@@ -15,15 +15,26 @@ const CAP = Math.min(12, args.maxConcurrent || 12)
 const BUDGET = args.agentBudget || 940
 const W = 'work/waves/' + args.wave
 const ASSESS_DIR = `spec/coverage/edition-2026/assessments/${args.wave}`
-let active = 0, spawned = 0
+// args.runTag (e.g. 'r2') keeps a continuation run's assessment files and labels distinct from earlier runs
+const RT = args.runTag ? `-${args.runTag}` : ''
+// a run of HALT_AFTER consecutive failed agents (usage limit, API outage) stops new spawns: the rest is carry_over
+const HALT_AFTER = 6
+let active = 0, spawned = 0, nullRun = 0, halted = false
 const waiters = []
 const acquire = () => active < CAP ? (active++, Promise.resolve()) : new Promise(r => waiters.push(r))
 const release = () => { const n = waiters.shift(); if (n) n(); else active-- }
 async function run(prompt, opts) {
+  if (halted) return { budget_exhausted: true, reason: 'halted_after_failures' }
   if (spawned >= BUDGET) return { budget_exhausted: true }
   spawned++
   await acquire()
-  try { return await agent(prompt, opts) } finally { release() }
+  try {
+    if (halted) return { budget_exhausted: true, reason: 'halted_after_failures' }
+    const r = await agent(prompt, opts)
+    if (r) nullRun = 0
+    else if (++nullRun >= HALT_AFTER && !halted) { halted = true; log(`HALTED: ${HALT_AFTER} consecutive agent failures; remaining work is carry_over`) }
+    return r
+  } finally { release() }
 }
 // ---------------- prompts ----------------
 const AUTHOR_RULES = `
@@ -95,7 +106,7 @@ S7. Uncertainty is not coverage. When in doubt, choose partial.
 S8. Classify every non-covered item. open_gaps (sections) and open_components with kind "writable"/"partial"/"absent" (units) are ONLY gaps the packet's author can close now inside the packet's owned files/editable hosts from held sources. Everything else goes to blocked[] (sections) or gets that kind (units): "blocked_source" (required source not held, wrong version, preview only: name work, version, pages), "blocked_math" (an exact unproved step), "blocked_policy" (needs a user decision), "lead_owned" (needs changes to drivers, canonical bib/symbols, generated views, restoration captures, tools or other packets' files). Do not repeat a blocked item in open_gaps.
 S9. The packet's NEW owned files are routed by the lead only at wave end. Assess their content as the content-to-be-routed: if the only reason a component or duty is not covered is that the owned file is not yet \\input on the route, treat it as covered (cite the owned file's lines) and add ONE blocked item {"kind":"lead_owned","detail":"route pending: <body file> and <annex file>"}; in that case the section's proposed_status is "partial" with empty open_gaps (the upgrade is granted by a re-assessment after routing). Never make "not routed" a writable gap. Placeholder text (contents listings, pointers to an unheld source) is not coverage and should be reported under defect_observations as a placeholder to remove.
 S10. Components of units listed in the packet's "readonly_units" are written by the named owner packet in this wave. If one is not covered, classify it as a blocked item {"kind":"lead_owned","detail":"owned by <owner packet>: <gap>"}, never as an open gap of this packet (the post-routing re-assessment judges it after the owner's text is routed).
-Write one assessment file per section and one per unit: ${ASSESS_DIR}/CA-${args.wave}-${p.id}-b${k}-<section_id or unit_id>-first.json with schema {"schema":"coverage-assessment/1","assessment_id","section_id" (or "unit_id"),"assessor":{"family":"anthropic","model":"opus","role":"first","context_id":"${args.wave}-${p.id}-b${k}-first"},"inputs":{"tex":[{"path","sha256"}],"sources_opened":[{"path","sha256","pages"}]},"components":[{"component_id","verdict","evidence":[{"path","line_start","line_end","label"}],"gap","blocker":{"kind","ref"}}],"duties":[{"duty","verdict","evidence":[...],"gap"}],"guards":{...},"defect_observations":[...],"not_consulted":["author notes","ledger prose","other assessments"]}.
+Write one assessment file per section and one per unit: ${ASSESS_DIR}/CA-${args.wave}-${p.id}${RT}-b${k}-<section_id or unit_id>-first.json with schema {"schema":"coverage-assessment/1","assessment_id","section_id" (or "unit_id"),"assessor":{"family":"anthropic","model":"opus","role":"first","context_id":"${args.wave}-${p.id}${RT}-b${k}-first"},"inputs":{"tex":[{"path","sha256"}],"sources_opened":[{"path","sha256","pages"}]},"components":[{"component_id","verdict","evidence":[{"path","line_start","line_end","label"}],"gap","blocker":{"kind","ref"}}],"duties":[{"duty","verdict","evidence":[...],"gap"}],"guards":{...},"defect_observations":[...],"not_consulted":["author notes","ledger prose","other assessments"]}.
 Return the structured result: guards_hard, unit_compile_ok, sections[{section_id, proposed_status (authored_unreviewed only if every component and duty is covered), open_gaps, blocked[{kind, detail}], assessment_id}], units[{unit_id, open_components[{component_id, gap, kind}], assessment_id}], components_covered.`
 }
 
@@ -124,21 +135,21 @@ const CONFIRM_SCHEMA = { type: 'object', properties: {
 
 function confirmPrompt(p, k, ids, unitIds) {
   const unitPart = unitIds && unitIds.length ? `, and queue units (no section row) ${unitIds.join(', ')}` : ''
-  return `Independent coverage confirmation (fresh context, role "confirm") for packet ${p.path}, sections ${ids.join(', ') || 'none'}${unitPart}, block ${k}, repository C:/Dev/the-methods-of-reason. Another assessor proposed these as fully covered; for each listed unit write ${ASSESS_DIR}/CA-${args.wave}-${p.id}-b${k}-<unit_id>-confirm.json (same schema, "unit_id" instead of "section_id") and return it in sections[] with section_id=<unit_id>; you have NOT been given its reasoning and must not open other assessment files, spec/research/* notes, *-return.json files or ledger prose fields.
+  return `Independent coverage confirmation (fresh context, role "confirm") for packet ${p.path}, sections ${ids.join(', ') || 'none'}${unitPart}, block ${k}, repository C:/Dev/the-methods-of-reason. Another assessor proposed these as fully covered; for each listed unit write ${ASSESS_DIR}/CA-${args.wave}-${p.id}${RT}-b${k}-<unit_id>-confirm.json (same schema, "unit_id" instead of "section_id") and return it in sections[] with section_id=<unit_id>; you have NOT been given its reasoning and must not open other assessment files, spec/research/* notes, *-return.json files or ledger prose fields.
 ${keyBlock(p, ids)}For each section and each linked required component and recorded duty in the packet, read the actual LaTeX on the route (with line numbers) and decide covered/partial/absent per the rules: covered requires every element of the success_condition present at cited lines and no failure_condition; a proof counts only if its steps are written; source-specific components require the held source (spec/coverage/edition-2026/held-sources.json) opened at two cited locators; uncertainty is not coverage; when in doubt, partial. Try actively to find what is missing. You assess coverage only, not correctness, and admit nothing.
-Write one file per section: ${ASSESS_DIR}/CA-${args.wave}-${p.id}-b${k}-<section_id>-confirm.json using schema coverage-assessment/1 with "assessor":{"family":"anthropic","model":"opus","role":"confirm","context_id":"${args.wave}-${p.id}-b${k}-confirm"} and the same component/duty/evidence structure (paths, line ranges, labels, sha256 of each tex input). Return all_covered=true for a section only if every component and duty is covered.`
+Write one file per section: ${ASSESS_DIR}/CA-${args.wave}-${p.id}${RT}-b${k}-<section_id>-confirm.json using schema coverage-assessment/1 with "assessor":{"family":"anthropic","model":"opus","role":"confirm","context_id":"${args.wave}-${p.id}${RT}-b${k}-confirm"} and the same component/duty/evidence structure (paths, line ranges, labels, sha256 of each tex input). Return all_covered=true for a section only if every component and duty is covered.`
 }
 
 // one assessment step: first assessor, then independent confirmation of proposed AU sections
 async function assessStep(p, k, sectionIds, unitIds) {
   const v = await run(assessPrompt(p, k, sectionIds, unitIds), { model: 'opus', effort: 'high', schema: ASSESS_SCHEMA,
-    label: `${p.id} assess b${k}`, phase: 'Assess' })
+    label: `${p.id}${RT} assess b${k}`, phase: 'Assess' })
   if (!v || v.budget_exhausted) return v
   const proposed = v.sections.filter(s => s.proposed_status === 'authored_unreviewed')
   const coveredUnits = (v.units || []).filter(u => !(u.open_components || []).length)
   if (proposed.length || coveredUnits.length) {
     const c = await run(confirmPrompt(p, k, proposed.map(s => s.section_id), coveredUnits.map(u => u.unit_id)),
-      { model: 'opus', effort: 'high', schema: CONFIRM_SCHEMA, label: `${p.id} confirm b${k}`, phase: 'Confirm' })
+      { model: 'opus', effort: 'high', schema: CONFIRM_SCHEMA, label: `${p.id}${RT} confirm b${k}`, phase: 'Confirm' })
     const ok = new Map(((c && c.sections) || []).map(s => [s.section_id, s]))
     proposed.forEach(s => {
       const o = ok.get(s.section_id)
@@ -178,8 +189,8 @@ async function runPacket(p) {
 
   // block 0: assess the current text before anyone writes (avoids duplicating drafts the ledger has not caught up with)
   const v0 = await assessStep(p, 0, sectionIds, unitIds)
-  if (!v0) return result('carry_over', { reason: 'initial_assessment_null' })
-  if (v0.budget_exhausted) return result('carry_over', { reason: 'agent_budget' })
+  if (!v0) return result('carry_over', { reason: halted ? 'halted_after_failures' : 'initial_assessment_null' })
+  if (v0.budget_exhausted) return result('carry_over', { reason: v0.reason || 'agent_budget' })
   merge(v0)
   if (!openSections().length && !openUnits().length) return result(p.mode === 'author' ? 'drafted' : 'accounted')
   gaps = openSections().map(s => `${s.section_id}: ${(s.open_gaps || []).join(' | ')}`)
@@ -187,13 +198,15 @@ async function runPacket(p) {
 
   for (let k = 1; k <= p.max_blocks; k++) {
     a = await run(authorPrompt(p, k, gaps, mode), { model: 'opus', effort: mode === 'redirect' ? 'max' : 'high',
-      schema: AUTHOR_SCHEMA, label: `${p.id} author b${k}`, phase: 'Author' })
+      schema: AUTHOR_SCHEMA, label: `${p.id}${RT} author b${k}`, phase: 'Author' })
+    if (!a && halted) return result('carry_over', { reason: 'halted_after_failures' })
     if (!a) { stall++; if (stall >= 2) return result('carry_over', { reason: 'author_null' }); continue }
-    if (a.budget_exhausted) return result('carry_over', { reason: 'agent_budget' })
+    if (a.budget_exhausted) return result('carry_over', { reason: a.reason || 'agent_budget' })
     acq.push(...(a.acquisition_needs || []))
     const v = await assessStep(p, k, openSections().map(s => s.section_id), openUnits().map(u => u.unit_id))
+    if (!v && halted) return result('carry_over', { reason: 'halted_after_failures' })
     if (!v) { stall++; if (stall >= 2) return result('carry_over', { reason: 'assessment_null' }); continue }
-    if (v.budget_exhausted) return result('carry_over', { reason: 'agent_budget' })
+    if (v.budget_exhausted) return result('carry_over', { reason: v.reason || 'agent_budget' })
     merge(v)
     const stillOpen = openSections(), unitsOpen = openUnits()
     const upgraded = last.sections.filter(s => s.proposed_status === 'authored_unreviewed').length
@@ -227,13 +240,13 @@ async function runLane(lane) {
 }
 
 phase('Author')
-log(`wave ${args.wave}: ${args.lanes.length} lanes, ${args.lanes.reduce((n, l) => n + l.packets.length, 0)} packets, cap ${CAP}, agent budget ${BUDGET}`)
+log(`wave ${args.wave}${RT}: ${args.lanes.length} lanes, ${args.lanes.reduce((n, l) => n + l.packets.length, 0)} packets, cap ${CAP}, agent budget ${BUDGET}`)
 const results = (await parallel(args.lanes.map(l => () => runLane(l)))).filter(Boolean).flat()
 const tally = {}
 results.forEach(r => { tally[r.outcome] = (tally[r.outcome] || 0) + 1 })
 log(`outcomes ${JSON.stringify(tally)}; agents spawned ${spawned}`)
 if (spawned >= BUDGET) log('AGENT BUDGET HIT: remaining work is carry_over (recorded, not dropped)')
-return { wave: args.wave, tally, spawned, results: results.map(r => ({ id: r.id, outcome: r.outcome, reason: r.reason,
+return { wave: args.wave, runTag: args.runTag || null, halted, tally, spawned, results: results.map(r => ({ id: r.id, outcome: r.outcome, reason: r.reason,
   sections: r.last && r.last.sections.map(s => ({ section_id: s.section_id, status: s.proposed_status, gaps: s.open_gaps, blocked: s.blocked,
     a: s.assessment_id, c: s.confirm_assessment_id })),
   units: r.last && r.last.units,
