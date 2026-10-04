@@ -1,0 +1,117 @@
+\section{Decidability and complexity: the two added reductions}
+\label{sec:annex-p14-decidability}
+
+\begin{annexitem}{annex:p14.dc.finite-cpl}{thm:p14-dc-finite-cpl}{Finite classical consequence and equivalence}
+\begin{proof}
+List all distinct atoms occurring in the finite input. Their number and the
+lengths of their names are bounded by the input bit length. A valuation is a
+bit for each such atom; bottom-up evaluation of each syntax tree and comparison
+of atom identifiers take polynomial time in that encoding. A no certificate
+for validity is a valuation falsifying the input formula. A no certificate
+for consequence is a valuation satisfying every listed premise and falsifying
+the conclusion. A no certificate for equivalence is a valuation on which
+the two formulas differ. Hence all three languages are in coNP.
+
+For a finite list \(\Gamma=(G_1,\ldots,G_s)\), the classical truth table
+for implication gives
+\[
+ \Gamma\models A
+ \quad\Longleftrightarrow\quad
+ \models (G_1\land\cdots\land G_s)\to A,
+\]
+where an empty conjunction is the fixed true abbreviation \(\topv\).
+The truth table for biconditional similarly gives
+\[
+ v(A)=v(B)\text{ for every valuation }v
+ \quad\Longleftrightarrow\quad\models A\leftrightarrow B.
+\]
+Each input tree is copied only a bounded number of times when the abbreviations
+are expanded to the primitive syntax. Atom names retain their original bit
+strings. The resulting encoding is polynomial in the combined input length.
+
+The coNP-hard validity language is the stated TAUT problem in
+\cref{thm:p02-taut-conp-complete}. Map its input \(A\) to the consequence
+instance \((\varnothing,A)\); its yes condition is exactly validity. Map it
+also to the equivalence instance \((A,\topv)\); again the yes condition is
+exactly validity. These are polynomial-time many-one reductions. Validity
+already has the cited lower bound, so the three upper and lower bounds match.
+If primitive truth is not available, the fixed formula \(q\to q\) expands
+\(\topv\), with a fresh atom name of polynomial encoded length. No step
+represents an arbitrary infinite premise set by a finite conjunction.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p14.dc.horn}{thm:p14-dc-horn}{A logarithmic-space circuit reduction to Horn satisfiability}
+\begin{proof}
+The upper bound follows from the finite forward-chaining procedure in
+\cref{thm:p02-horn-sat}. With a standard explicit clause encoding, parsing,
+sorting or comparing finite atom names and carrying out that procedure are
+polynomial in bit length. The theorem's sharper literal-reference operation
+count is not needed for membership in P.
+
+For hardness use the topologically ordered CVP language from
+\cref{def:p04-succinct-problems,thm:p04-succinct-completeness}. Its gates may
+include negation, so an unqualified monotone-circuit reduction would not
+suffice. Number the \(n\) gates by their positions in the topological list.
+For each circuit gate \(i\), introduce two distinct Horn atoms
+\(p_i^+\) and \(p_i^-\). They represent, respectively, a true and a false
+computed value of that gate. An input constant \(1\) produces the positive
+unit \(p_i^+\); a constant \(0\) produces \(p_i^-\). The following are all
+positive Horn implications, expanded as Horn clauses:
+\[
+\begin{array}{c|l}
+\text{gate }i&\text{implications emitted}\\ \hline
+\neg j&
+ p_j^-\to p_i^+,\quad p_j^+\to p_i^-\\
+j\land k&
+ p_j^+\land p_k^+\to p_i^+,\quad
+ p_j^-\to p_i^-,\quad p_k^-\to p_i^-\\
+j\lor k&
+ p_j^+\to p_i^+,\quad p_k^+\to p_i^+,\quad
+ p_j^-\land p_k^-\to p_i^-
+\end{array}
+\]
+For the designated output gate \(o\), emit the additional negative unit
+\(\neg p_o^-\). Thus we ask that the false-output rail remain absent, not
+that a positive output atom can be guessed arbitrarily.
+
+Let \(H^+\) be the positive clauses just constructed and \(S_*\) their least
+forward closure: begin with the constant units and add a clause head whenever
+all its antecedents are present. There are only twice as many atoms as circuit
+gates, so this reaches a fixed point after finitely many additions. Every
+model of \(H^+\) contains \(S_*\), by induction on additions. The valuation
+making exactly \(S_*\) true satisfies \(H^+\), because the fixed-point
+condition includes the head of every clause whose antecedents it satisfies.
+
+Induction in the circuit's topological order shows
+\[
+ p_i^+\in S_*\Longleftrightarrow \text{gate }i\text{ has value }1,
+ \qquad
+ p_i^-\in S_*\Longleftrightarrow \text{gate }i\text{ has value }0.
+\]
+For constants exactly the correct rail is initially present. For a negation
+gate the two implications exchange the predecessor's rails. For conjunction,
+the positive rail requires both positive predecessors, whereas the negative
+rail requires either negative predecessor. Disjunction is the dual case.
+The emitted implications are the only clauses with a given new gate's rails
+as heads; thus no later gate can add a spurious rail to an earlier gate.
+This proves both directions of the induction, including the fact that the
+two rails are never simultaneously present.
+
+If the output is \(1\), then \(p_o^-\notin S_*\), so the least-closure
+valuation satisfies the negative unit as well and is a model of the full
+Horn formula. If the output is \(0\), the negative rail belongs to \(S_*\)
+and therefore to every model of \(H^+\); the negative unit makes the full
+formula unsatisfiable. The construction preserves the CVP yes answer exactly.
+
+Gate numbers use \(O(\log n)\) bits. A transducer scans the explicit gate
+list, stores the current gate's numbers and type, and emits its constant
+number of clauses with indexed rail names. It needs \(O(\log n)\) workspace
+and produces polynomially many output bits. Validity of the fixed
+topologically ordered encoding is logspace checkable; a malformed input is
+mapped to the fixed unsatisfiable Horn conjunction \(q\land\neg q\).
+Thus the reduction is total on all encoded words, including no instances
+caused by malformed syntax. The cited logspace P-completeness of CVP supplies
+P-hardness, and the forward-chaining upper bound completes the classification.
+\end{proof}
+\end{annexitem}

@@ -1,0 +1,593 @@
+% Complete theoremhood and decision treatment for the existing X/strong-U sheet.
+\section{Linear Temporal Completeness and Decision}
+\label{sec:p08-linear-temporal-completeness}
+
+This chapter proves the adequacy of
+\hyperref[sheet:hilbert-ltl]{the registered Hilbert LTL calculus}
+on discrete infinite words, then constructs an accepting-run decision
+procedure. Its until operator permits a witness at the current position.
+The distinction from a strict future operator, and from consequence
+using infinitely many premises, matters to both proofs.
+
+The historical reference for finite-model threading is Gabbay,
+Pnueli, Shelah and Stavi's published 1980 paper. That paper's
+strict-future language and DUX calculus are kept distinct below.
+The automaton construction uses the local-type and pending-batch
+method in Appendix B of Vardi and Wolper's author preprint dated
+15 August 1985, associated with their 1986 proceedings publication.
+Sistla and Clarke's 1985 journal article supplies the complexity
+comparison. The proofs here fill the stated construction steps for
+the exact registered language; a reformulation is not presented as
+a verbatim reproduction of another calculus or source version
+\cite{GabbayPnueliShelahStavi1980,VardiWolper1986,SistlaClarke1985}.
+
+\subsection{The exact language and premise boundary}
+\label{sec:p08-ltl-completeness-language}
+
+\begin{hbdefinition}{def:p08-ltl-completeness-language}{The fixed infinite-word problem}
+Use the atom set \(\mathsf{Prop}\) and the grammar
+\[
+ A::=p\mid\bottom\mid\neg A\mid(A\land A)
+       \mid\mathsf X A\mid A\mathbin{\mathsf U}A.
+\]
+Boolean abbreviations are those in
+\cref{sec:modal-temporal-epistemic-02}; in particular
+\(\mathsf F A=\topv\mathbin{\mathsf U}A\) and
+\(\mathsf G A=\neg\mathsf F\neg A\).
+A word is \(\mathcal M=(\mathbb N,V)\) with
+\(V:\mathbb N\to\mathcal P(\mathsf{Prop})\). Next means truth at
+\(n+1\), and
+\[
+ \mathcal M,n\entails A\mathbin{\mathsf U}B
+ \quad\Longleftrightarrow\quad
+ \exists j\geq n\,
+ \bigl(\mathcal M,j\entails B\ \land\
+       \forall k\,(n\leq k<j\Rightarrow\mathcal M,k\entails A)\bigr).
+\]
+The Boolean clauses are classical. Write \(\vdash_L A\) for the
+existing finite no-premise Hilbert derivation
+\(\derives_{\mathsf{LTL}}A\). Its temporal schemas are X-distribution,
+X-negation and U-unfolding; its rules are MP, theorem-only XNec
+and theorem-only UInd, exactly as registered. No rule here allows
+necessitating or applying UInd to an open assumption.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p08-ltl-strict-bridge}{proved=annex:p08.ltl.strict-bridge}{The strict and non-strict conventions on natural-number time}
+Let \(A\mathbin{\mathsf U_s}B\) mean that a witness \(j>n\)
+satisfies \(B\), with \(A\) required only at \(n<k<j\).
+This is the strict convention used in the 1980 paper. On these words,
+\[
+ A\mathbin{\mathsf U_s}B\ \leftrightarrow\
+ \mathsf X(A\mathbin{\mathsf U}B),\qquad
+ A\mathbin{\mathsf U}B\ \leftrightarrow\
+ B\lor(A\land(A\mathbin{\mathsf U_s}B)).
+\]
+The displayed biconditionals assert pointwise truth equivalence
+of the explicitly compared expressions. Replacing operators
+recursively gives truth-preserving translations of nested formulas.
+Strict eventuality and invariance correspond to
+\(\mathsf X\mathsf F A\) and \(\mathsf X\mathsf G A\).
+In particular, \(\bottom\mathbin{\mathsf U_s}B\) means next \(B\),
+whereas \(\bottom\mathbin{\mathsf U}B\) means current \(B\).
+\end{hbtheorem}
+
+\subsection{Soundness and the premise boundary}
+\label{sec:p08-ltl-soundness-boundary}
+
+\begin{hbtheorem}{thm:p08-ltl-soundness}{proved=annex:p08.ltl.soundness}{Soundness of every registered schema and rule}
+If \(\vdash_L A\), then \(\mathcal M,n\entails A\) for every
+word and every \(n\). Moreover a formula is valid at all positions
+of all words exactly when it is valid at position zero of all words.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p08-ltl-local-consequence}{Local premise consequence and its finitary proof relation}
+Write \(\Gamma\models_\omega A\) when, at every word and position,
+truth of every member of \(\Gamma\) implies truth of \(A\) there.
+Define \(\Gamma\vdash_L^{\rm fin}A\) to mean that some finite
+\(\Gamma_0\subseteq\Gamma\) satisfies
+\(\vdash_L(\bigwedge\Gamma_0)\to A\), with empty conjunction
+\(\topv\). Premises are local to the evaluation position, not
+assumed at every later position. This relation does not change
+the registered theorem-only rules.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p08-ltl-noncompactness}{proved=annex:p08.ltl.noncompactness}{The exact arbitrary-premise failure}
+For an atom \(p\), put
+\(\Gamma=\{\mathsf X^n p:n\in\mathbb N\}\), with
+\(\mathsf X^0p=p\). Then \(\Gamma\models_\omega\mathsf Gp\),
+but no finite subset entails \(\mathsf Gp\). Equivalently,
+\(\Gamma\cup\{\neg\mathsf Gp\}\) is unsatisfiable while every
+finite subset is satisfiable. Thus sound finitary derivations cannot
+be strongly complete for this arbitrary-premise consequence relation.
+\end{hbtheorem}
+
+\subsection{Finite consistent types and their successors}
+\label{sec:p08-ltl-consistent-types}
+
+\begin{hblemma}{thm:p08-ltl-next-boolean}{proved=annex:p08.ltl.next-boolean}{Derived Boolean laws for next}
+The registered calculus proves that \(\mathsf X\) preserves truth,
+falsity, negation, finite conjunctions and finite disjunctions, and
+preserves every provable implication. In particular, from
+\(\vdash_L C\to D\) one obtains
+\(\vdash_L\mathsf XC\to\mathsf XD\); no premises are open
+in this derivation.
+\end{hblemma}
+
+\begin{hbdefinition}{def:p08-ltl-consistent-type}{Finite truth records and characteristic formulas}
+For a formula \(\varphi\), expand abbreviations and let
+\(C=\operatorname{Sub}(\varphi)\), its finite set of syntactic
+subformulas. Let \(n\) be the length of that expanded formula,
+counting its written symbol occurrences, and put \(m=|C|\).
+Atom identifiers are effectively encoded; counting their full
+written lengths can only increase this input-size bound.
+A truth record is a function
+\(t:C\to\{0,1\}\). Its characteristic formula is
+\[
+ \chi_t=\bigwedge_{D\in C}D^{t(D)},\qquad
+ D^1=D,\quad D^0=\neg D,
+\]
+in a fixed order. Call \(t\) \emph{consistent} when
+\(\nvdash_L\neg\chi_t\), and let \(Q_C\) be the set of such
+records. Define \(tR_Cs\) exactly when
+\(\nvdash_L\neg(\chi_t\land\mathsf X\chi_s)\).
+This finite graph is used for the existence proof. Testing its
+definition is not the algorithm later used for deciding formulas.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p08-ltl-type-partition}{proved=annex:p08.ltl.type-partition}{A finite exhaustive partition}
+The calculus proves \(\bigvee_{t\in Q_C}\chi_t\), and different
+characteristic formulas are pairwise incompatible. Each consistent
+record satisfies the Boolean truth conditions on \(C\). If
+\(\nvdash_L\neg\varphi\), some \(t\in Q_C\) has
+\(t(\varphi)=1\). Empty disjunction means \(\bottom\).
+\end{hblemma}
+
+\begin{hblemma}{thm:p08-ltl-successor}{proved=annex:p08.ltl.successor}{Successor existence and all one-step obligations}
+Every \(t\in Q_C\) has an \(R_C\)-successor. On every edge
+\(tR_Cs\),
+\[
+\begin{aligned}
+ t(\mathsf XD)&=s(D)&& (\mathsf XD\in C),\\
+ t(A\mathbin{\mathsf U}B)&=
+ \max\{t(B),\min(t(A),s(A\mathbin{\mathsf U}B))\}
+ &&(A\mathbin{\mathsf U}B\in C).
+\end{aligned}
+\]
+An until formula's extra \(\mathsf X\)-obligation need not be
+inserted into \(C\); the unfolding axiom and the edge's consistency
+already enforce it.
+\end{hblemma}
+
+\begin{hblemma}{thm:p08-ltl-eventuality-reach}{proved=annex:p08.ltl.eventuality-reach}{UInd forces a finite witness path}
+If \(t(A\mathbin{\mathsf U}B)=1\), there is a finite path
+\(t=t_0R_Ct_1R_C\cdots R_Ct_k\) with
+\(t_k(B)=1\) and \(t_i(A)=1\) for every \(i<k\).
+Length zero is permitted when the right operand already holds.
+\end{hblemma}
+
+\subsection{Realizing all eventualities and proving completeness}
+\label{sec:p08-ltl-fair-truth}
+
+\begin{hbdefinition}{def:p08-ltl-fair-sequence}{Local coherence and eventuality realization}
+A sequence \(t_0,t_1,\ldots\) of records on \(C\) is locally
+coherent when each record satisfies the Boolean conditions and
+every consecutive pair satisfies the two displayed one-step clauses.
+It realizes eventualities when, whenever
+\(t_i(A\mathbin{\mathsf U}B)=1\), some \(j\geq i\) has
+\(t_j(B)=1\). The one-step clauses then force \(A\) at every
+preceding point of a least such witness interval.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p08-ltl-fair-path}{proved=annex:p08.ltl.fair-path}{A single infinite path realizes every pending until}
+From every consistent record there is an infinite \(R_C\)-path
+realizing all eventualities. The construction uses a fixed finite
+ordering of the until subformulas and finite witness paths, with
+an extra successor step in every scheduling round.
+\end{hblemma}
+
+\begin{hblemma}{thm:p08-ltl-fair-truth}{proved=annex:p08.ltl.fair-truth}{The full truth lemma for a coherent realizing sequence}
+For any locally coherent sequence realizing eventualities, define
+\(V(i)\) on atoms occurring in \(\varphi\) by
+\(p\in V(i)\) exactly when \(t_i(p)=1\), and set unused atoms
+false. Then for all \(D\in C\) and all \(i\),
+\[
+ \mathcal M,i\entails D\quad\Longleftrightarrow\quad t_i(D)=1.
+\]
+Both directions for until are part of the claim; local unfolding
+alone is insufficient.
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p08-linear-temporal-completeness}{proved=annex:p08.ltl.completeness}{Weak and finite-premise completeness for the registered calculus}
+For every formula \(A\),
+\[
+ \vdash_L A\quad\Longleftrightarrow\quad
+ \mathcal M,n\entails A\text{ for every word and position}.
+\]
+For every finite \(\Gamma\),
+\(\Gamma\models_\omega A\) exactly when
+\(\vdash_L(\bigwedge\Gamma)\to A\).
+The arbitrary-premise noncompactness theorem remains applicable.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p08-ltl-unfulfilled-loop}{Why a locally consistent loop need not be a model}
+For \(\varphi=\mathsf Fp\), a local record can make
+\(p\) false and \(\mathsf Fp\) true forever while satisfying
+\(\mathsf Fp\leftrightarrow p\lor\mathsf X\mathsf Fp\)
+at every step. The resulting loop has no witness for \(p\) and
+therefore fails eventuality realization. By contrast, a record
+sequence in which \(p\) first becomes true at position three
+realizes \(\mathsf Fp\) at position zero. Recurrence
+\(\mathsf G\mathsf Fp\) requires further witnesses indefinitely.
+\end{hbexample}
+
+\subsection{An effective local automaton and its pending batches}
+\label{sec:p08-ltl-automaton-construction}
+
+\begin{hbdefinition}{def:p08-ltl-buchi-convention}{Infinite-word automata with permitted starts}
+A nondeterministic B\"uchi automaton is
+\(\mathcal A=(\Sigma,Q,I,\Delta,F)\), with finite alphabet
+and state set, \(I,F\subseteq Q\), and
+\(\Delta:Q\times\Sigma\to\mathcal P(Q)\).
+On \(a_0a_1\cdots\), a run is \(q_0q_1\cdots\) with
+\(q_0\in I\) and \(q_{i+1}\in\Delta(q_i,a_i)\).
+Acceptance requires \(q_i\in F\) for infinitely many indices.
+The permitted-start set matches the source construction; its
+conversion to the handbook's single-start convention is proved below.
+One accepting visit, including the initial visit, is insufficient.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p08-ltl-local-automaton}{The effective closure-type construction}
+For input \(\varphi\), let \(C=\operatorname{Sub}(\varphi)\)
+as above, \(P\) its finite atom set, and \(\mathcal U\) its
+until subformulas. Write \(m=|C|\), \(r=|\mathcal U|\).
+Let \(Q_b\) contain \emph{all} records \(t:C\to\{0,1\}\)
+satisfying only the Boolean truth conditions:
+\(t(\bottom)=0\), \(t(\neg D)=1-t(D)\), and
+\(t(D\land E)=\min\{t(D),t(E)\}\) whenever the displayed
+compound belongs to \(C\). Define \(tEs\)
+by the X and until equations in
+\cref{thm:p08-ltl-successor}. This test uses finite truth bits,
+not Hilbert consistency. Put
+\[
+ D_t=\{A\mathbin{\mathsf U}B\in\mathcal U:
+                 t(A\mathbin{\mathsf U}B)=1, t(B)=0\},
+ \qquad H_t=\{A\mathbin{\mathsf U}B\in\mathcal U:t(B)=1\}.
+\]
+An obligation state is any \(O\subseteq\mathcal U\).
+Its allowed next sets satisfy
+\[
+ O'\supseteq D_t\quad\text{if }O=\varnothing,
+ \qquad O'\supseteq O\setminus H_t\quad\text{if }O\ne\varnothing.
+\]
+Arbitrary extra obligations are permitted, as in the source;
+the accepting choices need not add them.
+
+The automaton \(\mathcal A_\varphi\) has alphabet
+\(2^P\), states \(Q_b\times2^{\mathcal U}\), starts
+\(\{t:t(\varphi)=1\}\times\{\varnothing\}\), and accepting
+set \(Q_b\times\{\varnothing\}\). A transition on letter
+\(a\subseteq P\) from \((t,O)\) to \((s,O')\) requires
+\(a=\{p\in P:t(p)=1\}\), \(tEs\), and the displayed
+obligation-set condition. Thus the current type describes the
+letter consumed by its outgoing transition.
+\cite[preprint Appendix B, pp.~2--3]{VardiWolper1985LTLPreprint}
+\end{hbdefinition}
+
+These truth-bit records encode the source's sets of subformulas
+and their signed negations: include \(D\) when its bit is one,
+otherwise include \(\neg D\), and identify double negations.
+The Boolean conditions make this a bijection with the source's
+complete consistent Boolean types. The source first reads whole
+closure types, then projects a letter to its true atoms. The
+displayed transition performs that projection directly.
+
+\begin{hblemma}{thm:p08-ltl-batch-realization}{proved=annex:p08.ltl.batch-realization}{Exactly what recurring empty obligation sets guarantee}
+For a locally coherent type sequence, an allowed obligation
+sequence starting at \(\varnothing\) and visiting
+\(\varnothing\) infinitely often exists exactly when the type
+sequence realizes every eventuality. This includes the case
+\(\mathcal U=\varnothing\).
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p08-ltl-automaton-language}{proved=annex:p08.ltl.automaton-language}{Both language inclusions and the finite size bound}
+The language of \(\mathcal A_\varphi\) is exactly the words
+satisfying \(\varphi\) at zero. It has at most
+\(2^{m+r}\leq2^{2n}\) states, where \(n\) is the length of
+the expanded input formula. This Boolean-coordinate bound implies
+the source's looser bound \(2^{3n}\). The construction is
+effective, including its initial, transition and accepting sets.
+No determinization or complementation theorem is imported.
+\end{hbtheorem}
+
+\subsection{Generalized acceptance and the counter construction}
+\label{sec:p08-ltl-generalized-acceptance}
+
+The same finite eventuality requirement can be recorded by several
+accepting sets, one for each until, rather than by a set of pending
+obligations. The following finite constructions establish the
+relation between these two representations; the pending-batch
+construction above retains the source's own representation.
+
+\begin{hbdefinition}{def:p08-ltl-generalized-buchi}{Generalized B\"uchi acceptance}
+A generalized B\"uchi automaton has the same finite alphabet,
+states, permitted starts and transition function as
+\cref{def:p08-ltl-buchi-convention}, and a finite list
+\(F_1,\ldots,F_h\) of accepting subsets. Its infinite run is
+accepting when it visits \emph{each} \(F_j\) infinitely often.
+When \(h=0\), every infinite run is accepting.
+
+For the LTL local automaton use \(Q_b\), the starts with
+\(t(\varphi)=1\), and the letter-matching edges \(tEs\)
+from \cref{def:p08-ltl-local-automaton}. For each
+\(U=A\mathbin{\mathsf U}B\in\mathcal U\), put
+\[
+ F_U=\{t\in Q_b:t(U)=0\text{ or }t(B)=1\}.
+\]
+Call the resulting generalized automaton \(\mathcal G_\varphi\).
+These are finite truth-bit tests; no consistency oracle is used.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p08-ltl-generalized-realization}{proved=annex:p08.ltl.generalized-realization}{Each acceptance set expresses one eventuality}
+A locally coherent type sequence realizes every eventuality
+exactly when it visits each \(F_U\) infinitely often.
+Consequently \(\mathcal G_\varphi\) accepts precisely the
+words satisfying \(\varphi\) at zero, and has at most
+\(2^m\) states and \(r\) accepting sets. It has the same
+language as \(\mathcal A_\varphi\).
+\end{hblemma}
+
+\begin{hbdefinition}{def:p08-ltl-buchi-counter}{Tracking the next required accepting set}
+For \(h\geq1\), convert a generalized automaton
+\((\Sigma,Q,I,\Delta,F_1,\ldots,F_h)\) to an ordinary
+B\"uchi automaton with states \(Q\times\{1,\ldots,h\}\),
+starts \(I\times\{1\}\), and accepting set
+\[
+ F^*=\{(q,h):q\in F_h\}.
+\]
+Its transitions on \(a\) have first coordinate
+\(q'\in\Delta(q,a)\), and second coordinate
+\[
+ j'=\begin{cases}
+        j,&q\notin F_j,\\
+        j+1,&q\in F_j\text{ and }j<h,\\
+        1,&q\in F_j\text{ and }j=h.
+      \end{cases}
+\]
+The index \(j\) is the next accepting set still to be
+witnessed; its update tests the current state before consuming
+the transition. For \(h=0\), retain the original state and
+transition sets and declare all states accepting.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p08-ltl-generalized-conversion}{proved=annex:p08.ltl.generalized-conversion}{Language preservation, all edge cases and the state bound}
+The counter conversion preserves the infinite-word language
+and has \(h|Q|\) states for \(h\geq1\), or \(|Q|\) for
+\(h=0\). It handles empty accepting subsets and an empty
+start set without an additional assumption. Applied to
+\(\mathcal G_\varphi\), it gives an ordinary automaton with
+at most \(\max\{1,r\}2^m\) states. A state with counter
+\(h\) is accepting only when its first coordinate actually
+lies in \(F_h\); merely reaching the last counter value
+does not complete a round.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p08-ltl-single-start}{proved=annex:p08.ltl.single-start}{The single-start conversion without an empty transition}
+For any permitted-start automaton, add a fresh nonaccepting
+\(q_*\) with
+\[
+ \Delta_*(q_*,a)=\bigcup_{q\in I}\Delta(q,a).
+\]
+Keep every old transition and accepting state, and make
+\(\{q_*\}\) the sole start. This preserves the infinite-word
+language, including an empty original start set, and adds one
+state. No transition targets \(q_*\).
+\end{hbtheorem}
+
+\subsection{Accepting cycles and finite-state verification}
+\label{sec:p08-ltl-accepting-cycles}
+
+\begin{hbdefinition}{def:p08-ltl-automaton-graph}{Paths, positive returns and eventual periodicity}
+The automaton's graph has an edge \(q\to q'\) when some
+letter permits that transition. Write \(\to^*\) for a path
+of zero or more edges, and \(\to^+\) for one or more edges.
+A strongly connected component is an equivalence class for
+mutual \(\to^*\)-reachability. It is cyclic when it contains
+a nonempty closed walk; a singleton needs a self-loop.
+A word \(uv^\omega\), with finite \(u\) and nonempty finite
+\(v\), is ultimately periodic.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p08-ltl-accepting-cycle}{proved=annex:p08.ltl.accepting-cycle}{Emptiness, a positive return and a lasso witness}
+A finite B\"uchi automaton accepts some word exactly when
+there are \(i\in I,f\in F\) with
+\(i\to^*f\) and \(f\to^+f\). Equivalently, some reachable
+cyclic strongly connected component contains an accepting state.
+For an automaton with \(N\) states a nonempty language has a
+witness \(uv^\omega\) with \(\operatorname{len}(u)\leq N-1\)
+and \(1\leq\operatorname{len}(v)\leq N\), where
+\(\operatorname{len}\) denotes finite-word length.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p08-ltl-positive-return}{An accepting point is not an accepting cycle}
+Let \(i\) be the only start and accepting state, and let the
+only edges be \(i\to q\) and \(q\to q\), where \(q\)
+is nonaccepting. The automaton has an infinite run and starts
+in an accepting state, but its language is empty. Counting the
+zero-length path \(i\to^*i\) as a return would give the
+wrong answer. In the pending-batch construction, a loop with
+\(\mathsf Fp\) true and \(p\) always false likewise leaves
+its initially empty batch and can never empty it again.
+\end{hbexample}
+
+\begin{hbdefinition}{def:p08-ltl-product-checking}{The exact finite-state model-checking problem}
+Let \(K=(W,w_0,R,\ell)\) have finite nonempty \(W\),
+total relation \(R\), and labels \(\ell:W\to2^P\).
+It satisfies \(\varphi\) when every infinite path from
+\(w_0\) yields a word satisfying \(\varphi\) at zero.
+Construct \(\mathcal A_{\neg\varphi}\). Product vertices
+are \((w,t,O)\) whose type's atom bits agree with \(\ell(w)\).
+Product edges require \(wRw'\) and the automaton transition
+on \(\ell(w)\). Starts use \(w_0\) and the automaton's
+starts; accepting vertices have \(O=\varnothing\).
+This is universal-path LTL checking, not a CTL formula or a
+change to the until operator.
+Write \(\lVert K\rVert\geq2\) for the complete encoded
+input length of its state, edge and label lists, increased to
+two for a smaller representation. It is a size parameter,
+not a vector norm or a count of only the reachable states.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p08-ltl-product-correctness}{proved=annex:p08.ltl.product-correctness}{Product paths are exactly the counterexamples}
+The finite-state structure violates \(\varphi\) exactly when
+the product contains a reachable accepting state with a positive
+return. Projecting its prefix and loop yields a genuine infinite
+counterexample path of \(K\). Totality ensures the paths being
+checked use the prescribed infinite-time semantics.
+\end{hbtheorem}
+
+\subsection{Decision algorithms and their resource bounds}
+\label{sec:p08-ltl-decision-bounds}
+
+\begin{hbtheorem}{thm:p08-ltl-finite-graph-decision}{proved=annex:p08.ltl.finite-graph-decision}{A complete finite-graph emptiness algorithm}
+Reachability followed by a two-pass depth-first decomposition
+into strongly connected components decides automaton emptiness.
+It accepts exactly the reachable cyclic components meeting \(F\).
+The graph computation takes time linear in its explicit numbers
+of vertices and edges. Consequently explicit LTL construction
+and product checking take time \(2^{O(n)}\) and
+\(\lVert K\rVert2^{O(n)}\), respectively, with exponential
+graph storage permitted.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p08-ltl-polynomial-space}{proved=annex:p08.ltl.polynomial-space}{An explicit deterministic polynomial-space decision procedure}
+LTL satisfiability and validity are decidable in deterministic
+polynomial space in the formula length. Combined finite-state
+model checking is decidable in space
+\(O((n+\log\lVert K\rVert)^2)\), apart from the read-only
+input. The procedure recomputes bounded reachability rather than
+storing the exponential graph; this space claim does not require
+that recomputation to retain the explicit-graph time bound.
+\end{hbtheorem}
+
+\subsection{The matching lower bounds}
+\label{sec:p08-ltl-lower-bounds}
+
+\begin{hbdefinition}{def:p08-ltl-configuration-encoding}{A finite formula describing polynomial-space configurations}
+For this complexity statement atom names come from an unbounded
+effectively named supply. Fix a deterministic polynomial-space
+Turing-machine decider \(M\). On input \(w\), choose a
+polynomially bounded width \(s\geq3\) large enough for its
+tape, including two permanent boundary cells. Acceptance and
+rejection have stationary self-transitions after halting.
+Let \(\mathcal D_M\) be the finite cell alphabet consisting of a
+boundary symbol, ordinary tape symbols and pairs of a machine
+state with a tape symbol. Such a pair marks the unique head.
+
+Use propositions \(C_0,\ldots,C_{s-1}\) for position within
+a configuration and \(P_d\) for each \(d\in\mathcal D_M\).
+For a nonempty finite list define the Boolean abbreviation
+\[
+ \operatorname{One}(B_1,\ldots,B_k)=
+ (\bigvee_i B_i)\land
+ \bigwedge_{i<j}\neg(B_i\land B_j).
+\]
+Let \(H\) be the disjunction of head-symbol propositions and
+\(H_{\rm acc}\) that of accepting-head propositions. The
+formula \(\Psi_{M,w}\) is the conjunction of these finite conditions:
+\begin{enumerate}
+\item \(C_0\) holds initially, the position propositions are
+      always exactly one, and
+      \(\mathsf G(C_i\to\mathsf XC_{i+1\bmod s})\)
+      holds for each \(i\).
+\item Cell propositions are always exactly one. The boundary
+      proposition holds exactly at \(C_0\) and \(C_{s-1}\).
+\item At each \(C_0\), exactly one of
+      \(H,\mathsf XH,\ldots,\mathsf X^{s-1}H\) holds.
+\item For each \(0\leq i<s\),
+      \(\mathsf X^iP_{d_i}\) gives the known initial
+      configuration: input \(w\), initial head/state, blank
+      unused cells and the two boundary symbols.
+\item Let \(f:\mathcal D_M^3\to\mathcal D_M\) be the local next-cell
+      function of the machine. For each interior cell
+      \(1\leq i\leq s-2\) and triple \((a,b,c)\), include
+      \[
+       \mathsf G\left(C_{i-1}\to
+       \bigl((P_a\land\mathsf XP_b\land\mathsf X^2P_c)
+                  \to\mathsf X^{s+1}P_{f(a,b,c)}\bigr)\right).
+      \]
+\item Finally include \(\mathsf F H_{\rm acc}\).
+\end{enumerate}
+The local function is specified completely in the proof. The
+Boolean abbreviations and finite iterations of next are expanded,
+so this is an ordinary formula of the registered language.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p08-ltl-pspace-hardness}{proved=annex:p08.ltl.pspace-hardness}{Satisfiability and validity are PSPACE-complete}
+For each fixed decider \(M\), the formula \(\Psi_{M,w}\)
+is constructible in polynomial time in \(\operatorname{len}(w)\), and is
+satisfiable exactly when \(M\) accepts \(w\). Thus LTL
+satisfiability is PSPACE-hard. With the upper bound above it
+is PSPACE-complete, as is validity. This concerns unrestricted
+Boolean negation; it does not assign the same complexity to
+every positive or restricted temporal fragment.
+\cite[Section 4, especially Lemma 4.4]{SistlaClarke1985}
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p08-ltl-block-translation}{Encoding arbitrary valuations in a small transition model}
+List the input formula's atoms as \(p_0,\ldots,p_{k-1}\),
+adding an unused atom if necessary so \(k\geq1\).
+Construct states \((i,b)\), \(0\leq i<k,b\in\{0,1\}\),
+and a fresh initial state \(w_*\). From \(w_*\) go to
+either \((0,0)\) or \((0,1)\); from \((i,b)\) go to
+either \((i+1\bmod k,0)\) or \((i+1\bmod k,1)\).
+Use two fresh propositions: \(c\) holds exactly in phase zero,
+and \(b_*\) holds exactly when the state's second coordinate
+is one. The initial state carries neither.
+
+Define \(T\) on formulas by preserving falsity, negation and
+conjunction, and by
+\[
+\begin{aligned}
+ T(p_i)&=\mathsf X^i b_*,\\
+ T(\mathsf XA)&=\mathsf X^kT(A),\\
+ T(A\mathbin{\mathsf U}B)
+   &=(\neg c\lor T(A))\mathbin{\mathsf U}(c\land T(B)).
+\end{aligned}
+\]
+At phase-zero positions the next \(k\) bits encode one valuation
+of the original atoms. The until witness is forced to a phase-zero
+position, and intermediate nonzero phases impose no left-operand
+obligation.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p08-ltl-model-checking-complete}{proved=annex:p08.ltl.model-checking-complete}{Combined finite-state model checking is PSPACE-complete}
+The constructed transition structure satisfies
+\(\mathsf XT(A)\) on all paths from \(w_*\) exactly when
+\(A\) is valid over the original atom valuations. Its size is
+\(O(k)\) and the translated formula size is
+\(O(k\operatorname{len}(A))\), where this instance of
+\(\operatorname{len}\) counts written formula symbols.
+This polynomial reduction proves PSPACE-hardness of universal
+finite-state LTL checking; together with the proved upper bound
+it gives PSPACE-completeness. The initial next operator skips
+only the fresh branching start, not any encoded valuation.
+\end{hbtheorem}
+
+\paragraph{Reference use.}
+For satisfiability, construct the formula's local types and pending
+batches, then test for a reachable accepting positive cycle.
+For validity, run that test on the syntactic negation: an
+accepted lasso is a counterexample word. For a finite-state
+specification, test the product with the automaton for its
+negation; a returned lasso is a counterexample program path.
+In each case the word or path uses the exact current-witness
+until convention. An empty negation automaton proves validity,
+and an empty counterexample product proves universal satisfaction.
+The finite-type,
+pending-batch and generalized-acceptance representations support
+the same future-LTL satisfiability and verification tasks.
+Strict tense, past-operator, determinization and branching-time
+constructions require their respective languages and acceptance
+conditions.
+\index{linear temporal logic!completeness}\index{linear temporal logic!decision}
+\index{B\"uchi automaton!eventuality obligations}\index{noncompactness!LTL}

@@ -1,0 +1,545 @@
+\section{Numerical error: complete proofs}
+\label{sec:annex-p12-numerical-error}
+
+\begin{annexitem}{annex:p12.numerical.nearest}{thm:p12-numerical-nearest}{Spacing, nearest rounding and the range boundary}
+\begin{proof}
+In \([\beta^e,\beta^{e+1}]\), consecutive format values are separated by
+\(h=\beta^{e-p+1}\), including the upper endpoint. Every real value
+between them lies within \(h/2\) of an endpoint. At the lower radix-interval
+boundary the gap on the other side is smaller, so the same upper bound
+still applies. Divide by \(|z|\geq\beta^e\) to obtain
+\(h/(2|z|)\leq\beta^{1-p}/2=u\). Symmetry proves the negative case.
+As \(|z|\) ranges from \(\beta^e\) to \(\beta^{e+1}\), the ratio
+\(h/(2|z|)\) ranges from \(u\) down toward \(u/\beta\).
+In a normal-only finite format, every sufficiently small positive value
+rounds to zero. Its relative error is one, so the preceding small uniform
+bound cannot extend to that region. Zero is handled separately.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.numerical.no-guard}{thm:p12-numerical-no-guard}{The complete no-guard example}
+\begin{proof}
+Take \(x=1\) and \(y=1-\beta^{-p}\), whose normalized significand
+has \(p\) digits all equal to \(\beta-1\). Aligned at the exponent of
+\(x\), its final digit is discarded by the no-guard procedure, leaving
+\(\bar y=1-\beta^{1-p}\). Thus the exact difference is
+\(\beta^{-p}\), whereas the computed difference is
+\(\beta^{1-p}\), already representable. Their relative discrepancy is
+\((\beta^{1-p}-\beta^{-p})/\beta^{-p}=\beta-1\).
+For the decimal example, alignment replaces \(9.93\) by \(9.9\),
+so \(10.1-9.9=0.2\), instead of \(0.17\).
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.numerical.guard-bound}{thm:p12-numerical-guard-bound}{All exponent and carry cases for a guard digit}
+\begin{proof}
+For subtraction interchange the positive operands if necessary and scale
+them by an exact power of \(\beta\), so \(1\leq x<\beta\) and
+\(0<y<x\). Such scaling preserves relative error. If their exponents
+agree, the difference is an integer multiple of \(\beta^{1-p}\)
+smaller than \(\beta\), hence is exactly representable. If the exponents
+differ by one, all digits of the smaller operand fit in the \(p+1\)
+aligned positions. The operation is then exact subtraction followed by
+nearest rounding, with relative error at most \(u\).
+
+For exponent difference at least two, \(y<1/\beta\). Let \(\bar y\)
+be the truncated operand and \(r=y-\bar y\), so
+\(0\leq r<\beta^{-p}=2u/\beta\). Put
+\(d=x-y\) and \(\bar d=x-\bar y=d+r\).
+If \(d\geq1\), then \(1\leq\bar d<\beta\), and the last rounding
+has absolute error at most \(u\). Therefore its total relative error
+is less than \(u+2u/\beta\).
+
+If \(d<1\), then \(\bar d<1+\beta^{-p}\). Both \(x\) and
+\(\bar y\) are multiples of \(\beta^{-p}\), so
+\(\bar d\leq1\). Every such nonnegative lattice value at most one
+is exactly representable; the final rounding adds no error. Since
+\(d=x-y>1-1/\beta\), the relative error is less than
+\[
+ \frac{\beta^{-p}}{1-1/\beta}=\frac{2u}{\beta-1}
+ \leq (1+2/\beta)u.
+\]
+The last inequality is equality at \(\beta=2\); after multiplying
+by \(\beta(\beta-1)\), it reduces to
+\(0\leq(\beta-2)(\beta+1)\). This includes the case where truncation
+moves a difference across a radix-interval boundary.
+
+For same-sign addition normalize \(x\geq y\geq0\) in the same way,
+and first use no guard digits. Set \(U=\beta^{1-p}=2u\).
+Truncation loses \(r<U\); the aligned sum \(s=x+\bar y\) is a
+multiple of \(U\). If \(s<\beta\), it is exactly representable,
+so relative error is less than \(U\), since \(x+y\geq1\).
+If \(s\geq\beta\), its final rounding has absolute error at most
+\(\beta U/2\), and \(x+y\geq\beta\). Thus the relative error is
+less than \(U/\beta+U/2=(1+2/\beta)u\leq2u\).
+With \(g\geq1\) guard digits the discarded tail is less than
+\(U/\beta^g\). Without a carry the final rounding error is at most
+\(U/2=u\), giving relative error less than
+\(2u/\beta^g+u\leq2u\). With a carry, divide the combined
+absolute bound \(U/\beta^g+\beta U/2\) by a sum at least
+\(\beta\), giving less than \(2u/\beta^{g+1}+u\leq2u\).
+For subtraction with more than one guard digit, the equal-exponent
+and adjacent-exponent cases still round an exact difference. In the
+remaining case \(y<1/\beta\), the discarded tail is less than
+\(U/\beta^g\). If the exact difference is at least one, its
+relative error is bounded by \(u+2u/\beta^g\leq2u\).
+Below one the rounded difference stays at most one, and its final
+absolute rounding error is at most \(u/\beta\). For \(g\geq2\)
+the relative error is therefore less than
+\[
+ \frac{u/\beta+2u/\beta^g}{1-1/\beta}
+ \leq\frac{\beta+2}{\beta(\beta-1)}u\leq2u.
+\]
+This proves the at-least-one-guard convention used by later formulas. Signed cases
+reduce to these two magnitude operations. Equal magnitudes subtract
+exactly to zero, and adding zero is exact.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.numerical.close-subtraction}{thm:p12-numerical-close-subtraction}{The factor-two exactness argument}
+\begin{proof}
+Take \(x\geq y>0\); the other ordering changes only the sign. If the
+exponents agree, the difference is a multiple of their shared last-place
+unit, with no more than \(p\) significant digits. Otherwise
+\(x\leq2y\) and \(\beta\geq2\) imply that the exponents differ by
+at most one. Normalize \(x\) to exponent zero; then
+\(y=0.d_1\cdots d_p\) in the aligned notation. A guard digit retains
+this entire value. Moreover \(0\leq x-y\leq y<1\), and the exact
+difference is a multiple of \(\beta^{-p}\). It therefore has at most
+\(p\) significant digits and the final rounding changes nothing.
+The finite-format transfer requires that this exact difference not be
+lost at the exponent boundary.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.numerical.product-errors}{thm:p12-numerical-product-errors}{Exact product bounds without dropping terms}
+\begin{proof}
+Expand the product minus one as a sum over nonempty subsets of
+\(\{1,\ldots,n\}\). The triangle inequality bounds every term
+\(\prod_{i\in S}\delta_i\) by \(\prod_{i\in S}a_i\).
+Summing these terms gives exactly \(\prod_i(1+a_i)-1\).
+For the difference-of-squares evaluation the two signed operations have
+errors bounded by \(2u\), and the multiplication by \(u\).
+Multiplying their three relative factors and expanding gives the
+displayed polynomial. If an exact sum or difference is zero, the
+corresponding zero computation is exact; the theorem only asserts a
+relative bound when the target product is nonzero.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.numerical.cancellation}{thm:p12-numerical-cancellation}{Operand error survives exact subtraction}
+\begin{proof}
+The difference between \(\widehat A-\widehat B\) and \(A-B\) is
+\(e_A-e_B\), whose magnitude is at most \(E_A+E_B\).
+Add any subtraction error by the triangle inequality. Division by
+\(|A-B|\) gives the relative statement when this denominator is nonzero.
+Choosing \(A-B\) arbitrarily small while the operand-error budget
+stays fixed proves that no small uniform relative bound follows.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.numerical.quadratic}{thm:p12-numerical-quadratic}{Conjugate root identities and their denominator conditions}
+\begin{proof}
+Since \(b>0\) and \(\sqrt d\geq0\), the denominator
+\(b+\sqrt d\) is nonzero. Multiply the direct numerator by its
+conjugate:
+\[
+ \frac{-b+\sqrt d}{2a}
+ =\frac{d-b^2}{2a(b+\sqrt d)}
+ =-\frac{2c}{b+\sqrt d}.
+\]
+This also covers \(c=0\). When \(b<0\), use
+\((-b-\sqrt d)/(2a)=-2c/(b-\sqrt d)\), whose conjugate
+denominator is then negative and nonzero. These are real identities;
+they make no claim about an already perturbed discriminant or coefficients.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.numerical.triangle-radicand}{thm:p12-numerical-triangle-radicand}{All four factors, multiplication errors and degeneracy}
+\begin{proof}
+The ordering and triangle inequality give \(b\leq a\leq2b\), so
+\(a\ominus b=a-b\) exactly by the close-subtraction theorem.
+The first factor \(a\oplus(b\oplus c)\) differs multiplicatively
+from \(a+b+c\) by two factors with errors at most \(2u\): the inner
+sum's perturbation is attenuated by \((b+c)/(a+b+c)\leq1\), and
+the outer sum contributes another factor. The second and third factors
+each contribute one error of magnitude at most \(2u\), because their
+inputs \(c,a-b\) are exact. The fourth factor
+\(a\oplus(b\ominus c)\) contributes two such factors; the inner
+perturbation is attenuated by \((b-c)/(a+b-c)\leq1\).
+Zero inner differences introduce no error. All four exact factors are
+positive in a nondegenerate triangle. Three multiplications contribute
+three factors with error at most \(u\). Therefore
+\[
+ (1-2u)^6(1-u)^3\leq Q/q\leq(1+2u)^6(1+u)^3.
+\]
+For \(0\leq u\leq1/200\), the polynomial
+\(\{(1+2u)^6(1+u)^3-1\}/u\), extended continuously at zero,
+has nonnegative coefficients and is increasing. At \(u=1/200\),
+\[
+ (1+2u)^6(1+u)^3
+ =\frac{8620181596490631201}{8000000000000000000}
+ <\frac{27}{25}=1+16u.
+\]
+Thus the upper relative error is less than \(16u\) throughout the
+stated interval. Repeated use of \((1-r)(1-s)\geq1-r-s\) for
+\(r,s\in[0,1]\) bounds the lower product by \(1-15u\).
+For \(a=b+c\), the exact inner difference is \(a-b=c\), so
+the second factor is zero exactly, and the radicand is zero.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.numerical.triangle-area}{thm:p12-numerical-triangle-area}{Area identity and propagation through square root and division}
+\begin{proof}
+Let \(s=(a+b+c)/2\). The four real factors are
+\(2s,2(s-a),2(s-b),2(s-c)\), so
+\(q=16s(s-a)(s-b)(s-c)\). To verify the area identity without
+assuming Heron's formula, use the included angle between sides \(b,c\).
+Its cosine is \((b^2+c^2-a^2)/(2bc)\), from the squared distance
+formula; area is \(bc\sin\theta/2\). Squaring gives
+\(16A^2=4b^2c^2-(b^2+c^2-a^2)^2=q\).
+The nonnegative square root therefore yields \(A=\sqrt q/4\).
+
+Write \(Q=q(1+\delta)\), with \(|\delta|<16u\leq0.08\).
+Rationalizing the square-root difference gives
+\[
+ |\sqrt{1+\delta}-1|
+ =\frac{|\delta|}{\sqrt{1+\delta}+1}
+ \leq0.52|\delta|<8.5u,
+\]
+since \(\sqrt{0.92}+1>1/0.52\), verified by squaring positive
+quantities. The half-ulp square-root assumption and nearest rounding
+of division by four add two factors bounded by \(u\). The resulting upper factor
+is \((1+8.5u)(1+u)^2\), whose error divided by \(u\) is increasing.
+At \(u=1/200\) this factor is \(16847217/16000000<211/200\),
+which is \(1+11u\). The lower factor is at least \(1-10.5u\)
+by the same product inequality used above. Binary division by four is
+an exponent shift and can omit its rounding factor. A degenerate
+triangle has \(q=Q=0\), so both areas are zero.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.numerical.mu}{thm:p12-numerical-mu}{Integral bounds for the logarithmic ratio}
+\begin{proof}
+Integrating \((1+xt)^{-1}\) for \(x>0\) proves the representation;
+at zero the integral is one. Differentiation under this continuous
+integrand on a compact interval gives
+\(\mu'(x)=-\int_0^1t(1+xt)^{-2}\,dt\).
+It follows that \(-1/2\leq\mu'(x)\leq0\), and that
+\(\mu(x)\geq1/(1+x)\), hence \(\mu(x)\geq1/2\) on \([0,1]\).
+For the logarithmic derivative put \(w(t)=(1+xt)^{-1}\).
+This function is nonincreasing and lies in \((0,1]\). Thus
+\[
+ -\mu'(x)=\int_0^1t w(t)^2\,dt
+ \leq\int_0^1t w(t)\,dt\leq\tfrac12\int_0^1w(t)\,dt.
+\]
+For the last inequality pair \(t\) with \(1-t\): the integral of
+\((t-1/2)w(t)\) is
+\(\int_0^{1/2}(t-1/2)(w(t)-w(1-t))\,dt\leq0\).
+Division by the positive \(\mu(x)\) proves the claim. These integral
+arguments also establish the endpoint derivatives by continuity.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.numerical.log-increment}{thm:p12-numerical-log-increment}{Guard-digit addition and the compensated logarithm}
+\begin{proof}
+Normalize the addition \(1+x\) at exponent zero. Its one-guard
+truncation discards less than \(\beta^{-p}=2u/\beta\), and the
+final rounding, still in the radix interval starting at one, adds absolute
+error at most \(u\). Consequently
+\(z=1+\widehat x\), where \(\widehat x\geq0\) and
+\(|\widehat x-x|\leq2u\). Also \(z<2\): before rounding the sum
+is less than \(1.75\), and the upper rounding displacement is less
+than \(0.1\). The close-subtraction theorem therefore gives
+\(t=z\ominus1=z-1=\widehat x\) exactly.
+
+If \(z=1\), then \(0<x\leq2u\). The elementary inequality
+\(\ln(1+x)\geq2x/(2+x)\) follows because the difference is zero
+at zero and its derivative is
+\(x^2/((1+x)(2+x)^2)\geq0\). Thus returning \(x\) has relative
+error at most \(x/2\leq u\).
+
+Otherwise \(\widehat x>0\). The logarithmic-ratio lemma and the
+mean value theorem give
+\[
+ \exp(-u)\leq\mu(\widehat x)/\mu(x)\leq\exp(u).
+\]
+The half-ulp library logarithm, nearest-rounded division and final
+multiplication contribute three factors, each between \(1-u\) and \(1+u\).
+Hence
+\[
+ \exp(-u)(1-u)^3\leq L/\ln(1+x)\leq\exp(u)(1+u)^3.
+\]
+For \(0\leq u<0.1\), the power series yields
+\(\exp(u)\leq1/(1-u)\). Further,
+\((1+u)^3/(1-u)\leq1+5u\), since after multiplication by
+\(1-u\) the difference is \(u(1-8u-u^2)\geq0\).
+For the lower bound, \(\exp(-u)\geq1-u\), so the lower factor is
+at least \((1-u)^4\geq1-4u\). This proves the five-unit bound
+without silently upgrading one-guard addition to exact rounding.
+The branch at zero returns zero without a relative-error claim.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.numerical.no-drift}{thm:p12-numerical-no-drift}{Symmetric rounding cells and the exact asymmetric-boundary case}
+\begin{proof}
+Every nonzero format value has immediate neighbors. Away from a signed
+radix power their two gaps are the same power of \(\beta\), say
+\(D\). Its nearest-rounding cell has endpoints \(z\pm D/2\),
+both included when its retained integer significand is even and both
+excluded when odd. This follows from the equally spaced digit grid
+and alternating parity of neighboring coefficients. At a positive
+boundary \(z=\beta^k\), put
+\[
+ q_0=\beta^{k-p+1},\qquad a_0=q_0/\beta.
+\]
+The left gap is \(a_0\), the right gap is \(q_0\), and the
+rounding cell is \([z-a_0/2,z+q_0/2]\). Both endpoints belong:
+the boundary coefficient \(\beta^{p-1}\) is even, and the
+neighboring coefficients \(\beta^p-1\) and \(\beta^{p-1}+1\)
+are odd. Reflection gives the negative cells. Rounding is
+sign-symmetric for the same reason. In the unrestricted-exponent
+model only zero rounds to zero: a nonzero real number has a
+nonzero format value of its sign closer than zero.
+
+Fix any signed format values \(x,y\) and set
+\[
+ z=R(x-y),\quad \rho=z-(x-y),\quad s=z+y=x+\rho,
+ \quad x'=R(s),\quad\eta=x'-s.
+\]
+Because the format value \(x\) is itself a candidate when rounding
+\(s\), nearest rounding gives \(|\eta|\leq|\rho|\).
+The exact next subtraction is \(x'-y=z+\eta\).
+If \(x'=x\), the two-operation map already fixes its original
+input. If \(z=0\), then \(x=y\), which is such an immediate case.
+
+Suppose \(z\) has equal adjacent gaps \(D\). The first rounding
+gives \(|\rho|\leq D/2\), strictly if \(z\) is odd. Thus
+\(z+\eta\) lies in the same rounding cell, including the correct
+endpoint convention. The next subtraction returns \(z\), and
+the next addition returns \(R(z+y)=x'\).
+
+For an unequal-gap value, sign symmetry permits \(z=\beta^k>0\),
+without restricting either original operand's sign. If \(\rho\geq0\),
+its first rounding cell gives \(\rho\leq a_0/2\). Then
+\(|\eta|\leq a_0/2\), and again \(z+\eta\) rounds to \(z\).
+Otherwise write \(\rho=-r\), so
+\[
+ 0<r\leq q_0/2,\qquad s=x-r,\qquad |\eta|\leq r.
+\]
+If \(\eta\geq-a_0/2\), the cell still contains \(z+\eta\).
+Only \(\eta<-a_0/2\) remains.
+
+In this exceptional case let \(t_-=x'=R(s)<s\) and let
+\(t_+\) be the next format value above \(t_-\). Then
+\(t_-<s<t_+\): an intervening or equal format value would be
+closer than \(t_-\). Neither zero nor its accumulation causes a
+gap here, since \(R(s)=0\) would imply \(s=0\) and \(\eta=0\).
+Put \(D=t_+-t_-\) and \(d=s-t_-=-\eta\).
+Nearest rounding implies \(d\leq D-d\). Since \(d>a_0/2\),
+we have \(D>a_0\). Consecutive-format gaps are radix powers,
+so \(D\geq\beta a_0=q_0\). Moreover \(x=s+r>s\) is a format
+value, so \(x\geq t_+\). Hence
+\[
+ \frac{q_0}{2}\geq r=x-s\geq t_+-s
+ \geq\frac D2\geq\frac{q_0}{2}.
+\]
+Every inequality is equality: \(D=q_0\), \(r=d=q_0/2\),
+\(x=t_+\), and \(\eta=-q_0/2\). The exact next difference is
+\[
+ v=z-q_0/2=(\beta^p-\beta/2)\beta^{k-p}.
+\]
+Its coefficient is an integer in
+\([\beta^{p-1},\beta^p)\), since \(\beta\) is even and
+\(p\geq2\); therefore \(v\) is exactly representable.
+The next subtraction returns \(v\), and its following addition
+is \(v+y=s-q_0/2=t_-=x'\), also exact. Thus this last case fixes
+\(x'\) as well, even though its rounded intermediate difference
+can change. The two-operation map is idempotent in every case.
+Induction gives \(x_j=x_1\) for all \(j\geq1\), and if
+\(x_1=x\), it is constant from the beginning.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.numerical.split-rounding}{thm:p12-numerical-split-rounding}{Integer lattices, midpoint parity and the additional carry case}
+\begin{proof}
+Zero is immediate, and sign symmetry reduces to \(x>0\). Scale to
+an integer \(X\) with \(P/\beta\leq X<P\), where
+\(P=\beta^p\), and write \(B=\beta^k\). All rounding operations
+commute with this exact radix scaling. Set
+\(T=R((B+1)X)=BV\). The integer \(V\) exists because the spacing
+at the product is \(B\) when \((B+1)X<BP\), and \(\beta B\)
+otherwise. If the product is below \(BP\), its rounding error is
+at most \(B/2\); at or above \(BP\), it is at most \(\beta B/2\).
+The product is less than \(\beta BP\), since \(B+1<\beta B\).
+
+Put \(Z=T-X\). First \(Z\geq BP/\beta\). In the no-carry
+product case this follows from \(Z\geq BX-B/2\) when
+\(X>P/\beta\); at \(X=P/\beta\), the product and subtraction
+are exact, because \(B\) divides \(X\). In the carry case,
+\[
+ X\geq BP/(B+1),\qquad Z\geq B(X-\beta/2).
+\]
+For \(\beta\geq4\), using \(P\geq\beta B\) gives
+\[
+ \frac{BP}{B+1}-\frac P\beta
+ \geq\frac{B((\beta-1)B-1)}{B+1}\geq B\geq\beta/2.
+\]
+For \(\beta=2,B\geq4\), the same lower bound is
+\(B(B-1)/(B+1)\geq1\). If \(\beta=B=2\) and \(p\geq3\),
+the original difference is \(P/6\geq4/3\). The only remaining
+case is \(\beta=2,p=2,k=1\), where carry forces \(X=3\),
+and \(X-\beta/2=2=P/\beta\). This proves the lower bound in
+every permitted parameter case.
+
+Suppose first that \(Z<BP\). It then lies in a radix interval whose
+spacing is \(B\), so
+\[
+ R(Z)=B\,\operatorname{nint}(V-X/B),
+\]
+where \(\operatorname{nint}\) is nearest-integer rounding to even.
+If \(X/B\) is not a half-integer, translation and reflection give
+\(\operatorname{nint}(V-X/B)=V-\operatorname{nint}(X/B)\).
+If it is a half-integer, \(V\) is even: without a product carry,
+\(V\) is itself the rounded integer of the half-integer
+\(X+X/B\); with a carry, \(V\) is a multiple of the even
+\(\beta\). Translation by an even integer preserves midpoint
+parity, so the same identity holds. Consequently
+\(T-R(Z)=B\operatorname{nint}(X/B)\).
+
+It remains to handle \(Z\geq BP\), which can occur after a
+product carry. Since \(X\leq P-1\),
+\[
+ BP\leq Z\leq BX+\beta B/2<BP+\beta B/2.
+\]
+Here the spacing is \(\beta B\), so \(R(Z)=BP\), strictly before
+the next midpoint. Let \(C=P/B\) and \(d=P-X\).
+The inequality \(Z\geq BP\) and the product-error bound imply
+\(1\leq d\leq\beta/2\). Hence
+\(C-1/2\leq X/B<C\), because \(B\geq\beta\).
+The integer \(C=\beta^{p-k}\) is even, so
+\(\operatorname{nint}(X/B)=C\), including the midpoint.
+Furthermore \(V\) is a multiple of \(\beta\),
+\(V-P\geq X/B>C-1\), and \(V\leq P+C\), because the
+unrounded scaled product \(X+X/B\) is smaller than the representable
+grid point \(P+C\). Thus \(V=P+C\). It follows that
+\(T-R(Z)=B(V-P)=BC=B\operatorname{nint}(X/B)\).
+
+In both cases this final difference has at most \(p-k\) significant
+digits after normalization, including any carry, so its last rounding
+is exact. Undo the scaling and sign change to obtain \(H_k(x)\).
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.numerical.split}{thm:p12-numerical-split}{Short residuals in the even-precision and odd-binary cases}
+\begin{proof}
+Use the preceding integer normalization. Write
+\(X=qB+r\), \(0\leq r<B\). The computed high part is either
+\(qB\) or \((q+1)B\), selected by nearest-integer rounding, and
+therefore has at most \(p-k\) significant digits. The real residual
+is correspondingly \(r\) or \(r-B\); its magnitude is at most
+\(B/2\). At equality it is a signed value \(\beta^k/2\), which
+has one significant radix digit because \(\beta\) is even.
+For even \(p\), \(k=p-k\), and every smaller integer residual has
+at most \(k\) radix digits. For odd binary precision,
+\(k=(p+1)/2\), and an integer of magnitude strictly smaller than
+\(2^{k-1}\) has at most \(k-1=(p-1)/2\) binary digits. Thus
+the residual is exactly representable in all stated cases, and
+\(R(x-h)=x-h\). This proves the split and its exact recombination.
+Products of two \(r_0=\lfloor p/2\rfloor\)-digit significands
+have at most \(2r_0\leq p\) significant digits. They are therefore
+computed exactly when in range. Distributivity in the reals gives
+the four-term expansion; it does not specify a lossless summation
+algorithm for those terms.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.numerical.round-trip}{thm:p12-numerical-round-trip}{Midpoint separation in every declared even radix}
+\begin{proof}
+If \(m=0\), the result is zero. Sign symmetry handles negative
+\(m\). If \(i=j\), division is a radix scaling followed by division
+by two. Since \(m\) has at most \(p-1\) radix digits and the base
+is even, \(m/2\) has at most \(p\) digits and is exactly
+representable. Multiplying back is exact. Otherwise, scale \(n\) by a radix power
+so that
+\(n'=\beta^{p-1}+\beta^k\), \(0\leq k\leq p-2\). The lower bound
+on \(k\) follows from exact representability of \(n\) at precision
+\(p\). Independently scale the positive integer \(m\) upward
+by a radix power to obtain \(m'\) with
+\(1/\beta\leq q=m'/n'<1\). Such a scaling is possible since
+\(m<\beta^{p-1}\leq n'\). It makes \(m'\) an integer. If
+\(m'\geq\beta^{p-1}\), at least one upward shift was used, so
+\(m'\) is divisible by the even \(\beta\). When \(q=1/\beta\), division is exact and there is
+nothing further to prove.
+
+For \(1/\beta<q<1\), the grid spacing is \(h=\beta^{-p}\).
+Every midpoint has the form \(Q=N/(2\beta^p)\) with \(N\) odd.
+Then
+\[
+ |Q-q|=
+ \frac{|N(\beta^{p-1-k}+1)-2m'\beta^{p-k}|}{2n'\beta^{p-k}}
+ \geq\frac{\beta^{k-p}}{2n'},
+\]
+because the numerator is an odd integer and is nonzero. The distance
+from \(q\) to its nearest grid point is at most half a grid step
+minus its distance to the midpoint on that side. Therefore
+\[
+ n'|R(q)-q|
+ \leq\frac{n'}{2\beta^p}-\frac{\beta^k}{2\beta^p}
+ =\frac1{2\beta}.
+\]
+Here \(\beta^{p-2}<m'<\beta^p\). Between the lower two radix powers the
+spacing is \(1/\beta\), and \(m'\), being an integer, has even
+grid coefficient \(\beta m'\). At the upper radix interval its spacing is one,
+and \(m'\) is even; at the shared boundary the smaller adjacent gap
+is \(1/\beta\). Thus every value within \(1/(2\beta)\) of \(m'\)
+rounds to \(m'\), including a possible tie on the closer side.
+Apply this to \(n'R(q)\). Nearest rounding commutes with each
+radix-power scaling, so undoing the independent scalings of
+\(m\) and \(n\) gives the required original identity.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.numerical.root-sensitivity}{thm:p12-numerical-root-sensitivity}{Square-root perturbations at and away from zero}
+\begin{proof}
+For \(s\geq t\geq0\),
+\(s-t=(\sqrt s-\sqrt t)(\sqrt s+\sqrt t)
+\geq(\sqrt s-\sqrt t)^2\).
+Take square roots and interchange the two inputs if necessary to
+obtain the first bound. If both inputs are at least \(d_0\),
+rationalization gives denominator
+\(\sqrt{\widehat d}+\sqrt d\geq2\sqrt{d_0}\), proving the
+second. In either quadratic-root branch, a change only in the square
+root is divided by \(2a\); take absolute values. These statements
+do not define a real square root for a negative input.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.numerical.certification}{thm:p12-numerical-certification}{Interval certificates and non-certification}
+\begin{proof}
+The assumed absolute bound is precisely
+\(v\in[\widehat v-E,\widehat v+E]\). An interval strictly above
+or below zero proves the corresponding sign. If it contains zero,
+zero itself is compatible with the bound, so neither strict sign
+follows from that bound alone. Applying the two enclosures and the
+strict endpoint inequality gives the ordering result.
+Finally \(|v|\geq|\widehat v|-E>0\) by the reverse triangle
+inequality; division gives the relative bound. Strictness of the
+endpoint conditions accounts for the boundary-equality cases.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.numerical.data-budget}{thm:p12-numerical-data-budget}{The complete coefficient-uncertainty budget}
+\begin{proof}
+Write \(b_*=b+\Delta_b\), \(a_*=a+\Delta_a\) and
+\(c_*=c+\Delta_c\). Expansion gives
+\[
+ b_*^2-b^2=2b\Delta_b+\Delta_b^2,\qquad
+ a_*c_*-ac=a\Delta_c+c\Delta_a+\Delta_a\Delta_c.
+\]
+Bound each term with the stated nonnegative radii and apply the
+triangle inequality, including the factor four. A further triangle
+inequality adds the independent arithmetic-error budget. The two
+terms concern different differences and neither bounds the other.
+\end{proof}
+\end{annexitem}

@@ -1,0 +1,364 @@
+\chapter{Reachability, 2-CNF, and First-Order Validity}
+\label{sec:p04-decision-problem-hardness}
+
+Completeness of a decision problem requires its upper bound and a reduction
+from every problem in the declared class. The linear SCC algorithm for
+2-CNF does not by itself give a logarithmic-space lower bound. Similarly,
+enumerability and undecidability do not by themselves give c.e.-completeness.
+The reductions here supply the stronger conclusions with explicit inputs.
+The counting argument follows Immerman's complementation method
+\cite{Immerman1988Complement}; the first-order construction gives an explicit
+finite transition theory and its countermodel, in the machine-to-logic
+tradition of \cite[\S11]{Turing1937}, with the distinct later correction
+\cite[pp.~544--545]{Turing1938DecisionCorrection}. It is a new construction,
+not a transcription of that historical encoding.
+
+\section{Logarithmic space and directed reachability}
+\label{sec:p04-dh-reachability}
+
+\begin{hbdefinition}{def:p04-dh-nl}{Logarithmic-space languages and reductions}
+Use the read-only-input and all-branches-halting convention of
+\cref{def:p04-complexity-convention}. Put
+\[
+ \mathsf L=\mathsf{SPACE}(\log(n+2)),\qquad
+ \mathsf{NL}=\mathsf{NSPACE}(\log(n+2)),
+ \qquad
+ \mathsf{coNL}=\{\{0,1\}^*\setminus A:A\in\mathsf{NL}\}.
+\]
+Here \(n\) is total input bit length; changing the finitely many smallest
+lengths does not change the class. A logarithmic-space many-one translator
+has a read-only input, a write-only output, and \(O(\log(n+2))\) work cells.
+It halts on every input and produces one polynomial-length output word.
+The notation is \(A\leq_m^{\log}B\), as in
+\cref{def:p04-succinct-problems}. Completeness below uses this reduction,
+not merely a polynomial-time translation.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p04-dh-graphs}{Two explicit directed-graph languages}
+An instance has a unary positive vertex count \(N\), binary designated
+indices \(s,t\in\{1,\ldots,N\}\), and the explicit \(N\)-by-\(N\) Boolean
+adjacency matrix in row-major order. Field separators and bits are tokens
+in a fixed finite alphabet, encoded by fixed-length binary blocks; indices
+use their canonical binary strings. Syntactic validity, lengths and index
+bounds are logarithmic-space checkable.
+\[
+\begin{aligned}
+ \mathsf{STCON}&=\{\langle G,s,t\rangle:
+       \text{valid encoding and a directed path }s\leadsto t\},\\
+ \mathsf{NONREACH}&=\{\langle G,s,t\rangle:
+       \text{valid encoding and no directed path }s\leadsto t\}.
+\end{aligned}
+\]
+Paths include length zero. Both languages reject malformed inputs,
+including a zero vertex count. Thus \(\mathsf{NONREACH}\) is the complement
+of \(\mathsf{STCON}\) on valid graph encodings, not their whole binary
+input space. Each vertex index needs \(O(\log(N+1))\) bits; an adjacency
+query is computed by rescanning the input.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p04-dh-stcon}{proved=annex:p04.dh.stcon}{Directed reachability is NL-complete}
+Under \cref{def:p04-dh-graphs}, \(\mathsf{STCON}\) is
+\(\mathsf{NL}\)-complete under logarithmic-space many-one reductions.
+The hardness translator outputs a valid graph on every input, including
+the empty word.
+\end{hbtheorem}
+
+\begin{hbmethod}{def:p04-dh-counting}{The reachability census}
+For a valid graph, put
+\[
+ R_d=\{v:\text{a path from }s\text{ to }v\text{ has length at most }d\},
+ \qquad c_d=|R_d|.
+\]
+Start with \(c_0=1\). Given the correct \(c_d\), test one candidate \(v\)
+for membership in \(R_{d+1}\) by scanning each \(u=1,\ldots,N\) once.
+Nondeterministically include or omit \(u\). Inclusion must be accompanied
+by a verified path of length at most \(d\) from \(s\) to \(u\).
+Count inclusions and set a flag if an included \(u\) is \(v\) or has an
+edge to \(v\). Reject this branch unless the final inclusion count is
+exactly \(c_d\). Its flag then gives the correct membership answer.
+Repeat for every \(v\), counting true flags to obtain \(c_{d+1}\).
+Repeat through \(d=N-2\), then enumerate \(R_{N-1}\) with the same
+count check to test whether \(t\) is absent. For \(N=1\) there is no
+census-update iteration.
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p04-dh-complement}{proved=annex:p04.dh.complement}{Nonreachability, complementation, and hardness}
+The census decides \(\mathsf{NONREACH}\) in \(\mathsf{NL}\).
+Together with the configuration reduction, it gives
+\(\mathsf{NL}=\mathsf{coNL}\), and \(\mathsf{NONREACH}\) is
+\(\mathsf{NL}\)-complete under \(\leq_m^{\log}\).
+These conclusions use the verified census; they are not consequences of
+the SCC running-time bound.
+\end{hbtheorem}
+
+\section{The exact 2-CNF classification}
+\label{sec:p04-dh-two-cnf}
+
+\begin{hbdefinition}{def:p04-dh-two-cnf}{Explicit 2-CNF input}
+The input consists of a unary count \(r\geq0\) and an explicit list of
+clauses over variables \(p_1,\ldots,p_r\); literal indices are canonical
+binary strings and each clause has zero, one, or two signed literals.
+Clause and literal separators have the fixed binary token coding above.
+Invalid indices, clauses of greater length and malformed words are no
+instances. The language \(\mathsf{2SAT}\) contains exactly valid
+satisfiable inputs. An empty clause makes a valid input unsatisfiable;
+an empty clause list is satisfiable, including \(r=0\).
+Unused declared variables are permitted. Unary declaration size makes
+\(r\) at most the input length.
+
+For an ordinary explicit list with arbitrary finite binary atom names,
+replace each distinct occurring name by its occurrence-order index.
+A logarithmic-space transducer compares two names by rescanning their
+input positions and finds a name's index by counting first occurrences.
+It need not store the names simultaneously. Unused declarations can be
+discarded. Thus this explicit encoding is logspace intertranslatable
+with the ordinary occurring-variable clause-list presentation, but not
+with a succinctly described exponentially large formula.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p04-dh-two-sat}{proved=annex:p04.dh.two-sat}{2-CNF satisfiability is NL-complete}
+The language \(\mathsf{2SAT}\) is \(\mathsf{NL}\)-complete under
+logarithmic-space many-one reductions. Its unsatisfiability problem on
+valid encodings is also \(\mathsf{NL}\)-complete. This coexists with the
+linear literal-reference SCC algorithm of \cref{thm:p02-two-sat};
+no equality \(\mathsf L=\mathsf{NL}\), linear bit-time bound, or succinct
+input classification is inferred.
+\end{hbtheorem}
+
+The hardness translation has one variable for each graph vertex:
+\[
+ F_{G,s,t}
+ =p_s\land\neg p_t\land
+    \bigwedge_{(u,v)\in E(G)}(\neg p_u\lor p_v).
+\]
+It is satisfiable exactly when \(t\) is not reachable from \(s\).
+The two unit clauses are contradictory if \(s=t\), matching length-zero
+reachability. If there are no edges and \(s\ne t\), setting only the
+reachable vertex \(s\) true is a satisfying assignment. Malformed graph
+input maps to the fixed unsatisfiable \(p_1\land\neg p_1\), not to a
+promise violation.
+
+\section{An effective first-order validity language}
+\label{sec:p04-dh-first-order}
+
+\begin{hbdefinition}{def:p04-dh-validity}{Codes and semantic range of validity}
+Fix the countable effective signature
+\[
+ \Sigma_{\mathrm H}
+ =\{\mathsf{nil},\mathsf{Reach}\}
+   \cup\{\mathsf a_i:i\in\N\}
+   \cup\{\mathsf c_j:j\in\N\},
+\]
+where \(\mathsf{nil}\) is a constant, \(\mathsf{Reach}\) is unary
+relational, every \(\mathsf a_i\) is unary functional, and every
+\(\mathsf c_j\) is binary functional. Each sentence uses finitely many
+symbols. For an index \(i\geq0\), let \(k\) be the length of
+\(\operatorname{bin}(i+1)\) and use the self-delimiting field
+\(\gamma(i)=1^k0\operatorname{bin}(i+1)\).
+Use four-bit tags for the following prefix grammar; juxtaposition means
+concatenation of codes:
+\[
+\begin{array}{c|l@{\qquad}c|l}
+0000&\mathsf{nil}&0001&x_i:\ \gamma(i)\\
+0010&\mathsf a_i(t):\ \gamma(i)t&0011&\mathsf c_j(t,u):\ \gamma(j)tu\\
+0100&\mathsf{Reach}(t):\ t&0101&t=u:\ tu\\
+0110&\neg A:\ A&0111&A\land B:\ AB\\
+1000&\forall x_i A:\ \gamma(i)A&&
+\end{array}
+\]
+In this grammar each displayed expression after the colon is the tag's
+remaining code, and \(t,u,A,B\) stand for recursively encoded expressions,
+not their printed names. Tags not listed are invalid. The parser checks
+term/formula categories, field lengths, arities, exhausted input and bound
+variable indices. Thus being a closed sentence is decidable.
+Displayed implication, disjunction and existential quantification expand
+to the primitive \(\neg,\land,\forall\); truth and falsity expand to a
+fixed tautology or contradiction using \(\mathsf{Reach}(\mathsf{nil})\).
+For a binary string
+\(u\), use
+\[
+ \operatorname{code}(u)=2^{|u|}-1+\operatorname{value}_2(u),
+ \qquad \operatorname{value}_2(\epsilon)=0.
+\]
+The inverse writes the canonical binary expansion of the input number
+plus one and deletes its leading \(1\). Thus the empty string has code
+zero and is an invalid sentence; every natural number has a unique
+decoded binary string. This is an explicit computable sentence coding,
+not the unrelated machine-program numbering.
+For a formula \(A\), \(\operatorname{code}(A)\) means the code of its
+declared prefix word, not the code of its printed TeX. For example the
+closed atom \(\mathsf{Reach}(\mathsf{nil})\) has prefix word \(01000000\)
+and numerical code \(2^8-1+64=319\).
+
+Let \(\mathsf{VALID}_{\mathrm H}\subseteq\N\) consist of the codes of
+closed first-order sentences in this signature true in every nonempty
+\(\Sigma_{\mathrm H}\)-structure. Malformed codes, open formulas and
+arity errors are outside the language. Identity may be included with
+its ordinary semantic interpretation; the hardness outputs below do
+not use it. The target is unrestricted validity, not truth in the
+standard arithmetic structure, validity in finite structures, or
+consequence from an input infinite theory.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p04-dh-machine-encoding}{Machines used by the validity reduction}
+A finite deterministic machine \(M\) has indexed finite states \(Q\),
+a finite tape alphabet \(\Gamma\) containing distinct blank, zero and
+one symbols, a designated initial state \(q_0\), and one halting
+accepting state \(q_{\mathrm a}\). Its partial transition table consists
+of entries
+\[
+ \delta(q,a)=(q',b,D),\qquad D\in\{\mathsf L,\mathsf R,\mathsf N\},
+\]
+with no entries out of \(q_{\mathrm a}\).
+Missing entries do not accept. The presentation permits
+\(q_0=q_{\mathrm a}\), for immediate acceptance.
+States, alphabet, designated indices, table entries and the binary input
+word \(w\) are explicit finite lists in the fixed string coding.
+Duplicate incompatible transitions, absent designated symbols and
+ill-formed words are rejected by a terminating syntactic parser.
+
+The tape is two-way infinite and blank outside its finite written
+support, as in the registered machine convention. Represent it by two
+finite lists: \(\ell\) holds the symbols strictly left of the head,
+nearest first; \(\rho\) holds the scanned symbol followed by those to
+its right. A missing list position means blank. Lists may contain
+explicit blank symbols. Let \(\mathsf a_a\) be the constructor assigned
+injectively to tape symbol \(a\), and let \(\mathsf c_q\) be the binary
+constructor assigned injectively to state \(q\). These are finite
+selections from \(\Sigma_{\mathrm H}\), not new uninterpreted arities.
+Write
+\[
+ [a_1\cdots a_k]
+ =\mathsf a_{a_1}(\cdots\mathsf a_{a_k}(\mathsf{nil})\cdots),
+ \qquad [\epsilon]=\mathsf{nil}.
+\]
+The initial configuration term is
+\(\mathsf c_{q_0}(\mathsf{nil},[w])\).
+\end{hbdefinition}
+
+\begin{hbmethod}{def:p04-dh-horn-compilation}{The finite transition theory}
+For every transition \(\delta(q,a)=(q',b,D)\), first take the scanned
+nonempty-list pattern \(\rho=\mathsf a_a(v)\). Emit the universal closure
+of the appropriate implication in the table below. When \(a\) is blank,
+also emit the same clauses with the scanned pattern replaced by
+\(\mathsf{nil}\) and its tail \(v\) replaced by \(\mathsf{nil}\).
+For a left move, emit one clause for each \(d\in\Gamma\) and the separate
+empty-left clause.
+\[
+\begin{array}{c|c|l}
+D&\text{left pattern}&\text{Horn implication}\\ \hline
+\mathsf R&u&
+ \mathsf{Reach}(\mathsf c_q(u,\mathsf a_a(v)))
+ \to\mathsf{Reach}(\mathsf c_{q'}(\mathsf a_b(u),v))\\
+\mathsf N&u&
+ \mathsf{Reach}(\mathsf c_q(u,\mathsf a_a(v)))
+ \to\mathsf{Reach}(\mathsf c_{q'}(u,\mathsf a_b(v)))\\
+\mathsf L&\mathsf a_d(u)&
+ \mathsf{Reach}(\mathsf c_q(\mathsf a_d(u),\mathsf a_a(v)))
+ \to\mathsf{Reach}(\mathsf c_{q'}(u,\mathsf a_d(\mathsf a_b(v))))\\
+\mathsf L&\mathsf{nil}&
+ \mathsf{Reach}(\mathsf c_q(\mathsf{nil},\mathsf a_a(v)))
+ \to\mathsf{Reach}(\mathsf c_{q'}(\mathsf{nil},
+                 \mathsf a_{\sqcup}(\mathsf a_b(v))))
+\end{array}
+\]
+Here \(\sqcup\) is the designated blank symbol, not union. Bind exactly
+the variables appearing in each clause. Let \(T_M\) be the conjunction
+of all these closed clauses; an empty transition table gives
+\(T_M=\topv\). Set
+\[
+\begin{aligned}
+ I_{M,w}&=\mathsf{Reach}(\mathsf c_{q_0}(\mathsf{nil},[w])),\\
+ H_M&=\exists u\,\exists v\,
+             \mathsf{Reach}(\mathsf c_{q_{\mathrm a}}(u,v)),\\
+ \Phi_{M,w}&=(T_M\land I_{M,w})\to H_M.
+\end{aligned}
+\]
+Universal closure is taken before forming the conjunction and implication.
+This finite sentence has no comprehension, least-fixed-point or induction
+axiom. Its construction is effective; its transition-clause count is
+at most \(2(|\Gamma|+1)|\delta|\), and its written size is polynomial
+in the explicit machine and word encoding.
+\end{hbmethod}
+
+\begin{hblemma}{lem:p04-dh-computation-validity}{proved=annex:p04.dh.computation}{Acceptance exactly becomes unrestricted validity}
+For every valid machine/word pair,
+\[
+ M\text{ accepts }w\quad\Longleftrightarrow\quad
+ \models\Phi_{M,w}.
+\]
+If the machine does not accept, a countermodel is the free ground-term
+algebra for \(\Sigma_{\mathrm H}\), with \(\mathsf{Reach}\) interpreted
+as exactly the configuration terms in its actual run from \(w\).
+Freeness and the explicit empty-list cases are part of the argument;
+reachability is not merely asserted to be first-order definable.
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p04-dh-validity-complete}{proved=annex:p04.dh.validity}{First-order validity is c.e.-complete}
+The language \(\mathsf{VALID}_{\mathrm H}\) is computably enumerable
+and c.e.-complete under total computable many-one reductions
+\(\leq_m\) of \cref{sec:universal-reductions-02}. The same c.e.-completeness
+therefore holds for general effectively encoded first-order validity.
+For every c.e. \(A\subseteq\N\), fix a recognizer \(M_A\); an explicit
+reduction is
+\[
+ x\longmapsto
+ \operatorname{code}\bigl(\Phi_{M_A,\operatorname{bin}(x)}\bigr).
+\]
+It is a total syntactic construction, not a simulation run until
+acceptance. The proof establishes the lower bound from every c.e. set,
+rather than inferring it from mere undecidability. It also proves the
+recognizer conversion needed here directly from the definition of a
+c.e. domain, without promoting the sketched arithmetic-history theorem.
+\end{hbtheorem}
+
+\section{Relationalization and the finite-model boundary}
+\label{sec:p04-dh-boundaries}
+
+\begin{hbtheorem}{thm:p04-dh-relational-validity}{proved=annex:p04.dh.relational}{A purely relational validity variant}
+General relational first-order validity with identity is also c.e.-complete
+under total computable many-one reductions. The reduction needs only
+one unary reachability predicate and finitely many binary and ternary
+function-graph predicates in each input sentence; its signature is encoded
+as part of the input. No statement for an arbitrary individual fixed
+finite relational signature, or for the identity-free monadic fragment,
+is inferred.
+\end{hbtheorem}
+
+Replace each used unary function by a binary graph predicate and each used
+binary function by a ternary graph predicate. Require existence and uniqueness
+of the output for every argument tuple. Replace the constant by a variable
+\(z_0\), translate term values by their graph relations, and universally
+quantify \(z_0\) outside
+\[
+ (\text{total-function graph axioms})\to
+       (\text{translated }\Phi_{M,w}).
+\]
+The graph axioms are individually closed sentences. The value translation
+and its two-way model correspondence are proved in the annex. This supplies
+the effective relationalization rather than a verbal instruction alone.
+Church's historical axioms-to-implication passage is the distinct source
+\cite[pp.~40--41]{Church1936DecisionNote}.
+
+\begin{hbexample}{def:p04-dh-finite-boundary}{Finite validity is a different target}
+Let \(f\) be unary and \(c\) a constant, and put
+\[
+ B=(\forall x\,f(x)\ne c)\land
+     \forall x\,\forall y\,(f(x)=f(y)\to x=y).
+\]
+In a finite nonempty domain, an injective self-map is surjective, so
+\(B\) has no finite model. Hence \(B\to\bottom\) is true in every finite
+structure. It is not unrestrictedly valid: on \(\N\), interpret
+\(f(n)=n+1\) and \(c=0\). This also shows why a countermodel involving
+an unbounded term domain cannot be replaced by a finite search.
+
+Neither the c.e.-completeness proof nor this example alters
+\cref{thm:trakhtenbrot}: finite validity over its stated relational
+signatures is not c.e. The transition reduction uses arbitrary nonempty
+structures and makes no claimed reduction to a monadic function-free
+decision problem.
+\end{hbexample}
+
+\index{2-SAT!NL-completeness}\index{NL!complementation}
+\index{first-order validity!computably enumerable completeness}
+\index{many-one reduction!effective hardness}

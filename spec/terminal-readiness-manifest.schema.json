@@ -1,0 +1,235 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "terminal-readiness-manifest.schema.json",
+  "title": "Terminal readiness residual manifest",
+  "description": "Deterministic aggregate of every non-user release gate. User final acceptance remains a separate record that may be created only after this manifest has zero non-user residuals and must pin these exact bytes.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "manifest_kind",
+    "publication",
+    "required_review_gates",
+    "gates",
+    "non_user_residual_count",
+    "user_final_acceptance",
+    "readiness_status"
+  ],
+  "properties": {
+    "schema_version": {"type": "integer", "const": 1},
+    "manifest_kind": {"const": "terminal-readiness"},
+    "publication": {"$ref": "#/$defs/publication"},
+    "required_review_gates": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "prefixItems": [
+        {"const": "source_fidelity_ai"},
+        {"const": "topic_specialist_ai"},
+        {"const": "adversarial_publication_ai"},
+        {"const": "static"},
+        {"const": "build"},
+        {"const": "visual"}
+      ]
+    },
+    "gates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "inherited_interval_restoration",
+        "inherited_source_order",
+        "source_unit_admission",
+        "handbook_unit_admission",
+        "register_obligation_closure",
+        "acquisition_gap_resolution",
+        "presentation_packet_content_admission",
+        "external_coverage_assignment",
+        "publication_artifact"
+      ],
+      "properties": {
+        "inherited_interval_restoration": {"$ref": "#/$defs/restorationGate"},
+        "inherited_source_order": {"$ref": "#/$defs/sourceOrderGate"},
+        "source_unit_admission": {"$ref": "#/$defs/reviewedGate"},
+        "handbook_unit_admission": {"$ref": "#/$defs/reviewedGate"},
+        "register_obligation_closure": {"$ref": "#/$defs/reviewedGate"},
+        "acquisition_gap_resolution": {"$ref": "#/$defs/reviewedGate"},
+        "presentation_packet_content_admission": {"$ref": "#/$defs/reviewedGate"},
+        "external_coverage_assignment": {"$ref": "#/$defs/coverageGate"},
+        "publication_artifact": {"$ref": "#/$defs/publicationGate"}
+      }
+    },
+    "non_user_residual_count": {"type": "integer", "minimum": 0},
+    "user_final_acceptance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "record_path"],
+      "properties": {
+        "status": {"enum": ["absent", "pending"]},
+        "record_path": {"const": "spec/provenance/user-final-acceptance.json"}
+      }
+    },
+    "readiness_status": {"enum": ["OPEN", "AWAITING_USER_FINAL_ACCEPTANCE"]}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "count": {"type": "integer", "minimum": 0},
+    "status": {"enum": ["PASS", "OPEN"]},
+    "publication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "path", "sha256", "bytes", "pages"],
+      "properties": {
+        "title": {"const": "The Methods of Reason"},
+        "path": {"const": "handbook/main.pdf"},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "bytes": {"type": "integer", "minimum": 1},
+        "pages": {"type": "integer", "minimum": 1}
+      }
+    },
+    "baseGate": {
+      "type": "object",
+      "required": [
+        "artifact_path",
+        "artifact_sha256",
+        "required",
+        "pass",
+        "residual",
+        "status"
+      ],
+      "properties": {
+        "artifact_path": {"type": "string", "minLength": 1},
+        "artifact_sha256": {"$ref": "#/$defs/sha256"},
+        "required": {"$ref": "#/$defs/count"},
+        "pass": {"$ref": "#/$defs/count"},
+        "residual": {"$ref": "#/$defs/count"},
+        "status": {"$ref": "#/$defs/status"}
+      }
+    },
+    "simpleGate": {
+      "allOf": [{"$ref": "#/$defs/baseGate"}],
+      "unevaluatedProperties": false
+    },
+    "publicationGate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "manifest_path",
+        "publication_identity_sha256",
+        "required",
+        "pass",
+        "residual",
+        "status"
+      ],
+      "properties": {
+        "manifest_path": {"const": "spec/compendium-volume-manifest.json"},
+        "publication_identity_sha256": {"$ref": "#/$defs/sha256"},
+        "required": {"const": 1},
+        "pass": {"const": 1},
+        "residual": {"const": 0},
+        "status": {"const": "PASS"}
+      }
+    },
+    "restorationGate": {
+      "allOf": [
+        {"$ref": "#/$defs/baseGate"},
+        {
+          "type": "object",
+          "required": [
+            "artifact_bytes",
+            "restoration_record_count",
+            "restoration_record_set_sha256"
+          ],
+          "properties": {
+            "artifact_bytes": {"$ref": "#/$defs/count"},
+            "restoration_record_count": {"$ref": "#/$defs/count"},
+            "restoration_record_set_sha256": {"$ref": "#/$defs/sha256"}
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "sourceOrderGate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "terminal_command",
+        "handbook_tree_sha256",
+        "handbook_tex_file_count",
+        "required",
+        "pass",
+        "residual",
+        "status"
+      ],
+      "properties": {
+        "terminal_command": {
+          "const": "python tools/check.py --tree handbook --strict --require-no-pending-inherited-refs"
+        },
+        "handbook_tree_sha256": {"$ref": "#/$defs/sha256"},
+        "handbook_tex_file_count": {"$ref": "#/$defs/count"},
+        "required": {"$ref": "#/$defs/count"},
+        "pass": {"const": 0},
+        "residual": {"$ref": "#/$defs/count"},
+        "status": {"$ref": "#/$defs/status"}
+      }
+    },
+    "reviewMetric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required", "pass", "residual", "status"],
+      "properties": {
+        "required": {"$ref": "#/$defs/count"},
+        "pass": {"$ref": "#/$defs/count"},
+        "residual": {"$ref": "#/$defs/count"},
+        "status": {"$ref": "#/$defs/status"}
+      }
+    },
+    "reviewMetrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_fidelity_ai",
+        "topic_specialist_ai",
+        "adversarial_publication_ai",
+        "static",
+        "build",
+        "visual"
+      ],
+      "properties": {
+        "source_fidelity_ai": {"$ref": "#/$defs/reviewMetric"},
+        "topic_specialist_ai": {"$ref": "#/$defs/reviewMetric"},
+        "adversarial_publication_ai": {"$ref": "#/$defs/reviewMetric"},
+        "static": {"$ref": "#/$defs/reviewMetric"},
+        "build": {"$ref": "#/$defs/reviewMetric"},
+        "visual": {"$ref": "#/$defs/reviewMetric"}
+      }
+    },
+    "reviewedGate": {
+      "allOf": [
+        {"$ref": "#/$defs/baseGate"},
+        {
+          "type": "object",
+          "required": ["review_gates"],
+          "properties": {"review_gates": {"$ref": "#/$defs/reviewMetrics"}}
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "coverageGate": {
+      "allOf": [
+        {"$ref": "#/$defs/baseGate"},
+        {
+          "type": "object",
+          "required": ["admitted_packet_count", "sidecar_count", "content_assignment_count", "metadata_disposition_count", "metadata_batch_count"],
+          "properties": {
+            "admitted_packet_count": {"$ref": "#/$defs/count"},
+            "sidecar_count": {"$ref": "#/$defs/count"},
+            "content_assignment_count": {"$ref": "#/$defs/count"},
+            "metadata_disposition_count": {"$ref": "#/$defs/count"},
+            "metadata_batch_count": {"$ref": "#/$defs/count"}
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    }
+  }
+}

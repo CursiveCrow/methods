@@ -1,0 +1,188 @@
+%% D-P2-007: definitional CNF for the active primitive CPL grammar.
+\section{Definitional CNF and the Tseitin transformation}
+\label{sec:p02-tseitin-transformation}
+
+The normal forms of Section~\ref{sec:prop-syntax-semantics-04} preserve truth
+under each valuation.  For satisfiability search, definitional CNF instead
+uses additional variables to record subformula values.  Harrison's
+author-hosted presentation gives biconditional definitions together with an
+asserted output variable \cite[slide~12]{Harrison2003PropositionalSlides}.
+The construction below fixes every primitive case and its occurrence and
+encoding conventions.  The conjunction clause shape and the root assertion
+also occur in the Part~\ref{part:p12} example in
+Section~\ref{sec:automated-reasoning-02}.
+
+Use the actual grammar \(\mathsf{Fm}_{\mathsf{CPL}}\), with primitives
+\(\bottom,\neg,\land,\lor,\to\), and truth values
+\(\mathbb{B}=\{\mathbf{F},\mathbf{T}\}\).  Defined connectives are expanded before applying
+this construction.  A \emph{valuation on} a finite set \(W\subseteq\mathsf{Prop}\)
+means a function \(v:W\to\mathbb{B}\).  The same recursive truth clauses define
+\(\widehat v\) on formulas whose variables lie in \(W\).
+Lemma~\ref{lem:prop-coincidence} identifies these values with those under any
+total valuation extending \(v\); such an extension exists by assigning
+\(\mathbf{F}\) outside \(W\).  Clause satisfaction uses
+\(\operatorname{form}_{\mathsf{CPL}}\) from the preceding normal-form section.
+For a finite clause set \(S\), write \(v\entails S\) when \(v\) satisfies
+every clause in \(S\).
+
+\begin{hbdefinition}{def:p02-tseitin-construction}{Occurrence-based definitional CNF}
+Fix \(\varphi\in\mathsf{Fm}_{\mathsf{CPL}}\).  Let \(V\) be exactly its finite set of
+occurring variables, and use \(\operatorname{Pos}(\varphi)\) and
+\(\varphi_a\) from Definition~\ref{def:p02-selected-replacement}.
+The root is \(\epsilon\); the children of a position \(a\) are \(a1\)
+and, in the binary case, \(a2\).  Put
+\[
+ N=|\operatorname{Pos}(\varphi)|,\qquad
+ G_\varphi=\{a\in\operatorname{Pos}(\varphi):\varphi_a\notin\mathsf{Prop}\},
+ \qquad M=|G_\varphi|.
+\]
+Choose distinct variables \(z_a\in\mathsf{Prop}\setminus V\), one for each
+\(a\in G_\varphi\), and let \(Z_\varphi=\{z_a:a\in G_\varphi\}\).
+One deterministic policy traverses the tree in preorder (root, left subtree,
+right subtree) and assigns the first \(M\) unused variables in the indexed
+enumeration \(p_0,p_1,\ldots\).  Equal subformula strings at different
+nonvariable positions receive different labels.  The notation \(z_a\) is an
+alias for its chosen variable \(p_n\), not an extra kind of variable token.
+
+Each position has a variable representative
+\[
+ r_a=\begin{cases}
+       p_n,&\varphi_a=p_n,\\
+       z_a,&a\in G_\varphi.
+      \end{cases}
+\]
+Thus original variable leaves are reused, and a \(\bottom\) occurrence is
+labelled.  Emit the following clauses at each node.  In the nonvariable rows
+write \(z=z_a\), \(x=r_{a1}\) when there is a child, and
+\(y=r_{a2}\) when there is a second child.  These are variables, so their
+negations are literals; \(x\) and \(y\) are allowed to coincide.
+\[
+\begin{array}{c|l}
+ \varphi_a&\text{clauses emitted at }a\\ \hline
+ p_n&\text{none}\\
+ \bottom&\{\neg z\}\\
+ \neg\alpha&\{\neg z,\neg x\},\ \{z,x\}\\
+ (\alpha\land\beta)&
+   \{\neg z,x\},\ \{\neg z,y\},\ \{z,\neg x,\neg y\}\\
+ (\alpha\lor\beta)&
+   \{\neg z,x,y\},\ \{z,\neg x\},\ \{z,\neg y\}\\
+ (\alpha\to\beta)&
+   \{\neg z,\neg x,y\},\ \{z,x\},\ \{z,\neg y\}.
+\end{array}
+\]
+Let \(\mathcal D_\varphi\) be the union of these finite clause sets, and put
+\[
+ S_\varphi=\mathcal D_\varphi\cup\bigl\{\{r_\epsilon\}\bigr\}.
+\]
+The last clause is the \emph{root clause}.  It asserts the representative of
+the complete input, including when that input is just a variable.
+
+For an exact CNF formula string, emit node blocks in preorder and the clauses
+within each row in their displayed order, then append the root clause.
+Call this list \(C_1,\ldots,C_m\), retaining any duplicate emissions, and set
+\[
+ T_\varphi=\bigwedge_{i=1}^{m}\operatorname{form}_{\mathsf{CPL}}(C_i)
+\]
+with the inherited right-associated convention.  Each individual clause's
+literals are sorted by the inherited literal code when
+\(\operatorname{form}_{\mathsf{CPL}}\) is applied.  Thus the emitted list determines
+one formula string, while \(S_\varphi\) is a set of clauses.
+\index{Tseitin transformation}\index{CNF!definitional}
+\index{root clause}\index{auxiliary variable}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p02-tseitin}{proved=annex:p2.prop.tseitin}{Definitional extension and equisatisfiability}
+For every \(\varphi\in\mathsf{Fm}_{\mathsf{CPL}}\), use the variable sets and clause
+construction of Definition~\ref{def:p02-tseitin-construction}.
+For every valuation \(v:V\to\mathbb{B}\), there is exactly one extension
+\(w:V\cup Z_\varphi\to\mathbb{B}\) satisfying \(\mathcal D_\varphi\).
+It satisfies
+\[
+ w(r_a)=\widehat v(\varphi_a)
+ \qquad\text{for every }a\in\operatorname{Pos}(\varphi).
+\]
+Consequently,
+\[
+ v\entails\varphi
+ \quad\Longleftrightarrow\quad
+ \exists w:V\cup Z_\varphi\to\mathbb{B}\;
+   [\,w|_V=v\ \text{and}\ w\entails S_\varphi\,].
+\]
+When the right side holds, its extension is unique on \(V\cup Z_\varphi\).
+The clause set \(S_\varphi\) and the CNF formula \(T_\varphi\) are
+equisatisfiable with \(\varphi\).  Under total valuations on \(\mathsf{Prop}\),
+\(\{T_\varphi\}\entails\varphi\), but the converse need not hold.
+\end{hbtheorem}
+
+The existence quantifier in this theorem belongs to the metatheory, not to
+the CPL formula grammar.  The input assignment is fixed on \(V\), not on
+all of \(\mathsf{Prop}\): a total global valuation already assigns the chosen fresh
+symbols.  Total extensions outside \(V\cup Z_\varphi\) remain unrestricted
+and are not claimed unique.  Uniqueness uses both directions of every gate
+definition; it is not asserted for encodings obtained by dropping selected
+gate clauses.
+
+\begin{hbtheorem}{thm:p02-tseitin-size}{proved=annex:p2.prop.tseitin-size}{Structural size and an explicit encoding bound}
+For every input \(\varphi\in\mathsf{Fm}_{\mathsf{CPL}}\), with \(N,M\) as in
+Definition~\ref{def:p02-tseitin-construction},
+the construction uses exactly \(M\leq N\) auxiliary variables, emits at most
+\(3M+1\) clauses, and emits at most \(7M+1\) literal occurrences.  Every
+clause has at most three literals.  The emitted list and \(T_\varphi\) have
+\(O(N)\) size when each variable name is one token.  Given the parsed tree
+and the fresh names, clause emission takes \(O(N)\) elementary operations
+with unit-cost variable references and name comparisons.
+
+For a bit encoding in which variable indices are written in binary and the
+connectives and separators have fixed codes, let \(L\) be the length of that
+primitive input.
+The deterministic policy can choose every auxiliary index below \(N\).
+The output bit length is
+\[
+ O\bigl(L+N\log(N+1)\bigr),
+\]
+and the construction is effective in polynomial time in \(L\).
+No linear bit-time bound is asserted.  These bounds measure the primitive
+formula tree after expansion of defined connectives; they do not measure an
+unexpanded abbreviation or the number of distinct subformula strings.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p02-tseitin-worked}{A conjunction, negation and implication}
+Take \(\varphi=((P\land Q)\to\neg P)\), with distinct \(P,Q\).
+The nonvariable positions are \(\epsilon,1,2\), represented by fresh
+\(z_\epsilon,z_1,z_2\).  The emitted blocks, in order, are
+\[
+\begin{aligned}
+ \epsilon:&\quad
+  \{\neg z_\epsilon,\neg z_1,z_2\},
+  \{z_\epsilon,z_1\},\ \{z_\epsilon,\neg z_2\},\\
+ 1:&\quad
+  \{\neg z_1,P\},\ \{\neg z_1,Q\},\ \{z_1,\neg P,\neg Q\},\\
+ 2:&\quad \{\neg z_2,\neg P\},\ \{z_2,P\}.
+\end{aligned}
+\]
+Append \(\{z_\epsilon\}\), giving nine emitted clauses.
+If \(v(P)=\mathbf{F}\), \(v(Q)=\mathbf{T}\), the defining extension gives
+\(w(z_1)=\mathbf{F}\), \(w(z_2)=\mathbf{T}\), \(w(z_\epsilon)=\mathbf{T}\),
+and satisfies the output.  If both input variables are true, the defining
+extension instead has values \(\mathbf{T},\mathbf{F},\mathbf{F}\) at these three
+labels: it satisfies every gate block but fails the root clause, just as the
+input formula is false.  The three clauses at position \(1\) have the same
+conjunction-gate shape as the Part~\ref{part:p12} example; they do not assert the root.
+\end{hbexample}
+
+\begin{hbexample}{def:p02-tseitin-root-boundary}{Why the root clause and the assignment domains matter}
+For \(\varphi=\bottom\), the input variable set is empty and
+\[
+ \mathcal D_\varphi=\bigl\{\{\neg z_\epsilon\}\bigr\},\qquad
+ S_\varphi=\bigl\{\{\neg z_\epsilon\},\{z_\epsilon\}\bigr\}.
+\]
+The definitions alone are satisfiable, while the input and the rooted output
+are unsatisfiable.  Dropping the root therefore loses equisatisfiability.
+
+For \(\varphi=\neg P\), a valuation on \(\{P,z_\epsilon\}\) assigning
+\(\mathbf{F}\) to both variables makes \(\varphi\) true and \(T_\varphi\)
+false.  Hence \(\varphi\) and \(T_\varphi\) are not generally logically
+equivalent even when both are read over their common enlarged vocabulary.
+The extension theorem instead fixes \(P\) and chooses the required fresh
+value \(w(z_\epsilon)=\mathbf{T}\).
+\end{hbexample}

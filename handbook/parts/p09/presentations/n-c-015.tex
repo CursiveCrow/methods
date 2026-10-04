@@ -1,0 +1,509 @@
+% Source presentations for register row N-c-015.
+
+\subsection{Finite trees in \emph{Tree Automata Techniques and Applications}}
+\label{sec:p09-presentation-n-c-015}
+
+The source is the online monograph release dated 18 November 2008; the register's
+2007 date refers to the evolving work rather than a distinct fixed book
+edition.  The release explicitly treats finite trees and excludes infinite-tree
+automata \cite[pp.~11--13]{ComonEtAl2007}.  Its automata therefore receive
+finite terms, not Rabin's entire infinite labeled tree.
+
+A finite ranked alphabet \(F\) assigns an arity to each of its symbols.  Write
+\(T(F)\) for its set of ground terms, formed recursively: every nullary symbol
+is a term, and
+\(f(t_1,\ldots,t_n)\) is a term exactly when \(f\) has arity \(n\) and each
+\(t_i\) is already a term.  Their node diagrams are the finite ordered
+\(F\)-trees.  TATA writes a nondeterministic bottom-up automaton as
+\[
+ \mathcal A=(Q,F,Q_f,\Delta),
+\]
+where \(Q\) is the finite state set, \(Q_f\subseteq Q\) the final states, and
+\(\Delta\) contains rules
+\(f(q_1,\ldots,q_n)\to q\) for \(n\)-ary \(f\); several rules may have
+the same symbol and child-state tuple.  A run labels each tree node
+bottom-up so that its label and its children's states match one transition; it
+accepts when the root state lies in \(Q_f\)
+\cite[\S1.1]{ComonEtAl2007}.  A language is \emph{recognizable} when some
+such automaton accepts exactly its members.  This tuple is the source notation
+corresponding to Definition~\ref{def:p09-ranked-tree-automaton}: TATA's
+alphabet \(F\) is the handbook's \(\Sigma\), so \(T(F)\) is the handbook's
+\(T_\Sigma\); TATA's final-state set \(Q_f\) is the handbook's \(F\), and TATA
+lists \(Q_f\) before \(\Delta\).
+
+For a small run, take nullary symbols \(a,b\), a binary symbol \(f\), rules
+\(a\to q_a\), \(b\to q_b\), and
+\(f(q_a,q_b)\to q_f\), with \(q_f\) final.  The unique displayed bottom-up
+assignment accepts \(f(a,b)\).  If the last rule is absent, the same ground
+term has no run.  This example makes clear that acceptance concerns the root of
+a finite term rather than recurrence along an infinite path.
+
+\paragraph{Subset determinization.}
+\label{sec:p09-finite-tree-determinization}
+For a term \(t\), let \(\operatorname{Reach}_{\mathcal A}(t)\subseteq Q\)
+be the possible root states of all runs on \(t\), without imposing
+the final-state condition.
+The deterministic automaton has state set \(\mathcal P(Q)\), final
+states
+\[
+ \mathcal F=\{S\subseteq Q:S\cap Q_f\ne\varnothing\},
+\]
+and, for each symbol \(f\) of arity \(m\), the total transition function
+\[
+ \delta_f(S_1,\ldots,S_m)
+ =\{q\in Q:\exists q_1\in S_1\cdots\exists q_m\in S_m\
+                    (f(q_1,\ldots,q_m)\to q)\in\Delta\}.
+\]
+For \(m=0\), this is the set of targets of all nullary \(f\)-rules.
+The empty subset is retained, so the transition is defined even
+when there is no compatible original rule.
+
+Induction on \(t=f(t_1,\ldots,t_m)\) proves that the unique
+deterministic root state is \(\operatorname{Reach}_{\mathcal A}(t)\).
+A run on \(t\) restricts to runs on its child terms and one matching
+root rule, giving membership in the displayed set.
+Conversely, the chosen child runs and that root rule combine into
+a run on \(t\).  For a nullary term the assertion is precisely
+the definition of \(\delta_f\).
+The final-state condition therefore gives exactly \(L(\mathcal A)\).
+There are at most \(2^{|Q|}\) states.
+
+One may retain only the subsets realized by ground terms.
+Starting with nullary transition values and repeatedly applying all
+symbol operations to tuples of already obtained subsets computes
+them.  Every generated subset has a term witness, and induction on
+terms gives the converse.  If the ranked alphabet has no nullary
+symbol, \(T(F)\) is empty; the full subset construction still defines
+a complete automaton, and there is no input term to accept
+\cite[Theorem~1.1.9]{ComonEtAl2007}.
+
+\paragraph{Boolean operations on tree languages.}
+\label{sec:p09-finite-tree-boolean}
+Complement the deterministic complete automaton by replacing
+\(\mathcal F\) with \(\mathcal P(Q)\setminus\mathcal F\).
+Every ground term has exactly one run, so its root belongs to exactly
+one of these final-state sets.  The result is the complement relative
+to \(T(F)\).
+The totality and uniqueness of the run are used here: flipping final
+states in a nondeterministic automaton can retain an accepted term
+through a different run, and an absent run in a partial automaton
+cannot become accepting merely by changing its final states.
+
+For union, first make the state sets of two automata over the same
+ranked alphabet disjoint.  Take their disjoint union of states, rules,
+and final states.  Every transition keeps all its child states and
+its target in one component.  A run on the connected input tree
+therefore lies entirely in one component, and acceptance is precisely
+acceptance by either original automaton.
+
+For intersection, use states \(Q_1\times Q_2\), final states
+\(Q_{1,f}\times Q_{2,f}\), and rules
+\[
+ f((q_1,r_1),\ldots,(q_m,r_m))\to(q,r)
+\]
+exactly when both \(f(q_1,\ldots,q_m)\to q\) and
+\(f(r_1,\ldots,r_m)\to r\) are original rules.
+Projection of a run gives a run of each component, and pairing
+two runs on the same tree gives a product run.
+The root is final exactly when both original roots are final.
+These are the effective Boolean closures of
+\cite[Theorem~1.3.1]{ComonEtAl2007}.
+
+\paragraph{Membership, emptiness, and finite witnesses.}
+\label{sec:p09-finite-tree-emptiness}
+Membership of a supplied finite term is decided by computing its
+reachable-state subsets upward and checking the root.
+For emptiness, start with the states reached by nullary rules and
+repeatedly mark the target of any rule whose child states are all marked.
+Induction on the marking stages shows that every marked state is
+the root of a run on some ground term.
+Conversely, induction on term height shows that every possible root
+state is eventually marked.
+Thus the language is nonempty exactly when some final state is marked.
+At most \(|Q|\) new-state markings occur.
+
+For the linear-time implementation, give each rule a counter equal
+to its arity and index each child-state occurrence by its rule.
+Enable nullary rules immediately.
+Whenever a state is first marked, process each of its indexed
+occurrences and decrement the corresponding rule counter.
+When a counter reaches zero, mark the rule's target if it is new.
+Occurrences are counted with multiplicity: a rule
+\(f(q,q)\to r\) has two indexed occurrences of \(q\), and both are
+processed when \(q\) is marked.
+Each state enters the queue once, and each child occurrence is
+processed once.  With indexed state and rule identifiers, the running
+time is
+\[
+ O\!\left(|Q|+|\Delta|+\sum_{\rho\in\Delta}
+                                 \operatorname{arity}(\rho)\right),
+\]
+linear in the explicit transition representation
+\cite[Theorem~1.7.4]{ComonEtAl2007}.
+
+Recording the rule that first marks each state also gives a finite
+accepting witness when one exists.
+Its child states were marked earlier, so these recorded dependencies
+form an acyclic finite graph.  Unfolding the graph gives a ground
+term and an accepting run.
+The graph representation can share repeated subterms; writing out
+the full tree may require more space than deciding nonemptiness.
+
+Combining complement and intersection with emptiness decides inclusion:
+\[
+ L(\mathcal A)\subseteq L(\mathcal B)
+ \quad\Longleftrightarrow\quad
+ L(\mathcal A)\cap\bigl(T(F)\setminus L(\mathcal B)\bigr)=\varnothing.
+\]
+Two inclusion decisions give equivalence; emptiness of the complement
+gives universality.  These constructions use only finite state sets
+and finite transition tables.
+
+For \(k\geq1\), let \(\epsilon\) denote the empty word in
+\(\{1,\ldots,k\}^{*}\).  WSkS is weak monadic second-order logic over this
+set of words: first-order variables denote words, the successor
+operation appends one letter, and every set variable denotes a finite set of
+words.  Proposition~3.3.1 replaces each first-order variable by a singleton set
+variable.  The resulting restricted syntax has atomic formulas
+\[
+ X\subseteq Y,\qquad \operatorname{Sing}(X),\qquad X=Yi,\qquad X=\epsilon,
+\]
+where \(\operatorname{Sing}(X)\) says that \(X\) has exactly one element and
+\(X=Yi\) says that the unique word in \(X\) is the \(i\)-successor of the
+unique word in \(Y\).  The source atom \(X=\epsilon\) is the eliminable
+abbreviation \(X=\{\epsilon\}\).  This removes first-order variables without
+changing the defined assignments.
+
+The translation uses a fresh set variable for each individual variable.
+An existential individual quantifier becomes
+\(\exists X\,(\operatorname{Sing}(X)\land\cdots)\), and a universal
+one becomes \(\forall X\,(\operatorname{Sing}(X)\to\cdots)\).
+After the recursive translation, conjoin singleton guards for the
+free individual-variable tracks.
+The bijection \(w\mapsto\{w\}\) between words and singleton sets
+proves that these clauses preserve their assignment domains.
+
+For \(n\geq1\), a tuple \((S_1,\ldots,S_n)\) of finite sets is encoded by one finite tree over
+\(\{0,1,\bot\}^{n}\).  At a position \(p\), coordinate \(i\) is \(1\) when
+\(p\in S_i\), \(0\) when \(p\notin S_i\) but extends to a word in \(S_i\),
+and \(\bot\) otherwise.  A symbol containing \(0\) or \(1\) has arity \(k\),
+whereas \(\bot^{n}\) is nullary.
+For precision, let \(K=\{1,\ldots,k\}\), put \(U=\bigcup_i S_i\),
+and let \(\operatorname{Pref}(U)\) contain all prefixes of members of \(U\).
+The code has exactly the position domain
+\[
+ D(\bar S)=\{\epsilon\}\cup
+                \{pi:p\in\operatorname{Pref}(U),\ i\in K\}.
+\]
+Thus each prefix supporting a set member has all \(k\) children;
+children with no support are nullary padding leaves.
+The prefix set and this domain are finite because \(U\) is finite.
+When all \(S_i\) are empty, the code is the one-node tree \(\bot^n\).
+Write \(\operatorname{code}(\bar S)\) for the resulting term.
+Decoding selects precisely the positions with a \(1\) in each track.
+
+The source's Example~3.3.3, with
+\(k=2\), \(S_1=\{\epsilon,11\}\), \(S_2=\varnothing\), and
+\(S_3=\{11,22\}\), labels the root by \((1,\bot,0)\), positions \(1\) and
+\(2\) by \((0,\bot,0)\) and \((\bot,\bot,0)\), positions \(11\) and \(22\)
+by \((1,\bot,1)\) and \((\bot,\bot,1)\).
+Its six padding positions are exactly
+\(12,21,111,112,221,222\), each labelled \((\bot,\bot,\bot)\).
+There are eleven nodes in total.
+
+\paragraph{Recognizing exactly the canonical codes.}
+\label{sec:p09-wsks-canonical}
+For \(n\geq1\), write \(\Sigma_n=\{0,1,\bot\}^n\) with the ranks
+just defined, and \(\bot_n=\bot^n\).
+Let \(W_n\subseteq T(\Sigma_n)\) be the set of canonical codes.
+A partial deterministic bottom-up checker has states
+\(H\subseteq\{1,\ldots,n\}\), recording which tracks have a
+membership mark somewhere in the current subtree.
+Its nullary rule is \(\bot_n\to\varnothing\).
+For an internal label \(\alpha\) and child states \(H_1,\ldots,H_k\),
+put \(H=\bigcup_{\ell=1}^k H_\ell\) and permit a transition precisely when
+\[
+\begin{array}{ll}
+ \alpha_j=\bot&\Longrightarrow j\notin H,\\
+ \alpha_j=0&\Longrightarrow j\in H,\\
+ \alpha_j=1&\text{has no additional child condition}
+\end{array}
+\qquad(1\leq j\leq n).
+\]
+The target is \(H\cup\{j:\alpha_j=1\}\), and every checker state
+is final.  An invalid local combination has no transition.
+Induction on subtrees proves the support interpretation of the states.
+The three conditions say exactly that bottom forbids all membership
+at or below the node, zero requires a strict descendant member,
+and one marks membership at the node itself.
+Every internal node consequently supports a member in some track.
+Together with the ranks, this forces the displayed code domain
+and all its labels.  Conversely every canonical code satisfies these
+conditions, so the checker recognizes exactly \(W_n\).
+
+For example, \(00(\bot\bot,\bot\bot)\) is not a canonical binary
+two-track code: both zeros assert support that neither child has.
+The checker rejects it.
+For the empty variable list, set
+\(\Sigma_0=\{\top\}\), with \(\top\) nullary, and \(W_0=\{\top\}\);
+this single tree encodes the empty tuple.
+Throughout the formula construction we maintain
+\[
+ L(\mathcal A_\varphi)
+   =\{\operatorname{code}(\bar S):\bar S\models\varphi\}
+   \subseteq W_n,
+\]
+where the coordinates are the distinct free set variables in a fixed order.
+
+This coding also supplies the exact bridge to finite-tree monadic logic.  For
+a finite ranked alphabet \(F\), choose \(k\geq1\) at least as large as every
+arity occurring in \(F\).  A finite ranked tree is represented by its finite
+position set \(D\) and the
+subsets \(X_f\subseteq D\) of positions carrying each symbol \(f\); the
+source's arity clauses say that these data form one ground term.  In that
+coding the label predicate for \(f\) becomes \(x\in X_f\), and the
+\(i\)-th-child relation becomes \(y=xi\).  A monadic formula over the finite
+tree becomes a WSkS formula by restricting every element quantifier to \(D\)
+and every set quantifier to subsets of \(D\).
+Conversely, the state sets in Lemma~3.3.6 below partition precisely \(D\).
+Thus the ambient prefix tree is used to code a finite input, not substituted
+for that input \cite[pp.~89--95]{ComonEtAl2007}.
+
+Lemma~3.3.4 constructs an automaton from a restricted WSkS formula.  In the
+binary instance \(k=2\), its atomic construction for \(X\subseteq Y\), for
+example, has one final state \(q\) and the rules
+\[
+ \bot\bot\to q,\quad 00(q,q)\to q,\quad 01(q,q)\to q,\quad
+ 11(q,q)\to q,\quad \bot0(q,q)\to q,\quad \bot1(q,q)\to q.
+\]
+Intersect this automaton with \(W_2\).
+On a canonical code of an inclusion, a nonempty \(X\)-support
+cannot face an empty \(Y\)-support, and every \(X\)-membership mark
+also marks \(Y\).  Exactly the displayed labels are permitted.
+Conversely, the absence of \(10\) and \(1\bot\) at every node
+ensures that every member of \(X\) belongs to \(Y\).
+For general \(k\), use the same five internal labels with \(k\)
+children in state \(q\).
+
+The remaining atomic constructions are equally finite.
+For \(\operatorname{Sing}(X)\), use states \(q,q'\), with \(q'\)
+the only final state, and rules
+\[
+ \bot\to q,\qquad 1(q,\ldots,q)\to q',
+\]
+together with, for each child position \(i\), a \(0\)-rule with
+child \(i\) in state \(q'\), all other children in \(q\), and target \(q'\).
+A \(q'\)-run therefore follows one zero-labelled prefix path to
+one membership node; all other subtrees are empty.
+These are precisely singleton codes.
+For \(X=\epsilon\), retain just the two displayed rules, so the
+membership node must be the root.
+
+For distinct variables in the order \((X,Y)\), the atom \(X=Yi\)
+uses states \(q,q',q''\), with only \(q''\) final, and rules
+\[
+ \bot\bot\to q,\qquad 1\bot(q,\ldots,q)\to q'.
+\]
+Add one \(01\)-rule whose \(i\)-th child is in \(q'\), whose other
+children are in \(q\), and whose target is \(q''\).
+Finally add the \(00\)-rules with exactly one child in \(q''\),
+all others in \(q\), and target \(q''\).
+The \(01\)-node is the unique \(Y\)-member; its \(i\)-th child is
+the unique \(X\)-member.  The \(00\)-rules allow their common prefix
+above that pair.  This proves the required singleton-successor
+condition.  Repeated variables are handled separately:
+\(X\subseteq X\) accepts \(W_1\), whereas \(X=Xi\) accepts nothing
+because a finite word is not its own proper successor.
+These constructions are the general-\(k\) forms of the source's
+binary transition tables \cite[Figures~3.8--3.11]{ComonEtAl2007}.
+Permuting coordinates puts each atomic automaton into the chosen
+variable order; the operation preserves every symbol's arity.
+The inverse-image construction below supplies any additional free tracks.
+
+\paragraph{Projection with subtree pruning.}
+\label{sec:p09-wsks-pruning}
+For \(n>1\), let \(d_j\) delete coordinate \(j\) from a label,
+and put \(m=n-1\).
+Define a tree map \(h_j\) by
+\[
+ h_j(\bot_n)=\bot_m,
+\]
+and
+\[
+ h_j(\alpha(t_1,\ldots,t_k))=
+ \begin{cases}
+  \bot_m,&d_j(\alpha)=\bot_m,\\
+  d_j(\alpha)(h_j(t_1),\ldots,h_j(t_k)),
+       &d_j(\alpha)\ne\bot_m.
+ \end{cases}
+\]
+The first case deletes the entire child family because the projected
+symbol is nullary.
+For canonical input, it occurs exactly where no surviving track
+has a member at or below the node.  Otherwise a surviving membership
+keeps the node internal, and the same calculation applies recursively
+to its children.  Hence
+\[
+ h_j(\operatorname{code}(S_1,\ldots,S_n))
+   =\operatorname{code}(S_1,\ldots,S_{j-1},S_{j+1},\ldots,S_n).
+\]
+A surviving zero still has a descendant one in its own track, so
+its label remains zero.  This is the source's linear tree
+homomorphism specialized to these ranked codes
+\cite[Proposition~3.2.12]{ComonEtAl2007}.
+
+Here is the automaton image construction, including the collapsed case.
+Let \(\mathcal A\) recognize a language contained in \(W_n\).
+First take the product of \(\mathcal A\) with the partial checker
+for \(W_n\).  Its accepted language is unchanged, and every tree
+admitting a run is now canonical.
+Let \(E\) be the set of states reachable by trees whose surviving
+coordinates are bottom at every node.
+Compute \(E\) by the emptiness marking construction restricted to
+all nullary \(\bot_n\)-rules and the internal labels \(\alpha\) satisfying
+\(d_j(\alpha)=\bot_m\).
+The resulting states have finite witness subtrees supported entirely
+by the deleted track.
+
+Keep the state set and final states, and use the following projected rules:
+\[
+\begin{array}{ll}
+ \bot_m\to q&\text{for every }q\in E,\\
+ d_j(\alpha)(q_1,\ldots,q_k)\to q
+   &\text{for every old }\alpha(q_1,\ldots,q_k)\to q\\
+   &\text{with }d_j(\alpha)\ne\bot_m.
+\end{array}
+\]
+An original accepting run projects by retaining its state at every
+remaining node.  At a collapsed subtree the root state is in \(E\),
+so the new nullary rule is available.
+Conversely, replace each new nullary leaf of a projected accepting
+run by a finite subtree witnessing its state in \(E\).
+At each retained internal node use an old transition witnessing
+the new rule.  Induction up the finite tree produces an original
+accepting run whose image is the projected tree.
+That original tree is canonical, so the displayed coding identity
+proves that the image represents exactly the surviving assignment.
+
+For example, deleting \(Y\) from a code with \(X=\varnothing\)
+and \(Y=\{1\}\) collapses its root to the one-node empty-\(X\) code.
+The old root's surviving label is bottom, so keeping its children
+would violate the required rank.
+
+\paragraph{Aligning free variables and interpreting connectives.}
+\label{sec:p09-wsks-logical-induction}
+Suppose an automaton uses only some of the variables in a larger list,
+with list lengths \(m>n\geq1\).
+Let \(h\) drop all other tracks with the pruning rule just proved.
+Its language on the larger list is
+\[
+ W_m\cap h^{-1}(L(\mathcal A)).
+\]
+This inverse image has an explicit finite construction.
+Determinize and complete the smaller automaton, with transition
+functions \(\delta\).  At a larger-alphabet node, let \(\beta\)
+be the vector of retained coordinates.
+If \(\beta=\bot_n\), assign the fixed state \(\delta_{\bot_n}\),
+ignoring the child states.  Otherwise apply \(\delta_\beta\) to
+the child states.  A larger padding leaf also receives
+\(\delta_{\bot_n}\).
+The resulting state is the smaller automaton's state on \(h(t)\),
+by induction on \(t\).
+Totality ensures that even a child whose image is rejected has a
+state and cannot obstruct a later collapse above it.
+Intersecting with \(W_m\) completes the construction.
+
+For a disjunction, lift both operand automata to the union of their
+distinct free-variable lists and take union.
+For negation use relative complement
+\[
+ L(\mathcal A_{\neg\varphi})=W_n\setminus L(\mathcal A_\varphi).
+\]
+For conjunction, apply the same free-variable alignment and then
+take intersection.
+For \(\exists X\,\varphi\), take the pruned image deleting \(X\)'s
+track.  Every preimage is a finite-set witness, and every finite-set
+witness has its canonical preimage, so the operation has exactly
+the existential semantics.  If \(X\) is not free in \(\varphi\),
+the quantifier is vacuous and the automaton is unchanged.
+Bound variables are renamed first so their track identities are unambiguous.
+Together with the atomic constructions, these cases prove the
+language invariant by induction on restricted WSkS formulas.
+
+At zero free variables, \(\Sigma_0\) has just the nullary symbol
+\(\top\), and \(W_0=\{\top\}\).
+Deleting the last track sends every code to this one nullary tree.
+The set \(E\) in the image construction is then the set of all
+reachable states, and the rules are \(\top\to q\) for \(q\in E\).
+Thus \(\top\) is accepted exactly when some old accepting code exists,
+including witnesses of arbitrarily large finite depth.
+After determinizing and completing a zero-track automaton, lifting
+uses its fixed state \(\delta_\top\) at every node and then intersects
+with the larger canonical-code language.
+Complement at level zero exchanges \(\varnothing\) and \(\{\top\}\).
+
+Conversely, Lemma~3.3.6 assigns a set variable \(Y_q\) to the positions bearing
+each automaton state \(q\), requires those sets to partition the encoded tree,
+and requires the root to satisfy
+\(\bigvee_{q\in Q_f}\epsilon\in Y_q\).  If \(X_f\) is the set of positions
+bearing symbol \(f\), its transition condition is the source's local clause
+\[
+ \forall x\Bigl((x\in X_f\land x\in Y_q)\Rightarrow
+   \bigvee_{f(q_1,\ldots,q_s)\to q\in\Delta}
+      \bigwedge_{i=1}^{s}xi\in Y_{q_i}\Bigr),
+\]
+conjoined for every symbol \(f\) and state \(q\).  These clauses say exactly
+that the quantified state partition is an accepting bottom-up run
+\cite[\S3.3]{ComonEtAl2007}.
+
+Lemmas~3.3.4 and~3.3.6 supply the two coded directions: a formula
+gives an automaton on assignment codes, and an accepting run is
+described by an existential state partition.
+Theorem~3.3.8 then obtains WSkS decidability.  For a
+closed sentence the track alphabet is the singleton nullary alphabet
+\(\{\top\}\), so truth in the fixed WSkS structure reduces to
+whether a rule \(\top\to q_f\) exists for some final state \(q_f\).  This is
+the detailed source route for Theorem~\ref{thm:p09-finite-tree-automata}.
+
+The restriction is real.  For the ranked alphabet
+\(F=\{a^{(0)},f^{(2)}\}\), Exercise~1.4 records that
+\(L=\{f(t,t):t\in T(F)\}\) is not recognizable.  By Theorem~1.1.9, a
+recognizing automaton could be taken deterministic.  Every term \(t\) would
+have to reach a state, since otherwise the required term \(f(t,t)\) could not
+be accepted.  Distinct terms \(t,u\) could not reach the same state: otherwise
+the identical transition on the child-state pair would give \(f(t,t)\) and
+\(f(t,u)\) the same root state, although the first lies in \(L\) and the second
+does not.  Thus the infinitely many terms in \(T(F)\) would require infinitely
+many states, a contradiction.
+
+If set variables range over arbitrary, not necessarily finite, subsets of the
+infinite successor tree, the source calls the resulting logic full SkS.  Its
+decision procedure requires automata that assign states from the root downward
+on infinite inputs and a different complementation argument; TATA states that
+boundary immediately
+after Theorem~3.3.8.  On an actually finite input structure, weak and full set
+quantification coincide because every subset is finite.  That elementary
+observation does not turn a finite-tree automaton into Rabin's automaton on an
+entire infinite labeled tree.
+
+\paragraph{Thatcher--Wright source boundary.}
+The registered 1968 article is the historical source named by TATA.  Its
+authoritative abstract says only that finite algebras replace conventional
+finite automata and announces closure results, a generalized Kleene theory,
+and an application to a positive second-order decision problem.  Because the
+technical body is not part of the available source basis, that abstract-level
+phrase is not used as a handbook definition.  The paper's algebraic signature,
+recognition relation, exact logical language, theorem statements, examples, and
+proof are not reconstructed by assigning TATA's modern tuple and WSkS proof to the older
+paper \cite{ThatcherWright1968}.  Historical provenance and the detailed
+modern presentation therefore remain separate.  A same-title 1966 IBM
+Research Paper RC-1713 is a bibliographic lead only, not technical evidence.
+
+\paragraph{Finite-domain MSO and the successor-tree coding.}
+The finite-tree equivalence in Theorem~\ref{thm:p09-finite-tree-automata}
+has a complete proof in Annex~\ref{annex:p9.trees.1}, using assignment
+bits on the nodes of a fixed finite input tree.
+Erasing those bits preserves the input tree's ranks and shape.
+The WSkS coding here instead represents finite sets in the infinite
+successor tree, and its projection includes the proved subtree pruning.
+Both constructions are explicit at the input type where they are used.

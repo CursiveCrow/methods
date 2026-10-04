@@ -1,0 +1,796 @@
+\chapter{Best-First Search and Heuristic Guarantees}
+\label{sec:p12-best-first-search-and-heuristic-guarantees}
+\index{search!best-first}
+\index{search!A*}
+\index{search!A**}
+\index{heuristic!admissibility}
+\index{heuristic!consistency}
+\index{search!reopening}
+\index{search!computational optimality}
+\index{search!global compatibility}
+
+A heuristic can guide the search for a cheap solution without proving that
+the first solution found is cheapest. A lower bound supplies the missing
+certificate, provided the search preserves the paths needed by that
+certificate. A separate question concerns computational efficiency: which
+other algorithms must inspect the same states? The two questions have
+different hypotheses. This treatment follows the distinctions developed by
+Dechter and Pearl \cite{DechterPearl1985BestFirst}.
+
+\section{Search objects and the information interface}
+
+\begin{hbdefinition}{def:p12-hsearch-instance}{A weighted state graph}
+An instance is \(I=(G,s,\Gamma,c,h)\). Here \(G=(V,E)\) is a directed
+graph, \(s\in V\) is the initial state, \(\Gamma\subseteq V\) is the set
+of goals, and each edge has a finite nonnegative real cost \(c(u,v)\).
+A path record \(P=(v_0,\ldots,v_k)\) includes its edges, starts at
+\(v_0=s\), and has cost
+\[
+ g(P)=\sum_{i=0}^{k-1}c(v_i,v_{i+1}).
+\]
+The empty-edge path at \(s\) has cost zero. A solution ends at a goal.
+The notation \(P_{s,u}\) denotes the prefix ending at the specified
+occurrence of \(u\); segments of a record are indexed by occurrences
+when a state is repeated.
+Write \(g^*(v)\) for the infimum of costs from \(s\) to \(v\), and
+\(h^*(v)\) for the infimum of costs from \(v\) to a goal; an empty
+set of possible paths has infimum \(+\infty\). Write \(C^*=h^*(s)\).
+When an optimal path is used, attainment of this infimum is required.
+
+The heuristic \(h:V\to[0,\infty)\) is finite at every state and is
+zero at goals. The graph is \emph{locally finite} when each state has
+finitely many successors. Expanding a non-goal state reveals its complete
+successor list and edge costs. Generation reveals a successor's identity,
+goal flag and heuristic. State equality is decidable in this interface.
+For oracle-expansion comparisons, neither the complete graph, its exact
+vertex count nor a complete list of goals is supplied in advance.
+Goals are terminal in this search interface: their successor lists are
+not queried. With nonnegative additive costs, truncating a path at its
+first goal cannot make the solution more expensive.
+\end{hbdefinition}
+
+A node of the path-unfolding tree is a path record, whereas a vertex of
+\(G\) is a state. Several records can end at the same state. Counting
+states, counting path records, counting repeated expansions and measuring
+elapsed computation therefore give different quantities.
+\begin{hbdefinition}{def:p12-hsearch-expansion-count}{The compared expansion set}
+For the comparisons below, \(E_A(I)\) denotes the set of distinct non-goal states
+expanded by algorithm \(A\). Selecting a goal and returning without
+generating its successors does not expand it in this convention.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p12-hsearch-heuristics}{Admissibility and consistency}
+The heuristic is \emph{admissible} when \(h(v)\le h^*(v)\) for every
+state. It is \emph{consistent} when, for every edge,
+\[
+ h(u)\le c(u,v)+h(v).
+\]
+The latter condition concerns pairs of states, not just the accuracy of
+individual estimates. The normalization \(h(t)=0\) at every goal is part
+of both the algorithmic and comparison interface.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-hsearch-consistency-bound}{proved=annex:p12.hsearch-consistency-bound}{Consistency supplies a lower bound}
+A consistent normalized heuristic is admissible. Along every path record,
+the values \(g+h\) are nondecreasing.
+\end{hbtheorem}
+
+\section{An executable A* graph procedure}
+
+\begin{hbmethod}{def:p12-hsearch-algorithm}{A* with duplicate detection and reopening}
+Store a label \(g(v)\), initially \(+\infty\), and a witnessing path
+record \(W(v)\) for every reached state. Set \(g(s)=0\), \(W(s)=(s)\)
+and \(\mathrm{OPEN}=\{s\}\), with \(\mathrm{CLOSED}=\varnothing\).
+Repeat the following steps.
+\begin{enumerate}
+\item If OPEN is empty, return failure.
+\item Select a state \(u\) in OPEN with minimum
+  \(f(u)=g(u)+h(u)\). Among equal scores prefer goals; remaining ties
+  use a declared rule based on the revealed information. Remove \(u\)
+  from OPEN.
+\item If \(u\) is a goal, return \(W(u)\). In particular, do not
+  return merely because a goal was generated.
+\item Put \(u\) in CLOSED and reveal all successors. For each
+  \((u,v)\), compute \(q=g(u)+c(u,v)\). If \(q<g(v)\), replace
+  \(g(v)\) by \(q\), set \(W(v)\) to the extension of the current
+  record \(W(u)\) by \((u,v)\), remove \(v\) from CLOSED if present,
+  and put \(v\) in OPEN. If \(q\ge g(v)\), retain the old label.
+\end{enumerate}
+Path records are persistent: changing a state's current label does not
+silently change the cost or ancestry stored in an older record. A heap
+implementation may contain obsolete entries, but must discard an entry
+whose version is no longer the state's current OPEN label. Re-expansion
+after a strict improvement is a real operation even if the successor list
+has already been cached.
+\end{hbmethod}
+
+Since \(h(v)\) is fixed for a given state, comparing two tentative
+\(f\)-values at that state is exactly comparing their \(g\)-values.
+This is the duplicate-pruning property used by A*. An arbitrary
+path-dependent score need not have it. For such a score, keep distinct
+path records unless the discarded record is proved no better under
+every possible common continuation.
+
+\begin{hblemma}{thm:p12-hsearch-frontier}{proved=annex:p12.hsearch-frontier}{A frontier witness on a fixed path}
+Let \(P\) be a finite path from \(s\) to a goal. Until A* terminates,
+some state \(v\) on \(P\) is in OPEN with
+\(g(v)\le g(P_{s,v})\), unless a goal of no larger path cost has
+already been selected. For an optimal path and admissible \(h\), this
+witness satisfies \(f(v)\le C^*\).
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p12-hsearch-finite}{proved=annex:p12.hsearch-finite}{Finite-graph termination and failure}
+On a finite graph with nonnegative edge costs, the stated A* procedure
+terminates for every finite heuristic satisfying the goal normalization.
+It returns failure exactly when no goal is reachable from \(s\).
+This termination statement does not require heuristic admissibility.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p12-hsearch-optimal}{proved=annex:p12.hsearch-optimal}{Least-cost solution}
+If an optimal path exists, \(h\) is admissible, and the stated A*
+procedure terminates by selecting a goal, the returned path has cost
+\(C^*\). Before termination every selected non-goal state satisfies
+\(g(v)+h(v)\le C^*\). Thus finite-graph termination gives a complete
+least-cost search procedure on finite graphs.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p12-hsearch-infinite}{proved=annex:p12.hsearch-infinite}{A sufficient condition on infinite graphs}
+Suppose \(G\) is locally finite, a goal is reachable, and some constant
+\(\delta>0\) bounds every edge cost below. With finite nonnegative
+\(h\), A* terminates with a solution. If \(h\) is also admissible,
+the solution is cheapest. Neither assertion promises termination with
+failure on an infinite unsolvable graph.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p12-hsearch-no-reopen}{proved=annex:p12.hsearch-no-reopen}{When CLOSED really is final}
+With a consistent heuristic, every state selected by A* has its least
+start-to-state cost \(g(v)=g^*(v)\). Consequently no CLOSED state needs
+reopening. Admissibility alone does not justify that implementation.
+\end{hbtheorem}
+
+\section{Deriving and using a heuristic}
+
+\begin{hbdefinition}{def:p12-hsearch-relaxation}{An edge-preserving relaxation}
+Let \(\rho\) map original states to states of another weighted graph.
+Every original goal maps to a relaxed goal. For each original edge
+\((u,v)\), the relaxed problem has a path from \(\rho(u)\) to
+\(\rho(v)\) costing at most \(c(u,v)\). Let \(d_R(x)\) be the exact
+least cost from relaxed state \(x\) to a relaxed goal, and suppose
+\(d_R(\rho(v))\) is finite. Define \(h_R(v)=d_R(\rho(v))\).
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-hsearch-relaxation}{proved=annex:p12.hsearch-relaxation}{The relaxation certificate}
+The heuristic \(h_R\) is admissible and consistent. Its guarantee uses
+the common edge-preserving relaxation and exact relaxed optimum; an
+unrelated convenient score or an arbitrary suboptimal relaxed solution
+cost does not supply this certificate.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p12-hsearch-trace}{A complete frontier trace}
+The only edges are \(s\to a\) of cost 2, \(a\to t\) of cost 2,
+\(s\to b\) of cost 1 and \(b\to t\) of cost 10, with sole goal
+\(t\). Take \(h(s)=0\), \(h(a)=2\), \(h(b)=10\), \(h(t)=0\).
+After expanding \(s\), OPEN contains
+\((a:g=2,h=2,f=4)\) and \((b:g=1,h=10,f=11)\).
+Select \(a\), generate \((t:g=4,h=0,f=4)\), then select \(t\)
+and return \(s,a,t\), cost 4. The parent of \(t\) is \(a\);
+\(b\) remains unexpanded. For a concrete relaxation producing this
+entire heuristic, retain every original edge and add a zero-cost edge
+\(s\to t\). The relaxed remaining costs are exactly
+\(0,2,10,0\) at \(s,a,b,t\); each original edge is still available
+at its original cost.
+
+If instead \(h(a)=20\), OPEN after \(s\) has scores 22 and 11.
+Expand \(b\), generate \(t\) with \(g=f=11\), and select it before
+\(a\). The returned cost is 11, although the optimum is 4. This is a
+solution-quality failure caused by overestimation.
+\end{hbexample}
+
+\begin{hbexample}{def:p12-hsearch-generated-goal}{Generation is not the stopping certificate}
+With edges \(s\to t:10\), \(s\to a:1\), \(a\to t:1\)
+and \(h=0\), expanding \(s\) generates a goal of cost 10.
+Its OPEN score is nevertheless larger than \(a\)'s score 1.
+Selecting \(a\) first improves the goal label to 2. Returning on
+generation would lose even this elementary uniform-cost guarantee.
+\end{hbexample}
+
+\begin{hbexample}{def:p12-hsearch-reopening}{An admissible inconsistent estimate}
+Use edges \(s\to a:3\), \(s\to b:1\), \(b\to a:1\),
+\(a\to t:2\), with sole goal \(t\), and set
+\(h(s)=h(a)=h(t)=0\), \(h(b)=3\).
+All estimates are admissible, but \(h(b)>1+h(a)\).
+A* first expands \(a\) with \(g=3\) and generates \(t\) at cost 5.
+It next expands \(b\), obtaining a better label \(g(a)=2\).
+Reopening \(a\) improves \(t\) to cost 4 and changes its witnessing
+path to \(s,b,a,t\). A procedure that permanently discards improvements
+to CLOSED returns cost 5 on this same input.
+\end{hbexample}
+
+\begin{hbexample}{def:p12-hsearch-termination-failures}{Two infinite-search boundaries}
+Local finiteness alone is insufficient. Let \(s\) have a goal successor
+of cost 2 and a chain whose successive edge costs are
+\(1/2,1/4,1/8,\ldots\). With \(h=0\), every chain prefix costs less
+than 1 and is selected before the goal forever. This example has strictly
+positive costs but no positive uniform lower bound.
+
+Alternatively, on an infinite unit-cost chain with no goal, A* with
+\(h=0\) never empties OPEN. Existence of a solution is an essential
+premise of Theorem~\ref{thm:p12-hsearch-infinite}.
+\end{hbexample}
+
+\section{What an efficiency comparison means}
+
+\begin{hbdefinition}{def:p12-hsearch-comparison}{Equal information and four comparison tests}
+An equal-information algorithm begins at \(s\), expands only generated
+states, receives the same successor, goal and heuristic information, and
+has no oracle for ungenerated portions of the graph. It may process known
+information differently. In particular, learning a tighter bound from an
+already revealed edge does not constitute extra external information.
+The comparison excludes a backward search started from an undisclosed goal
+or additional independently seeded search trees.
+The instance domain here consists of abstract weighted graphs. Extra known
+restrictions, such as unit edge costs or a fixed geometric state model,
+define a different comparison domain: the adversarial completions used
+below must belong to that domain before its lower bounds can be asserted.
+
+Fix a domain \(\mathcal I\), a competitor class \(\mathcal A\), and
+a family \(\{A_\tau\}\) of goal-preferring A* tie policies. The four
+tests distinguish the following quantifiers:
+\begin{enumerate}
+\item Universal expansion containment:
+ \(\forall I\,\forall\tau\,\forall B\in\mathcal A,
+ E_{A_\tau}(I)\subseteq E_B(I)\).
+\item Containment up to a competitor-dependent choice of ties:
+ \(\forall I\,\forall B\in\mathcal A\,\exists\tau,
+ E_{A_\tau}(I)\subseteq E_B(I)\).
+\item Pointwise absence of a proper-subset competitor, for a specified
+ policy: \(\forall I\,\forall B\in\mathcal A,
+ E_B(I)\not\subsetneq E_{A_\tau}(I)\).
+\item Absence of strict uniform domination of a specified policy:
+ if \(E_{A_\tau}(I_1)\setminus E_B(I_1)\ne\varnothing\) for some
+ \(I_1\), then
+ \(E_B(I_2)\setminus E_{A_\tau}(I_2)\ne\varnothing\) for some
+ \(I_2\).
+\end{enumerate}
+These are the distinctions underlying Dechter--Pearl types 0--3.
+The second test does not require one tie policy to work simultaneously
+against every competitor. Tests involving a specified policy must not be
+silently quantified over all policies when comparing their strengths.
+\end{hbdefinition}
+
+For example, two equal-cost solution branches with perfect estimates let
+different algorithms choose different branches. A tie choice reproducing
+one competitor's branch need not reproduce another's. A gratuitous
+expansion made by a different tie policy cannot be charged to the first
+policy. This is why the quantifiers belong in the statement of a claimed
+efficiency theorem.
+
+\begin{hbdefinition}{def:p12-hsearch-domains}{Admissible and consistent comparison domains}
+Let \(\mathcal I_{\rm adm}\) contain solvable finite instances with
+admissible estimates, and let \(\mathcal I_{\rm con}\) impose
+consistency as well. Let \(\mathcal A_{\rm adm}\) be the algorithms
+that return cheapest solutions on every instance in
+\(\mathcal I_{\rm adm}\). The guarantee is across that entire class,
+not just correctness on the particular graph being measured.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p12-hsearch-sure-set}{A strict contour and a nonpathological instance}
+For an admissible instance, put
+\[
+ S(I)=\{v\notin\Gamma:\text{some simple path }P:s\leadsto v
+ \text{ has }g(P_{s,u})+h(u)<C^*
+ \text{ at every noninitial }u\in P\}.
+\]
+The initial state is included when it is not a goal. An instance is
+nonpathological here when it has an optimal path on which
+\(h(u)<h^*(u)\) at every non-goal state, including \(s\).
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-hsearch-sure-set}{proved=annex:p12.hsearch-sure-set}{Strict contours are expanded}
+A* expands every state in \(S(I)\). On a nonpathological finite
+instance it expands exactly \(S(I)\), independently of remaining ties.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p12-hsearch-consistent-efficiency}{proved=annex:p12.hsearch-consistent-efficiency}{The consistent equal-information lower bound}
+On a consistent finite instance, every algorithm in
+\(\mathcal A_{\rm adm}\) expands every state in \(S(I)\).
+Consequently A* has universal expansion containment on nonpathological
+consistent instances, and competitor-dependent containment up to ties on
+all consistent finite instances.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p12-hsearch-information-trade}{An admissible estimate does not imply minimum expansions}
+Use \(s\to a:3\), \(s\to b:1\), \(s\to c:1\),
+\(b\to a:1\), \(c\to t:10\), with sole goal \(t\) and
+\(a\) a dead end. Set \(h(s)=0,h(a)=1,h(b)=20,h(c)=9,h(t)=0\).
+The infinite true remaining costs at \(a,b\) make these finite
+estimates admissible. A* expands \(a\) at score 4, then \(c\) at
+score 10, and returns cost 11 without expanding \(b\).
+
+An algorithm can instead inspect \(c\), discover a solution of cost
+11, and then inspect \(b\). The revealed edge \(b\to a\), together
+with admissibility, implies
+\(h^*(a)\ge h(b)-1=19\). Every still undiscovered solution must pass
+through \(a\), with prefix cost at least 2, so none can improve 11.
+The algorithm may stop without expanding \(a\). This saves \(a\)
+but pays for \(b\). It exemplifies the information trade in the
+paper's Figure 6(a); it is not a failure of A*'s returned cost.
+\end{hbexample}
+
+\begin{hbexample}{def:p12-hsearch-pathological-subset}{A proper-subset competitor}
+Use \(s\to a:3\), \(s\to b:1\), \(b\to a:1\),
+\(b\to t:10\), with \(a\) a dead end, and
+\(h(s)=h(t)=0,h(a)=1,h(b)=10\). A* must expand \(a\) before
+\(b\), then returns the goal at cost 11. A competitor that inspects
+\(b\) first learns \(h^*(a)\ge 9\), so all unseen solutions through
+\(a\) cost at least \(2+9=11\). It can return its known solution
+without expanding \(a\): its expansion set is a proper subset.
+The optimal path has \(h(b)=h^*(b)\), so the instance is pathological.
+Both competitors described here can be made admissible on all finite
+inputs by using only the justified stopping certificate and otherwise
+continuing exhaustive search.
+\end{hbexample}
+
+\begin{hbexample}{def:p12-hsearch-subset-cost-boundary}{The prefix cost in a pruning certificate}
+In the preceding pattern, change only the direct edge \(s\to a\)
+from cost 3 to cost 1. The same revealed information now bounds an
+unseen solution through \(a\) only by \(1+9=10\), which does
+not justify returning the known cost 11. A hidden goal continuation
+from \(a\) of cost 9 gives an optimum of 10, while preserving
+\(h(a)=1\) and \(h(b)=10\) as admissible estimates. Thus a
+pruning certificate must use the cheapest available prefix, not merely
+the prefix that passes through the state supplying its heuristic bound.
+\end{hbexample}
+
+\begin{hbtheorem}{thm:p12-hsearch-tradeoff}{proved=annex:p12.hsearch-tradeoff}{The nonpathological expansion trade}
+On a finite nonpathological admissible instance, if an algorithm in
+\(\mathcal A_{\rm adm}\) skips a state in \(S(I)\), it expands
+some state outside \(S(I)\). Thus no admissible competitor has a
+proper-subset expansion set on such an instance. There is nevertheless
+no single admissible algorithm whose expansion set is contained in every
+admissible competitor's on every admissible finite instance.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p12-hsearch-cost-compatibility}{Costwise compatibility outside the admissible domain}
+Call \(B\) costwise compatible with the A* family when, on every
+finite solvable nonnegative-cost instance with finite normalized
+\(h\), it returns a path costing no more than the path returned by
+any goal-preferring A* tie policy. This condition includes cases in which
+\(h\) overestimates. It is stronger than merely requiring \(B\)
+to be optimal whenever A* happens to be optimal.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-hsearch-cost-compatibility}{proved=annex:p12.hsearch-cost-compatibility}{Expansion containment for a costwise competitor}
+On every admissible finite instance, a costwise-compatible algorithm
+expands each state that some A* run expands at score strictly below
+\(C^*\). A* therefore has competitor-dependent containment up to
+ties against this class on the entire admissible finite domain, and
+universal containment on its nonpathological subdomain.
+\end{hbtheorem}
+
+\section{Path barriers and the A** distinction}
+
+\begin{hbdefinition}{def:p12-hsearch-pathmax}{A path-dependent barrier}
+For a path record \(P\), define
+\[
+ F(P)=\max_{u\in P}\bigl(g(P_{s,u})+h(u)\bigr).
+\]
+The A** procedure considered here uses the same strict \(g\)-improvement
+and reopening rule as Definition~\ref{def:p12-hsearch-algorithm}, but
+selects a record minimizing \(F\), with goals preferred at equal
+\(F\). Store the path record and its barrier together. Its update is
+\(F(P\cdot v)=\max(F(P),g(P\cdot v)+h(v))\).
+It does not discard a record merely because another record at the same
+state has a smaller barrier: duplicate dominance still compares \(g\).
+When a better \(g\)-record is accepted, replace the barrier by that
+record's newly computed barrier, even if the new barrier is larger.
+This separation of the selection score and duplicate criterion is the
+essential Appendix B distinction \cite[pp.~534--535]{DechterPearl1985BestFirst}.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-hsearch-pathmax}{proved=annex:p12.hsearch-pathmax}{Admissibility of the stated A** procedure}
+On solvable finite nonnegative-cost graphs with admissible \(h\), A**
+terminates with a cheapest solution; on an unsolvable finite graph it
+returns failure. The least-cost conclusion also holds on locally finite
+solvable graphs whose edge costs have a positive uniform lower bound.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p12-hsearch-pathmax-containment}{proved=annex:p12.hsearch-pathmax-containment}{A** containment with matched ties}
+On every admissible finite instance, for each goal-preferring A* tie
+policy there exists a goal-preferring A** tie policy that expands a
+subset of its distinct non-goal states. Some admissible instances let
+A** expand a proper subset of the states expanded by every A* tie
+policy. The first assertion permits the matching policy to depend on
+the instance and the specified A* run; it is not by itself a theorem
+of uniform domination by one fixed A** policy.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p12-hsearch-barrier-tie}{Why an inherited barrier changes expansions}
+Take \(s\to p:1\), \(p\to u:1\), \(p\to t:9\), with
+\(u\) a dead end, \(t\) the sole goal, and
+\(h(s)=0,h(p)=9,h(u)=h(t)=0\). After expanding \(p\), A* assigns
+\(f(u)=2\) and \(f(t)=10\), so must inspect \(u\).
+A** assigns both records barrier 10 and selects the goal, returning the
+same optimum while skipping \(u\). This is an admissible inconsistent
+case, and the saving concerns a boundary tie in the inherited barrier.
+\end{hbexample}
+
+\begin{hbexample}{def:p12-hsearch-wrong-duplicate-score}{A barrier is not a duplicate-dominance key}
+Take edges \(s\to a:1\), \(s\to b:2\), \(a\to x:4\),
+\(b\to x:5\), \(x\to t:5\), with sole goal \(t\), and
+\(h(s)=h(t)=0,h(a)=9,h(b)=6,h(x)=1\). These estimates are
+admissible. A** first reaches \(x\) through \(b\), at cost 7
+and barrier 8, and generates a goal of cost 12. It later expands \(a\)
+and obtains a path to \(x\) of cost 5 but barrier 10. Accepting the
+lower cost and reopening \(x\) produces the optimum 10. Rejecting
+that path because its barrier exceeds 8 leaves the suboptimal goal 12.
+The common extension \(x\to t\) thus reverses the preference between
+these two prefixes when preference is based only on their barriers.
+\end{hbexample}
+
+\section{The restricted path-score competitor class}
+
+\begin{hbdefinition}{def:p12-hsearch-bestfirst-class}{Normalized path-only best-first competitors}
+A competitor in \(\mathcal A_{\rm bf}\) selects a smallest-score
+OPEN record, with goal preference, using a score \(b(P)\) determined
+only by the states, edge costs, heuristic values and goal flags on that
+record. In particular it cannot inspect some separately explored branch
+when scoring \(P\). At goals require \(b(P)=g(P)\).
+It is admissible on all finite instances with admissible \(h\).
+If it merges records at a duplicate state using \(b\), require
+continuation-safe order preservation:
+\[
+ b(P)\le b(Q)\ \Longrightarrow\ b(P\cdot R)\le b(Q\cdot R)
+\]
+for every common continuation \(R\); a strict improvement reopens
+a processed state. Otherwise the competitor must keep the distinct
+path records needed by its correctness argument. Goal normalization is
+a real restriction on the numerical score, not just an ordering convention.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-hsearch-bestfirst-forcing}{proved=annex:p12.hsearch-bestfirst-forcing}{What an admissible path score cannot conceal}
+Fix an admissible finite instance with \(h(s)<C^*\). On every simple path
+\(P:s\leadsto v\) whose noninitial prefix scores \(g+h\) are
+strictly below \(C^*\), every noninitial score \(b(P_{s,u})\) of
+an algorithm in \(\mathcal A_{\rm bf}\) is strictly below \(C^*\).
+It follows that the competitor expands every state of \(S(I)\).
+Hence A* has universal expansion containment against this class on
+nonpathological instances. On all admissible finite instances, A** has
+containment against this class up to a competitor-dependent tie choice.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p12-hsearch-two-input-score}{proved=annex:p12.hsearch-two-input-score}{A restriction on two-input scores}
+If a member of \(\mathcal A_{\rm bf}\) scores non-goal records by
+\(b(P)=H(g(P),h(v))\), then
+\(H(x,y)\le x+y\) for every finite \(x,y\ge 0\) that its
+declared input domain permits. The assertion uses the normalized goal
+score and admissibility across that entire domain.
+\end{hbtheorem}
+
+\section{Global guarantees and propagation of known costs}
+\label{sec:p12-hsearch-cost-closure}
+
+\begin{hbdefinition}{def:p12-hsearch-weak-compatibility}{The weaker optimum-preservation condition}
+A weakly compatible algorithm returns an optimum whenever an A* policy
+returns an optimum on the same finite solvable instance. It need not
+match A*'s returned cost on an instance where A* is suboptimal.
+Requiring this implication for every tie policy is still weaker than
+costwise compatibility.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-hsearch-weak-compatibility}{proved=annex:p12.hsearch-weak-compatibility}{Optimum preservation does not force the strict contour}
+Under the stated graph-information interface, there is a weakly
+compatible algorithm that, on a nonpathological admissible instance,
+skips a state in \(S(I)\). Thus the costwise containment theorem
+cannot be extended to this weaker premise.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p12-hsearch-pending-domination}{proved=annex:p12.hsearch-pending-domination}{Pending label propagation can defeat type-3 optimality}
+For the pending-reopening A** procedure of
+Definition~\ref{def:p12-hsearch-pathmax}, there is a legal
+goal-preferring tie policy and an admissible equal-information algorithm
+that uniformly expands a subset of its states and a proper subset on
+some finite positive-cost instance. Consequently arbitrary tie policies
+of that operational procedure do not satisfy the type-3 test.
+\end{hbtheorem}
+
+\begin{hbmethod}{def:p12-hsearch-saturated}{A path-barrier search with complete known-edge relaxation}
+Write \(A^\dagger\) for the following explicitly strengthened
+procedure. Maintain the finite revealed graph \(R\), the set \(D\)
+of non-goals whose successor lists have been revealed, and the frontier
+\(U\) of generated states outside \(D\). Initially \(R\) has
+the single vertex \(s\) and no edges, \(D=\varnothing\),
+\(U=\{s\}\), \(g(s)=0\), \(W(s)=(s)\) and
+\(F(W(s))=h(s)\).
+
+Before selecting a new state, propagate every strict \(g\)-improvement
+through every already revealed outgoing edge until no improvement is
+possible. Keep persistent witnesses and the path barriers \(F\) with
+the same update formula as A**. This relaxation processes cached lists;
+it does not reveal a new state. Equal-cost alternatives retain the
+existing record. Now select a minimum-barrier state in \(U\), with
+goals preferred and otherwise the specified tie policy. Return its
+witness if it is a goal. Otherwise reveal its full successor list,
+place it in \(D\), initialize or improve successor labels, and repeat.
+Empty \(U\) means failure.
+
+At selection times its \(g\)-labels are shortest-path costs in
+\(R\). This is stronger than updating only descendants in the current
+pointer tree: a newly improved path may use a previously revealed edge
+that is not a current parent edge. The extra relaxation is not free in
+time or memory; it is free only in the distinct-successor-list metric.
+\end{hbmethod}
+
+\begin{hblemma}{thm:p12-hsearch-saturated-invariant}{proved=annex:p12.hsearch-saturated-invariant}{The exposed-graph certificate}
+On solvable finite instances with admissible heuristics, \(A^\dagger\)
+terminates with an optimum. Its successive selected barriers are
+nondecreasing. Immediately
+before a non-goal \(j\) is selected with barrier \(m\), let
+\(d_R\) be distance in the revealed graph. Then
+\[
+ g(v)=d_R(s,v),\qquad
+ d_R(s,x)+h(x)\le m\quad(x\in D),\qquad
+ d_R(s,j)+h(j)\le m.
+\]
+Every generated goal has known least revealed-path cost strictly greater
+than \(m\). The same procedure is complete on solvable locally finite
+graphs with a positive uniform lower bound on edge costs.
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p12-hsearch-saturated-type-three}{proved=annex:p12.hsearch-saturated-type-three}{Type-3 optimality with the propagation premise supplied}
+Fix any goal-preferring tie policy of \(A^\dagger\). On the domain
+of solvable finite graphs with nonnegative costs and admissible
+heuristics, no algorithm in \(\mathcal A_{\rm adm}\) strictly
+uniformly dominates that policy. More precisely, a competitor that
+skips one of its expanded states on some instance must, on another
+admissible finite instance, expand a state it skips.
+
+The comparison includes finite zero-cost edges. The proof's new terminal
+edge can have zero cost; a comparison domain excluding all such edges
+cannot simply reuse that construction. The competitor must satisfy the
+correctness requirement, not merely be an arbitrary procedure.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p12-hsearch-no-type-two}{proved=annex:p12.hsearch-no-type-two}{No universally protected type-2 algorithm}
+For every algorithm admissible on all solvable finite nonnegative-cost
+instances, some other admissible algorithm has a proper-subset expansion
+set on some such instance. Thus no fixed admissible algorithm satisfies
+the pointwise type-2 test throughout this domain.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p12-hsearch-positive-type-three}{proved=annex:p12.hsearch-positive-type-three}{The strictly positive-cost comparison}
+On the finite strictly positive-cost domain, use \(A^\dagger\) with
+this additional tie convention: among minimum-barrier non-goals of
+barrier \(m\), prefer a record with \(g<m\) to a record with
+\(g=m\). Goals still have first priority; remaining ties are arbitrary.
+Every fixed policy satisfying this convention is type-3 optimal against
+algorithms admissible on all instances of this positive-cost domain.
+No fixed admissible algorithm is type-2 optimal throughout that domain.
+
+The same conclusions extend to the domain also allowing solvable locally
+finite graphs with an existing positive uniform edge bound, when the
+competitors are admissible there. No numerical lower bound common to all
+instances is supplied as additional input: the finite comparison
+instances may have arbitrarily small positive edges.
+\end{hbtheorem}
+
+\section{Generalized best-first barriers}
+\label{sec:p12-hsearch-generalized}
+
+\begin{hbdefinition}{def:p12-hsearch-general}{General scores and continuation-safe graph merging}
+Let \(q(P)\) be any finite score of a finite path record. A general
+best-first path search keeps separate records, selects a minimum-score
+record, returns when its endpoint is a goal, and otherwise generates
+all one-edge extensions. Ties prefer goals unless another convention is
+explicitly stated. The initial non-goal is necessarily expanded first.
+
+For a graph version with one record per state, require continuation-safe
+order preservation of \(q\), as in
+Definition~\ref{def:p12-hsearch-bestfirst-class}. Replace a record only
+on a strict score improvement and reopen it if previously processed.
+The cost \(C(P)\) assigned to a complete solution may be nonadditive;
+stopping at a goal is part of the represented problem. No relationship
+between \(q\) and \(C\) is assumed until stated.
+In this generalized setting, \(C^*\) denotes the minimum of the
+specified \(C(P)\) over allowed solution paths, whenever attained.
+It agrees with the earlier additive \(h^*(s)\) when \(C(P)=g(P)\).
+Assume each required score evaluation terminates. This section takes
+\(s\) to be a non-goal; otherwise the empty solution is returned
+immediately and no noninitial barrier is needed.
+
+For a noninitial goal path put
+\[
+ B_q(P)=\max_{u\in P,\ u\text{ noninitial occurrence}}
+                 q(P_{s,u}),\qquad
+ \mu=\min_{P\text{ a goal path}}B_q(P).
+\]
+Assume the minimum is attained and finite. The forced initial selection
+is excluded from this threshold. Including it gives the source's full
+path maximum \(M=\max(q((s)),\mu)\).
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-hsearch-general-barrier}{proved=annex:p12.hsearch-general-barrier}{Barrier, solution bound and strict expansion contour}
+For the path-record or continuation-safe graph version:
+\begin{enumerate}
+\item After the initial expansion, until termination a current OPEN
+ record has score at most \(\mu\); every subsequent selected record
+ therefore has score at most \(\mu\).
+\item If a solution record \(P_0\) is returned, then
+ \(B_q(P_0)=\mu\). Some noninitial selection attains \(\mu\).
+\item If goal scores are \(q(P)=\psi(C(P))\), with \(\psi\)
+ strictly increasing, then \(\psi(C(P_0))\le\mu\). If an optimal
+ solution path has its largest noninitial score at its goal, the returned
+ solution is optimal.
+\item Every non-goal state reachable by a path all of whose noninitial
+ prefix scores are strictly below \(\mu\) is expanded before the
+ first noninitial selection of score \(\mu\).
+\end{enumerate}
+The last two assertions concern terminating searches. The numerical
+bound \(C(P_0)\le\psi^{-1}(\mu)\) requires that this inverse value
+be defined. The weaker full-root bound with \(M\) also follows.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p12-hsearch-general-complete}{proved=annex:p12.hsearch-general-complete}{A general completeness condition}
+Suppose the graph is locally finite, a solution exists, and along every
+infinite rooted path-record chain the prefix scores are unbounded above.
+Then the stated general best-first search terminates with a solution.
+It suffices more generally that the prefix-closed tree of records
+whose noninitial prefix scores are all at most \(\mu\) is finite.
+\end{hbtheorem}
+
+\begin{hblemma}{thm:p12-hsearch-general-closure}{proved=annex:p12.hsearch-general-closure}{What complete score propagation establishes}
+In the continuation-safe graph version, suppose a finite revealed graph
+has reached a score-relaxation fixed point: every revealed edge has been
+relaxed after the last update of its tail's current record. Then the
+current score at each reached state is the minimum score over all
+start-rooted records in that revealed graph. Merely having generated
+all edges of a record does not establish this fixed-point premise.
+\end{hblemma}
+
+\begin{hbexample}{def:p12-hsearch-saturated-cost}{A bounded score on an infinite positive-cost graph}
+Let the initial state have a direct goal edge of cost 2 and an infinite
+goal-free chain of unit-cost edges. Score a nonempty record by the
+largest edge cost on it, and set the initial score to zero. Every chain
+record has score 1, whereas the goal has score 2. General best-first
+selection follows the chain forever. All edges cost at least 1, but
+these scores are not unbounded above on the chain. Thus an edge-cost
+bound that proves additive A* completeness cannot be transferred to
+an arbitrary bounded evaluation score.
+\end{hbexample}
+
+\begin{hbtheorem}{thm:p12-hsearch-weighted}{proved=annex:p12.hsearch-weighted}{Weighted and nonlinear score certificates}
+For additive costs, nonnegative \(h\), and a search preserving the
+needed path frontier, the following assertions hold whenever it returns
+a solution. Parts~1, 3 and~4 assume admissibility of \(h\); part~2 uses
+its separately stated bound.
+\begin{enumerate}
+\item If \(q(P)=g(P)+h(v)(1+\varepsilon p(P))\), with
+ \(\varepsilon\ge 0\) and \(p(P)\le 1\) along an optimal path,
+ the returned cost is at most \((1+\varepsilon)C^*\).
+\item If \(\beta\ge 0\) and \(h(v)\le\beta h^*(v)\) along an
+ optimal path, the score
+ \(q=(1-w)g+wh\), with \(0\le w<1\), is admissible when
+ \(w\beta\le 1-w\). This includes
+ \(w\le 1/(1+\beta)\), subject to the separate restriction \(w<1\).
+\item A score \(q=H(g,h)\), nondecreasing in both arguments, is
+ admissible if \(H(C,0)\) is strictly increasing in \(C\) and
+ \(H(g,C-g)\le H(C,0)\) whenever \(0\le g\le C\).
+ In particular \(H(g,h)=\sqrt{g^2+h^2}\) qualifies.
+\item If \(\phi:[0,\infty)\to[0,\infty)\) is an increasing
+ concave bijection with \(\phi(0)=0\), then
+ \(H(g,h)=\phi(\phi^{-1}(g)+\phi^{-1}(h))\) qualifies.
+\end{enumerate}
+These are return-quality bounds, not independent termination theorems.
+For a path-dependent score, invalid duplicate pruning cannot be excused
+by one of these inequalities.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p12-hsearch-nonlinear-failure}{A nonlinear combination that overestimates}
+For \(H(g,h)=(\sqrt g+\sqrt h)^2\), use a branch
+\(s\to r:1,r\to t:1\) and a direct goal edge \(s\to u:3\),
+with \(h(s)=0,h(r)=1\) and zero goal heuristics. The score of
+\(r\) is~4, while the direct goal's score is~3. Best-first selection
+returns~3 although the optimum is~2. The input heuristic is admissible;
+the nonlinear combination has destroyed its certificate.
+\end{hbexample}
+
+\begin{hbexample}{def:p12-hsearch-forced-root}{Why the initial score is not an expansion threshold}
+In a finite tree give the initial node score~10, its non-goal child
+\(a\) score~1, a goal sibling of \(a\) score~2, and a non-goal child
+\(x\) of \(a\) score~9. The search selects the root, then \(a\),
+then the goal, skipping \(x\). The full path minmax is~10, but the
+effective threshold \(\mu\) is~2. A test using strictly less than~10
+only after the root would wrongly force \(x\)'s expansion.
+\end{hbexample}
+
+\begin{hbtheorem}{thm:p12-hsearch-returned-path}{proved=annex:p12.hsearch-returned-path}{A branch test relative to the returned path}
+Suppose the search returns the record
+\(P=(s=v_0,v_1,\ldots,v_m=t)\), and put
+\(L_i=\max_{i<j\le m}q(P_{s,v_j})\) for \(i<m\).
+If a noninitial non-goal state \(x\) is expanded, there are a prefix
+\(P_{s,v_i}\) and a continuation \(Q:v_i\leadsto x\) such that
+every new prefix in the concatenated record has score at most \(L_i\).
+Conversely, existence of such a continuation with every new prefix
+score strictly less than \(L_i\) forces \(x\)'s expansion.
+All scores use the complete start-rooted record, not the isolated branch
+segment; the continuation contains no intervening goal.
+In the necessary direction the prefix can be chosen as the common
+initial segment of the returned record and a record at which \(x\)
+was expanded.
+\end{hbtheorem}
+
+\section{An exact criterion on an ordered tree}
+\label{sec:p12-hsearch-ordered-tree}
+
+\begin{hbdefinition}{def:p12-hsearch-tree-convention}{Pure leftmost ties and side-subtree barriers}
+Let \(T\) be a finite rooted tree with ordered children, and remove
+all proper descendants of goals. In this section only, equal scores
+are resolved purely from left to right, including ties involving goals.
+This replaces, rather than supplements, the earlier goal-first tie rule.
+Write \(q(u)\) for the unique path score at \(u\).
+For a subtree rooted at \(r\), let \(m(r)\) be the minimum, over
+its goal paths, of the largest score from \(r\) through the goal,
+including both endpoints; set \(m(r)=+\infty\) if there is no goal.
+
+Fix a target \(k\). For every noninitial \(n\) on the root-to-\(k\)
+path, consider side subtrees branching at strict ancestors of \(n\).
+Let \(\ell(n)\) be the minimum of their \(m(r)\)-values on the
+left of the path, and \(r(n)\) the analogous minimum on the right.
+The minimum of an empty collection is \(+\infty\). Side branches
+at \(n\) itself are excluded: they are not generated before \(n\)
+is selected.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-hsearch-tree-criterion}{proved=annex:p12.hsearch-tree-criterion}{Necessary and sufficient left/right inequalities}
+The pure-leftmost search selects \(k\) if and only if, for every
+noninitial \(n\) on its root path,
+\[
+                 q(n)<\ell(n),\qquad q(n)\le r(n).
+\]
+A selected non-goal is expanded; a selected goal terminates the search.
+The initial node is selected without a side-subtree test. If the tree
+has no goal, all its nodes are selected and both inequalities hold.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p12-hsearch-tree-tie-boundary}{The goal-priority boundary}
+Let the root have a left non-goal leaf and a right goal leaf, both of
+score~1. The criterion selects the left leaf under pure-leftmost ties.
+The earlier goal-first convention selects the right goal immediately
+and skips the left leaf. Transferring the criterion without transferring
+its tie convention changes its conclusion.
+\end{hbexample}
+
+\begin{hbtheorem}{thm:p12-hsearch-no-type-zero}{proved=annex:p12.hsearch-no-type-zero}{Why universal tie-independent containment can fail}
+On the finite nonnegative-cost consistent domain, no single successful
+search algorithm has an expansion set contained in every admissible
+competitor's on every instance. The obstruction already uses
+uniform-cost competitors, so it also applies when competitors are
+restricted to the normalized path-score class or to the costwise-compatible
+class. Nonpathological-domain containment is not contradicted.
+\end{hbtheorem}
+
+An expansion theorem remains relative to its algorithm class and cost
+measure. Re-expansion counts, heuristic-evaluation costs, priority-queue
+work, memory and elapsed time are not determined by containment of
+distinct expanded states. A heuristic obtained by a proved relaxation
+offers a useful certificate; an empirical claim that most heuristics
+people invent satisfy it would require separate evidence.
+
+\begin{hbcorollary}{thm:p12-hsearch-positive-domain-extension}{proved=annex:p12.hsearch-positive-domain-extension}{The source's locally finite positive-cost domain}
+The strict-contour, consistent-containment, nonpathological-trade,
+matched-tie A** containment and normalized path-score conclusions extend
+to solvable locally finite graphs whose edge costs have an existing
+positive uniform lower bound. For each conclusion, use comparison
+algorithms satisfying its stated correctness requirement on that entire
+domain. The weak-compatibility counterexample, the pending-A** domination
+counterexample and the separate costwise theorem extend in the same sense;
+the latter two compatibility requirements retain their stated quantifiers
+when advice overestimates.
+
+For a normalized two-input path score in this positive-cost domain,
+\(H(x,y)\le x+y\) is forced for \(x>0,y\ge 0\). No restriction
+on the compulsory root's score is inferred by treating it as a noninitial
+state of zero prefix cost. Failure of universal containment against
+admissible and normalized path-score competitors already occurs on
+finite strictly positive-cost consistent graphs.
+\end{hbcorollary}

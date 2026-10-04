@@ -1,0 +1,347 @@
+\subsection{The constructed symbolic polynomial normalizer}
+
+\begin{hbdefinition}{def:p12-har-poly-regime}{Exact grammar, algebraic hypotheses and normal-form convention}
+Use exactly the five-constructor arithmetic syntax T and E from
+\cref{def:p12-har-autarkic-syntax,def:p12-har-autarkic-interpreter}:
+Z, U, Var i, Add s t and Mul s t. The following program implements
+the omitted source G using positive finite data and their generated
+primitive recursion in the explicitly historical Set-based regime.
+It is not a beta-only HOL term, an imported polynomial library or the
+generic compiler cited elsewhere by the chapter.
+
+For interpretation fix A:Set, typed zero/unit/addition/multiplication,
+and primitive book equality on A. Assume the actual commutative-semiring
+laws: associative and commutative addition with zero identity;
+associative and commutative multiplication with unit identity;
+both distributive laws; and zero annihilation on both sides.
+These are explicit propositional equation families. They are supplied
+by the constructed arithmetic library when A=nat. An arbitrary carrier
+with uninterpreted operations does not have these laws.
+Every well-typed valuation nu:nat-to-A in a valid context is admitted.
+Neither DN, choice, functional extensionality nor parametricity is used.
+
+Normal data are sparse polynomials: a monomial is a nondecreasing finite
+word of variable indices, repetitions recording powers; coefficients
+are positive naturals; rows have distinct words in strictly descending
+lexicographic order, with the empty word smaller than every nonempty
+word. The quotation convention is a right-associated sum with no
+trailing zero, natural literals made from U/Add, coefficient-one factors
+omitted, and no trailing unit in nonempty monomial products. This
+explicit convention may differ from implicit source parenthesization;
+the example below gives both the actual output and its association bridge
+\cite[pp.~1221--1222]{BarendregtGeuvers2001}.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p12-har-poly-data}{The actual finite data types and recursion support}
+Declare the strictly positive data
+\[
+\begin{aligned}
+ W&:\mathsf{Set},& []&:W,&i::w&:W\quad(i:\mathsf{nat},w:W),\\
+ R&:\mathsf{Set},&\mathsf{row}&:\mathsf{nat}\to W\to R,\\
+ P&:\mathsf{Set},&\epsilon&:P,&r\mathbin{\#}p&:P\quad(r:R,p:P).
+\end{aligned}
+\]
+For a fixed admitted target C, \(\mathrm{Rec}_W\) has seed z:C and branch
+nat-to-W-to-C-to-C; \(\mathrm{Rec}_R\) has a single branch nat-to-W-to-C;
+\(\mathrm{Rec}_P\) has seed z:C and branch R-to-P-to-C-to-C. Their computations
+at constructors are respectively z/f i w(rec w), f c w, and
+z/f r p(rec p). Generated Prop induction receives exactly the
+recursive-field hypotheses; R has none. These specified instances,
+not an assumed list/map library or a top-sort-polymorphic constant,
+are all finite-list support used below. A case operation is the same
+recursor with its recursive value ignored.
+
+For each fixed C put
+\(I_C:=\lambda b:\mathsf{nat}.\lambda u,v:C.
+\mathsf{nat\_rec}\ v(\lambda j:\mathsf{nat}.\lambda r:C.u)b\).
+Thus \(I_C\) O u v contracts to v and \(I_C\) one u v to u.
+Use the already constructed eqb, leb, ltb, andb and orb data codes.
+Write \(\mathsf{empty}_W\)/\(\mathsf{empty}_P\) for their constructor cases returning one at
+the empty constructor and O at a cons. Row coefficient/word and
+word head/tail projections are their constructor cases; head []=O,
+tail []=[] are explicit defaults.
+
+All displayed functional equations below are abbreviations for these
+fixed-target constructor recursions; branch types and nested recursion
+orders are checked in the annex. No well-founded search is silently
+postulated from an ordering relation.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p12-har-poly-word-code}{Computed word equality, order and product}
+The actual equality and strict-lexicographic codes are
+\[
+\begin{aligned}
+ \mathsf{weq}([],[])&=\mathsf{one},&
+ \mathsf{weq}([],j::v)&=O,&\mathsf{weq}(i::u,[])&=O,\\
+ \mathsf{weq}(i::u,j::v)&=
+          \mathsf{andb}(\mathsf{eqb}\ i\ j)(\mathsf{weq}(u,v)),\\
+ \mathsf{wlt}([],[])&=O,&
+ \mathsf{wlt}([],j::v)&=\mathsf{one},&\mathsf{wlt}(i::u,[])&=O,\\
+ \mathsf{wlt}(i::u,j::v)&=
+   \mathsf{orb}(\mathsf{ltb}\ i\ j)
+       (\mathsf{andb}(\mathsf{eqb}\ i\ j)(\mathsf{wlt}(u,v))).
+\end{aligned}
+\]
+Each is an outer \(\mathrm{Rec}_W\) at target W-to-nat, with a case on the
+second word in its seed/step and recursive value q:W-to-nat used
+only at v. This is an actual nested primitive recursion.
+Let u<lex v be the inductive Prop relation with constructors:
+[]<lex j::v; i<j implies i::u<lex j::v; and i=j together with
+u<lex v implies i::u<lex j::v. The conclusion depends only on
+data endpoints, not on a proof argument.
+
+Monomial multiplication merges words:
+\[
+ \mathsf{MW}([],v)=v,\qquad \mathsf{MW}(i::u,[])=i::u,
+\]
+and on two conses it computes
+\[
+ \mathsf{MW}(i::u,j::v)=
+ I_W(\mathsf{leb}\ i\ j)
+       (i::\mathsf{MW}(u,j::v))
+       (j::\mathsf{MW}(i::u,v)).
+\]
+To make both recursive calls legitimate, its outer \(\mathrm{Rec}_W\) has target
+W-to-W, seed lambda v.v, and cons branch
+\[
+ \lambda i:\mathsf{nat}.\lambda u:W.\lambda q:W\to W.
+ \lambda v:W.\mathrm{Rec}_W(i::u)
+  (\lambda j:\mathsf{nat}.\lambda v':W.\lambda z:W.
+     I_W(\mathsf{leb}\ i\ j)(i::q(j::v'))(j::z))v.
+\]
+The inner recursive value z is the required same-first-word/shorter-
+second-word call. Repeated variable indices are retained, not deduplicated.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p12-har-poly-word-order}{proved=annex:p12.har.poly-word-order}{All word-code cases and the strict total ordering}
+Weq and wlt satisfy Bit; weq u v=one iff u=v in primitive equality
+on W, and wlt u v=one iff u<lex v. Their O codes are equivalent
+to the respective negations. Lex order is irreflexive, transitive,
+asymmetric and trichotomous. No word-equality oracle is assumed.
+\end{hblemma}
+
+\begin{hbdefinition}{def:p12-har-poly-invariants}{The concrete sparse-data invariants}
+Use the inductive element-occurrence relation on W (head and tail
+constructors) and row-occurrence relation on P, again with head/tail
+constructors. \(\mathrm{Sorted}_W\) has the empty and singleton cases, and
+\(\mathrm{Sorted}_W\)(i::j::w) precisely when i<=j and \(\mathrm{Sorted}_W\)(j::w).
+Good epsilon holds. Good(row c w \# p) precisely requires c not=O,
+\(\mathrm{Sorted}_W\) w, Good p and, for every row c' v occurring in p, v<lex w.
+These are Prop predicates with the displayed generated proof branches;
+they are not proof fields consumed by the program.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p12-har-poly-semantics}{Actual coefficient, word and polynomial interpretations}
+In the fixed commutative semiring and valuation put
+\[
+\begin{aligned}
+ \chi&:=\mathsf{nat\_rec}\ 0_A
+                (\lambda k:\mathsf{nat}.\lambda a:A.a+_A1_A),\\
+ V_\nu&:=\mathrm{Rec}_W1_A
+       (\lambda i:\mathsf{nat}.\lambda w:W.\lambda a:A.\nu i\times_A a),\\
+ B_\nu(\mathsf{row}\ c\ w)&:=\chi c\times_A V_\nu w,\\
+ L_\nu&:=\mathrm{Rec}_P0_A
+       (\lambda r:R.\lambda p:P.\lambda a:A.B_\nu r+_A a).
+\end{aligned}
+\]
+The row interpretation is its \(\mathrm{Rec}_R\) branch; targets are the fixed A.
+These are actual functions, not interpretations postulated to satisfy
+the normalizer's desired conclusion.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p12-har-poly-coefficients}{proved=annex:p12.har.poly-coefficients}{Every coefficient homomorphism clause}
+\(\chi(0)=0_A\), \(\chi(\mathsf{one})=1_A\),
+\(\chi(c+d)=\chi c+_A\chi d\), and
+\(\chi(cd)=\chi c\times_A\chi d\).
+In the Nat instance \(\chi(n)=n\). The proofs use the declared semiring
+laws and generated nat induction, not an assumed homomorphism.
+\end{hblemma}
+
+\begin{hblemma}{thm:p12-har-poly-word-merge}{proved=annex:p12.har.poly-word-merge}{The actual merge preserves sortedness and every variable occurrence}
+MW preserves \(\mathrm{Sorted}_W\) on two sorted inputs. An index occurs in MW u v
+iff it occurs in u or v. In any declared commutative-semiring interpretation,
+\(V_\nu(\mathsf{MW}(u,v))=V_\nu(u)\times_A V_\nu(v)\),
+where V is the word interpretation defined above. The semantic equation
+holds even on unsorted words; commutativity is an explicit premise.
+\end{hblemma}
+
+\begin{hbdefinition}{def:p12-har-poly-insert}{Actual insertion, sum, scale and product}
+Put mk(c,w,p):=\(I_P\)(eqb c O)p(row c w \# p). Define
+\[
+ \mathsf{Ins}(c,w,p):=
+ I_P(\mathsf{eqb}\ c\ O)p
+  \bigl(\mathrm{Rec}_P(\mathsf{mk}(c,w,\epsilon))f_{c,w}\ p\bigr),
+\]
+where the branch on head row d v, tail s and recursive value z:P is
+\[
+ f_{c,w}(\mathsf{row}\ d\ v,s,z):=
+ I_P(\mathsf{weq}(w,v))\mathsf{mk}(c+d,w,s)
+  \bigl(I_P(\mathsf{wlt}(v,w))
+    (\mathsf{row}\ c\ w\mathbin{\#}(\mathsf{row}\ d\ v\mathbin{\#}s))
+    (\mathsf{row}\ d\ v\mathbin{\#}z)\bigr).
+\]
+The branch's row pattern is the single \(\mathrm{Rec}_R\)/case branch, not a
+destructive mutation. Zero input coefficients return p; an equal key
+combines coefficients, a larger new key is prepended, and a smaller
+one recurses through the tail. The mk zero test is present also at
+the combination branch.
+\[
+\begin{aligned}
+ \mathsf{Sum}(p,q)&:=\mathrm{Rec}_P q
+  (\lambda r:R.\lambda s:P.\lambda z:P.
+        \mathrm{case}_R(\lambda c:\mathsf{nat}.\lambda w:W.
+                            \mathsf{Ins}(c,w,z))r)\ p,\\
+ \mathsf{Scale}(c,w,p)&:=\mathrm{Rec}_P\epsilon
+  (\lambda r:R.\lambda s:P.\lambda z:P.
+   \mathrm{case}_R(\lambda d:\mathsf{nat}.\lambda v:W.
+              \mathsf{Ins}(cd,\mathsf{MW}(w,v),z))r)\ p,\\
+ \mathsf{Prod}(p,q)&:=\mathrm{Rec}_P\epsilon
+  (\lambda r:R.\lambda s:P.\lambda z:P.
+   \mathrm{case}_R(\lambda c:\mathsf{nat}.\lambda w:W.
+              \mathsf{Sum}(\mathsf{Scale}(c,w,q),z))r)\ p.
+\end{aligned}
+\]
+Every recursive target here is P; all source syntax is expanded into
+the displayed ordinary data-recursion applications.
+\end{hbdefinition}
+
+
+
+
+
+\begin{hblemma}{thm:p12-har-poly-insertion}{proved=annex:p12.har.poly-insertion}{Every insertion branch, key order and value}
+For Good p and \(\mathrm{Sorted}_W\) w, Ins(c,w,p) is Good, including c=O.
+Every output key is either w or an input key. For arbitrary raw p,w,c,
+\[
+ L_\nu(\mathsf{Ins}(c,w,p))=
+           (\chi c\times_A V_\nu w)+_A L_\nu p.
+\]
+Inserting a positive row whose key is larger than all input keys gives
+that row followed by the unchanged input, in primitive book equality.
+\end{hblemma}
+
+\begin{hblemma}{thm:p12-har-poly-operations}{proved=annex:p12.har.poly-operations}{The complete computed sum/product and all zero cases}
+Sum and Prod preserve Good on Good inputs; Scale(c,w,p) preserves
+Good when w is sorted and p is Good. Their actual interpreted values are
+\[
+\begin{aligned}
+ L_\nu(\mathsf{Sum}(p,q))&=L_\nu p+_A L_\nu q,\\
+ L_\nu(\mathsf{Scale}(c,w,p))&=(\chi c\times_A V_\nu w)\times_A L_\nu p,\\
+ L_\nu(\mathsf{Prod}(p,q))&=L_\nu p\times_A L_\nu q.
+\end{aligned}
+\]
+The semantic equations hold on raw data. Sum(epsilon,q)=q;
+Prod(epsilon,q) and Prod(p,epsilon) return epsilon; Scale(0,w,p)
+returns epsilon. Zero coefficients are dropped rather than retained
+as false nonzero rows.
+\end{hblemma}
+
+\begin{hbdefinition}{def:p12-har-poly-normalizer}{All five actual normalization branches}
+Write single(c,w):=mk(c,w,epsilon). The actual data normalization is
+\[
+ N:=\mathsf{fold}_T^P\bigl(
+ \epsilon,\mathsf{single}(\mathsf{one},[]),
+ \lambda i:\mathsf{nat}.\mathsf{single}(\mathsf{one},i::[]),
+ \lambda s,t:T.\lambda p,q:P.\mathsf{Sum}(p,q),
+ \lambda s,t:T.\lambda p,q:P.\mathsf{Prod}(p,q)\bigr).
+\]
+Thus N:T-to-P is an actual fold, not the assertion that some normal
+polynomial exists.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-har-poly-normalization}{proved=annex:p12.har.poly-normalization}{The complete five-branch normal-form and universal value proof}
+For every t:T, Good(Nt), and for every valid open valuation in the
+declared commutative semiring,
+\(L_\nu(Nt)=E_\nu^A t\).
+The program is valuation-independent; the preservation theorem is not.
+\end{hbtheorem}
+
+
+
+\begin{hbdefinition}{def:p12-har-poly-quotation}{Actual quotation-back and G}
+The four concrete quotation recursions are
+\[
+\begin{aligned}
+ \mathsf{lit}&:=\mathsf{nat\_rec}\ Z
+    (\lambda k:\mathsf{nat}.\lambda t:T.
+        I_T(\mathsf{eqb}\ k\ O)U(\mathsf{Add}\ t\ U)),\\
+ Q_W&:=\mathrm{Rec}_W U
+    (\lambda i:\mathsf{nat}.\lambda w:W.\lambda t:T.
+       I_T(\mathsf{empty}_W w)(\mathsf{Var}\ i)
+                    (\mathsf{Mul}(\mathsf{Var}\ i)t)),\\
+ Q_R(\mathsf{row}\ c\ w)&:=
+   I_T(\mathsf{empty}_W w)(\mathsf{lit}\ c)
+      (I_T(\mathsf{eqb}\ c\ \mathsf{one})(Q_Ww)
+                          (\mathsf{Mul}(\mathsf{lit}\ c)(Q_Ww))),\\
+ Q_P&:=\mathrm{Rec}_P Z
+   (\lambda r:R.\lambda p:P.\lambda t:T.
+        I_T(\mathsf{empty}_P p)(Q_Rr)(\mathsf{Add}(Q_Rr)t)),\\
+ G&:=\lambda t:T.Q_P(Nt).
+\end{aligned}
+\]
+\(Q_R\) is the displayed single \(\mathrm{Rec}_R\) branch. All four targets are T.
+The source's \(x^2\) and \(2x\) are printing sugar for Mul X X and
+Mul(Add U U)X; no additional constructor is inserted into T.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p12-har-poly-quotation}{proved=annex:p12.har.poly-quotation}{All quotation branches and the actual value bridge}
+For every raw datum,
+\(E_\nu^A(\mathsf{lit}\ c)=\chi c\),
+\(E_\nu^A(Q_W w)=V_\nu w\),
+\(E_\nu^A(Q_R r)=B_\nu r\), and
+\(E_\nu^A(Q_P p)=L_\nu p\).
+Each zero, empty, singleton, coefficient-one and other-coefficient case
+is constructed in the annex.
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p12-har-poly-preservation}{proved=annex:p12.har.poly-preservation}{G's full universal open-valuation preservation}
+For every fixed declared commutative semiring, every valid-context
+\(\nu:\mathsf{nat}\to A\), and every t:T,
+\[
+ E_\nu^A(Gt)=E_\nu^A t.
+\]
+In particular this supplies the source Nat obligation at every open
+natural-number valuation. No equality of valuation functions or closure
+of the input expression is assumed.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p12-har-poly-retraction}{proved=annex:p12.har.poly-retraction}{The actual normal-form retraction and idempotence}
+For Good p, \(N(Q_Pp)=p\) in primitive equality on P.
+Consequently G(Gt)=Gt in primitive equality on T, and every output is
+the declared quotation of Good sparse data. These are book equalities,
+not a claim of definitional idempotence on opaque open indices or of
+semantic completeness for arbitrary semiring models.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p12-har-poly-example}{proved=annex:p12.har.poly-example}{The source square-expansion example and its precise output convention}
+Put X:=Var O. The actual computation is
+\[
+\begin{aligned}
+ G(\mathsf{Mul}(\mathsf{Add}\ X\ U)(\mathsf{Add}\ X\ U))
+ \twoheadrightarrow_{\beta\iota\delta}
+ \mathsf{Add}(\mathsf{Mul}\ X\ X)
+  (\mathsf{Add}(\mathsf{Mul}(\mathsf{Add}\ U\ U)X)U).
+\end{aligned}
+\]
+This is \(x^2\)+(2x+1) under the declared right-associated quotation.
+The left-associated source reading (\(x^2\)+2x)+1 has the same interpretation
+by the explicit addition-associativity law. Literal AST identity with
+that alternate parsing is not asserted. This is a nontrivial symbolic
+output of the constructed G, not identity G or only a numerical example
+\cite[pp.~1221--1222]{BarendregtGeuvers2001}.
+\end{hbtheorem}
+
+\begin{proofboundary}{def:p12-har-poly-residual}{What the actual normalizer does not identify}
+The program is a sparse formal natural-coefficient polynomial normalizer
+for the declared five-constructor grammar. Preservation for a non-Nat
+interpretation requires its actual commutative-semiring laws; canonical
+data do not imply semantic completeness for a model with extra equations.
+Quotation's association convention is explicit rather than an assertion
+of a parser-dependent source AST identity. The distinct generic computation
+construction is given in
+\cref{thm:p12-har-prcompiler-representation,thm:p12-har-prcompiler-ok,thm:p12-har-prcompiler-predicate};
+polynomial normalization alone does not supply it or arbitrary proposition
+reification. Pocklington/Fermat and large-number certificates, differentiation and
+continuity extensions, arithmetic coding and global extension metatheory
+remain distinct source obligations. No kernel replay is claimed here.
+\end{proofboundary}

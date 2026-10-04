@@ -1,0 +1,603 @@
+%% toc: P1 6 6.1,6.3,6.4
+\section{Semantic data, models, and undischarged assumptions}
+\label{sec:p01-w02-p01-016-semantic-data}
+
+The definitions of \cref{sec:levels-03} rest on three notions that they use
+without defining. Semantic consequence quantifies over ``every complete tuple
+of semantic data permitted by that semantics'' and asks whether each tuple
+\emph{satisfies} the premises; derivability counts the \emph{undischarged
+assumptions} of a derivation. The definition of a semantics in
+\cref{sec:levels-01} names the same tuples, and \cref{sec:levels-04} speaks of
+models, but neither says what a datum is, when it is complete, what a
+variable assignment ranges over, when a set of formulas is satisfiable, or
+how an assumption comes to be discharged. This section supplies those
+definitions for the three semantics named in \cref{sec:levels-03}
+(propositional valuations, first-order structures with a variable
+assignment, Kripke structures with a world) and for the natural-deduction
+calculi \(\mathsf{ND}_{\mathsf{CPL}}\) and \(\mathsf{ND}_{\mathsf{FOL}}\).
+
+The inputs are the inherited definitions of valuations, structures,
+assignments, satisfaction, models and natural-deduction derivations
+\cite[chs.~``Levels, Objects, and Consequence'', ``Propositional Syntax and
+Semantics'', ``Natural Deduction and Sequents'', ``Structures, Satisfaction,
+and Translation'', ``Theories and Axiomatization'', ``First-Order
+Deduction'']{FrozenFormalLogicSemanticData}. The conclusions are: an exact
+account of semantic data and of satisfaction
+(\cref{def:p01-w02-p01-016-datum,def:p01-w02-p01-016-satisfaction}); the
+structure of assignments and their variants
+(\cref{thm:p01-w02-p01-016-variants,thm:p01-w02-p01-016-quantifier-variants});
+a proof that a tuple must be complete for consequence to be the intended
+relation (\cref{thm:p01-w02-p01-016-local-global}); satisfiability and its
+relation to consequence and to models
+(\cref{thm:p01-w02-p01-016-unsat-reduction,thm:p01-w02-p01-016-sentences}); and
+an account of open and discharged assumptions with the discharge theorem for
+natural deduction
+(\cref{thm:p01-w02-p01-016-open-bounds,thm:p01-w02-p01-016-discharge}). The
+results and proofs are editorial completions built from the inherited
+definitions; they are not proofs attributed to an external presentation.
+
+\subsection{Semantic data and satisfaction}
+\label{sec:p01-w02-p01-016-data}
+
+A semantics fixes what a formula is evaluated \emph{at}. The thing it is
+evaluated at is a tuple, and the tuple has to supply every component that a
+truth condition consults; otherwise the question whether the formula holds
+has no answer.
+
+\begin{hbdefinition}{def:p01-w02-p01-016-datum}{Semantic datum and complete tuple}
+Let \(\mathcal S\) be a semantics for a formal language with formula set
+\(F\), in the sense of \cref{sec:levels-01}. The semantics declares a class
+\(\mathcal D_{\mathcal S}\) of \emph{permitted semantic data}. Each member is
+a tuple whose components have declared types, and the tuple is
+\emph{complete}: it supplies, with its declared type, every component that
+some satisfaction clause of \(\mathcal S\) consults. A complete tuple of
+semantic data for \(\mathcal S\) is exactly a member of
+\(\mathcal D_{\mathcal S}\). A tuple that lacks a consulted component, or
+supplies one of the wrong type, is not a datum of \(\mathcal S\), and
+\(\mathcal S\) assigns it no satisfaction relation. The three semantics named
+in \cref{sec:levels-03} declare the following data.
+\begin{enumerate}
+  \item \emph{Classical propositional logic.} A datum is a single valuation
+        \(v\colon\mathsf{Prop}\to\mathbb B\), where
+        \(\mathbb B=\{\mathbf F,\mathbf T\}\). Completeness means that
+        \(v\) is total: it assigns a value to every propositional variable,
+        not only to those occurring in the formulas at hand
+        \cite[ch.~``Propositional Syntax and Semantics'', definition ``Truth
+        values and valuation'']{FrozenFormalLogicSemanticData}.
+  \item \emph{First-order logic over a signature \(\Lang\).} A datum is a
+        pair \((\mathcal M,s)\) of an \(\Lang\)-structure \(\mathcal M\),
+        whose domain \(\dom\mathcal M\) is nonempty, and a variable
+        assignment \(s\) in \(\mathcal M\)
+        (\cref{def:p01-w02-p01-016-assignment}). The structure alone is not a
+        datum
+        \cite[ch.~``Structures, Satisfaction, and Translation'', definitions
+        ``First-order structure'' and ``Variable assignment and
+        update'']{FrozenFormalLogicSemanticData}.
+  \item \emph{Normal modal logic over a class \(\mathcal C\) of frames.} A
+        datum is a pair \((\mathcal M,w)\) of a Kripke structure
+        \(\mathcal M=(W,R,V)\) with \(W\ne\varnothing\),
+        \(R\subseteq W\times W\), \(V\colon\mathsf{Prop}\to\mathcal P(W)\)
+        and \((W,R)\in\mathcal C\), together with a world \(w\in W\)
+        \cite[ch.~``Modal, Temporal, and Epistemic Logic'', definition
+        ``Kripke frame and Kripke structure'']{FrozenFormalLogicSemanticData}.
+        The Kripke structure alone is not a datum.
+\end{enumerate}
+\index{semantic data}\index{complete tuple of semantic data}
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p01-w02-p01-016-assignment}{Variable assignment and assignment variant}
+Let \(\mathcal M\) be a first-order structure and let \(\mathsf{Var}\) be the
+set of individual variables. A \emph{variable assignment} in \(\mathcal M\) is
+a total function
+\[
+  s\colon\mathsf{Var}\to\dom\mathcal M .
+\]
+Its domain is the whole of \(\mathsf{Var}\), not only the variables free in
+some formula; its codomain is the domain of the structure. For
+\(x\in\mathsf{Var}\) and \(a\in\dom\mathcal M\), the \emph{update}
+\(s[x\mapsto a]\) is the assignment that sends \(x\) to \(a\) and agrees with
+\(s\) on every other variable
+\cite[ch.~``Structures, Satisfaction, and Translation'', definition
+``Variable assignment and update'']{FrozenFormalLogicSemanticData}. An
+assignment \(s'\) in \(\mathcal M\) is an \emph{\(x\)-variant} of \(s\) iff
+\(s'(y)=s(y)\) for every variable \(y\ne x\). Every assignment is an
+\(x\)-variant of itself.
+\index{variable assignment}\index{assignment!variant}
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p01-w02-p01-016-variants}{proved=annex:p01-w02-p01-016-variants}{Updates and variants}
+Let \(\mathcal M\) be a structure, \(s\) an assignment in \(\mathcal M\),
+\(x,y\) variables and \(a,b\in\dom\mathcal M\).
+\begin{enumerate}
+  \item At least one assignment in \(\mathcal M\) exists.
+  \item \(s[x\mapsto a]\) is an \(x\)-variant of \(s\), and every
+        \(x\)-variant \(s'\) of \(s\) equals \(s[x\mapsto s'(x)]\). The map
+        \(a\mapsto s[x\mapsto a]\) is a bijection from \(\dom\mathcal M\) onto
+        the set of \(x\)-variants of \(s\).
+  \item \(s[x\mapsto a][x\mapsto b]=s[x\mapsto b]\) and
+        \(s[x\mapsto s(x)]=s\).
+  \item If \(x\ne y\), then
+        \(s[x\mapsto a][y\mapsto b]=s[y\mapsto b][x\mapsto a]\).
+\end{enumerate}
+\end{hblemma}
+
+Satisfaction is the relation that answers, for each datum and each formula,
+whether the formula holds at that datum. It is defined by structural
+recursion on formulas, one clause for each formation rule; only the atomic
+clauses and the clauses for variable-binding or world-shifting operators
+consult components of the datum.
+
+\begin{hbdefinition}{def:p01-w02-p01-016-satisfaction}{Satisfaction relation}
+A \emph{satisfaction relation} for a semantics \(\mathcal S\) is a relation
+between \(\mathcal D_{\mathcal S}\) and the formula set \(F\); write
+\(d\entails_{\mathcal S}\varphi\), read ``\(d\) satisfies \(\varphi\)'', when
+it holds, and \(d\not\entails_{\mathcal S}\varphi\) otherwise. For
+\(\Gamma\subseteq F\), \(d\entails_{\mathcal S}\Gamma\) means
+\(d\entails_{\mathcal S}\gamma\) for every \(\gamma\in\Gamma\); in particular
+every datum satisfies \(\varnothing\). The subscript is dropped when one
+semantics is fixed. For the three semantics of
+\cref{def:p01-w02-p01-016-datum}:
+\begin{enumerate}
+  \item \(v\entails\varphi\) iff \(\widehat v(\varphi)=\mathbf T\), where
+        \(\widehat v\) is the unique extension of \(v\) by the recursive
+        truth clauses of \cref{sec:prop-syntax-semantics-02};
+  \item \(\mathcal M,s\entails\varphi\) is defined by the clauses of
+        \cref{sec:fol-semantics-02}. The clauses that consult the datum are
+        the atomic ones,
+        \[
+          \begin{aligned}
+          \mathcal M,s\entails R(t_1,\ldots,t_n)
+          &\iff
+          (\sem{t_1}^{\mathcal M}_s,\ldots,\sem{t_n}^{\mathcal M}_s)\in
+          R^{\mathcal M},\\
+          \mathcal M,s\entails r=t
+          &\iff
+          \sem{r}^{\mathcal M}_s=\sem{t}^{\mathcal M}_s,
+          \end{aligned}
+        \]
+        where \(\sem{t}^{\mathcal M}_s\) is the value of the term \(t\) in
+        \(\mathcal M\) under \(s\), and the quantifier clauses,
+        \[
+          \mathcal M,s\entails\forall x\,\varphi
+          \iff
+          \mathcal M,s[x\mapsto a]\entails\varphi
+          \text{ for every }a\in\dom\mathcal M,
+        \]
+        with ``some'' in place of ``every'' for \(\exists x\,\varphi\); the
+        clauses for \(\bottom,\neg,\land,\lor,\to\) are the Boolean ones,
+        with \(\mathcal M,s\entails\neg\varphi\) iff
+        \(\mathcal M,s\not\entails\varphi\);
+  \item \(\mathcal M,w\entails A\) is classical for the propositional
+        connectives at the world \(w\), and
+        \(\mathcal M,w\entails\Box A\) iff \(\mathcal M,v\entails A\) for
+        every \(v\) with \(wRv\) \cite[ch.~``Modal, Temporal, and Epistemic
+        Logic'', definition ``Kripke frame and Kripke
+        structure'']{FrozenFormalLogicSemanticData}. The inherited definition
+        does not display the atomic clause; here it is read as
+        \(\mathcal M,w\entails p\) iff \(w\in V(p)\), the clause that the
+        inherited intuitionistic semantics states for a valuation of the same
+        type \(\mathsf{Prop}\to\mathcal P(W)\) \cite[ch.~``Intuitionistic
+        Logic'', forcing relation following definition ``Intuitionistic
+        Kripke frame and structure'']{FrozenFormalLogicSemanticData}.
+\end{enumerate}
+In each case the semantic consequence relation of \cref{sec:levels-03} is
+\[
+  \Gamma\entails_{\mathcal S}\varphi
+  \iff
+  \text{for every }d\in\mathcal D_{\mathcal S}:\;
+  d\entails_{\mathcal S}\Gamma\text{ implies }d\entails_{\mathcal S}\varphi .
+\]
+\index{satisfaction!relation of a semantics}
+\end{hbdefinition}
+
+The quantifier clause is often stated with variants instead of updates. The
+two readings agree.
+
+\begin{hbtheorem}{thm:p01-w02-p01-016-quantifier-variants}{proved=annex:p01-w02-p01-016-quantifier-variants}{Quantifier clauses through variants}
+For every structure \(\mathcal M\), assignment \(s\), variable \(x\) and
+formula \(\varphi\):
+\begin{enumerate}
+  \item \(\mathcal M,s\entails\forall x\,\varphi\) iff
+        \(\mathcal M,s'\entails\varphi\) for every \(x\)-variant \(s'\) of
+        \(s\);
+  \item \(\mathcal M,s\entails\exists x\,\varphi\) iff
+        \(\mathcal M,s'\entails\varphi\) for some \(x\)-variant \(s'\) of
+        \(s\).
+\end{enumerate}
+\end{hbtheorem}
+
+Completeness of a tuple is a requirement on the definition, not on what has
+to be inspected in a particular case. The coincidence lemmas
+(\cref{lem:prop-coincidence,lem:fol-coincidence}) show that satisfaction of
+a formula depends only on the components it mentions, and this makes finite
+checks possible for finitely many propositional formulas.
+
+\begin{hbtheorem}{thm:p01-w02-p01-016-finite-check}{proved=annex:p01-w02-p01-016-finite-check}{Finitely many valuations suffice for propositional consequence}
+Let \(\Gamma\cup\{\varphi\}\) be a set of propositional formulas and let
+\(P\subseteq\mathsf{Prop}\) be a finite set containing every propositional
+variable that occurs in a member of \(\Gamma\cup\{\varphi\}\). For
+\(u\colon P\to\mathbb B\), let \(u^{+}\) be the valuation that agrees with
+\(u\) on \(P\) and sends every variable outside \(P\) to \(\mathbf F\). Then
+\(\Gamma\entails\varphi\) iff, for each of the \(2^{\lvert P\rvert}\)
+functions \(u\colon P\to\mathbb B\), \(u^{+}\entails\Gamma\) implies
+\(u^{+}\entails\varphi\).
+\end{hbtheorem}
+
+The truth table in \cref{sec:prop-syntax-semantics-02} is this check with
+\(\Gamma=\varnothing\) and \(P=\{P,Q\}\). Partial data serve only because the
+coincidence lemma relates them to complete ones; they are not themselves data
+of the semantics.
+
+The next result shows what goes wrong when the components of a datum are not
+held fixed together. Quantifying first over structures, and only inside that
+over assignments, yields a different relation.
+
+\begin{hbtheorem}{thm:p01-w02-p01-016-local-global}{proved=annex:p01-w02-p01-016-local-global}{Consequence must quantify over whole tuples}
+\leavevmode
+\begin{enumerate}
+  \item Let \(R\) be a unary relation symbol and \(x\) a variable. For every
+        structure \(\mathcal M\): if \(\mathcal M,s\entails R(x)\) for every
+        assignment \(s\), then \(\mathcal M,s\entails\forall x\,R(x)\) for
+        every assignment \(s\). Nevertheless
+        \(\{R(x)\}\not\entails\forall x\,R(x)\).
+  \item Let \(p\in\mathsf{Prop}\) and let \(\mathcal C\) be the class of all
+        frames. For every Kripke structure \(\mathcal M\) on a frame in
+        \(\mathcal C\): if \(\mathcal M,w\entails p\) for every world \(w\),
+        then \(\mathcal M,w\entails\Box p\) for every world \(w\).
+        Nevertheless \(\{p\}\not\entails^{\ell}_{\mathcal C}\Box p\), where
+        \(\entails^{\ell}_{\mathcal C}\) is the consequence relation of
+        \cref{sec:levels-03} for the data \((\mathcal M,w)\).
+\end{enumerate}
+\end{hbtheorem}
+
+The relation in which the whole tuple is quantified at once is the one
+defined in \cref{sec:levels-03}. For modal data it is the local consequence
+\(\entails^{\ell}_{\mathcal C}\) of \cref{sec:modal-temporal-epistemic-01}; the
+structure-wise relation is the global consequence
+\(\entails^{g}_{\mathcal C}\), and the inherited text records that the two
+can differ \cite[ch.~``Modal, Temporal, and Epistemic Logic'', definition
+``Local and global modal consequence'']{FrozenFormalLogicSemanticData}.
+Clause 2 of \cref{thm:p01-w02-p01-016-local-global} is a witness.
+
+\begin{hbwarning}{def:p01-w02-p01-016-incomplete-tuple}{A structure without an assignment does not satisfy an open formula}
+Let \(\mathcal M\) have domain \(\{0,1\}\) and \(R^{\mathcal M}=\{0\}\), and
+let \(s(x)=0\) and \(s'(x)=1\). Then \(\mathcal M,s\entails R(x)\) and
+\(\mathcal M,s'\not\entails R(x)\). The question whether ``\(\mathcal M\)
+satisfies \(R(x)\)'' therefore has no answer: \((\mathcal M)\) is not a
+complete tuple. Writing \(\mathcal M\entails R(x)\) and meaning ``for some
+assignment'' or ``for every assignment'' silently changes the consequence
+relation, as \cref{thm:p01-w02-p01-016-local-global} shows. Only for a
+sentence is the choice of assignment immaterial, by the assignment
+independence corollary in \cref{sec:fol-semantics-02}.
+\end{hbwarning}
+
+\subsection{Models, satisfiability, validity, and consequence}
+\label{sec:p01-w02-p01-016-models}
+
+\begin{hbdefinition}{def:p01-w02-p01-016-satisfiable}{Satisfiability}
+Let \(\mathcal S\) be a semantics with data \(\mathcal D_{\mathcal S}\). A set
+\(\Gamma\) of formulas is \emph{satisfiable} in \(\mathcal S\) iff
+\(d\entails_{\mathcal S}\Gamma\) for some \(d\in\mathcal D_{\mathcal S}\),
+and \emph{unsatisfiable} otherwise. A formula \(\varphi\) is satisfiable iff
+\(\{\varphi\}\) is. For the three semantics of
+\cref{def:p01-w02-p01-016-datum} this reads: some valuation satisfies
+\(\Gamma\) \cite[ch.~``Propositional Syntax and Semantics'', definition
+``Semantic notions'']{FrozenFormalLogicSemanticData}; some structure and
+assignment satisfy every member of \(\Gamma\) \cite[ch.~``Theories and
+Axiomatization'', definition ``Theory, model, satisfiability, and structure
+theory'']{FrozenFormalLogicSemanticData}; some Kripke structure on a frame
+in \(\mathcal C\) and some world of it satisfy every member of \(\Gamma\).
+\index{satisfiable}\index{unsatisfiable}
+\end{hbdefinition}
+
+Validity is the case \(\Gamma=\varnothing\) of consequence
+(\cref{sec:levels-03}): \(\varphi\) is valid iff every datum satisfies it.
+A \emph{model} is a first-order notion tied to sentences: a structure
+\(\mathcal M\) is a model of a set \(T\) of sentences iff
+\(\mathcal M\entails\sigma\) for every \(\sigma\in T\), where
+\(\mathcal M\entails\sigma\) means \(\mathcal M,s\entails\sigma\) for every
+assignment \(s\) (\cref{sec:levels-04}, \cref{def:fol-theory-satisfiability}).
+A structure is not called a model without a stated sentence or theory, and a
+datum of the propositional or modal semantics is not called a model in this
+handbook's registered vocabulary.
+
+\begin{hbtheorem}{thm:p01-w02-p01-016-unsat-reduction}{proved=annex:p01-w02-p01-016-unsat-reduction}{Consequence, validity and satisfiability}
+Let \(\mathcal S\) be a semantics whose satisfaction relation obeys the
+classical negation clause, \(d\entails_{\mathcal S}\neg\varphi\) iff
+\(d\not\entails_{\mathcal S}\varphi\), for every datum \(d\) and formula
+\(\varphi\). This holds for the three semantics of
+\cref{def:p01-w02-p01-016-datum}. For all \(\Gamma,\Delta,\varphi\):
+\begin{enumerate}
+  \item \(\Gamma\entails_{\mathcal S}\varphi\) iff
+        \(\Gamma\cup\{\neg\varphi\}\) is unsatisfiable;
+  \item \(\varphi\) is valid iff \(\neg\varphi\) is unsatisfiable, and
+        \(\varphi\) is satisfiable iff \(\neg\varphi\) is not valid;
+  \item if \(\Gamma\subseteq\Delta\) and \(\Gamma\entails_{\mathcal S}\varphi\),
+        then \(\Delta\entails_{\mathcal S}\varphi\); if \(\Delta\) is
+        satisfiable, so is every subset of \(\Delta\);
+  \item if \(\Gamma\) is unsatisfiable, then
+        \(\Gamma\entails_{\mathcal S}\psi\) for every formula \(\psi\).
+\end{enumerate}
+Clauses 3 and 4 hold for every semantics, without the negation clause.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p01-w02-p01-016-sentences}{proved=annex:p01-w02-p01-016-sentences}{Satisfiability and consequence for sentences through models}
+Let \(T\cup\{\sigma\}\) be a set of sentences of a first-order signature
+\(\Lang\).
+\begin{enumerate}
+  \item \(T\) is satisfiable iff \(T\) has a model.
+  \item \(T\entails\sigma\) iff every model of \(T\) is a model of
+        \(\sigma\), that is,
+        \(\operatorname{Mod}(T)\subseteq\operatorname{Mod}(\{\sigma\})\).
+  \item \(\sigma\) is valid iff \(\mathcal M\entails\sigma\) for every
+        \(\Lang\)-structure \(\mathcal M\).
+\end{enumerate}
+\end{hbtheorem}
+
+The step from satisfiability to a model in clause 1 uses the nonemptiness of
+domains: a model is a structure in which every assignment satisfies \(T\), and
+there must be an assignment to start from (clause 1 of
+\cref{thm:p01-w02-p01-016-variants}).
+
+\begin{hbexample}{def:p01-w02-p01-016-worked-models}{A consequence checked through unsatisfiability}
+Let \(\Lang\) have unary relation symbols \(P,Q\) and a constant symbol
+\(c\), and let \(\Gamma=\{\forall x\,(P(x)\to Q(x)),\,P(c)\}\). By clause 1
+of \cref{thm:p01-w02-p01-016-unsat-reduction}, \(\Gamma\entails Q(c)\) holds
+iff \(\Gamma\cup\{\neg Q(c)\}\) is unsatisfiable. Suppose
+\(\mathcal M,s\) satisfied all three formulas and put \(a=c^{\mathcal M}\).
+The universal clause at \(a\) gives
+\(\mathcal M,s[x\mapsto a]\entails P(x)\to Q(x)\). Since
+\(\mathcal M,s\entails P(c)\), \(a\in P^{\mathcal M}\), so
+\(\mathcal M,s[x\mapsto a]\entails P(x)\), hence
+\(\mathcal M,s[x\mapsto a]\entails Q(x)\) and \(a\in Q^{\mathcal M}\). Then
+\(\mathcal M,s\entails Q(c)\), contradicting
+\(\mathcal M,s\entails\neg Q(c)\). So \(\Gamma\entails Q(c)\).
+
+The premises are sentences, so by \cref{thm:p01-w02-p01-016-sentences} the
+same fact says that every model of \(\Gamma\) is a model of \(Q(c)\). The set
+\(\Gamma\) is satisfiable: the structure with domain \(\{0\}\),
+\(P^{\mathcal M}=Q^{\mathcal M}=\{0\}\) and \(c^{\mathcal M}=0\) is a model.
+Dropping the universal premise changes the verdict: \(\{P(c),\neg Q(c)\}\) is
+satisfied by the structure with domain \(\{0\}\), \(P^{\mathcal M}=\{0\}\),
+\(Q^{\mathcal M}=\varnothing\), \(c^{\mathcal M}=0\), so
+\(\{P(c)\}\not\entails Q(c)\).
+\end{hbexample}
+
+Satisfiability of a set with free variables is a property of pairs, and it is
+not preserved by passing to universal closures.
+
+\begin{hbtheorem}{thm:p01-w02-p01-016-closure-gap}{proved=annex:p01-w02-p01-016-closure-gap}{Satisfiable formulas with unsatisfiable closures}
+Let \(R\) be a unary relation symbol and \(x\ne y\) variables.
+\begin{enumerate}
+  \item \(\{R(x),\neg R(y)\}\) is satisfiable.
+  \item \(\{\forall x\,R(x),\forall y\,\neg R(y)\}\) is unsatisfiable, so it
+        has no model.
+  \item No structure \(\mathcal M\) has
+        \(\mathcal M,s\entails R(x)\) and \(\mathcal M,s\entails\neg R(y)\)
+        for every assignment \(s\).
+\end{enumerate}
+\end{hbtheorem}
+
+The set \(\{R(x),\neg R(y)\}\) has no model in the registered sense, because
+model is defined for sets of sentences only; the countermodel definition of
+\cref{sec:levels-05} is restricted to sentences for the same reason. A
+refutation of a consequence between open formulas states a structure and an
+assignment.
+
+\subsection{Assumptions, discharge, and derivability}
+\label{sec:p01-w02-p01-016-assumptions}
+
+Derivability in \cref{sec:levels-03} requires a derivation ``whose
+undischarged assumptions are members of \(\Gamma\)''. For the
+natural-deduction calculi on the handbook's route this is made exact as
+follows. The rules of \(\mathsf{ND}_{\mathsf{CPL}}\) are displayed in
+\cref{sec:prop-deduction-01}; \(\mathsf{ND}_{\mathsf{FOL}}\) adds the
+quantifier, conversion and identity rules of \cref{sec:fol-deduction-01}.
+
+\begin{hbdefinition}{def:p01-w02-p01-016-assumption}{Assumption, discharge, open and undischarged assumption}
+Let \(D\) be a natural-deduction derivation: a finite rooted tree of formula
+occurrences in which each inner node, with its immediate predecessors, is an
+instance of a rule \cite[ch.~``Natural Deduction and Sequents'', definition
+``Natural-deduction derivation'']{FrozenFormalLogicSemanticData}.
+\begin{enumerate}
+  \item An \emph{assumption occurrence} of \(D\) is a leaf that is not the
+        conclusion of a rule without premises. In \(\mathsf{ND}_{\mathsf{CPL}}\)
+        every leaf is an assumption occurrence; in
+        \(\mathsf{ND}_{\mathsf{FOL}}\) the only premise-free rule is \(=I\),
+        whose conclusion \(t=t\) is a leaf that is not an assumption.
+        Assumption occurrences carry discharge labels drawn from
+        \(\mathbb N\).
+  \item A \emph{discharging rule} is one of \(\to I\), \(\neg I\),
+        \(\mathsf{RAA}\), \(\lor E\) and \(\exists E\). An application of
+        \(\to I\), \(\neg I\), \(\mathsf{RAA}\) or \(\exists E\) carries one
+        label \(i\) and \emph{discharges} exactly the open occurrences marked
+        \(i\) of its bracketed assumption (\(\varphi\), \(\varphi\),
+        \(\neg\varphi\), \(\varphi[y/x]\) respectively) that lie above the
+        premise to which the bracket belongs; an application of \(\lor E\)
+        carries labels \(i,j\) and discharges the open occurrences of the
+        first disjunct marked \(i\) above its second premise and those of the
+        second disjunct marked \(j\) above its third premise. Each label
+        carried by an application discharges at least one occurrence.
+  \item An assumption occurrence is \emph{discharged} in \(D\) iff some rule
+        application on the path from it to the root discharges it, and
+        \emph{open}, or \emph{undischarged}, otherwise.
+  \item \(\operatorname{Open}(D)\) is the set of formulas that have at least
+        one open occurrence in \(D\).
+\end{enumerate}
+Then \(\Gamma\derives_{\mathcal C}\varphi\), for
+\(\mathcal C\in\{\mathsf{ND}_{\mathsf{CPL}},\mathsf{ND}_{\mathsf{FOL}}\}\),
+holds iff some \(\mathcal C\)-derivation \(D\) has conclusion \(\varphi\) and
+\(\operatorname{Open}(D)\subseteq\Gamma\)
+\cite[ch.~``Natural Deduction and Sequents'', definition ``Propositional
+derivability''; ch.~``First-Order Deduction'', definition ``First-order
+derivability'']{FrozenFormalLogicSemanticData}. The formula \(\varphi\) is a
+theorem of \(\mathcal C\) iff \(\operatorname{Open}(D)=\varnothing\) for some
+derivation \(D\) of \(\varphi\), that is, iff every assumption occurrence of
+\(D\) is discharged.
+\index{assumption!open}\index{assumption!undischarged}\index{discharge}
+\end{hbdefinition}
+
+Two features of the definition matter in use. Openness is a property of an
+\emph{occurrence}: one formula may have a discharged occurrence and an open
+one in the same derivation. And the side conditions of \(\forall I\) and
+\(\exists E\) refer to the open assumptions of the subderivation at the point
+where the rule is applied, so whether an assumption has already been
+discharged decides whether a generalization is permitted.
+
+\begin{hblemma}{thm:p01-w02-p01-016-open-bounds}{proved=annex:p01-w02-p01-016-open-bounds}{How a rule application changes the open assumptions}
+\leavevmode
+\begin{enumerate}
+  \item If \(D\) consists of a single assumption occurrence of \(\varphi\),
+        then \(\operatorname{Open}(D)=\{\varphi\}\); if \(D\) consists of a
+        single conclusion of \(=I\), then \(\operatorname{Open}(D)=\varnothing\).
+  \item Let \(D\) end with an application \(\rho\) of a rule to the
+        conclusions of immediate subderivations \(D_1,\ldots,D_n\), with
+        \(n\ge1\), and let \(\Delta_\rho\) be the set of formulas of which
+        \(\rho\) discharges at least one occurrence. Then
+        \[
+          \Bigl(\bigcup_{k=1}^{n}\operatorname{Open}(D_k)\Bigr)
+          \setminus\Delta_\rho
+          \;\subseteq\;
+          \operatorname{Open}(D)
+          \;\subseteq\;
+          \bigcup_{k=1}^{n}\operatorname{Open}(D_k),
+        \]
+        with equality throughout when \(\rho\) discharges nothing.
+\end{enumerate}
+\end{hblemma}
+
+Both inclusions in clause 2 can be strict at the formula level, which is why
+the open set is not a function of the open sets of the subderivations alone.
+The example below exhibits a case where a formula in \(\Delta_\rho\) stays
+open.
+
+\begin{hbtheorem}{thm:p01-w02-p01-016-derivability-structure}{proved=annex:p01-w02-p01-016-derivability-structure}{Structural properties of derivability}
+Let \(\mathcal C\) be \(\mathsf{ND}_{\mathsf{CPL}}\) or
+\(\mathsf{ND}_{\mathsf{FOL}}\).
+\begin{enumerate}
+  \item If \(\varphi\in\Gamma\), then \(\Gamma\derives_{\mathcal C}\varphi\).
+  \item If \(\Gamma\subseteq\Delta\) and \(\Gamma\derives_{\mathcal C}\varphi\),
+        then \(\Delta\derives_{\mathcal C}\varphi\).
+  \item If \(\Gamma\derives_{\mathcal C}\varphi\), then
+        \(\Gamma_0\derives_{\mathcal C}\varphi\) for some finite
+        \(\Gamma_0\subseteq\Gamma\).
+  \item \(\derives_{\mathcal C}\varphi\) iff some derivation of \(\varphi\)
+        has all its assumption occurrences discharged.
+\end{enumerate}
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p01-w02-p01-016-discharge}{proved=annex:p01-w02-p01-016-discharge}{Discharge theorem for natural deduction}
+Let \(\mathcal C\) be \(\mathsf{ND}_{\mathsf{CPL}}\) or
+\(\mathsf{ND}_{\mathsf{FOL}}\). For every set \(\Gamma\) and formulas
+\(\varphi,\psi\),
+\[
+  \Gamma\cup\{\varphi\}\derives_{\mathcal C}\psi
+  \iff
+  \Gamma\derives_{\mathcal C}\varphi\to\psi .
+\]
+\end{hbtheorem}
+
+\begin{hbexample}{def:p01-w02-p01-016-worked-discharge}{Tracking the open assumptions}
+Let \(P,Q,S\in\mathsf{Prop}\). In the derivation below, written as a
+numbered list in the inherited style, the last column records
+\(\operatorname{Open}\) of the subderivation ending at each line.
+\[
+\begin{array}{@{}r@{\;\;}l@{\;\;}l@{\;\;}l@{}}
+1.&[P]^1&\text{assumption}&\{P\}\\
+2.&[P\to Q]^2&\text{assumption}&\{P\to Q\}\\
+3.&Q&\to E,1,2&\{P,\,P\to Q\}\\
+4.&[Q\to S]^3&\text{assumption}&\{Q\to S\}\\
+5.&S&\to E,3,4&\{P,\,P\to Q,\,Q\to S\}\\
+6.&P\to S&\to I,1\text{--}5&\{P\to Q,\,Q\to S\}\\
+7.&(Q\to S)\to(P\to S)&\to I,4\text{--}6&\{P\to Q\}\\
+8.&(P\to Q)\to((Q\to S)\to(P\to S))&\to I,2\text{--}7&\varnothing
+\end{array}
+\]
+Line 6 witnesses \(\{P\to Q,Q\to S\}\derives_{\mathsf{ND}_{\mathsf{CPL}}}P\to S\);
+line 8 shows that the final formula is a theorem. Each \(\to I\) removes one
+formula from the open set, in agreement with
+\cref{thm:p01-w02-p01-016-open-bounds}.
+
+Now take two occurrences of \(P\) with different labels, \([P]^1\) and
+\([P]^2\), combine them by \(\land I\) to \(P\land P\), and apply \(\to I\)
+with label \(1\) to obtain \(P\to(P\land P)\). Only the occurrence marked
+\(1\) is discharged. The occurrence marked \(2\) stays open, so this tree
+witnesses \(\{P\}\derives_{\mathsf{ND}_{\mathsf{CPL}}}P\to(P\land P)\) and
+not the theorem; for this tree, \(P\in\Delta_\rho\) for the final
+\(\to I\), and still \(P\) belongs to its open set.
+Marking both occurrences with one fresh label before applying \(\to I\), as
+the inherited definition permits, discharges both and proves
+\(\derives_{\mathsf{ND}_{\mathsf{CPL}}}P\to(P\land P)\).
+\end{hbexample}
+
+\begin{hbtheorem}{thm:p01-w02-p01-016-eigen-failure}{proved=annex:p01-w02-p01-016-eigen-failure}{An open assumption prevents generalization}
+Let \(P\) be a unary relation symbol and \(x\) a variable.
+\begin{enumerate}
+  \item The two-node tree whose leaf is an assumption occurrence of
+        \(P(x)\) and whose root \(\forall x\,P(x)\) is obtained by
+        \(\forall I\) is not a derivation, and
+        \(\{P(x)\}\not\entails\forall x\,P(x)\).
+  \item \(\derives_{\mathsf{ND}_{\mathsf{FOL}}}\forall x\,(P(x)\to P(x))\).
+\end{enumerate}
+\end{hbtheorem}
+
+In clause 2 the assumption \(P(x)\) is discharged by \(\to I\) before
+\(\forall I\) is applied, so at the generalization step no open assumption
+contains \(x\) free. The difference between the two clauses is exactly the
+difference between an undischarged and a discharged assumption.
+
+\begin{hbwarning}{def:p01-w02-p01-016-limits}{Limits of these definitions}
+\begin{enumerate}
+  \item The account of discharge applies to calculi with discharging rules.
+        In the Hilbert-style modal calculi of
+        \cref{sec:modal-temporal-epistemic-01}, a derivation from \(\Gamma\)
+        is a finite sequence whose premise lines are never discharged, and
+        necessitation applies only to formulas with a separate derivation
+        from no premises \cite[ch.~``Modal, Temporal, and Epistemic Logic'',
+        section ``Normal propositional modal logic'']{FrozenFormalLogicSemanticData}.
+        There every premise used remains a premise, and
+        \cref{thm:p01-w02-p01-016-discharge} is not available in the stated
+        form.
+  \item In a sequent calculus the role of the open assumptions of a
+        derivation is played by the antecedent of its end sequent. The
+        classical sequent section reads a finite multiset to the left of
+        \(\derives\) through its support (\cref{sec:prop-deduction-02}), and
+        the intuitionistic chapter defines the relation for an arbitrary set
+        \(\Gamma\) through finite contexts drawn from \(\Gamma\)
+        (\cref{ch:intuitionistic-logic}).
+  \item \cref{thm:p01-w02-p01-016-unsat-reduction} assumes the classical
+        negation clause. The intuitionistic forcing relation of
+        \cref{ch:intuitionistic-logic} defines \(\neg A\) as
+        \(A\to\bottom\), whose clause quantifies over all later worlds
+        \cite[ch.~``Intuitionistic Logic'']{FrozenFormalLogicSemanticData},
+        and the classical clause fails there: in the structure with worlds
+        \(0\le1\) and \(V(p)=\{1\}\), the world \(0\) forces neither \(p\)
+        nor \(\neg p\), since \(0\notin V(p)\) and the later world \(1\)
+        forces \(p\). Clause 1 of that theorem is therefore not available for
+        that semantics in the stated form.
+\end{enumerate}
+\end{hbwarning}
+
+\paragraph{Relationships.}
+\Cref{def:p01-w02-p01-016-datum,def:p01-w02-p01-016-satisfaction} make exact
+the data and satisfaction relation named in the definition of a semantics in
+\cref{sec:levels-01} and in the definition of semantic consequence in
+\cref{sec:levels-03}; \cref{def:p01-w02-p01-016-assumption} makes exact the
+undischarged assumptions in the definition of derivability there. Soundness
+and completeness, defined in \cref{sec:levels-03}, connect the two relations
+for each calculus and semantics; the first-order instances are
+\cref{thm:fol-soundness,thm:fol-completeness}. The inherited propositional
+completeness proof (\cref{thm:prop-completeness}) reaches consequence
+through satisfiability: from \(\Gamma\not\derives\varphi\) it obtains that
+\(\Gamma\cup\{\neg\varphi\}\) is consistent, constructs a valuation
+satisfying it, and concludes \(\Gamma\not\entails\varphi\), which is the
+semantic direction of clause 1 of
+\cref{thm:p01-w02-p01-016-unsat-reduction}.
+
+\paragraph{Sources.}
+Every inherited definition used above is cited at its chapter and named
+definition in the frozen manuscript
+\cite{FrozenFormalLogicSemanticData}, whose text is reproduced on the
+handbook's route at the cross-referenced sections. The results of this
+section and their proofs in
+\cref{sec:annex-p01-w02-p01-016-semantic-data} are editorial completions.

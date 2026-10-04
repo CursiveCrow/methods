@@ -1,0 +1,763 @@
+\chapter{Proofs for the Standard Small-Clause Transformation}
+\label{annex:p12-small-clause-standard}
+
+\begin{annexitem}{annex:p12.small.sat.closure}{thm:p12-small-sat-closure}{Coincidence and existential closure}
+\begin{proof}
+We first establish the valuation fact used here and in subsequent proofs.
+The value of a term depends only on the variables occurring in it.
+For a variable this is the definition of evaluation; a constant has no
+valuation dependence. For \(f(t_1,\ldots,t_n)\), agreement on all its
+variables gives agreement on each child's variables, hence equal child
+values by induction and equal function values.
+
+Formula truth depends only on its free variables. This follows for
+atoms from the term result, and for logical constants without a
+valuation condition. At each Boolean connective, agreement on the
+union of the operands' free-variable sets gives equal operand truth
+values and hence equal output truth values. For \(Qx B\), let
+\(\nu,\mu\) agree on \(\operatorname{free}(B)\setminus\{x\}\).
+For every \(d\in D\), the valuations \(\nu[x/d],\mu[x/d]\)
+agree on \(\operatorname{free}(B)\): they agree at \(x\) by the
+updates and elsewhere by the assumption. Induction gives the same
+truth of \(B\) for each \(d\). Thus the set of witnesses is the
+same for \(\exists\), and the all-values condition is the same for
+\(\forall\). This proves coincidence for both quantifiers.
+
+If \(\nu\) satisfies \(\Phi\), use its values
+\(\nu(x_1),\ldots,\nu(x_k)\) as successive witnesses for the
+existential closure. Conversely, truth of that finite existential
+prefix supplies a tuple \((d_1,\ldots,d_k)\) under which its body
+is true. Choose a fixed \(d_0\in D\), use the constant valuation
+with value \(d_0\), and update it by the supplied tuple. Coincidence
+ensures that this valuation satisfies \(\Phi\), regardless of
+values assigned to other variables. No axiom of Choice is needed
+for a finite string of witnesses. When \(k=0\), coincidence says
+that truth of the sentence is independent of every valuation.
+
+For the distinction between conventions, take \(D=\{0,1\}\),
+\(P^{\mathfrak A}=\{0\}\), \(\nu(x)=0\) and \(\nu(y)=1\).
+Then \(P(x)\land\neg P(y)\) is true. Its universal closure would
+require \(P(d)\land\neg P(d)\) by setting both variables to any
+one \(d\in D\), which is impossible.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.small.context}{thm:p12-small-context}{Contextual replacement with bound variables}
+\begin{proof}
+Fix a structure in the specified model class. Order the two truth
+values by \(0<1\), and write \(\llbracket A\rrbracket_\nu=1\)
+when \(\mathfrak A,\nu\models A\), and \(0\) otherwise.
+The assumption that \(A\) entails \(B\)
+at every valuation is the pointwise inequality
+\(\llbracket A\rrbracket_\nu\le
+\llbracket B\rrbracket_\nu\). Conjunction and disjunction are
+monotone in each operand. Negation reverses the order. Implication,
+whose truth function is \(\neg a\lor b\), reverses the order in
+its first operand and preserves it in the second.
+
+Quantifiers are monotone operations on the valuation-dependent body.
+If \(A\) is true at all \(\nu[x/d]\), the pointwise assumption
+makes \(B\) true at all of them; this proves the universal case.
+If \(A\) is true at one such update, the same update witnesses
+\(B\); this proves the existential case. No assumption about the
+selected variable's value being fixed outside the context is made.
+
+Induct up the path from the selected occurrence to the root.
+Each monotone step keeps the current implication direction, and
+each antitone step reverses it. Their product is precisely the
+specified nonzero polarity. For an equivalence assumption the
+inserted truth values are equal at every valuation. Every Boolean
+truth function, including biconditional, preserves equality of the
+corresponding argument values, and both quantified truth conditions
+preserve equality pointwise. Thus equality propagates even through
+an ancestor biconditional and its zero-polarity descendants.
+This proves replacement at all occurrences, including the root.
+
+If equivalence is known only relative to background assumptions,
+the argument applies to the structures satisfying those assumptions
+at every valuation required by the replacement. Dropping them, or
+checking the inserted formulas at just the current assignment before
+entering a quantifier, would not meet the hypothesis.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.small.simplify}{thm:p12-small-simplify}{All simplification rules and the normal-form invariant}
+\begin{proof}
+For a fixed valuation put \(a=\llbracket A\rrbracket\in\{0,1\}\).
+Idempotence gives \(a\land a=a\) and \(a\lor a=a\).
+Complementarity gives \(a\land\neg a=0\) and
+\(a\lor\neg a=1\); reflexivity gives \(a\leftrightarrow a=1\)
+and \(a\to a=1\). Negating truth or falsity interchanges them.
+The conjunction identities with \(1,0\) yield \(a,0\), and the
+disjunction identities yield \(1,a\), respectively. Using
+\(a\to b=\neg a\lor b\), the four implication cases
+\(a\to1,1\to a,a\to0,0\to a\) give \(1,a,\neg a,1\).
+The two biconditional cases with \(1,0\) give \(a,\neg a\).
+These are all eighteen Boolean schemes in the displayed collection.
+
+For either quantifier, if \(x\notin\operatorname{free}(A)\),
+coincidence from the preceding closure proof makes the truth value
+of \(A\) the same under every \(\nu[x/d]\). Because \(D\)
+is nonempty, both its universal and existential aggregation equal
+that common value. This proves the two remaining schemes.
+Contextual replacement proves equivalence at every application site.
+
+Count every formula constructor and atomic formula as one tree node.
+Writing \(N=N(A)\ge1\), the idempotence cases replace
+\(2N+1\) nodes by \(N\); complementarity cases replace
+\(2N+2\) by one; reflexivity cases replace \(2N+1\) by one.
+Negated constants lose one node. A Boolean operation with a constant
+has \(N+2\) nodes and is replaced by one, \(N\), or \(N+1\)
+nodes. A redundant quantifier replaces \(N+1\) by \(N\).
+Thus every actual rewrite strictly decreases a positive integer.
+Commutative matching permutes operands only to recognize a rule;
+it is not an additional rewrite that could be repeated forever.
+
+Suppose an irreducible result has a logical constant at a proper
+position. Its parent is a negation, binary connective, or quantifier.
+In the first two cases an applicable constant scheme exists. In the
+quantifier case its constant body has no free variable, so the
+quantifier scheme applies. Each case contradicts irreducibility.
+Therefore constants are absent or constitute the entire result.
+Likewise an irreducible quantified subformula cannot have a vacuous
+binder. No rule introduces a new free variable; rules such as
+\(A\lor\neg A\mapsto\top\) can remove them. Finally, the
+empty conjunction of clauses is true and a clause with no disjunct
+is false, giving the stated outputs for \(\top\) and \(\bot\).
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.small.nnf}{thm:p12-small-nnf}{A decreasing interpretation for all NNF rewrites}
+\begin{proof}
+Both expansions of a biconditional have the same truth table as
+that biconditional: they are true when both operands are true or
+both false. De Morgan's laws, quantifier duality, the definition
+of implication and double negation prove equivalence of all the
+other rules. Quantifier duality follows directly from ``not every''
+versus ``some not'', and ``not some'' versus ``every not'', for the
+same domain values. Contextual replacement lifts these local facts.
+
+Let the weights of \(A,B\) be \(a,b\), necessarily positive.
+The two biconditional right sides have weights
+\(5a+5b+5\) and \(3a+3b+3\), each strictly below
+\(6a+6b+6\). For either De Morgan rule the left weight is
+\(2a+2b+2\) and the right weight \(2a+2b+1\).
+For either quantifier duality it is \(2a+2\) versus \(2a+1\).
+Implication changes \(3a+2b+2\) to \(2a+b+1\), and double
+negation changes \(4a\) to \(a\). These exhaust the rules.
+Every constructor's weight function is strictly increasing in
+each argument on positive integers. Consequently a decrease inside
+any larger formula is a strict decrease of its total weight.
+No infinite rewrite sequence is possible, including one that
+duplicates arbitrarily complicated operands of a biconditional.
+
+If a terminal formula contained a biconditional, choose one with
+no biconditional ancestor. Its polarity is \(+1\) or \(-1\),
+so one of the specified rules would apply. Implications are always
+reducible. Once those two constructors are absent, a negation not
+immediately on an atom is on another negation, a quantifier or a
+conjunction/disjunction, and the corresponding rule applies.
+Hence the terminal formula is NNF. Each rewrite retains precisely
+the same names of free variables and of all occurring variables;
+duplication changes occurrences but not these sets. Constant-free
+input remains constant-free.
+
+For the example, negative polarity gives
+\[
+\begin{aligned}
+\neg(A\leftrightarrow B)
+&\equiv \neg[(A\land B)\lor(\neg A\land\neg B)]\\
+&\equiv \neg(A\land B)\land\neg(\neg A\land\neg B)\\
+&\equiv(\neg A\lor\neg B)\land(\neg\neg A\lor\neg\neg B)\\
+&\equiv(\neg A\lor\neg B)\land(A\lor B).
+\end{aligned}
+\]
+If one instead expands every biconditional into two implications,
+the corresponding sequence is
+\[
+\begin{aligned}
+\neg(A\leftrightarrow B)
+&\equiv\neg[(A\to B)\land(B\to A)]\\
+&\equiv\neg[(\neg A\lor B)\land(\neg B\lor A)]\\
+&\equiv\neg(\neg A\lor B)\lor\neg(\neg B\lor A)\\
+&\equiv(A\land\neg B)\lor(B\land\neg A)\\
+&\equiv(A\lor B)\land(A\lor\neg A)
+       \land(\neg B\lor B)\land(\neg B\lor\neg A).
+\end{aligned}
+\]
+For atomic operands these are four literal clauses, two tautological.
+For compound operands, later NNF rewrites can obscure the original
+syntactic complementary pair. The polarity-dependent expansion
+avoids introducing these two particular redundant disjunctions.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.small.miniscope}{thm:p12-small-miniscope}{Truth preservation and the quantifier-scope measure}
+\begin{proof}
+Fix a valuation and suppose \(x\) is not free in \(B\).
+Its truth value is independent of the value assigned to \(x\).
+If that value is true, then \(A\land B\) has the truth value
+of \(A\), while \(A\lor B\) is true for every value of \(x\).
+The displayed right sides have the same quantified truth values,
+using nonemptiness for the existential quantification of a true
+formula. If \(B\) is false, then \(A\lor B\) has the truth
+value of \(A\), while \(A\land B\) is false for every value
+of \(x\). Nonemptiness makes its universal quantification false.
+This proves all four guarded schemes for both truth values of
+\(B\). Exchanging operands is justified by commutativity.
+
+For the two unguarded distributions, every value satisfies
+\(A\land B\) exactly when every value satisfies \(A\) and
+every value satisfies \(B\). Some value satisfies \(A\lor B\)
+exactly when some value satisfies at least one of its operands.
+These are the universal-conjunction and existential-disjunction
+rules. Their additional free-variable conditions restrict when the
+procedure uses these identities, not their truth. Contextual
+replacement proves equivalence of each complete formula.
+
+Write \(r=b(A)\), \(s=b(B)\). In a guarded step the selected
+quantifier's contribution \(3^{r+s+1}\) is replaced by
+\(3^r\); in a distributive step it is replaced by
+\(3^r+3^s\). For \(r,s\ge0\),
+\[
+ 3^r+3^s\le2\cdot3^{r+s}<3^{r+s+1}.
+\]
+Contributions of quantifiers inside \(A\) or \(B\) are unchanged.
+An ancestor quantifier also has the same number of Boolean nodes
+in its scope: the step moves or duplicates quantifiers but neither
+duplicates nor removes the Boolean tree of \(A\circ B\).
+Quantifiers outside that subtree are unaffected. Thus the total
+nonnegative integer strictly decreases at every step. The sum is
+zero in a quantifier-free formula, which has no available step.
+This proves termination. It supplies no comparison between the
+running times of different deduction procedures on the output.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.small.renaming}{thm:p12-small-renaming}{The complete raw-renaming valuation lemma}
+\begin{proof}
+For a term variable \(z\), the hypothesis says precisely that
+its two values agree after replacement by \(\rho(z)\).
+Constants have unchanged interpretation. For a function application,
+induction gives equal argument values, and applying the unchanged
+function yields equal output values. This proves the term assertion.
+
+For an atom, all term values agree, so its tuple belongs to the
+same predicate interpretation on both sides; equality atoms obey
+the same conclusion with the identity relation. Logical constants
+are unchanged. For negation, the induction hypothesis gives equal
+truth values before negating. For each of \(\land,\lor,\to\)
+and \(\leftrightarrow\), agreement on the union of the operands'
+free-variable sets yields equal operand values separately, hence
+equal values under its specified Boolean truth function.
+
+Consider a quantified formula \(Qx B\). For each \(d\in D\)
+compare \(\nu_1[x/d]\) with \(\nu_2[\rho(x)/d]\).
+At \(z=x\) their values agree modulo \(\rho\) by construction.
+At \(z\in\operatorname{free}(B)\setminus\{x\}\), injectivity
+on \(\operatorname{vars}(Qx B)\) gives
+\(\rho(z)\ne\rho(x)\). Neither relevant coordinate changes,
+and the original agreement on
+\(\operatorname{free}(Qx B)\) applies. Therefore these updated
+valuations agree modulo \(\rho\) on all free variables of \(B\).
+Its induction hypothesis gives
+\[
+ \mathfrak A,\nu_1[x/d]\models B
+ \quad\Longleftrightarrow\quad
+ \mathfrak A,\nu_2[\rho(x)/d]\models\operatorname{raw}_\rho(B)
+ \qquad(d\in D).
+\]
+For \(Q=\exists\), the same \(d\) is a witness in either
+direction. For \(Q=\forall\), the equivalence holds for every
+\(d\), and therefore the all-values conditions coincide.
+This proves both quantified cases, including \(\rho(x)=x\).
+Only injectivity on the occurring variables was used; no permutation
+or injective identity-extension of the entire infinite alphabet is
+required.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.small.rectification}{thm:p12-small-rectification}{Fresh-block rectification, including repeated original binders}
+\begin{proof}
+Use induction on the number of formula-tree nodes, with the following
+strengthened assertion for a call on \(A\) starting at \(n\).
+Its unused names \(y_n,\ldots,y_{n+nq(A)-1}\) are pairwise
+distinct and outside \(\operatorname{vars}(A)\). The output is
+equivalent to \(A\), has the same free-variable set, has precisely
+this block as its bound-name set with one name per binder, and
+contains no other variables except free variables of \(A\).
+
+An atom or logical constant has no binder and is returned unchanged.
+At a negation, the child has fewer nodes, uses the same empty or
+nonempty block, and its induction hypotheses pass through negation.
+At a binary connective, the first child receives a block of length
+\(nq(B)\) and the second the immediately following block of
+length \(nq(C)\). The blocks are disjoint and fresh for both
+original children. The induction hypotheses give equivalent
+operands, their original free-variable sets, and the two disjoint
+bound-name sets. None of these new names is free in the other
+operand. The union of the blocks has the required total length,
+and each of the four Boolean truth functions preserves equivalence.
+
+At \(Qx B\), put \(y=y_n\) and
+\(B'=\operatorname{raw}_{x\mapsto y}(B)\). This map is injective
+on \(\operatorname{vars}(B)\), because \(y\) was absent.
+It has the same tree shape and quantifier count as \(B\), and
+its variables belong to \(\operatorname{vars}(B)\cup\{y\}\).
+The later names in the supplied block are consequently fresh for
+\(B'\). The recursive call on \(B'\) has fewer nodes than
+\(Qx B\), so it terminates and satisfies the strengthened assertion.
+
+For any valuation \(\nu\) and \(d\in D\),
+\(\nu[x/d]\) and \(\nu[y/d]\) agree modulo the raw map on
+\(\operatorname{free}(B)\). At \(x\) both values are \(d\);
+all other relevant names are different from fresh \(y\) and are
+unchanged. The preceding renaming lemma and then the recursive
+equivalence give
+\[
+ \mathfrak A,\nu[x/d]\models B
+ \ \Longleftrightarrow\ 
+ \mathfrak A,\nu[y/d]\models B'
+ \ \Longleftrightarrow\ 
+ \mathfrak A,\nu[y/d]\models\operatorname{ren}(B',n+1).
+\]
+Taking an existential witness proves the \(\exists\) case, and
+taking every \(d\) proves the \(\forall\) case.
+
+Syntactic induction for raw renaming gives
+\(\operatorname{free}(B')=
+\rho(\operatorname{free}(B))\). At a quantifier this uses
+injectivity to commute the image with removal of its bound name.
+The recursive output has this same free-variable set, so binding
+\(y\) removes exactly the image of \(x\) and leaves
+\(\operatorname{free}(B)\setminus\{x\}\).
+Its internal binders use exactly the later block, each once, while
+the outer binder uses \(y_n\). The new bound names are absent
+from the resulting free-variable set. All the strengthened claims
+follow.
+
+This argument permits the original input to reuse \(x\) at an
+inner binder. The preliminary raw step then temporarily renames
+that inner binder to \(y_n\) as well. The recursive call assigns
+it a later fresh name and preserves its original binding behavior.
+For example, \(\forall x(P(x)\lor\exists x Q(x))\) becomes
+\(\forall y_1(P(y_1)\lor\exists y_2 Q(y_2))\), not a formula
+that makes the two original binding occurrences identical.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.small.skolem}{thm:p12-small-skolem}{Witness selection, substitution, expansion and reduct}
+\begin{proof}
+Let the selected subformula be \(E=\exists x B\) and its distinct
+free parameters \(\bar z=(z_1,\ldots,z_m)\). For each tuple
+\(\bar d\in D^m\), define
+\[
+ W_{\bar d}=\{e\in D:
+       \mathfrak A,\nu[\bar z/\bar d][x/e]\models B\}.
+\]
+The arbitrary initial \(\nu\) does not affect this set: all free
+variables of \(B\) are in \(\{x,z_1,\ldots,z_m\}\), and
+coincidence applies. By Choice, choose \(e_{\bar d}\in W_{\bar d}\)
+for each nonempty fiber. Fix one \(d_0\in D\), and interpret
+the fresh symbol in an expansion \(\mathfrak A'\) by
+\[
+ f^{\mathfrak A'}(\bar d)=
+ \begin{cases}
+ e_{\bar d},&W_{\bar d}\ne\varnothing,\\
+ d_0,&W_{\bar d}=\varnothing.
+ \end{cases}
+\]
+For \(m=0\), \(D^0\) consists of the empty tuple and this is
+the interpretation of a new constant. All old symbols keep their
+interpretations, including any symbols introduced in earlier steps.
+
+We spell out the substitution fact needed for this construction.
+Put \(t=f(\bar z)\). Rectification ensures that no binder inside
+\(B\) is named \(x\) or any \(z_i\). For an atom of \(B\),
+term induction proves that substituting \(t\) for free \(x\)
+and evaluating under \(\mu\) has the same effect as evaluating
+the original terms under \(\mu[x/t^{\mathfrak A',\mu}]\).
+The variable case is exactly this update; all other variables and
+constants are unchanged; function applications follow from their
+children. Predicate and equality truth then agree. Boolean
+connectives preserve this agreement in all their arguments.
+For an inner binder \(Qw C\), we have \(w\ne x\) and
+\(w\notin\operatorname{vars}(t)\), so
+\(t^{\mathfrak A',\mu[w/d]}=t^{\mathfrak A',\mu}\), and
+updating \(w\) commutes with the displayed update of \(x\).
+The induction hypothesis applies under every \(\mu[w/d]\).
+Existential witnesses and universal all-values conditions therefore
+coincide, proving
+\[
+ \mathfrak A',\mu\models B[x:=t]
+ \quad\Longleftrightarrow\quad
+ \mathfrak A',\mu[x/t^{\mathfrak A',\mu}]\models B.
+\]
+
+In the constructed expansion, if \(E\) is true under \(\mu\),
+the corresponding fiber is nonempty and the chosen value of \(f\)
+belongs to it. The substitution identity proves \(B[x:=t]\).
+If the fiber is empty, no value satisfies \(B\), including the
+default, so both \(E\) and \(B[x:=t]\) are false. Hence these
+two formulas agree at every valuation in this expansion. The fresh
+symbol does not occur in \(B\), and old-symbol truth agrees in
+\(\mathfrak A\) and \(\mathfrak A'\). Contextual equivalence
+therefore carries a model of the old whole sentence to a model of
+the new one on the same domain.
+
+Conversely, take any structure for the expanded signature. If
+\(B[x:=t]\) is true, its evaluated term supplies an existential
+witness by the same substitution identity. Thus
+\(B[x:=t]\to\exists x B\) holds pointwise without Choice.
+An existential occurrence in NNF has positive polarity: negations
+occur only on atoms. Contextual monotonicity takes truth of the
+new whole sentence to truth of the old sentence. Since the latter
+contains no new symbol, it is true in the reduct.
+
+An existential chosen with minimum position length has no
+existential ancestor. Every binder above it is therefore universal,
+and closedness plus rectification means that its free parameters
+are precisely the occurring names bound by those ancestors.
+Substitution cannot capture them at an inner binder. No quantifier
+is duplicated; the selected existential is removed and the other
+binder occurrences remain distinct. Closedness and rectification
+are preserved. The number of existentials decreases by one,
+which also proves termination of their successive elimination.
+
+Freshness outside the current signature is what permits the
+specified choice of \(f^{\mathfrak A'}\) without altering any old
+interpretation. Merely being absent from the particular formula
+does not permit such a change to a declared old symbol.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.small.cnf}{thm:p12-small-cnf}{The two ordered phases of CNF formation}
+\begin{proof}
+All quantifiers now are universal. In a rectified closed formula,
+if \((\forall x A)\circ B\) occurs, then \(x\) is not free
+in \(B\). Otherwise that occurrence of \(x\), outside its unique
+binder, would either be globally free or require a second binder
+of the same name. Both contradict rectification and closedness.
+The same argument works when the quantified operand is second.
+The guarded identities are the reversals of the corresponding
+miniscoping equivalences, so each pull preserves truth.
+
+Count, for every quantifier occurrence, its Boolean ancestors and
+sum those counts. Moving \(\forall x\) over its immediately
+enclosing Boolean connective removes that one ancestor for the
+selected binder. Descendant quantifiers inside \(A\) still have
+the same Boolean connective as an ancestor, and quantifiers inside
+\(B\) do too. No other Boolean ancestry changes. Thus the sum
+decreases by exactly one. If some quantifier still lies beneath
+a Boolean connective, there is a quantifier immediately below
+a Boolean connective, possibly after selecting the outermost
+quantifier in that branch. Its pull is allowed by the preceding
+guard argument. Therefore a terminal result has all quantifiers
+in one prefix and a quantifier-free matrix. No binder is duplicated,
+so rectification is preserved throughout this phase.
+
+For matrix distribution, every formula weight is at least two.
+With operand weights \(a,b,c\), the rule's left weight is
+\(a(b+c+1)=ab+ac+a\), and its right weight is
+\(ab+ac+1\). Their difference \(a-1\) is positive.
+Both constructor interpretations are strictly increasing on
+positive arguments, so every contextual distribution strictly
+decreases the total weight. The usual truth table gives
+\(A\lor(B\land C)\) equivalent to
+\((A\lor B)\land(A\lor C)\); commutative matching gives the
+other operand order.
+
+If a terminal matrix had a conjunction below a disjunction, choose
+a lowest disjunction ancestor of a conjunction along such a path.
+One can choose the last disjunction before the first conjunction;
+they are parent and child, giving an available distribution.
+Thus every disjunction has only literals below it. Flattening
+the conjunctions and disjunctions yields a conjunction of clauses.
+Universal quantification distributes across its finite conjuncts,
+and variables absent from a conjunct may be removed vacuously.
+This identifies the prefixed formula with the universally read
+clause-set representation.
+
+The scheduling qualification is real. Start with the rectified
+formula \((\forall x P(x))\lor(Q\land R)\), where \(Q,R\)
+are nullary predicates. Distributing prematurely and pulling in
+each branch produces
+\[
+ [\forall x(P(x)\lor Q)]\land
+ [\forall x(P(x)\lor R)].
+\]
+Pulling the first binder out gives
+\(\forall x[(P(x)\lor Q)\land\forall x(P(x)\lor R)]\).
+The remaining inner pull is blocked because \(x\) is free in
+\(P(x)\lor Q\). Pulling the other binder first yields the
+symmetric obstruction. Another rectification or a different
+quantifier rule could repair this, but neither is part of the
+displayed two-phase schedule. Pulling first avoids the duplication.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.small.clause.simplify}{thm:p12-small-clause-simplify}{Clause instances, retained witnesses and condensation}
+\begin{proof}
+For an arbitrary term substitution \(\sigma\) and valuation
+\(\nu\), define \(\nu_\sigma(x)=(x\sigma)^{\mathfrak A,\nu}\).
+Term induction gives
+\((t\sigma)^{\mathfrak A,\nu}=t^{\mathfrak A,\nu_\sigma}\):
+the variable case is the definition; constants are unchanged;
+and function applications use the induction hypotheses for their
+arguments. Atom truth and its negation agree under these two
+evaluations, and so does a disjunction of finitely many literals,
+including the empty disjunction. Consequently a universally true
+clause \(C\) has every instance \(C\sigma\) true under every
+valuation.
+
+If \(C\sigma\subseteq D\) as multisets, any true disjunct of
+\(C\sigma\) is also present in \(D\). Thus universal truth
+of \(C\) implies universal truth of \(D\). A model of the
+clause set with \(D\) deleted still satisfies its retained witness
+\(C\), and hence satisfies \(D\); the reverse implication is
+immediate by removing a conjunct. A syntactic tautology is true
+under every assignment because its atom and literal negation
+have opposite truth values. Its deletion therefore preserves
+the model class as well.
+
+If \(C\) is obtained by removing duplicate literals from an
+instance \(D\sigma\), the two disjunctions have the same truth
+value: repetition adds no alternative truth value. Hence universal
+truth of \(D\) implies that of \(C\). The additional required
+subsumption of \(D\) by \(C\) gives the converse, by the
+preceding paragraph. This proves condensation equivalence without
+identifying multiset inclusion with ordinary set inclusion.
+
+An injective renaming of a clause's occurring variables preserves
+its universal truth: every valuation on either finite set of
+variable names can be transferred to the corresponding names on
+the other side, and the raw-renaming term/atom argument applies.
+The remaining alphabet coordinates can be assigned any fixed
+domain element. Different clauses may therefore be renamed apart
+independently, because they are separate universally closed conjuncts.
+
+Each clause deletion reduces the clause count by one and does not
+increase the number of literal occurrences. Each proper condensation
+strictly reduces the latter number and does not increase clause
+count. Their sum is a nonnegative integer and strictly decreases
+at every deletion or condensation. Renaming apart is a finite
+representation step, not an endlessly repeatable reduction rule.
+
+Finally, \(D=\{R(x,x),R(y,y)\}\) has two literal occurrences
+under every substitution, even when their images coincide. It
+cannot multiset-subsume a singleton. Substituting \(y\mapsto x\)
+and deleting the duplicate gives \(C=\{R(x,x)\}\), which
+subsumes \(D\) and is its equivalent condensation.
+The retained-witness requirement excludes simultaneous deletion
+of all clauses in a subsumption cycle; the next countermodels
+exhibit why it is needed.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.small.pipeline}{thm:p12-small-pipeline}{Composition of the standard transformation}
+\begin{proof}
+Existential closure is a finite operation with the fixed-structure
+satisfaction equivalence proved above. Simplification terminates
+and preserves equivalence; a constant result immediately has its
+specified clause-set meaning. Otherwise its output is a finite
+constant-free sentence. NNF rewriting and miniscoping each terminate
+by their respective decreasing integer measures and preserve
+equivalence. Indexed rectification terminates by tree-size induction
+and leaves an equivalent closed NNF with unique bound names.
+
+There are finitely many existential occurrences in that resulting
+formula. Each successive local Skolem step removes exactly one
+and introduces one fresh symbol of finite arity. Assuming Choice,
+a model at a given step expands on the same domain to a model at
+the next step. Repeating finitely often gives an expansion of the
+original structure; every symbol of its original signature has
+kept its interpretation. Conversely, the choice-free reduct
+implication at each step composes backwards to a model of the
+rectified sentence.
+
+After those steps, prefix pulling and then matrix distribution
+terminate, preserve equivalence in the expanded signature and
+produce a finite universally quantified clause matrix. Clause
+representation and the terminating retained-witness simplifications
+preserve that expanded-signature model class. Thus every model of
+the closed input has the claimed expansion, and every model of
+the output has a reduct satisfying the closed input. Existential
+closure then supplies precisely a satisfying valuation for the
+original open input. For sentence input there are no free variables
+to close and this is ordinary sentence satisfaction.
+
+The full run is a finite concatenation of terminating finite phases.
+Although intermediate formulas may grow, each individual rule has
+a finite right side and each phase has the stated termination
+argument. Only finitely many Skolem symbols are introduced, so
+the extension of the possibly infinite original signature is finite.
+The proof does not assert that arbitrary first-order satisfiability
+has thereby been decided: that task is delegated to a deduction
+procedure acting on the resulting clauses.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.small.example}{thm:p12-small-example}{Every stage of the running example}
+\begin{proof}
+Write \(R_{xx}=R(x,x)\) only within this derivation. Associative
+display of \(\land,\lor\) abbreviates the corresponding binary
+trees; when needed, their reassociation is justified by their
+truth functions rather than counted as a transformation step.
+The input is already a constant-free NNF. The miniscoping steps are
+\[
+\begin{aligned}
+&\forall x\exists y\forall z
+       [R_{xx}\land((P(y)\lor R(x,y))\lor Q(z))]\\
+&\equiv\forall x\exists y
+       [R_{xx}\land\forall z((P(y)\lor R(x,y))\lor Q(z))]\\
+&\equiv\forall x\exists y
+       [R_{xx}\land((P(y)\lor R(x,y))\lor\forall z Q(z))]\\
+&\equiv\forall x
+       [R_{xx}\land\exists y((P(y)\lor R(x,y))\lor\forall z Q(z))]\\
+&\equiv\forall x
+       [R_{xx}\land((\exists y(P(y)\lor R(x,y)))\lor\forall z Q(z))]\\
+&\equiv\forall x
+       [R_{xx}\land((\exists y P(y)\lor\exists y R(x,y))\lor\forall z Q(z))]\\
+&\equiv(\forall x R_{xx})\land
+       \forall x[(\exists y P(y)\lor\exists y R(x,y))\lor\forall z Q(z)]\\
+&\equiv(\forall x R_{xx})\land
+       [\forall x(\exists y P(y)\lor\exists y R(x,y))\lor\forall z Q(z)]\\
+&\equiv(\forall x R_{xx})\land
+       [(\exists y P(y)\lor\forall x\exists y R(x,y))\lor\forall z Q(z)].
+\end{aligned}
+\]
+The first two steps use that \(z\) is absent from \(R_{xx}\)
+and from \(P(y)\lor R(x,y)\). The next uses that \(y\) is
+absent from \(R_{xx}\); the following one uses its absence from
+\(\forall z Q(z)\). Existential distribution is permitted because
+\(y\) is free in both \(P(y)\) and \(R(x,y)\). Universal
+distribution across the conjunction is permitted because \(x\)
+is free in both conjuncts. The last two steps use its absence
+from \(\forall z Q(z)\) and \(\exists y P(y)\), respectively.
+
+Preorder allocation of five fresh binder names gives
+\[
+ (\forall y_1 R(y_1,y_1))\land
+ [(\exists y_2 P(y_2)\lor
+          \forall y_3\exists y_4 R(y_3,y_4))\lor\forall y_5 Q(y_5)].
+\]
+The first existential has no free parameter and is eliminated
+using a fresh constant \(a\). The second has precisely the free
+parameter \(y_3\), and is eliminated using a fresh unary \(f\).
+The intermediate and resulting formulas are
+\[
+\begin{aligned}
+ &(\forall y_1 R(y_1,y_1))\land
+ [(P(a)\lor\forall y_3\exists y_4 R(y_3,y_4))\lor\forall y_5 Q(y_5)],\\
+ &(\forall y_1 R(y_1,y_1))\land
+ [(P(a)\lor\forall y_3 R(y_3,f(y_3)))\lor\forall y_5 Q(y_5)].
+\end{aligned}
+\]
+These are expansion/reduct steps, not equivalences under arbitrary
+preassigned interpretations of \(a,f\).
+
+For prefix formation, first rewrite the bracketed right conjunct as
+\[
+\begin{aligned}
+ &(\forall y_3[P(a)\lor R(y_3,f(y_3))])\lor\forall y_5Q(y_5)\\
+ &\equiv\forall y_3[(P(a)\lor R(y_3,f(y_3)))\lor\forall y_5Q(y_5)]\\
+ &\equiv\forall y_3\forall y_5[P(a)\lor R(y_3,f(y_3))\lor Q(y_5)].
+\end{aligned}
+\]
+Pull \(y_1\) out of the left conjunct, then \(y_3\) and
+\(y_5\) out of the right conjunct inside that prefix. Freshness
+provides each side condition. The result is
+\[
+ \forall y_1\forall y_3\forall y_5
+ [R(y_1,y_1)\land(P(a)\lor R(y_3,f(y_3))\lor Q(y_5))].
+\]
+Its matrix already is a conjunction of literal clauses. No
+distribution is applicable to its outer conjunction. Removing
+the displayed prefix in favor of universal clause reading and
+renaming variables apart yields exactly
+\(\{R(u,u)\}\) and \(\{P(a),R(v,f(v)),Q(w)\}\).
+
+Without miniscoping, the existential in
+\(\forall x\exists y\forall z
+[R(x,x)\land(P(y)\lor R(x,y)\lor Q(z))]\)
+has the sole free parameter \(x\). A single unary symbol \(g\)
+gives the clauses
+\(\{R(u,u)\}\) and
+\(\{P(g(v)),R(v,g(v)),Q(w)\}\).
+The miniscoped output has a constant in its \(P\)-literal but
+two newly introduced symbols in total. This verifies the claimed
+distinction between dependency arity and the number of symbols.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.small.failures}{thm:p12-small-failures}{Finite countermodels for each forbidden transformation}
+\begin{proof}
+The following interpretations use the stated nonempty domains.
+They specify all predicates occurring in their displayed examples;
+other signature symbols can be interpreted arbitrarily.
+\begin{enumerate}
+\item For a missing free-variable guard, take \(D=\{0,1\}\)
+and \(P^{\mathfrak A}=Q^{\mathfrak A}=\{1\}\).
+Then \(\exists x(P(x)\land Q(x))\) is true, with witness \(1\).
+The unguarded proposed result
+\((\exists xP(x))\land Q(x)\) is false at \(\nu(x)=0\).
+The moved-out \(Q(x)\) is no longer governed by the binder.
+
+\item Take \(D=\{0,1\}\), \(P^{\mathfrak A}=\{0\}\)
+and \(Q^{\mathfrak A}=\{1\}\). Every element satisfies
+\(P(x)\lor Q(x)\), but neither predicate holds everywhere.
+Thus \(\forall x(P(x)\lor Q(x))\) is true and
+\((\forall xP(x))\lor(\forall xQ(x))\) is false.
+In the same structure, neither element satisfies both predicates,
+so \(\exists x(P(x)\land Q(x))\) is false, whereas
+\((\exists xP(x))\land(\exists xQ(x))\) is true.
+These refute the two missing unrestricted distributions separately.
+
+\item For capture, let \(D=\{0,1\}\),
+\(R^{\mathfrak A}=\{(0,1)\}\) and \(\nu(y)=1\).
+The formula \(\exists xR(x,y)\) is true with witness \(0\).
+Changing \(x\) to \(y\) while leaving the already occurring
+\(y\) fixed yields \(\exists yR(y,y)\), false because the
+relation has no diagonal pair. The proposed raw map is not
+injective on the original occurring variables \(\{x,y\}\).
+
+\item Let the declared signature already contain a constant \(a\),
+even though \(a\) is absent from \(\exists xP(x)\). Take
+\(D=\{0,1\}\), \(a^{\mathfrak A}=0\) and
+\(P^{\mathfrak A}=\{1\}\). The existential is true, but
+replacing its witness by the old \(a\) gives the false \(P(a)\).
+An expansion must preserve \(a^{\mathfrak A}\), so cannot repair
+this. A genuinely new constant could instead be interpreted by
+\(1\), as the expansion theorem requires.
+
+\item The distinct clauses \(\{P(x)\}\) and \(\{P(y)\}\)
+subsume one another by variable renaming. On the one-element
+domain \(D=\{0\}\) with \(P^{\mathfrak A}=\varnothing\),
+their conjunction is false. Deleting both produces the empty
+clause set, true in this structure. Sequential deletion with a
+retained witness cannot perform that joint deletion.
+
+\item For the running example, take \(D=\{0,1\}\), let
+\(P^{\mathfrak A}=Q^{\mathfrak A}=D\), and let
+\(R^{\mathfrak A}=\{(0,1),(1,0)\}\). Interpret \(a\) by
+\(0\) and \(f\) by \(f(0)=1,f(1)=0\). Every diagonal
+\(R(d,d)\) is false, while \(P(a)\), every \(Q(d)\) and
+every \(R(d,f(d))\) are true. Hence all three pairwise
+disjunction clauses in the statement are universally true.
+The required unit \(\{R(u,u)\}\) is false, and the original
+sentence is false as well. Adding the universal clause
+\(\{\neg R(s,s)\}\) leaves the three erroneous clauses
+satisfied in this same structure. In contrast, the original
+sentence entails \(\forall sR(s,s)\), which is inconsistent
+with \(\forall s\neg R(s,s)\) on every nonempty domain.
+Thus the wrong replacement can destroy preservation of
+satisfiability for the larger problem, not just fixed-model
+equivalence.
+\end{enumerate}
+Nonempty-domain restrictions also have content. If empty domains
+were allowed, \(\forall x\bot\) would be true while \(\bot\)
+is false, and \(\exists x\top\) would be false while \(\top\)
+is true. The vacuous-quantifier rules and the guarded identities
+that use these cases would need corresponding qualifications.
+\end{proof}
+\end{annexitem}

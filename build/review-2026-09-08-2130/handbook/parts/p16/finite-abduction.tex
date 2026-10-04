@@ -1,0 +1,354 @@
+% P16-C1: finite propositional abduction and explicit input boundaries.
+\chapter{Finite Logical Abduction}
+\label{sec:p16-finite-abduction}
+
+Logical abduction searches for permitted assumptions which, together with a
+background theory, consistently entail specified observations. This chapter
+uses Eiter and Gottlob's finite propositional model: hypotheses and
+observations are positive atoms, and an explanation is a subset of the
+permitted hypotheses \cite[sec.~2, manuscript pp.~9--11]{EiterGottlobAbductionManuscript}.
+The finite construction and examples below are supplied here with complete
+proofs. No complexity classification is needed for this construction.
+
+The source requires a consistent background theory. We also allow an
+inconsistent theory as an input to the checking procedure, and prove that
+this additional input case has no explanations. This extension does not
+change the explanation criterion on the source's inputs.
+
+\section{Background, hypotheses and observations}
+\label{sec:p16-abduction-inputs}
+
+\begin{hbdefinition}{def:p16-abduction-input}{Finite abduction input}
+A \emph{finite abduction input} is a tuple
+\(\mathcal P=(V,H,M,T)\), with the following data:
+\begin{enumerate}
+\item \(V\) is a finite subset of the propositional alphabet \(\mathsf{Prop}\).
+\item \(H\subseteq V\) is the set of \emph{permitted hypotheses}, also
+      called the \emph{abducible atoms}.
+\item \(M\subseteq V\) is the set of \emph{observations}; Eiter and
+      Gottlob call these \emph{manifestations}.
+\item \(T\) is a finite set of classical propositional formulas whose
+      occurring atoms all belong to \(V\), called the \emph{background
+      theory}.
+\end{enumerate}
+The sets may be empty. Neither \(H\cap M=\varnothing\) nor
+\(H\cup M=V\) is required. Hypotheses and observations in this definition
+are atoms themselves: negative literals and compound formulas are not
+members of \(H\) or \(M\). The theory \(T\) may contain negations
+and compound formulas. Its formulas use the grammar and abbreviations of
+\cref{sec:prop-syntax-semantics-01}.
+The source's truth constant and biconditional are written here using
+the book's abbreviations \(\topv\) and \(\leftrightarrow\).
+
+A \emph{candidate} is a set \(E\subseteq H\). In \(T\cup E\),
+the atoms in \(E\) are treated as formulas asserted positively.
+An atom outside \(H\) cannot be inserted into a candidate merely because
+it would imply an observation. Changing \(H\) changes the input problem.
+\index{abduction!permitted hypotheses}\index{abduction!observations}
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p16-abduction-models}{Finite valuations and explanatory entailment}
+Use the truth values \(\mathbb{B}=\{\mathbf{F},\mathbf{T}\}\) and the recursive
+truth clauses of \cref{sec:prop-syntax-semantics-02}. Put
+\[
+ \mathsf{Val}(V)\defeq\{v:v\text{ is a function }V\to\mathbb{B}\}.
+\]
+For \(v\in\mathsf{Val}(V)\), evaluate a formula over \(V\) by those
+same clauses, and write \(v\entails\varphi\) when its value is
+\(\mathbf{T}\). For a set \(\Gamma\) of formulas over \(V\), put
+\[
+ \operatorname{Mod}_V(\Gamma)
+   \defeq\{v\in\mathsf{Val}(V):
+                  v\entails\gamma\text{ for every }\gamma\in\Gamma\}.
+\]
+We say \(\Gamma\) is \emph{consistent} in this chapter when this set
+is nonempty, that is, when \(\Gamma\) is satisfiable. The notation
+\(\Gamma\entails M\) abbreviates the assertion
+\(\Gamma\entails m\) for every \(m\in M\), using the book's
+classical semantic consequence relation. The next theorem identifies this
+relation with the finite valuation test.
+
+A candidate \(E\) is an \emph{explanation} for \(\mathcal P\) when
+\[
+ \operatorname{Mod}_V(T\cup E)\ne\varnothing
+       \qquad\text{and}\qquad T\cup E\entails M.
+\]
+Write \(\operatorname{Expl}(\mathcal P)\) for the family of all such
+explanations. This family corresponds to the source's
+\(\operatorname{Sol}(\mathcal P)\).
+\index{abduction!explanation}\index{abduction!consistency}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p16-abduction-semantics}{proved=annex:p16.abduction-semantics}{The finite criterion and its boundary cases}
+For every finite abduction input and every \(E\subseteq H\),
+\(E\) is an explanation exactly when
+\(\operatorname{Mod}_V(T\cup E)\ne\varnothing\) and
+\[
+ v(m)=\mathbf{T}\qquad
+  (v\in\operatorname{Mod}_V(T\cup E),\ m\in M).
+\]
+The use of functions on \(V\) agrees with the book's valuations on all
+of \(\mathsf{Prop}\). After naming the finite alphabet in \(\mathsf{Prop}\) and
+expanding those two abbreviations, inputs with consistent \(T\) have
+precisely Eiter and Gottlob's explanation criterion
+\cite[defs.~2.1--2.2, manuscript pp.~9--10]{EiterGottlobAbductionManuscript}.
+The additional and empty cases satisfy:
+\begin{enumerate}
+\item If \(T\) is inconsistent, then
+      \(\operatorname{Expl}(\mathcal P)=\varnothing\).
+\item The empty set is an explanation exactly when \(T\) is consistent
+      and \(T\entails M\).
+\item If \(M=\varnothing\), the explanations are exactly those
+      \(E\subseteq H\) for which \(T\cup E\) is consistent.
+\end{enumerate}
+\end{hbtheorem}
+
+\begin{hbwarning}{def:p16-abduction-two-tests}{Consistency and sufficiency are separate tests}
+\par\nobreak
+Classical entailment from an inconsistent set is vacuous: there is no
+satisfying valuation to falsify an observation. Such a set fails the
+consistency test and gives no explanation. Conversely, consistency only
+provides one model of the proposed assumptions. Explanation requires every
+such model to satisfy every observation. A single countervaluation refutes
+that requirement.
+
+Membership in \(H\) is an additional input restriction. A consistent set
+of atoms that entails \(M\) can still be ineligible because it includes
+an atom outside \(H\). The examples below distinguish these failures.
+\end{hbwarning}
+
+\section{Two notions of a small explanation}
+\label{sec:p16-abduction-minimality}
+
+\begin{hbdefinition}{def:p16-abduction-minimality}{Subset-minimal and minimum-cardinality explanations}
+An explanation \(E\) is \emph{subset-minimal} if no proper subset of
+\(E\) is an explanation. It has \emph{minimum cardinality} if no
+explanation has fewer members. Define the two families by
+\[
+\begin{aligned}
+ \operatorname{MinExpl}(\mathcal P)
+   &\defeq\{E\in\operatorname{Expl}(\mathcal P):\\
+   &\hspace{1.5em}\text{no }F\subsetneq E\text{ is an explanation}\},\\
+ \operatorname{CardExpl}(\mathcal P)
+   &\defeq\{E\in\operatorname{Expl}(\mathcal P):\\
+   &\hspace{1.5em}|E|\leq|F|\text{ for every explanation }F\}.
+\end{aligned}
+\]
+If there are no explanations, both families are empty. These are the
+subset and cardinality preference criteria of the source
+\cite[def.~2.3 and following discussion, manuscript pp.~10--11]{EiterGottlobAbductionManuscript}.
+They compare sets of assumptions. No probability, cost or causal relation
+has been specified by either definition.
+\index{abduction!subset-minimal explanation}
+\index{abduction!minimum-cardinality explanation}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p16-abduction-minimality}{proved=annex:p16.abduction-minimality}{Existence, inclusion and the deletion criterion}
+\par\nobreak
+Every explanation contains a subset-minimal explanation. If any explanation
+exists, both minimality families are nonempty, and
+\[
+ \operatorname{CardExpl}(\mathcal P)
+        \subseteq\operatorname{MinExpl}(\mathcal P)
+        \subseteq\operatorname{Expl}(\mathcal P).
+\]
+Distinct subset-minimal explanations are incomparable under inclusion;
+their cardinalities may differ.
+
+If \(E\) is an explanation, then
+\[
+\begin{aligned}
+ E\in\operatorname{MinExpl}(\mathcal P)
+ \quad\Longleftrightarrow\quad&
+ E\setminus\{h\}\notin\operatorname{Expl}(\mathcal P)
+                  \\
+ &\text{for every }h\in E.
+\end{aligned}
+\]
+This is the source's single-deletion characterization
+\cite[prop.~2.1, p.~11]{EiterGottlobAbductionManuscript}.
+It also holds for the extended input convention used here.
+
+The relevant monotonicity has a consistency qualification: if \(E\) is
+an explanation, \(E\subseteq F\subseteq H\), and \(T\cup F\) is
+consistent, then \(F\) is an explanation. An arbitrary superset of an
+explanation need not be an explanation, because it can become inconsistent.
+\end{hbtheorem}
+
+Subset-minimality can therefore be checked by testing each one-atom
+deletion of a known explanation. Minimum cardinality compares it with all
+explanations, including those incomparable with it. The unequal-size example
+below makes the distinction explicit.
+
+\section{An exhaustive finite construction}
+\label{sec:p16-abduction-enumeration}
+
+\begin{hbmethod}{def:p16-abduction-enumeration}{Enumerating explanations and both minimality families}
+The input is the finite tuple \(\mathcal P=(V,H,M,T)\). List \(V\)
+and \(H\) by increasing indices in \(\mathsf{Prop}=\{p_i:i\in\N\}\).
+Put \(n=|V|\), \(r=|H|\), and initialize a list \(\mathcal L\)
+with no members.
+\begin{enumerate}
+\item Enumerate every binary vector of length \(r\), in lexicographic
+      order. Its candidate \(E\subseteq H\) contains the hypothesis
+      at a position exactly when the bit at that position is one.
+\item For this \(E\), initialize two Boolean flags to false:
+      \emph{has a model} and \emph{has a countervaluation}. Enumerate
+      every binary vector of length \(n\), in lexicographic order,
+      interpreting zero as
+      \(\mathbf{F}\) and one as \(\mathbf{T}\). This gives a valuation on
+      \(V\). Evaluate every formula of \(T\) and every atom of \(E\).
+      If all are true, set \emph{has a model} to true. If in addition some
+      \(m\in M\) is false, set \emph{has a countervaluation} to true.
+      Once set, a flag stays true for this candidate.
+\item After the valuation scan, append \(E\) to \(\mathcal L\)
+      exactly when \emph{has a model} is true and
+      \emph{has a countervaluation} is false.
+\item After all candidates, form \(\mathcal L_{\subseteq}\) by
+      retaining exactly those members \(E\) of \(\mathcal L\) for
+      which no other member is a proper subset of \(E\).
+\item If \(\mathcal L\) is empty, put \(\mathcal L_{\#}\) empty.
+      Otherwise compute the least cardinality of a member of \(\mathcal L\)
+      by a finite scan, and let \(\mathcal L_{\#}\) retain exactly
+      the members of that cardinality. Return all three lists.
+\end{enumerate}
+The empty binary vector occurs once when its length is zero. In particular,
+empty \(H\) still gives the candidate \(\varnothing\), and empty
+\(V\) still gives the unique empty valuation. Testing all observations
+when \(M\) is empty cannot set the countervaluation flag.
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p16-abduction-enumeration}{proved=annex:p16.abduction-enumeration}{Termination and exact output}
+The construction terminates. Viewed as sets of their listed members, its
+outputs are exactly
+\[
+\begin{aligned}
+ \mathcal L&=\operatorname{Expl}(\mathcal P),\\
+ \mathcal L_{\subseteq}&=\operatorname{MinExpl}(\mathcal P),\\
+ \mathcal L_{\#}&=\operatorname{CardExpl}(\mathcal P).
+\end{aligned}
+\]
+No candidate or output member is duplicated. The unshortened nested scans
+in steps 1--3 inspect exactly \(2^{r+n}\) candidate--valuation pairs.
+This count does not make formula evaluation or the subsequent filtering
+constant-time operations. No optimality or complexity-class claim is made.
+\end{hbtheorem}
+
+\section{Complete small examples}
+\label{sec:p16-abduction-examples}
+
+\begin{hbdefinition}{def:p16-abduction-examples}{Six explicit inputs}
+In the following inputs, distinct letters among \(a,b,c,z,m\) denote
+distinct members of \(\mathsf{Prop}\). The tuple order is always \((V,H,M,T)\).
+These are additional handbook examples.
+\[
+\begin{aligned}
+ \mathcal P_{\rm inconsistent}
+   &\defeq(\{a,m\},\{a\},\{m\},\{a,\neg a\}),\\
+ \mathcal P_{\rm given}
+   &\defeq(\{a,m\},\{a\},\{m\},\{m\}),\\
+ \mathcal P_{\rm empty}
+   &\defeq(\varnothing,\varnothing,\varnothing,\varnothing),\\
+ \mathcal P_{\rm sizes}
+   &\defeq(\{a,b,c,m\},\{a,b,c\},\{m\},\\
+   &\hspace{2em}\{a\to m,(b\land c)\to m\}),\\
+ \mathcal P_{\rm constraint}
+   &\defeq(\{a,b,m\},\{a,b\},\{m\},\\
+   &\hspace{2em}\{a\to m,\neg(a\land b)\}),\\
+ \mathcal P_{\rm permitted}
+   &\defeq(\{a,z,m\},\{a\},\{m\},\{z\to m\}).
+\end{aligned}
+\]
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p16-abduction-examples}{proved=annex:p16.abduction-examples}{All explanation families for the six inputs}
+The complete families are as follows.
+\begin{enumerate}
+\item \emph{Inconsistent background.} All three explanation families of
+      \(\mathcal P_{\rm inconsistent}\) are empty, even though every
+      \(T\cup E\) entails \(m\) vacuously.
+\item \emph{Observation already given.}
+      \(\operatorname{Expl}(\mathcal P_{\rm given})
+          =\{\varnothing,\{a\}\}\).
+      Both minimality families equal \(\{\varnothing\}\).
+\item \emph{Empty data.} All three families of
+      \(\mathcal P_{\rm empty}\) equal \(\{\varnothing\}\).
+      This is one explanation, rather than no explanations.
+\item \emph{Unequal sizes.}
+      \[
+      \begin{aligned}
+       \operatorname{Expl}(\mathcal P_{\rm sizes})
+         &=\{\{a\},\{a,b\},\{a,c\},\{a,b,c\},\{b,c\}\},\\
+       \operatorname{MinExpl}(\mathcal P_{\rm sizes})
+         &=\{\{a\},\{b,c\}\},\\
+       \operatorname{CardExpl}(\mathcal P_{\rm sizes})
+         &=\{\{a\}\}.
+      \end{aligned}
+      \]
+      The two subset-minimal explanations are incomparable, with sizes
+      one and two.
+\item \emph{Consistency constraint.} All three families of
+      \(\mathcal P_{\rm constraint}\) equal \(\{\{a\}\}\).
+      The candidate \(\{b\}\) is consistent with \(T\) but does
+      not entail \(m\). The superset \(\{a,b\}\) of the explanation
+      \(\{a\}\) fails consistency.
+\item \emph{Permitted hypotheses.} All three families of
+      \(\mathcal P_{\rm permitted}\) are empty. The set \(\{z\}\)
+      is consistent with \(T\) and entails \(m\) with \(T\), but
+      is not a candidate because \(z\notin H\). The permitted
+      nonempty candidate \(\{a\}\) is consistent and non-explanatory.
+\end{enumerate}
+\end{hbtheorem}
+
+\section{What an explanation establishes}
+\label{sec:p16-abduction-interpretation}
+
+\begin{hbtheorem}{thm:p16-abduction-truth-boundary}{proved=annex:p16.abduction-truth-boundary}{Explanatory assumptions need not follow from the observations}
+In \(\mathcal P_{\rm sizes}\), both \(\{a\}\) and \(\{b,c\}\)
+are subset-minimal explanations, but
+\[
+\begin{aligned}
+ T\cup M&\not\entails a,\\
+ T\cup M&\not\entails(b\land c).
+\end{aligned}
+\]
+Indeed there is one valuation satisfying \(T\cup M\) which makes all
+three permitted hypotheses false.
+\end{hbtheorem}
+
+An explanation asserts that, \emph{if} its hypotheses hold together with
+the background, the observations follow, and that these combined assumptions
+are satisfiable. The theorem shows why this does not establish that the
+selected hypotheses are true. A declaration that \(M\) contains the
+observations does not by itself supply evidence for their measurement or for
+the background theory either.
+
+\begin{hbwarning}{def:p16-abduction-causal-boundary}{Logical explanation and causal interpretation}
+The arrows in \(T\) are classical material implications. The input
+contains no causal relation, intervention semantics, temporal ordering or
+probability distribution. Consequently the construction establishes a
+logical property of the supplied formulas and permitted assumptions. A
+claim about what actually caused an observation requires additional
+structure and evidence. Choosing fewer assumptions, or removing redundant
+ones, does not supply that structure.
+
+This chapter supplies the finite atomic-hypothesis foundation and its stated
+procedures. General formula hypotheses and their translations, first-order
+abduction, other preference orders, the source's complexity classifications,
+probabilistic abduction and causal explanation require separate treatments.
+Consistency-based diagnosis, its complete conflict search, measurement
+updates and default correspondence are supplied in
+\cref{sec:p16-consistency-based-diagnosis}.
+The exact distinction between consistency diagnosis and explanatory
+entailment is proved in \cref{thm:p16-diag-abduction-boundaries}.
+The distinction between generating an analogical candidate and
+establishing its truth by entailment is
+\cref{thm:p19-analogy-candidate-truth}; the associated task evidence
+is supplied in \cref{sec:p19-analogy-and-problem-transfer}.
+The separate deductive-explanation model, its verification
+condition and its account of relative emergence are supplied in
+\cref{sec:p16-deductive-nomological-explanation}.
+The complete source
+presentation and the broader explanation/abduction subject remain beyond
+this bounded unit.
+\end{hbwarning}

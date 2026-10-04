@@ -1,0 +1,356 @@
+\section{First-order resolution}
+\label{sec:fol-cardinality-normalforms-04}
+
+\begin{definition}[First-order clause and formula interpretation]
+Using the first-order literal defined before the prenex theorem, a
+\emph{clause} is a finite set of first-order literals, with
+set equality as its equality relation.  Thus literal order and multiplicity
+are not clause data.
+
+For an exact map back to formulas, take as presentation data a well-order
+\(\prec_{\Lang}\) of the symbol tokens of \(\Lang\).  Supplying this order is
+an explicit well-ordering assumption; for an arbitrary signature,
+its existence follows from the well-ordering theorem and hence from the Axiom
+of Choice.  The semantic results below do not depend on which supplied
+well-order is used.  Combine \(\prec_{\Lang}\) with the order
+\(x_0,x_1,\ldots\) and a fixed order of
+the finitely many logical and punctuation tokens, and order formula strings
+first by length and then lexicographically.  For a clause \(C\), let
+\(k=\abs{C}\); when \(k>0\), list its members as
+\(L_1\prec\cdots\prec L_k\) in the induced order and define, by downward
+recursion,
+\[
+ D_k\defeq L_k,
+ \qquad
+ D_i\defeq(L_i\lor D_{i+1})\quad(1\leq i<k).
+\]
+Then define
+\[
+ \operatorname{form}_{\Lang}(C)\defeq
+ \begin{cases}
+  \bottom,&C=\varnothing,\\
+  D_1,&C\ne\varnothing.
+ \end{cases}
+\]
+Let \(x_{i_1},\ldots,x_{i_m}\), with
+\(i_1<\cdots<i_m\), be exactly the variables occurring in \(C\).  Its
+formula interpretation is
+\[
+ \operatorname{ucl}_{\Lang}(C)\defeq
+ \forall x_{i_1}\cdots\forall x_{i_m}\,
+ \operatorname{form}_{\Lang}(C),
+\]
+with the quantifier prefix empty when \(m=0\).  The functions
+\(\operatorname{form}_{\Lang}\) and \(\operatorname{ucl}_{\Lang}\) are
+metalinguistic, not new object-language constructors.  They are required
+because a clause is a set rather than a formula;
+\(\operatorname{ucl}_{\Lang}\) differs from \(\operatorname{form}_{\Lang}\)
+by closing every clause variable.  A structure satisfies \(C\) iff it
+satisfies \(\operatorname{ucl}_{\Lang}(C)\), and it satisfies a clause set
+iff it satisfies every member.
+
+A clause is \emph{equality-free} iff no literal in it contains \(=\); that is,
+the atom underlying each of its literals has the form
+\(R(t_1,\ldots,t_n)\), not \(r=t\).  A clause set is equality-free iff each
+of its clauses is equality-free.  This condition concerns the literals in
+the clauses, not the signature, because logical equality is not a signature
+member.
+\end{definition}
+
+\begin{definition}[Finite-support simultaneous term substitution]
+A \emph{term substitution} is a total function
+\(\theta:\Var\to\Term(\Lang)\) whose support
+\[
+ \operatorname{supp}(\theta)
+ \defeq\set{x\in\Var:\theta(x)\ne x}
+\]
+is finite.  A finite display such as
+\(\set{x_1\mapsto t_1,\ldots,x_n\mapsto t_n}\) denotes the substitution
+shown on those variables and the identity on every other variable.
+
+Its simultaneous homomorphic action is defined by
+\[
+ x\theta=\theta(x),
+ \qquad
+ f(t_1,\ldots,t_n)\theta
+ =f(t_1\theta,\ldots,t_n\theta),
+\]
+\[
+ \begin{aligned}
+ R(t_1,\ldots,t_n)\theta
+   &\defeq R(t_1\theta,\ldots,t_n\theta),\\
+ (r=t)\theta&\defeq(r\theta=t\theta),\\
+ (\neg A)\theta&\defeq\neg(A\theta),\\
+ C\theta&\defeq\set{L\theta:L\in C}.
+ \end{aligned}
+\]
+Here \(A\) is atomic, \(L\) is a literal, and \(C\) is a clause.  The
+application is simultaneous: when \(\theta(x)\) is inserted for \(x\), the
+same application does not apply \(\theta\) again inside that inserted term.
+The clause action may identify two literals, in which case set equality
+removes the duplicate.  This quantifier-free action is the one needed by
+resolution; it neither replaces nor restricts the total capture-avoiding
+single-variable formula substitution \(\varphi[t/x]\) defined earlier.
+\end{definition}
+
+\begin{definition}[Composition and instance preorder]
+The identity substitution \(\mathrm{id}\) maps every variable to itself.  For
+substitutions \(\theta\) and \(\eta\), their composition \(\theta\eta\) is
+oriented by
+\[
+ (\theta\eta)(x)\defeq(\theta(x))\eta.
+\]
+Its support is contained in
+\(\operatorname{supp}(\theta)\cup\operatorname{supp}(\eta)\), so it is
+again a finite-support term substitution.
+Thus \(t(\theta\eta)=(t\theta)\eta\), and the same equation holds for
+atoms, literals, and clauses.  Define the \emph{instance preorder} on term
+substitutions by
+\[
+ \theta\preceq_{\mathrm{inst}}\rho
+ \quad\Longleftrightarrow\quad
+ \text{there is a term substitution \(\eta\) such that }
+ \rho=\theta\eta.
+\]
+This is a relation among substitutions, not equality: it records that
+\(\rho\) results from further simultaneous instantiation of \(\theta\).
+It is reflexive by \(\mathrm{id}\) and transitive by associativity of the
+displayed composition, so it is a preorder.  Its use below is precisely to
+state what ``most general'' means.
+\end{definition}
+
+\begin{lemma}[Composition of simultaneous substitutions]
+For every term \(t\), atom \(A\), literal \(L\), and clause \(C\),
+\[
+ \begin{gathered}
+ t(\theta\eta)=(t\theta)\eta,
+ \qquad A(\theta\eta)=(A\theta)\eta,\\
+ L(\theta\eta)=(L\theta)\eta,
+ \qquad C(\theta\eta)=(C\theta)\eta.
+ \end{gathered}
+\]
+\end{lemma}
+\begin{proof}
+Induct on terms for the first equation.  The atomic and literal equations then
+follow from their displayed homomorphic clauses.  Taking the pointwise image
+of a finite set proves the clause equation.  The term equation also proves
+associativity of substitution composition by extensionality.
+\end{proof}
+
+\begin{lemma}[Satisfaction under simultaneous term substitution]
+\label{lem:clause-substitution}
+If a \(\Lang\)-structure \(\Meta\) satisfies a clause \(C\), then it
+satisfies \(C\theta\) for every term substitution \(\theta\).
+\end{lemma}
+\begin{proof}
+For an assignment \(s\), define another assignment by
+\[
+ s^{\theta}(x)\defeq\sem{\theta(x)}^{\Meta}_{s}.
+\]
+Induction on terms gives
+\(\sem{t\theta}^{\Meta}_{s}=\sem{t}^{\Meta}_{s^{\theta}}\), and the atomic
+truth clauses extend this equality to literals.  Because \(\Meta\) satisfies
+the universal closure of \(C\), the assignment \(s^{\theta}\) satisfies some
+literal \(L\in C\).  Hence \(s\) satisfies \(L\theta\in C\theta\).  Since
+\(s\) was arbitrary, \(\Meta\) satisfies the universal closure of
+\(C\theta\).
+\end{proof}
+
+\begin{definition}[Renaming apart]
+A \emph{variable renaming} is a finite-support term substitution induced by a
+bijection \(\pi:\Var\to\Var\); hence every \(\pi(x)\) is a variable.  For a
+clause \(C\), put
+\[
+ \operatorname{Var}(C)\defeq
+ \bigcup_{L\in C}\operatorname{Var}(L).
+\]
+Clauses \(C\pi\) and \(D\rho\) are \emph{renamed apart} iff
+\(\operatorname{Var}(C\pi)\cap\operatorname{Var}(D\rho)=\varnothing\).
+Before a resolution inference, each parent is replaced by such a renamed
+copy.  The required renamings exist because both variable sets are finite and
+\(\Var\) is infinite.  Universal closure makes a renamed copy equivalent to
+the original clause; the operation changes bound variable names in its
+formula interpretation, not its satisfaction conditions.
+\end{definition}
+
+\begin{definition}[Unifier and most general unifier]
+A term substitution \(\theta\) is a \emph{unifier} of atomic formulas
+\(A\) and \(B\) iff \(A\theta\) and \(B\theta\) are literally identical.
+A unifier \(\theta\) is a \emph{most general unifier} iff
+\(\theta\preceq_{\mathrm{inst}}\rho\) for every unifier \(\rho\); equivalently, every
+unifier \(\rho\) has the form \(\theta\eta\) for some term substitution
+\(\eta\).
+\end{definition}
+
+\begin{definition}[First-order unification procedure]
+Below, \emph{atom} abbreviates \emph{atomic formula}.  To unify atoms
+\(A\) and \(B\), first fail if their outer atomic symbols or
+arities differ.  Otherwise form a finite set \(E\) of metalinguistic term
+equations \(r\doteq t\) by pairing corresponding arguments (the two ordered
+arguments when the common atomic symbol is \(=\)), and initialize
+\(\theta\) to \(\mathrm{id}\).  Repeatedly apply the following transformations
+to a selected equation:
+\begin{enumerate}
+  \item delete \(t\doteq t\);
+  \item replace
+        \(f(r_1,\ldots,r_n)\doteq f(t_1,\ldots,t_n)\) by the equations
+        \(r_i\doteq t_i\) for \(1\leq i\leq n\);
+  \item fail on
+        \(f(r_1,\ldots,r_m)\doteq g(t_1,\ldots,t_n)\) when
+        \(f\ne g\) or \(m\ne n\);
+  \item orient \(t\doteq x\) as \(x\doteq t\) when \(x\) is a variable
+        and \(t\) is not;
+  \item for \(x\doteq t\) with \(x\ne t\), perform the \emph{occurs
+        check}: if \(x\in\operatorname{Var}(t)\), fail; otherwise put
+        \(\delta=\set{x\mapsto t}\), apply \(\delta\) simultaneously to
+        every remaining equation, and replace the accumulator by
+        \(\theta\delta\).
+\end{enumerate}
+If the equation set becomes empty, return \(\theta\).  The occurs check is
+part of this procedure rather than part of the definition of a term
+substitution: it rejects the impossible demand that a finite term equal a
+proper term containing itself.
+\end{definition}
+
+\begin{theorem}[First-order unification]
+The unification procedure terminates.  It returns failure iff its
+input atoms are not unifiable; otherwise it returns a most general unifier.
+\end{theorem}
+\begin{proof}[Proof sketch]
+Maintain the invariant that the unifiers of the original problem are exactly
+the substitutions \(\theta\eta\) for substitutions \(\eta\) solving every
+equation still in \(E\).  Deletion, decomposition, and orientation preserve
+this invariant directly.  Elimination preserves it by the composition lemma.
+The clash rule has no solution.  If \(x\) occurs properly in \(t\), no finite
+term can satisfy \(x\eta=t\eta\), which justifies occurs-check failure.
+
+An elimination removes its variable from the remaining problem; a
+decomposition removes matching outer function symbols; deletion removes an
+equation, and orientation is immediately followed by one of these steps.
+The corresponding lexicographic measure therefore decreases, proving
+termination.  At success the remaining equation set is empty, so the
+invariant says both that \(\theta\) unifies the original atoms and that every
+other unifier is an instance \(\theta\eta\).  At either failure rule the
+invariant says that no unifier exists.  The full lexicographic-measure check
+and the transformation-by-transformation invariant calculations are omitted.
+\end{proof}
+
+After the two parent clauses \(E\) and \(F\) have been renamed apart, choose
+\(A\in E\) and \(\neg B\in F\), and let \(\theta\) be a most general
+unifier of the atoms \(A\) and \(B\).  The first-order resolution rule is
+\[
+ \Rule[Resolution]{E\qquad F}
+ {\bigl((E\setminus\set{A})\cup(F\setminus\set{\neg B})\bigr)\theta}.
+\]
+Factoring applies to two distinct literals of the same polarity in one
+clause \(E\).  If their underlying atoms are \(A\) and \(B\), and
+\(\theta\) is a most general unifier of those atoms, its rule is
+\[
+ \Rule[Factoring]{E}{E\theta}.
+\]
+Because clauses are sets, the two selected literals become one member of
+\(E\theta\).  A \emph{first-order resolution derivation} from a clause set
+\(S\) is a finite sequence in which each clause belongs to \(S\) or follows
+by resolution or factoring from earlier clauses, using renamed-apart copies
+of two parents before every resolution step.
+
+\begin{theorem}[Soundness of first-order resolution and factoring]
+Every structure satisfying the parent clauses of a resolution or factoring
+inference satisfies its conclusion.  Consequently, if a first-order
+resolution derivation from \(S\) contains the empty clause, then \(S\) is not
+satisfiable.
+\end{theorem}
+\begin{proof}
+Renaming apart preserves the universally closed formula interpretations: one
+direction follows from \cref{lem:clause-substitution}, and the other follows
+by applying the inverse variable renaming.  By the same lemma, a structure
+satisfying \(E\) and \(F\) satisfies \(E\theta\) and \(F\theta\).  If an
+assignment falsified every literal in the displayed resolvent, satisfaction
+of the substituted first parent would force \(A\theta\), while satisfaction
+of the substituted second parent would force \(\neg(B\theta)\).  But
+\(A\theta=B\theta\) literally, a contradiction.  Factoring is sound directly
+by \cref{lem:clause-substitution}.  Induction on a derivation now preserves
+satisfaction, whereas the formula interpretation of the empty clause is
+\(\bottom\).
+\end{proof}
+
+\begin{definition}[Ground term and ground instance]
+A term \(t\) is \emph{ground} iff \(\operatorname{Var}(t)=\varnothing\).  Let
+\(C\) be a first-order clause.  A \emph{ground instance} of \(C\) is a clause
+\(C\theta\) where \(\theta\) maps every variable occurring in \(C\) to a
+ground term.  These terms classify terms and substitution instances,
+respectively; neither means a closed formula.  They are required in the two
+cited results and the resolution-completeness proof below.
+\end{definition}
+
+\begin{theorem}[Herbrand theorem for clauses]
+\label{thm:herbrand-clauses}
+Let \(S\) be a finite equality-free set of first-order clauses in a signature
+having at least one ground term.  Then \(S\) is not satisfiable iff some finite
+set of ground instances of members of \(S\), regarded as propositional
+clauses whose distinct ground atoms are propositional variables, is not
+satisfiable.
+\textit{Status: cited theorem.}
+\end{theorem}
+
+\begin{theorem}[Lifting lemma]
+\label{thm:resolution-lifting}
+Let \(C,D\) be first-order clauses with disjoint variable sets, and let \(G\)
+be the ground resolvent produced by one ground resolution step from ground
+instances of \(C\) and \(D\).  Factor each parent literal family that its
+ground substitution identifies, and let \(R\) be the first-order resolvent of
+the resulting parents obtained with a most general unifier.  Then there is a
+substitution \(\eta\) that maps every variable occurring in \(R\) to a ground
+term and satisfies \(R\eta=G\).  The analogous equality holds for a ground
+factoring step and its lifted first-order factoring step.  Consequently, for
+every clause set \(S\), every
+ finite ground resolution refutation of ground instances of \(S\) lifts, step by
+step, to a first-order resolution derivation with factoring from \(S\).
+\textit{Status: cited theorem.}
+\end{theorem}
+
+See \cite{Robinson1965,BachmairGanzinger2001} for complete proofs of
+\cref{thm:herbrand-clauses,thm:resolution-lifting}.
+
+\begin{example}[Unification and resolution]
+Resolve
+\[
+ \set{P(f(x)),Q(x)}
+ \quad\text{and}\quad
+ \set{\neg P(y),R(y)}.
+\]
+The substitution \(\theta=\set{y\mapsto f(x)}\) is a most general unifier of
+\(P(f(x))\) and \(P(y)\).  The resolvent is
+\[
+ \set{Q(x),R(f(x))}.
+\]
+\end{example}
+
+\begin{theorem}[Refutational completeness of first-order resolution]
+\label{thm:fol-resolution}
+Let \(S\) be a finite equality-free set of first-order clauses.  After adding
+a constant if the signature has no ground term, \(S\) is not satisfiable iff
+resolution with factoring derives the empty clause.
+\end{theorem}
+\begin{proof}[Proof sketch]
+The preceding soundness theorem proves the reverse implication.  For the
+forward implication, \cref{thm:herbrand-clauses} yields a finite propositionally
+unsatisfiable set of ground instances of clauses in \(S\).  Propositional
+refutational completeness gives a ground resolution refutation.
+\Cref{thm:resolution-lifting} replaces each ground resolution step by a first-order resolution or
+factoring step whose instance is that ground step.  Induction through the
+finite ground refutation yields a first-order derivation of the empty clause.
+This proof depends on the two cited theorems, the existence of most general
+unifiers for unifiable first-order terms, and propositional refutational
+completeness; it is the
+precise equality-free scope of the classical result in
+\cite{Robinson1965,BachmairGanzinger2001}.  The cited complete proofs and the
+step-by-step lifted derivation are not reproduced here.
+\end{proof}
+
+Bare resolution is not complete for logical equality.  One must add
+an equality-complete treatment, such as equality axioms together with
+resolution or a sound and complete paramodulation or superposition calculus.
+The theorem above deliberately excludes every clause having a literal that
+contains logical equality.
+

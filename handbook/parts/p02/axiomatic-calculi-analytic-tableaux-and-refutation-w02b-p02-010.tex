@@ -1,0 +1,449 @@
+%% toc: P2 13 13.1,13.2,13.3
+\section{Derivation maps between the Hilbert, natural-deduction and sequent calculi}
+\label{sec:p02-w02b-p02-010-translations}
+
+The three classical propositional calculi of this part prove the same
+consequences, but they do so with different objects: the Hilbert calculus
+\(\mathsf H_{\mathsf{CPL}}\) of \cref{def:p02-hilbert-derivation} produces
+finite sequences of \(\{\neg,\to\}\)-formulas, the natural-deduction calculus
+\(\mathsf{ND}_{\mathsf{CPL}}\) produces trees with discharged assumptions,
+and \(\mathsf{LK}_{\mathsf{CPL}}\) produces trees of sequents.  This section
+gives explicit constructions that turn a derivation in one calculus into a
+derivation in another, in every direction among the three, and proves that
+each construction is correct.  The existence statements obtained from them
+are the Hilbert legs of \cref{thm:p02-calculi-derivability-equivalence}; the
+constructions themselves say more, because they fix which derivation is
+produced.
+
+\emph{Inputs.}  A Hilbert derivation from a set of \(\{\neg,\to\}\)-formulas;
+or an \(\mathsf{ND}_{\mathsf{CPL}}\) derivation over the full language with
+primitives \(\bottom,\neg,\land,\lor,\to\); or an \(\mathsf{LK}_{\mathsf{CPL}}\)
+derivation of a sequent of full-language formulas.  \emph{Conclusions.}  A
+derivation in each of the other two calculi of the same formula, when it
+lies in the \(\{\neg,\to\}\)-fragment, or otherwise of its image under the
+translation \(\operatorname{tr}_{\mathsf H}\) of
+\cref{def:p02-hilbert-translation}, from the correspondingly translated
+assumptions.  The constructions from natural deduction to sequents and back
+are those of \cref{thm:p07-lk-nd-equivalence}; this section supplies the
+four constructions that involve the Hilbert calculus and checks that the
+sequent constructions stay inside the propositional calculi.
+
+\subsection{Setting}
+\label{sec:p02-w02b-p02-010-setting}
+
+\begin{hbconvention}{def:p02-w02b-p02-010-setting}{Calculi, open assumptions and the two fixed formulas}
+\(\mathsf{Fm}_{\mathsf{CPL}}\) is the set of propositional formulas with
+primitives \(\bottom,\neg,\land,\lor,\to\), and
+\(\mathsf{Fm}_{\{\neg,\to\}}\subseteq\mathsf{Fm}_{\mathsf{CPL}}\) is the set
+of formulas built from propositional variables by \(\neg\) and \(\to\) alone.
+\begin{enumerate}
+  \item \(\Gamma\derives_{\mathsf H_{\mathsf{CPL}}}\theta\) is the relation of
+    \cref{def:p02-hilbert-derivation}, for
+    \(\Gamma\cup\{\theta\}\subseteq\mathsf{Fm}_{\{\neg,\to\}}\), with axiom
+    schemas A1--A3 and the rule MP of
+    \texttt{sheet:\allowbreak hilbert-cpl}.  An
+    \emph{\(\mathsf H\)-theorem} is a formula derivable from \(\varnothing\).
+  \item An \(\mathsf{ND}_{\mathsf{CPL}}\) derivation is a tree of the
+    inherited derivation definition, with the rules of
+    \texttt{sheet:\allowbreak nd-cpl}; every discharge is
+    nonvacuous and applies to all open occurrences of its formula.  For a
+    derivation \(D\), \(\operatorname{oa}(D)\) is the set of formulas that
+    have at least one open assumption occurrence in \(D\).  For an arbitrary
+    \(\Gamma\subseteq\mathsf{Fm}_{\mathsf{CPL}}\),
+    \(\Gamma\derives_{\mathsf{ND}_{\mathsf{CPL}}}\varphi\) holds iff some
+    derivation \(D\) has root \(\varphi\) and
+    \(\operatorname{oa}(D)\subseteq\Gamma\).
+  \item An \(\mathsf{LK}_{\mathsf{CPL}}\) derivation is a finite tree of
+    sequents of finite multisets of full-language formulas, built from the
+    contexted initial sequents by the structural, logical and cut rules of
+    the inherited classical sequent calculus, which are the propositional
+    rows of \texttt{sheet:\allowbreak lk}.  A finite set written
+    as an antecedent is the multiset with multiplicity one on each member.
+  \item Fix the propositional variable \(p_0\) of
+    \cref{def:p02-hilbert-translation}, and put
+    \[
+      \top_{\mathsf H}\defeq p_0\to p_0,
+      \qquad
+      \bot_{\mathsf H}\defeq\neg\top_{\mathsf H}
+      =\operatorname{tr}_{\mathsf H}(\bottom).
+    \]
+    These are names for two fixed formulas of the fragment, not new
+    connectives.  By \cref{thm:p02-w02b-p02-010-hilbert-theorems}(1),
+    \(\top_{\mathsf H}\) is an \(\mathsf H\)-theorem.
+\end{enumerate}
+Throughout, \(\varphi,\psi,\chi,\theta\) and \(A,B,C\) range over
+\(\mathsf{Fm}_{\{\neg,\to\}}\) when they occur in Hilbert statements, and
+\(\alpha,\beta,\gamma\) range over \(\mathsf{Fm}_{\mathsf{CPL}}\).
+\end{hbconvention}
+
+The fragment is literally a subset of the full language, and
+\(\operatorname{tr}_{\mathsf H}\) is the identity on it: a structural
+induction on \(\alpha\in\mathsf{Fm}_{\{\neg,\to\}}\) uses only the clauses for
+variables, \(\neg\) and \(\to\), each of which returns the same constructor
+applied to the translated parts.  Hence the Hilbert-to-other directions need
+no formula translation, while the directions into the Hilbert calculus must
+pass through \(\operatorname{tr}_{\mathsf H}\).
+
+\subsection{Hilbert axiom schemas, modus ponens and the deduction theorem}
+\label{sec:p02-w02b-p02-010-hilbert}
+
+The calculus has the three schemas and one rule displayed on
+\texttt{sheet:\allowbreak hilbert-cpl}: A1
+\(\varphi\to(\psi\to\varphi)\), A2
+\((\varphi\to(\psi\to\chi))\to((\varphi\to\psi)\to(\varphi\to\chi))\), A3
+\((\neg\psi\to\neg\varphi)\to((\neg\psi\to\varphi)\to\psi)\), and MP from
+\(\varphi\to\psi\) and \(\varphi\) to \(\psi\).  Every instance of A1--A3 is
+an axiom; a member of \(\Gamma\) may be written at any line; MP is the only
+rule, and it has no side condition.  The deduction theorem,
+\cref{thm:p02-hilbert-deduction}, is proved for arbitrary \(\Gamma\) in
+\cref{annex:p2.calc.2} from A1, A2 and MP alone.  The following lemmas are
+the Hilbert facts on which the maps below depend.
+
+\begin{hblemma}{thm:p02-w02b-p02-010-hilbert-structural}{proved=annex:p02-w02b-p02-010-hilbert-structural}{Structural properties of Hilbert derivability}
+Let \(\Gamma,\Delta\subseteq\mathsf{Fm}_{\{\neg,\to\}}\) and
+\(\theta\in\mathsf{Fm}_{\{\neg,\to\}}\).
+\begin{enumerate}
+  \item (Monotonicity.) If \(\Gamma\derives_{\mathsf H_{\mathsf{CPL}}}\theta\)
+    and \(\Gamma\subseteq\Delta\), then
+    \(\Delta\derives_{\mathsf H_{\mathsf{CPL}}}\theta\).
+  \item (Composition.) If \(\Gamma\derives_{\mathsf H_{\mathsf{CPL}}}\delta\)
+    for every \(\delta\in\Delta\) and
+    \(\Gamma\cup\Delta\derives_{\mathsf H_{\mathsf{CPL}}}\theta\), then
+    \(\Gamma\derives_{\mathsf H_{\mathsf{CPL}}}\theta\).
+  \item (Finiteness.) If \(\Gamma\derives_{\mathsf H_{\mathsf{CPL}}}\theta\),
+    then \(\Gamma_0\derives_{\mathsf H_{\mathsf{CPL}}}\theta\) for the finite
+    set \(\Gamma_0\subseteq\Gamma\) of members of \(\Gamma\) that occur as
+    lines of a given derivation.
+\end{enumerate}
+\end{hblemma}
+
+\begin{hblemma}{thm:p02-w02b-p02-010-hilbert-theorems}{proved=annex:p02-w02b-p02-010-hilbert-theorems}{Derived Hilbert theorems}
+For all \(\varphi,\psi,\chi\in\mathsf{Fm}_{\{\neg,\to\}}\), each of the
+following has an explicit derivation in \(\mathsf H_{\mathsf{CPL}}\) from the
+indicated premises (none, for items 1 and 3--8):
+\begin{enumerate}
+  \item \(\varphi\to\varphi\);
+  \item \(\varphi\to\chi\) from \(\{\varphi\to\psi,\ \psi\to\chi\}\);
+  \item \(\neg\neg\varphi\to\varphi\);
+  \item \(\varphi\to\neg\neg\varphi\);
+  \item \(\neg\varphi\to(\varphi\to\psi)\);
+  \item \((\neg\psi\to\neg\varphi)\to(\varphi\to\psi)\);
+  \item \((\varphi\to\psi)\to(\neg\psi\to\neg\varphi)\);
+  \item \((\varphi\to\psi)\to((\neg\varphi\to\psi)\to\psi)\).
+\end{enumerate}
+\end{hblemma}
+
+\begin{hblemma}{thm:p02-w02b-p02-010-rule-images}{proved=annex:p02-w02b-p02-010-rule-images}{Hilbert images of the natural-deduction rules}
+For all \(A,B,C\in\mathsf{Fm}_{\{\neg,\to\}}\), writing \(\vdash\) for
+\(\derives_{\mathsf H_{\mathsf{CPL}}}\):
+\[
+\begin{array}{ll}
+ \text{(i)}\ \{A,B\}\vdash\neg(A\to\neg B);
+ &\text{(ii)}\ \{\neg(A\to\neg B)\}\vdash A\ \text{and}\
+   \{\neg(A\to\neg B)\}\vdash B;\\[2pt]
+ \text{(iii)}\ \{A\}\vdash\neg A\to B\ \text{and}\ \{B\}\vdash\neg A\to B;
+ &\text{(iv)}\ \{\neg A\to B,\ A\to C,\ B\to C\}\vdash C;\\[2pt]
+ \text{(v)}\ \{A\to\bot_{\mathsf H}\}\vdash\neg A;
+ &\text{(vi)}\ \{A,\neg A\}\vdash\bot_{\mathsf H};\\[2pt]
+ \text{(vii)}\ \{\bot_{\mathsf H}\}\vdash C;
+ &\text{(viii)}\ \{\neg A\to\bot_{\mathsf H}\}\vdash A.
+\end{array}
+\]
+\end{hblemma}
+
+Items (i)--(viii) are the translated forms of conjunction introduction and
+elimination, disjunction introduction and elimination, negation
+introduction and elimination, falsum elimination and RAA: with
+\(A=\operatorname{tr}_{\mathsf H}(\alpha)\) and
+\(B=\operatorname{tr}_{\mathsf H}(\beta)\), the formula
+\(\neg(A\to\neg B)\) is \(\operatorname{tr}_{\mathsf H}(\alpha\land\beta)\)
+and \(\neg A\to B\) is \(\operatorname{tr}_{\mathsf H}(\alpha\lor\beta)\).
+
+\subsection{Natural-deduction facts used by the maps}
+\label{sec:p02-w02b-p02-010-nd}
+
+\begin{hblemma}{thm:p02-w02b-p02-010-nd-structural}{proved=annex:p02-w02b-p02-010-nd-structural}{Padding, unrestricted discharge and composition in natural deduction}
+Let \(\Gamma,\Delta,\Sigma\subseteq\mathsf{Fm}_{\mathsf{CPL}}\) and
+\(\alpha,\beta,\chi\in\mathsf{Fm}_{\mathsf{CPL}}\).
+\begin{enumerate}
+  \item (Padding.) For every derivation \(D\) with root \(\chi\) there is a
+    derivation \(D'\) with root \(\chi\), containing an open occurrence of
+    \(\alpha\), and with
+    \(\operatorname{oa}(D')=\operatorname{oa}(D)\cup\{\alpha\}\).
+  \item (Discharge as a closure property.)  If
+    \(\Gamma\cup\{\alpha\}\derives_{\mathsf{ND}_{\mathsf{CPL}}}\beta\) then
+    \(\Gamma\derives_{\mathsf{ND}_{\mathsf{CPL}}}\alpha\to\beta\); if
+    \(\Gamma\cup\{\alpha\}\derives_{\mathsf{ND}_{\mathsf{CPL}}}\bottom\) then
+    \(\Gamma\derives_{\mathsf{ND}_{\mathsf{CPL}}}\neg\alpha\); if
+    \(\Gamma\cup\{\neg\alpha\}\derives_{\mathsf{ND}_{\mathsf{CPL}}}\bottom\)
+    then \(\Gamma\derives_{\mathsf{ND}_{\mathsf{CPL}}}\alpha\); and if
+    \(\Gamma\derives_{\mathsf{ND}_{\mathsf{CPL}}}\alpha\lor\beta\),
+    \(\Delta\cup\{\alpha\}\derives_{\mathsf{ND}_{\mathsf{CPL}}}\chi\) and
+    \(\Sigma\cup\{\beta\}\derives_{\mathsf{ND}_{\mathsf{CPL}}}\chi\), then
+    \(\Gamma\cup\Delta\cup\Sigma\derives_{\mathsf{ND}_{\mathsf{CPL}}}\chi\).
+    This holds whether or not the witnessing derivation of the premise uses
+    the assumption.
+  \item (Composition.) If \(\Delta\derives_{\mathsf{ND}_{\mathsf{CPL}}}\sigma\)
+    for every \(\sigma\in\Sigma\) and
+    \(\Gamma\cup\Sigma\derives_{\mathsf{ND}_{\mathsf{CPL}}}\chi\), then
+    \(\Gamma\cup\Delta\derives_{\mathsf{ND}_{\mathsf{CPL}}}\chi\).
+\end{enumerate}
+\end{hblemma}
+
+\begin{hblemma}{thm:p02-w02b-p02-010-nd-translation}{proved=annex:p02-w02b-p02-010-nd-translation}{Each formula is natural-deduction equivalent to its Hilbert translation}
+For every \(\alpha\in\mathsf{Fm}_{\mathsf{CPL}}\),
+\[
+  \{\alpha\}\derives_{\mathsf{ND}_{\mathsf{CPL}}}\operatorname{tr}_{\mathsf H}(\alpha)
+  \qquad\text{and}\qquad
+  \{\operatorname{tr}_{\mathsf H}(\alpha)\}\derives_{\mathsf{ND}_{\mathsf{CPL}}}\alpha .
+\]
+\end{hblemma}
+
+\subsection{The four maps}
+\label{sec:p02-w02b-p02-010-maps}
+
+\begin{hbtheorem}{thm:p02-w02b-p02-010-hilbert-to-nd}{proved=annex:p02-w02b-p02-010-hilbert-to-nd}{From Hilbert derivations to natural deduction}
+Let \(\Gamma\subseteq\mathsf{Fm}_{\{\neg,\to\}}\) and let
+\(\theta_0,\ldots,\theta_n\) be a Hilbert derivation from \(\Gamma\).  There
+are \(\mathsf{ND}_{\mathsf{CPL}}\) derivations \(D_0,\ldots,D_n\), constructed
+line by line, such that \(D_i\) has root \(\theta_i\) and
+\(\operatorname{oa}(D_i)\subseteq\Gamma\).  A premise line becomes a one-node
+assumption, an axiom line becomes a fixed closed derivation of that
+instance, and an MP line becomes \(\to E\) applied to relabelled copies of
+the two earlier trees.  Consequently
+\(\Gamma\derives_{\mathsf H_{\mathsf{CPL}}}\theta\) implies
+\(\Gamma\derives_{\mathsf{ND}_{\mathsf{CPL}}}\theta\).  The derivations
+produced use only the rules assumption, \(\land I\), \(\land E_1\),
+\(\land E_2\), \(\to I\), \(\to E\), \(\neg E\) and RAA.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p02-w02b-p02-010-nd-to-hilbert}{proved=annex:p02-w02b-p02-010-nd-to-hilbert}{From natural deduction to Hilbert derivations}
+For every \(\mathsf{ND}_{\mathsf{CPL}}\) derivation \(D\) with root
+\(\alpha\) there is a Hilbert derivation, constructed by recursion on \(D\),
+of \(\operatorname{tr}_{\mathsf H}(\alpha)\) from
+\(\operatorname{tr}_{\mathsf H}[\operatorname{oa}(D)]\).  Each rule
+application of \(D\) is replaced by the matching item of
+\cref{thm:p02-w02b-p02-010-rule-images}, \(\to E\) by MP, and \(\to I\) by
+the deduction theorem.  Consequently, for every
+\(\Gamma\subseteq\mathsf{Fm}_{\mathsf{CPL}}\),
+\(\Gamma\derives_{\mathsf{ND}_{\mathsf{CPL}}}\alpha\) implies
+\(\operatorname{tr}_{\mathsf H}[\Gamma]\derives_{\mathsf H_{\mathsf{CPL}}}
+\operatorname{tr}_{\mathsf H}(\alpha)\).
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p02-w02b-p02-010-hilbert-to-lk}{proved=annex:p02-w02b-p02-010-hilbert-to-lk}{From Hilbert derivations to sequent derivations}
+Let \(\Gamma\subseteq\mathsf{Fm}_{\{\neg,\to\}}\) and let
+\(\theta_0,\ldots,\theta_n\) be a Hilbert derivation from \(\Gamma\).  For
+each \(i\) there is a finite multiset \(\Pi_i\) with
+\(\operatorname{supp}(\Pi_i)\subseteq\Gamma\) and an
+\(\mathsf{LK}_{\mathsf{CPL}}\) derivation of \(\Pi_i\Rightarrow\theta_i\),
+constructed line by line: a premise line is an identity sequent, an axiom
+line is a fixed cut-free derivation of \(\Rightarrow\theta_i\), and an MP line
+is two cuts against the sequent \(\varphi,\varphi\to\psi\Rightarrow\psi\).
+Consequently, for every finite \(\Gamma_0\subseteq\mathsf{Fm}_{\{\neg,\to\}}\)
+with \(\operatorname{supp}(\Pi_n)\subseteq\Gamma_0\), the sequent
+\(\Gamma_0\Rightarrow\theta_n\) is derivable in \(\mathsf{LK}_{\mathsf{CPL}}\);
+in particular, for finite \(\Gamma\),
+\(\Gamma\derives_{\mathsf H_{\mathsf{CPL}}}\theta\) implies that
+\(\Gamma\Rightarrow\theta\) is derivable.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p02-w02b-p02-010-lk-to-hilbert}{proved=annex:p02-w02b-p02-010-lk-to-hilbert}{From sequent derivations to Hilbert derivations}
+Let \(\Gamma\Rightarrow\Delta\) be derivable in \(\mathsf{LK}_{\mathsf{CPL}}\),
+and let \(D_{\Delta}=\bigvee\Delta\) be the disjunction of
+\cref{def:p07-sequent-nd-translation}, with \(D_{\varnothing}=\bottom\).
+Then
+\(\operatorname{tr}_{\mathsf H}[\operatorname{supp}(\Gamma)]
+\derives_{\mathsf H_{\mathsf{CPL}}}\operatorname{tr}_{\mathsf H}(D_{\Delta})\).
+The Hilbert derivation is obtained by applying the sequent-to-natural-deduction
+construction of \cref{annex:p7.calculi.3} and then the construction of
+\cref{thm:p02-w02b-p02-010-nd-to-hilbert}; for a single succedent formula
+\(\alpha\) the conclusion reads
+\(\operatorname{tr}_{\mathsf H}[\operatorname{supp}(\Gamma)]
+\derives_{\mathsf H_{\mathsf{CPL}}}\operatorname{tr}_{\mathsf H}(\alpha)\).
+\end{hbtheorem}
+
+\begin{hbcorollary}{thm:p02-w02b-p02-010-hilbert-equivalence}{proved=annex:p02-w02b-p02-010-hilbert-equivalence}{Hilbert legs of the derivability equivalence}
+For every \(\Gamma\subseteq\mathsf{Fm}_{\mathsf{CPL}}\) and
+\(\alpha\in\mathsf{Fm}_{\mathsf{CPL}}\):
+\begin{enumerate}
+  \item \(\Gamma\derives_{\mathsf{ND}_{\mathsf{CPL}}}\alpha\) iff
+    \(\operatorname{tr}_{\mathsf H}[\Gamma]\derives_{\mathsf H_{\mathsf{CPL}}}
+    \operatorname{tr}_{\mathsf H}(\alpha)\);
+  \item if \(\Gamma\) is finite, the sequent \(\Gamma\Rightarrow\alpha\) is
+    derivable in \(\mathsf{LK}_{\mathsf{CPL}}\) iff
+    \(\operatorname{tr}_{\mathsf H}[\Gamma]\derives_{\mathsf H_{\mathsf{CPL}}}
+    \operatorname{tr}_{\mathsf H}(\alpha)\);
+  \item if \(\Gamma\cup\{\alpha\}\subseteq\mathsf{Fm}_{\{\neg,\to\}}\), then
+    \(\Gamma\derives_{\mathsf H_{\mathsf{CPL}}}\alpha\) iff
+    \(\Gamma\derives_{\mathsf{ND}_{\mathsf{CPL}}}\alpha\), and, for finite
+    \(\Gamma\), iff \(\Gamma\Rightarrow\alpha\) is derivable in
+    \(\mathsf{LK}_{\mathsf{CPL}}\).
+\end{enumerate}
+\end{hbcorollary}
+
+Together with \cref{thm:prop-nd-soundness,thm:prop-completeness} for the
+semantic leg and with \cref{thm:p07-lk-nd-equivalence} restricted to
+propositional derivations, this corollary yields every equivalence displayed
+in \cref{thm:p02-calculi-derivability-equivalence}.  The corollary is proved
+syntactically: no step uses soundness or completeness of any calculus.
+
+\begin{hbmethod}{def:p02-w02b-p02-010-procedure}{Translating a derivation between the three calculi}
+\emph{Input:} a derivation in one of \(\mathsf H_{\mathsf{CPL}}\),
+\(\mathsf{ND}_{\mathsf{CPL}}\), \(\mathsf{LK}_{\mathsf{CPL}}\), and a target
+calculus.
+\begin{enumerate}
+  \item \(\mathsf H\to\mathsf{ND}\): process lines in order; for line
+    \(\theta_i\) take an assumption leaf, the fixed closed derivation of the
+    axiom instance (with the A1 case split \(\varphi\neq\psi\) or
+    \(\varphi=\psi\)), or \(\to E\) beneath copies of the trees for its two
+    MP premises, relabelled apart.
+  \item \(\mathsf{ND}\to\mathsf H\): recurse from the leaves to the root of
+    the tree; at a rule application, concatenate the Hilbert derivations of
+    the translated premises and append the derivation of the matching item
+    of \cref{thm:p02-w02b-p02-010-rule-images}; for a discharging rule, first
+    apply the deduction theorem to the discharged translated assumption.
+  \item \(\mathsf H\to\mathsf{LK}\): process lines in order as in step 1,
+    using identity sequents, the three fixed cut-free axiom derivations, and
+    two cuts for MP; finish with left contraction and left weakening.
+  \item \(\mathsf{LK}\to\mathsf H\): apply the sequent-to-natural-deduction
+    construction of \cref{annex:p7.calculi.3}, then step 2.
+  \item \(\mathsf{ND}\to\mathsf{LK}\) and \(\mathsf{LK}\to\mathsf{ND}\): the
+    two constructions of \cref{annex:p7.calculi.3}.
+\end{enumerate}
+\emph{Side conditions:} every discharge in a produced natural-deduction tree
+must be nonvacuous; the constructions guarantee this by the padding detour
+of \cref{thm:p02-w02b-p02-010-nd-structural}(1) and the A1 case split.
+Discharge labels in copied subtrees must be renamed apart before grafting or
+\(\to E\).  The Hilbert side has no discharge, so no side condition arises
+there beyond the formula shapes of the schemas and of MP.
+\emph{Output:} a derivation in the target calculus of the same formula or,
+for maps into \(\mathsf H_{\mathsf{CPL}}\), of its
+\(\operatorname{tr}_{\mathsf H}\)-image, from translated assumptions.
+\end{hbmethod}
+
+\subsection{Worked example}
+\label{sec:p02-w02b-p02-010-example}
+
+\begin{hbexample}{def:p02-w02b-p02-010-example}{The conjunction projection through all three calculi}
+Take the natural-deduction derivation of \((P\land Q)\to P\) in
+\cref{fig:p02-nd-lk-correspondence}: an assumption \([P\land Q]^1\),
+\(\land E_1\) to \(P\), and \(\to I\) discharging label \(1\).  Its
+translation is
+\(\operatorname{tr}_{\mathsf H}((P\land Q)\to P)=\neg(P\to\neg Q)\to P\).
+
+\emph{Natural deduction to Hilbert.}  The leaf becomes the one-line
+derivation of \(\neg(P\to\neg Q)\) from itself.  The \(\land E_1\) step
+appends the derivation of item (ii) of
+\cref{thm:p02-w02b-p02-010-rule-images}, whose lines are
+\[
+\begin{array}{rll}
+1.&\neg(P\to\neg Q)&\text{premise}\\
+2.&\neg P\to(P\to\neg Q)&\text{\cref{thm:p02-w02b-p02-010-hilbert-theorems}(5)}\\
+3.&(\neg P\to(P\to\neg Q))\to(\neg(P\to\neg Q)\to\neg\neg P)&\text{\cref{thm:p02-w02b-p02-010-hilbert-theorems}(7)}\\
+4.&\neg(P\to\neg Q)\to\neg\neg P&\text{MP }2,3\\
+5.&\neg\neg P&\text{MP }1,4\\
+6.&\neg\neg P\to P&\text{\cref{thm:p02-w02b-p02-010-hilbert-theorems}(3)}\\
+7.&P&\text{MP }5,6
+\end{array}
+\]
+where lines 2, 3 and 6 stand for their explicit empty-premise derivations
+from the annex, inserted in place.  The \(\to I\) step applies the deduction
+theorem to this derivation, discharging the premise
+\(\neg(P\to\neg Q)\), and yields
+\(\derives_{\mathsf H_{\mathsf{CPL}}}\neg(P\to\neg Q)\to P\).
+
+\emph{Hilbert back to natural deduction.}  Applied to that Hilbert
+derivation, \cref{thm:p02-w02b-p02-010-hilbert-to-nd} gives a closed
+derivation of \(\neg(P\to\neg Q)\to P\).  To return to the original
+formula, the implication case of
+\cref{thm:p02-w02b-p02-010-nd-translation} is used: assume
+\([P\land Q]^2\), derive \(\neg(P\to\neg Q)\) from it by the conjunction case
+of the same lemma, apply \(\to E\) with the closed derivation to obtain
+\(P\), and discharge label \(2\).  The result is a closed derivation of
+\((P\land Q)\to P\).  It is a different tree from the one in the figure: the
+maps preserve the conclusion, not the derivation.
+
+\emph{Hilbert to sequents.}  Applied to the same Hilbert derivation,
+\cref{thm:p02-w02b-p02-010-hilbert-to-lk} produces an
+\(\mathsf{LK}_{\mathsf{CPL}}\) derivation of
+\(\Rightarrow\neg(P\to\neg Q)\to P\) that uses Cut at every MP line, whereas
+the derivation of \(\Rightarrow(P\land Q)\to P\) in the figure is cut-free.
+\end{hbexample}
+
+\subsection{Limitations and a failure case}
+\label{sec:p02-w02b-p02-010-limits}
+
+\begin{hbwarning}{def:p02-w02b-p02-010-vacuous}{Vacuous discharge defeats the obvious translation of A1}
+The usual natural-deduction proof of the A1 instance
+\(\varphi\to(\psi\to\varphi)\) assumes \(\varphi\), discharges a never-used
+\(\psi\), and then discharges \(\varphi\).  On
+\texttt{sheet:\allowbreak nd-cpl} that is not a derivation: a
+discharge needs an open occurrence of its formula.  The padding detour
+\(\varphi,\psi\vdash\varphi\land\psi\vdash\varphi\) supplies the occurrence
+of \(\psi\) when \(\psi\neq\varphi\).  It fails for the instance
+\(P\to(P\to P)\), because the inner \(\to I\) discharges every open
+occurrence of \(P\), leaving none for the outer one.  The construction
+therefore treats \(\varphi=\psi\) separately: it conjoins the assumption
+\(P\) with the closed derivation of \(P\to P\), projects to \(P\to P\), and
+discharges \(P\) once.  A translation that ignores the side condition yields
+a tree that is not a derivation.
+\end{hbwarning}
+
+\begin{hbwarning}{def:p02-w02b-p02-010-size}{The maps preserve conclusions, not size or proof shape}
+None of the constructions preserves derivation size up to a constant
+factor.  A Hilbert line used by several later MP steps is copied into each
+natural-deduction or sequent subtree that needs it: at an MP line the new
+tree contains complete copies of both premise trees.  Tree sizes therefore
+add along every MP step, and for a sequence of \(n\) lines the construction
+guarantees no bound better than one exponential in \(n\).  In
+the other direction each application of the deduction theorem replaces
+every line of the derivation it acts on by a segment of up to five lines, so
+nested discharges multiply length.  The sequent derivations produced from
+Hilbert derivations contain Cut at every MP line; a cut-free derivation of
+the same sequent exists by cut elimination, which is a separate Part~7
+result and is not used here.  The translation \(\operatorname{tr}_{\mathsf H}\)
+also depends on the fixed variable \(p_0\): it preserves each formula's truth
+function, but \(\operatorname{tr}_{\mathsf H}(\bottom)\) is not \(\bottom\),
+and the ND--Hilbert round trip returns a derivation of a formula only
+up to the natural-deduction equivalence of
+\cref{thm:p02-w02b-p02-010-nd-translation}.
+\end{hbwarning}
+
+\subsection{Relationships and sources}
+\label{sec:p02-w02b-p02-010-relations}
+
+The three-way comparison of the calculi by derivation shape and use is
+\cref{tab:p02-proof-systems}, and one natural-deduction/sequent
+correspondence is drawn in \cref{fig:p02-nd-lk-correspondence}.  The maps of
+this section are the propositional counterparts of the first-order proof
+bridges \cref{thm:p02-hfa-proof-bridges}; that construction obtains its
+propositional kernels from \cref{thm:p02-calculi-derivability-equivalence},
+whose Hilbert legs are now given by
+\cref{thm:p02-w02b-p02-010-hilbert-equivalence} without semantic
+completeness.  The rejection calculus of
+\cref{sec:p02-classical-rejection} takes the Hilbert derivations of
+\cref{def:p02-hilbert-derivation} as its assertion judgment, and its
+classical adequacy is the empty-premise case of these equivalences.
+
+Gentzen proved the equivalence of his natural-deduction calculus
+\(\mathsf{NK}\), his sequent calculus \(\mathsf{LK}\) and a calculus
+\(\mathsf{LHK}\) modelled on Hilbert's formalism by the cycle
+\(\mathsf{LHK}\to\mathsf{NK}\to\mathsf{LK}\to\mathsf{LHK}\)
+\cite[Abschnitt~V, \S 6, p.~429]{Gentzen1935b}, counting two derivations
+equivalent when their end formulas or end sequents are equivalent in the
+sense fixed in \cite[Abschnitt~V, \S 1, pp.~417--418]{Gentzen1935b}.
+Kleene proves the deduction theorem for his propositional calculus by
+course-of-values induction on the length of the given deduction
+\cite[\S 21, Theorem~1, p.~90]{Kleene1952}, and translates between his
+Hilbert-style system and Gentzen's sequent system \(\mathsf{G1}\) in both
+directions \cite[\S 77, Theorems~46 and 47, pp.~445--446]{Kleene1952}; his
+translation of an empty succedent uses a negated self-implication, as
+\(\operatorname{tr}_{\mathsf H}(\bottom)\) does here.  Neither source uses
+the calculi of this book; for instance, Kleene's Axiom Schema 1b, displayed
+at \cite[\S 21, p.~92]{Kleene1952}, is A2 with its two antecedents
+interchanged.  The constructions and proofs in this section are written
+directly for \texttt{sheet:\allowbreak hilbert-cpl},
+\texttt{sheet:\allowbreak nd-cpl} and the propositional rows
+of \texttt{sheet:\allowbreak lk}; the axiom schemas follow the
+attribution on the sheet \cite{Mendelson1997}.

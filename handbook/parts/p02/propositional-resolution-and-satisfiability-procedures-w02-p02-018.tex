@@ -1,0 +1,587 @@
+%% toc: P2 15 15.1,15.2,15.3,15.8
+\section{Decision bounds, reductions and checked certificates for propositional satisfiability}
+\label{sec:p02-w02-p02-018-decision-certificates}
+
+\emph{Purpose.}  The propositional resolution rule, its soundness and its
+refutation completeness are the exact inherited results of
+\cref{sec:prop-metatheory-04}, with the refutation displayed as a graph in
+Figure~\ref{fig:p02-resolution-dag}.  This section supplies what those results
+do not: an explicit input representation for the four finite decision problems
+of classical propositional logic, a truth-table procedure for them with a
+written termination, correctness and running-time proof, the exact limits of
+that decidability claim, the proofs that \(\mathsf{SAT}\) is in
+\(\mathsf{NP}\), that \(\mathsf{TAUT}\) is in \(\mathsf{coNP}\), that negation
+interreduces \(\mathsf{SAT}\) with the complement of \(\mathsf{TAUT}\), and
+that every \(\mathsf{NP}\) problem reduces to \(\mathsf{SAT}\), and finally
+three checked certificate formats with a worked instance of each, together
+with a fully annotated first-order resolution refutation.
+
+\emph{Inputs.}  Finite strings over the fixed token alphabet of
+\cref{def:p02-w02-p02-018-input}, presenting a formula, a finite list of
+premises with a conclusion, or a pair of formulas; and, for the certificate
+checks, finite clause sets with a candidate valuation or a candidate
+refutation log.  \emph{Conclusions.}  A yes or no answer with a witness
+valuation where one exists, a bound on the number of machine steps, and
+checked evidence for satisfiability, unsatisfiability and failure of
+consequence.
+
+\emph{Standing notation.}  Formulas are the members of
+\(\mathsf{Fm}_{\mathsf{CPL}}\) of \cref{sec:prop-syntax-semantics-01}, with
+primitive \(\bottom,\neg,\land,\lor,\to\) and variables \(p_n\)
+(\(n\in\N\)).  A valuation \(v\) assigns \(\mathbf T\) or \(\mathbf F\) to
+every variable, \(\widehat v\) is its extension to formulas, and
+satisfaction, satisfiability, validity, semantic consequence
+\(\Gamma\entails\varphi\) and logical equivalence are those of
+\cref{sec:prop-syntax-semantics-02}.  \(\operatorname{Var}(e)\) is the finite
+set of variables occurring in \(e\).  Clauses, the clause interpretation
+\(\operatorname{form}_{\mathsf{CPL}}\) and literal complements
+\(\overline L\) are those of \cref{sec:prop-syntax-semantics-04,%
+sec:prop-metatheory-04}.  In examples \(p,q,r\) are the distinct variables
+\(p_0,p_1,p_2\).  The complexity classes, reductions and the languages
+\(\mathsf{SAT}\) and \(\mathsf{TAUT}\) are those of
+\cref{def:p02-complexity-standing,def:p02-sat-taut}.
+
+\subsection{The declared input representation}
+\label{sec:p02-w02-p02-018-input}
+
+\begin{hbconvention}{def:p02-w02-p02-018-input}{Effective finite inputs for classical propositional logic}
+\emph{Tokens.}  The token alphabet consists of the thirteen distinct symbols
+\[
+ \texttt{p},\ \texttt{0},\ \texttt{1},\ \texttt{;},\ \bottom,\ \neg,\
+ \land,\ \lor,\ \to,\ (,\ ),\ \texttt{,}\ ,\ \texttt{|}\ ,
+\]
+listed here in a fixed order; the token in position \(i\) of this list
+(\(0\leq i\leq 12\)) is encoded by the four-bit binary numeral of \(i\).
+Every input is a bit string; it is \emph{decodable} when its length is a
+multiple of \(4\) and each consecutive group of four bits is the code of a token.
+Write \(m\) for the bit length of an input, so a decodable input has \(m/4\)
+tokens.
+
+\emph{Formulas.}  The variable \(p_n\) is written as the token \texttt{p},
+followed by the binary numeral of \(n\) without leading zeros (the single
+digit \texttt{0} when \(n=0\)), followed by the terminator \texttt{;}.  A
+formula is written as its fully parenthesized string of
+\cref{sec:prop-syntax-semantics-01} with each variable so written; the
+separators \texttt{,} and \texttt{|} do not occur in formula strings.  This
+is the formula encoding of \cref{def:p02-sat-taut} with its code table
+fixed.
+
+\emph{Instances.}  The four decision problems are the following sets of bit
+strings.
+\begin{enumerate}
+\item \(\mathsf{SAT}\): encodings of satisfiable formulas.
+\item \(\mathsf{TAUT}\): encodings of valid formulas.
+\item \(\mathsf{CONS}\): encodings of strings
+      \(\gamma_1\,\texttt{,}\,\gamma_2\,\texttt{,}\cdots\texttt{,}\,\gamma_r\,
+      \texttt{|}\,\varphi\) with \(r\geq0\) formula strings before the
+      separator \texttt{|} (for \(r=0\) the string begins with \texttt{|})
+      such that \(\{\gamma_1,\ldots,\gamma_r\}\entails\varphi\).  The list
+      presents the finite premise set \(\Gamma=\{\gamma_1,\ldots,\gamma_r\}\);
+      order and repetition in the list do not affect membership.
+\item \(\mathsf{EQV}\): encodings of strings
+      \(\varphi\,\texttt{|}\,\psi\) of two formula strings such that
+      \(\varphi\) and \(\psi\) are logically equivalent.
+\end{enumerate}
+A bit string that is not decodable, or whose token string does not have the
+displayed shape with formula strings in the displayed positions, is
+\emph{malformed} and belongs to none of the four sets.  For an instance
+\(x\), \(k\) denotes the number of distinct variables occurring in it.
+Because every variable occurrence uses at least three tokens,
+\(k\leq m/12\).
+
+The names \(\mathsf{CONS}\) and \(\mathsf{EQV}\) are needed to state the
+consequence and equivalence problems as sets of strings beside the two
+languages of \cref{def:p02-sat-taut}; they are metalinguistic names of
+languages, not connectives, and are used in
+\cref{thm:p02-w02-p02-018-decision}.  Any other representation reaches these
+results only through a computable translation into this one.
+\index{CONS@\(\mathsf{CONS}\)}\index{EQV@\(\mathsf{EQV}\)}
+\index{input representation!propositional decision problems}
+\end{hbconvention}
+
+\subsection{The truth-table decision procedure and its bound}
+\label{sec:p02-w02-p02-018-truth-table}
+
+\begin{hbmethod}{def:p02-w02-p02-018-evaluator}{Stack evaluation of formula strings}
+\emph{Input.}  A token string \(w\) without separators, and a
+\emph{valuation table} \(\tau\): a finite list of pairs \((n,b)\), each a
+binary numeral \(n\) and a truth value \(b\), with no numeral listed twice.
+The table determines the valuation \(v_\tau\) that gives \(p_n\) the value
+\(b\) when \((n,b)\) is listed and \(\mathbf F\) otherwise.
+
+\emph{Procedure.}  Start with an empty stack whose entries are truth values
+or the markers \(\neg\), \((\), \(\land\), \(\lor\), \(\to\).  To
+\emph{reduce} the stack, repeat: while the top entry is a truth value \(b\)
+and the entry below it is \(\neg\), replace these two entries by the
+opposite value of \(b\).  Read \(w\) from left to right.
+\begin{enumerate}
+\item On \texttt{p}: read the following digit tokens up to the next
+      \texttt{;}.  If no \texttt{;} follows, if the digit string is empty, or
+      if it has a leading \texttt{0} and more than one digit, stop with the
+      answer \emph{malformed}.  Otherwise push the value that \(v_\tau\)
+      gives to the variable with this numeral, then reduce.
+\item On \(\bottom\): push \(\mathbf F\), then reduce.
+\item On \(\neg\), \((\), \(\land\), \(\lor\) or \(\to\): push it.
+\item On \()\): if the four top entries are, from the top, a truth value
+      \(b\), a binary connective \(\circ\), a truth value \(a\) and \((\),
+      replace them by the value of \(a\circ b\) under the truth clause of
+      \(\circ\), then reduce; otherwise stop with \emph{malformed}.
+\item On any other token stop with \emph{malformed}.
+\end{enumerate}
+At the end of \(w\), answer \emph{well formed with value \(b\)} if the stack
+consists of exactly one truth value \(b\), and \emph{malformed} otherwise.
+\end{hbmethod}
+
+\begin{hblemma}{thm:p02-w02-p02-018-evaluator}{proved=annex:p02-w02-p02-018-evaluator}{Correctness and cost of stack evaluation}
+Let \(w\) be a token string without separators and \(\tau\) a valuation
+table.
+\begin{enumerate}
+\item Method~\ref{def:p02-w02-p02-018-evaluator} answers \emph{well formed}
+      on \(w\) if and only if \(w\) is the string of a formula \(\chi\), and
+      then its value is \(\widehat{v_\tau}(\chi)\).
+\item On a deterministic machine with a read-only input tape holding \(w\)
+      and work tapes holding \(\tau\) and the stack, the method halts within
+      \(c\,t\,(t+s)\) steps, where \(t\) is the number of tokens of \(w\),
+      \(s\) the number of symbols of the written table and \(c\) a constant
+      independent of \(w\) and \(\tau\).
+\end{enumerate}
+\end{hblemma}
+
+\begin{hbmethod}{def:p02-w02-p02-018-truth-table}{Truth-table decision procedure}
+\emph{Input.}  A bit string \(x\) and one of the four problems of
+\cref{def:p02-w02-p02-018-input}.
+
+\emph{Step 1 (recognition).}  Decode \(x\) into tokens; split the token string
+at its separators; check that the separators have the shape required by the
+problem; and run Method~\ref{def:p02-w02-p02-018-evaluator} with the empty
+table on each segment.  If any check fails, \emph{reject}.
+
+\emph{Step 2 (variables).}  List the distinct variables of the instance as
+\(x_1,\ldots,x_k\) in order of first occurrence, and write the table
+\(\tau=((x_1,\mathbf F),\ldots,(x_k,\mathbf F))\).
+
+\emph{Step 3 (rows).}  Visit the \(2^k\) assignments
+\(u:\{x_1,\ldots,x_k\}\to\{\mathbf T,\mathbf F\}\) in lexicographic order of
+\((u(x_1),\ldots,u(x_k))\) with \(\mathbf F\) before \(\mathbf T\); the table
+holds the current row, and the next row is obtained by changing the final
+run of \(\mathbf T\) entries to \(\mathbf F\) and the entry before that
+run from \(\mathbf F\) to \(\mathbf T\).  For each row evaluate every segment
+under \(v_\tau\) by Method~\ref{def:p02-w02-p02-018-evaluator} and stop at the
+first row on which
+\begin{itemize}
+\item for \(\mathsf{SAT}\), the formula is true: \emph{accept} and output the
+      row;
+\item for \(\mathsf{TAUT}\), the formula is false: \emph{reject} and output
+      the row;
+\item for \(\mathsf{CONS}\), every premise is true and the conclusion is
+      false: \emph{reject} and output the row;
+\item for \(\mathsf{EQV}\), the two formulas receive different values:
+      \emph{reject} and output the row.
+\end{itemize}
+\emph{Step 4 (exhaustion).}  If no row stops the search, \emph{reject} for
+\(\mathsf{SAT}\) and \emph{accept} for \(\mathsf{TAUT}\), \(\mathsf{CONS}\)
+and \(\mathsf{EQV}\).
+\index{truth-table decision procedure}
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p02-w02-p02-018-decision}{proved=annex:p02-w02-p02-018-decision}{Decidability with a running-time bound}
+For each of \(\mathsf{SAT}\), \(\mathsf{TAUT}\), \(\mathsf{CONS}\) and
+\(\mathsf{EQV}\), Method~\ref{def:p02-w02-p02-018-truth-table} halts on every
+bit string \(x\) and accepts \(x\) exactly when \(x\) belongs to the problem.
+A row output on acceptance for \(\mathsf{SAT}\), extended by \(\mathbf F\) on
+all other variables, satisfies the formula; a row output on rejection for
+\(\mathsf{TAUT}\), \(\mathsf{CONS}\) or \(\mathsf{EQV}\), so extended,
+falsifies the formula, is a countervaluation to
+\(\Gamma\entails\varphi\), or separates the two formulas.  On a deterministic
+multitape machine the procedure halts within
+\[
+ c\,(2^{k}+1)\,m^{2}
+\]
+steps, where \(m\) is the bit length of \(x\), \(k\) the number of distinct
+variables of the instance (\(k=0\) for a malformed input) and \(c\) a
+constant independent of \(x\).  Every valid formula with \(k\) variables
+makes the procedure visit all \(2^{k}\) rows.
+\end{hbtheorem}
+
+The bound has two factors: the number of rows, \(2^{k}\), and the cost of one
+row, which is at most quadratic in the input length.  The last sentence of
+the theorem shows that this procedure attains the exponential factor.  That
+is not a lower bound for the problem: a proof that no polynomial-time
+procedure decides \(\mathsf{SAT}\) would settle \(\mathsf P\ne\mathsf{NP}\),
+since \(\mathsf{SAT}\) is \(\mathsf{NP}\)-complete
+(\cref{thm:p02-w02-p02-018-cook-levin}).  The theorem also gives a written
+proof of the content of the cited \cref{thm:p02-decidability} for the
+representation of \cref{def:p02-w02-p02-018-input}.
+
+\begin{hbwarning}{def:p02-w02-p02-018-scope}{Limits of the decidability theorem}
+\Cref{thm:p02-w02-p02-018-decision} decides consequence from a
+\emph{finite} premise list presented by the declared encoding, over the
+countable variable set \(\{p_n:n\in\N\}\).  It gives no procedure for a fixed
+infinite theory \(\Gamma\), and none exists in general: by
+\cref{thm:p02-w02-p02-018-limits}(1) there are sets
+\(\Gamma\subseteq\{p_n:n\in\N\}\) whose consequence sets are not decided by
+any machine.  Compactness (\cref{thm:prop-compactness}) implies that a
+consequence of an infinite \(\Gamma\) is already a consequence of a finite
+subset, but it does not say how to find that subset from \(\Gamma\).  Nor does the theorem apply to the
+languages \(\operatorname{Form}(P)\) of
+\cref{def:p02-arbitrary-prop-language} over an arbitrary set \(P\): a
+decision procedure acts on finite strings, and by
+\cref{thm:p02-w02-p02-018-limits}(2) an uncountable \(P\) has no injective
+representation by finite strings at all.  A countable \(P\) is covered only
+when it is presented by a computable translation into the declared
+encoding.
+\end{hbwarning}
+
+\begin{hbtheorem}{thm:p02-w02-p02-018-limits}{proved=annex:p02-w02-p02-018-limits}{Infinite theories and uncountable alphabets}
+\begin{enumerate}
+\item For \(A\subseteq\N\) let \(\Gamma_A=\{p_n:n\in A\}\).  Then
+      \(\Gamma_A\entails p_n\) if and only if \(n\in A\).  Consequently
+      the map \(A\mapsto\{\varphi:\Gamma_A\entails\varphi\}\) is injective,
+      and for all but countably many \(A\subseteq\N\) the set of encodings
+      of formulas \(\varphi\) with \(\Gamma_A\entails\varphi\) is decided by no
+      deterministic multitape machine.
+\item If \(P\) is uncountable, there is no injective map from \(P\) into the
+      set \(\{0,1\}^*\) of finite bit strings.
+\end{enumerate}
+\end{hbtheorem}
+
+\subsection{Membership, the negation reduction and \texorpdfstring{\(\mathsf{NP}\)}{NP}-hardness}
+\label{sec:p02-w02-p02-018-complexity}
+
+\begin{hbconvention}{def:p02-w02-p02-018-verifier}{Verifiers and pairing}
+For bit strings \(x=x_1\cdots x_n\) and \(y\), put
+\(\langle x,y\rangle\defeq x_1x_1x_2x_2\cdots x_nx_n\,01\,y\).  Reading
+the string in consecutive pairs of bits from the left, the first pair
+\(01\) separates the two parts, because every earlier pair is \(00\) or
+\(11\); so the pairing is injective and both parts are recovered in one
+scan.  A predicate
+\(R\) of two strings is \emph{polynomial time} when a deterministic multitape
+machine decides \(\{\langle x,y\rangle:R(x,y)\}\) in a number of steps bounded
+by a polynomial in the length of \(\langle x,y\rangle\).  This fixes the
+predicate clause of \cref{def:p02-complexity-standing}.  For
+\(L\subseteq\{0,1\}^*\), \(L^{\mathsf c}\) is its complement
+\(\{0,1\}^*\setminus L\); thus \(\mathsf{TAUT}^{\mathsf c}\) consists of the
+malformed strings and the encodings of formulas that are not valid.
+\end{hbconvention}
+
+\begin{hbtheorem}{thm:p02-w02-p02-018-membership}{proved=annex:p02-w02-p02-018-membership}{\(\mathsf{SAT}\) is in \(\mathsf{NP}\) and \(\mathsf{TAUT}\) is in \(\mathsf{coNP}\)}
+\(\mathsf{SAT}\in\mathsf{NP}\), witnessed by the certificate that lists the
+values of a satisfying valuation on the variables of the formula in order of
+first occurrence, checked by one evaluation.  \(\mathsf{TAUT}^{\mathsf c}\in
+\mathsf{NP}\), witnessed by a falsifying valuation listed in the same way (or
+the empty string for a malformed input); hence \(\mathsf{TAUT}\in
+\mathsf{coNP}\).  In both cases the certificate has length at most \(m\) and
+the check takes at most \(c\,m^{2}\) steps.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p02-w02-p02-018-negation}{proved=annex:p02-w02-p02-018-negation}{The negation reduction}
+Let \(h(x)\) be the encoding of \(\neg\varphi\) when \(x\) encodes the formula
+\(\varphi\), and the encoding of \(\neg\bottom\) when \(x\) is malformed.
+Then \(h\) is computable within \(c\,(m+1)^{2}\) steps on inputs of bit
+length \(m\), for a constant \(c\), and, for every bit string \(x\),
+\[
+ x\in\mathsf{SAT}\iff h(x)\in\mathsf{TAUT}^{\mathsf c},
+ \qquad
+ x\in\mathsf{TAUT}^{\mathsf c}\iff h(x)\in\mathsf{SAT}.
+\]
+Consequently, for every \(L\subseteq\{0,1\}^*\), \(L\) has a polynomial-time
+many-one reduction to \(\mathsf{SAT}\) if and only if \(L^{\mathsf c}\) has one
+to \(\mathsf{TAUT}\).
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p02-w02-p02-018-cook-levin}{proved=annex:p02-w02-p02-018-cook-levin}{Every \(\mathsf{NP}\) problem reduces to \(\mathsf{SAT}\)}
+For every \(L\in\mathsf{NP}\) there is a polynomial-time computable map
+\(x\mapsto\varphi_x\), with \(\varphi_x\) an encoded formula, such that
+\(x\in L\) iff \(\varphi_x\) is satisfiable.  With
+\cref{thm:p02-w02-p02-018-membership}, \(\mathsf{SAT}\) is
+\(\mathsf{NP}\)-complete under polynomial-time many-one reductions.
+\end{hbtheorem}
+
+\begin{hbcorollary}{thm:p02-w02-p02-018-taut-conp}{proved=annex:p02-w02-p02-018-taut-conp}{\(\mathsf{TAUT}\) is \(\mathsf{coNP}\)-complete}
+\(\mathsf{TAUT}\) is \(\mathsf{coNP}\)-complete under polynomial-time
+many-one reductions.
+\end{hbcorollary}
+
+The formula \(\varphi_x\) describes a run of a polynomial-time verifier for
+\(L\) on the input \(x\) and an unknown certificate, step by step, in
+variables that record the machine state, the head positions and the cell
+contents at each time.  This tableau-of-computation method is the
+construction of \textcite[p.~152, Theorem~1]{Cook1971}, which encodes a
+one-tape nondeterministic machine and states the result for tautologies in
+disjunctive normal form under polynomial-time oracle reducibility.  The
+annex encodes a deterministic multitape verifier instead, so that the
+reduction is many-one and uses the machine model of
+\cref{def:p02-complexity-standing} without a tape-reduction step.  The
+reconstruction in \cref{sec:p09-presentation-n-c-026} encodes a one-tape
+verifier by windows of three adjacent cells and so presupposes a one-tape
+simulation of the verifier; the encoding here follows every head of the
+multitape verifier with its own position variables instead.
+\Cref{thm:p02-w02-p02-018-cook-levin,thm:p02-w02-p02-018-taut-conp} prove the
+statements cited as \cref{thm:p02-sat-np-complete,thm:p02-taut-conp-complete}
+and \cref{thm:p04-cook-levin}.  They classify the problems; they do not decide
+whether \(\mathsf P=\mathsf{NP}\) or \(\mathsf{NP}=\mathsf{coNP}\).
+
+\subsection{Checked certificates}
+\label{sec:p02-w02-p02-018-certificates}
+
+\begin{hbdefinition}{def:p02-w02-p02-018-formats}{Three certificate formats and their checks}
+Let \(F\) and \(S\) be finite clause sets, \(\Gamma\) a finite formula set and
+\(\varphi\) a formula.
+\begin{enumerate}
+\item A \emph{satisfying-valuation certificate} for \(F\) is a total
+      assignment of truth values to \(\operatorname{Var}(F)\).  Its
+      \emph{clause check} visits each clause \(C\in F\) and looks for a literal
+      of \(C\) made true by the assignment; it accepts when every clause has
+      one.  This is the SAT certificate of
+      \cref{def:p12-sat-certificate-boundary}.
+\item A \emph{resolution refutation log} for \(S\) is a finite list of
+      numbered lines \(1,\ldots,N\).  Line \(i\) carries a clause \(C_i\)
+      and a justification, which is either \emph{input} or a triple
+      \((j,k,L)\) with \(j,k<i\): the parents \(C_j\), \(C_k\) and the
+      pivot literal \(L\).  The \emph{line check} accepts an input line when
+      \(C_i\in S\), and a triple line when \(L\in C_j\),
+      \(\overline L\in C_k\) and
+      \(C_i=(C_j\setminus\{L\})\cup(C_k\setminus\{\overline L\})\).  The
+      \emph{log check} accepts when every line passes and \(C_N=\varnothing\).
+\item A \emph{countervaluation certificate} for \(\Gamma\entails\varphi\) is
+      a total assignment of truth values to
+      \(\operatorname{Var}(\Gamma\cup\{\varphi\})\).  Its check evaluates every
+      member of \(\Gamma\) and \(\varphi\) under the assignment, extended by
+      \(\mathbf F\) elsewhere, and accepts when every member of \(\Gamma\) is
+      true and \(\varphi\) is false.
+\end{enumerate}
+These are finite evidence objects with mechanical checks, distinct from the
+semantic facts they establish; the distinction is used in
+\cref{thm:p02-w02-p02-018-checks}.
+\index{certificate!satisfying valuation}\index{resolution refutation log}
+\index{certificate!countervaluation}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p02-w02-p02-018-checks}{proved=annex:p02-w02-p02-018-checks}{Soundness and completeness of the three checks}
+\begin{enumerate}
+\item The clause check accepts an assignment for \(F\) if and only if every
+      valuation extending it satisfies \(F\).  So \(F\) is satisfiable iff
+      some certificate is accepted.
+\item If the log check accepts a log for \(S\), then \(S\) is not
+      satisfiable.  If \(S\) is not satisfiable, some log for \(S\) is
+      accepted.
+\item The countervaluation check accepts an assignment if and only if every
+      valuation extending it satisfies \(\Gamma\) and falsifies \(\varphi\).
+      So \(\Gamma\not\entails\varphi\) iff some certificate is accepted.
+\end{enumerate}
+\end{hbtheorem}
+
+\begin{hblemma}{thm:p02-w02-p02-018-extraction}{proved=annex:p02-w02-p02-018-extraction}{Countervaluations from failed searches}
+Let \(\Gamma\) be finite.
+\begin{enumerate}
+\item If Method~\ref{def:p02-w02-p02-018-truth-table} rejects an instance of
+      \(\mathsf{CONS}\) presenting \(\Gamma\) and \(\varphi\), its output row,
+      restricted to \(\operatorname{Var}(\Gamma\cup\{\varphi\})\), is accepted
+      by the countervaluation check.
+\item Let \(F_\Gamma\) and \(F_\neg\) be finite clause sets such that every
+      valuation satisfying \(F_\Gamma\) satisfies \(\Gamma\), every valuation
+      satisfying \(F_\neg\) falsifies \(\varphi\), and
+      \(\operatorname{Var}(\Gamma\cup\{\varphi\})\subseteq
+      \operatorname{Var}(F_\Gamma\cup F_\neg)\).  If
+      Method~\ref{def:p12-dpll} returns a valuation on
+      \(F_\Gamma\cup F_\neg\), its restriction to
+      \(\operatorname{Var}(\Gamma\cup\{\varphi\})\) is accepted by the
+      countervaluation check.
+\end{enumerate}
+\end{hblemma}
+
+The hypotheses of the second clause hold when each member of \(\Gamma\) and
+the formula \(\neg\varphi\) is the conjunctive normal form, in the same
+variables, of the corresponding clause set
+(\cref{lem:prop-clause-satisfaction}).  They fail for a Tseitin clause set,
+which is only equisatisfiable: there the returned valuation must first be
+restricted, and its correctness rests on the definitional clauses, not on this
+lemma.  A finished tableau with an open branch gives the third route, by
+\cref{thm:p02-w02-p02-014-consequence}.
+
+\begin{hbexample}{def:p02-w02-p02-018-sat-example}{A checked satisfying valuation}
+Let
+\[
+ F=\bigl\{\{p,q\},\{\neg p,r\},\{\neg q,r\}\bigr\},
+\]
+so \(\operatorname{Var}(F)=\{p,q,r\}\).  The certificate is the total assignment
+\(v(p)=\mathbf F\), \(v(q)=\mathbf T\), \(v(r)=\mathbf T\).  The clause check
+runs as follows.
+\[
+\begin{array}{lll}
+\text{clause} & \text{literal found} & \text{value}\\\hline
+\{p,q\} & q & \mathbf T\\
+\{\neg p,r\} & \neg p & \mathbf T\\
+\{\neg q,r\} & r & \mathbf T
+\end{array}
+\]
+Every clause has a true literal, so the check accepts and \(F\) is satisfiable
+by \cref{thm:p02-w02-p02-018-checks}(1).  The candidate
+\(p,q,r\mapsto\mathbf F\) is rejected at the first clause, which has no true
+literal; a rejected candidate shows nothing about \(F\).
+\end{hbexample}
+
+\begin{hbexample}{def:p02-w02-p02-018-log-example}{A checked resolution refutation log}
+Let \(S=F\cup\bigl\{\{\neg r\}\bigr\}\) with \(F\) as in
+\cref{def:p02-w02-p02-018-sat-example}.  This is the clause set of
+Figure~\ref{fig:p02-resolution-dag} and of the trace
+\cref{def:p12-dpll-trace}.  The log and its line checks are:
+\[
+\begin{array}{rlll}
+i & C_i & \text{justification} & \text{line check}\\\hline
+1 & \{p,q\} & \text{input} & \in S\\
+2 & \{\neg p,r\} & \text{input} & \in S\\
+3 & \{\neg q,r\} & \text{input} & \in S\\
+4 & \{\neg r\} & \text{input} & \in S\\
+5 & \{\neg p\} & (2,4,r) & r\in C_2,\ \neg r\in C_4,\
+   \{\neg p\}\cup\varnothing=\{\neg p\}\\
+6 & \{\neg q\} & (3,4,r) & r\in C_3,\ \neg r\in C_4,\
+   \{\neg q\}\cup\varnothing=\{\neg q\}\\
+7 & \{q\} & (1,5,p) & p\in C_1,\ \neg p\in C_5,\
+   \{q\}\cup\varnothing=\{q\}\\
+8 & \varnothing & (7,6,q) & q\in C_7,\ \neg q\in C_6,\
+   \varnothing\cup\varnothing=\varnothing
+\end{array}
+\]
+Every line passes and the last clause is empty, so the log check accepts and
+\(S\) is not satisfiable by \cref{thm:p02-w02-p02-018-checks}(2).  Since
+\(\neg r=\operatorname{form}_{\mathsf{CPL}}(\{\neg r\})\), the same log
+certifies the consequence
+\(\{p\lor q,\ \neg p\lor r,\ \neg q\lor r\}\entails r\): a valuation
+satisfying the three premises and falsifying \(r\) would satisfy \(S\).
+\end{hbexample}
+
+\begin{hbexample}{def:p02-w02-p02-018-counter-example}{A countervaluation extracted from a failed search and checked}
+Let \(\Gamma=\{p\lor q,\ \neg p\lor r\}\) and \(\varphi=r\).  With
+\(p,q,r=p_0,p_1,p_2\), the members of \(\Gamma\) are
+\(\operatorname{form}_{\mathsf{CPL}}(\{p,q\})\) and
+\(\operatorname{form}_{\mathsf{CPL}}(\{\neg p,r\})\), and \(\neg\varphi\)
+is satisfied exactly by the valuations satisfying \(\{\neg r\}\).  So the
+hypotheses of \cref{thm:p02-w02-p02-018-extraction}(2) hold for
+\(F_\Gamma=\bigl\{\{p,q\},\{\neg p,r\}\bigr\}\) and
+\(F_\neg=\bigl\{\{\neg r\}\bigr\}\).
+
+\emph{Search.}  Method~\ref{def:p12-dpll} starts from
+\(\bigl\{\{p,q\},\{\neg p,r\},\{\neg r\}\bigr\}\) with the empty assignment.
+The unit clause \(\{\neg r\}\) sets \(r=\mathbf F\), leaving
+\(\bigl\{\{p,q\},\{\neg p\}\bigr\}\).  The unit clause \(\{\neg p\}\) sets
+\(p=\mathbf F\), leaving \(\bigl\{\{q\}\bigr\}\).  The unit clause \(\{q\}\)
+sets \(q=\mathbf T\), leaving no clause.  The search returns
+\(v(p)=\mathbf F\), \(v(q)=\mathbf T\), \(v(r)=\mathbf F\), with no
+unassigned variable left to extend.
+
+\emph{Check.}  \(\widehat v(p\lor q)=\mathbf T\) because
+\(v(q)=\mathbf T\); \(\widehat v(\neg p\lor r)=\mathbf T\) because
+\(v(p)=\mathbf F\); and \(\widehat v(r)=\mathbf F\).  The countervaluation
+check accepts, so \(\Gamma\not\entails r\) by
+\cref{thm:p02-w02-p02-018-checks}(3).
+
+\emph{The same answer by truth table.}  Method~\ref{def:p02-w02-p02-018-truth-table}
+on the instance \(p\lor q\,\texttt{,}\,\neg p\lor r\,\texttt{|}\,r\) lists
+\(x_1,x_2,x_3=p,q,r\) and visits \(\mathbf{FFF}\), \(\mathbf{FFT}\),
+\(\mathbf{FTF}\).  The first row falsifies \(p\lor q\), the second makes
+\(r\) true, and the third is the row found above, so the procedure rejects at
+the third of the \(2^3\) rows and outputs it.  Adding the premise
+\(\neg q\lor r\) removes this countervaluation; the log of
+\cref{def:p02-w02-p02-018-log-example} then certifies the consequence.
+\end{hbexample}
+
+\begin{hbwarning}{def:p02-w02-p02-018-bad-log}{A line that resolves on two pivots is rejected}
+From \(\{p,q\}\) and \(\{\neg p,\neg q\}\) a line claiming
+\(\varnothing\) fails the line check: on the pivot \(p\) the resolvent is
+\(\{q,\neg q\}\), on the pivot \(q\) it is \(\{p,\neg p\}\), and neither is
+empty.  The rule removes exactly one complementary pair.  Accepting such a line
+would be unsound, since \(p\mapsto\mathbf T\), \(q\mapsto\mathbf F\) satisfies
+both clauses.  Likewise an assignment that leaves a variable of \(F\)
+unassigned is not a certificate in the sense of
+\cref{def:p02-w02-p02-018-formats}(1), and an accepted countervaluation for
+\(\Gamma\entails\varphi\) shows only that this consequence fails, not that
+\(\Gamma\entails\neg\varphi\).
+\end{hbwarning}
+
+\subsection{A fully annotated first-order resolution refutation}
+\label{sec:p02-w02-p02-018-fol-dag}
+
+The first-order clauses, substitutions, renaming apart, most general unifiers
+and the resolution and factoring rules are those of
+\cref{sec:fol-cardinality-normalforms-04}.  In
+Figure~\ref{fig:p02-w02-p02-018-fol-dag} every inference is an instance of
+the first-order resolution rule with the parents
+\(E\ni A\) and \(F\ni\neg B\); each edge pair is annotated with the rule, the
+resolved literal pair \(A\) and \(\neg B\), and the most general unifier
+\(\theta\) of \(A\) and \(B\).  For a ground step the unifier is the identity
+\(\mathrm{id}\), the substitution with empty support.  No factoring step is
+used, and no renaming is needed: the parents of the first step have the
+disjoint variable sets \(\{x\}\) and \(\{y\}\), and every later step has a
+ground parent.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  font=\small,
+  clause/.style={draw,rounded corners,align=center,inner sep=3pt},
+  note/.style={align=left,font=\footnotesize,inner sep=2pt},
+  >=Stealth]
+  \node[clause] (c1) at (0,0) {\(C_1=\{P(x),Q(x)\}\)};
+  \node[clause] (c2) at (4.6,0) {\(C_2=\{\neg Q(y),R(y)\}\)};
+  \node[clause] (c3) at (9.0,-1.9) {\(C_3=\{\neg P(a)\}\)};
+  \node[clause] (c4) at (9.0,-3.8) {\(C_4=\{\neg R(a)\}\)};
+  \node[clause] (c5) at (2.3,-1.9) {\(C_5=\{P(y),R(y)\}\)};
+  \node[clause] (c6) at (4.6,-3.8) {\(C_6=\{R(a)\}\)};
+  \node[clause] (c7) at (6.8,-5.7) {\(C_7=\varnothing\)};
+  \draw[->] (c1) -- (c5);
+  \draw[->] (c2) -- (c5);
+  \draw[->] (c5) -- (c6);
+  \draw[->] (c3) -- (c6);
+  \draw[->] (c6) -- (c7);
+  \draw[->] (c4) -- (c7);
+  \node[note,anchor=east] at (1.6,-1.9)
+    {Resolution\\\(A=Q(x)\in C_1\)\\\(\neg B=\neg Q(y)\in C_2\)\\\(\theta_1=\{x\mapsto y\}\)};
+  \node[note,anchor=east] at (3.4,-3.8)
+    {Resolution\\\(A=P(y)\in C_5\)\\\(\neg B=\neg P(a)\in C_3\)\\\(\theta_2=\{y\mapsto a\}\)};
+  \node[note,anchor=east] at (5.6,-5.7)
+    {Resolution\\\(A=R(a)\in C_6\)\\\(\neg B=\neg R(a)\in C_4\)\\\(\theta_3=\mathrm{id}\) (ground)};
+\end{tikzpicture}
+\caption{A first-order resolution refutation from the input clauses
+\(C_1,\ldots,C_4\) to the empty clause \(C_7\).  Each derived clause is the
+resolvent of its two incoming parents: \(C_5\) of \(C_1,C_2\); \(C_6\) of
+\(C_5,C_3\); \(C_7\) of \(C_6,C_4\).  Each annotation names the rule, the
+resolved literal pair and the most general unifier used; the last step is
+ground and uses the identity substitution.}
+\label{fig:p02-w02-p02-018-fol-dag}
+\end{figure}
+\index{resolution!annotated refutation DAG}
+
+\begin{hblemma}{thm:p02-w02-p02-018-fol-dag}{proved=annex:p02-w02-p02-018-fol-dag}{The annotated refutation is correct}
+In Figure~\ref{fig:p02-w02-p02-018-fol-dag}, each \(\theta_i\) is a most
+general unifier of the displayed atoms \(A\) and \(B\), and is the output of
+the unification procedure of \cref{sec:fol-cardinality-normalforms-04} on
+them; each derived clause is the displayed resolvent
+\(\bigl((E\setminus\{A\})\cup(F\setminus\{\neg B\})\bigr)\theta_i\).
+Consequently \(\{C_1,C_2,C_3,C_4\}\) is not satisfiable.
+\end{hblemma}
+
+Figure~\ref{fig:p02-fol-resolution-dag} shows a two-step refutation whose
+second step, a ground resolution of \(Q(a)\) against \(\neg Q(a)\), uses the
+identity unifier; Figure~\ref{fig:p02-w02-p02-018-fol-dag} states every such
+annotation explicitly.
+
+\subsection{Relationships and sources}
+\label{sec:p02-w02-p02-018-relationships}
+
+The truth-table procedure is one of four decision routes for the same finite
+problems.  Resolution decides unsatisfiability of a finite clause set by
+saturation, by \cref{thm:prop-resolution-complete}; the systematic tableau
+procedure decides satisfiability, validity and finite-premise consequence by
+\cref{thm:p02-w02-p02-014-decision}; and the search of
+Method~\ref{def:p12-dpll} decides satisfiability of a finite clause set by
+\cref{thm:p12-dpll-correctness}.  Only the truth-table bound is stated in
+terms of the variable count alone; the polynomial special cases of
+Table~\ref{tab:p02-tractable-sat} restrict the input syntax instead.  The
+class and reduction conventions are those of
+\cref{def:p02-complexity-standing}, and Part~4 places the classifications of
+\cref{sec:p02-w02-p02-018-complexity} in its class ladder
+(\cref{def:p04-complexity-convention}).  The resolution method is due to
+\textcite{Robinson1965}; the reduction of
+\cref{thm:p02-w02-p02-018-cook-levin} follows the method of
+\textcite[p.~152, Theorem~1]{Cook1971}.

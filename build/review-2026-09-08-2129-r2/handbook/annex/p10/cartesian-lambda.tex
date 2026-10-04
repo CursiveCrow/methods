@@ -1,0 +1,273 @@
+%% Full context-category and categorical beta-eta proofs.
+
+\section{The cartesian closed category of simply typed contexts}
+
+\begin{annexitem}{annex:p10.lambda.1}{thm:p10-stlc-equational-substitution}{Capture-avoiding simultaneous substitution}
+\begin{proof}
+All terms and contexts in a particular derivation are finite.
+The infinite variable supply therefore permits bound variables
+to be renamed, retaining their type annotations, outside all
+names that the following constructions must avoid.
+
+First prove weakening and consistent renaming for typing by
+induction on the typing derivation.  A variable declaration
+remains present; application uses the two induction hypotheses;
+at abstraction, rename the bound variable if necessary, apply
+the induction hypothesis to the extended context, and abstract
+again.  The same induction on an equality derivation proves
+weakening and renaming for equality.  Reflexivity, symmetry,
+transitivity, and congruence are preserved.  A renamed or
+weakened \(\beta\) equation is again such an equation, up to
+bound renaming.  In an \(\eta\) equation choose its displayed
+bound variable fresh also for the new declarations.
+
+Define substitution recursively on terms.  For a variable
+\(y_j\) in the source typing context, put \(y_j[\sigma]=\sigma_j\);
+substitution commutes with application.  At an abstraction
+\(\lambda z{:}\gamma.P\), make \(z\) fresh and use the lifted
+substitution
+\[
+ \sigma^+:\Theta,z{:}\gamma\longrightarrow\Psi,z{:}\gamma,
+ \qquad
+ \sigma^+=(\sigma_1,\ldots,\sigma_n,z),
+\]
+where the old components have been weakened into
+\(\Theta,z{:}\gamma\).  Set
+\[
+       (\lambda z{:}\gamma.P)[\sigma]
+                =\lambda z{:}\gamma.P[\sigma^+].
+\]
+The definition does not depend, up to bound
+\(\alpha\)-equivalence, on the fresh name: consistently
+renaming it in the two recursively obtained bodies identifies
+the results.  Induction on the term now proves typing.
+The abstraction step applies the induction hypothesis to
+\(P\) and \(\sigma^+\), then the abstraction typing rule.
+
+The same recursion proves that an identity substitution acts
+as the identity up to bound renaming.  For associativity,
+freshen binders for the entire finite diagram of substitutions.
+The variable case of
+\[
+                   (M[\sigma])[\tau]=_\alpha M[\sigma[\tau]]
+\]
+is the definition of the component tuple on the right, and
+the application case follows componentwise.  In the abstraction
+case both sides have the same fresh binder; their bodies agree
+by induction and by
+\(\sigma^+[\tau^+]=_\alpha(\sigma[\tau])^+\).
+This proves the substitution identities.
+
+Next induct on an equality derivation to substitute into it.
+Equivalence rules and application congruence are immediate.
+Abstraction congruence uses the lifted substitution.
+For a \(\beta\) equation, its substituted left side contracts
+to
+\[
+                 M[\sigma^+][N[\sigma]/x].
+\]
+Substitution associativity identifies this, up to bound
+renaming, with \((M[N/x])[\sigma]\): both composite
+substitutions send the old context variables to their
+\(\sigma\)-components and \(x\) to \(N[\sigma]\).
+For an \(\eta\) equation, choose \(x\) fresh for the context
+and all components of \(\sigma\).  Its image is
+\(\lambda x{:}\alpha.M[\sigma]x=M[\sigma]\), an instance
+of the same typed schema.  Bound renaming is preserved by
+capture avoidance.
+
+Finally suppose \(\sigma_j=_{\beta\eta}\sigma'_j\) in their
+common context for every component.  Induction on \(M\)
+proves \(M[\sigma]=_{\beta\eta}M[\sigma']\).
+The variable case is the corresponding hypothesis,
+application uses congruence, and abstraction uses weakening
+of the component equations, reflexivity for the fresh variable,
+the induction hypothesis for the lifted substitutions, and
+abstraction congruence.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p10.lambda.2}{thm:p10-stlc-context-ccc}{Products and curried-list exponentials}
+\begin{proof}
+Substitution preserves typing, so composition produces an
+arrow with the required target types.  If either input tuple
+is replaced by a componentwise equal tuple,
+Theorem~\ref{thm:p10-stlc-equational-substitution} gives the
+same output class.  Consistent changes of the declared names
+are bijective variable substitutions; composing with their
+inverse restores the original presentation by the substitution
+identities.  Thus intermediate choices of fresh names do not
+affect composition.  The two identity laws and associativity
+are the corresponding substitution identities, component by
+component.  This establishes the category.
+
+For any \(\Gamma\), there is exactly one tuple with no
+components, so \(()\) is terminal.  In the concatenated
+context \(\Gamma\cdot\Delta\), take the first and second
+blocks of variables as the projections.  Pairing two arrows
+with a common domain concatenates their tuples.
+Substituting this tuple into a projection recovers its block.
+Conversely, the two blocks determine every component of a
+tuple into \(\Gamma\cdot\Delta\), proving the product
+universal property.  These statements also apply when
+either block is empty.
+
+For the exponential construction, repeated application
+types each \(f_jx_1\cdots x_m\) as \(\beta_j\).
+Repeated abstraction types the proposed transpose component
+as \(c_\Gamma(\beta_j)\).  Congruence makes transposition
+well-defined on classes.  For an arrow \(K:\Xi\to\Delta^\Gamma\),
+evaluation after \(K\times\mathrm{id}_\Gamma\) has components
+\[
+                         K_jx_1\cdots x_m.
+\]
+Consequently, evaluating the transpose of
+\(T:\Xi\cdot\Gamma\to\Delta\) applies
+\(\lambda x_1{:}\alpha_1\cdots\lambda x_m{:}\alpha_m.T_j\)
+to the \(m\) corresponding variables.  Successive typed
+\(\beta\) equations give \(T_j\), for every \(j\).
+
+Conversely, transposing the displayed evaluation tuple gives
+\[
+          \lambda x_1{:}\alpha_1\cdots
+                        \lambda x_m{:}\alpha_m.K_jx_1\cdots x_m.
+\]
+The \(x_i\)'s have been chosen outside the context of \(K_j\).
+Apply \(\eta\) first to the innermost abstraction, then
+successively to the remaining abstractions.  Each variable
+is absent from the free variables of the term to which that
+\(\eta\) step is applied, so the result is \(K_j\).
+The two operations are inverse, which also proves uniqueness
+of transposes.
+
+If \(m=0\), the exponential object is \(\Delta\), evaluation
+is its identity, and transposition changes no component.
+If \(n=0\), the exponential object is \(()\), both hom-sets
+in the exponential bijection are singletons, and all equations
+are equations between empty tuples.  In particular the case
+\(\Gamma=\Delta=()\) is included.
+
+For \(r:\Xi'\to\Xi\), freshen the abstraction variables
+outside its components.  Substitution under the \(m\)
+abstractions then gives, componentwise,
+\[
+ \Lambda\bigl(T\circ(r\times\mathrm{id}_\Gamma)\bigr)
+                  =\Lambda(T)\circ r.
+\]
+This is naturality in \(\Xi\).  Terminal object, products,
+and these exponential bijections prove cartesian closure.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p10.lambda.3}{thm:p10-stlc-ccc-completeness}{Categorical substitution and the separating syntactic model}
+\begin{proof}
+Interpret a named context by its ordered list of types.
+Projections therefore give interpretations unchanged by
+consistent renaming of the declared names.  Induction on terms,
+using their annotated binders, proves bound
+\(\alpha\)-invariance.  Typing of every interpretation follows
+from the product and exponential domains and codomains in
+Definition~\ref{def:p10-stlc-ccc-interpretation}.
+
+We spell out the naturality of transposition used below.
+For \(f:X\times A\to B\) and \(s:Y\to X\), the exponential
+universal property gives
+\[
+        \Lambda(f\circ(s\times\mathrm{id}_A))
+                             =\Lambda(f)\circ s.             \tag{*}
+\]
+Indeed, evaluation of the right side, after pairing it with
+the \(A\)-projection, is \(f\circ(s\times\mathrm{id}_A)\),
+by the evaluation equation for \(\Lambda(f)\) and the product
+projection laws.  Uniqueness of transposes proves \((*)\).
+
+First consider substitutions whose components are variables
+of the corresponding types.  Their tuple arrows select the
+indicated context projections.  Induction on the term proves
+the substitution formula for these variable substitutions:
+variables use the projection equations and application uses
+pairing.  At an abstraction, the lifted selection retains the
+fresh bound variable, so its tuple arrow is the old selection
+arrow times the identity; apply the induction hypothesis to
+the body and then \((*)\).
+In particular, weakening a term to a context with one
+additional final declaration interprets it by precomposition
+with the projection to the old context.
+
+We now prove the substitution formula by induction on \(M\).
+For a variable it is exactly the defining projection equation
+for the tuple arrow \(\llbracket\sigma\rrbracket\).
+The application step uses the induction hypotheses and
+\[
+                 \langle f,g\rangle\circ s
+                         =\langle f\circ s,g\circ s\rangle.
+\]
+For abstraction, use a fresh bound variable of type \(\gamma\).
+The lifted substitution has interpretation
+\(\llbracket\sigma\rrbracket\times
+ \mathrm{id}_{\llbracket\gamma\rrbracket}\):
+its old components are weakened interpretations and its last
+component is the new projection.  The induction hypothesis
+for the body and \((*)\) now give
+\[
+ \llbracket(\lambda x{:}\gamma.P)[\sigma]\rrbracket
+  =\Lambda\bigl(\llbracket P\rrbracket\circ
+       (\llbracket\sigma\rrbracket\times
+        \mathrm{id}_{\llbracket\gamma\rrbracket})\bigr)
+  =\llbracket\lambda x{:}\gamma.P\rrbracket
+          \circ\llbracket\sigma\rrbracket.
+\]
+The empty target context has its unique terminal tuple arrow,
+so this argument includes substitutions into closed terms.
+
+For soundness of \(\beta\), let
+\(f=\llbracket M\rrbracket:X\times A\to B\) and
+\(n=\llbracket N\rrbracket:X\to A\).
+The exponential evaluation equation gives
+\[
+           \operatorname{ev}\circ\langle\Lambda(f),n\rangle
+                      = f\circ\langle\mathrm{id}_X,n\rangle.
+\]
+The right side is the interpretation of \(M[N/x]\) by the
+substitution formula.  For \(\eta\), if \(m:X\to B^A\),
+the transpose of
+\(\operatorname{ev}\circ
+ \langle m\circ\pi_X,\pi_A\rangle\) is \(m\), by the
+uniqueness part of the exponential universal property.
+This is exactly the interpretation of the typed \(\eta\)
+equation, since the bound variable is fresh.
+Equivalence rules, application congruence, and abstraction
+congruence preserve equality of arrows.  Thus every typed
+\(\beta\eta\) equation holds in every such interpretation.
+
+For the converse take \(\mathcal C=\mathcal S_{\beta\eta}\)
+with the precise choices of
+Theorem~\ref{thm:p10-stlc-context-ccc}, and assign to each
+base type \(\mathsf b\) the singleton context \((\mathsf b)\).
+Induction on types gives
+\[
+                        \llbracket\alpha\rrbracket=(\alpha):
+\]
+the exponential of \((\beta)\) by \((\alpha)\) in this category
+is the singleton
+\((\alpha\mathbin{\to_{\mathrm{ty}}}\beta)\).
+Starting from \(()\), recursive context products are
+concatenations, so
+\(\llbracket(\alpha_1,\ldots,\alpha_m)\rrbracket
+   =(\alpha_1,\ldots,\alpha_m)\) literally.
+
+Induction on a typed term shows that its interpretation in
+this model is the arrow to the singleton target represented
+by that very term.  Variables are the stated projections.
+For application, pairing the two singleton arrows and
+composing with the evaluation term \(fx\) produces \(MN\)
+by simultaneous substitution.  For abstraction, the
+transpose is the one-component tuple
+\((\lambda x{:}\alpha.M)\) by construction.
+Therefore equality of the interpretations of \(M\) and \(N\)
+in this one CCC is precisely their componentwise typed
+\(\beta\eta\) equality.  Equality in every CCC implies equality
+in this CCC and proves the converse.  The argument uses no
+normal-form theorem.
+\end{proof}
+\end{annexitem}

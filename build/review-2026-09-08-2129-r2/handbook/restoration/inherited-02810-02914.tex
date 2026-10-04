@@ -1,0 +1,105 @@
+\section{Propositional resolution}
+\label{sec:prop-metatheory-04}
+
+The clause object in this section is exactly the finite set defined in
+\cref{sec:prop-syntax-semantics-04}.  A valuation satisfies a clause set \(S\) iff it
+satisfies every \(C\in S\), so the set is interpreted conjunctively.  The
+complement of \(p\) is \(\neg p\), and the complement of \(\neg p\) is
+\(p\).  A clause containing both a literal and its complement is
+\emph{tautological}; its formula interpretation is valid, so deleting it from
+a clause set preserves the satisfying valuations of that set.
+
+\begin{definition}[Resolvent]
+Let \(E\) and \(F\) be clauses, let \(L\in E\), and let its complement
+\(\overline L\) belong to \(F\).  Their \emph{resolvent on \(L\)} is the
+clause
+\[
+  (E\setminus\set{L})\cup(F\setminus\set{\overline L}).
+\]
+A \emph{resolution derivation} from a clause set \(S\) is a finite sequence
+whose members are clauses in \(S\) or resolvents of earlier members.
+\end{definition}
+
+\begin{theorem}[Soundness of propositional resolution]
+Every valuation satisfying both parent clauses satisfies their resolvent.
+Consequently, deriving the empty clause proves that the initial clause set is
+not satisfiable.
+\end{theorem}
+\begin{proof}
+Let \(E,F\) be the parents and let
+\(R=(E\setminus\set{L})\cup(F\setminus\set{\overline L})\).  Suppose a
+valuation falsifies \(R\).  It therefore falsifies every nonpivot literal in
+both parents.  To satisfy \(E\), it must satisfy \(L\); to satisfy \(F\), it
+must satisfy \(\overline L\).  No valuation satisfies complementary
+literals.  Therefore no valuation can satisfy both parents while falsifying
+the resolvent.  Induction on a resolution derivation preserves satisfaction.
+The empty clause is false under every valuation.
+\end{proof}
+
+\begin{theorem}[Refutational completeness of propositional resolution]
+\label{thm:prop-resolution-complete}
+Let \(S\) be a finite set of clauses.  Then \(S\) is not satisfiable
+iff the empty clause has a resolution derivation from \(S\).
+\end{theorem}
+\begin{proof}
+Soundness proves the reverse implication.  For the forward implication,
+delete tautological clauses.  Induct on the number of variables occurring in
+\(S\).  If there are no variables, an unsatisfiable clause set contains the
+empty clause.
+
+Choose a variable \(p\).  Form \(S_p\) from all clauses not containing
+\(p\) or \(\neg p\), together with every non-tautological resolvent on
+\(p\) of a clause containing \(p\) and a clause containing \(\neg p\).  We claim that
+\(S\) is satisfiable iff \(S_p\) is satisfiable.  Restricting a valuation
+satisfying \(S\) to the other variables satisfies all retained clauses and all
+resolvents by soundness.  Conversely, let \(w\) satisfy \(S_p\).  A clause
+\(\set{p}\cup A\), where \(p\notin A\), whose remainder \(A\) is false
+under \(w\) requires \(p=\True\); a clause
+\(\set{\neg p}\cup B\), where \(\neg p\notin B\), whose remainder \(B\)
+is false requires \(p=\False\).  Both requirements cannot occur:
+otherwise the resolvent \(A\cup B\) on \(p\) would be false under
+\(w\); being false under \(w\), it contains no complementary pair of
+literals, so it is not tautological, belongs to \(S_p\), and contradicts
+the assumption that \(w\) satisfies \(S_p\).  Choose either
+permitted value for \(p\).  The resulting extension satisfies \(S\), proving
+the claim.
+
+If \(S\) is not satisfiable, neither is \(S_p\).  It contains fewer variables,
+so the induction hypothesis gives a resolution derivation of the empty clause
+from \(S_p\).  Every noninitial clause of \(S_p\) is itself a resolvent of
+clauses in \(S\).  Splicing those one-step derivations into the derivation from
+\(S_p\) gives a resolution derivation from \(S\).
+\end{proof}
+
+\begin{remark}[Attribution and scope of the finiteness hypothesis]
+\label{rem:resolution-finiteness}
+The variable-elimination step in the proof of
+\cref{thm:prop-resolution-complete}---passing from \(S\) to \(S_p\) and
+discarding the variable \(p\)---is the elimination rule of Davis and
+Putnam \cite{DavisPutnam1960}.  The finiteness hypothesis on \(S\) is
+consumed by the induction, not by the result: an infinite clause set may
+contain infinitely many variables, and the induction on the number of
+variables then has no measure to decrease.  The restriction is removed by
+propositional compactness.  Suppose an arbitrary clause set \(S\) is not
+satisfiable.  A valuation satisfies a clause \(C\) iff it satisfies the
+formula \(\operatorname{form}_{\CPL}(C)\) of
+\cref{sec:prop-syntax-semantics-04}, so the formula set
+\(\set{\operatorname{form}_{\CPL}(C):C\in S}\) is not satisfiable, and
+\cref{thm:prop-compactness} gives a finite subset of it that is not
+satisfiable.  Selecting for each of its finitely many members one clause
+of \(S\) interpreting it yields a finite \(S_0\subseteq S\) that is not
+satisfiable.  \Cref{thm:prop-resolution-complete} applied to \(S_0\)
+gives a resolution derivation of the empty clause from \(S_0\), and every
+resolution derivation from \(S_0\) is one from \(S\).  Since the
+soundness theorem above is stated without finiteness of the clause set,
+the equivalence of \cref{thm:prop-resolution-complete} therefore holds
+for every clause set, finite or not.
+\end{remark}
+
+Resolution is a refutation calculus: it derives the empty clause from an
+unsatisfiable clause set.  Conversion to conjunctive normal form and
+resolution must therefore be kept distinct.  The former supplies clauses; the
+latter derives clauses.  The original resolution method is due to Robinson
+\cite{Robinson1965}; normal-form transformations and their preservation
+properties are treated systematically in \cite{BaazEglyLeitsch2001}.
+

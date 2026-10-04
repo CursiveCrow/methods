@@ -1,0 +1,304 @@
+%% Native common Q-Res calculus with complete finite-PCNF proofs.
+\chapter{Q-Resolution and Quantified Certificates}
+\label{sec:p12-q-resolution-and-quantified-certificates}
+
+Definition~\ref{def:p04-qbf-languages} and
+Theorem~\ref{thm:p04-tqbf-pspace} already fix the QBF language and prove its
+PSPACE completeness.  This chapter supplies a different object: a quantified
+clause refutation and its strategy-relative checking guarantee.  It uses the
+actual common Q-Res presentation in the July~2021 author manuscript
+\cite[Sec.~2.2, Fig.~2.1]{BeyersdorffEtAl2021QBFJulyAuthor}, keeping its
+separate identity from the final handbook chapter and the original 1995
+paper to which it attributes the calculus.  The independent complete proofs
+below concern precisely the displayed finite-PCNF rules.  They do not identify
+all later resolution, dependency, expansion or QRAT systems with Q-Res.
+
+\section{Prefix order and legal strategy dependencies}
+
+\begin{hbdefinition}{def:p12-qres-pcnf}{The native PCNF interface}
+A closed prenex conjunctive-normal-form input is \(\phi=\Pi\psi\), with
+finite prefix \(\Pi=Q_1X_1\cdots Q_kX_k\),
+\(Q_i\in\{\exists,\forall\}\), and disjoint finite variable blocks
+\(X_i\).  Adjacent nonempty blocks have different quantifiers, and every
+matrix variable is in the prefix.  An empty prefix is permitted for the
+quantifier-free terminal case; unused variables have no effect.  The matrix
+\(\psi\) is a finite set of clauses, each a finite set of signed literals.
+Complement \(\bar l\) flips a literal's sign, with
+\(\overline{\bar l}=l\), rather than adding a double-negation formula.
+A clause containing both signs of one variable is tautological.  The empty
+clause \(\varnothing\), also denoted \(\bot\) in the source, is false;
+the empty matrix is true.
+
+A Boolean valuation \(v\) on a specified finite variable set maps
+exactly that set to \(\{0,1\}\). In the elimination proof its domain
+is the remaining earlier variables: ``complete'' refers to that stated
+finite domain, not to every variable of the surrounding propositional
+language. A complete play instead assigns all variables of the input prefix.
+
+For \(x\in X_i\), write \(\operatorname{lv}(x)=i\) and
+\(\operatorname{quant}(\Pi,x)=Q_i\), extended to literals by their
+underlying variable.  The source order \(x\leq_\Pi y\) compares block
+levels.  In particular an existential literal \(e\leq_\Pi u\) with
+universal \(u\) is in a strictly earlier block, since differently quantified
+variables cannot share a block.  This is the linear prefix restriction, not
+an arbitrary declared dependency relation
+\cite[Sec.~2.2]{BeyersdorffEtAl2021QBFJulyAuthor}.
+The source uses \(\operatorname{var}(l)\) for a literal's variable and
+\(\operatorname{var}(\psi)\) for all matrix variables.  Its rule figure
+writes \(\operatorname{vars}(\Pi)\) for the prefix's variable set, the
+union of its blocks.  The sheet retains that locally typed figure notation.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p12-qres-strategies}{Skolem and Herbrand strategy certificates}
+The quantifiers are interpreted recursively: \(\exists x\) accepts one of
+the two values, while \(\forall x\) requires both.  Equivalently the players
+choose values in prefix order, and the existential player wins exactly when
+the final matrix is true.  A legal existential strategy assigns each
+existential variable \(e\) by a Boolean function \(f_e\) of only the
+universal variables preceding it.  A legal universal strategy assigns each
+universal \(u\) by a Boolean function \(g_u\) of only the preceding
+existential variables.  The players' own earlier values are recovered from
+their earlier functions and need not be extra independent arguments.
+These are respectively Skolem and Herbrand functions in the source's
+strategy presentation \cite[Sec.~2.2]{BeyersdorffEtAl2021QBFJulyAuthor}.
+
+A strategy certificate specifies each allowed argument list and the complete
+Boolean table for its function.  An empty argument list has one constant
+value.  A winning existential certificate must make \(\psi\) true for
+every universal assignment; a winning universal certificate must make it
+false for every existential assignment.  In an alternating prefix a single
+complete valuation records only one play and is not in general a strategy
+certificate.  Constant strategies are permitted, but must still pass every
+opponent assignment; a purely existential input reduces to ordinary valuation
+checking.  An existential function of a later universal variable is illegal
+even if its values make the matrix true.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-qres-game-strategies}{proved=annex:p12-qres-game-strategies}{Finite game semantics and strategy construction}
+For every closed finite PCNF, exactly one player has a winning legal strategy.
+The existential player has one precisely when the QBF is true; the universal
+player has one precisely when it is false.  Backward evaluation of the finite
+assignment tree constructs its finite strategy tables with only the permitted
+preceding-opponent dependencies, including empty prefixes and blocks.
+\end{hbtheorem}
+
+\section{The exact common Q-Res rule sheet}
+
+\input{registry/calculi/p12-q-resolution.tex}
+
+All proof lines are interpreted with respect to the same fixed \(\Pi\).
+The axiom \texttt{cl-init} selects a non-tautological input clause.
+\texttt{red} removes a trailing universal literal only when every existential
+literal of the conclusion is earlier in the prefix.  If the conclusion has
+no existential literal, this order condition is vacuous, but the parent must
+still be non-tautological.  \texttt{res} has an existential pivot and rejects
+a tautological conclusion.  Removing a blocked universal or resolving on a
+universal pivot is not an instance of this sheet.  The latter restriction
+identifies this calculus; it is not a claim that every separately specified
+universal-pivot calculus is unsound.
+
+\begin{hbdefinition}{def:p12-qres-strategy-consequence}{What a derived clause preserves}
+A legal existential strategy \(S\) satisfies a clause \(C\) when every
+universal assignment, completed with the functions of \(S\), makes \(C\)
+true.  A proof invariant says that every winning strategy for the input
+satisfies each derived clause.  It does \emph{not} say that each derived
+clause is a propositional consequence of the matrix alone.  For example,
+\(a\) can be obtained from \(a\lor u\) under prefix \(\exists a\forall u\)
+by universal reduction, although the valuation \(a=0,u=1\) satisfies the
+parent and falsifies the conclusion.  The prefix is part of the inference.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-qres-rule-soundness}{proved=annex:p12-qres-rule-soundness}{Rule and refutation soundness with the full prefix}
+Each displayed rule preserves the invariant of
+Definition~\ref{def:p12-qres-strategy-consequence}.  Consequently deriving
+the empty clause proves the original QBF false.  Universal reduction
+preserves a winning strategy because changing its removed universal value
+cannot change any remaining existential literal, whose dependencies are
+earlier.  The proof includes the non-tautology condition, the case with no
+remaining existential literal, and vacuous prefix variables.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p12-qres-native-derivation}{The source's blocked-then-legal reduction}
+Retain the source PCNF
+\[
+ \exists x_1,x_3,x_4\;\forall y_5\;\exists x_2\;
+ \{\{\bar x_1,x_2\},\{x_3,y_5,\bar x_2\},
+   \{x_4,\bar y_5,\bar x_2\},\{\bar x_3,\bar x_4\}\}.
+\]
+Resolving the last and third clauses on \(x_4\) gives
+\(C_0=\{\bar x_3,\bar y_5,\bar x_2\}\).  Reduction of \(\bar y_5\)
+is forbidden because \(x_2\) follows \(y_5\).  Resolving \(C_0\) with
+\(\{\bar x_1,x_2\}\) on \(x_2\) gives
+\(C_1=\{\bar x_1,\bar x_3,\bar y_5\}\).  Now both existential variables
+are earlier, so reduction yields \(C_2=\{\bar x_1,\bar x_3\}\)
+\cite[Example~2.3.1]{BeyersdorffEtAl2021QBFJulyAuthor}.
+This is a derivation, not a refutation: the input is true, witnessed by
+constant-zero existential functions.  The derived clause constrains winning
+strategies and does not justify changing the source example into an UNSAT
+claim.
+\end{hbexample}
+
+\section{A general certificate construction, not a SAT replacement}
+
+\begin{hbmethod}{def:p12-qres-elimination}{Right-to-left quantified elimination}
+Choose an order within each block and expand the finite prefix into scalar
+quantifiers.  Work from its innermost remaining variable outward, maintaining
+a CNF over only the still-uneliminated variables.  Remove tautological input
+clauses, which are semantically true, and record the others as axioms.
+For innermost universal \(u\), remove its literal from every containing
+clause; the side condition of \texttt{red} holds since no later existential
+variable remains in those clauses.  Keep clauses not containing \(u\).
+
+For innermost existential \(x\), partition clauses into those not mentioning
+\(x\), those \(A\cup\{x\}\), and those \(B\cup\{\bar x\}\).
+Replace the last two groups by every non-tautological \(A\cup B\) from
+a positive/negative pair, recording its resolution parents.  Ignore a
+tautological resolvent as true, rather than inserting it into the proof.
+The working matrix drops the parent clauses involving the eliminated variable;
+the proof record keeps their earlier identifiers.  This is an elimination
+construction with a new working matrix, not a proof-log deletion rule.
+No new variable or forbidden strategy dependency is introduced.
+\end{hbmethod}
+
+\begin{hblemma}{thm:p12-qres-elimination-step}{proved=annex:p12-qres-elimination-step}{Exact innermost existential and universal elimination}
+For every assignment to the remaining earlier variables, the existential
+replacement computes exactly \(\exists x\) of the old matrix, and the
+universal replacement computes exactly \(\forall u\) of it.  The
+tautological-resolvent omission and non-tautological-parent restriction have
+their actual semantic meanings in these equalities.  Hence applying the
+unchanged earlier prefix preserves QBF truth at each step.
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p12-qres-completeness}{proved=annex:p12-qres-completeness}{Constructive refutational completeness}
+For every false closed finite PCNF, the elimination construction terminates
+and produces a valid Q-Res derivation of the empty clause under the original
+prefix.  Conversely a valid such derivation exists only for a false input.
+This is general finite-PCNF completeness, with no bound on alternations,
+clause width or variable count.  It makes no polynomial certificate-size
+or practical solver-termination claim.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p12-qres-alternating-certificate}{An alternating refutation and a legal counterstrategy}
+Take prefix \(\exists a\forall u\exists b\) and four input clauses
+\(\{a,u,b\}\), \(\{a,u,\bar b\}\),
+\(\{\bar a,\bar u,b\}\), \(\{\bar a,\bar u,\bar b\}\).
+The complete certificate has the following clause records; the parent numbers
+refer only to earlier records:
+\begin{center}
+\begin{tabular}{@{}lll@{}}
+\toprule
+Record & Clause & Justification \\
+\midrule
+1--4 & The four displayed clauses & \texttt{cl-init} \\
+5 & \(\{a,u\}\) & \texttt{res} on \(b\), parents 1,2 \\
+6 & \(\{\bar a,\bar u\}\) & \texttt{res} on \(b\), parents 3,4 \\
+7 & \(\{a\}\) & \texttt{red} of \(u\), parent 5 \\
+8 & \(\{\bar a\}\) & \texttt{red} of \(\bar u\), parent 6 \\
+9 & \(\varnothing\) & \texttt{res} on \(a\), parents 7,8 \\
+\bottomrule
+\end{tabular}
+\end{center}
+Initially \(u\) is blocked by later \(b\); its reduction becomes legal
+only after the two resolutions.  The universal counterstrategy is
+\(g_u(a)=a\), a function of an earlier existential value.  If \(a=u=0\)
+the first pair requires both values of \(b\); if \(a=u=1\) the second pair
+does.  No later choice of \(b\) can win.  The propositional matrix itself
+has models, for example \(a=0,u=1,b=0\), so ordinary matrix SAT is not
+the conclusion certified here.
+\end{hbexample}
+
+\section{Checking and strategy certificates}
+
+\begin{hbmethod}{def:p12-qres-proof-checker}{The abstract quantified proof checker}
+Retain the exact input prefix/matrix.  Each record gives its clause, rule tag,
+earlier parent identifiers, and selected pivot or removed literal where
+required.  Check closure and quantifier types; check every literal-set equality,
+input membership and non-tautology guard; and check every prefix-order test.
+Accept refutation only if a checked record is the empty clause.  Forward
+references, a changed prefix, a failed rule condition or an unchecked final
+empty record reject the proof.  All these are finite syntactic checks and
+are polynomial in the explicit input plus certificate length.  This
+description is a checker specification, not an executed or verified binary.
+The logical soundness theorem supplies its guarantee; parser and encoding
+correspondence remain separately required.
+\end{hbmethod}
+
+\begin{hbmethod}{def:p12-qres-strategy-checker}{Finite direct strategy checking}
+For each controlled variable check that its table is total on exactly its
+declared preceding-opponent argument list.  Reject later-variable arguments.
+Enumerate every assignment to the opposing player's variables.  Evaluate the
+controlled functions and the matrix on the induced complete assignment.
+Require all matrix values true for an existential certificate, or all false
+for a universal certificate.  An incomplete table or one good play is not
+acceptance.  Enumeration can be exponential in the variable count; this is
+not a claim that succinct arbitrary circuit strategies are polynomially
+checkable merely because their circuit is small.
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p12-qres-strategy-checking}{proved=annex:p12-qres-strategy-checking}{Exact meaning of finite strategy acceptance}
+The direct finite checker terminates and accepts precisely the legal winning
+table strategies.  Together with the finite-game construction it supplies
+strategy certificates for true and false inputs.  A Q-Res refutation is a
+false-input certificate; a true-input strategy is not an empty-clause proof.
+No polynomial-time strategy-extraction algorithm from an arbitrary Q-Res log
+is asserted by this enumeration construction.
+\end{hbtheorem}
+
+\section{Failed rule conditions and separate presentations}
+
+\begin{hbexample}{def:p12-qres-illegal-reduction}{Illegal reduction and tautological resolution}
+The source's true formula is
+\[
+ \forall x\exists y\;\{\{x,\bar y\},\{\bar x,y\}\}.
+\]
+Its winning strategy is \(f_y(x)=x\).  Removing \(x\) from the first
+clause or \(\bar x\) from the second is illegal: the later existential
+\(y\) is allowed to respond to \(x\).  Those wrong reductions would give
+\(\{\bar y\}\) and \(\{y\}\) and a false refutation.  Likewise resolving
+the two inputs on \(y\) gives \(\{x,\bar x\}\), a tautology forbidden
+by \texttt{res}; reducing both universal literals from it also violates
+\texttt{red}'s non-tautology premise
+\cite[Example~2.3.2]{BeyersdorffEtAl2021QBFJulyAuthor}.
+Neither an arbitrary independence declaration nor treating a tautology as an
+ordinary reduction parent repairs the certificate.
+\end{hbexample}
+
+Reversing the prefix gives
+\(\exists y\forall x\;\{\{x,\bar y\},\{\bar x,y\}\}\), which is
+false: \(y\) must be constant, and the universal player chooses
+\(x=1-y\).  The apparent existential strategy \(y=x\) now reads a later
+universal variable and is forbidden.  Thus equal matrices do not determine
+equal quantified problems or equal strategy certificates.
+
+\begin{hbdefinition}{def:p12-qres-full-reduction}{The distinct fully reduced convention}
+The 2013 ECCC presentation assumes input clauses already fully universally
+reduced and defines a Q-resolvent by first forming a non-tautological
+propositional resolvent and then removing all unblocked universal literals
+\cite[Preliminaries, p.~2]{JanotaMarquesSilva2013QBFExpansionECCC97}.
+Write \(\operatorname{ur}_{\Pi}(C)\) for this full reduction.  This convention
+packages several source-sheet \texttt{red} steps into one operation; it is
+not a claim that the later presentation is byte-identical to the
+historical 1995 publication. The input normalization itself has a quantified
+truth-preservation obligation, not merely a renaming of clauses.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-qres-normalized-bridge}{proved=annex:p12-qres-normalized-bridge}{The full-reduction convention at its actual standing}
+Full reduction is a finite sequence of legal \texttt{red} steps and preserves
+exactly the winning existential strategies of the clause matrix.  Every
+fully reduced resolution step expands into source-sheet resolution followed
+by legal reduction steps.  Both conventions admit a refutation exactly for
+false closed finite PCNFs, after the declared input normalization.  This is
+a semantic/refutational bridge, not linewise equality of every intermediate
+clause, whole-source equivalence or a proof-size comparison.
+\end{hbtheorem}
+
+Long-distance Q-resolution uses specially governed merged universal literals;
+QU-resolution admits universal pivots; dependency-aware reduction replaces
+linear order tests with separately justified dependency information.  They
+have distinct syntax, side conditions and proof obligations
+\cite[Sec.~2.3.2]{BeyersdorffEtAl2021QBFJulyAuthor}.  The ordinary tautology
+in the failed example is not such a merged-literal object.  Clause/cube
+QCDCL, expansion proofs, QRAT and strategy-extraction constructions also
+remain separate from the common Q-Res sheet.  None is proved by importing
+ordinary SAT resolution, nor are QBF prefix dependencies preserved merely
+because a preprocessing step preserves propositional matrix satisfiability.

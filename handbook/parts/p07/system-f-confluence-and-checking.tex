@@ -1,0 +1,254 @@
+\section{System F confluence and explicit type checking}
+\label{sec:p07-system-f-confluence-and-checking}
+
+Confluence and decidable checking concern different inputs. Confluence
+applies to the raw annotated terms, including terms that have no typing
+derivation or admit infinite reductions. Checking decides a specified
+Church-style judgment by its finite syntax. Neither proof below assumes
+normalization. Together with the separate normalization theorem, confluence
+also gives uniqueness of the normal form of every well-typed term.
+
+We use exactly Sheet~\ref{sheet:system-f}, with the combined compatible
+relation \(\to_{\mathsf F}\) and capture-avoiding substitutions of
+Definitions~\ref{def:p07-system-f-sn-raw} and
+\ref{def:p07-system-f-sn-substitutions}. In particular there are no eta
+contractions and no reductions inside types. The parallel-development
+method follows the beta fragment of
+\cite[Sections~4.3--4.4]{Selinger2013LambdaNotesV2}; the explicit
+type-abstraction and type-application cases are supplied here.
+The System~F syntax is also presented in
+\cite[Sections~8.1--8.4]{Selinger2013LambdaNotesV2} and
+\cite[Sections~11.1--11.2]{GirardLafontTaylor2003Web}.
+
+\subsection{Parallel reduction and substitution}
+\label{sec:p07-system-f-parallel}
+
+\begin{hbdefinition}{def:p07-system-f-parallel}{An auxiliary parallel relation}
+On raw terms modulo alpha-renaming, let \(M\Rrightarrow_{\mathsf F}N\)
+be the least relation with the following closure clauses. They define an
+auxiliary relation used in the proof; the book's computational steps remain
+the two registered beta contractions.
+\begin{enumerate}
+\item Every variable satisfies \(x\Rrightarrow_{\mathsf F}x\).
+\item If \(M\Rrightarrow_{\mathsf F}M'\) and
+      \(N\Rrightarrow_{\mathsf F}N'\), then
+      \(MN\Rrightarrow_{\mathsf F}M'N'\).
+\item If \(P\Rrightarrow_{\mathsf F}P'\), then
+      \(\lambda x{:}\alpha.P\Rrightarrow_{\mathsf F}
+        \lambda x{:}\alpha.P'\).
+\item If \(P\Rrightarrow_{\mathsf F}P'\), then
+      \(\Lambda a.P\Rrightarrow_{\mathsf F}\Lambda a.P'\).
+\item If \(P\Rrightarrow_{\mathsf F}P'\), then
+      \(P[\alpha]\Rrightarrow_{\mathsf F}P'[\alpha]\).
+\item If \(P\Rrightarrow_{\mathsf F}P'\) and
+      \(N\Rrightarrow_{\mathsf F}N'\), then
+      \((\lambda x{:}\alpha.P)N\Rrightarrow_{\mathsf F}P'[N'/x]\).
+\item If \(P\Rrightarrow_{\mathsf F}P'\), then
+      \((\Lambda a.P)[\alpha]\Rrightarrow_{\mathsf F}P'[\alpha/a]\).
+\end{enumerate}
+Binders are renamed fresh for the substitution images in clauses~6 and~7.
+The relation can contract several nested redexes, and its reflexive cases
+allow some redexes to be retained. No transitivity clause is included.
+\index{System F!parallel reduction}\index{confluence!System F}
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p07-system-f-parallel-closure}
+ {proved=annex:p7.system-f.parallel-closure}{The same finite reductions}
+For every raw term \(M\), \(M\Rrightarrow_{\mathsf F}M\). Moreover,
+\[
+ \to_{\mathsf F}\ \subseteq\ \Rrightarrow_{\mathsf F}
+ \subseteq\ \to_{\mathsf F}^*.
+\]
+Consequently their reflexive transitive closures coincide.
+\end{hblemma}
+
+\begin{hblemma}{thm:p07-system-f-parallel-substitution}
+ {proved=annex:p7.system-f.parallel-substitution}{Parallel substitution, including mixed binders}
+For arbitrary raw terms and capture-avoiding type substitution \(\tau\),
+\[
+ M\Rrightarrow_{\mathsf F}M'
+ \quad\Longrightarrow\quad M\tau\Rrightarrow_{\mathsf F}M'\tau.
+\]
+If additionally \(N\Rrightarrow_{\mathsf F}N'\), then
+\[
+ M[N/x]\Rrightarrow_{\mathsf F}M'[N'/x].
+\]
+These assertions permit open terms, open type arguments, erased
+occurrences and arbitrarily many duplicated occurrences of \(x\).
+\end{hblemma}
+
+\subsection{Complete development and the join}
+\label{sec:p07-system-f-development}
+
+\begin{hbdefinition}{def:p07-system-f-development}{Complete development of the original redexes}
+Define \(M^\star\) recursively on the original term syntax:
+\[
+\begin{aligned}
+ x^\star&=x,\\
+ (\lambda x{:}\alpha.P)^\star&=\lambda x{:}\alpha.P^\star,\\
+ (\Lambda a.P)^\star&=\Lambda a.P^\star.
+\end{aligned}
+\]
+For a term application, distinguish its original function constructor:
+\[
+ (MN)^\star=
+ \begin{cases}
+ P^\star[N^\star/x],&M=\lambda x{:}\alpha.P,\\
+ M^\star N^\star,&M\text{ is not a lambda abstraction}.
+ \end{cases}
+\]
+For a type application use
+\[
+ (M[\alpha])^\star=
+ \begin{cases}
+ P^\star[\alpha/a],&M=\Lambda a.P,\\
+ M^\star[\alpha],&M\text{ is not a type abstraction}.
+ \end{cases}
+\]
+Types are unchanged except for the displayed capture-avoiding substitutions.
+This is a finite structural recursion. A new redex created by developing
+a function is retained when the original function was not an abstraction;
+\(M^\star\) need not be normal.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p07-system-f-development-join}
+ {proved=annex:p7.system-f.development-join}{Every parallel reduct reaches the same development}
+For raw terms,
+\[
+ M\Rrightarrow_{\mathsf F}N
+       \quad\Longrightarrow\quad N\Rrightarrow_{\mathsf F}M^\star.
+\]
+In particular the parallel relation has the diamond property: any two
+of its one-step reducts have a common one-step parallel reduct, with
+reflexive parallel steps allowed.
+\end{hbtheorem}
+
+The finite rectangular joining argument in
+Annex~\ref{annex:p7.system-f.confluence} proves the existing
+Theorem~\ref{thm:p07-system-f-confluence} from this diamond and the
+closure lemma. No termination hypothesis is used. Thus raw divergent
+terms are included in the confluence statement.
+
+\begin{hbexample}{def:p07-system-f-mixed-overlaps}{The two mixed nesting patterns}
+Consider \(((\Lambda a.(\lambda x{:}\alpha.P)Q)[\beta])\).
+Contracting the outer type redex first, then the exposed term redex, gives
+\(P[\beta/a][Q[\beta/a]/x]\). Contracting the inner term redex
+first, then the type redex, gives \((P[Q/x])[\beta/a]\).
+These are equal by the type/term substitution identity with capture
+avoided.
+
+Conversely consider \((\lambda x{:}\alpha.(\Lambda a.P)[\beta])N\).
+Rename \(a\) fresh for the free type variables of \(N\).
+The two orders give \((P[N/x])[\beta/a]\) and
+\((P[\beta/a])[N/x]\), which agree under that freshness condition.
+The parallel-substitution lemma handles reductions duplicated through
+\(N\) as well as these displayed root contractions. The development
+proof also covers two term redexes, two type redexes, disjoint positions,
+and contexts that expose a new redex after reduction.
+\end{hbexample}
+
+\subsection{Finite representations and alpha equality of types}
+\label{sec:p07-system-f-checking-types}
+
+\begin{hbdefinition}{def:p07-system-f-checking-inputs}{Effective syntax and context validation}
+Represent the two disjoint sorts of variable names by finite strings with
+decidable equality. A type context \(\Delta\) lists distinct type
+variables; a term context \(\Gamma\) assigns one finite type to each
+of its distinct term variables. Malformed syntax is rejected.
+Bound names may be renamed consistently and capture-free; free names in
+\(\Delta\) and \(\Gamma\) are kept fixed.
+
+Write \(\mathsf{WF}(\Delta,\alpha)\) for the formation check:
+accept a variable precisely when it occurs in \(\Delta\); accept
+an arrow when both components pass; at \(\forall a.\beta\), rename
+\(a\) fresh for \(\Delta\) and check \(\beta\) under \(\Delta,a\).
+Validate \(\Gamma\) by applying this check to every declared type.
+
+To compare two types modulo bound renaming, traverse each with a stack
+of enclosing universal binders. Encode a bound-variable occurrence by
+its distance to the nearest matching binder in the stack, and a free
+variable by its actual name. Encode an arrow by the ordered pair of its
+children and a universal type by a binder marker followed by its encoded
+body. Two types are alpha-equal precisely when these finite encodings agree.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p07-system-f-type-syntax-decision}
+ {proved=annex:p7.system-f.type-syntax-decision}{Deciding formation, alpha equality and substitution}
+The formation check terminates and accepts exactly the types derivable
+over \(\Delta\) by the sheet's formation rules. The stack comparison
+terminates and decides equality of types modulo bound renaming while
+preserving free names. Capture-avoiding type substitution is effective
+on this finite syntax and returns a finite type. It preserves formation
+under the hypotheses of Lemma~\ref{thm:p07-system-f-sn-typing-substitution}.
+\end{hblemma}
+
+\subsection{Synthesizing and checking the explicitly supplied type}
+\label{sec:p07-system-f-checking-algorithm}
+
+\begin{hbmethod}{def:p07-system-f-synthesis}{The syntax-directed synthesis procedure}
+For validated contexts define \(\mathsf{Synth}(\Delta,\Gamma,M)\)
+to return a type or the failure marker \(\mathsf{fail}\).
+Before descending through a binder, consistently rename its bound name
+fresh for the current contexts and the finitely many free names involved.
+This is permitted alpha-renaming of the input, not renaming its free
+context declarations.
+\begin{enumerate}
+\item At \(x\), return its declared type in \(\Gamma\); fail if
+      there is no declaration.
+\item At \(\lambda x{:}\alpha.P\), require
+      \(\mathsf{WF}(\Delta,\alpha)\). Synthesize \(P\) in
+      \(\Gamma,x:\alpha\). If its type is \(\beta\), return
+      \(\alpha\mathbin{\to_{\rm ty}}\beta\); propagate failure.
+\item At \(PN\), synthesize both subterms. Require the first result
+      to have arrow shape \(\alpha\mathbin{\to_{\rm ty}}\beta\),
+      and the second to be alpha-equal to \(\alpha\). Return \(\beta\)
+      if these tests succeed; otherwise fail.
+\item At \(\Lambda a.P\), after the fresh renaming require \(a\)
+      absent from \(\Delta\) and from the free variables of every type
+      in \(\Gamma\). Synthesize \(P\) under \(\Delta,a;\Gamma\).
+      Return \(\forall a.\beta\) if that call returns \(\beta\),
+      and propagate failure otherwise.
+\item At \(P[\alpha]\), require \(\mathsf{WF}(\Delta,\alpha)\)
+      and synthesize \(P\). Its result must have universal shape
+      \(\forall a.\beta\). Return the capture-avoiding instance
+      \(\beta[\alpha/a]\); otherwise fail.
+\end{enumerate}
+The checker for an input judgment first validates the proposed result
+type, then accepts precisely when synthesis succeeds and its result is
+alpha-equal to that proposed type. There is no implicit type instantiation,
+generalization or search for missing lambda annotations.
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p07-system-f-synthesis-correct}
+ {proved=annex:p7.system-f.synthesis-correct}{Termination, exactness and uniqueness of the synthesized type}
+For finite validated contexts and a finite explicit term, synthesis
+terminates. It returns \(\beta\) exactly when the term has a derivation
+\(\Delta;\Gamma\derives_{\mathsf F}M:\beta\), modulo the permitted
+bound renamings. If the term is typable, every type assignable in those
+same contexts is alpha-equal to the returned type. If synthesis fails,
+no such typing derivation exists.
+\end{hbtheorem}
+
+This proves the stated Church-style checking theorem
+\ref{thm:p07-system-f-church-checking}; its final decision argument is
+Annex~\ref{annex:p7.system-f.church-checking}. The recursion follows
+proper subterms of the supplied term. Although substitution can enlarge
+an output type, it does not add recursive term-checking calls on that
+output. This termination argument uses neither confluence nor term
+normalization, and asserts no polynomial bound for a chosen representation.
+
+\begin{hbexample}{def:p07-system-f-checking-examples}{Explicit instantiation and fixed free names}
+In contexts \(\Delta=b\) and
+\(\Gamma=f:\forall a.(a\mathbin{\to_{\rm ty}}a),\ z:b\),
+synthesis of \(f[b]z\) returns \(b\): the type application returns
+\(b\mathbin{\to_{\rm ty}}b\), and the term application matches
+its domain. Synthesis of \(fz\) fails because the type of \(f\) has
+universal, not arrow, outer shape. The missing instance is not guessed.
+
+Alpha equality must distinguish free and bound names. Under a context
+containing the free type variable \(a\), the types \(\forall b.a\)
+and \(\forall b.b\) are different. Their bodies encode a free name
+and a bound index, respectively. By contrast \(\forall a.a\) and
+\(\forall b.b\) are alpha-equal as types. Consistent freshening of
+an input binder must never capture or rename a free context variable.
+\end{hbexample}

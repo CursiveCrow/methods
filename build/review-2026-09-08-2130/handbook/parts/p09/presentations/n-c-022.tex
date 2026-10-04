@@ -1,0 +1,495 @@
+% Source presentations for register row N-c-022.
+
+\subsection{From declarative clauses to SLD search and finite failure}
+\label{sec:p09-presentation-n-c-022}
+
+\subsubsection{One relation, two modes, and three kinds of control}
+
+Kowalski's procedural reading starts from clauses, not from a separately
+specified input--output function.  For a concrete source-faithful example, use
+\([\,]\) for the empty list and \([u\mid v]\) for
+\(\operatorname{cons}(u,v)\), and let
+\[
+\begin{array}{rcl}
+ \mathit{app}([\,],Y,Y)&\leftarrow&\\
+ \mathit{app}([U\mid X],Y,[U\mid Z])
+   &\leftarrow&\mathit{app}(X,Y,Z).
+\end{array}
+\]
+These are universally quantified definite clauses defining one ternary
+relation.  Calling the first two arguments \enquote{inputs} and the third an
+\enquote{output} describes one use of that relation; it is not part of the
+logical clause.
+
+In the forward mode, the goal
+\(\leftarrow\mathit{app}([a,b],[c],Z)\) has the refutation
+\[
+\begin{aligned}
+ \leftarrow\mathit{app}([a,b],[c],Z)
+ &\Longrightarrow
+ \leftarrow\mathit{app}([b],[c],Z_1)
+   &&[Z=[a\mid Z_1]],\\
+ &\Longrightarrow
+ \leftarrow\mathit{app}([\,],[c],Z_2)
+   &&[Z_1=[b\mid Z_2]],\\
+ &\Longrightarrow\Box
+   &&[Z_2=[c]].
+\end{aligned}
+\]
+The computed answer is \(Z=[a,b,c]\).  In the inverse mode, the same two
+clauses enumerate every split of a fixed list.  The complete branching
+calculation for
+\(\leftarrow\mathit{app}(X,Y,[a,b])\) is
+\[
+\begin{array}{rcll}
+ \leftarrow\mathit{app}(X,Y,[a,b])
+ &\Longrightarrow&\Box
+   &[X=[\,],\ Y=[a,b]],\\
+ &\Longrightarrow&
+   \leftarrow\mathit{app}(X_1,Y,[b])
+   &[X=[a\mid X_1]],\\[2pt]
+ \leftarrow\mathit{app}(X_1,Y,[b])
+ &\Longrightarrow&\Box
+   &[X_1=[\,],\ Y=[b]],\\
+ &\Longrightarrow&
+   \leftarrow\mathit{app}(X_2,Y,[\,])
+   &[X_1=[b\mid X_2]],\\[2pt]
+ \leftarrow\mathit{app}(X_2,Y,[\,])
+ &\Longrightarrow&\Box
+   &[X_2=[\,],\ Y=[\,]].
+\end{array}
+\]
+At the last node the recursive head does not unify with an empty third list, so
+it contributes no child to the complete tree.
+Thus the three successful answers are
+\[
+ (X,Y)=([\,],[a,b]),\qquad([a],[b]),\qquad([a,b],[\,]).
+\]
+This is the relational use of variables as partially specified data emphasized
+in the early procedural presentation.  The complete member computation in
+Kowalski supplies the original branching precedent; the append relation is the
+worked source example in the later semantic and SLD developments
+\cite[printed pp.~570--573]{Kowalski1974}
+\cite{VanEmdenKowalski1976,AptVanEmden1982}.
+
+Three choices must remain separate.
+\begin{enumerate}
+\item An \emph{atom-selection rule} chooses one atom of the current goal.
+\item A \emph{clause choice} chooses one unifying program-clause head and hence
+  one child of the complete tree.
+\item A \emph{tree-search strategy} decides which pending child to visit next.
+\end{enumerate}
+The first is the computation rule quantified over by the SLD completeness
+theorem.  The second creates logical nondeterminism.  The third includes
+breadth-first, fair interleaving, and Prolog's depth-first backtracking.
+Kowalski's paper supplies the procedural reading and the computation-space
+examples; it does not identify any one traversal with logical consequence.
+
+\subsubsection{Herbrand interpretations and the immediate-consequence proof}
+
+Fix a first-order signature with at least one ground term.  Its \emph{Herbrand
+universe} is the set of all ground terms over that signature, and its
+\emph{Herbrand base} is the set of all ground predicate atoms over that
+universe.  A ground instance of a clause is obtained by replacing every
+variable with a ground term.  Consequently a Herbrand interpretation is exactly
+a subset \(I\) of the Herbrand base: a ground atom is true precisely when it
+belongs to \(I\).
+
+For a definite program \(P\), Definition~\ref{def:p09-definite-program} gives
+\[
+ T_P(I)=
+ \{\,H\theta:
+   (H\leftarrow B_1,\ldots,B_k)\in P,\ 
+   \theta\text{ ground},\
+   B_i\theta\in I\text{ for all }i\,\}.
+\]
+This is a semantic operator on sets of ground atoms.  It is not one SLD
+transition: it applies every ground clause instance simultaneously.
+
+The finite ancestor program makes the iteration visible:
+\[
+\begin{array}{ll}
+ parent(a,b).&parent(b,c).\\
+ anc(X,Y)\leftarrow parent(X,Y).&
+ anc(X,Z)\leftarrow parent(X,Y),anc(Y,Z).
+\end{array}
+\]
+Starting from the empty interpretation,
+\[
+\begin{aligned}
+ T_P^1(\varnothing)
+   &=\{parent(a,b),parent(b,c)\},\\
+ T_P^2(\varnothing)
+   &=T_P^1(\varnothing)
+     \cup\{anc(a,b),anc(b,c)\},\\
+ T_P^3(\varnothing)
+   &=T_P^2(\varnothing)\cup\{anc(a,c)\},\\
+ T_P^4(\varnothing)&=T_P^3(\varnothing).
+\end{aligned}
+\]
+The consequence \(anc(a,c)\) appears independently of a clause order, selected
+goal atom, or search traversal.
+
+The least-model theorem follows from four explicit steps.
+
+\paragraph{Monotonicity.}
+If \(I\subseteq J\), every ground clause body contained in \(I\) is contained
+in \(J\), so \(T_P(I)\subseteq T_P(J)\).
+
+\paragraph{Models are exactly pre-fixed points.}
+A Herbrand interpretation \(I\) satisfies every ground instance
+\[
+ H\leftarrow B_1,\ldots,B_k
+\]
+exactly when membership of all \(B_i\) in \(I\) implies membership of \(H\).
+This is precisely \(T_P(I)\subseteq I\).
+
+\paragraph{The union of the finite stages is a fixed point.}
+Put
+\[
+ L=\bigcup_{n<\omega}T_P^n(\varnothing).
+\]
+Every clause body is finite.  If all its atoms belong to \(L\), there is one
+finite stage containing all of them: take the maximum of their finitely many
+stage indices.  Hence
+\[
+ T_P(L)
+ =\bigcup_{n<\omega}T_P(T_P^n(\varnothing))
+ =\bigcup_{n<\omega}T_P^{n+1}(\varnothing)
+ =L.
+\]
+
+\paragraph{It is the least model.}
+If \(I\) is any Herbrand model, then \(T_P(I)\subseteq I\).  Induction on \(n\)
+gives \(T_P^n(\varnothing)\subseteq I\) for every \(n\), and therefore
+\(L\subseteq I\).  Since \(L\) is itself a fixed point and hence a model, it is
+the least Herbrand model:
+\[
+ M_P=L=\operatorname{lfp}(T_P).
+\]
+For a ground atom \(A\), ordinary first-order consequence agrees with
+membership in this least model: by the Herbrand theorem, failure of ground
+consequence has a Herbrand countermodel, while the intersection of the
+Herbrand models of a definite program is itself its least model
+\cite[printed pp.~736--741]{VanEmdenKowalski1976}.
+
+The finite-stage statement has an equally concrete proof-tree form.  A
+\emph{ground proof tree} for \(A\) has root \(A\); an internal node labelled
+\(H\) chooses a ground clause instance
+\(H\leftarrow B_1,\ldots,B_k\) and has the \(B_i\) as children; a fact is a
+leaf.  Taking a fact-only tree to have height \(1\), induction on \(n\) proves
+\[
+ A\in T_P^n(\varnothing)
+ \quad\Longleftrightarrow\quad
+ A\text{ has a ground proof tree of height at most }n.
+\]
+The forward induction reads the clause instance that put \(A\) into the next
+stage.  The reverse induction applies \(T_P\) after all child roots have
+appeared.  Thus every member of \(M_P\) has a finite proof, even when the
+program or Herbrand base is infinite; there need not be one uniform finite
+height for all consequences.
+
+\subsubsection{SLD answers: soundness, lifting, and strong completeness}
+
+Now return to goal-directed proof.  Standardize every input clause apart before
+unification.  For the goal \(\leftarrow anc(a,Z)\), choose the recursive clause
+first:
+\[
+\begin{aligned}
+ \leftarrow anc(a,Z)
+ &\xRightarrow{\theta_1}
+   \leftarrow parent(a,Y_0),anc(Y_0,Z),
+ &\theta_1&=\{X_0/a,\ Z_0/Z\},\\
+ &\xRightarrow{\theta_2}
+   \leftarrow anc(b,Z),
+ &\theta_2&=\{Y_0/b\},\\
+ &\xRightarrow{\theta_3}
+   \leftarrow parent(b,Z),
+ &\theta_3&=\{X_1/b,\ Y_1/Z\},\\
+ &\xRightarrow{\theta_4}\Box,
+ &\theta_4&=\{Z/c\}.
+\end{aligned}
+\]
+Here \((X_0,Y_0,Z_0)\) and \((X_1,Y_1)\) belong to fresh variants of the two
+clauses.  Restricting the composed substitution to the initial variable gives
+the computed answer \(Z=c\).  The root branch using the base clause instead
+returns \(Z=b\).
+
+\paragraph{Why every computed answer is correct.}
+At one positive SLD step, the selected goal atom \(A_i\) is unified with the
+head \(H\) of
+\[
+ H\leftarrow B_1,\ldots,B_k.
+\]
+The universally closed clause entails
+\(B_1\land\cdots\land B_k\to H\).  After applying the mgu \(\theta\), the
+conjunction of the new resolvent therefore entails the conjunction of the old
+goal under \(\theta\).  Chaining these implications through a refutation and
+using that the empty conjunction is true yields
+\[
+ P\models
+ \forall\bigl((A_1\land\cdots\land A_n)
+              \theta_1\cdots\theta_m\bigr).
+\]
+After restriction to the variables of the initial goal, this is exactly the
+correct-answer condition in Definition~\ref{def:p09-sld}.  Apt and van Emden's
+fixed-point proof sharpens the same invariant.  If \(G_{m-i}\) is the goal
+\(i\) steps before success and \(\theta_{m-i+1},\ldots,\theta_m\) are the
+remaining substitutions, then every ground instance of every atom in
+\(G_{m-i}\theta_{m-i+1}\cdots\theta_m\) belongs to
+\(T_P^i(\varnothing)\)
+\cite[thm.~5.1 and cor.~5.2]{AptVanEmden1982}.
+
+\paragraph{The lifting step.}
+Suppose an instance \(G\eta\) takes an SLD step using a standardized-apart
+clause \(C\) whose variables are disjoint from those of \(G\eta\), and write
+\(\sigma\) for the mgu used in that step.  Then \(\eta\sigma\) unifies the
+selected atom of \(G\) with the uninstantiated clause head.  If \(\theta\) is
+an mgu of those two atoms, the defining property of an mgu gives a substitution
+\(\rho\) through which this unifier factors:
+\[
+ (\eta\sigma)|_{\operatorname{Var}(G)\cup\operatorname{Var}(C)}
+ =
+ (\theta\rho)|_{\operatorname{Var}(G)\cup\operatorname{Var}(C)}.
+\]
+The resolvent from \(G\) under \(\theta\) therefore has the resolvent from
+\(G\eta\) under \(\sigma\) as a further instance.  Repeating this argument
+lifts every finite refutation of an instance to a refutation of the original
+goal.  If \(\sigma_1,\ldots,\sigma_m\) are the mgus in the instance
+refutation and \(\theta_1,\ldots,\theta_m\) those in the lifted refutation, the
+general factorization is
+\[
+ \eta\sigma_1\cdots\sigma_m
+   =(\theta_1\cdots\theta_m)\rho
+\]
+on the variables of the initial goal.  In the special case used below, the
+instance refutation has the identity as its computed answer, and the left side
+reduces there to \(\eta\).  This is why completeness says that every correct
+answer is an \emph{instance} of a computed answer; the two substitutions need
+not be literally equal.
+
+\paragraph{From the least model to a refutation.}
+For a ground atom \(A\in M_P\), choose the least stage at which \(A\) appears.
+The corresponding ground clause has body atoms at earlier stages.  Induction
+on that stage constructs finite refutations of those body goals.  The lifting
+lemma replaces the ground clause instances by standardized-apart clauses and
+mgus.  For a finite conjunction, the same induction combines the component
+refutations.  Thus a semantically correct ground instance has an SLD
+refutation.
+
+For a non-ground correct answer \(\eta\), the universal closure of each
+instantiated goal atom follows from \(P\).  Replace its remaining variables by
+distinct constants occurring in neither \(P\) nor \(G\eta\).  Ground
+completeness gives refutations for those ground atoms; replacing the fresh
+constants back by variables gives
+refutations of the atoms in \(G\eta\) whose computed answers are the identity.
+Combine them into a refutation of \(G\eta\), then apply the lifting lemma.  The
+result has computed answer \(\theta\) and a further substitution \(\rho\) such
+that \(\eta=\theta\rho\) on the initial variables.  Finally, the switching lemma
+permutes adjacent independent atom selections; repeated switching transforms a
+refutation into one following any fixed computation rule, without changing the
+answer except for variants.  This is the proof spine behind Lloyd's Theorems
+9.2--9.5 and the exact strong answer theorem stated in
+Theorem~\ref{thm:p09-sld-adequacy}
+\cite[ch.~2, \S\S8--9]{Lloyd1987}.
+
+\paragraph{What the theorem does not say.}
+Consider the extensionally equivalent left-recursive presentation
+\[
+\begin{array}{rcl}
+ anc(X,Y)&\leftarrow&anc(X,Z),parent(Z,Y),\\
+ anc(X,Y)&\leftarrow&parent(X,Y),
+\end{array}
+\]
+with the two parent facts above and the recursive clause placed first.  The
+complete SLD tree for \(\leftarrow anc(a,Y)\) has a base-clause branch
+\[
+ \leftarrow parent(a,Y)\Longrightarrow\Box\quad[Y=b].
+\]
+Its first recursive branch begins
+\[
+\begin{aligned}
+ \leftarrow anc(a,Y)
+ &\Longrightarrow
+ \leftarrow anc(a,Z_1),parent(Z_1,Y)\\
+ &\Longrightarrow
+ \leftarrow anc(a,Z_2),parent(Z_2,Z_1),parent(Z_1,Y)\\
+ &\Longrightarrow\cdots .
+\end{aligned}
+\]
+A leftmost, textual-clause-order, depth-first traversal remains on this infinite
+branch and never visits the existing answer.  The computation rule selected the
+leftmost atom; clause order chose the recursive child; depth-first traversal
+caused starvation.  Strong completeness says that the complete tree for the
+fixed atom-selection rule contains a refutation.  It does not say that an
+unfair traversal finds it
+\cite[\S6, discussion after thm.~6.6]{AptVanEmden1982}.
+
+\subsubsection{Completion and a proof from a finitely failed tree}
+
+Clark completion changes one-way program clauses into classical definitions.
+For clauses \(p(\bar t_i)\leftarrow B_i\), with local variables renamed apart,
+Definition~\ref{def:p09-clark-completion} gives
+\[
+ p(\bar x)\leftrightarrow
+ \bigvee_i\exists\bar y_i\,
+   (\bar x=\bar t_i\land B_i),
+\]
+together with the displayed free-term equality theory.  The equality axioms
+matter: they make distinct constructors disjoint, make each constructor
+injective, exclude a finite term from containing itself, and justify the mgu
+cases in the finite-tree proof.  Metalinguistic unification and object-language
+equality in the completion remain different things.
+
+For the parent/ancestor program, the completed definitions simplify to
+\[
+\begin{aligned}
+ parent(x,y)
+ &\leftrightarrow
+   ((x=a\land y=b)\lor(x=b\land y=c)),\\
+ anc(x,z)
+ &\leftrightarrow
+   \bigl(parent(x,z)\lor
+   \exists y\,(parent(x,y)\land anc(y,z))\bigr).
+\end{aligned}
+\]
+The complete SLD tree for the ground goal
+\(\leftarrow anc(c,a)\) is finite and has no success leaf:
+\[
+\begin{array}{c}
+ \leftarrow anc(c,a)\\[2pt]
+ \swarrow\hspace{45mm}\searrow\\[-2pt]
+ \leftarrow parent(c,a)
+ \hspace{20mm}
+ \leftarrow parent(c,Y_1),anc(Y_1,a)\\
+ \text{failure}\hspace{42mm}\text{failure at }parent(c,Y_1).
+\end{array}
+\]
+The two root children come from the two ancestor clauses.  At each leaf, no
+parent fact unifies with a first argument \(c\).
+
+The completion proves the same negative conclusion.  Free-term equality gives
+\(c\ne a\) and \(c\ne b\), so the parent biconditional entails
+\(\forall y\,\neg parent(c,y)\).  Both disjuncts in the ancestor
+biconditional are therefore false at \((c,a)\), whence
+\[
+ \operatorname{Comp}(P)\models\neg anc(c,a).
+\]
+This is not an appeal to elapsed search time: it uses every child of the root
+and the fact that the whole tree is finite.
+
+The general soundness proof has the same shape.  At a positive selected atom,
+the completion and equality axioms entail the goal clause at a failed leaf when
+there is no unifying head; at an internal node they entail the parent goal
+clause from the conjunction of all child goal clauses.  Induction on tree depth
+therefore propagates failure from every leaf to the root.  With negative
+literals, an outer induction on the finite SLDNF rank handles subsidiary trees:
+a subsidiary refutation proves its ground atom, while a subsidiary finite
+failure proves its classical negation in the completion.  This is the
+rank-then-depth proof of Lloyd's Theorem 15.4, whose positive core is Clark's
+finite-failure argument
+\cite{Clark1978}\cite[thm.~15.4]{Lloyd1987}.
+
+Finiteness is load-bearing.  Add only the clause
+\[
+ loop(X)\leftarrow loop(X).
+\]
+The goal \(\leftarrow loop(a)\) has one infinite branch and neither a refutation
+nor a finite failed tree.  Its completed definition is the tautology
+\(\forall x\,(loop(x)\leftrightarrow loop(x))\), which entails neither
+\(loop(a)\) nor \(\neg loop(a)\).
+Thus \enquote{no answer has appeared} cannot be substituted for finite failure.
+
+\subsubsection{Ground SLDNF, four outcomes, and the exact theorem boundary}
+
+Use the normal program
+\[
+\begin{array}{rcl}
+ bird(tweety)&\leftarrow&\\
+ flies(X)&\leftarrow&bird(X),\mathsf{not}\ abnormal(X),\\
+ loop(X)&\leftarrow&loop(X).
+\end{array}
+\]
+There is no clause defining \(abnormal\).  The registered safe SLDNF rule
+selects a negative literal only after its atom is ground.  Its mutually
+recursive success and failure definitions are well-founded by the finite rank
+from Definition~\ref{def:p09-sldnf}.
+
+For \(\leftarrow flies(tweety)\), positive resolution first gives
+\[
+ \leftarrow bird(tweety),\mathsf{not}\ abnormal(tweety)
+ \Longrightarrow
+ \leftarrow\mathsf{not}\ abnormal(tweety).
+\]
+The subsidiary rank-\(0\) tree for
+\(\leftarrow abnormal(tweety)\) is the one-node finite failed tree, so the
+ground negative literal succeeds at rank \(1\), and the outer goal refutes.  No
+variable binding is returned by the negative step; negation as failure is a
+test.
+
+The four operational outcomes can now be separated without euphemism:
+\begin{center}
+\begin{tabularx}{\textwidth}{@{}l X X@{}}
+\toprule
+Goal & Subsidiary behavior & Outer result \\
+\midrule
+\(\leftarrow\mathsf{not}\ abnormal(tweety)\)
+  & The ground positive goal has a finite complete tree with no success.
+  & Negative success; completion entails
+    \(\neg abnormal(tweety)\). \\
+\(\leftarrow\mathsf{not}\ bird(tweety)\)
+  & The ground positive goal has a refutation using the fact.
+  & Negative failure; no negative answer is returned. \\
+\(\leftarrow\mathsf{not}\ loop(tweety)\)
+  & The ground positive goal follows one infinite recursive branch.
+  & Divergence; neither negative success nor negative failure. \\
+\(\leftarrow\mathsf{not}\ parent(X,b)\)
+  & The negative atom is nonground and no positive literal remains to bind it.
+  & Floundering under safe selection; neither success nor failure. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Safeness and allowedness have different standings.  Safeness is a restriction
+on which literal the computation rule may select.  Allowedness is the syntactic
+condition in Definition~\ref{def:p09-normal-program}.  The flies clause above
+is allowed because its variable occurs in the positive body atom \(bird(X)\).
+The floundering query is not allowed because \(X\) occurs only in a negative
+literal.  Lloyd's Proposition 15.1 says that if the whole program/query pair is
+allowed, no computation flounders and every computed answer grounds the
+original query variables.  This is a sufficient syntactic guarantee, not the
+definition of SLDNF success and not a hypothesis of the two soundness theorems.
+
+Theorem 15.4 says that a finitely failed safe SLDNF tree makes the universally
+closed goal clause a consequence of \(\operatorname{Comp}(P)\).  Theorem 15.6
+says that every safe SLDNF computed answer is a correct completion answer.  Its
+proof inducts on refutation length; positive steps use the completed defining
+biconditional and negative steps use Theorem 15.4.  Neither theorem claims
+termination or completeness for every normal program
+\cite[\S15, prop.~15.1 and thms.~15.4, 15.6]{Lloyd1987}.
+
+The adjacent completeness theorem has much stronger hypotheses.  A
+hierarchical program has a natural-number level for each predicate such that
+every body predicate has strictly smaller level than its clause head.  This
+excludes both \(anc\) recursion and \(loop\).  Under that hypothesis,
+allowedness, and a safe computation rule, Lloyd's Theorem 16.3 proves that the
+SLDNF tree exists and is finite and that every ground correct completion answer
+is computed.  Its termination proof orders each goal by the finite multiset of
+predicate levels; every child strictly decreases that well-founded multiset.
+This theorem cannot be relabelled as completeness for arbitrary recursive
+normal programs \cite[thm.~16.3]{Lloyd1987}.
+
+The internal SLDNF locators were checked in a university-hosted scan of the
+corrected printing against the Springer edition record; the scan is not a
+publisher-hosted copy, so that provenance remains explicit.  Concrete Prolog
+is commonly presented with leftmost selection, textual clause order, and
+depth-first traversal; it also provides cut and arithmetic, and some
+implementations use unification without the occurs check \cite{Lloyd1987}.
+The confirmed ISO
+general-core record and public WG17 material separately identify control
+constructs, cut, arithmetic, negation as failure, ordinary unification, and
+unification with an occurs check as subjects addressed separately.  The
+corrected normative clauses are not part of the available source basis, so no
+clause-exact ISO behavior is asserted.  In every case these implementation and
+language-standard choices do not alter the pure SLD theorem; they fall outside it unless separately
+formalized \cite{ISO13211-1-1995}.

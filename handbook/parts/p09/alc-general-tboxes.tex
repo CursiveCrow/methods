@@ -1,0 +1,189 @@
+%% General-TBox ALC: a finite-type algorithm and combined complexity.
+
+\subsection{General TBoxes and elimination of unrealizable types}
+\label{sec:p09-alc-general-tboxes}
+
+For a finite TBox \(\mathcal T\), a concept \(C\) is satisfiable
+relative to \(\mathcal T\) when some \(I\models\mathcal T\) has
+\(C^I\ne\varnothing\).
+Subsumption \(C\sqsubseteq_{\mathcal T}D\) means
+\(C^I\subseteq D^I\) in every such interpretation.
+Knowledge-base satisfiability uses the full finite pair
+\((\mathcal T,\mathcal A)\) from Definition~\ref{def:p09-alc}.
+For instance checking, \(\mathcal K\models C(a)\) means that every
+model of \(\mathcal K\) interprets \(a\) in \(C^I\).
+The complexity below is combined complexity: the TBox, ABox, and
+query are all part of the input.
+
+\begin{hbdefinition}{def:p09-alc-complete-type}{Complete concept types}
+Use the finite NNF closure \(\mathcal C\) of
+Definition~\ref{def:p09-alc-tableau}, with \(m=|\mathcal C|\).
+For an NNF concept \(E\), write \(\bar E\) for its NNF complement.
+The complement swaps \(\top,\bot\), swaps \(A,\neg A\), swaps
+\(\sqcap,\sqcup\) while complementing their operands, and satisfies
+\[
+ \overline{\exists r.E}=\forall r.\bar E,\qquad
+ \overline{\forall r.E}=\exists r.\bar E.
+\]
+Choose the normalization by these recursive clauses, so
+\(\overline{\bar E}=E\).
+Induction on concepts gives
+\((\bar E)^I=\Delta^I\setminus E^I\).
+The closure contains each complement and each immediate sub-concept.
+
+A type is a subset \(t\subseteq\mathcal C\) satisfying:
+\[
+\begin{array}{ll}
+ \text{constants:}&\top\in t,\quad\bot\notin t;\\
+ \text{complements:}&\text{exactly one of }E,\bar E\text{ belongs to }t
+                         \text{ for every }E\in\mathcal C;\\
+ \text{conjunctions:}&E\sqcap F\in t
+                         \Longleftrightarrow E\in t\text{ and }F\in t;\\
+ \text{disjunctions:}&E\sqcup F\in t
+                         \Longleftrightarrow E\in t\text{ or }F\in t;\\
+ \text{global inclusions:}&\mathsf{Glob}(\mathcal T)\subseteq t.
+\end{array}
+\]
+The Boolean conditions apply whenever the displayed compound concept
+belongs to \(\mathcal C\).
+For types \(t,u\) and an input role \(r\), define compatibility by
+\[
+ t\leadsto_r u
+ \quad\Longleftrightarrow\quad
+ \forall(\forall r.E)\in t\quad E\in u.
+\]
+These finite sets describe possible truth values at one element.
+They become realized types only after their existential requirements
+can be met.
+\index{description logic!type elimination}\index{concept type}
+\end{hbdefinition}
+
+\begin{hbmethod}{def:p09-alc-type-elimination}{Eliminating unrealizable types}
+Let \(S_0\) be the set of all types from the preceding definition.
+There are at most \(2^m\).
+Define a decreasing sequence by
+\[
+ S_{i+1}=
+ \left\{t\in S_i:
+ \begin{array}{l}
+  \text{for every }\exists r.E\in t,\text{ some }u\in S_i\\
+  \text{satisfies }t\leadsto_r u\text{ and }E\in u
+ \end{array}\right\}.
+\]
+Stop when \(S_{i+1}=S_i\), and call the resulting set \(S\).
+Each strict change deletes a type, so this takes at most \(2^m\)
+strict stages.
+
+Accept the tested-concept/TBox/ABox input precisely when all the
+following conditions hold.
+First, \(S\ne\varnothing\).
+Second, there is an assignment \(a\mapsto t_a\in S\) for the
+individual names occurring in the ABox such that
+\[
+\begin{aligned}
+ E(a)\in\mathcal A&\ \Longrightarrow\
+                         \operatorname{nnf}(E)\in t_a,\\
+ r(a,b)\in\mathcal A&\ \Longrightarrow\
+                         t_a\leadsto_r t_b.
+\end{aligned}
+\]
+Finally, if a concept \(C_0\) is being tested, some \(t\in S\)
+contains \(\operatorname{nnf}(C_0)\).
+The assignment condition is vacuous for an empty ABox, while
+\(S\ne\varnothing\) enforces the nonempty-domain convention even
+for a TBox-only input.
+Different individual names may be assigned the same type.
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p09-alc-type-elimination}{proved=annex:p9.alc.2}{Correctness and bounds of \(\mathcal{ALC}\) type elimination}
+The method accepts exactly the satisfiable inputs of
+Theorem~\ref{thm:p09-alc-tableau}.
+Every accepted input has a model with at most \(2^m\) elements.
+If the total input length is \(N\), then \(m=O(N)\), and an explicit
+deterministic implementation runs in time \(2^{O(N^2)}\).
+With no ABox individual names, the displayed enumeration and elimination
+run in time \(2^{O(N)}\).
+\end{hbtheorem}
+
+The model has one element for each surviving type.
+It interprets a concept name by the types containing it and a role
+by all compatible pairs of types.
+Completeness of the type descriptions is essential to the truth lemma.
+If \(\forall r.E\) is absent, its complement \(\exists r.\bar E\)
+is present and requires a surviving counterexample successor.
+If \(\exists r.E\) is absent, \(\forall r.\bar E\) excludes every
+compatible \(E\)-successor.
+
+\paragraph{Two effects of general inclusions.}
+For
+\[
+ \mathcal T=\{A\sqsubseteq\exists r.B,\quad
+              B\sqsubseteq\exists r.C,\quad C\sqsubseteq\bot\},
+\]
+no initial type contains \(C\).
+Every type containing \(B\) is deleted in the first elimination stage,
+because its required \(C\)-successor is unavailable.
+All remaining \(A\)-types are then deleted because their \(B\)-successors
+have disappeared.
+The TBox itself is satisfiable, for example on a singleton with
+\(A,B,C\) all empty, but the tested concept \(A\) is unsatisfiable.
+
+For \(\mathcal T=\{A\sqsubseteq\forall r.B\}\) and
+\[
+ \mathcal A=\{A(a),\ r(a,b),\ \neg B(b)\},
+\]
+every permitted type of \(a\) contains \(\forall r.B\), and every
+permitted type of \(b\) contains \(\neg B\).
+There is no compatible pair for the asserted role edge.
+The name-assignment test therefore rejects the knowledge base.
+
+\paragraph{Cyclic inclusions and finite models.}
+The TBox \(\{A\sqsubseteq\exists r.A\}\) has a model with a
+nonempty \(A\): take one element in \(A\) and an \(r\)-loop.
+The type algorithm permits precisely this reuse of a surviving
+type as its own successor.
+The blocking tableau and the type algorithm encode the reuse in
+different finite search objects; their proofs establish the same
+satisfiability condition.
+
+\begin{hbtheorem}{thm:p09-alc-general-exptime}{proved=annex:p9.alc.3}{Combined complexity of general-TBox \(\mathcal{ALC}\)}
+The following problems are \(\mathsf{EXPTIME}\)-complete under
+polynomial-time many-one reductions:
+concept satisfiability relative to a general finite TBox;
+subsumption relative to such a TBox;
+satisfiability of a finite \(\mathcal{ALC}\) knowledge base; and
+concept-instance checking for a finite knowledge base.
+The satisfiability classification also holds when an optional
+tested concept accompanies the knowledge base.
+The input has exactly the constructors, GCIs, and assertions of
+Definition~\ref{def:p09-alc}.
+\end{hbtheorem}
+
+The upper bound follows from the type algorithm.
+The lower bound in Annex~\ref{annex:p9.alc.3} encodes an alternating
+polynomial-space computation by concept names and two role relations.
+A binary counter decreases on every generated transition, ensuring that
+an infinite successor chain cannot replace a finite accepting computation.
+The other reasoning tasks then follow by explicit polynomial reductions.
+
+\paragraph{Source presentations and algorithmic scope.}
+The classification for concept satisfiability under general TBoxes is
+Theorem~6 on draft p.~26 of Baader, Horrocks, and Sattler's chapter
+\emph{Description Logics}.  The cited locators refer to its 47-page author
+draft; the published chapter belongs to the 2008
+\emph{Handbook of Knowledge Representation}
+\cite[draft \S3.6.1, Proposition~5 and Theorem~6]{BaaderHorrocksSattler2008}.
+That presentation obtains the upper bound with looping tree automata.
+The finite-type algorithm and alternating-machine construction above
+supply the proofs under the handbook's stated input convention.
+
+Donini and Massacci give a separate tableau algorithm for a concept and
+a general TBox.  Their Theorem~3.13 proves single deterministic
+exponential time for strategies satisfying their prescribed search
+techniques; Theorem~6.17 supplies the depth-first-search call bound
+\cite[pp.~98, 123]{DoniniMassacci2000}.
+Their input called a knowledge base consists of the TBox.
+The finite ABox assignment in the present method is an additional
+construction proved in Annex~\ref{annex:p9.alc.2}.
+The termination theorem for the earlier blocking tableau makes no
+runtime claim about arbitrary expansion strategies.

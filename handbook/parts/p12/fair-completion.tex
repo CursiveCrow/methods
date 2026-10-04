@@ -1,0 +1,280 @@
+\section{Completion runs, scheduling and persistent rules}
+\label{sec:p12-fair-completion}
+
+A final critical-pair check proves correctness of a completed rewrite
+system. An incremental completion procedure also needs to justify its
+bookkeeping: earlier joining rules may be simplified or deleted before
+the procedure stops. We distinguish Knuth--Bendix's restart procedure
+\cite[\S\S5--6]{KnuthBendix1970} from Huet's labeled and marked
+incremental procedure \cite[pp.~13--19]{Huet1981CompletionCorrectness}.
+The latter supplies the fairness and limit results proved here. It is
+a specified source algorithm, not a correctness assertion about every
+possible interleaving of the primitive operations on
+Sheet~\ref{sheet:term-rewriting}.
+
+\begin{hbconvention}{def:p12-fc-common-order}{One ordering for the entire run}
+All terms and rules have the ordinary first-order meaning of
+Definition~\ref{def:p12-trs}. The signature and finite terms are
+effectively represented. Fix one decidable reduction ordering \(>\),
+well-founded and closed under substitutions and contexts, before the
+run begins. Every generated rule must decrease this same ordering.
+It may be partial. A nontrivial normalized equation whose sides are
+incomparable causes failure in the oriented procedures below.
+For the original 1970 presentation the ordering is
+\(>_{\rm kb70}\); the proofs apply to any fixed ordering with the
+stated properties. The input equation set \(E_0\) is finite.
+\end{hbconvention}
+
+\begin{hbmethod}{def:p12-fc-restart}{The restart and interreduction procedure}
+First orient the input equations, discarding identical sides and
+reporting failure if a required pair is incomparable. Interreduce the
+finite rule set: whenever a rule has a side reducible by the other
+rules, normalize both sides using those other rules. Delete the rule
+if the two results agree; otherwise replace it by their greater-to-lesser
+orientation, or report failure if they are incomparable.
+
+After interreduction, compute every critical pair of the current rule
+set, including both ordered overlap directions and self-overlaps.
+Normalize each pair's two sides. If every resulting pair agrees, stop
+with success. Otherwise orient a disagreeing pair, add that consequence
+as a rule, interreduce again, and restart the complete critical-pair
+scan. A fixed finite scan suffices for each current finite rule set;
+no result from an earlier scan is reused without a new check.
+These are the restart and rule-replacement operations of the 1970
+source. Repeating interreduction until no replacement applies makes
+its all-rules replacement instruction operationally definite; the
+source does not prescribe the order of those replacements.
+Its suggestions about trying another ordering or introducing
+defined operators after failure are different runs or presentations,
+not unrecorded changes inside this run.
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p12-fc-restart}{proved=annex:p12.fc.restart}{Correctness of successful restart completion}
+Each interreduction phase terminates or reports failure. Every
+successful restart output is terminating, confluent and equationally
+equivalent to \(E_0\). The exhaustive final scan proves the required
+critical-pair coverage; joinability is not an extra assumed postcondition.
+This assertion does not say that repeated restarts eventually succeed.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p12-fc-state}{Huet's labeled and marked states}
+At iteration \(i\), a state consists of a finite set \(E_i\) of
+pending equations, a finite set \(\mathcal R_i\) of records
+\((k,\ell,r,m)\), and a counter \(c_i\). A record denotes the
+rule \(k:\ell\to r\), whose mark \(m\) is either unmarked or
+marked. Labels are unique natural numbers, allocated in increasing
+order and never reused. Let \(R_i\) be the underlying rules after
+forgetting labels and marks. A surviving label keeps its left-hand
+side; its right-hand side may be normalized without changing its
+label or mark. A changed left-hand side deletes that label.
+Initially \(i=0\), \(E_i=E_0\),
+\(\mathcal R_i=\varnothing\), and \(c_i=0\).
+The following macrosteps define the subsequent iterations.
+\end{hbdefinition}
+
+\begin{hbmethod}{def:p12-fc-equation-phase}{Equation reduction and insertion}
+While \(E_i\ne\varnothing\), select any \(s\approx t\in E_i\)
+and compute \(R_i\)-normal forms \(s'\) and \(t'\).
+If \(s'=t'\), remove the selected equation and leave the rules
+unchanged. If \(s'\ne t'\) and neither side exceeds the other,
+stop with failure. Otherwise let \(\ell>r\) be their orientation.
+Put
+\[
+ K=\{k:(k,\ell_k,r_k,m_k)\in\mathcal R_i,
+                   \ \ell_k\text{ is reducible by }\ell\to r\}.
+\]
+For every \(k\in K\), choose one such step
+\(\ell_k\to_{\{\ell\to r\}}\ell'_k\). The next pending set is
+\[
+ E_{i+1}=(E_i\setminus\{s\approx t\})
+                 \cup\{\ell'_k\approx r_k:k\in K\}.
+\]
+Allocate label \(c_i+1\) to the new, unmarked rule \(\ell\to r\).
+Delete all records whose labels lie in \(K\). For each other old
+record retain its left side, label and mark, replacing its right side
+by any normal form under \(S_i=R_i\cup\{\ell\to r\}\).
+These choices of right-side normal forms refer to this displayed
+pre-insertion rule set plus the new rule. Finally increase the counter
+and the iteration index. Ordinary set union may remove duplicate
+pending equations.
+
+The new left side is \(R_i\)-normal before insertion. This condition
+controls which old rules may be collapsed and is essential to the
+limit argument. No arbitrary removal of a rule is part of the procedure.
+\end{hbmethod}
+
+\begin{hbmethod}{def:p12-fc-critical-phase}{Incremental critical-pair computation}
+When \(E_i=\varnothing\), stop with success if all rule records are
+marked. Otherwise choose an unmarked label \(k\). Compute all
+critical pairs between its current rule and every current rule whose
+label \(j\leq k\), in both overlap directions, including \(j=k\).
+Set the next pending equation set to those pairs, mark record \(k\),
+leave all other records and the counter unchanged, and resume the
+equation phase. Equal-sided pairs may be retained for trivial deletion.
+The mark is retained if a later insertion only changes the right-hand
+side. This is the source's incremental policy, whose correctness
+requires the proof below; it is not a claim that the old and new
+critical pairs are literally equal.
+\end{hbmethod}
+
+\begin{hbdefinition}{def:p12-fc-fairness}{Fair label selection and the two limits}
+A selection is \emph{fair} when every allocated label is eventually
+either deleted or selected for critical-pair computation. It is enough
+always to select the least unmarked live label. Unqualified preference
+for a short or promising rule is not this condition.
+
+Consider a run that never reports failure, either infinite or extended
+constantly after a successful halt. Let
+\[
+ R_* =\bigcup_i R_i.
+\]
+Let \(R_\infty\) contain the final versions of precisely the labels
+that are never deleted after their creation. The lemmas below prove
+that each such label's right side changes only finitely often, so this
+definition is meaningful. Equivalently, these are the labeled rules
+present unchanged from some iteration onward. \(R_*\) includes
+transient versions; \(R_\infty\) need not be finite and is not an
+effectively recognizable set merely by being called a limit.
+\index{completion!fairness}\index{completion!persistent rules}
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p12-fc-invariants}{proved=annex:p12.fc.invariants}{Termination of phases and source invariants}
+In every nonfailure run:
+\begin{enumerate}
+\item Every rule of \(R_*\) decreases \(>\), and every \(R_i\)
+      is interreduced: each right side is \(R_i\)-normal and each
+      left side is normal under the other rules.
+\item Every equation phase ends with an empty pending set in finitely
+      many iterations. No fairness assumption on equation selection
+      is needed.
+\item Every pending equation \(s\approx t\) occurring at any
+      iteration has a join \(s\to_{R_*}^*u\leftarrow_{R_*}^*t\).
+\item Every generated equation and rule is an equational consequence
+      of \(E_0\), and \(\equiv_{R_*}=\equiv_{E_0}\).
+\item A label that is never deleted has only finitely many proper
+      changes of its right side, ending in a rule of \(R_\infty\).
+\end{enumerate}
+\end{hblemma}
+
+\begin{hbdefinition}{def:p12-fc-containment}{Pattern containment and strict generalization}
+A term \(a\) \emph{contains} \(b\) when some subterm of \(a\)
+is a substitution instance of \(b\). Write \(a\gg b\) when
+\(a\) contains \(b\) but \(b\) does not contain \(a\).
+This is a relation on patterns, not the reduction ordering \(>\).
+Equal-size examples can be strict: \(f(x,x)\gg f(y,z)\) for
+distinct \(y,z\), since generalization can separate two variables.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p12-fc-containment}{proved=annex:p12.fc.containment}{Well-founded deletion chains and persistent reducibility}
+The relation \(\gg\) is well-founded. If insertion of \(\ell\to r\)
+deletes an old label with left side \(a\), then \(a\gg\ell\).
+Every term reducible by \(R_i\) remains reducible by every later
+\(R_j\). In particular deletion is backed by a strictly more general
+or structurally smaller matching pattern; it cannot simply discard
+the old rule's applicability.
+\end{hblemma}
+
+\begin{hblemma}{thm:p12-fc-fair-coverage}{proved=annex:p12.fc.fair-coverage}{What fair marking supplies for a persistent peak}
+Assume fair label selection. For each one-step persistent peak
+\(a\to_{R_\infty}b_1\), \(a\to_{R_\infty}b_2\), there are
+\(d_1,d_2,e\) such that
+\[
+ a\to_{R_*}d_i,\qquad d_i\to_{R_*}^*b_i,
+ \qquad d_i\to_{R_*}^*e\quad(i=1,2).
+\]
+The join is established for appropriate historical right-side versions.
+It is not an assumption that the final critical pair was already
+joinable in \(R_\infty\).
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p12-fc-limit}{proved=annex:p12.fc.limit}{Correctness of the fair persistent limit}
+For every nonfailure run with fair label selection, \(R_\infty\)
+is terminating, confluent and interreduced, and
+\[
+ \equiv_{R_\infty}=\equiv_{R_*}=\equiv_{E_0}.
+\]
+More strongly, whenever \(a\to_{R_*}^*b\), the terms \(a,b\)
+have a common \(R_\infty\)-reduct; and whenever
+\(a\to_{R_*}^*b_1,b_2\), the two endpoints have a common
+\(R_\infty\)-reduct. Thus transient right-side versions do not
+leave unaccounted equational consequences in the limit.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p12-fc-computation}{proved=annex:p12.fc.computation}{Finite success and semidecision during an infinite run}
+A successful finite run returns a finite canonical presentation of
+\(E_0\). Under the nonfailure and fairness hypotheses, an infinite
+run has an infinite \(R_\infty\); if that limit is finite, the
+procedure stops with success.
+
+During a nonfailure fair run, progressively normalize any two query
+terms with the successive current rule sets. Equality is accepted as
+soon as the two current terms coincide. This semidecides their equality
+modulo \(E_0\). After successful termination, comparing the two
+final normal forms decides equality and inequality. An incomparable
+equation, timeout or unfinished fair run is not an inequality certificate.
+\end{hbtheorem}
+
+\begin{hbcorollary}{thm:p12-fc-antichain}{proved=annex:p12.fc.antichain}{The pattern obstruction to an infinite fair run}
+In an infinite nonfailure fair run, the left sides of
+\(R_\infty\) form an infinite set of pairwise incomparable
+patterns under containment: no distinct left side contains another.
+Consequently, if the given term language has no infinite set of
+pairwise containment-incomparable left-side patterns, every
+nonfailure fair run terminates successfully. This is a property of
+the fixed ordinary term language, not a completeness assertion for
+rewriting modulo additional equations
+\cite[p.~19]{Huet1981CompletionCorrectness}.
+\end{hbcorollary}
+
+\begin{hbtheorem}{thm:p12-fc-scheduler}{proved=annex:p12.fc.scheduler}{An explicit fair scheduler and a worked collapse run}
+Selecting the least unmarked live label is fair. With input
+\(\{f(a)\approx b,\ a\approx c\}\) and the reduction ordering
+from Theorem~\ref{thm:p12-completion-worked}, Huet's procedure can
+produce labels for \(f(a)\to b\), \(a\to c\), and then
+\(f(c)\to b\), deleting the first label when the second is inserted.
+The returned rule set is \(\{a\to c,f(c)\to b\}\), and the
+marking scan establishes its complete critical-pair coverage.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p12-fc-associativity}{proved=annex:p12.fc.associativity}{The original associativity superposition test}
+Take a finite signature consisting of one binary operation
+\(\mathbin{\cdot}\) and at least one constant. The single rule
+\[
+ (x\cdot y)\cdot z\longrightarrow x\cdot(y\cdot z)
+\]
+is a canonical presentation of associativity. The original
+\(>_{\rm kb70}\), with any strict total symbol precedence and
+every symbol weight and the variable weight equal to one, orients
+it. Its only nontrivial critical pair
+has both sides reducing to \(x\cdot(y\cdot(z\cdot w))\).
+Both specified procedures therefore succeed without adding any
+rule. The canonical forms preserve the left-to-right sequence
+of variable and constant leaves \cite[\S5, p.~276]{KnuthBendix1970}.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p12-fc-permutation-failure}{proved=annex:p12.fc.permutation-failure}{Commutativity cannot be oriented as one universal rule}
+For a binary symbol \(f\) and distinct variables \(x,y\), no
+substitution-stable strict ordering compares
+\(f(x,y)\) and \(f(y,x)\) in either direction.
+Thus the initial singleton equation
+\(f(x,y)\approx f(y,x)\) causes an incomparable-equation
+failure in either specified oriented procedure. This failure does
+not decide that the equation is false, or that its equational
+word problem is undecidable \cite[pp.~13--14]{Huet1981CompletionCorrectness}.
+\end{hbtheorem}
+
+\paragraph{Limits of the algorithmic claim.}
+The fixed ordering matters. The singleton systems \(\{a\to b\}\)
+and \(\{b\to a\}\) each terminate, but their union cycles and no
+one strict ordering orients both. Stagewise termination alone therefore
+cannot replace the common-order hypothesis.
+
+Classical oriented completion stops at an incomparable nontrivial equation.
+Unfailing completion retains or otherwise processes such equations with
+additional inference rules. Ordered completion controls their use by
+ordering conditions on suitable instances. Rewriting modulo a congruence
+changes matching, unification and critical-pair formation. These are
+distinct procedures requiring their own completeness arguments. In
+particular, Huet's 1981 suggestions about extensions to permutative
+or associative-commutative theories are not turned here into proved
+claims about those extensions \cite[pp.~19--20]{Huet1981CompletionCorrectness}.

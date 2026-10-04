@@ -1,0 +1,273 @@
+\chapter{Consistent Learning and Description Length}
+\label{sec:p15-occam-learning}
+
+Fitting the observed examples does not, by itself, establish accuracy
+on further examples. A learning guarantee relates the sampling mechanism,
+the class of candidate functions and the rule that chooses a function.
+This chapter supplies the finite-class lemma and Occam-algorithm theorem
+of Blumer, Ehrenfeucht, Haussler and Warmuth
+\cite[Lemma~2.1, Definition~2.2 and Theorem~2.3]{BlumerEtAl1987Occam}.
+It states both the probability and computational assumptions, with
+explicit finite-string counting conventions.
+
+\section{Targets, observations and generalization error}
+
+\begin{hbdefinition}{def:p15-occam-model}{The realizable independent-sample model}
+Let \((X,\mathcal A)\) be a nonempty measurable input space,
+\(Y\) a nonempty finite label set with its discrete sigma-field, and
+\(H\subseteq Y^X\) a nonempty finite or countable class of measurable
+functions fixed before the sample. The target
+\(f\in H\) is fixed. A distribution \(P\) on \(X\) produces independent
+observations \(X_1,\ldots,X_m\), all with law \(P\), where \(m\geq1\).
+The learner receives
+\(S=((X_1,f(X_1)),\ldots,(X_m,f(X_m)))\).
+The sample is ordered and may contain repeated inputs.
+
+A hypothesis \(h\in H\) is consistent with \(S\) when
+\(h(X_i)=f(X_i)\) for every \(i\). Its generalization error and
+empirical error are
+\[
+ R_P(h,f)=P\{x:h(x)\ne f(x)\},\qquad
+ \widehat R_S(h)=\frac1m\sum_{i=1}^m
+                       \mathbf1_{\{h(X_i)\ne f(X_i)\}}.
+\]
+The version space \(V(S)\) is the set of consistent hypotheses.
+It is nonempty because it contains \(f\).
+A proper consistent learner returns a member of \(V(S)\).
+Here \(\varepsilon\in(0,1)\) is an error tolerance and
+\(\delta\in(0,1)\) is a failure-probability tolerance. The first
+concerns a fresh input under \(P\); the second concerns the sample
+under \(P^{\otimes m}\). A learner's selected hypothesis is assumed
+measurable as an \(H\)-valued random variable, with the discrete
+sigma-field on \(H\). In the source's encoded computational setting,
+\(X\) is countable with the full power-set sigma-field; selection
+maps on the resulting countable sample space are automatically measurable.
+\index{learning!realizable}\index{generalization error}\index{version space}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p15-occam-finite}{proved=annex:p15.occam-finite}{Every consistent member of a fixed finite class}
+If \(|H|=r<\infty\), then
+\[
+ P^{\otimes m}\{\exists h\in V(S):R_P(h,f)>\varepsilon\}
+      <r(1-\varepsilon)^m\leq r e^{-m\varepsilon}.
+\]
+In particular every proper consistent learner has error at most
+\(\varepsilon\) with probability at least \(1-\delta\) whenever
+\[
+ m\geq
+ \max\left\{1,\left\lceil
+       \frac{\ln r+\ln(1/\delta)}{-\ln(1-\varepsilon)}
+                         \right\rceil\right\}.
+\]
+Replacing the denominator by \(\varepsilon\) gives a sufficient
+larger bound. These guarantees are uniform in \(P\) and \(f\in H\).
+They establish a statistical bound even if finding a consistent
+hypothesis is computationally expensive.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p15-occam-threshold-example}{proved=annex:p15.occam-threshold-example}{A complete finite version-space calculation}
+Let \(X=\{0,1,2\}\), let \(P\) be uniform, and let
+\(H=\{h_0,h_1,h_2,h_3\}\), where \(h_t(x)=\mathbf1_{\{x\geq t\}}\).
+Take target \(f=h_2\) and tolerance \(\varepsilon=1/4\).
+The exact probability that some bad hypothesis remains consistent is
+\[
+                 2(2/3)^m-(1/3)^m.
+\]
+The smallest sample size for which this probability is at most
+\(1/20\) is \(m=10\): its values at \(m=9,10\) are respectively
+\(1023/19683\) and \(2047/59049\).
+The generic bound in \cref{thm:p15-occam-finite} gives the
+sufficient sample size
+\(\lceil\ln80/\ln(4/3)\rceil=16\).
+A sample containing inputs zero and two but not one leaves
+both \(h_1\) and \(h_2\) consistent, although \(h_1\) has error \(1/3\).
+\end{hbtheorem}
+
+\section{What a short description counts}
+
+\begin{hbdefinition}{def:p15-occam-codes}{A fixed representation system}
+Let \(\mathcal C\subseteq\{0,1\}^*\) be a set of binary codes with
+a fixed decoding map onto \(H\). A code may name one function;
+several codes may name the same function. Its length is its number
+of bits, and \(\ell(h)\) is the minimum code length of \(h\).
+An empty code has length zero. Decoding conventions are fixed
+before observing data.
+
+A code family is prefix-free when no code is a proper prefix
+of another distinct code. A prefix-free family containing the
+empty code contains no other code. For computational claims, restrict
+to countable \(X\) with fixed effective finite encodings of inputs
+and labels, and assume that testing
+one represented hypothesis on one encoded observation is assumed
+to take polynomial time in their combined lengths.
+\index{description length!fixed encoding}\index{prefix-free code}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p15-occam-code-count}{proved=annex:p15.occam-code-count}{Arbitrary strings and prefix-free descriptions}
+For real \(L\geq0\), the number of distinct hypotheses with a code
+of length at most \(L\) is at most
+\[
+                 2^{\lfloor L\rfloor+1}-1<2^{L+1}.
+\]
+For a prefix-free code family, the sharper bound \(2^{\lfloor L\rfloor}\)
+holds. Furthermore a prefix-free family satisfies the Kraft inequality
+\[
+                       \sum_{c\in\mathcal C}2^{-|c|}\leq1.
+\]
+Choosing one shortest code per hypothesis therefore gives
+\(\sum_{h\in H}2^{-\ell(h)}\leq1\).
+Without the prefix-free condition, lengths at most one already
+allow the three codes consisting of the empty word, zero and one.
+\end{hbtheorem}
+
+\section{The Occam algorithm and its full sample bound}
+
+\begin{hbdefinition}{def:p15-occam-algorithm}{The source's polynomial compression requirement}
+Fix constants \(c\geq1\) and \(0\leq a<1\).
+An Occam algorithm is a proper consistent learner such that,
+for every integer target-size bound \(n\geq1\), every \(f\in H\)
+with \(\ell(f)\leq n\), and every nonempty sample of \(f\) of
+size \(m\), it outputs a code of length at most \(n^c m^a\).
+It runs in time polynomial in the total encoded sample length.
+The constants and representation system do not depend on
+\(f,P,n,m,\varepsilon,\delta\).
+
+The source's polynomial learnability requires a sufficient sample
+size polynomial in \(n,1/\varepsilon,1/\delta\), uniform in
+\(P\) and \(f\) of size at most \(n\), and polynomial running
+time in the encoded sample length. The statistical theorem
+below supplies such a sample size. It does not assert that
+an efficient Occam algorithm exists for every representation class.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p15-occam-compression}{proved=annex:p15.occam-compression}{The complete Occam implication with explicit code conventions}
+Set \(q=-\ln(1-\varepsilon)>0\).
+For arbitrary binary codes, the Occam algorithm has error at most
+\(\varepsilon\) with probability at least \(1-\delta\) if
+\[
+ m\geq\left\lceil\max\left\{
+  1,\ \frac{2\ln(2/\delta)}q,\
+       \left(\frac{2n^c\ln2}{q}\right)^{1/(1-a)}
+                          \right\}\right\rceil .
+\]
+For prefix-free codes, replace \(\ln(2/\delta)\) by
+\(\ln(1/\delta)\). This gives the source's displayed
+constant bound under that counting convention.
+For either convention, a sufficient sample size is
+\[
+ O\!\left(\frac{\ln(1/\delta)}{\varepsilon}
+               +\left(\frac{n^c}{\varepsilon}\right)^{1/(1-a)}
+               +1\right)
+\]
+for \(0<\varepsilon,\delta<1\) and \(n\geq1\); the constants depend
+only on \(c,a\). Thus the source's polynomial learnability
+conclusion follows.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p15-occam-minimum-approximation}{proved=annex:p15.occam-minimum-approximation}{The sample-independent case and approximate minimization}
+If the output length is at most \(n^c\), independent of \(m\),
+then arbitrary codes require only
+\[
+ m\geq\max\left\{1,\left\lceil
+       \frac{(n^c+1)\ln2+\ln(1/\delta)}{-\ln(1-\varepsilon)}
+                                      \right\rceil\right\}.
+\]
+For prefix-free codes, \(n^c+1\) can be replaced by \(n^c\).
+
+Let \(b(S)\) be the minimum length of any consistent hypothesis,
+and use \(b_+(S)=\max\{1,b(S)\}\) to handle the empty code.
+If a polynomial-time proper consistent algorithm returns length
+at most \(b_+(S)^c\), it meets this sample-independent bound
+for every target of length at most \(n\geq1\).
+Exact minimum-length selection is sufficient when computationally
+available, but exact minimization is not required by the theorem.
+\end{hbtheorem}
+
+\section{A simultaneous guarantee for a countable class}
+
+\begin{hbtheorem}{thm:p15-occam-weighted}{proved=annex:p15.occam-weighted}{Fixed weights and a guarantee for the selected hypothesis}
+Assign weights \(w_h>0\) to a countable \(H\) before sampling,
+with \(\sum_h w_h\leq1\). With probability at least \(1-\delta\),
+every \(h\in V(S)\) satisfies
+\[
+ R_P(h,f)\leq
+      \frac{\ln(1/w_h)+\ln(1/\delta)}m.
+\]
+A bound exceeding one is valid but uninformative.
+For prefix-free descriptions one may take \(w_h=2^{-\ell(h)}\).
+For arbitrary binary descriptions, choosing one shortest code
+per hypothesis permits \(w_h=2^{-2\ell(h)-1}\).
+These give respectively the numerators
+\(\ell(h)\ln2+\ln(1/\delta)\) and
+\((2\ell(h)+1)\ln2+\ln(1/\delta)\).
+The weights allocate a probability bound over hypotheses; this
+theorem does not construct a Bayesian posterior over \(H\).
+\end{hbtheorem}
+
+\section{Why the assumptions matter}
+
+\begin{hbtheorem}{thm:p15-occam-boundaries}{proved=annex:p15.occam-boundaries}{Dependence, distribution change and a data-dependent class}
+The preceding guarantees cannot in general discard their sampling
+and fixed-class assumptions:
+\begin{enumerate}
+\item On two equally likely inputs, a hypothesis wrong at one
+      input remains consistent with probability \(1/2\) if all
+      \(m\) observations repeat one random input. The independent
+      value would be \(2^{-m}\).
+\item A hypothesis can have training error zero and future error
+      one when the training and future input distributions differ.
+\item After observing an all-zero target on a finite \(N\)-point
+      domain, form \(h_S\) that is zero at observed points and
+      one elsewhere. The data-dependent class \(\{f,h_S\}\)
+      has at most two members and contains the target, but
+      returning \(h_S\) has uniform-distribution error at least
+      \(1-m/N\). If \(N\geq2m\), that error is at least \(1/2\)
+      for every sample.
+\end{enumerate}
+Thus choosing a short code or small class after observing data
+does not establish the fixed-representation premise. Conflicting
+labels for the same input can also make the version space empty;
+the noiseless realizability guarantee then does not apply.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p15-occam-unseen-labels}{proved=annex:p15.occam-unseen-labels}{A finite lower bound without restrictions on the target}
+On a domain of \(N\geq1\) points with uniform input distribution,
+let the target range over all binary functions. For any learner
+using \(m\) labelled observations, and with any independent internal
+randomization, some fixed target has expected generalization error
+at least
+\[
+                           \frac12\left(1-\frac mN\right).
+\]
+When \(N\geq2m\), this is at least \(1/4\).
+This lower bound is an editorial comparison: it does not
+contradict learnability with sample size depending on the
+target representation length.
+\end{hbtheorem}
+
+\section{Using a learning guarantee}
+
+\begin{hbmethod}{def:p15-occam-method}{From a representation class to a defensible error claim}
+Specify the input population and target labels. Choose the hypothesis
+class and encoding before observing the sample. State whether the
+learner is proper, returns a consistent hypothesis and has the required
+output-size and runtime bounds. Select \(\varepsilon,\delta\), then
+choose the sample size from the applicable theorem.
+
+The resulting conclusion concerns error on a fresh input from the
+same distribution, with the stated probability over the sample.
+It is not exact identification of the target, a guarantee for
+adversarial distribution changes, or a philosophical claim that
+the shortest explanation must be true.
+\end{hbmethod}
+
+The original paper separates its proved implication from its
+Section~3 questions about efficient Occam algorithms and a converse.
+Its discussion of hard minimum-consistency problems refers to
+other works; those reductions and later converse theorems are
+separate presentations. Noise, improper learning, agnostic loss
+minimization, infinite-dimensional complexity and modern generalization
+methods require their own theorems. Bayesian updating under a
+specified prior is treated in
+\cref{sec:p15-bayesian-updating-prediction}; here the distribution
+over training inputs remains arbitrary within the stated model.

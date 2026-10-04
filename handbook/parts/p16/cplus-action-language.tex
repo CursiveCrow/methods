@@ -1,0 +1,414 @@
+% ED26-SRC-036-019-S19.5 referral [18]; captured author version April 2003.
+\chapter{The Action Language C+: Laws, Events and Histories}
+\label{sec:p16-cplus-action-language}
+
+C+ separates what is caused from material constraints on a history.
+Giunchiglia, Lee, Lifschitz, McCain and Turner use finite-domain constants
+and causal laws to define a labelled transition system
+\cite[Sections~4--5, Appendix~B]{GiunchigliaEtAl2003CplusAuthor}.
+This treatment follows the openly offered author manuscript dated
+8 April 2003, associated by the coauthor's publication page with the
+2004 article; its pagination is not the publisher's pagination.
+Its full three-class grammar is broader than the displayed fragment in
+\cref{sec:p16-nct-cplus}. Later extensions are not silently included.
+\index{C+}\index{action language}\index{fluent!statically determined}
+
+\section{Signature and causal laws}
+\label{sec:p16-cplus-grammar}
+
+Use \cref{def:p16-nct-signature,def:p16-nct-theory}: each constant
+has a nonempty finite domain, but the signature need not be finite.
+An interpretation is explanatory when it uniquely satisfies the heads
+whose bodies it makes true. The sign \(\Leftarrow\) constructs a causal
+rule, not a material implication.
+Constant-to-constant equality abbreviates
+\[
+ c=d\quad:\quad
+ \bigvee_{v\in\operatorname{Dom}(c)\cap\operatorname{Dom}(d)}
+                        (c=v\land d=v).
+\]
+An empty disjunction is \(\bot\); inequality negates this formula.
+Boolean constants have values \(t,f\).
+
+\begin{hbdefinition}{def:p16-cplus-laws}{The original three-class grammar}
+Partition constants into fluents \(\sigma^{fl}\) and actions
+\(\sigma^{act}\), and fluents into simple \(\sigma^{sim}\) and
+statically determined \(\sigma^{sd}\).
+Actions need not be Boolean.
+A fluent formula contains only fluents, including constant-free formulas.
+An action formula contains at least one action constant and no fluent.
+A general formula may mix the two kinds.
+An action description \(D\) is a set of laws:
+\[
+\begin{array}{lll}
+ \text{static}&\text{caused }F\text{ if }G&
+                         F,G\text{ fluent};\\
+ \text{action dynamic}&\text{caused }F\text{ if }G&
+                         F\text{ action},\ G\text{ general};\\
+ \text{fluent dynamic}&\text{caused }F\text{ if }G\text{ after }H&
+                         F,G\text{ fluent},\ H\text{ general}.
+\end{array}
+\]
+A fluent dynamic head \(F\) contains no statically determined constant.
+Heads may be compound formulas. Static and action dynamic laws share
+keywords but have different head types.
+\end{hbdefinition}
+
+Static laws can explain derived values within a state. Action dynamic
+laws can explain event attributes from fluents and other attributes.
+Fluent dynamic laws connect origin state/event to successor fluents.
+
+\begin{hbdefinition}{def:p16-cplus-translation}{The history translation}
+For \(m\geq0\), use constants \(i:c\), with unchanged domains:
+fluents at \(0\leq i\leq m\), actions at \(0\leq i<m\).
+The notation \(i:F\) stamps every constant occurrence together.
+Construct \(D_m\) by the following families:
+\[
+\begin{array}{ll}
+ i:F\Leftarrow i:G&
+  \text{static laws},\ 0\leq i\leq m;\\
+ i:F\Leftarrow i:G&
+  \text{action dynamic laws},\ 0\leq i<m;\\
+ (i+1):F\Leftarrow((i+1):G)\land(i:H)&
+  \text{fluent dynamic laws},\ 0\leq i<m;\\
+ 0:c=v\Leftarrow0:c=v&
+  c\in\sigma^{sim},\ v\in\operatorname{Dom}(c).
+\end{array}
+\]
+Only simple fluents receive initial exogeneity automatically.
+Action exogeneity, inertia and derived-fluent exogeneity are not implicit.
+\end{hbdefinition}
+
+The \(G\) condition of a fluent dynamic law is tested at the successor;
+\(H\) is tested at the origin, including its event. Replacing this by
+an old-state precondition changes the law.
+
+\section{All seventeen abbreviation conventions}
+\label{sec:p16-cplus-abbreviations}
+
+The author's Appendix B has seventeen numbered conventions, grouped
+here without dropping any family. Every expansion must satisfy the
+base grammar, including its dynamic-head restriction.
+
+\begin{enumerate}
+\item Omit \(\text{if }\top\) in a static or action dynamic law.
+Write \(\text{caused }F\text{ after }H\) for a fluent dynamic law
+with \(G=\top\).
+\item \(\text{constraint }F\) means
+\(\text{caused }\bot\text{ if }\neg F\), with \(F\) fluent.
+\(\text{constraint }F\text{ after }G\) means
+\(\text{caused }\bot\text{ if }\neg F\text{ after }G\),
+with \(F\) fluent and \(G\) general.
+These filter explanations rather than cause \(F\).
+\item For any fluent \(c\), \(\text{rigid }c\) abbreviates
+\(\text{constraint }c=v\text{ after }c=v\) for every value.
+\(\text{always }F\) means
+\(\text{caused }\bot\text{ after }\neg F\), for general \(F\).
+It constrains origin-state/event combinations on transitions, not
+all static states, and contributes nothing at horizon zero.
+\item \(\text{nonexecutable }F\text{ if }G\), with action \(F\),
+means \(\text{caused }\bot\text{ after }F\land G\).
+For \(\text{F causes G if H}\), action formula \(F\) and fluent \(G\)
+give \(\text{caused }G\text{ after }F\land H\);
+action \(G\) instead gives \(\text{caused }G\text{ if }F\land H\).
+The fluent head must contain only simple constants.
+\item \(\text{default }F\text{ if }G\) means
+\(\text{caused }F\text{ if }F\land G\), static or action dynamic
+according to \(F\)'s type.
+\(\text{default }F\text{ if }G\text{ after }H\) means
+\(\text{caused }F\text{ if }F\land G\text{ after }H\);
+its \(\text{if }G\) may be omitted when \(G=\top\).
+\item \(\text{exogenous }c\text{ if }G\) means
+\(\text{default }c=v\text{ if }G\) for all values.
+For action \(F\), \(\text{F may cause G if H}\) means
+\(\text{default }G\text{ after }F\land H\) when \(G\) is fluent,
+and \(\text{default }G\text{ if }F\land H\) when \(G\) is action.
+\item \(\text{inertial }c\text{ if }G\) means
+\(\text{default }c=v\text{ after }c=v\land G\) for every value.
+The fluent \(c\) must be simple; \(G\) is an origin condition.
+A final \(\text{if }\top\) may be dropped in causes, default,
+exogenous, may-cause and inertial declarations.
+\item Appending \(\text{unless }a\) to static
+\(\text{caused }F\text{ if }G\) requires Boolean derived \(a\)
+and means the two static laws
+\[
+ \text{caused }F\text{ if }G\land\neg a,\qquad\text{default }\neg a.
+\]
+For an action dynamic law this requires Boolean action \(a\),
+and both expanded laws are action dynamic.
+For fluent dynamic \(\text{caused }F\text{ if }G\text{ after }H\),
+it requires Boolean action \(a\) and means
+\[
+ \text{caused }F\text{ if }G\text{ after }H\land\neg a,\qquad
+ \text{default }\neg a,
+\]
+the second law action dynamic. A state abnormality and an event
+abnormality are thus different constant types.
+\end{enumerate}
+
+For instance inertia expands to
+\[
+ (i+1):c=v\Leftarrow
+             ((i+1):c=v)\land(i:c=v)\land(i:G).
+\]
+The repeated successor atom licenses its persistence as an explanation
+when the old value and condition hold. It is not a least-Horn-model rule.
+Exogeneity supports false Boolean action values as well as true ones.
+Non-Boolean actions have no distinguished no-action value unless the
+description designates it.
+
+\section{States, events and general paths}
+\label{sec:p16-cplus-transition}
+
+\begin{hbdefinition}{def:p16-cplus-system}{The labelled transition system}
+A state \(s\) assigns every fluent and has \(0:s\) as an explanatory
+model of \(D_0\). An event \(e\) assigns every action constant.
+A transition \(\langle s,e,s'\rangle\) exists when
+\(0:s\cup0:e\cup1:s'\) is an explanatory model of \(D_1\).
+Its event label is a full assignment, not just a set of true actions.
+A length-\(m\) path records \(s_0,e_0,s_1,\ldots,e_{m-1},s_m\);
+a length-zero path is a state.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p16-cplus-paths}{proved=annex:p16.cplus-paths}{General state and path correspondence}
+For every well-formed original C+ description, both endpoints of every
+transition are states. For every finite \(m\geq0\), explanatory models
+of \(D_m\) are exactly length-\(m\) paths, preserving all state/event
+values. Arbitrary formula heads are allowed; neither definiteness nor
+acyclicity is assumed.
+\end{hbtheorem}
+
+The proof partitions activated heads into coordinate blocks. It does
+not apply an atom-head completion result to compound heads.
+
+\begin{hbtheorem}{thm:p16-cplus-head-exception}{proved=annex:p16.cplus-head-exception}{The essential head restriction}
+Let derived Boolean \(p\) have static law
+\(\text{caused }p\text{ if }p\). Its only state has \(p=t\).
+Translating the invalid law \(\text{caused }\neg p\text{ after }p\)
+nevertheless gives explanatory history \(p_0=t,p_1=f\);
+its target is not a state. This is an exception to a relaxed grammar,
+not a legal C+ description.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p16-cplus-embedding}{proved=annex:p16.cplus-embedding}{Embedding causal theories}
+For a causal theory \(T\), declare all constants derived fluents and
+replace \(F\Leftarrow G\) by static \(\text{caused }F\text{ if }G\).
+States are exactly \(T\)'s explanatory models.
+With no further laws or actions, every ordered pair of states is a
+transition labelled by the empty event. This describes the embedding,
+not a physical dynamics inferred from a static theory.
+\end{hbtheorem}
+
+\section{Rigidity does not by itself license compression}
+\label{sec:p16-cplus-rigid}
+
+A fluent is rigid relative to \(D\) when every transition preserves its
+value. For rigid set \(R\), form \(D_m^R\) by erasing timestamps on
+its constants. Let \(I^R\) retain other coordinates and give each
+\(c\in R\) its initial value.
+
+The source illustrates rigidity in the monkey description by prohibiting
+every \(PushBox(l)\). No remaining direct or static law explains a new
+box location, so its inertia preserves its value on every transition.
+The graph then separates into three box-location parts, with no edge
+between different parts. This is a property of the modified description,
+not a general consequence of calling a physical object fixed.
+
+\begin{hbtheorem}{thm:p16-cplus-rigid}{proved=annex:p16.cplus-rigid}{Rigid-value compression with its hypotheses}
+Suppose all members of \(R\) are derived fluents, and every law whose
+head contains a member of \(R\) contains only members of \(R\)
+throughout head and conditions. Then \(I\mapsto I^R\) bijects the
+explanatory models of \(D_m\) and \(D_m^R\), for every finite \(m\).
+Neither hypothesis can simply be removed.
+\end{hbtheorem}
+
+With simple Boolean \(p\), \(\text{rigid }p,\text{default }p\)
+explain only \(p_0=p_1=t\) at horizon one, but compression also explains
+\(p=f\). For derived \(p,q\), laws
+\(\text{caused }p\text{ if }q,\text{exogenous }q\) have only state
+\(p=q=t\), making \(p\) rigid. With \(R=\{p\}\), compression nevertheless
+explains \(p=t,q_0=f,q_1=t\): a later cause explains the shared earlier
+value. The annex gives both countermodels.
+
+\section{The source's action descriptions}
+\label{sec:p16-cplus-cases}
+
+A description is definite when each head is a value atom or \(\bot\)
+and no atom heads infinitely many laws. Then its \(D_m\) is definite,
+so \cref{thm:p16-nct-completion} supplies an exact completion method.
+Finite explicitly represented domains admit bounded SAT encoding.
+No planning complexity or physical adequacy conclusion follows.
+
+\subsection{A basic action}
+Simple Boolean \(p\), Boolean action \(a\), and laws
+\(a\text{ causes }p,\text{exogenous }a,\text{inertial }p\)
+give \(p'=p\lor a\), including both initial and both event values.
+False \(a\) preserves \(p\) because inertia was declared.
+
+\subsection{The complete monkey-and-bananas law schemas}
+Figures 2--3 declare simple \(\operatorname{Loc}(x)\), for
+\(x\in\{Monkey,Box,Bananas\}\), with values \(L_1,L_2,L_3\), and simple
+Boolean \(HasBananas,OnBox\).
+Boolean actions are \(Walk(l),PushBox(l)\) for each location, and
+\(ClimbOn,ClimbOff,GraspBananas\).
+All actions are exogenous and all simple fluents inertial.
+The static schemas are
+\[
+\begin{split}
+ \text{caused }\operatorname{Loc}(Bananas)=l
+   &\text{ if }HasBananas\land\operatorname{Loc}(Monkey)=l,\\
+ \text{caused }\operatorname{Loc}(Monkey)=l
+   &\text{ if }OnBox\land\operatorname{Loc}(Box)=l.
+\end{split}
+\]
+\(Walk(l)\) causes the monkey to be at \(l\), and is nonexecutable if
+already there or if on the box.
+\(PushBox(l)\) causes both monkey and box to be at \(l\), and is
+nonexecutable if the monkey is already there, is on the box, or is
+not at the box.
+\(ClimbOn\) causes \(OnBox\), and is prohibited if already on it or
+not at it. \(ClimbOff\) causes \(\neg OnBox\), and is prohibited if
+not on it. \(GraspBananas\) causes \(HasBananas\), and is prohibited
+if already possessing them, not on the box, or not at the bananas.
+For every \(l\), prohibit \(Walk(l)\land PushBox(l)\),
+\(Walk(l)\land ClimbOn\), \(PushBox(l)\land ClimbOn\);
+also prohibit \(ClimbOff\land GraspBananas\).
+This is not a ban on every concurrent action combination.
+
+From monkey and box at \(L_1\), bananas at \(L_3\), both Booleans false,
+the successive events \(PushBox(L_3),ClimbOn,GraspBananas\), with all
+other actions false each time, give a three-step path.
+Carrying the bananas uses the static ramification.
+
+Figure 4 extends the signature to a fixed set \(M\) of monkey names:
+\(\alpha,\beta\) range over \(M\), location constants are indexed by
+\(M\cup\{Bananas,Box\}\), and each monkey has its own Boolean
+\(HasBananas(\alpha),OnBox(\alpha)\) and indexed action constants.
+Its David and Goliath exceptions concern designated members of that set.
+The multi-monkey description uses derived Boolean
+\(Ab_1(\alpha,\beta)\) on the static occupancy constraint
+\(\text{constraint }\neg(OnBox(\alpha)\land OnBox(\beta))
+\text{ unless }Ab_1(\alpha,\beta)\), for \(\alpha\ne\beta\).
+Static causes make \(Ab_1(David,\alpha)\) and \(Ab_1(\alpha,David)\)
+true for its exception.
+Boolean action \(Ab_2(\alpha)\) qualifies both effects of
+\(PushBox(\alpha,l)\). Action dynamic laws cause it when
+\(OnBox(Goliath)\) or \(ClimbOn(Goliath)\).
+Negative defaults come from unless; abnormalities are not declared
+exogenous. Defeating push effects is different from prohibiting push.
+These are the displayed abnormality mechanisms, not a claim to have
+enumerated every multi-monkey transition.
+
+\subsection{Conditional shooting}
+Figure 5 has simple Boolean \(Loaded,Alive(Turkey_1),Alive(Turkey_2)\),
+simple \(Target\in\{Turkey_1,Turkey_2,None\}\), and Boolean actions
+\(Load,Aim(Turkey_1),Aim(Turkey_2),Shoot\).
+Actions are exogenous and fluents inertial.
+Load causes \(Loaded\) and \(Target=None\); \(Aim(x)\) causes \(Target=x\).
+Shoot causes \(\neg Alive(x)\) if \(Target=x\), and causes \(\neg Loaded\).
+Prohibit shooting unloaded and each \(Aim(x)\land Shoot\).
+The target condition is tested before shooting.
+With target \(None\), shooting unloads but kills neither turkey.
+
+\subsection{Nondeterministic travel}
+Figure 6 has simple locations of Jack and car in \(\{Home,Work\}\)
+and exogenous Boolean \(Go(Home),Go(Work)\); both locations are inertial.
+\(Go(l)\) causes \(\operatorname{Loc}(Jack)=l\) and may cause
+\(\operatorname{Loc}(Car)=l\) if
+\(\operatorname{Loc}(Car)=\operatorname{Loc}(Jack)\).
+It is prohibited if Jack is already at \(l\).
+Optional explanation of the car's new value is not a probability law.
+
+\subsection{Concurrent lifting and spontaneous tendency}
+Figure 7 has simple \(Level(LeftEnd),Level(RightEnd)\in\{Low,High\}\)
+and Boolean \(OnTable\), all inertial, and exogenous Boolean \(Lift(x)\).
+A lift causes its end high and is prohibited if already high.
+The static law causes \(\neg OnTable\) when levels differ.
+Starting low at both ends and on the table, one lift takes the object
+off; two simultaneous lifts leave it on.
+
+Figure 8 has simple Boolean \(Right\), not declared inertial,
+and exogenous Boolean \(Hold\).
+Hold causes \(Right\) if \(Right\), and \(\neg Right\) if \(\neg Right\).
+Defaults \(Right\text{ after }\neg Right\) and
+\(\neg Right\text{ after }Right\) supply a tendency to flip.
+Persistence when held is an action effect, not ordinary inertia.
+
+\begin{hbtheorem}{thm:p16-cplus-outcomes}{proved=annex:p16.cplus-outcomes}{Selected exact outcomes}
+The basic action has its four \(p'=p\lor a\) transitions.
+The stated three-step monkey history is a path.
+From a loaded state targeting \(Turkey_1\), both turkeys alive, a
+shooting-only event unloads and leaves only \(Turkey_2\) alive.
+From Jack and car at Home, the Go(Work)-only event has exactly two
+successors: Jack at Work and car at Home or Work.
+The one-lift and two-lift events have the stated unique successors.
+The pendulum preserves Right exactly when held, otherwise flips.
+\end{hbtheorem}
+
+\subsection{Definitions and non-Boolean event attributes}
+Section 5.5 adds derived Boolean \(NextToBox\) with
+\[
+ \text{caused }NextToBox\text{ if }
+    \operatorname{Loc}(Monkey)=\operatorname{Loc}(Box),\qquad
+ \text{default }\neg NextToBox.
+\]
+It can replace the equality in conditions. A simple declaration would
+add initial self-support and could make it incorrectly true initially.
+
+Figure 9 declares simple inertial Boolean \(HasPublications,
+HasJournalPublications,HasLongPublications\).
+Its exogenous action constants are Boolean \(Publish\),
+\(Kind\in\{Conference,Journal,None\}\) and
+\(Length\in\{1,\ldots,100,None\}\).
+The laws are
+\[
+\begin{gathered}
+ Publish\text{ causes }HasPublications,\\
+ \text{always }((Kind=None)\equiv\neg Publish),\\
+ Publish\text{ causes }HasJournalPublications\text{ if }Kind=Journal,\\
+ \text{always }((Length=None)\equiv\neg Publish),\\
+ Publish\text{ causes }HasLongPublications\text{ if }Length=l
+                                      \quad(31\leq l\leq100).
+\end{gathered}
+\]
+The always-laws constrain event attributes, not static fluent values.
+The source first contrasts this with changing the action vocabulary from
+\(Publish\) to \(Publish(k)\), and then to \(Publish(k,l)\): adding a
+kind and a length argument requires rewriting the old effect schemas.
+The attribute representation instead retains the action constant and
+adds event coordinates and their constraints. This is the stated
+representation tradeoff, not an assertion that every parameterized
+action notation is inferior.
+
+\begin{hbtheorem}{thm:p16-cplus-definitions}{proved=annex:p16.cplus-definitions}{Definitions and attributes}
+For fresh derived Boolean \(d\) and old-signature fluent formula \(F\),
+adding \(\text{caused }d\text{ if }F,\text{default }\neg d\)
+uniquely extends each state and history by \(d\equiv F\).
+Replacing occurrences of \(F\) in old law conditions by \(d\) preserves
+the correspondence, keeping old heads unchanged.
+The simple-fluent variant fails already at horizon zero.
+The publication description has one nonpublishing event, both attributes
+None, and \(200\) publishing events.
+From an all-false state, Journal with length 31 makes all three fluents
+true; Conference with length 20 makes only HasPublications true.
+Each specified event has a unique successor.
+\end{hbtheorem}
+
+\section{Scope of the causal representation}
+\label{sec:p16-cplus-limits}
+
+The correspondence is internal to the given laws and finite horizon.
+Constraints can prohibit events; incompatible caused values can imply
+additional prohibitions. Defeated effects need not prohibit actions.
+May-cause laws permit multiple explained successors without probabilities.
+Derived definitions, inertia and default tendencies provide different
+kinds of support.
+
+An event label is not automatically a structural-model intervention,
+nor does an explanatory model identify a mechanism from observations.
+Rules stipulate what counts as an explanation, without establishing the
+physical reliability of these idealizations. Stable-model,
+situation-calculus and temporal-action encodings require separate
+translation hypotheses. The captured source's later CCalc discussion
+and subsequent language extensions are not used to assert a broader
+algorithm or correspondence.

@@ -1,0 +1,682 @@
+% Completed source-scope proofs in this authoring checkpoint.
+
+\begin{annexitem}{annex:p17.htn-finite-derivation}{thm:p17-htn-finite-derivation}{Finite decomposition depth and the solution operator}
+\begin{proof}
+Induct on \(r\). At zero, the definition is exactly primitive completion.
+If the statement holds at \(r\), membership at \(r+1\) either already holds
+at \(r\), or holds at \(r\) for one immediate reduction \(d'\). The former
+has a derivation of length at most \(r\); prefixing the latter derivation by
+the selected reduction gives length at most \(r+1\).
+
+Conversely, a derivation of length at most \(r+1\) either has length at most
+\(r\), or has an initial reduction followed by at most \(r\) further steps.
+The induction hypothesis and the defining union give membership in either
+case. Taking the union over finite \(r\) proves the final assertion. The
+definition adds no limit-stage execution for an infinite derivation.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p17.htn-example}{thm:p17-htn-example}{A protected execution and failures of two different kinds}
+\begin{proof}
+Rename the method parameter to a fresh variable \(v\). Unifying its head
+\(\mathit{job}(v)\) with the initial task \(\mathit{job}(w)\) gives
+\(\theta=\{v\mapsto w\}\). All method literals and actions receive this
+same substitution, producing the ground abbreviations in the example.
+Decomposing \(j\) replaces it by the fresh labels \(a,b\) and conjoins
+\(a\prec b\), \((a,g,b)\) and \((b,c)\). Label \(z\) remains present.
+For the order \(a,b,z\), the trace is
+\[
+ \{g\},\quad\{g,r\},\quad\{g,r,c\},\quad\{r,c\}.
+\]
+The setup and run preconditions hold, and disturbance is always executable.
+The protected interval has indices \(1\leq e<2\), so only the state
+\(\{g,r\}\) is checked and it satisfies \(g\). The after-condition at
+\(b\) holds because \(c\in\{g,r,c\}\). This is a primitive completion
+after one permitted decomposition, hence a solution.
+
+For order \(a,z,b\), the executable trace is
+\[
+ \{g\},\quad\{g,r\},\quad\{r\},\quad\{r,c\}.
+\]
+Run still has its required readiness atom, and the final completion atom is
+true. But the protected interval now has \(1\leq e<3\); its state at
+\(e=2\) lacks \(g\). The primitive completion condition fails.
+
+For the job-only network, its sole method generates exactly the two primitive
+occurrences setup and run, ordered in that order. There is no further
+decomposition and no primitive-task insertion rule. Shortcut is executable
+from \(I\) and gives \(\{g,c\}\), but its one-action sequence is not a
+completion of the method-derived network. The finite-derivation characterization
+therefore excludes it from the solution set.
+
+If the only method for loop replaces loop by one loop occurrence, induction
+on the number of reductions shows that a nonprimitive occurrence remains
+after every finite derivation. Its completion set is empty, and so is the
+solution set. With a second method to a dummy primitive, one decomposition
+gives an executable completion. Choosing the recursive method repeatedly
+still produces an infinite branch, proving the stated search limitation.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p17.htn-semidecision}{thm:p17-htn-semidecision}{An effective enumeration of finite decompositions}
+\begin{proof}
+There are finitely many constants and no function symbols. Each finite set
+of variables therefore has finitely many ground assignments. Enumerate the
+groundings of the initial network and, at each reduction, the ground instances
+of a matching method. Use a canonical sequence of fresh labels, so infinite
+choices of names do not introduce infinite branching. The finite method set
+and the finite number of task occurrences make each reduction node finitely
+branching.
+
+At every depth enumerate all such reductions. For each primitive network,
+enumerate its finitely many total orderings and simulate the actions. Every
+state and constraint check is effective; false preconditions or a false Boolean
+constraint reject that candidate. Halt with its action sequence when a
+completion is found. An empty primitive network is checked directly.
+
+Every reported sequence has the required finite derivation and primitive
+completion. Conversely, any solution has a finite derivation by
+Theorem~\ref{thm:p17-htn-finite-derivation}. Ground values used in its final
+completion give compatible choices for every variable along that derivation.
+The enumeration reaches those choices, that derivation and that ordering at
+a finite stage. Thus every solvable problem is eventually accepted. Without
+a solution there may be arbitrarily deep compound decompositions, so this
+procedure provides no general negative stopping rule.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p17.htn-cfl-intersection}{thm:p17-htn-cfl-intersection}{Alternating checks of finite accepting computation histories}
+\begin{proof}
+Acceptance of an input by a deterministic Turing machine is undecidable:
+a machine can simulate any given computation and enter an accepting state
+exactly when that computation halts, reducing the halting problem
+(Theorem~\ref{thm:halting-undecidable}). We effectively construct two
+context-free languages whose intersection records the accepting histories
+of a given machine on a given input.
+
+Encode a configuration as a finite tape word with boundary markers and
+exactly one marked symbol \((q,a)\), recording the control state and the
+scanned tape symbol. An accepting finite computation uses only finitely
+many cells. Its configurations can therefore all be padded with blanks to
+one common width, with no transition crossing the boundary. Valid padded
+configurations form a regular language. Initial configurations consist of
+the specified input and a blank tail, and final accepting configurations
+have their marker in an accepting control state; these conditions are
+regular as well.
+
+The relation between two consecutive configurations of equal width is
+recognizable by a finite automaton reading their aligned pairs of symbols.
+For example, a right move \((q,a)\mapsto(q',b,R)\) changes the aligned
+pairs only in the adjacent window
+\[
+ ((q,a),b),\quad(c,(q',c)),
+\]
+where \(c\) is the old symbol of the next cell; everywhere else the pairs
+are diagonal \((d,d)\). A left move uses the reversed-position window,
+and a stay move changes only the marked cell. Take the finite union of
+these patterns over the transition table and intersect with the regular
+one-head and boundary conditions. This gives an effective finite automaton
+for one legal step. Reversing its accepted pair words is also regular:
+reverse its edges and exchange initial and final roles in a finite
+nondeterministic automaton.
+
+Consider words of the form
+\[
+ C_0\#C_1^R\#C_2\#C_3^R\#\cdots\#C_t^{\epsilon_t},
+\]
+where the separator is fresh, even configurations are written forwards,
+odd configurations backwards, and \(\epsilon_t\) denotes that parity
+choice. A finite-state condition checks the syntactic configuration form,
+that the first is an initial configuration for the given input, and that
+the final one is accepting. It does not check transitions or common width.
+
+A pushdown automaton for the first language checks pairs
+\((C_0,C_1),(C_2,C_3),\ldots\). Push the first configuration of a pair,
+then pop it while reading the reversed next configuration. This aligns
+their symbols in reverse order, so the reversed finite transition checker
+verifies a legal step. Emptying the stack exactly at the configuration
+boundary also verifies equal widths. Reset at the next pair. If there is
+an unpaired final configuration, a nondeterministic branch can read it
+without a pair check, but accepts only if it is the last configuration.
+
+A second pushdown automaton skips \(C_0\) and checks pairs
+\((C_1,C_2),(C_3,C_4),\ldots\). Pushing the written reversal \(C_1^R\)
+and popping while reading \(C_2\) aligns the configurations in forward
+order, so it uses the forward transition checker. It similarly handles
+a possible unpaired final configuration. Both machines run the regular
+syntax/initial/final check in their finite control. Their intersection
+therefore checks every adjacent transition, forces all adjacent widths
+to agree, and admits exactly finite accepting histories. A history of
+one accepting initial configuration is permitted by both machines.
+
+For completeness of the grammar construction, convert each pushdown
+machine effectively to empty-stack acceptance and normalize its stack
+replacement operations to replace one symbol by zero, one or two symbols.
+Introduce grammar variables \([p,A,q]\), denoting strings that take the
+machine from control state \(p\) with top symbol \(A\) to state \(q\)
+just after removing \(A\), leaving the lower stack untouched. A transition
+reading \(a\), with \(a\) possibly empty, which pops \(A\) from state
+\(p\) into \(q\), gives \([p,A,q]\to a\). Replacing \(A\) by
+\(B\) and entering state \(r\) gives
+\([p,A,q]\to a[r,B,q]\). Replacing it by \(BC\), with \(B\) on top,
+gives, for every intermediate state \(s\),
+\[
+ [p,A,q]\ \to\ a[r,B,s][s,C,q].
+\]
+The start variable selects the initial control/bottom-stack symbol and
+an accepting final control state. Induction on these productions shows
+that every generated word has the stated stack computation. Conversely,
+decompose an accepting stack computation at the moments its newly pushed
+symbols are removed; induction on its finite computation gives a grammar
+derivation. Thus the two effective grammars generate exactly the two
+pushdown languages just described.
+
+Their intersection is nonempty exactly when the machine accepts its input,
+so intersection nonemptiness is undecidable. All history words are nonempty.
+Encode each alphabet symbol by a distinct binary block of one fixed length.
+The resulting word map is injective, so equality and intersection
+nonemptiness are preserved. Replace terminals in productions by their
+blocks, compute nullable nonterminals and omit their occurrences in all
+possible ways, retaining the nonempty language; an omitted occurrence
+can be re-expanded by its empty derivation, proving preservation.
+Eliminate unit productions by their finite transitive closure, introduce
+one new nonterminal for each terminal occurring in a longer right-hand
+side, and split longer right-hand sides into binary chains. These
+effective transformations preserve the nonempty generated language and
+leave precisely rules \(A\to BC\) and \(A\to a\). They give the
+claimed binary, nonempty, normal-form restriction.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p17.htn-undecidable}{thm:p17-htn-undecidable}{Two grammars and an alternating production-consumption protocol}
+\begin{proof}
+The source reduction uses the undecidability of nonemptiness of the
+intersection of two context-free languages
+\cite[Appendix, Theorem~1]{ErolHendlerNau1996HTNComplexity}; this is the
+specific formal-language premise from \cite{HopcroftUllman1979HTNPremise},
+proved here in Annex~\ref{annex:p17.htn-cfl-intersection}.
+Use two grammars over a common binary alphabet, with disjoint nonterminal
+sets, in Chomsky normal form, and with no empty word. These restrictions
+preserve the problem: a fixed-length injective binary encoding of a finite
+alphabet preserves equality of generated words; ordinary normal-form conversion
+gives rules \(A\to BC\) or \(A\to a\). Empty-word membership is decidable.
+If both grammars contain the empty word, return a trivial solvable instance;
+otherwise remove empty words, which cannot contribute to their intersection.
+
+For each terminal \(a\), introduce a state atom \(p_a\) and two primitive
+actions. Action \(a_1\) has precondition \(\mathit{turn}\), adds \(p_a\)
+and deletes turn. Action \(a_2\) has preconditions \(p_a,\neg\mathit{turn}\),
+deletes \(p_a\) and adds turn. Initially only turn is true. For every
+nonterminal introduce a compound symbol. A grammar rule \(A\to BC\)
+gives an ordered two-child method for the corresponding compounds; a rule
+\(A\to a\) gives the one-child method to \(a_1\) in grammar 1 and to
+\(a_2\) in grammar 2.
+
+The initial network has exactly two unordered compound occurrences for the
+start symbols, labelled \(u,v\), and the constraint
+\[
+ (\operatorname{last}[u,v],\mathit{turn}).
+\]
+This tests turn after the final primitive action. It imposes no order between
+the two roots. All written method bodies have at most two tasks and are
+totally ordered; the initial network also has at most two tasks.
+
+Inductively, whenever turn is true, every \(p_a\) is false. The next
+nondummy action must be some \(a_1\), leaving just \(p_a\) true and turn
+false. The only executable next action is then \(a_2\), which consumes
+that atom and restores the invariant. Hence every executable sequence
+alternates matching terminal actions, starting with grammar 1. The final
+constraint forces it to finish with grammar 2.
+
+A finite decomposition of each root is precisely a derivation in its grammar.
+The ordered methods preserve the left-to-right order of its terminal yield,
+while the roots' primitive descendants may interleave. A completed plan
+therefore projects to the same terminal word in both grammars. Conversely,
+given a common nonempty word and its two parse trees, decompose the roots
+according to those trees and interleave the two terminal yields in matching
+pairs. The resulting execution meets all local ordering constraints and the
+final turn condition.
+
+Thus the HTN instance has a solution exactly when the grammar intersection
+is nonempty. The construction has polynomial size and meets the stated
+two-task restrictions, proving undecidability. The semidecision theorem
+provides the positive enumeration, so plan existence is strictly semidecidable.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p17.htn-fixed-undecidable}{thm:p17-htn-fixed-undecidable}{Encoding grammar rules as initial-state data in a fixed domain}
+\begin{proof}
+Use the fixed terminal alphabet \(\{a,b\}\), atoms \(p_a,p_b,\mathit{turn}\),
+the four production/consumption actions of
+Annex~\ref{annex:p17.htn-undecidable}, and one effect-free dummy action.
+Reserve distinct constants \(A_1,B_1,A_2,B_2,D\) and one unary compound
+symbol \(t\). Four methods map \(t(x)\) to the appropriate terminal action
+under the equality constraint \(x=A_i\) or \(x=B_i\). A fifth maps
+\(t(x)\) to the dummy action under \(x=D\).
+
+A static ternary predicate \(R\) records grammar rules. The sixth method
+decomposes \(t(x)\) into ordered tasks \(t(y),t(z)\), requiring
+\(R(x,y,z)\) after the first child. No operator changes \(R\), so this
+condition is equivalent to requiring the corresponding initial fact. The
+domain consists of these five operators and six methods, independently of
+the grammars.
+
+For the two normalized grammars, introduce distinct constants for all their
+nonterminals, disjoint from the reserved constants. A rule \(X\to YZ\)
+becomes the fact \(R(X,Y,Z)\). A terminal rule \(X\to a\) in grammar
+\(i\) becomes \(R(X,A_i,D)\), and likewise for \(b\). Add turn to the
+initial state, and start with the two unordered tasks \(t(S_1),t(S_2)\),
+again requiring turn after their last primitive descendant.
+
+The static facts permit exactly the grammar productions. Equality constraints
+prevent nonterminal constants from being confused with terminal or dummy
+constants. Each terminal yield carries the grammar's correct subscript;
+the inserted dummy actions change neither the state nor the grammar word.
+After erasing these dummies, the alternating argument of the preceding annex
+again forces the two yielded words to agree. Conversely, two parses of a
+common word yield a valid interleaving, with their dummy occurrences inserted
+in the local orders required by the parses.
+
+Only constants, initial facts and the initial task parameters depend on the
+input grammars. The construction is effective and polynomial. Thus this one
+fixed domain has undecidable plan existence; semidecidability still follows
+from the general enumeration.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p17.htn-levels}{thm:p17-htn-levels}{A finite search bound from a decreasing ground-task rank}
+\begin{proof}
+Ground the finite function-free description. Every edge from a method head
+to a child strictly decreases an integer between zero and \(k\). Hence no
+root-to-leaf decomposition path has more than \(k\) edges. Let \(r\) be
+the initial number of task occurrences and \(B\geq1\) the maximum number
+of children in a method. Every decomposition forest then has at most
+\[
+ r(1+B+\cdots+B^k)
+\]
+nodes. There are finitely many choices of ground methods at each node, so
+there are finitely many such labelled forests up to the canonical renaming
+of occurrence labels. Their primitive leaves also admit only finitely many
+orders. Execute and check every candidate. Acceptance is sound and complete
+by the finite-derivation theorem, and exhaustive failure is now a decision.
+
+The finite directed graph of ground tasks, with an edge for every possible
+method-head/child occurrence, also makes the acyclicity promise checkable.
+A directed cycle contradicts any strictly decreasing level assignment.
+If the graph is acyclic, assign a task the length of a longest downward path.
+Primitive tasks have no outgoing method edges and receive zero. These levels
+give an appropriate finite bound. No assertion about complexity follows
+merely from this decidability argument.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p17.htn-summary}{thm:p17-htn-summary}{Exact trace summaries for arbitrary Boolean endpoint and interval constraints}
+\begin{proof}
+Suppose nonempty traces \(\rho,\eta\) concatenate, so the final state of
+\(\rho\) equals the initial state of \(\eta\). The first state and first
+post-action state of the concatenation come from \(\rho\); its last
+pre-action state and final state come from \(\eta\). Its length-one flag
+is false. Directly partitioning the trace states gives
+\[
+ \begin{aligned}
+ A(\rho\eta)&=A(\rho)\cap A(\eta),&
+ B(\rho\eta)&=B(\rho)\cap A(\eta),\\
+ C(\rho\eta)&=A(\rho)\cap C(\eta),&
+ D(\rho\eta)&=B(\rho)\cap C(\eta).
+ \end{aligned}
+\]
+The shared boundary state can occur in both intersections without changing
+them. These identities also apply when one or both traces have length one;
+the indicated inclusive and exclusive state ranges give the same formulas.
+One block needs no concatenation. Repetition gives the summary of any
+nonempty list of compatible blocks.
+
+For exact constraint evaluation, name a block's first and last primitive
+positions. The total block order determines the order of anchors from
+different blocks. Within a block, the first precedes the last unless its
+length-one flag is true, when they coincide. Thus first/last expressions and
+ordering tests are determined without knowing the full numerical lengths.
+The state before or after either anchor is one of the four stored boundary
+states.
+
+Consider an interval from an anchor \(e\) to an anchor \(e'\), with the
+state-index convention \(\pi(e)\leq j<\pi(e')\). If the endpoints coincide
+or occur in reverse order, its universal literal set is all literals. If
+they lie in one block in increasing order, they are its first and last
+anchors and the required literal set is \(D\) of that block. If they lie
+in different blocks in increasing order, intersect the following sets:
+\begin{enumerate}
+\item from the left block, \(B\) if \(e\) is its first anchor, or the
+      literals true in its final state if \(e\) is its last anchor;
+\item \(A\) of every intervening block;
+\item from the right block, its initial-state literals if \(e'\) is its
+      first anchor, or \(C\) if \(e'\) is its last anchor.
+\end{enumerate}
+These sets cover exactly the states of the half-open interval, allowing
+duplicate boundary states. A protection atom holds exactly when its literal
+belongs to this intersection. Its negation is evaluated by negating that
+membership test, not by replacing the literal with its opposite. All Boolean
+combinations are consequently decidable exactly.
+
+An enclosing reference to a compound child is interpreted at its first or
+last descendant according to Definition~\ref{def:p17-htn-method}. Repeated
+replacement preserves those same extremal anchors. Hence the preceding
+evaluation applies both to original first/last expressions and to those
+introduced by decomposition; no enclosing interval is discarded.
+
+There are \(2^b\) states, giving at most \(2^{4b}\) boundary-state tuples.
+The ground literal set has \(2b\) elements, and each of the four stored
+literal sets has at most \(2^{2b}\) possible values. Including the flag
+gives the upper bound \(2^{4b}2^{8b}2=2^{12b+1}\). Many such candidates
+are unrealizable, but the bound and the composition procedure do not assume
+that every candidate is realized.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p17.htn-total-order}{thm:p17-htn-total-order}{Finite tabulation with complete boundary and interval information}
+\begin{proof}
+Ground the finite description. Let \(g\) be the number of ground task
+symbols and \(S\leq2^{12b+1}\) the number of candidate trace summaries.
+Project states onto the relevant ground atoms. Every precondition, effect
+and constraint reads only those coordinates, so projection preserves action
+executability, state updates and constraint truth; discarded coordinates
+cannot change existence of a solution.
+Maintain a table of pairs \((t,\tau)\), initially containing just the
+summaries obtained by executing each primitive task from every state in
+which it is executable. An initial primitive trace has one action, so its
+four boundary states and four literal sets are obtained directly.
+
+For each ground method with head \(t\) and ordered children
+\(t_1,\ldots,t_k\), enumerate choices of table entries for the children.
+Require compatible consecutive boundary states. Evaluate the method's full
+constraint formula by Lemma~\ref{thm:p17-htn-summary}, including its goal
+postcondition where applicable. When the formula holds, compose the child
+summaries and insert the resulting \((t,\tau)\). Repeat until no new
+entry is added. Then treat each ground instance of the initial ordered
+network similarly, additionally requiring initial state \(I\). Accept if
+any such combination satisfies the initial constraint. Check an empty
+initial network directly.
+
+Soundness follows by induction on insertion stages. A primitive entry has
+its actual one-action trace. For a newly added entry, choose the witnessing
+child traces supplied by the induction hypothesis. Their concatenation is
+executable, satisfies the method constraint, and has the computed summary.
+The decomposition replacements identify precisely the same endpoints for
+enclosing constraints. Therefore the entry witnesses an actual permitted
+decomposition with that trace summary.
+
+For completeness, take a finite solution derivation and induct on its
+decomposition-tree height. Total ordering of each network forces the
+primitive descendants of a child to be a contiguous block before the next
+child; descendants of different children cannot interleave. The leaf entries
+are initially present. By induction the child summaries are eventually
+present, so their ground method instance is considered and its true
+constraint is recognized exactly. Its parent entry is inserted. Applying
+the same argument to the initial network shows that every solution is
+accepted. Arbitrary Boolean and negated interval constraints are covered
+by the summary lemma.
+
+There are at most \(gS\) table entries, hence at most \(gS\) productive
+rounds. The number of ground methods is at most exponential in a polynomial
+in \(L\). Each method has at most \(L\) children, so enumerating summary
+tuples contributes at most \(S^L\). Compatibility and formula evaluation
+take polynomial time in \(b\) and the grounded description length. The
+product of these finite factors is bounded by
+\(2^{\operatorname{poly}(L)+O(b\operatorname{poly}(L))}\).
+When \(b\) is polynomial this is exponential time; when
+\(b\leq2^{\operatorname{poly}(L)}\) it is double exponential time.
+
+The hardness follows from the regular, totally ordered instances constructed
+in Annex~\ref{annex:p17.htn-regular}. They are a subclass of the present
+instances and already give EXPSPACE-hardness in the lifted case and
+PSPACE-hardness in the propositional case. No equality between these lower
+and upper bounds is asserted.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p17.htn-regular}{thm:p17-htn-regular}{One pending task, bounded-space reachability and machine simulations}
+\begin{proof}
+\emph{Upper bounds.} Grounding leaves every regular network with at most
+one nonprimitive task, ordered relative to its primitive tasks. Guess a
+permitted total ordering of those primitive tasks and their ground bindings.
+If there is a compound child, its descendants form one block between a
+primitive prefix and a primitive suffix: none of the enclosing primitives
+can interleave with that block.
+
+Use obligations \((t,\tau)\), with a ground nonprimitive task and a candidate
+summary from Definition~\ref{def:p17-htn-trace-summary}. An obligation can
+be discharged by a ground method with only primitive children exactly when
+their execution has summary \(\tau\) and satisfies the method constraint.
+Otherwise a method has one nonprimitive child \(t'\). Guess its summary
+\(\tau'\), execute the primitive prefix from the input state of \(\tau\),
+require that its resulting state match the input of \(\tau'\), and execute
+the primitive suffix from the output of \(\tau'\). Compose the summaries,
+check equality with \(\tau\), and evaluate every local constraint exactly
+by Lemma~\ref{thm:p17-htn-summary}. A successful check gives a directed edge
+\((t,\tau)\to(t',\tau')\). The initial regular network is handled by the
+same prefix/child/suffix check from \(I\), or directly if it is primitive.
+
+Every accepted finite path specifies methods ending in a primitive method;
+substituting their witnessed traces upwards supplies the required plan.
+Conversely, every finite regular derivation has one spine of compound tasks,
+so its actual summaries trace such an accepting path. There are at most
+\(gS\) obligations. If an accepting path exists, one without a repeated
+obligation exists: remove any cycle, retaining the same task and exact
+summary at the joining point. This preserves every enclosing constraint.
+
+An obligation, a local method choice and the necessary states/literal sets
+use \(O(b+\operatorname{poly}(L))\) space. A path counter bounding search
+by \(gS\) uses \(O(\log g+\log S)\) space of the same order. Method
+groundings and primitive orderings can be generated as needed. Thus the
+problem is in nondeterministic exponential space, or nondeterministic
+polynomial space in the propositional case. Savitch's theorem
+(Theorem~\ref{thm:p04-savitch}) turns these into EXPSPACE and PSPACE:
+squaring an exponential or polynomial space bound stays in the respective
+class. With a fixed domain all arities occurring in its schemas are fixed,
+so their ground atoms and task instances are polynomially numerous. Any
+predicate used only by the initial network is static: after guessing that
+network's bindings, its tests can be evaluated from the explicitly given
+initial facts and removed. The same polynomial-space procedure therefore
+proves the fixed-domain PSPACE upper bound without enumerating all possible
+simultaneous groundings of the initial network.
+
+\emph{A fixed-domain PSPACE lower bound.} Fix a deterministic Turing machine
+deciding a PSPACE-complete language in polynomial space. Its finite states,
+tape alphabet and transition table are fixed. For an input \(x\), use one
+constant per cell of its polynomial space bound, with a static successor
+relation describing neighboring cells. Unary predicates indicate the head
+position and each tape symbol; finitely many nullary predicates indicate
+the machine control state. The initial state explicitly describes the
+input tape, blanks, initial head and initial control state.
+Such a fixed complete-language machine can decide bounded-space universal
+acceptance: given a machine description, an input and a unary space bound,
+simulate within that bound and stop after the finite configuration bound
+if no acceptance occurs. The configuration counter uses polynomial space.
+Every polynomial-space language reduces to this problem by inserting its
+fixed deciding machine and its polynomial unary bound, proving completeness.
+
+For every machine transition, use a fixed operator schema with variables
+for the current and neighboring cells. Its preconditions check the current
+control, head, symbol and relevant successor relation. Its effects replace
+the scanned symbol, move the head and update the control. A left move uses
+the successor relation in the reverse direction; a stay move uses one cell.
+The invariant that there is one head, one control state and one symbol per
+cell follows immediately from the updates and holds initially. Executable
+transition sequences are therefore exactly prefixes of the machine's
+computation. The goal is its accepting control state.
+
+The operator set is fixed independently of \(x\); only constants and
+initial facts vary, and their size is polynomial in \(\#x\). Apply the
+encoding of Theorem~\ref{thm:p17-htn-strips-embedding}. Its methods remain
+fixed, regular and totally ordered, use one compound symbol and at most
+two tasks per body, and preserve acceptance. Hence a fixed regular domain
+is PSPACE-hard. Grounding this bounded-arity family takes polynomial time;
+renaming each ground action as a nullary primitive gives propositional
+instances with the same restrictions, proving the propositional lower bound.
+
+\emph{An EXPSPACE lower bound with varying arities.} Let a fixed deterministic
+machine decide any chosen language in space \(2^{p(\#x)}\), and choose
+\(m\geq1\), polynomial in \(\#x\), so that \(2^m\) cells suffice.
+Use the two constants 0 and 1. A cell is an \(m\)-tuple of bits, represented
+as arguments, not as a function term. Predicates
+\(\mathit{Head}(\vec z)\) and \(\mathit{Tape}_a(\vec z)\), for each
+tape symbol \(a\), have arity \(m\); control-state predicates are nullary.
+
+The initial description must not explicitly list exponentially many blank
+cells. Instead start in an initialization phase with a counter predicate
+\(\mathit{Init}(0,\ldots,0)\). For each possible carry position include
+an operator whose precondition has the form
+\(\mathit{Init}(\vec y,0,1,\ldots,1)\). It writes a blank at that address,
+removes that counter fact and adds
+\(\mathit{Init}(\vec y,1,0,\ldots,0)\). A final operator at address
+\((1,\ldots,1)\) writes its blank and enters the input-loading phase.
+These \(m+1\) cases enumerate every bit address exactly once, in binary
+order, and no simulation operator is enabled during initialization.
+
+Use one fixed-order loading step per input symbol to replace the blank at
+its explicitly given bit address by that symbol. Nullary stage predicates
+force these steps in sequence. The last enters the machine's initial control
+state and places its head at the first address. Thus all cells have exactly
+one symbol, the required initial tape has been produced, and the compact
+initialization cannot be bypassed.
+
+For a right-moving machine transition, use one operator per carry position
+to change a head address \((\vec y,0,1,\ldots,1)\) to
+\((\vec y,1,0,\ldots,0)\), checking the scanned symbol and control and
+updating them as above. Left moves use the analogous borrow cases; stay
+moves leave the address unchanged. There are no moves beyond the allocated
+endpoints. All simulation actions require the appropriate machine control
+predicate. Consequently an accepting control state is reachable exactly
+when the bounded machine accepts \(x\).
+
+The description uses polynomially many schemas, each with polynomially
+many argument positions. The exponentially long initialization is a possible
+plan prefix, not part of the encoded input. The operators are function-free
+and use positive preconditions; their add/delete effects maintain the stated
+machine invariant. Applying the regular HTN encoding again gives one compound
+symbol, totally ordered binary method bodies and a one-task initial network.
+This is a polynomial reduction for every language in EXPSPACE, proving
+EXPSPACE-hardness under all the stated extra restrictions. Combined with
+the upper bounds, it completes the three assertions.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p17.htn-primitive}{thm:p17-htn-primitive}{Primitive planning: verification and two independent satisfiability reductions}
+\begin{proof}
+For membership in NP, guess a constant for every variable and a permutation
+of the finitely many labelled tasks. Both descriptions have polynomial size.
+Simulate the resulting finite action sequence, rejecting an unmet precondition.
+Its explicitly stored state contains at most the initial atoms and the atoms
+added by these polynomially many operator instances, so this simulation does
+not require materializing the exponentially large set of all possible atoms.
+Evaluate every equality, ordering, endpoint and interval atom by the stored
+trace; interval checks inspect at most the number of task occurrences.
+Evaluate the Boolean constraint formula. All these operations take polynomial
+time in the input and guessed certificate. With a fixed total order and no
+variables, no guess remains, proving the polynomial-time subcase.
+
+For NP-hardness of primitive propositional planning, start with a Boolean
+formula \(\beta(p_1,\ldots,p_r)\). Use an initially empty state and two
+precondition-free actions per atom: one adds \(p_i\), the other deletes it.
+Put every action once in the initial network with no ordering restrictions.
+Form the network constraint by replacing each \(p_i\) in \(\beta\) by
+the test that \(p_i\) holds after the final occurrence, expressed using
+\(\operatorname{last}\) of all labels. A final truth assignment satisfies
+the constraint exactly when it satisfies \(\beta\). Conversely, any
+satisfying assignment is obtained by ordering each pair with its desired
+final effect last; concatenating the pairs realizes all choices together.
+This is a polynomial reduction and uses no methods or variables.
+
+For NP-hardness with a totally ordered primitive network, use two constants
+\(\mathit{true},\mathit{false}\). For each Boolean variable \(p_i\), use
+a distinct unary predicate \(P_i\), one variable \(x_i\), and one
+precondition-free action adding \(P_i(x_i)\). Order these actions in a
+fixed sequence, starting from the empty state. Replace \(p_i\) in
+\(\beta\) by the after-final test \(P_i(\mathit{true})\). Since this
+is the only action affecting \(P_i\), that test holds exactly when
+\(x_i\) is bound to true. Groundings and Boolean assignments therefore
+correspond in both directions. The reduction is polynomial and preserves
+total ordering. Unrestricted primitive planning contains both subcases,
+so their hardness and the common NP upper bound prove all assertions.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p17.htn-strips-embedding}{thm:p17-htn-strips-embedding}{Appending one explicit bookkeeping action}
+\begin{proof}
+Retain the original constants, predicates, state and action schemas. Introduce
+a fresh effect-free primitive action done and one compound task \(t\).
+Give \(t\) one terminating method to done. For every original action schema
+\(a(\vec x)\), give \(t\) the method consisting of
+\(\operatorname{do}[a(\vec x)]\) followed by \(\operatorname{perform}[t]\).
+Start with one occurrence \(u:t\); for each goal literal \(\ell\), impose
+the after-condition \((u,\ell)\).
+
+Each finite primitive decomposition repeatedly chooses an original action,
+then eventually the terminating method. It therefore yields exactly a
+sequence \(\sigma\mathit{done}\), with one final done and no other new
+actions. The inherited goal condition is tested after this final action.
+Because done does not change the state, executable completions are exactly
+original executable sequences ending in a goal state, followed by done.
+Conversely, any original solution prescribes the successive action methods
+and then the terminating method. An empty original solution chooses the
+terminating method immediately.
+
+There is one method per original operator and one additional method; their
+size is polynomial in the original description. Every method is totally
+ordered, contains at most two tasks, and has at most one nonprimitive task,
+which is last. Hence the stated regularity and size restrictions hold.
+Erasing done gives the promised equality of observable solution sets.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p17.htn-expressivity}{thm:p17-htn-expressivity}{Decidability and regular-language obstructions}
+\begin{proof}
+For any finite function-free STRIPS-style instance, there are finitely many
+ground atoms, hence finitely many world states and ground actions. Enumerate
+the reachable states from the initial state, applying every executable action
+and stopping when no new state appears. A goal state is reachable exactly
+when a plan exists. This is a terminating decision procedure, irrespective
+of its potentially large resource requirements.
+
+If a computable translation preserved existence of a plan in both directions,
+applying this decision procedure after translation would decide general HTN
+plan existence. Theorem~\ref{thm:p17-htn-undecidable} excludes that possibility.
+The converse direction of existence preservation is necessary: a target
+solution not corresponding to any source solution would invalidate this
+decidability argument.
+
+For the language claim, make each world state a state of a deterministic
+finite automaton, include an additional rejecting dead state, and use ground
+actions as alphabet letters. Executable actions follow the planning transition;
+undefined actions go to the dead state. The initial automaton state is the
+initial world state, and its accepting states are precisely goal states.
+The automaton recognizes exactly the STRIPS solution sequences.
+
+Now take two precondition-free, effect-free primitive actions \(a,b\), one
+compound task \(t\), and the two totally ordered methods
+\(t\) to \(a,b\), and \(t\) to \(a,t,b\). Start with \(t\).
+Induction on the number of recursive methods shows that every primitive
+derivation yields \(a^m b^m\) for some \(m\geq1\), and choosing the
+recursive method \(m-1\) times followed by the base method yields every
+such word. Every resulting sequence is executable and all its ordering
+constraints hold. Each method has at most one compound child, ordered
+relative to every primitive child, so this problem is regular in the source's
+definition.
+
+This language is not regular. If a deterministic automaton with \(q\) states
+recognized it, two of the \(q+1\) states reached after
+\(a,a^2,\ldots,a^{q+1}\) would coincide, at exponents \(i<j\).
+Appending \(b^i\) would then either accept both words or reject both.
+But \(a^i b^i\) belongs to the language and \(a^j b^i\) does not,
+a contradiction.
+
+Renaming letters in a finite automaton, or erasing selected letters by turning
+their edges into epsilon edges, yields a finite nondeterministic automaton
+for the image language. Such an automaton still recognizes a regular
+language. Thus neither symbol renaming nor bookkeeping erasure can make a
+STRIPS solution language equal this HTN language. The embedding in the
+preceding annex establishes the other direction under its explicit observable
+action convention. These are statements about the designated finite,
+function-free representations, not every language someone might call planning.
+\end{proof}
+\end{annexitem}

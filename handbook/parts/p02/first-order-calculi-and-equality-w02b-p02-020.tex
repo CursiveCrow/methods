@@ -1,0 +1,338 @@
+%% toc: P2 17 17.8
+\section{Proof of the quantified subformula property}
+\label{sec:p02-w02b-p02-020-subformula-proof}
+
+\emph{Purpose.}  \Cref{sec:p02-fol-subformula-property} defines the
+first-order subformula-instance relation
+(\cref{def:p02-fol-subformula-instance}) and states that every formula in a
+derivation on \texttt{sheet:lk} without Cut or Mix is
+such an instance of a formula in the endsequent
+(\cref{thm:p02-fol-subformula-property}).  This section proves that claim in a
+stronger, traced form: each formula occurrence is followed downward through
+the derivation, one rule at a time, to a definite occurrence in the endsequent,
+and each step is recorded.  The proof also shows exactly where the first-order
+property departs from literal subformulahood and why Cut, Mix and the
+equality rule of \texttt{sheet:lk-eq} lie outside it.
+
+\emph{Inputs.}  A first-order language \(\Lang\) with terms
+\(\operatorname{Term}(\Lang)\) (\cref{sec:fol-syntax-semantics-01}) and formulas
+\(\operatorname{Fm}(\Lang)\) (\cref{sec:fol-syntax-semantics-02}); the total
+capture-avoiding substitution \(\varphi[t/x]\) of
+\cref{def:p02-fol-capture-avoiding-substitution}, which is the operation used
+by the quantifier rules of the sheet; and a finite derivation tree on
+\texttt{sheet:lk}: two-sided sequents of finite
+multisets, contexted initial sequents \(\Gamma,\varphi\Rightarrow\varphi,\Delta\)
+and \(\Gamma,\bot\Rightarrow\Delta\), weakening, contraction, the rules for
+\(\neg,\land,\lor,\to\), and the four quantifier rules, with no equality rule.
+Formulas are compared literally, not modulo alpha-equivalence.
+
+\emph{Conclusions.}  Every formula occurrence of a derivation containing
+neither Cut nor Mix reaches a unique endsequent occurrence by a finite chain of
+steps, each of which keeps the formula, passes to an immediate propositional
+subformula, or passes to a term instance of a quantified formula
+(\cref{thm:p02-w02b-p02-020-traced}).  Hence it is a first-order subformula
+instance of that endsequent formula; this is the assertion of
+\cref{thm:p02-fol-subformula-property}.  When no endsequent formula contains a
+quantifier, every formula of the derivation is a literal subformula of an
+endsequent formula (\cref{thm:p02-w02b-p02-020-quantifier-free}).
+
+\subsection{Instance sets, literal subformulas and successors}
+\label{sec:p02-w02b-p02-020-conventions}
+
+\begin{hbconvention}{def:p02-w02b-p02-020-instance-set}{Instance set and literal subformulas}
+The \emph{immediate propositional subformula} of \(\neg\varphi\) is
+\(\varphi\); those of \(\varphi\circ\psi\), for
+\(\circ\in\{\land,\lor,\to\}\), are \(\varphi\) and \(\psi\).  Atomic formulas,
+\(\bot\) and quantified formulas have none.  These are well defined by unique
+readability (\cref{thm:fol-unique-readability}).  A formula is
+\emph{quantifier-free} when neither \(\forall\) nor \(\exists\) occurs in it.
+
+For a formula \(\chi\), the \emph{instance set} \(\operatorname{SI}(\chi)\) is
+the least set of formulas that contains \(\chi\) and is closed under
+\begin{enumerate}
+  \item passing from a formula to each of its immediate propositional
+        subformulas, and
+  \item passing from \(Qx\,\varphi\), for \(Q\in\{\forall,\exists\}\), to
+        \(\varphi[t/x]\) for every \(t\in\operatorname{Term}(\Lang)\).
+\end{enumerate}
+The terms in clause~2 are those of \(\Lang\), variables included; a term of
+\(\Lang\) is what the clause ``every term \(t\) in the language of the
+derivation'' of \cref{def:p02-fol-subformula-instance} ranges over.  The
+\emph{literal subformulas} of \(\chi\) form the least set that contains
+\(\chi\) and is closed under clause~1 and under passing from \(Qx\,\varphi\)
+to \(\varphi\) itself, with \(x\) left free.
+\index{subformula!first-order instance}
+\index{subformula!literal}
+\end{hbconvention}
+
+The set \(\operatorname{SI}(\chi)\) is the section at \(\chi\) of the relation
+of \cref{def:p02-fol-subformula-instance}: the formulas \(\psi\) that are
+first-order subformula instances of \(\chi\) are exactly the members of
+\(\operatorname{SI}(\chi)\) (\cref{thm:p02-w02b-p02-020-closure}).  It can be infinite: for a unary
+relation symbol \(P\), \(\operatorname{SI}(\forall x_0\,P(x_0))\) contains
+\(P(x_0)[t/x_0]=P(t)\) for every term \(t\), and distinct terms give distinct
+formulas.
+
+\begin{hbconvention}{def:p02-w02b-p02-020-successor}{Occurrences and their successors}
+A rule instance on \texttt{sheet:lk} is given together
+with the decomposition of each premise and of the conclusion into the context
+multisets and displayed formulas written in the rule.  When a formula occurs
+several times in one sequent, the occurrences are kept apart by this
+decomposition and by a fixed one-to-one matching between each context multiset
+of a premise and the same multiset in the conclusion.  For every rule other
+than Cut and Mix, each formula occurrence in a premise has exactly one
+\emph{successor} in the conclusion:
+\begin{enumerate}
+  \item an occurrence in a context multiset \(\Gamma\) or \(\Delta\) of a
+        premise has as successor the matched occurrence of the same formula in
+        the same multiset of the conclusion (both premises of
+        \(\land R\), \(\lor L\) and \(\to L\) carry the context
+        \(\Gamma,\Delta\), and each of the two matched occurrences has the
+        conclusion's occurrence as successor);
+  \item in \(C_L\) and \(C_R\), each of the two displayed occurrences of
+        \(\varphi\) has as successor the displayed \(\varphi\) of the
+        conclusion;
+  \item in a logical rule (\(\neg L\), \(\neg R\), \(\land L\), \(\land R\),
+        \(\lor L\), \(\lor R\), \(\to L\), \(\to R\), \(\forall L\),
+        \(\forall R\), \(\exists L\), \(\exists R\)), each displayed premise
+        formula has as successor the displayed compound formula of the
+        conclusion, called the \emph{principal} formula.
+\end{enumerate}
+Weakening premises consist of context occurrences only, and the initial
+sequents \(\mathrm{id}\) and \(\bot L\) have no premises.  Endsequent
+occurrences have no successor.  Following successors from an occurrence gives
+its \emph{successor chain}.  This is the immediate-descendant relation of
+\cite[\S1.2.3, p.~12]{Buss1998Intro}, transferred to the rules of this sheet.
+\index{successor of a formula occurrence}
+\index{sequent calculus!formula occurrence}
+\end{hbconvention}
+
+\subsection{Results}
+\label{sec:p02-w02b-p02-020-results}
+
+\begin{hblemma}{thm:p02-w02b-p02-020-closure}{proved=annex:p02-w02b-p02-020-closure}{Instance sets, chains and transitivity}
+For all formulas \(\psi,\varphi,\chi\):
+\begin{enumerate}
+  \item \(\psi\) is a first-order subformula instance of \(\chi\) in the sense
+        of \cref{def:p02-fol-subformula-instance} if and only if
+        \(\psi\in\operatorname{SI}(\chi)\);
+  \item \(\psi\in\operatorname{SI}(\chi)\) if and only if there is a finite
+        sequence \(\chi=\psi_0,\psi_1,\ldots,\psi_n=\psi\) with \(n\ge0\) in
+        which each \(\psi_{i+1}\) is an immediate propositional subformula of
+        \(\psi_i\), or \(\psi_i=Qx\,\theta\) and
+        \(\psi_{i+1}=\theta[t/x]\) for some \(Q\in\{\forall,\exists\}\) and
+        \(t\in\operatorname{Term}(\Lang)\);
+  \item if \(\varphi\in\operatorname{SI}(\chi)\), then
+        \(\operatorname{SI}(\varphi)\subseteq\operatorname{SI}(\chi)\); in
+        particular \(\psi\in\operatorname{SI}(\varphi)\) and
+        \(\varphi\in\operatorname{SI}(\chi)\) give
+        \(\psi\in\operatorname{SI}(\chi)\).
+\end{enumerate}
+\end{hblemma}
+
+\begin{hblemma}{thm:p02-w02b-p02-020-literal}{proved=annex:p02-w02b-p02-020-literal}{Literal subformulas are instances}
+\begin{enumerate}
+  \item For every formula \(\varphi\) and variable \(x\),
+        \(\varphi[x/x]=\varphi\).
+  \item Every literal subformula of \(\chi\) belongs to
+        \(\operatorname{SI}(\chi)\).
+  \item If \(\chi\) is quantifier-free, then \(\operatorname{SI}(\chi)\) is
+        the set of literal subformulas of \(\chi\), and every member of it is
+        quantifier-free.
+\end{enumerate}
+\end{hblemma}
+
+The inclusion in clause~2 can be proper once \(\chi\) contains a quantifier:
+for a unary relation symbol \(P\),
+\(\operatorname{SI}(\forall x_0\,P(x_0))\) contains \(P(x_1)\), which is not a
+literal subformula of \(\forall x_0\,P(x_0)\), whose literal subformulas are
+\(\forall x_0\,P(x_0)\) and \(P(x_0)\).
+
+\begin{hbtheorem}{thm:p02-w02b-p02-020-traced}{proved=annex:p02-w02b-p02-020-traced}{Traced subformula-instance property on \(\mathsf{LK}\) without Cut or Mix}
+Let \(\mathcal D\) be a derivation on
+\texttt{sheet:lk} in which neither Cut nor Mix occurs.
+For every formula occurrence \(o\) of \(\mathcal D\):
+\begin{enumerate}
+  \item the successor chain \(o=o_0,o_1,\ldots,o_k\) of \(o\) is finite and
+        ends at an occurrence \(o_k\) of the endsequent of \(\mathcal D\);
+  \item for each \(i<k\), writing \(\psi_i\) for the formula at \(o_i\),
+        either \(\psi_i=\psi_{i+1}\), or \(\psi_i\) is an immediate
+        propositional subformula of \(\psi_{i+1}\), or
+        \(\psi_{i+1}=Qx\,\theta\) and \(\psi_i=\theta[t/x]\) with
+        \(t\in\operatorname{Term}(\Lang)\); in the last case \(t\) is the term
+        of the rule instance when the step is made by \(\forall L\) or
+        \(\exists R\), and the eigenvariable \(y\) when it is made by
+        \(\forall R\) or \(\exists L\);
+  \item the formula at \(o\) belongs to \(\operatorname{SI}(\psi_k)\).
+\end{enumerate}
+In particular, every formula occurrence of \(\mathcal D\) is a first-order
+subformula instance of some formula occurrence in the endsequent, which is the
+assertion of \cref{thm:p02-fol-subformula-property}, including its term
+instances from \(\forall L\) and \(\exists R\) and its eigenvariable instances
+from \(\forall R\) and \(\exists L\).
+\end{hbtheorem}
+
+\begin{hbcorollary}{thm:p02-w02b-p02-020-quantifier-free}{proved=annex:p02-w02b-p02-020-quantifier-free}{Quantifier-free endsequents give literal subformulas}
+If \(\mathcal D\) is a derivation on \texttt{sheet:lk}
+containing neither Cut nor Mix, and no formula of its endsequent contains a
+quantifier, then every formula occurring in \(\mathcal D\) is quantifier-free
+and is a literal subformula of a formula of the endsequent.  In particular no
+quantifier rule occurs in \(\mathcal D\).
+\end{hbcorollary}
+
+\emph{Assumptions used.}  The proof of
+\cref{thm:p02-w02b-p02-020-traced} uses three facts about the derivation: no
+Cut or Mix occurs; every rule is one of the listed rules of
+\texttt{sheet:lk}, each with a premise shape in which every
+premise formula is a context formula, a contracted formula, an immediate
+propositional subformula of the principal formula, or an instance
+\(\theta[t/x]\) of the principal formula \(Qx\,\theta\); and the substitution in
+the quantifier rules is the same operation as in clause~2 of
+\cref{def:p02-w02b-p02-020-instance-set}.  The eigenvariable conditions of
+\(\forall R\) and \(\exists L\) are part of the definition of a derivation on
+the sheet, and the theorem is stated for such derivations.  The argument does
+not appeal to them: an instance \(\theta[y/x]\) lies in
+\(\operatorname{SI}(Qx\,\theta)\) whether or not \(y\) is fresh.  Freshness
+matters for validity instead.  Without it, \(\forall R\) with
+\(\varphi=P(x_1)\), \(x=y=x_1\) and \(\Gamma=\{P(x_1)\}\) would take the
+initial sequent \(P(x_1)\Rightarrow P(x_1)\) to
+\(P(x_1)\Rightarrow\forall x_1\,P(x_1)\), which fails in a two-element
+structure where \(P\) holds of exactly the element assigned to \(x_1\); every
+formula of that two-line tree is still in
+\(\operatorname{SI}(\forall x_1\,P(x_1))\).
+
+\subsection{Worked example}
+\label{sec:p02-w02b-p02-020-example}
+
+\begin{hbexample}{def:p02-w02b-p02-020-example}{An instance with a renamed bound variable}
+Let \(R\) be a binary relation symbol, and use the variable order
+\(x_0,x_1,x_2,\ldots\) of
+\cref{def:p02-fol-capture-avoiding-substitution}.  The following is a
+derivation on \texttt{sheet:lk}, written from the top,
+each line obtained from the line above it.
+\begin{enumerate}
+  \item \(R(x_1,x_1)\Rightarrow R(x_1,x_1)\), by \(\mathrm{id}\) with
+        \(\Gamma\) and \(\Delta\) empty.
+  \item \(\forall x_2\,R(x_1,x_2)\Rightarrow R(x_1,x_1)\), by \(\forall L\)
+        with \(\varphi=R(x_1,x_2)\), \(x=x_2\) and \(t=x_1\), since
+        \(R(x_1,x_2)[x_1/x_2]=R(x_1,x_1)\).
+  \item \(\forall x_0\forall x_1\,R(x_0,x_1)\Rightarrow R(x_1,x_1)\), by
+        \(\forall L\) with \(\varphi=\forall x_1\,R(x_0,x_1)\), \(x=x_0\) and
+        \(t=x_1\).  The substitution renames the binder: the bound variable
+        \(x_1\) differs from \(x_0\) and occurs in \(t\), so the third clause
+        of \cref{def:p02-fol-capture-avoiding-substitution} applies, and the
+        least variable outside \(\{x_0,x_1\}\) is \(x_2\).  Thus
+        \((\forall x_1\,R(x_0,x_1))[x_1/x_0]=\forall x_2\,R(x_1,x_2)\), the
+        premise formula of this step.
+  \item \(\forall x_0\forall x_1\,R(x_0,x_1)\Rightarrow\forall x_1\,R(x_1,x_1)\),
+        by \(\forall R\) with \(\varphi=R(x_1,x_1)\), \(x=x_1\) and
+        eigenvariable \(y=x_1\), since \(R(x_1,x_1)[x_1/x_1]=R(x_1,x_1)\).
+        Both formulas of the conclusion are sentences, so \(x_1\) occurs free
+        in no formula of \(\Gamma,\Delta,\forall x_1\,R(x_1,x_1)\).
+\end{enumerate}
+The formula occurrences, their successor chains and the witnesses required by
+\cref{thm:p02-w02b-p02-020-traced} are as follows.
+\begin{itemize}
+  \item \(\forall x_2\,R(x_1,x_2)\) on line~2 has successor
+        \(\forall x_0\forall x_1\,R(x_0,x_1)\) on line~3, of which it is the
+        instance at \(t=x_1\).  It is not a literal subformula of either
+        endsequent formula: the literal subformulas of the left formula are
+        \(\forall x_0\forall x_1\,R(x_0,x_1)\), \(\forall x_1\,R(x_0,x_1)\)
+        and \(R(x_0,x_1)\), and those of the right formula are
+        \(\forall x_1\,R(x_1,x_1)\) and \(R(x_1,x_1)\).  Its bound variable
+        \(x_2\) occurs nowhere in the endsequent.
+  \item The antecedent \(R(x_1,x_1)\) on line~1 has successors
+        \(\forall x_2\,R(x_1,x_2)\) and then
+        \(\forall x_0\forall x_1\,R(x_0,x_1)\); its chain is two instance steps.
+  \item The succedent \(R(x_1,x_1)\) on lines 1 to 3 is a context occurrence
+        until line~4, where it is the eigenvariable instance of the principal
+        formula \(\forall x_1\,R(x_1,x_1)\).
+\end{itemize}
+The naive replacement of \(x_0\) by \(x_1\) in \(\forall x_1\,R(x_0,x_1)\)
+would give \(\forall x_1\,R(x_1,x_1)\), in which the inserted \(x_1\) is
+captured.  The relation of \cref{def:p02-fol-subformula-instance} uses the
+capture-avoiding operation, so it records the renamed formula
+\(\forall x_2\,R(x_1,x_2)\) that the rule actually introduces.
+\end{hbexample}
+
+\subsection{Failure cases and limitations}
+\label{sec:p02-w02b-p02-020-limits}
+
+\begin{hbwarning}{def:p02-w02b-p02-020-cut-failure}{A Cut formula need not be an instance}
+Let \(P\) and \(Q\) be distinct zero-ary relation symbols.  The sequents
+\(P\Rightarrow P,Q\) and \(Q,P\Rightarrow P\) are instances of
+\(\mathrm{id}\).  Cut on \(Q\) gives \(P,P\Rightarrow P,P\), and \(C_L\)
+followed by \(C_R\) gives \(P\Rightarrow P\).  The formula \(Q\) occurs in this
+derivation but \(\operatorname{SI}(P)=\{P\}\), since an atomic formula has no
+immediate propositional subformula and is not quantified.  So the conclusion of
+\cref{thm:p02-w02b-p02-020-traced} fails once Cut is admitted; the Cut
+formulas have no successor in \cref{def:p02-w02b-p02-020-successor}, and that
+is the point at which the proof breaks.  The same derivation with Mix in place
+of Cut, with \(m=n=1\), fails in the same way.
+\end{hbwarning}
+
+\begin{hbwarning}{def:p02-w02b-p02-020-equality-failure}{The equality rule is outside the theorem}
+In the equality calculus \texttt{sheet:lk-eq}, the replacement rule \(=L\)
+passes from the premise \(\Gamma,\varphi[r/x]\Rightarrow\Delta\) to
+\(\Gamma,r=t,\varphi[t/x]\Rightarrow\Delta\).  Take distinct constants \(a,b\),
+a unary relation symbol \(P\) and a zero-ary relation symbol \(Q\).  From the
+initial sequent \(P(a),Q\Rightarrow Q\), the rule with \(\varphi=P(x_0)\),
+\(x=x_0\), \(r=a\) and \(t=b\) gives \(Q,a=b,P(b)\Rightarrow Q\).  The two-step derivation
+contains neither Cut nor Mix.  Its formula \(P(a)\) is not in
+\(\operatorname{SI}(Q)\), \(\operatorname{SI}(a=b)\) or
+\(\operatorname{SI}(P(b))\), each of which is the singleton of its atomic
+formula.  The equality-free hypothesis of
+\cref{thm:p02-fol-subformula-property} is therefore needed as stated.
+\end{hbwarning}
+
+\emph{Limitations.}  The theorem is a statement about derivations that already
+contain neither Cut nor Mix.  It does not say which sequents have such
+derivations on \texttt{sheet:lk}; that is a cut-elimination
+or cut-free completeness question, and the registry note on the sheet records
+that the Part-7 cut-elimination sketch is not a theorem about this
+presentation.  The bound on formulas is not a finiteness bound: clause~2
+ranges over all terms, so an instance set can be infinite, as
+\(\operatorname{SI}(\forall x_0\,P(x_0))\) is, and the property restricts the
+shape of the formulas in a derivation but not the terms that instantiate
+quantifiers.  The
+contexted initial sequents may contain arbitrary formulas, including quantified
+ones, in \(\Gamma\) and \(\Delta\); such formulas are carried down as context
+and are covered by clause~1 of the successor convention.
+
+\subsection{Relationships and sources}
+\label{sec:p02-w02b-p02-020-relations}
+
+For the defined-negation calculus \texttt{sheet:lk-defneg}, cut elimination
+is \cref{thm:p07-classical-cut-elimination}, and
+\cref{thm:p07-classical-analytic} records the consequences: literal
+subformulas, after expanding defined negation, for propositional sequents, and
+for first-order cut-free proofs the closure of the end formulas under immediate
+subformulas, capture-avoiding term instances and alpha-renaming.  Those results
+concern a different rule inventory and do not transfer to the primitive-negation
+\texttt{sheet:lk}.  On \texttt{sheet:lk} the literal form is recovered by
+\cref{thm:p02-w02b-p02-020-quantifier-free} whenever the endsequent is
+quantifier-free.  For the intuitionistic sheet the analogous first-order
+statement, taken modulo alpha-equivalence, is \cref{thm:p07-lj-analyticity}
+with \cref{def:p07-lj-instance-subformula}.  The present theorem needs no
+alpha-renaming clause and compares formulas literally, because the quantifier
+rules of \texttt{sheet:lk} use exactly the deterministic substitution that
+appears in the instance set, and every other rule passes formulas down
+unchanged or to their principal formula.
+
+Buss gives the ancestor argument for the cut-free propositional system
+\(\mathsf{PK}\) and states the resulting subformula property
+\cite[\S1.2.3, p.~12, and Prop.~1.2.4, p.~13]{Buss1998Intro}.  His first-order
+calculus \(\mathsf{LK}\) separates free from bound variables, so that a
+substituted term is always free for the variable it replaces; under that
+convention a subformula of a formula is in general a semiformula, and he
+remarks that without the convention the cut-elimination theorem would need a
+slight reformulation \cite[\S2.3.1, pp.~31--32]{Buss1998Intro}.  His
+quantifier rules take an arbitrary term in \(\forall{:}\mathrm{left}\) and
+\(\exists{:}\mathrm{right}\) and an eigenvariable that must not appear in the
+lower sequent's side formulas in \(\forall{:}\mathrm{right}\) and
+\(\exists{:}\mathrm{left}\) \cite[Def.~2.3.2, p.~32]{Buss1998Intro}.  The
+present sheet has one class of variables and total capture-avoiding
+substitution instead, which is why the instance set is closed under
+\(\theta[t/x]\) for every term and may contain renamed binders, as in
+\cref{def:p02-w02b-p02-020-example}.  The proof written here is for the rules
+of \texttt{sheet:lk} as registered.

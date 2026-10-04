@@ -1,0 +1,583 @@
+\chapter{Proofs for Classical Cut Elimination}
+\label{annex:p07-classical-cut-elimination}
+
+\begin{annexitem}{annex:p07.classical.alpha-identity}{thm:p07-classical-alpha-identity}{Exact identity without an alpha-conversion rule}
+\begin{proof}
+We first prove the syntactic facts needed for the construction. Encode a
+formula tree by retaining predicate, function and logical-constructor
+labels. At a variable leaf, record its actual name if it is free; if it
+is bound, record the position of its nearest governing binder in the
+stack of surrounding binders. The nearest-binder convention includes
+shadowed names: a quantifier inside \(QxC\) with its own binder \(x\)
+governs its own occurrences. A generating fresh alpha-renaming changes
+the outer binder's name and just its governed leaves, so it leaves this
+tree unchanged. Congruence, symmetry and transitivity preserve equality
+of the encodings as well.
+
+Conversely, suppose the two encodings agree. Traverse their corresponding
+binders from outside inward and rename each corresponding pair to the same
+variable, choosing these variables pairwise distinct and absent from all
+original names and free-variable names of the two finite formulas. Every
+step is an allowed fresh alpha-generator: the chosen name is absent from
+the matrix at that step, including the newly chosen earlier binder names.
+Capture-avoiding substitution stops at an inner binder of the renamed
+variable, so shadowed occurrences are unchanged. Both resulting literal
+trees now have the same binder labels, bound leaves, free leaves and other
+labels; hence they are identical formulas. The finite sequences of
+generators establish alpha-equivalence of the originals. Thus equality of
+these encodings characterizes precisely the stated alpha-equivalence.
+
+In particular alpha-equivalent formulas have the same outer constructor,
+and corresponding operands of a binary constructor are alpha-equivalent.
+For \(QxC=_{\alpha}QzD\), choose \(y\) outside every variable in the
+two formulas. Removing the outer binder and replacing its governed leaves
+by the free name \(y\) gives the same encoding on both sides. Therefore
+\(C[y/x]=_{\alpha}D[y/z]\), with the exact least-fresh substitutions
+on the left and right.
+
+For a finite simultaneous substitution \(\sigma\), first use the preceding
+freshening construction to give every binder a name outside the domain
+of \(\sigma\) and every variable in its finitely many range terms.
+Substitution now replaces exactly the free variable leaves by their range
+terms, once per leaf, without capture. It commutes with function symbols,
+falsity and each binary logical constructor. At a quantifier it leaves the
+fresh binder in place and continues through its matrix. These cases exhaust
+the term and formula grammars. Thus this operation is determined by the
+encoding, so substitution respects alpha-equivalence. The exact algorithm
+may choose different fresh names, but only bound-name labels change;
+its result has the same encoding. A bijection of variable names similarly
+acts only on free-name labels and the names in substituted terms; bound
+positions remain fixed. This proves the commutation of permutation and
+substitution on alpha-classes.
+
+The substitution interchange used below can also be checked leaf by leaf.
+Suppose \(x\) is outside the domain of \(\sigma\) and outside all variables
+in its explicitly assigned range terms. Then
+\[
+ (C[t/x])\sigma=_{\alpha}(C\sigma)[t\sigma/x].
+\]
+For the free leaf \(x\), both sides give \(t\sigma\). For a free
+leaf \(v\ne x\), both give \(v\sigma\), since that term has no free
+\(x\); an unchanged leaf \(v\) is distinct from \(x\) as well.
+Function constructors reduce to their argument leaves. Give all formula
+binders names fresh for the terms and substitutions in this identity.
+Then falsity, each binary constructor and each fresh quantifier preserve
+the identity by induction through their operands or matrix. Undoing the
+freshening proves the displayed alpha-equality for arbitrary literal
+representatives.
+
+Finally, the particular identity needed for principal quantifier reduction
+does not require \(x\) to be absent from the witness term \(t\).
+Choose \(y\ne x\) outside all variables of \(C,t\). Then
+\[
+ (C[y/x])[t/y]=_{\alpha}C[t/x].
+\]
+A free \(x\) leaf goes first to \(y\), then to \(t\); every other
+free leaf is fixed, since none was \(y\). No second substitution takes
+place inside the inserted \(t\). The same constructor induction with
+fresh binders proves the formula identity. Also, substituting for a name
+not free in a formula fixes its encoding and hence its alpha-class.
+All these facts concern syntax alone.
+
+Now prove both orientations of the asserted identity simultaneously by
+induction on formula rank. For atoms, alpha-equivalence is literal equality,
+so use Id. Falsity is also literally itself and has its own identity.
+Suppose \(A=A_1\land A_2\), \(B=B_1\land B_2\).
+From the smaller identities \(A_i\Rightarrow B_i\), left-weaken by the
+other \(A\)-operand and apply the sheet's two-operand \(\land L\).
+This gives \(A\Rightarrow B_1\) and \(A\Rightarrow B_2\).
+The shared-context \(\land R\) gives \(A\Rightarrow B\).
+
+For \(A=A_1\lor A_2\), \(B=B_1\lor B_2\), right-weaken
+\(A_i\Rightarrow B_i\) by the other \(B\)-operand and apply the
+single, two-auxiliary \(\lor R\). The two results
+\(A_1\Rightarrow B\), \(A_2\Rightarrow B\) combine by \(\lor L\).
+For implications, use the smaller identities
+\(B_1\Rightarrow A_1\) and \(A_2\Rightarrow B_2\).
+Split \(\to L\) gives \(A_1\to A_2,B_1\Rightarrow B_2\), and
+\(\to R\) gives \(A_1\to A_2\Rightarrow B_1\to B_2\).
+
+For \(A=\forall xC\), \(B=\forall zD\), take fresh \(y\).
+The smaller alpha-identity is
+\(C[y/x]\Rightarrow D[y/z]\), using the exact specified substitution
+values. Apply \(\forall L\) with term \(y\), followed by
+\(\forall R\) with eigenvariable \(y\), to obtain \(A\Rightarrow B\).
+The final conclusion has no free \(y\).
+For \(A=\exists xC\), \(B=\exists zD\), use the same smaller identity,
+then \(\exists R\) on the right and \(\exists L\) on the left, both
+with \(y\). Its eigenvariable condition also holds. Interchanging
+\(A,B\) in each construction proves the opposite orientation.
+No Cut, Mix, semantic equivalence or contexted identity axiom was used.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p07.classical.parameter-substitution}{thm:p07-classical-parameter-substitution}{Height-preserving operations on alpha-class trees}
+\begin{proof}
+Work only in the auxiliary presentation. A bijection of variable names,
+applied to every formula, witness term and eigenvariable annotation of a
+proof, preserves its tree. The syntactic facts established above make the
+quantified instances commute with this operation on classes. A bijection
+also preserves absence from a free-variable set. Id, \(\bot L\), all four
+structural rules and all six propositional rules remain the same instances,
+including their shared or split contexts. All four quantifier rules retain
+their instance and, where present, their freshness condition. This proves
+the permutation assertion by induction on the tree.
+
+At an eigenvariable inference, transpose its parameter \(y\) with a
+variable \(z\) absent from the entire premise proof and the additional
+finite data. Apply that permutation to the whole premise proof. Since
+\(y\) is not free in the inference's conclusion and \(z\) is fresh,
+the concluding classes are unchanged. This freshening preserves auxiliary
+height. There are always enough variables because every specified proof
+and forbidden set is finite.
+
+For term substitution, the following slightly stronger induction is useful:
+any finite simultaneous substitution \(\sigma\) applied to the endsequent
+of a cut-free auxiliary tree has a cut-free tree of the same height.
+Terms in its range are inserted only for free variables. Id maps to
+\([C\sigma]\Rightarrow[C\sigma]\); \(\bot L\) retains falsity.
+WL, WR, CL and CR are reapplied to their transformed occurrences, even
+if previously different formulas now have the same class. Each of
+\(\land L,\land R,\lor L,\lor R,\to L,\to R\) commutes with
+substitution in its operands; shared contexts remain shared and split
+contexts remain concatenated.
+
+For \(\forall L\), display the quantified class as \(\forall xC\)
+with bound \(x\) fresh for the domain and range variables of \(\sigma\).
+This changes no class or proof tree. The transformed auxiliary instance is
+\[
+ [C[t/x]\,\sigma]=[(C\sigma)[t\sigma/x]].
+\]
+Apply the induction hypothesis to the premise and reapply \(\forall L\)
+with term \(t\sigma\). For \(\exists R\), exactly the same displayed
+identity supplies its right-hand instance and the same witness substitution.
+These rules have no eigenvariable restriction.
+
+For \(\forall R\), choose such a fresh bound representative and freshen
+its eigenvariable to \(z\) outside the domain and range variables of
+\(\sigma\) and all other finite data. Apply induction to the permuted
+premise, whose height remains strictly below the original inference.
+Its active formula is now \([(C\sigma)[z/x]]\). The substituted
+conclusion is \(z\)-free: its old free variables did not include \(z\)
+and the substitution range cannot introduce it. Hence \(\forall R\)
+is valid. For \(\exists L\), freshen its premise parameter in the same
+way; the active formula on the left becomes \([(C\sigma)[z/x]]\),
+and the same free-variable calculation validates \(\exists L\).
+Each case reapplies one original inference above premises of the same
+height, completing the induction. One-variable substitution is included.
+
+Term substitution changes terms, not logical constructors. The
+bound-occurrence characterization likewise leaves all logical constructors
+unchanged under alpha-conversion. Thus formula rank is preserved.
+This proof makes no claim about the height of exact representative
+realizations of these auxiliary trees.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p07.classical.alpha-realization}{thm:p07-classical-alpha-realization}{Returning to the registered rule sheet}
+\begin{proof}
+An exact derivation becomes an auxiliary one by taking classes at every
+occurrence; each inference and its height are unchanged. For the other
+direction induct on the height of a cut-free auxiliary tree, with the
+prescribed representative of every end occurrence included in the data.
+
+At class identity, the two representatives are alpha-equivalent but need
+not be literally equal. Use the exact cut-free alpha-identity just proved.
+At \(\bot L\), the principal class has only the literal representative
+\(\bot\), and the prescribed endsequent is an exact initial instance.
+At weakening, realize the other end occurrences in the premise, then add
+the prescribed new formula by WL or WR. At contraction, prescribe two
+identical copies of its retained end representative in the premise,
+realize the premise, then apply CL or CR. Other context occurrences keep
+their prescribed representatives and multiplicities.
+
+For \(\land L\), prescribe the two exact conjuncts of the chosen
+principal in its premise. For \(\land R\), prescribe one such right
+operand in each premise and the same exact context representatives in
+both. For \(\lor L\), prescribe one left disjunct in each shared-context
+premise. For \(\lor R\), prescribe both exact right disjuncts in its one
+premise. For \(\to R\), prescribe the exact antecedent operand on the
+left and consequent operand on the right. For split \(\to L\),
+distribute the prescribed end context tokens according to the auxiliary
+split and prescribe its exact antecedent operand in the first succedent
+and consequent operand in the second antecedent. Constructor compatibility
+of alpha-equivalence ensures these are the required premise classes.
+Apply the realization induction to each premise and reapply that exact
+registered rule.
+
+For \(\forall L\), retain its witness term \(t\). If the prescribed
+principal is \(\forall xC\), prescribe the exact, least-fresh
+\(C[t/x]\) as its active premise occurrence. It has the required class
+by the syntactic substitution facts. Realize that premise and apply
+\(\forall L\). For \(\exists R\), use the same construction on the
+right with its prescribed \(\exists xC\).
+For \(\forall R\), freshen the auxiliary eigenvariable to \(y\)
+outside every variable in the prescribed endsequent. This does not
+change the auxiliary height or conclusion. Prescribe the exact instance
+\(C[y/x]\) and the given contexts in the shorter premise; realize it
+and apply the exact \(\forall R\). Its freshness condition holds for
+the actual conclusion. For \(\exists L\), prescribe \(C[y/x]\) on
+the left after the same freshening, realize the shorter premise, and
+apply the exact \(\exists L\).
+
+These are every cut-free rule. Realization is finite, contains no Cut or
+Mix and has exactly the prescribed endsequent. Its identity replacements
+can increase physical height, which is why realization is not inserted
+inside a same-rank height comparison in the elimination induction.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p07.classical.bottom-erasure}{thm:p07-classical-bottom-erasure}{Selected falsities, including initial sequents}
+\begin{proof}
+Induct on the height of a cut-free proof together with its selected
+succedent bottom occurrences. With none selected, retain the proof.
+At Id, a nonempty selection is possible only for
+\(\bot\Rightarrow\bot\); replace it by the initial
+\(\bot\Rightarrow\). At \(\bot L\), the antecedent bottom remains,
+so the erased conclusion is another instance of that initial schema.
+
+If WR introduces a selected token, erase the selected old tokens in
+its premise and omit this WR. If the new token is unselected, erase
+the old selection and reapply WR. If CR's retained token is selected,
+select both ancestors, erase them by induction and omit CR. For an
+unselected CR, retain both contracted ancestors, erase the other selected
+tokens and reapply CR. WL and CL affect only the antecedent; erase the
+selected succedent tokens in their premise and reapply those rules.
+
+No right logical rule introduces bottom itself. All selected tokens in
+a logical conclusion are therefore context tokens. For the unary rules
+\(\land L,\lor R,\to R\), preserve every active operand, erase the
+selected context ancestors and reapply the rule. For shared \(\land R\)
+and \(\lor L\), erase the same selected context in both premises and
+reapply the shared rule. For split \(\to L\), erase only the selected
+ancestors assigned to each premise; reapply the split rule with its active
+operands retained. For \(\forall L\) and \(\exists R\), the active
+instance and witness term remain unchanged. For \(\forall R\) and
+\(\exists L\), the active instance remains and deleting context formulas
+cannot introduce a free eigenvariable into the conclusion. Thus all four
+quantifier rules can also be reapplied.
+
+An active operand equal to bottom is unselected unless it is an ancestor
+of the designated end token; logical operands of retained principals are
+never erased merely by comparing their spelling. This proves the
+construction, with no increase in auxiliary height. The same induction
+works for exact syntax, because it changes neither formulas nor witnesses.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p07.classical.marked-mix}{thm:p07-classical-marked-mix}{The complete contraction-sensitive reduction}
+\begin{proof}
+Pass the two exact cut-free input trees to the auxiliary presentation.
+All heights in this proof refer to auxiliary trees; realization occurs
+only at the end. Keep the selected occurrence tokens as part of the data.
+Write the inputs and required output as
+\[
+ D:\Gamma\Rightarrow\Delta,A^m,\qquad
+ E:A^n,\Pi\Rightarrow\Sigma,
+ \qquad \Gamma,\Pi\Rightarrow\Delta,\Sigma. \tag{M}
+\]
+If \(m=0\), use D and weaken with \(\Pi,\Sigma\). If \(n=0\), use
+E and weaken with \(\Gamma,\Delta\). These include every zero-boundary
+case. Otherwise induct on
+\((\operatorname{rk}_{\mathrm{fm}}(A),\operatorname{ht}(D)+
+\operatorname{ht}(E))\), universally over contexts, marked subsets and
+multiplicities. The hypothesis places no upper bound on the height of
+its constructed output.
+
+\emph{Finite structural bookkeeping.}
+Weakening adds any requested finite multiset by one step per occurrence.
+If \(S\) contains \(r\) copies of a formula B, contracting \(j\) copies
+of S into one means reducing \(jr\) occurrences of B to \(r\), not to
+one. Context tokens and active tokens are tracked separately until the
+active ones have been eliminated. Thus overlapping contexts and equal
+active formulas do not authorize excess contraction.
+
+\emph{All initial cases.}
+If D is Id, its selected succedent forces D to be
+\(A\Rightarrow A\), with \(m=1\), \(\Gamma=A\), \(\Delta\) empty.
+Contract the n selected antecedent copies in E to one. The result
+\(A,\Pi\Rightarrow\Sigma\) is (M), with every unselected copy retained.
+If E is Id, it is \(A\Rightarrow A\), with \(n=1\), \(\Pi\) empty
+and \(\Sigma=A\). Contract D's m selected copies to one to obtain (M).
+If D is \(\bot L\), its left bottom lies in \(\Gamma\) and (M) is
+itself initial. If E is \(\bot L\) with a retained antecedent bottom,
+that token lies in \(\Pi\), so (M) is again initial. The remaining
+initial possibility has E's every antecedent bottom selected. Then
+\(A=\bot\); erase D's selected right bottoms by the preceding lemma,
+then weaken with \(\Pi,\Sigma\). These are every initial pair.
+
+\emph{All structural cases.}
+If D ends with WR introducing a selected A, apply induction to its
+immediate premise and the original E with multiplicity \(m-1,n\), and
+omit that WR. If E ends with WL introducing a selected A, use the
+original D and its immediate premise with \(m,n-1\), omitting that WL.
+Zero multiplicity is allowed in both calls.
+If D ends with CR forming a selected A, both ancestors are selected;
+the call uses its immediate premise with \(m+1,n\), and no CR is
+reapplied. If E ends with CL forming a selected A, use \(m,n+1\)
+on its immediate premise and omit CL. In every case the selected input
+height decreases, regardless of the increased multiplicity.
+
+For an unselected WR or CR in D, keep its new occurrence or both
+contracted ancestors unselected, transport the other marks, apply
+induction to the premise and reapply that WR or CR. For an unselected
+WL or CL in E, remove the other selection by the recursive call, then
+restore the new unselected occurrence by WL, or retain both unselected
+contraction ancestors and reapply CL to them.
+WL and CL in D act on its antecedent, never its selected succedent:
+apply induction to the premise and reapply the rule. WR and CR in E
+act on its succedent, never its selected antecedent: do the same.
+This exhausts the four structural rules on each side, including an
+unselected contraction whose formula is also A. Exchange requires no
+inference because contexts are multisets.
+
+\emph{Nonselected logical principals.}
+Suppose the last rule on one side does not introduce a selected token.
+On the D side apply the induction to each immediate D-premise and the
+original full E. On the E side apply it to the original full D and each
+immediate E-premise. Marks lift through shared contexts to both premises
+and through split contexts only to their assigned premise. A branch with
+no marked ancestor uses the zero-boundary construction. Every call has
+the same formula rank and a strictly smaller original input-height sum.
+
+The effect is to insert the fixed contexts \((\Pi;\Sigma)\) in each
+transformed D-premise, or \((\Gamma;\Delta)\) in each transformed
+E-premise, while removing its marked context tokens. Denote the inserted
+pair in this paragraph by \((L;R)\). Reconstruct each logical rule as
+follows; its active operand tokens are unselected and remain present.
+\begin{description}
+\item[\(\land L\).] The premise retains its two displayed left operands;
+form their conjunction once, with L and R as added contexts.
+\item[\(\land R\).] Both premises acquire the same L and R and retain
+their respective right operand. Their enlarged contexts agree, so apply
+the shared-context conjunction rule.
+\item[\(\lor L\).] Both premises retain their distinct left disjunct and
+the same enlarged contexts; apply the shared-context disjunction rule.
+\item[\(\lor R\).] Its one premise retains both right disjuncts. Form
+their disjunction with the added contexts unchanged.
+\item[\(\to R\).] Its one premise retains the displayed left antecedent
+operand and right consequent operand. Apply implication-right to them.
+\item[\(\to L\).] Apply the calls separately to its two split premises.
+Reapplying split implication-left yields two copies of L and R. Contract
+those two copied context multisets to one, preserving their own internal
+multiplicities.
+\item[\(\forall L\).] Retain the displayed left instance \(B[t/x]\) and
+reapply universal-left with the same witness term t.
+\item[\(\forall R\).] Before the recursive call, freshen its parameter
+\(y\) for the entire opposite proof. Retain the right instance \(B[y/x]\) and
+reapply universal-right; the inserted contexts are y-free.
+\item[\(\exists L\).] Before the call, freshen its parameter y for the
+opposite proof. Retain the left instance \(B[y/x]\) and reapply
+existential-left with its valid freshness condition.
+\item[\(\exists R\).] Retain the right instance \(B[t/x]\) and reapply
+existential-right with the same term t.
+\end{description}
+
+For the split calculation on D, write its premises as
+\[
+ \Gamma_1\Rightarrow\Delta_1,A^{m_1},B,
+ \qquad C,\Gamma_2\Rightarrow\Delta_2,A^{m_2},
+ \quad m_1+m_2=m.
+\]
+The recursive results are
+\(\Gamma_1,\Pi\Rightarrow\Delta_1,\Sigma,B\) and
+\(C,\Gamma_2,\Pi\Rightarrow\Delta_2,\Sigma\).
+Split implication-left concludes
+\[
+ B\to C,\Gamma_1,\Gamma_2,\Pi,\Pi
+ \Rightarrow\Delta_1,\Delta_2,\Sigma,\Sigma.
+\]
+Contract the two added \(\Pi\) and \(\Sigma\) copies. On E, its split
+contexts partition the n marked antecedent occurrences; the same
+calculation duplicates \(\Gamma\) and \(\Delta\), which are then
+contracted. Shared \(\land R\) and \(\lor L\) do not need this step:
+their enlarged contexts occur in both premises but only once in the
+conclusion of the shared rule.
+
+To make the quantifier sides explicit, \(\forall L\) on D and
+\(\exists R\) on E are always nonselected-principal cases, because
+their principals lie on the wrong side for the selection. The same is
+true of \(\exists L\) on D and \(\forall R\) on E, but these require
+the stated eigenvariable freshening. The other four possibilities are
+\(\forall R\) on D, \(\exists R\) on D, \(\forall L\) on E and
+\(\exists L\) on E: the preceding reconstruction applies precisely
+when their principal token is unselected. Thus all eight side-specific
+quantifier commutations are included. Freshening preserves the original
+auxiliary premise height before the same-rank call. It occurs before
+introducing the other proof's contexts, not after an invalid inference.
+
+\emph{Preparation of every principal pair.}
+The remaining case has one selected principal A at the last logical
+rule of each proof. Put \(S=\Gamma,\Pi\) and \(T=\Delta,\Sigma\).
+There may still be selected A occurrences in their side contexts.
+For each immediate premise \(D_i\), remove its residual marked A
+occurrences by a call against the \emph{original full E}. For each
+immediate premise \(E_j\), remove its residual marked occurrences by
+a call against the \emph{original full D}. The inequalities are
+\[
+ \operatorname{ht}(D_i)+\operatorname{ht}(E)
+ <\operatorname{ht}(D)+\operatorname{ht}(E),
+ \qquad
+ \operatorname{ht}(D)+\operatorname{ht}(E_j)
+ <\operatorname{ht}(D)+\operatorname{ht}(E).
+\]
+If the residual class is empty, use the zero case. Only \emph{after}
+these calls return may one add missing split-context portions by
+weakening to the common S,T. These new proof heights are unrestricted;
+they will be inputs only to smaller-formula-rank calls. Every lower-rank
+call below selects exactly its displayed active tokens, leaving equal
+formulas in S,T unselected.
+
+\emph{Conjunction \(A=B\land C\).}
+The last rules are \(\land R\) on D and \(\land L\) on E. Residual
+cleaning produces
+\[
+ S\Rightarrow T,B,\qquad S\Rightarrow T,C,\qquad B,C,S\Rightarrow T.
+\]
+Use the smaller-rank Mix hypothesis on the displayed B in the first
+and third proofs. Its result is \(C,S,S\Rightarrow T,T\).
+Mix the displayed C with the second proof, obtaining
+\(S,S,S\Rightarrow T,T,T\). Contract the three context copies.
+Both B and C have smaller rank. If B=C, there are nevertheless two
+different active tokens in the third premise, and they are consumed
+one at a time.
+
+\emph{Disjunction \(A=B\lor C\).}
+The sheet uses one two-auxiliary \(\lor R\) premise and two shared
+\(\lor L\) premises. Cleaning produces
+\[
+ S\Rightarrow T,B,C,\qquad B,S\Rightarrow T,\qquad C,S\Rightarrow T.
+\]
+Smaller-rank Mix on B gives \(S,S\Rightarrow T,T,C\); Mix on C with
+the third proof gives three copies of S,T, which are contracted. No
+single-injection disjunction-right rule was assumed.
+
+\emph{Implication \(A=B\to C\).}
+D's immediate premise is
+\(B,\Gamma\Rightarrow\Delta,A^{m-1},C\).
+E's split premises can be written
+\[
+ A^{n_1},\Pi_1\Rightarrow\Sigma_1,B,\qquad
+ C,A^{n_2},\Pi_2\Rightarrow\Sigma_2,\qquad n_1+n_2=n-1,
+\]
+with \(\Pi=\Pi_1,\Pi_2\) and \(\Sigma=\Sigma_1,\Sigma_2\).
+The prescribed same-rank calls, followed by the missing-context
+weakenings, produce
+\[
+ B,S\Rightarrow T,C,\qquad S\Rightarrow T,B,\qquad C,S\Rightarrow T.
+\]
+Mix the second and first on B, giving
+\(S,S\Rightarrow T,T,C\). Mix with the third on C, then contract
+the three context copies. These two calls have smaller rank and do
+not require a height bound on the cleaned proofs.
+
+\emph{Universal \(A=\forall xB\).}
+Freshen D's last eigenvariable y away from the whole E proof, its
+witness t, every variable of B, the binder x and the retained contexts.
+The last premises are
+\[
+ D_0:\Gamma\Rightarrow\Delta,A^{m-1},B[y/x],\qquad
+ E_0:B[t/x],A^{n-1},\Pi\Rightarrow\Sigma.
+\]
+The calls \((D_0,E;m-1,n)\) and \((D,E_0;m,n-1)\) on A give
+\[
+ F:S\Rightarrow T,B[y/x],\qquad G:B[t/x],S\Rightarrow T.
+\]
+The parameter y is free in neither S nor T nor \(\forall xB\).
+Freshen F's internal eigenvariables for t, and apply the independent
+substitution lemma with \([t/y]\). Its endsequent is
+\(S\Rightarrow T,B[t/x]\): the retained contexts are fixed on
+classes and the capture-avoiding composition identity gives the active
+instance. Mix this with G on that one instance and contract the two
+copies of S,T. Its rank is
+\(\operatorname{rk}_{\mathrm{fm}}(B[t/x])=
+\operatorname{rk}_{\mathrm{fm}}(B)<
+\operatorname{rk}_{\mathrm{fm}}(\forall xB)\).
+
+\emph{Existential \(A=\exists xB\).}
+Freshen E's last eigenvariable y away from D, t, every variable of B
+and the binder x. Its premises are
+\[
+ D_0:\Gamma\Rightarrow\Delta,A^{m-1},B[t/x],\qquad
+ E_0:B[y/x],A^{n-1},\Pi\Rightarrow\Sigma.
+\]
+The two smaller-height calls on A give
+\(F:S\Rightarrow T,B[t/x]\) and \(G:B[y/x],S\Rightarrow T\).
+Now substitute \([t/y]\) in G, after freshening its internal
+eigenvariables. The result is \(B[t/x],S\Rightarrow T\), with
+unchanged retained contexts. A smaller-rank Mix with F followed by
+contraction gives (M). This is the dual placement of the substitution,
+not an assertion that eigenvariables may occur in the added contexts.
+
+There is no logical principal pair for an atom or for bottom, since
+no right logical rule introduces either. The initial bottom case was
+already settled independently. The five cases exhaust all constructors;
+defined negation is the implication-to-bottom case.
+
+Every recursive call has either the same rank and a smaller
+\emph{original input} height sum, or a strictly smaller formula rank
+with arbitrary finite input heights. Structural padding and contraction
+after a call introduce no further same-rank call on that larger output.
+Well-founded recursion on pairs of natural numbers therefore constructs
+a finite auxiliary cut-free proof of (M). Finally realize it with the
+exact prescribed context formulas and multiplicities. This proves the
+marked Mix assertion on the registered sheet.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p07.classical.cut-elimination}{thm:p07-classical-cut-elimination}{Eliminating all cuts in a finite tree}
+\begin{proof}
+First replace every formula occurrence by its alpha class. Normalize the
+resulting finite proof by structural recursion on its original tree.
+Initial inferences are retained. At any ordinary inference, recursively
+normalize its immediate premises and reapply the original rule. Their
+endsequents have not changed, so its context and eigenvariable conditions
+still hold. At Cut, normalize its two premises and apply the marked Mix
+construction with one selected copy on each side. At a registered Mix,
+do the same with its displayed positive multiplicities. In either case
+the returned proof is cut-free and has the original inference's conclusion.
+
+The outer recursion passes only to immediate subtrees. Each inner Mix
+construction terminates by its own proved lexicographic recursion.
+Consequently the result is a finite auxiliary proof with neither Cut
+nor Mix. Realize its end classes using the exact original endsequent
+representatives. The realization theorem gives the claimed exact proof.
+Its possibly greater physical height is irrelevant to the completed
+auxiliary induction. No semantic completeness or separate cut theorem
+has been used.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p07.classical.analytic}{thm:p07-classical-analytic}{Subformula tracing and empty-sequent underivability}
+\begin{proof}
+In a cut-free proof, trace any formula occurrence downward toward the
+endsequent. A context occurrence persists. A contracted occurrence joins
+the retained occurrence of the same formula. An active propositional
+operand becomes an immediate subformula of its principal formula.
+Weakening creates an occurrence but does not remove any premise
+occurrence. The shared rules supply a continuation from either premise,
+and the split implication rule supplies the continuation in its assigned
+context or principal operand. Thus every premise occurrence has a
+continuation; no Cut or Mix is available to erase the trace.
+
+At a quantifier rule, an instance \(B[t/x]\) or \(B[y/x]\) traces to the matrix
+\(B\) of its principal quantifier. This is the required instance relation,
+with alpha-renaming for bound names. Composing these finitely many trace
+steps places every first-order occurrence in the closure of the end
+formulas under taking subformulas, term instances and alpha-renaming.
+No quantifier constructor present in a traced formula can disappear on
+the path: a matrix instance has the same logical constructors as its
+matrix, and the principal adds its displayed quantifier. Therefore a
+cut-free proof of a propositional endsequent has no quantified formula
+occurrences. Its traces use literal propositional subformulas only.
+Cut elimination supplies such a cut-free proof from any derivation,
+giving analytic existence after expanding defined negation.
+
+Finally, the empty sequent is not an instance of Id or \(\bot L\).
+Every other cut-free registered rule has a displayed formula in its
+conclusion: a weakening formula, a retained contraction formula, or a
+logical principal. Thus it cannot be the last inference of a cut-free
+proof of the empty sequent. Cut elimination excludes an arbitrary
+derivation of that sequent as well.
+\end{proof}
+\end{annexitem}

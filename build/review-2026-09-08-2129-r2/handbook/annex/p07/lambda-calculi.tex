@@ -1,0 +1,124 @@
+%% annex/p07/lambda-calculi.tex --- proof material for P7 chapter 7.4
+%% New content: no source-compression denominator applies.
+
+\begin{annexitem}{annex:p7.lambda.1}{thm:p07-church-rosser}{Church--Rosser by parallel reduction}
+\begin{proof}
+All terms in Method~\ref{def:p07-parallel-reduction} are read modulo
+alpha-equivalence.  First observe, by induction on a term, that
+\(M\mathrel{\mathsf{Par}}M\): use the variable clause at a variable and the
+application and abstraction clauses at the two constructors.  The same
+induction shows that complete development respects alpha-equivalence.  The
+only nonliteral step is an abstraction: after replacing
+\(\lambda y.P\) by \(\lambda z.P[z/y]\), with \(z\) fresh, the induction
+hypothesis gives
+\(\operatorname{dev}(P[z/y])=_{\alpha}
+  \operatorname{dev}(P)[z/y]\).  Whether an application has an abstraction at
+its head is unchanged by alpha-renaming, so the two application clauses of
+\(\operatorname{dev}\) agree on alpha-equivalence classes.
+
+We next prove the parallel-substitution lemma:
+\[
+ M\mathrel{\mathsf{Par}}M',\quad
+ N\mathrel{\mathsf{Par}}N'
+ \quad\Longrightarrow\quad
+ M[N/x]\mathrel{\mathsf{Par}}M'[N'/x].                 \tag{1}
+\]
+Before the induction, alpha-rename every binder in the displayed parallel
+derivation away from \(x\) and from the free variables of \(N,N'\); the first
+paragraph shows that this changes neither hypothesis nor conclusion.  Induct on the displayed derivation of
+\(M\mathrel{\mathsf{Par}}M'\).  If \(M=x\), both sides of (1) are
+\(N\) and \(N'\), so use the second hypothesis.  If \(M=y\ne x\), both
+sides are \(y\), so use reflexivity.  The application case follows by applying
+the induction hypotheses to the two subterms and then the application clause.
+For an abstraction \(\lambda y.P\), freshness gives \(y\ne x\); apply the
+induction hypothesis to \(P\) and use the abstraction clause.  In the beta
+case write the source as \((\lambda y.P)Q\) and the target as
+\(P'[Q'/y]\).  The induction hypotheses give
+\(P[N/x]\mathrel{\mathsf{Par}}P'[N'/x]\) for the body and the analogous
+statement for the argument.  If the redex binder is \(y\), the beta clause
+then has target
+\(P'[N'/x][Q'[N'/x]/y]\), which is alpha-equal to
+\((P'[Q'/y])[N'/x]\) because \(y\notin\FV(N')\).  This
+composition-of-substitutions identity follows by induction on \(P'\),
+alpha-renaming an abstraction binder fresh for all substituted terms; thus no
+textual substitution or capture is used.
+
+The development lemma is
+\[
+ M\mathrel{\mathsf{Par}}P
+ \quad\Longrightarrow\quad
+ P\mathrel{\mathsf{Par}}\operatorname{dev}(M).          \tag{2}
+\]
+Induct on the parallel derivation.  The variable case is immediate.  The
+abstraction case follows from the induction hypothesis and the abstraction
+clause.  For an application-congruence conclusion
+\(MN\mathrel{\mathsf{Par}}M'N'\), use the two induction hypotheses.  If
+\(M\) is not an abstraction, the application clause gives
+\(M'N'\mathrel{\mathsf{Par}}
+  \operatorname{dev}(M)\operatorname{dev}(N)\), which is
+\(\operatorname{dev}(MN)\).  If \(M=\lambda x.Q\), the induction hypotheses
+give
+\(M'=_{\alpha}\lambda x.Q'\) with
+\(Q'\mathrel{\mathsf{Par}}\operatorname{dev}(Q)\), and
+\(N'\mathrel{\mathsf{Par}}\operatorname{dev}(N)\); the beta clause therefore
+gives
+\[
+ M'N'\mathrel{\mathsf{Par}}
+ \operatorname{dev}(Q)[\operatorname{dev}(N)/x]
+ =\operatorname{dev}(MN).
+\]
+Finally, if the last rule is the parallel beta clause, its conclusion is
+\(Q'[N'/x]\).  The induction hypotheses for the body and argument, followed
+by (1), give
+\[
+ Q'[N'/x]\mathrel{\mathsf{Par}}
+ \operatorname{dev}(Q)[\operatorname{dev}(N)/x],
+\]
+again exactly the complete development of the source redex.  This exhausts
+the four clauses and proves (2).
+
+If
+\(M\mathrel{\mathsf{Par}}N_0\) and
+\(M\mathrel{\mathsf{Par}}N_1\), (2) supplies
+\(N_i\mathrel{\mathsf{Par}}\operatorname{dev}(M)\) for both \(i\).
+Thus one-step parallel reduction has the diamond property.
+
+It remains to relate the auxiliary relation to ordinary beta reduction.  A
+root beta contraction is a parallel beta step by reflexivity of the developed
+body and argument; induction on a term context closes this fact under
+application and abstraction.  Hence
+\(\longrightarrow_\beta\subseteq\mathsf{Par}\).  Conversely, induction on a
+parallel derivation sequentializes it.  The variable case takes no beta step;
+the application and abstraction cases concatenate the finite reductions of
+their subterms inside the corresponding contexts; and the parallel beta case
+first reduces the body and argument inside
+\((\lambda x.M)N\) to \((\lambda x.M')N'\) and then contracts the root redex
+to \(M'[N'/x]\).  Therefore
+\(\mathsf{Par}\subseteq\longrightarrow_\beta^{*}\), and the two relations
+have the same reflexive--transitive closure.
+
+For completeness, lift the one-step diamond to finite paths explicitly.  Given
+paths of lengths \(m,n\) from one term, place them along the left and top edges
+of an \(m\)-by-\(n\) grid.  Induct lexicographically on the cell coordinates.
+At each cell the already constructed top and left edges are two parallel steps
+with a common source; the diamond property supplies the bottom and right edges.
+After finitely many cells, the lower-right corner is reachable from both path
+endpoints.  Replacing each parallel edge by its finite beta simulation gives a
+common beta reduct.  This is exactly the assertion of
+Theorem~\ref{thm:p07-church-rosser}.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p7.lambda.2}{thm:p07-beta-normal-form-unique}{Uniqueness of beta-normal forms}
+\begin{proof}
+Suppose
+\(M\longrightarrow_{\beta}^{*}N_1\) and
+\(M\longrightarrow_{\beta}^{*}N_2\), with both \(N_1,N_2\) beta-normal.
+Theorem~\ref{thm:p07-church-rosser} gives \(P\) such that
+\(N_i\longrightarrow_{\beta}^{*}P\) for \(i=1,2\).  No nonreflexive beta step
+can start from a beta-normal term, so each of these two reductions consists
+only of the reflexive step, modulo the bound-variable representatives fixed
+by Definition~\ref{def:p07-alpha-substitution}.  Thus \(N_1\) and \(N_2\) are
+alpha-equivalent.
+\end{proof}
+\end{annexitem}

@@ -1,0 +1,22 @@
+# P17: finite bets and subjective probabilities
+
+Root author return, 8 September 2026 UTC / 7 September Pacific. The complete new body and six proof items are supplied for independent review. This note grants no independent acceptance or admission.
+
+| File | Lines | SHA-256 |
+| --- | --- | --- |
+| `handbook/parts/p17/finite-subjective-probability.tex` | 288 | `A599CD4F95B5876E0E6904CB144F83979154958DE6D56E3CBFDE17AC98401243` |
+| `handbook/annex/p17/finite-subjective-probability.tex` | 266 | `655A21E509312E709AAEBD5080DF265DB5D7D1BDC5BC2A5407C292BA25B80A48` |
+
+The source is Rubinstein's 2015 author revision of *Lecture Notes in Microeconomic Theory*, second edition (2012), held at `source/references/rubinstein-microeconomic-theory-2015/rubinstein-second-edition-revision-2015-01-11.pdf`, SHA-256 `F7CEA2C4F48C77D93DD25C30BBDA83E051C6562A589256AAC8CBA1B5084A33F8`. The existing `Rubinstein2015LectureNotes` key suffices. Root read the full printed pp. 102–103 as text and complete page images during the same turn's Lecture 7 source reading. Physical pages are 116–117; version/title context and the complete preceding lecture were also read. Source images are retained in task workspace `tmp/p17-expected-utility-source/source-116.png` and `source-117.png`.
+
+The source assumptions are reproduced in independently written form: complete/transitive preference on all finite real payoff vectors; neighborhood continuity; strict improvement in every state (the source's weak monotonicity); and additivity under an arbitrary common state-dependent payoff. The proof derives weak coordinate monotonicity, existence of a unique sure-payment equivalent by a closed-set supremum argument, additivity and a Lipschitz bound, real homogeneity, and the unique nonnegative normalized probability vector. It explicitly constructs and checks the same separating halfspaces that the source obtains using separation. No unstated separation theorem is used. Zero-probability states and the one-state case are included.
+
+The event-price theorem is a separately identified handbook deduction, not a claim that the exact portfolio theorem appears on source pp. 102–103. Its declared model allows finite signed quantities of all unit event contracts at the same quotes and settlement time. The proof derives normalization, bounds and finite additivity from absence of a strictly negative-everywhere portfolio, and proves the converse by finite expectation. It distinguishes this condition from a nonpositive payoff with loss only at a zero-probability state. The source's independence-based exchange discussion on pp. 100–101 is explicitly distinguished; its dynamic consent/payment assumptions are not silently imported.
+
+All six result/proof pairs have matching suffixes: `bet-cash-equivalent`, `finite-bet-representation`, `bet-halfspaces`, `bet-events-null-states`, `finite-price-coherence`, and `nonlinear-bet-example`, with body prefix `thm:p17-` and annex prefix `annex:p17.`.
+
+Root read both complete authored files back. Direct checks include the rational-to-real homogeneity step, the sure-payoff normalization, all-zero/negative-scalar cases, zero state masses, empty events/portfolios and both directions of quote coherence. The three-state worked values sum to one and give cash value two. The nonlinear example's translated comparison differs by `(1-exp(-1))^2>0`; it satisfies the other assumptions but refutes common-vector additivity. The existing two-file scanner returns no findings and six reciprocal proof pairs. No tests, manuscript build or page inspection were performed.
+
+The finite P15 expectation definition is the only cross-part numerical dependency; all order and cash-equivalent proofs needed here are supplied directly. The prior expected-utility/risk chapters provide context and retain their frozen accepted hashes. This unit is not a general Savage theorem, a proof of objective chance, an empirical elicitation study, an infinite-portfolio theorem or a complete treatment of dynamic coherence.
+
+Root integration places the new body/annex after `risk-aversion` in P17. Typed notation intake uses P17.4: state set S and positive K; vectors x,y,z and certain vectors; basis e_i; coordinate order and two norms; C(x) cash equivalent; probability vector pi, dot evaluation and event measure; comparison halfspaces; unit event indicators, quotes q(A), net contracts b_A and signed finite portfolio coefficients; nonlinear V. Each role is locally defined; root alone edits the shared registry and candidate navigation.

@@ -1,0 +1,506 @@
+\chapter{Sequential decisions and dynamic programming}
+\label{sec:p17-sequential-decisions}
+
+A sequential decision changes both the current payoff and the
+distribution of later opportunities. The method below takes the
+transition law, information available before each action, and an
+additive payoff criterion as inputs. It returns an optimal policy
+and a value, with computable error bounds when iteration is used.
+The source interfaces are Bellman's bounded transformation equation
+\cite[Theorem~1, pp.~716--718]{Bellman1952DynamicProgramming}
+and Blackwell's discounted model and operator construction
+\cite[Sections~2--3 and Theorems~3--8, pp.~227--234]{Blackwell1965Discounted}.
+Bellman's theorem is proved at its stated bounded-function scope.
+The stochastic decision results here use finite states and finite
+actions; Blackwell's broader Borel-space results have additional scope.
+The remaining six original Bellman constructions, with their full
+resource, stopping and search domains, are supplied in
+\cref{sec:p17-bellman-original-constructions}.
+
+\section{What is observed, chosen and received}
+
+\begin{hbdefinition}{def:p17-sequential-model}{A finite controlled Markov model}
+Let \(S\) be a nonempty finite state set. At time
+\(t=0,1,\ldots\), state \(s\) admits the nonempty finite action
+set \(A_t(s)\). A finite common set \(A\) contains these actions.
+The inputs are transition probabilities and real rewards
+\[
+ P_t(s'\mid s,a)\geq0,\qquad
+ \sum_{s'\in S}P_t(s'\mid s,a)=1,\qquad
+ r_t(s,a,s')\in\mathbb R
+ \quad(a\in A_t(s)).
+\]
+At time \(t\), the decision maker first observes \(X_t\),
+then chooses \(A_t\), then the next state \(X_{t+1}\) is
+drawn from \(P_t(\cdot\mid X_t,A_t)\), and the reward
+\(r_t(X_t,A_t,X_{t+1})\) is received.
+The symbol \(A_t\) for the chosen random action is distinguished
+by its lack of the state argument from the feasible set \(A_t(s)\).
+The expected one-step reward is
+\[
+                 \bar r_t(s,a)=
+                     \sum_{s'}P_t(s'\mid s,a)r_t(s,a,s').
+\]
+The controlled Markov assumption specifies this next-state law
+even conditional on the whole available history and current action.
+It also specifies that the displayed state/action/next-state
+arguments contain all information relevant to the current reward.
+
+A history before action \(t\) is
+\(h_t=(s_0,a_0,s_1,\ldots,a_{t-1},s_t)\), with every past
+action feasible at its recorded state and time. A
+\emph{randomized history-dependent policy} \(\pi\) specifies
+probabilities \(\pi_t(a\mid h_t)\) on \(A_t(s_t)\) at every
+such history. A deterministic policy puts mass one on a selected
+action. A Markov policy depends only on \(t,s_t\).
+In a time-homogeneous model, \(A_t(s)=A(s)\),
+\(P_t=P\) and \(r_t=r\); a deterministic stationary policy
+is a single map \(f\) with \(f(s)\in A(s)\).
+Randomization uses no signal about the environment beyond
+the stated history.
+
+An initial distribution \(\rho\in\Delta(S)\) may be supplied;
+the value from initial state \(s\) uses \(\rho=\delta_s\).
+The expected-utility interpretation uses the finite lotteries
+and signalwise comparisons in
+\cref{thm:p17-lottery-reduction,thm:p17-information-policy-value}.
+Additivity across time and the chosen discount are further
+modeling assumptions. The finite-prize representation
+of \cref{thm:p17-finite-vnm} alone does not impose them.
+\index{Markov decision process}\index{policy!history-dependent}
+\index{dynamic programming}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p17-sequential-policy-law}{proved=annex:p17.sequential.policy.law}{The probability law of every allowed policy}
+For each initial law and policy there is a unique path probability
+law with cylinder masses
+\[
+ \rho(s_0)\prod_{t=0}^{N-1}
+          \pi_t(a_t\mid h_t)P_t(s_{t+1}\mid s_t,a_t).
+\]
+All finite-horizon expectations are therefore finite sums.
+The same specified kernels define a continuation from any
+history, even a history having zero probability from the chosen
+initial law. Statements about such continuations use this
+specified law rather than a division by a zero history probability.
+For any fixed initial law, a randomized Markov policy can reproduce
+the state/action marginals of a history-dependent policy at every
+time. This latter policy may depend on the initial law; a single
+simultaneously optimal policy for all initial states is established
+separately below.
+\end{hbtheorem}
+
+\section{A finite number of decisions}
+
+\begin{hbdefinition}{def:p17-sequential-finite-return}{Horizon, terminal payoff and continuation value}
+Fix an integer \(N\geq0\), terminal reward \(g:S\to\mathbb R\),
+and \(0\leq\gamma\leq1\). There are decisions at
+\(t=0,\ldots,N-1\), followed by \(g(X_N)\).
+Only those \(N\) transition, reward and feasible-action tables
+are required; an arbitrary feasible extension beyond \(N\)
+has no effect on this return.
+For a continuation from \(h_t\), let
+\[
+ J_{t,N}^{\pi}(h_t)=
+ E_{h_t}^{\pi}\!\left[
+   \sum_{k=t}^{N-1}\gamma^{k-t}
+           r_k(X_k,A_k,X_{k+1})+\gamma^{N-t}g(X_N)\right].
+\]
+Use \(\gamma^0=1\), including \(\gamma=0\), and an empty sum
+equals zero. At \(t=N\), this return is \(g(s_N)\).
+The finite-horizon optimum is the supremum over all specified
+history-dependent randomized continuation policies.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p17-sequential-backward}{proved=annex:p17.sequential.backward}{Backward recursion and full policy-class optimality}
+Set \(v_N=g\) and compute, for \(t=N-1,\ldots,0\),
+\[
+ v_t(s)=\max_{a\in A_t(s)}
+       \sum_{s'}P_t(s'\mid s,a)
+                       [\,r_t(s,a,s')+\gamma v_{t+1}(s')\,].
+\]
+Every maximum is attained. Select a maximizing action
+\(f_t(s)\) at each state and time, using a fixed order to resolve
+ties. Then for every history ending in \(s\) at time \(t\),
+\[
+                 J_{t,N}^{\pi}(h_t)\leq v_t(s)
+                         =J_{t,N}^{f}(h_t)
+                    \quad\hbox{for every }\pi.
+\]
+Thus a deterministic Markov policy is simultaneously optimal
+from every history. For initial law \(\rho\), its value is
+\(\sum_s\rho(s)v_0(s)\).
+When \(N=0\), the answer is \(g\) and there are no actions.
+With rational input tables, every value and selected action can
+be obtained by finite exact rational arithmetic and comparison.
+\end{hbtheorem}
+
+\section{Discounted infinite time}
+
+\begin{hbdefinition}{def:p17-sequential-discounted}{Bounded return and the two operators}
+For the discounted stochastic theorems below the model is time homogeneous,
+\(0\leq\gamma<1\), and
+\[
+ R=\max_{\substack{s,s'\in S\\a\in A(s)}}|r(s,a,s')|<\infty .
+\]
+This boundedness follows from the finite input tables; it is
+recorded explicitly because the infinite-series proof uses it.
+Define
+\[
+ J^\pi(s)=E_s^\pi\sum_{t=0}^{\infty}
+                      \gamma^t r(X_t,A_t,X_{t+1}),\qquad
+ V^*(s)=\sup_\pi J^\pi(s).
+\]
+For \(v:S\to\mathbb R\), write
+\(\|v\|_\infty=\max_s|v(s)|\), and set
+\[
+\begin{aligned}
+ (Tv)(s)&=\max_{a\in A(s)}
+                  [\,\bar r(s,a)+\gamma\sum_{s'}P(s'\mid s,a)v(s')\,],\\
+ (T_fv)(s)&=\bar r(s,f(s))
+                         +\gamma\sum_{s'}P(s'\mid s,f(s))v(s').
+\end{aligned}
+\]
+\(T\) is the optimality operator; \(T_f\) fixes the first action
+to the stationary choice \(f\).
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p17-sequential-tail}{proved=annex:p17.sequential.tail}{Convergent returns and uniform tail bounds}
+Every displayed discounted reward series converges absolutely
+on every admissible path, and
+\[
+ |J^\pi(s)|\leq\frac R{1-\gamma},\qquad
+ \left|J^\pi(s)-E_s^\pi\sum_{t=0}^{N-1}\gamma^t r_t\right|
+                       \leq\frac{R\gamma^N}{1-\gamma}.
+\]
+Here \(r_t\) abbreviates the realized reward of the homogeneous
+model. If two policies have the same decision kernels at all
+histories at times \(0,\ldots,N-1\), then
+\[
+                  \|J^\pi-J^{\pi'}\|_\infty
+                          \leq\frac{2R\gamma^N}{1-\gamma}.
+\]
+The factor \(2\) is necessary for rewards of both signs.
+With terminal payoff \(v\), the corresponding \(N\)-stage
+return differs from \(J^\pi\) by at most
+\(\gamma^N(R/(1-\gamma)+\|v\|_\infty)\).
+\end{hbtheorem}
+
+\begin{hblemma}{thm:p17-sequential-contraction}{proved=annex:p17.sequential.contraction}{The full contraction and fixed-point argument}
+For any nonempty set \(E\), bounded functions on \(E\)
+form a complete space in the norm
+\(\|u\|_\infty=\sup_{x\in E}|u(x)|\).
+If an operator \(B\) on this space satisfies
+\[
+                 \|Bu-Bv\|_\infty\leq\gamma\|u-v\|_\infty,
+                         \qquad 0\leq\gamma<1,
+\]
+then it has a unique fixed point \(w\). Its successive iterates
+\(u_{k+1}=Bu_k\) satisfy
+\[
+ \|u_k-w\|_\infty\leq\gamma^k\|u_0-w\|_\infty,\qquad
+ \|u_k-w\|_\infty\leq
+               \frac{\gamma^k}{1-\gamma}\|Bu_0-u_0\|_\infty.
+\]
+The same conclusion holds on a nonempty closed invariant subset.
+For any specified sigma algebra on \(E\), its bounded measurable
+functions form such a closed space whenever the operator preserves them.
+Here monotonicity means that pointwise \(u\leq v\) implies
+pointwise \(Bu\leq Bv\).
+In particular, an operator which is monotone and satisfies
+\[
+                  B(u+c\mathbf1)=Bu+\gamma c\mathbf1
+                           \quad(c\in\mathbb R)
+\]
+is such a contraction. The finite operators \(T,T_f\) have
+these properties.
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p17-bellman-bounded-transformations}{proved=annex:p17.bellman.bounded.transformations}{Bellman's original bounded transformation equation}
+Let \(E\ne\varnothing\), fix an integer \(m\geq1\),
+and let \(S_k:E\to E\), \(k=1,\ldots,m\).
+Suppose
+\[
+       0\leq g_k(p)\leq C,\qquad
+       0\leq h_k(p)\leq b<1
+                  \quad(p\in E,\ 1\leq k\leq m).
+\]
+Then the equation
+\[
+            F(p)=\max_{1\leq k\leq m}
+                      [\,g_k(p)+h_k(p)F(S_kp)\,]
+\]
+has exactly one bounded solution. It is nonnegative, bounded
+by \(C/(1-b)\), and obtained by successive approximation
+from any bounded initial function.
+This proves Bellman's Theorem~1, whose \(E\) is a region
+of Euclidean space, without requiring \(E\) to be finite.
+When \(E\) is finite, for constant \(h_k=\gamma\) and deterministic transitions
+\(p\mapsto S_kp\), this is the optimality operator above
+with nonnegative rewards. The stochastic operator replaces
+evaluation at a successor by its probability-weighted average.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p17-sequential-stationary-optimum}{proved=annex:p17.sequential.stationary.optimum}{A stationary optimum against all history-dependent policies}
+The unique fixed point \(w=Tw\) is \(V^*\).
+At each state choose a maximizing action \(f^*(s)\) in
+\(Tw(s)\). Then
+\[
+               J^\pi(s)\leq w(s)=J^{f^*}(s)
+                       \quad(s\in S,\ \hbox{every }\pi).
+\]
+Thus \(f^*\) is deterministic, stationary, and optimal from
+every state and every initial distribution.
+If a vector \(u\) satisfies \(Tu\leq u\), it is an upper
+bound on every policy value. For a stationary \(f\),
+\[
+              f\hbox{ is optimal}
+          \quad\Longleftrightarrow\quad TV^f=V^f,
+                 \qquad V^f=J^f.
+\]
+More generally a policy is optimal from all initial states
+if and only if its value vector is a fixed point of \(T\).
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p17-sequential-value-iteration}{proved=annex:p17.sequential.value.iteration}{Value iteration and a policy-loss certificate}
+Starting from any vector \(v_0\), iterate \(v_{k+1}=Tv_k\).
+For \(v_0=0\),
+\[
+                   \|v_k-V^*\|_\infty
+                        \leq\frac{R\gamma^k}{1-\gamma}.
+\]
+For any vector \(v\), define its residual
+\(\delta(v)=\|Tv-v\|_\infty\). Then
+\[
+                       \|v-V^*\|_\infty
+                             \leq\frac{\delta(v)}{1-\gamma}.
+\]
+If a stationary policy \(f\) obeys
+\(T_fv\geq Tv-\eta\mathbf1\), \(\eta\geq0\), then
+\[
+ 0\leq V^*(s)-V^f(s)
+       \leq\frac{2\gamma\|v-V^*\|_\infty+\eta}{1-\gamma}
+       \leq
+          \frac{2\gamma\,\delta(v)}{(1-\gamma)^2}
+                         +\frac{\eta}{1-\gamma}.
+\]
+An exact greedy choice has \(\eta=0\). These bounds give
+explicit stopping criteria for value accuracy and for the
+loss of the extracted policy. At \(\gamma=0\), one
+application of \(T\) gives the optimal value and a greedy
+policy is optimal.
+\end{hbtheorem}
+
+\section{Evaluating and improving a policy}
+
+\begin{hbtheorem}{thm:p17-sequential-policy-evaluation}{proved=annex:p17.sequential.policy.evaluation}{The policy linear system and its actual inverse}
+For a stationary \(f\), put
+\[
+ P_f(s,s')=P(s'\mid s,f(s)),\qquad r_f(s)=\bar r(s,f(s)).
+\]
+Every power of \(P_f\) is row stochastic, and
+\[
+ (I-\gamma P_f)^{-1}=\sum_{k=0}^{\infty}\gamma^kP_f^k,
+ \qquad
+ V^f=(I-\gamma P_f)^{-1}r_f.
+\]
+The inverse exists, has nonnegative entries, and has
+maximum absolute row sum \(1/(1-\gamma)\).
+Its tail after power \(N-1\) has row sum
+\(\gamma^N/(1-\gamma)\).
+The value is the unique solution of \(v=T_fv\).
+For rational transition, reward and discount data, Gaussian
+elimination computes this vector exactly using finitely many
+rational operations; each required pivot exists after a row
+interchange because the matrix is invertible.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p17-sequential-improvement}{proved=annex:p17.sequential.improvement}{Both source improvement routines}
+Let \(v=J^\pi\) for any policy, and let \(g\) be stationary.
+If \(T_gv\geq v\), then
+\[
+                        V^g\geq T_gv\geq v.
+\]
+Here \(T_gJ^\pi\) is the return from using \(g\) for the
+first action and then restarting \(\pi\) from the observed
+successor state.
+In particular, a greedy policy \(g\) for \(V^f\) improves
+a stationary \(f\). Writing \(d=T_gV^f-V^f\geq0\),
+\[
+               V^g-V^f=(I-\gamma P_g)^{-1}d\geq d.
+\]
+Thus an improvement strict at a state gives a value increase
+strict at that same state.
+
+For two stationary policies \(f,g\), define \(h(s)=f(s)\)
+where \(V^f(s)\geq V^g(s)\), and \(h(s)=g(s)\) otherwise.
+Then
+\[
+                         V^h\geq\max(V^f,V^g)
+\]
+coordinatewise. These are, respectively, the Howard and
+Eaton--Zadeh improvement statements proved in Blackwell's
+Theorem~8, specialized to the present finite model.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p17-sequential-policy-iteration}{proved=annex:p17.sequential.policy.iteration}{Finite termination with a specified tie rule}
+Start with any deterministic stationary policy \(f\).
+Evaluate \(V^f\). At each state retain \(f(s)\) if it
+maximizes the action value computed from \(V^f\); otherwise
+replace it by the first maximizing action in a fixed action
+order. Repeat evaluation and improvement until no action changes.
+The final policy is optimal, and there are at most
+\(\prod_{s\in S}|A(s)|-1\) strict improvement steps.
+This is a terminating exact algorithm for rational data.
+For arbitrary unspecified real inputs, the mathematical
+maxima and inverses still exist, but an effective exact
+comparison procedure for those real numbers is an additional input.
+\end{hbtheorem}
+
+\section{A complete maintenance decision}
+
+\begin{hbdefinition}{def:p17-sequential-maintenance}{Two observed machine conditions}
+The states are \(G\), good, and \(B\), bad. The following
+table gives the reward, which here is independent of the
+successor state, and the next-state probabilities.
+\[
+\begin{array}{c|c|r|cc}
+ \text{state}&\text{action}&r&P(G)&P(B)\\ \hline
+ G&\text{run}&3&1/2&1/2\\
+ G&\text{service}&1&1&0\\
+ B&\text{wait}&0&0&1\\
+ B&\text{repair}&-2&1&0
+\end{array}
+\]
+The condition is observed before acting each period. Running
+earns three now and may leave the machine bad for tomorrow.
+Service earns one now and leaves it good. Repair incurs two
+now and makes the next period good; it does not also produce
+the running reward in that period. These timing choices are
+part of the model.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p17-sequential-maintenance}{proved=annex:p17.sequential.maintenance}{Backward decisions, exact policy evaluation and an error certificate}
+For three decisions, terminal reward zero and \(\gamma=1\),
+the backward values and selected policies are
+\[
+\begin{array}{c|cc|cc}
+ t&v_t(G)&v_t(B)&f_t(G)&f_t(B)\\ \hline
+ 3&0&0&\text{no action}&\text{no action}\\
+ 2&3&0&\text{run}&\text{wait}\\
+ 1&9/2&1&\text{run}&\text{repair}\\
+ 0&23/4&5/2&\text{run}&\text{repair}
+\end{array}
+\]
+Starting in \(G\), the optimal value is \(23/4\).
+The decision after a bad transition uses the newly observed
+condition; repair is worthwhile with two decisions left
+and is wasteful on the last decision.
+
+For discounted infinite time with \(\gamma=3/4\), policy
+\((\text{run},\text{wait})\) has values \((24/5,0)\).
+One greedy improvement gives
+\((\text{run},\text{repair})\), with
+\[
+                         V^*=(72/11,\ 32/11).
+\]
+The two omitted action values at this vector are
+\(65/11\) for service in \(G\) and \(24/11\) for wait in \(B\),
+so the displayed policy is optimal.
+Value iteration from zero begins
+\[
+              v_1=(3,0),\qquad v_2=(33/8,1/4).
+\]
+Here \(R=3\). After \(k\) iterations its value error is at
+most \(12(3/4)^k\), and an exact greedy stationary policy
+has loss at most \(72(3/4)^k\).
+In particular \(k=23\) certifies loss below \(1/10\);
+the direct fixed-point calculation above certifies the
+specific displayed policy with zero loss.
+\end{hbtheorem}
+
+\section{The boundaries of the method}
+
+\begin{hbtheorem}{thm:p17-sequential-boundaries}{proved=annex:p17.sequential.boundaries}{What fails after the assumptions change}
+The following examples have the stated outcomes.
+
+\begin{enumerate}
+\item With one state, one action and reward \(1\), discount
+\(\gamma=1\) gives infinite total reward and equation \(v=1+v\)
+has no finite solution. With reward zero instead, every
+constant is a fixed point. With two deterministically alternating
+states and alternating rewards \(1,-1\), the undiscounted
+series is undefined as a convergent real series.
+\item Boundedness is automatic for the finite homogeneous tables.
+If the state space is enlarged to \(\mathbb N_0\), with the
+only transition \(j\mapsto j+1\), reward \(2^j\) and
+\(\gamma=1/2\), the return from zero is infinite.
+\item In Blackwell's one-state example with actions
+\(a\in\{1,2,\ldots\}\), reward \(1-1/a\), and
+\(0\leq\gamma<1\), the supremum is \(1/(1-\gamma)\)
+but no history-dependent randomized policy attains it.
+Thus bounded rewards alone do not replace finite action attainment.
+\item If a fair bit \(H\) is observed at time zero and then
+the recorded state at time one is the same symbol for both
+bit values, a final action \(a\in\{0,1\}\) rewarded by
+\(\mathbf1_{\{a=H\}}\) has history-policy value \(1\).
+A policy using only that time-one symbol has value at most
+\(1/2\). The recorded state fails the reward sufficiency
+assumption. Retaining \(H\) in the state repairs this particular model.
+\item With one state and actions \(0,1\), rewards
+\(r_t(a)=\mathbf1_{\{a=t\bmod2\}}\), and \(\gamma=1/2\),
+a time-dependent Markov policy has value \(2\).
+Every stationary randomized policy has value at most \(4/3\).
+This example removes time homogeneity.
+\item With one state, two identical zero-reward actions and
+\(\gamma<1\), switching actions on each tie can continue forever.
+The specified retain-on-tie rule prevents this policy-iteration failure.
+\end{enumerate}
+\end{hbtheorem}
+
+\begin{hblemma}{thm:p17-sequential-source-bridge}{proved=annex:p17.sequential.source.bridge}{The exact source operator and action conventions}
+Blackwell's reward is \(r(s,a,s')\), received after the
+transition; his discount is \(\beta=\gamma\), with the
+first reward undiscounted. With common finite action set
+and finite states, his stationary operator is \(T_f\).
+The supremum operator generated by an enumeration of all
+common actions is \(T\).
+State-dependent feasible action sets can be translated into
+his common-action convention without changing attainable
+state/reward laws or values.
+
+For \(\gamma>0\), two actions at a fixed state define the
+same one-step operator on every continuation vector exactly
+when they have the same transition row and the same
+expected reward \(\bar r(s,a)\). Equality of the realized
+reward function at every successor is sufficient but is not
+necessary. At \(\gamma=0\), equality of expected reward
+alone is equivalent to equality of the operators.
+\end{hblemma}
+
+\begin{hbmethod}{def:p17-sequential-computation}{Inputs, computation and returned decision}
+Supply the finite state and feasible-action lists, transition rows,
+successor-dependent rewards, and observation/action timing.
+For a finite horizon also supply \(N,g,\gamma\); apply
+\cref{thm:p17-sequential-backward} to return all \(v_t,f_t\)
+and the initial-distribution value.
+For the homogeneous discounted criterion supply \(0\leq\gamma<1\).
+With exact rational data, \cref{thm:p17-sequential-policy-iteration}
+returns an exact optimal stationary policy and its evaluated value.
+Alternatively specify an error tolerance, use
+\cref{thm:p17-sequential-value-iteration}, and return the
+computed value, greedy policy, and the corresponding residual
+or geometric error certificate.
+All numerical input values, including discount and terminal reward,
+must have the representation needed for the chosen arithmetic.
+For general Borel state and action spaces, use the selection,
+existence and verification constructions in
+\cref{sec:p17-blackwell-general-discounted}.
+For finite hidden states with compact continuous controls, use the
+information-state construction in
+\cref{sec:p17-partial-observation-decisions}; its finite-horizon
+value geometry is developed in
+\cref{sec:p17-astrom-incomplete-information-ii}.
+Average reward and undiscounted infinite return require their own
+model and existence premises.
+\end{hbmethod}

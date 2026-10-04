@@ -1,0 +1,461 @@
+%% Original source presentations supplement, not replace, the general CDCL proof.
+\chapter{The Original GRASP and MiniSat Presentations}
+\label{sec:p12-grasp-and-minisat-originals}
+
+GRASP's 1999 journal article and the MiniSat contribution to SAT~2003,
+published in 2004, have different native control structures and interfaces.
+This chapter treats the publication-form sources
+\cite{MarquesSilvaSakallah1999,EenSorensson2003}.
+The finite-CNF first-UIP and watched-propagation construction in
+Chapter~\ref{sec:p12-cdcl-uip-and-watched-literals} remains a separate proved
+interface.  In particular, it does not by its name prove GRASP's same-frame
+failure-driven assertions or MiniSat's arbitrary-constraint callbacks and
+incremental-assumption return protocol.
+
+\section{GRASP's antecedent assignments and cause sets}
+
+\begin{hbdefinition}{def:p12-grasp-native-state}{The original clause and causality notation}
+GRASP writes \(\varphi\) for the clause database, \(A\) for a partial
+assignment, \(\nu(x)\) for the assigned value of a variable, and
+\(\delta(x)\) for its level.  Its \(X=\{0,1\}\) is the unassigned
+value marker, not the finite variable set denoted by \(X\) in the later
+handbook presentation.  Preserve the source's literal convention
+\(x^0=x\), \(x^1=\neg x\): \(x^{\nu(x)}\) is the literal made
+\emph{false} by the assignment.  The plus sign in a displayed source clause
+means disjunction, not integer addition.
+
+For a unit reason clause \(\omega\) implying an assignment to \(x\),
+\(A^\omega(x)\) is the set of assignments falsifying its other literals.
+For example, from \(\omega=x+y+\neg z\),
+\(A^\omega(x)=\{y=0,z=1\}\).  A decision has no antecedent assignments.
+The implication graph \(I\) has assignment vertices, edges from the
+antecedents to their implied assignment, and a conflict vertex \(\kappa\)
+whose antecedents falsify its clause.  All antecedents precede their
+consequence, making the graph acyclic
+\cite[Secs.~2.1, 2.4; Fig.~1]{MarquesSilvaSakallah1999}.
+
+For an analysis at level \(d\), partition the antecedents of a current-level
+vertex into \(\Lambda(x)\), the assignments from levels below \(d\), and
+\(\Sigma(x)\), those from level \(d\).  Treat the conflict vertex's level
+as the maximum level of its antecedents.  Root facts are handled at level zero;
+the maximum of an empty unit-reason set is taken as zero.  The latter is an
+explicit boundary completion of the displayed maximum in source Eq.~(1),
+not a claim that a maximum of an empty set exists without a convention.
+\index{GRASP!antecedent assignments}\index{GRASP!cause sets}
+\end{hbdefinition}
+
+\begin{hbmethod}{def:p12-grasp-causes}{The standard backward cause construction}
+Fix the current level \(d\).  Starting from the conflict, expand a
+current-level implied vertex into its antecedents; retain lower-level
+assignments without expanding them; retain a current-level decision as a
+leaf.  In the source notation, the recursive operation is
+\[
+\operatorname{causes\_of}(x)=
+\begin{cases}
+ \{(x,\nu(x))\},&A(x)=\varnothing,\\
+ \Lambda(x)\cup
+ \displaystyle\bigcup_{(y,\nu(y))\in\Sigma(x)}
+        \operatorname{causes\_of}(y),&\text{otherwise}.
+\end{cases}
+\]
+Here \(A(x)\) suppresses the selected reason superscript; for the conflict
+use its conflict antecedents rather than treating it as a Boolean variable.
+An already empty conflict clause has an empty cause set and is an immediate
+root refutation.  Put
+\[
+ A^{\omega_C}(\kappa)=\operatorname{causes\_of}(\kappa),\qquad
+ \omega_C(\kappa)=
+   \sum_{(x,\nu(x))\in A^{\omega_C}(\kappa)}x^{\nu(x)}.
+\]
+The sum is the disjunction of the assignments' opposite literals.  These are
+the standard construction of source Eqs.~(2)--(4); the source separates it
+from the UIP variants
+\cite[Sec.~3; Eqs.~(2)--(4)]{MarquesSilvaSakallah1999}.
+The recursion is over the actual antecedent graph, not a set of unrelated
+variables that merely happens to have the same cardinality.
+\end{hbmethod}
+
+\begin{hblemma}{thm:p12-grasp-causes-sound}{proved=annex:p12-grasp-causes-sound}{Termination and semantic sufficiency of GRASP causes}
+On every finite acyclic reason graph with sound selected reasons, the standard
+cause construction terminates.  Every model satisfying its cause assignment
+would reproduce the conflicting consequences; hence no model of the input
+extends that assignment, and \(\omega_C(\kappa)\) is an input implicate.
+The result includes conflicts following earlier failure-driven assertions:
+their retained learned reasons must themselves be input implicates.  It does
+not presume that such assertions are fresh decisions.
+\end{hblemma}
+
+\section{The native recursive search, assertions, and backtracking}
+
+\begin{hbmethod}{def:p12-grasp-standard-engines}{Decide, Deduce, Diagnose, and Erase}
+The original framework uses four engines
+\cite[Sec.~2.5; Figs.~2--3, 5]{MarquesSilvaSakallah1999}.
+\emph{Decide} selects an unassigned variable and value, or recognizes a
+complete satisfying assignment.  The experimental decision heuristic counts
+the clauses directly satisfied by each proposed variable/value assignment;
+it is not Chaff's later activity heuristic.  \emph{Deduce} checks falsified
+clauses before applying unit clauses, records each selected antecedent, and
+continues until conflict or unit saturation.  \emph{Diagnose} constructs and
+records \(\omega_C\), computes
+\[
+ \beta=\max\{\delta(x):(x,\nu(x))\in A^{\omega_C}(\kappa)\},
+\]
+and returns a conflict to an earlier frame if \(\beta\ne d\), recording
+the new conflict's antecedents.  If \(\beta=d\), it leaves the learned
+clause available for an assertion after \emph{Erase} removes the current
+attempt.  An empty cause set is handled as a root conflict, not an undefined
+maximum.  \emph{Erase} removes the assignments of the abandoned attempt,
+not the fixed initial query assumptions.
+
+Before the first decision, perform root Deduce on the fixed initial query,
+reject a root conflict, and retain its fixed facts.  The recursive search
+then first calls Decide.  In each attempt it calls Deduce.
+If propagation succeeds, it searches a deeper frame.  A deeper conflict whose
+\(\beta\) is below this frame is passed upward immediately.  A local
+conflict, or one returned to this frame, is diagnosed.  If diagnosis points
+below the frame, erase and pass it upward.  Otherwise erase this attempt and
+repeat Deduce with the recorded clause, which forces the opposite branch.
+The standard driver thus keeps the current frame for a failure-driven
+assertion; it does not invariably jump to the second-highest learned-clause
+level as the later first-UIP procedure does.
+
+Level bookkeeping needs an explicit distinction in this source.  Eq.~(1)
+gives an ordinary implied vertex the maximum antecedent level; the actual
+Deduce pseudocode in Fig.~3 sets \(\delta(x)=d\), and Appendix Definition~4
+classifies an FDA by antecedents strictly below its assigned level.  The
+operational Search/Deduce presentation here uses the figure's current-frame
+annotation, including FDA vertices.  The reason-max convention remains a
+separate formula, not substituted during the same-frame FDA argument.
+Likewise Fig.~2 starts its frame parameter at zero whereas §2.2 describes the
+first decision as level one.  For the relative-query theorem below, root
+facts and fixed assumptions occupy zero and the first decision frame is one;
+this explicit initialization convention does not purport to verify an
+unexplained zero-based executable by copying its wrapper token.
+\end{hbmethod}
+
+\begin{hbdefinition}{def:p12-grasp-fda-cdb}{FDA and highest-cause-level CDB}
+If the cause set includes the present decision \(x=v@d\), its opposite
+literal occurs in \(\omega_C\).  Removing that decision and its implication
+sequence while retaining the earlier causes makes \(\omega_C\) unit and
+forces \(x=1-v\).  This is a \emph{failure-driven assertion} (FDA), with
+the learned clause as reason.  It is not an independent elective second
+decision.  In the original current-frame convention its antecedents have
+levels strictly below \(d\).
+
+If a subsequent conflict is supported entirely by assignments below the
+current frame, set \(\beta\) to their \emph{highest} level.  Every extension
+of the prefix through \(\beta\) still falsifies the recorded conflict clause,
+so deeper frames can be skipped.  At frame \(\beta\), the source diagnoses
+that conflict again to produce an FDA or a still-earlier target.  This is
+GRASP's standard conflict-directed backtracking (CDB), not an assertion that
+the clause is already unit at \(\beta\)
+\cite[Secs.~3.1.1--3.1.2; Eq.~(7)]{MarquesSilvaSakallah1999}.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-grasp-standard-search}{proved=annex:p12-grasp-standard-search}{The standard GRASP search with a declared root convention}
+For finite CNF, sound complete unit propagation, standard cause diagnosis,
+retained learned clauses, no restarts, and the fixed-root/current-frame
+convention stated above, the recursive search terminates.  With fixed initial
+assignment \(A_0\), success gives a total model extending \(A_0\), and
+failure occurs exactly when there is no such model.  FDA and CDB skip only
+assignments incompatible with an input implicate.  The theorem covers the
+standard engine, not arbitrary engine substitutions, the red-clause variant,
+or a compiled implementation of the published pseudocode.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p12-grasp-native-conflict}{The complete native FDA/CDB conflict construction}
+The original example uses
+\[
+\begin{array}{lll}
+ \omega_1=\neg x_1+x_2,&\omega_2=\neg x_1+x_3+x_9,&
+ \omega_3=\neg x_2+\neg x_3+x_4,\\
+ \omega_4=\neg x_4+x_5+x_{10},&
+ \omega_5=\neg x_4+x_6+x_{11},&\omega_6=\neg x_5+\neg x_6,\\
+ \omega_7=x_1+x_7+\neg x_{12},&\omega_8=x_1+x_8,&
+ \omega_9=\neg x_7+\neg x_8+\neg x_{13}.
+\end{array}
+\]
+Retain \(x_9=0@1\), \(x_{12}=x_{13}=1@2\), and
+\(x_{10}=x_{11}=0@3\).  Decide \(x_1=1@6\).  Then \(\omega_1\)
+forces \(x_2=1\), \(\omega_2\) forces \(x_3=1\), \(\omega_3\)
+forces \(x_4=1\), and \(\omega_4,\omega_5\) force \(x_5=x_6=1\),
+falsifying \(\omega_6\).  Expanding the current-level antecedents yields
+\[
+ A^{\omega_C}(\kappa)=\{x_1=1,x_9=0,x_{10}=0,x_{11}=0\},\qquad
+ \omega_C(\kappa)=\neg x_1+x_9+x_{10}+x_{11}.
+\]
+After erasure of the level-6 attempt, this clause forces the FDA \(x_1=0@6\).
+Now \(\omega_8\) forces \(x_8=1\), \(\omega_7\) forces \(x_7=1\),
+and \(\omega_9\) conflicts.  The FDA reason is expanded as well, giving
+\[
+ \omega_C(\kappa')=x_9+x_{10}+x_{11}+\neg x_{12}+\neg x_{13},\qquad
+ \beta=3.
+\]
+There is no remaining cause from level 6.  The whole prefix through level 3
+is excluded, so frames 6, 5 and 4 can be abandoned.  At level 3, further
+diagnosis supplies the source's next FDA/backtrack decision
+\cite[Figs.~1, 4; Eqs.~(5)--(7)]{MarquesSilvaSakallah1999}.
+This is not the different \(x_{21}/x_{31}\) example of the later handbook manuscript.
+\end{hbexample}
+
+\section{The original UIP links and complete-product boundary}
+
+\begin{hbmethod}{def:p12-grasp-uip-links}{UIP-local reasons with explicit endpoint order}
+Let \(u_1,\ldots,u_k\) be the current-level UIPs in forward order from
+the decision toward the conflict.  To explain a downstream vertex \(z\)
+relative to upstream UIP \(u_i\), stop backward expansion at \(u_i\):
+\(\operatorname{causes\_of}(u_i,u_i)=\{(u_i,\nu(u_i))\}\), and otherwise
+use the same \(\Lambda/\Sigma\) recursion.  To obtain a link from \(u_i\)
+to \(u_{i+1}\), negate the supporting assignments of
+\(\operatorname{causes\_of}(u_{i+1},u_i)\) and append the literal
+\(u_{i+1}^{1-\nu(u_{i+1})}\), which asserts the downstream value.  To
+exclude the final conflict, negate
+\(\operatorname{causes\_of}(\kappa,u_k)\).  Thus the source example yields
+both \(\neg x_1+x_9+x_4\) and \(\neg x_4+x_{10}+x_{11}\).
+
+This endpoint convention repairs the printed Eq.~(9): with Eq.~(8)'s argument
+order, its displayed cause arguments and appended endpoint do not give the
+stated links.  Merely retaining the stopping UIP and appending its own true
+literal yields a tautology, not the desired implication.  The construction
+above has its full semantic proof below; the original Eq.~(9) bytes remain
+unchanged in the primary capture
+\cite[Sec.~3.2.2; Eqs.~(8)--(9)]{MarquesSilvaSakallah1999}.
+\end{hbmethod}
+
+\begin{hblemma}{thm:p12-grasp-uip-links}{proved=annex:p12-grasp-uip-links}{Soundness of the corrected native UIP links}
+Every link produced by the stated endpoint-ordered construction is an
+implicate of the original input, and the terminal UIP conflict clause excludes
+exactly a sufficient cause assignment.  No claim that every such link has a
+universally smaller literal count than every other learned clause is needed
+for soundness.  Choosing the first UIP alone is a different stopping policy.
+\end{hblemma}
+
+\begin{hbmethod}{def:p12-grasp-retention-policy}{The source's green/red width policy}
+The source also distinguishes permanent green clauses of size at most a
+fixed \(k\) from larger red clauses, which are removed once they have more
+than one free literal.  This source-specific bounded diagnosis changes the
+retention policy and is not covered by the standard-retained-search theorem
+\cite[Sec.~3.2.1]{MarquesSilvaSakallah1999}.
+\end{hbmethod}
+
+\begin{hbdefinition}{def:p12-grasp-complete-product}{Prime implicates and the complete product}
+A non-tautological clause is a prime implicate of finite CNF \(\varphi\)
+when it is entailed by \(\varphi\) and no proper literal subset is entailed.
+Let \(P(\varphi)\) be the set of all such clauses.  If \(\varphi\) is
+unsatisfiable, the empty clause is the unique prime implicate under this
+definition; if \(\varphi\) is identically true, \(P(\varphi)\) is empty.
+This explicitly corrects the source appendix's phrase that the false function
+has no prime implicates while simultaneously placing the empty clause in its
+complete product.  Also, a prime subclause \(\omega\subseteq\psi\)
+implies \(\psi\), not the reverse implication printed in the satisfiable
+case of its proof
+\cite[Appendix, Thm.~3, pp.~519--520]{MarquesSilvaSakallah1999}.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-grasp-complete-product}{proved=annex:p12-grasp-complete-product}{Conflict-free decisions with all prime implicates}
+For satisfiable finite \(\varphi\), every consistent partial assignment
+that is unit-saturated and nonconflicting on \(P(\varphi)\) extends to a
+model.  Choosing either value of a still-unassigned variable and propagating
+cannot produce a conflict.  For an unsatisfiable input, the empty prime
+implicate gives an immediate conflict.  The satisfiable claim is for a
+compatible initial prefix, not for externally imposed contradictory query
+assumptions, and implies no small-size bound for \(P(\varphi)\).
+\end{hbtheorem}
+
+\section{MiniSat's actual 2004 callback and result contracts}
+
+\begin{hbdefinition}{def:p12-minisat-original-interface}{The published types, state, and external API}
+The original paper uses \texttt{var}, \texttt{lit}, \texttt{Vec},
+\texttt{Queue}, and \texttt{lbool}; \(\bot\) denotes \emph{undefined},
+not Boolean false.  The lifted values are
+\(\mathrm{True}_{\bot},\mathrm{False}_{\bot},\bot\), with distinct
+undefined literal and variable sentinels.  The public interface creates
+variables with \texttt{newVar}, adds clauses or declared Boolean constraints,
+calls \texttt{simplifyDB}, and calls \texttt{solve(assumptions)}; a successful
+solve exposes a \texttt{model} vector
+\cite[Secs.~2, 4.1; Figs.~1--3]{EenSorensson2003}.
+
+The state fields are the problem-constraint vector \texttt{constrs}, learned
+clause vector \texttt{learnts}, variable/clause scores and bump/decay factors,
+\texttt{order}, per-true-literal \texttt{watches}, per-variable
+\texttt{undos}, \texttt{propQ}, \texttt{assigns}, \texttt{trail}, level-boundary
+indices \texttt{trail\_lim}, \texttt{reason}, \texttt{level}, and
+\texttt{root\_level}.  The last field separates temporary query assumptions
+from search decisions.  These names and types are native implementation
+objects, not new inference rules.
+
+A false return from addition or top-level simplification leaves the source's
+solver object unusable: it has no stored Boolean ``already inconsistent''
+flag.  Before nonempty-assumption solve, top-level \texttt{simplifyDB} must
+therefore establish a usable base.  A false \texttt{solve} return then means
+UNSAT \emph{under those assumptions}; cancellation restores a usable
+assumption-free state.  It does not assert that the permanent base is UNSAT
+\cite[Sec.~2, pp.~503--504; Fig.~8]{EenSorensson2003}.
+\end{hbdefinition}
+
+\begin{hbmethod}{def:p12-minisat-original-callbacks}{The native constraint protocol}
+Each Boolean constraint implements \texttt{remove}, \texttt{propagate}, and
+\texttt{calcReason}; \texttt{simplify} and \texttt{undo} have defaults.
+Construction at top level registers all relevant watch events and enqueues
+the unit information available there.  Removal detaches registrations before
+disposing the object.  Propagation is invoked by a newly true watched literal;
+it reregisters itself in the same or another watch list, enqueues justified
+consequences, and reports a genuine conflict with a false return.
+
+\texttt{calcReason(p)} returns true assignment literals supporting the
+propagated \(p\); \texttt{calcReason(}\(\bot_{\mathrm{lit}}\)\texttt{)} returns assignments
+supporting a conflict.  The source guarantees the callback is evaluated in
+the relevant earlier assignment state.  A nonclausal constraint that changes
+internal state during propagation may register an undo callback; reverse-trail
+cancellation invokes it with that earlier state restored.  The no-undo
+property for clauses is not automatically a no-undo property for every
+Boolean constraint type \cite[Sec.~4.2]{EenSorensson2003}.
+
+For the operational return convention, \texttt{simplify} returns true only
+when the constraint is satisfied and may be deleted, and false when it remains
+after in-place simplification.  This follows the actual Clause code in Fig.~4
+and its caller in Fig.~9.  The prose on p.~508 reverses those two meanings;
+the present protocol corrects that discrepancy rather than declaring both
+variants simultaneously executable.  A stronger simplifier detecting a
+conflict requires its result to be checked: the source search ignores that
+result only for its particular BCP-strength simplifier
+\cite[pp.~508, 510, 515, 517]{EenSorensson2003}.
+\end{hbmethod}
+
+\begin{hbdefinition}{def:p12-minisat-original-reasons}{Semantic obligations of returned reason sets}
+For a Boolean constraint \(K\), a propagated literal \(p\), and a finite
+set \(R\) of previously true assignment literals, a sound callback requires
+\[
+ K\models\bigl((\bigwedge R)\to p\bigr).
+\]
+For a conflict reason it requires \(K\models\neg\bigwedge R\).
+Thus the corresponding clause is the disjunction of the complements of
+\(R\), with \(p\) appended in the propagation case.  This semantic
+obligation is required even when \(K\) is not itself a clause.  Registered
+events must also expose violated constraints at a total assignment; a
+callback that is merely sound when called but is never called on the needed
+event does not justify SAT.  These are the proof obligations of the source
+extension interface, not an implementation supplied by its type name.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-minisat-original-reason-bridge}{proved=annex:p12-minisat-original-reason-bridge}{The nonclausal reason-to-clause bridge}
+Under these reason, chronological-support, event-coverage and undo contracts,
+every clause learned by the native callback analysis is entailed by the
+permanent Boolean constraints.  A total conflict-free return satisfies them;
+a root-query conflict excludes all models satisfying the supplied assumptions.
+This proves the semantic bridge to the general CDCL resolution argument,
+not correctness or termination of an arbitrary new callback implementation.
+\end{hbtheorem}
+
+\section{Published propagation, analysis, and query execution}
+
+The original \texttt{Clause} stores \texttt{learnt}, \texttt{activity}, and
+\texttt{lits}; the two watches occupy \texttt{lits[0]} and \texttt{lits[1]}.
+Its propagation swaps the newly false watched literal into position 1,
+accepts immediately if position 0 is true, otherwise searches positions 2
+onward for a nonfalse replacement.  On failure it reregisters the old watch
+and enqueues position 0, which either propagates or conflicts.  On a conflict,
+the outer list traversal restores all unvisited list references.  Original
+\texttt{enqueue} immediately writes the assignment, reason and current level;
+an opposite enqueue clears \texttt{propQ} and returns false, while an already
+true enqueue does nothing \cite[Figs.~4, 6]{EenSorensson2003}.
+The abstract watched theorem can be applied only with these exact event and
+attachment conditions, as in Theorem~\ref{thm:p12-cdcl-uip-watch-correct}.
+
+The original constructor normalizes input clauses at top level, detects a
+true literal or tautology, removes false/duplicate occurrences, rejects an
+empty residual, and enqueues a unit residual.  A learned nonunit clause has
+its asserting literal first and a highest-level nonasserting watch second.
+The published Fig.~5 transfers \texttt{ps} into \texttt{c.lits} and then
+still indexes \texttt{ps}; the abstract vector transfer semantics are not
+specified by the printed API.  A concrete implementation must therefore
+specify the ownership boundary.  With a source-clearing transfer, subsequent
+watch selection and bumping must use \texttt{c.lits}, not the emptied vector.
+This is an explicit implementation dependency, not a claim that the literal
+pseudocode has been compiled and verified.
+
+\begin{hbexample}{def:p12-minisat-original-reason-example}{The published callback-reason expansion}
+The publication's own learning example makes the reason types concrete.
+Here \(u,v,x,y,z\) are Boolean variables, not frame indices or assigned-value
+parameters of the earlier GRASP presentation.
+If \(\{x,y,z\}\) is false, its conflict reason consists of the true
+assignments \(\neg x,\neg y,\neg z\).  If a constraint explains
+\(\neg x\) by true assignments \(u,\neg v\), it entails
+\(\neg u+v+\neg x\).  Expanding that callback reason replaces
+\(\neg x\) in the conflict reason by \(u,\neg v\), producing the
+learned clause \(\neg u+v+y+z\).  A reason set is therefore a conjunction
+of true assignments, not the disjunction returned as the learned clause
+\cite[Sec.~4.4, p.~513]{EenSorensson2003}.
+\end{hbexample}
+
+The native analysis uses \texttt{seen}, \texttt{counter}, a reason vector and
+a backward trail scan.  Initially \(p=\bot_{lit}\) requests the conflict
+reason.  Newly seen current-level variables increase the counter; positive
+older levels contribute complemented literals to the result and determine
+the backjump maximum.  Root-zero literals are omitted only because they are
+already permanent consequences.  The scan undoes trail entries until it
+reaches a seen literal, takes its stored reason, decrements the counter, and
+repeats until one UIP remains.  Its complement becomes the first learned
+literal.  The caller completes cancellation to the larger of the computed
+backjump and \texttt{root\_level}, then records and enqueues the assertion
+\cite[Fig.~7]{EenSorensson2003}.
+
+A learned unit is not allocated as a Clause object or inserted into
+\texttt{learnts}; the constructor enqueues it as a fact.  Under temporary
+assumptions its computed backjump may be zero but cancellation is clamped to
+the query root, so that fact is enqueued there.  Cancelling the assumptions
+after solve can erase it, and a later query may have to derive it again.
+The original explicitly describes this unit-storage boundary; it does not
+implement permanent storage of every learned unit
+\cite[p.~514]{EenSorensson2003}.  Forgetting an entailed
+fact cache is not a claim that the permanent input changed its models.
+
+\texttt{search} first propagates.  A conflict at the query root returns
+\(\mathrm{False}_{\bot}\); other conflicts invoke analysis, cancellation,
+recording and activity decay.  Without a conflict it may simplify at absolute
+level zero and reduce unlocked learned clauses.  A total assignment is copied
+to \texttt{model}; exceeding the conflict budget cancels to the query root
+and returns \(\bot\), not UNSAT.  The outer \texttt{solve} installs each
+assumption with propagation, fixes \texttt{root\_level}, repeats bounded
+searches, and eventually cancels temporary assumptions.  Its printed strategy
+starts with conflict budget 100 and learned limit \(\mathrm{nConstraints}/3\),
+then multiplies them by 1.5 and 1.1; variable/clause decay parameters are
+0.95 and 0.999.  These are the original selected strategy constants, not
+general complexity bounds \cite[Fig.~8]{EenSorensson2003}.
+
+\begin{hbtheorem}{thm:p12-minisat-original-query}{proved=annex:p12-minisat-original-query}{Root simplification and assumption-relative conclusions}
+Let \(F\) be the permanent Boolean constraint conjunction and \(G\) a
+finite conjunction of root facts entailed by \(F\).  If each retained
+constraint is simplified equivalently under \(G\), and only constraints
+already true under \(G\) are removed, the represented conjunction
+\(G\land F'\) has exactly the models of \(F\).  With temporary assumption
+conjunction \(H\), a checked model represents a model of \(F\land H\),
+and a sound query-root conflict proves \(F\land H\) unsatisfiable.
+Neither proves \(F\) unsatisfiable merely because \(H\) was inconsistent
+with it.  A budget return of undefined carries neither conclusion.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p12-minisat-original-assumptions}{A native return-value boundary}
+The permanent clause \(x+y\) is SAT, for example at \(x=1,y=0\).
+A solve call with assumptions \(\neg x,\neg y\) conflicts and returns
+false \emph{under assumptions}; it does not refute the permanent clause.
+After cancellation a solve call with assumption \(x\) still has a model.
+If a caller instead ignores a false addition of the contradictory units
+\(x\), \(\neg x\), the source declares that object unusable.  Calling
+assumption solve on it and interpreting the next false as merely temporary
+violates the source's precondition; no theorem here validates that misuse.
+\end{hbexample}
+
+The 17-page published contribution and the 23-page extended version~1.2 are
+not title aliases.  The original first-page footnote points to an extended
+version; its nine grouped code figures have different numbering from the
+extended presentation, which separately includes extra ADT exposition,
+exercises and a Satzoo appendix.  The original false-enqueue queue-clearing
+step differs from extended~1.2 Fig.~9, whose enqueue false branch lacks that
+local clear while its outer propagation clears the queue on callback failure.
+The original Simplify prose reverses the flags, while the extended prose
+uses the flags required by its caller.  These verified local differences
+must not be erased by substituting later text.  The shared
+first-UIP/watch case structure explains a bounded relationship to the general
+proof chapter; it is not a proof that all program states, API flags, wrapper
+conventions or empirical results of these versions are identical.

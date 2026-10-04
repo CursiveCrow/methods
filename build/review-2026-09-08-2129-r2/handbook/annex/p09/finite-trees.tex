@@ -1,0 +1,185 @@
+%% Finite-tree automata/MSO proof for the displayed ranked-tree signature.
+
+\section{Finite trees and monadic second-order logic}
+
+\begin{annexitem}{annex:p9.trees.1}{thm:p09-finite-tree-automata}{Finite-tree automata and monadic second-order logic}
+\begin{proof}
+Fix the finite ranked alphabet \(\Sigma\).
+The subset invariant in Section~\ref{sec:p09-finite-tree-determinization}
+proves determinization, including the empty subset.
+The disjoint-union, product, and complete-complement constructions in
+Section~\ref{sec:p09-finite-tree-boolean} prove the three Boolean closures.
+The upward marking invariant and its occurrence-counter implementation in
+Section~\ref{sec:p09-finite-tree-emptiness} prove membership and emptiness
+decidability.  We prove the two logical translations explicitly.
+
+\paragraph{Marking assignments on a fixed input tree.}
+List \(m\) free individual variables and \(n\) free set variables.
+Use the decorated ranked alphabet
+\[
+ \Sigma^{m,n}
+   =\{(f,\mathbf b):f\in\Sigma,\ \mathbf b\in\{0,1\}^{m+n}\},
+ \qquad
+ \operatorname{arity}(f,\mathbf b)=\operatorname{arity}(f).
+\]
+The underlying \(\Sigma\)-tree is obtained by forgetting the bits.
+An individual-variable track marks exactly its assigned node; a set
+track marks exactly the nodes in the assigned subset.
+Different individual variables may mark the same node.
+
+The language \(V_{m,n}\) of legal assignment markings is recognizable.
+For each individual track, a state records its number of marked nodes
+in the current subtree, truncated at two.
+At a node, add the current bit and the child counts and truncate
+again.  Accept exactly when every individual count is one.
+The set-variable tracks impose no extra restriction.
+There are finitely many count vectors, and induction on the tree
+proves the count invariant.
+When \(m=0\), the empty count vector accepts every decorated tree.
+When \(\Sigma\) has no ground terms, all these languages are empty,
+which is the correct empty class of input structures.
+
+\paragraph{Rank-preserving erasure and extra tracks.}
+Let \(h\) erase selected bit coordinates, preserving the ranked symbol
+and its arity.  The image under \(h\) of a recognizable decorated-tree
+language is recognizable: replace the label of every transition by
+its projected label, retaining its child states and target.
+An original run projects to a run of this automaton.
+Conversely, for each node of a finite projected run choose an
+original label witnessing its transition.  Those choices give one
+decorated input tree and a run of the original automaton.
+There is no compatibility condition between bits at different nodes
+beyond what its states and transitions already enforce.
+
+To read an automaton over a larger list of tracks, let each new
+transition ignore the extra bits.  This recognizes \(h^{-1}(L)\);
+intersecting with the legal-marking language for the larger list
+enforces the individual-variable conditions.
+Thus automata for two subformulas can always be placed on the same
+ordered union of their free-variable tracks.
+
+\paragraph{Atomic formulas.}
+Work relative to \(V_{m,n}\).
+Each of the following tests is recognized by a finite bottom-up
+automaton, then intersected with \(V_{m,n}\).
+For equality \(x=y\), record whether some node carries both individual
+markers.  Under the singleton condition this is exactly equality
+of their assigned nodes.
+For a label atom \(P_f(x)\), record whether an \(x\)-marked node
+has label \(f\).
+For \(x\in X\), record whether a node carries both the \(x\)-marker
+and the \(X\)-bit.
+In each case the record is a Boolean value: the current local event
+or the event already recorded in one of the child subtrees.
+Bottom and top are represented by the empty language and \(V_{m,n}\).
+
+For the child relation \(E_i(x,y)\), states additionally remember
+the individual-marker bits at the root of the current subtree.
+At a node labelled \(f\) of arity \(r\), the new local event holds
+exactly when \(i\leq r\), the current node has its \(x\)-bit set,
+and the root bits in its \(i\)-th child state contain the \(y\)-marker.
+Combine this event with the child event flags.
+The newly stored root bits are those of the current label.
+Induction shows that the final flag says exactly that the two
+uniquely marked nodes satisfy \(E_i\).
+If a formula uses the same individual variable twice, it uses the
+same track; the construction therefore also covers \(x=x\) and
+\(E_i(x,x)\).
+
+\paragraph{Induction on formulas.}
+Associate with each monadic second-order formula \(\varphi\) an
+automaton accepting exactly its legal marked trees on which
+\(\varphi\) is true.
+The atomic constructions begin the induction.
+For conjunction and disjunction, extend both automata to the same
+free-variable track list and take intersection or union.
+For negation, use relative complement
+\[
+ L_{\neg\varphi}=V_{m,n}\setminus L_\varphi.
+\]
+The legal-marking restriction is part of the invariant, including
+after negation.
+
+For \(\exists X\,\varphi\), construct the body automaton with the
+additional set track, then erase that track.
+Its finitely many node bits range over exactly all subsets of the
+finite input domain, so the image operation implements existential
+set quantification.
+For \(\exists x\,\varphi\), use an additional individual track,
+enforce its singleton condition, and then erase it.
+Every accepted expansion supplies a node witness, and every node
+witness supplies that marking.
+If the quantified variable does not occur in the body, add its
+unused track first; the nonempty input tree still has a singleton
+marking for an individual variable.
+Bound variables are renamed to avoid clashes before these operations.
+Universal quantifiers are obtained by negation and existential
+quantification.  Set equality and inclusion, if used as abbreviations,
+are expressed by their pointwise membership formulas.
+These cases exhaust the usual monadic second-order syntax in the
+stated label/child/equality signature.
+
+For a sentence, no tracks remain.  The alphabet
+\(\Sigma^{0,0}\) is canonically \(\Sigma\), and its automaton therefore
+recognizes precisely the sentence's language of finite ranked trees.
+
+\paragraph{Describing an accepting run by sets.}
+Conversely, let \(\mathcal A=(Q,\Sigma,\Delta,F)\) be a finite
+bottom-up tree automaton.
+Introduce one monadic set variable \(Z_q\) for each state \(q\in Q\).
+Require these sets to partition the input domain:
+\[
+ \forall x\left[
+  \left(\bigvee_{q\in Q}x\in Z_q\right)
+  \land
+  \bigwedge_{\substack{q,r\in Q\\q\ne r}}
+                 \neg(x\in Z_q\land x\in Z_r)
+ \right].
+\]
+Let \(d\) be the largest symbol arity, taking \(d=0\) when
+\(\Sigma\) is empty, and define
+\[
+ \operatorname{Root}(x)
+   \equiv\neg\exists y\,\bigvee_{i=1}^{d}E_i(y,x).
+\]
+On every input tree this picks its unique root.
+Require
+\[
+ \exists x\,
+       \left(\operatorname{Root}(x)\land
+                         \bigvee_{q\in F}x\in Z_q\right).
+\]
+For each \(f\in\Sigma\) of arity \(r\), include
+\[
+ \forall x\left[
+ P_f(x)\to
+ \bigvee_{\substack{f(q_1,\ldots,q_r)\to q\\\in\Delta}}
+ \left(
+  x\in Z_q\land
+  \exists y_1\cdots y_r
+       \bigwedge_{i=1}^{r}
+                    (E_i(x,y_i)\land y_i\in Z_{q_i})
+ \right)\right].
+\]
+For \(r=0\), the existential block is empty and its conjunction is
+\(\top\), so this is exactly the nullary-transition condition.
+An empty disjunction is \(\bot\).
+Existentially quantify all the \(Z_q\) around the conjunction of
+partition, root, and transition clauses.
+
+An accepting run supplies its state classes as witnesses to these sets.
+Conversely, a satisfying partition assigns exactly one state to each
+node.  Its actual label selects a transition clause, and its ranked
+tree children are precisely the witnesses in that clause.
+Thus every node satisfies a legal transition, and the root clause
+makes the resulting run accepting.
+If \(Q\) or \(F\) is empty, the same empty-disjunction conventions
+make the formula unsatisfiable on a nonempty tree, as required.
+This proves the converse translation.
+
+All subsets of the finite input domain are finite.
+Accordingly weak and full monadic quantification have the same
+meaning on these structures.  The two translations and the finite
+automaton constructions establish all assertions of the theorem.
+\end{proof}
+\end{annexitem}

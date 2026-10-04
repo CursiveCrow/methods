@@ -1,0 +1,231 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "section-review-shard.schema.json",
+  "title": "Section-local review evidence used during construction",
+  "description": "Schema validation is necessary but not sufficient. The merger also validates live file and authority hashes, unit identities, gate ordering, evidence isolation, dependency closure, and deterministic ordering.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "section"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "section": {"$ref": "#/$defs/section"}
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "nonemptyString": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^\\S(?:.*\\S)?$"
+    },
+    "repositoryPath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
+    },
+    "stringArray": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/nonemptyString"}
+    },
+    "hashedFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": {"$ref": "#/$defs/repositoryPath"},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "consultedAuthority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "locator", "sha256"],
+      "properties": {
+        "path": {"$ref": "#/$defs/repositoryPath"},
+        "locator": {"$ref": "#/$defs/nonemptyString"},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "ordinaryEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "category",
+        "artifact_path",
+        "sha256",
+        "producer_identity",
+        "recorded_scope"
+      ],
+      "properties": {
+        "category": {
+          "enum": [
+            "source_restoration",
+            "external_content",
+            "provenance_mapping",
+            "build",
+            "visual",
+            "internal_lock"
+          ]
+        },
+        "artifact_path": {"$ref": "#/$defs/repositoryPath"},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "producer_identity": {"$ref": "#/$defs/nonemptyString"},
+        "recorded_scope": {"$ref": "#/$defs/nonemptyString"}
+      }
+    },
+    "aiEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "category",
+        "artifact_path",
+        "sha256",
+        "producer_identity",
+        "recorded_scope",
+        "model",
+        "model_version",
+        "instructions",
+        "consulted_authorities",
+        "findings",
+        "other_review_outputs_consulted"
+      ],
+      "properties": {
+        "category": {
+          "enum": [
+            "topic_source_fidelity_ai",
+            "topic_specialist_ai",
+            "topic_adversarial_publication_ai",
+            "section_source_fidelity_ai",
+            "section_specialist_ai",
+            "section_adversarial_publication_ai"
+          ]
+        },
+        "artifact_path": {"$ref": "#/$defs/repositoryPath"},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "producer_identity": {"$ref": "#/$defs/nonemptyString"},
+        "recorded_scope": {"$ref": "#/$defs/nonemptyString"},
+        "model": {"$ref": "#/$defs/nonemptyString"},
+        "model_version": {"$ref": "#/$defs/nonemptyString"},
+        "instructions": {"$ref": "#/$defs/nonemptyString"},
+        "consulted_authorities": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/consultedAuthority"}
+        },
+        "findings": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/nonemptyString"}
+        },
+        "other_review_outputs_consulted": {"const": false}
+      }
+    },
+    "gates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_restoration",
+        "external_content",
+        "provenance_mapping",
+        "topic_source_fidelity_ai",
+        "topic_specialist_ai",
+        "topic_adversarial_publication_ai",
+        "section_source_fidelity_ai",
+        "section_specialist_ai",
+        "section_adversarial_publication_ai",
+        "build",
+        "visual",
+        "internal_lock"
+      ],
+      "properties": {
+        "source_restoration": {"enum": ["pending", "pass"]},
+        "external_content": {"enum": ["pending", "pass"]},
+        "provenance_mapping": {"enum": ["pending", "pass"]},
+        "topic_source_fidelity_ai": {"enum": ["pending", "pass"]},
+        "topic_specialist_ai": {"enum": ["pending", "pass"]},
+        "topic_adversarial_publication_ai": {"enum": ["pending", "pass"]},
+        "section_source_fidelity_ai": {"enum": ["pending", "pass"]},
+        "section_specialist_ai": {"enum": ["pending", "pass"]},
+        "section_adversarial_publication_ai": {"enum": ["pending", "pass"]},
+        "build": {"enum": ["pending", "pass"]},
+        "visual": {"enum": ["pending", "pass"]},
+        "internal_lock": {"enum": ["pending", "pass"]}
+      }
+    },
+    "section": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "section_id",
+        "part_id",
+        "title",
+        "state",
+        "source_files",
+        "handbook_unit_ids",
+        "inherited_source_unit_ordinals",
+        "presentation_packet_ids",
+        "register_obligation_ids",
+        "dependency_section_ids",
+        "gates",
+        "evidence"
+      ],
+      "properties": {
+        "section_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9._-]*:[A-Za-z0-9][A-Za-z0-9._:-]*$"
+        },
+        "part_id": {
+          "type": "string",
+          "pattern": "^p(?:0[1-9]|1[0-9])$"
+        },
+        "title": {"$ref": "#/$defs/nonemptyString"},
+        "state": {
+          "enum": [
+            "queued",
+            "source restored",
+            "external content integrated",
+            "provenance mapped",
+            "topics AI-approved",
+            "section AI-approved",
+            "build-approved",
+            "visual-approved",
+            "internally locked"
+          ]
+        },
+        "source_files": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/hashedFile"}
+        },
+        "handbook_unit_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/nonemptyString"}
+        },
+        "inherited_source_unit_ordinals": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "integer", "minimum": 1}
+        },
+        "presentation_packet_ids": {"$ref": "#/$defs/stringArray"},
+        "register_obligation_ids": {"$ref": "#/$defs/stringArray"},
+        "dependency_section_ids": {"$ref": "#/$defs/stringArray"},
+        "gates": {"$ref": "#/$defs/gates"},
+        "evidence": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {"$ref": "#/$defs/ordinaryEvidence"},
+              {"$ref": "#/$defs/aiEvidence"}
+            ]
+          }
+        }
+      }
+    }
+  }
+}

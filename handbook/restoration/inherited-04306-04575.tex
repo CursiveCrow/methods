@@ -1,0 +1,270 @@
+\chapter{Henkin Completeness and Compactness}
+\label{ch:fol-metatheory}
+
+The completeness theorem for classical first-order logic is G\"odel's
+\cite{Godel1930}.  This chapter develops the construction introduced by
+Henkin \cite{Henkin1949}, which extracts a term structure from a maximal
+consistent, witness-saturated set.
+
+\section{Syntactic preparation}
+\label{sec:fol-metatheory-01}
+
+\begin{definition}[First-order consistency]
+A set \(\Gamma\subseteq\Fm(\Lang)\) is \emph{consistent} iff
+\(\Gamma\notderives_{\ND_{\FOL}}\bottom\).  It is \emph{maximal consistent}
+iff it is consistent and \(\Gamma\cup\set{\varphi}\) is inconsistent for
+every \(\varphi\notin\Gamma\).
+\end{definition}
+
+The closure properties in \cref{lem:prop-mcs} also hold for a maximal
+consistent \(\Delta\subseteq\Fm(\Lang)\), but their first-order proof does not
+silently graft derivations across eigenvariable rules.  For deductive closure,
+suppose \(\Delta\derives_{\ND_{\FOL}}\varphi\) and
+\(\varphi\notin\Delta\).  Maximality supplies a derivation of \(\bottom\) from
+\(\Delta\cup\set{\varphi}\).  Because \(\Delta\) is consistent, at least one
+open occurrence of the added assumption remains in that derivation.  Apply
+\(\neg I\) at its root, discharging every such occurrence, to obtain
+\(\Delta\derives_{\ND_{\FOL}}\neg\varphi\).  Combining this derivation with
+the given derivation of \(\varphi\) by \(\neg E\) derives \(\bottom\) from
+\(\Delta\), contradicting consistency.  Clauses 2--5 of
+\cref{lem:prop-mcs} then use this deductive-closure result and only the
+displayed propositional rules, so their proofs transfer without an
+eigenvariable-renaming step.
+
+\begin{lemma}[Classical quantifier duality]
+\label{lem:quantifier-duality}
+The calculus \(\ND_{\FOL}\) derives
+\[
+ \neg\forall x\,\varphi\leftrightarrow\exists x\,\neg\varphi
+ \quad\text{and}\quad
+ \neg\exists x\,\varphi\leftrightarrow\forall x\,\neg\varphi.
+\]
+\end{lemma}
+\begin{proof}
+For \(\neg\exists x\,\varphi\to\forall x\neg\varphi\), take a variable
+\(y\) absent from \(\varphi\) and free in no open assumption.  Assume \(\varphi[y/x]\); existential
+introduction contradicts \(\neg\exists x\varphi\).  Negation introduction
+gives \(\neg\varphi[y/x]\), and universal introduction gives
+\(\forall y\,\neg\varphi[y/x]\).  Since \(y\) is fresh for \(\varphi\), the
+\(\alpha\) rule gives \(\forall x\neg\varphi\).  The reverse
+implication follows by existential elimination: a witness to \(\varphi\)
+contradicts the corresponding instance of \(\forall x\neg\varphi\).
+
+For \(\exists x\neg\varphi\to\neg\forall x\varphi\), eliminate the
+existential and contradict the corresponding universal instance.  For the
+remaining direction, assume \(\neg\forall x\varphi\) and, for reductio,
+\(\neg\exists x\neg\varphi\).  The already proved implication gives
+\(\forall x\neg\neg\varphi\).  For a variable \(y\) absent from
+\(\varphi\) and free in no open assumption, double-negation
+elimination gives \(\varphi[y/x]\); universal introduction gives
+\(\forall y\,\varphi[y/x]\), and the \(\alpha\) rule gives
+\(\forall x\varphi\), contradicting the first assumption.  Reductio yields
+\(\exists x\neg\varphi\).  Every eigenvariable is chosen absent from the
+surviving assumptions and conclusion.
+\end{proof}
+
+\begin{lemma}[Fresh-constant lemma]
+\label{lem:fresh-constant}
+Let \(c\) be a constant symbol occurring in neither \(\Gamma\) nor
+\(\varphi\).  If
+\(\Gamma\derives_{\ND_{\FOL}}\varphi[c/x]\), then
+\(\Gamma\derives_{\ND_{\FOL}}\forall x\varphi\).
+\end{lemma}
+\begin{proof}
+Fix a derivation witnessing the premise.  Because the derivation is finite,
+only a finite set \(\Gamma_0\subseteq\Gamma\) occurs among its open
+assumptions.  Choose a variable \(y\) absent from \(\Gamma_0\), from
+\(\varphi\), and from the finite derivation.  Uniformly replace \(c\) by \(y\)
+in that derivation.  Induction on the derivation shows that every rule instance
+remains an instance: \(c\) has no binding behavior, it occurs in no open
+assumption, and \(y\) occurred in no original rule instance, so every
+eigenvariable condition is preserved.  Hence
+\(\Gamma_0\derives_{\ND_{\FOL}}\varphi[y/x]\).  Since \(y\) is free in no
+member of \(\Gamma_0\), \(\forall I\) gives
+\(\Gamma_0\derives_{\ND_{\FOL}}\forall y\,\varphi[y/x]\).  Because
+\(y\notin\operatorname{Var}(\varphi)\), this conclusion is alpha-equivalent
+to \(\forall x\varphi\); the \(\alpha\) rule therefore gives the latter.  The
+same finite derivation also witnesses
+\(\Gamma\derives_{\ND_{\FOL}}\forall x\varphi\).
+\end{proof}
+
+\begin{definition}[Witness property]
+A set \(\Delta\subseteq\Fm(\Lang)\) has the \emph{witness property} iff, for
+every formula \(\exists x\varphi\in\Delta\), there is a constant symbol \(c\)
+of \(\Lang\) such that \(\varphi[c/x]\in\Delta\).
+\end{definition}
+
+The witness property is necessary in the term-structure construction: membership
+of an existential formula must supply a term naming a witness.
+
+\begin{lemma}[Witness-extension lemma]
+\label{lem:witness-extension}
+Let \(\Sigma\) be consistent, let \(c\) occur in neither \(\Sigma\) nor
+\(\exists x\varphi\), and put
+\[
+ H_{x,\varphi,c}\defeq
+ \exists x\varphi\to\varphi[c/x].
+\]
+Then \(\Sigma\cup\set{H_{x,\varphi,c}}\) is consistent.
+\end{lemma}
+\begin{proof}
+Suppose the extension is inconsistent.  Negation introduction gives
+\(\Sigma\derives\neg H_{x,\varphi,c}\).  Classical propositional derivations
+then give
+\[
+ \Sigma\derives\exists x\varphi
+ \quad\text{and}\quad
+ \Sigma\derives\neg\varphi[c/x],
+\]
+because \(\neg(A\to B)\derives A\land\neg B\).  The fresh-constant lemma
+applied to the second derivation gives
+\(\Sigma\derives\forall x\neg\varphi\).  Quantifier duality gives
+\(\Sigma\derives\neg\exists x\varphi\), contradicting the first derivation.
+Thus the extension is consistent.
+\end{proof}
+
+\begin{lemma}[Eliminating newly added constants]
+\label{lem:new-constant-elimination}
+Let \(\Lang'\) extend \(\Lang\) only by constant symbols, and let
+\(\Gamma\cup\set{\varphi}\subseteq\Fm(\Lang)\).  If there is an
+\(\ND_{\FOL}\)-derivation of \(\varphi\) from \(\Gamma\) in the expanded
+signature \(\Lang'\), then there is such a derivation in \(\Lang\).
+\end{lemma}
+\begin{proof}
+Fix an expanded-signature derivation.  It is finite, so only finitely many
+constants from \(\Lang'\setminus\Lang\), say
+\(d_1,\ldots,d_n\), occur in it.  Choose distinct variables
+\(z_1,\ldots,z_n\) absent from every formula and rule annotation in the
+derivation.  Simultaneously replace each \(d_i\) by \(z_i\) throughout the
+derivation.
+
+Induction on the derivation verifies that every inference remains an instance
+of the same rule.  Replacement commutes with the propositional constructors
+and with term formation.  Because the \(z_i\) occurred in no original binder,
+replacement causes no capture, and for every quantifier instance it commutes
+with capture-avoiding substitution.  The eigenvariables of
+\(\forall I\) and of \(\exists E\) are original variables,
+distinct from all \(z_i\); replacing constants therefore preserves their
+absence conditions.  Replacement also preserves alpha-equivalence and every
+identity-rule instance.  The end formula and open assumptions contain none of
+the \(d_i\), so they are unchanged.  The transformed tree is consequently a
+\(\Lang\)-derivation of \(\varphi\) from \(\Gamma\).
+\end{proof}
+
+\begin{lemma}[Transfinite Lindenbaum lemma]
+\label{lem:transfinite-lindenbaum}
+Let \(\Lang'\) be a signature, let \(\lambda\) be an ordinal, and let
+\(\langle\varphi_\alpha:\alpha<\lambda\rangle\) be an enumeration of
+\(\Fm(\Lang')\) in which every formula occurs at least once.  Then every
+set \(\Sigma\subseteq\Fm(\Lang')\) that is consistent for
+\(\ND_{\FOL}\) is contained in a maximal consistent
+\(\Delta\subseteq\Fm(\Lang')\).  The construction is choice-free given the
+enumeration; the Axiom of Choice enters only when such an enumeration must
+first be produced.
+\textit{Status: complete proof.}
+\end{lemma}
+\begin{proof}
+By \cref{thm:transfinite-recursion} with domain \(\lambda+1\), define a
+sequence \(\langle\Gamma_\alpha:\alpha\le\lambda\rangle\) by
+\[
+ \Gamma_0=\Sigma,\qquad
+ \Gamma_{\alpha+1}=
+ \begin{cases}
+   \Gamma_\alpha\cup\set{\varphi_\alpha},&\text{if this set is
+     consistent},\\
+   \Gamma_\alpha,&\text{otherwise},
+ \end{cases}
+ \qquad
+ \Gamma_\beta=\bigcup_{\alpha<\beta}\Gamma_\alpha
+ \ \text{ for limit }\beta.
+\]
+
+\emph{Chain claim:} if \(\alpha\le\beta\le\lambda\), then
+\(\Gamma_\alpha\subseteq\Gamma_\beta\).  Proceed by transfinite induction
+on \(\beta\): the claim is trivial at \(\beta=\alpha\), both successor
+clauses extend the preceding stage, and a limit stage is the union of all
+earlier stages.
+
+\emph{Consistency:} every \(\Gamma_\alpha\) is consistent, by transfinite
+induction on \(\alpha\).  Stage zero is the hypothesis on \(\Sigma\), and
+the successor clause preserves consistency by its case split.  At a limit
+\(\beta\), suppose \(\Gamma_\beta\derives_{\ND_{\FOL}}\bottom\).  The
+derivation is finite, so its open assumptions form a finite
+\(F\subseteq\Gamma_\beta\).  Each \(\psi\in F\) lies in some
+\(\Gamma_{\alpha_\psi}\) with \(\alpha_\psi<\beta\).  If
+\(F\ne\varnothing\), put
+\(\alpha^{*}=\max_{\psi\in F}\alpha_\psi<\beta\), which exists because a
+finite nonempty set of ordinals has a maximum; if \(F=\varnothing\), put
+\(\alpha^{*}=0<\beta\).  The chain claim locates
+\(F\subseteq\Gamma_{\alpha^{*}}\), so \(\Gamma_{\alpha^{*}}\) is
+inconsistent, contradicting the induction hypothesis at \(\alpha^{*}\).
+
+\emph{Maximality:} put \(\Delta=\Gamma_\lambda\); it is consistent, and it
+contains \(\Sigma\) by the chain claim.  Suppose \(\varphi\notin\Delta\)
+and pick \(\alpha<\lambda\) with \(\varphi_\alpha=\varphi\).  Rejection at
+stage \(\alpha+1\) means that \(\Gamma_\alpha\cup\set{\varphi}\) derives
+\(\bottom\).  A derivation from a set is a derivation from any superset,
+because derivability from a set requires only that every open assumption
+belong to it; hence \(\Delta\cup\set{\varphi}\) derives \(\bottom\).
+Therefore \(\Delta\) is maximal consistent.
+\end{proof}
+
+\begin{lemma}[Henkin--Lindenbaum lemma]
+\label{lem:henkin-lindenbaum}
+Let \(\Lang\) be a signature and assume the Axiom of Choice in the
+ambient set theory.  Every consistent
+\(\Sigma\subseteq\Fm(\Lang)\) is contained in a maximal consistent set
+\(\Delta\) in an expanded signature \(\Lang^H\), and \(\Delta\) has the
+witness property.
+\textit{Status: complete proof.}
+\end{lemma}
+\begin{proof}
+ Let \(\kappa=\max(\abs{\Lang},\aleph_0)\).  Add new constant symbols
+ \(\langle d_\xi:\xi<\kappa\rangle\).  Regard \(\Sigma\) as a set of formulas
+ in the expanded signature.
+It remains consistent there: otherwise
+\cref{lem:new-constant-elimination} would transform an expanded-signature
+derivation of \(\bottom\) into an original-signature derivation from
+\(\Sigma\).  By \cref{cor:syntax-counting}, the expanded
+language has at most \(\kappa\) formulas.  The \(\kappa\) formulas
+\(\exists x_0\,(x_0=d_\xi)\), for \(\xi<\kappa\), are pairwise distinct, so
+it has exactly \(\kappa\) formulas and exactly \(\kappa\) existential formulas.
+Since a cardinal
+is an ordinal by definition, fix a bijective enumeration
+\[
+  \langle E_\alpha:\alpha<\kappa\rangle,
+  \qquad
+  E_\alpha=\exists x_{n_\alpha}\varphi_\alpha
+  \text{ with }n_\alpha\in\N,
+\]
+ of its existential formulas.  By the transfinite-recursion theorem
+\cref{thm:transfinite-recursion}, at stage
+\(\alpha<\kappa\) add a witness implication
+\(H_{x_{n_\alpha},\varphi_\alpha,c_\alpha}\), where \(c_\alpha\) is the
+least \(d_\xi\), in the displayed index order, that is absent from the current
+theory and from \(E_\alpha\).  This least-available convention makes the
+recursive clause functional.  Before stage \(\alpha\), fewer than
+\(\kappa\) finite witness formulas have been added.  By
+\cref{thm:infinite-cardinal-finite-coding}, their union contains fewer than
+\(\kappa\) constants; \(E_\alpha\) contains only finitely many constants.
+Therefore one of the \(\kappa\) new constants remains available.  The
+witness-extension lemma
+preserves consistency at successor stages.  At a limit stage take the union;
+any derivation of \(\bottom\) would use finitely many assumptions and would
+already occur at an earlier stage.  Let \(\Sigma^H\) be the resulting
+consistent set.
+
+The set \(\Fm(\Lang^H)\) has cardinality exactly \(\kappa\), as
+established above from \cref{cor:syntax-counting} and the
+formulas \(\exists x_0\,(x_0=d_\xi)\).  By
+\cref{cor:cardinal-assignment}, under the Axiom of Choice already assumed,
+fix a bijective enumeration
+\(\langle\varphi_\alpha:\alpha<\kappa\rangle\) of \(\Fm(\Lang^H)\).
+Apply \cref{lem:transfinite-lindenbaum} to \(\Sigma^H\) under this
+enumeration to obtain a maximal consistent
+\(\Delta\supseteq\Sigma^H\supseteq\Sigma\).  Every witness implication remains
+in \(\Delta\).  If \(\exists x\varphi\in\Delta\), implication elimination
+and deductive closure put its designated instance \(\varphi[c/x]\) in
+\(\Delta\).  Hence \(\Delta\) has the witness property.
+\end{proof}
+

@@ -1,0 +1,374 @@
+\chapter{Generating argumentation interpreters as logic programs}
+\label{sec:p18-argumentation-meta-interpreters}
+
+Dung's argument-processing unit has two rules: an argument is accepted
+when it is not defeated, and it is defeated when an accepted argument
+attacks it. The argument-generation unit supplies the attack relation.
+This chapter gives the complete program construction and all three
+semantic correspondences of the original Section~5
+\cite[pp.~348--350, theorem~62]{Dung1995}. The input contract includes
+the argument domain, and the well-founded output specifies true,
+false and undefined atoms.
+
+\begin{hbdefinition}{def:p18-meta-input}{Argument names, the extensional contract and the source program}
+Let \(\mathcal F=(A,R)\) be an arbitrary argumentation framework,
+including \(A=\varnothing\). Use the attack direction, image \(S^+\),
+defense operator \(\mathsf F\), grounded extension \(G\), and extension
+semantics of \cref{def:p18-arbitrary-framework}.
+Choose distinct ground names for the arguments and identify \(A\)
+with its named image. Let \(D\) be a nonempty Herbrand domain
+containing these names. No distinct arguments share a name.
+
+Use unary predicates \(\operatorname{arg},\operatorname{acc},
+\operatorname{defeat}\) and one binary predicate
+\(\operatorname{atk}\). The argument-generation data consist
+of exactly the facts
+\[
+ \operatorname{arg}(a)\leftarrow\quad(a\in A),\qquad
+ \operatorname{atk}(a,b)\leftarrow\quad((a,b)\in R).
+\]
+There are no other rules defining these predicates.
+The relation \(R\) includes all attacks, not merely the attacks
+so far discovered by a procedure.
+
+When \(A\ne\varnothing\) and \(D=A\), the source's two-rule
+program \(P^0_{\mathcal F}\), with a uniform attack-predicate spelling, is
+\[
+\begin{aligned}
+ \operatorname{acc}(X)&\leftarrow\neg\operatorname{defeat}(X),\\
+ \operatorname{defeat}(X)&\leftarrow
+                    \operatorname{atk}(Y,X),\operatorname{acc}(Y),
+\end{aligned}
+\]
+together with the attack facts; \(\operatorname{arg}\) is then
+unnecessary. Its signature has one constant for every argument,
+including isolated arguments, and no function symbols or other
+constants. For arbitrary \(A,D\), the guarded program \(P_D\)
+uses the extensional facts above and
+\[
+\begin{aligned}
+ \operatorname{acc}(X)&\leftarrow
+                \operatorname{arg}(X),\neg\operatorname{defeat}(X),\\
+ \operatorname{defeat}(X)&\leftarrow
+                \operatorname{arg}(X),\operatorname{arg}(Y),
+                \operatorname{atk}(Y,X),\operatorname{acc}(Y).
+\end{aligned}
+\]
+All variables range over \(D\); grounding includes every substitution.
+The negative body literal is default negation as in
+\cref{def:p18-program-syntax}. The guards make the interpretation
+of extra names and the empty framework explicit.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p18-meta-specialization}{The exact ground specialization and output maps}
+Write \(a^\circ=\operatorname{acc}(a)\) and
+\(a^\bullet=\operatorname{defeat}(a)\) for \(a\in A\).
+Specializing the extensional predicates gives the ground program
+\[
+ Q_{\mathcal F}=
+ \{a^\circ\leftarrow\neg a^\bullet:a\in A\}
+ \ \cup\
+ \{b^\bullet\leftarrow a^\circ:(a,b)\in R\}
+\]
+on the specified base \(H_{\mathcal F}=\{a^\circ,a^\bullet:a\in A\}\).
+When \(A=\varnothing\), this is the empty program on the empty base.
+It is a ground semantic presentation; an arbitrary infinite set
+of arguments is not asserted to have a finite source encoding.
+
+For \(S\subseteq A\), set
+\[
+\begin{aligned}
+ m_Q(S)&=\{a^\circ:a\in S\}\cup\{b^\bullet:b\in S^+\},\\
+ L_Q(S)&=m_Q(S)\cup\{\neg a^\bullet:a\in S\}
+                         \cup\{\neg b^\circ:b\in S^+\}.
+\end{aligned}
+\]
+Let \(B_D^+\) be the set of extensional facts, viewed as atoms.
+Define the complete fixed background
+\[
+\begin{aligned}
+ B_D={}&B_D^+
+ \cup\{\neg\operatorname{arg}(d):d\in D\setminus A\}\\
+ &{}\cup\{\neg\operatorname{atk}(c,d):(c,d)\in D^2\setminus R\}\\
+ &{}\cup\{\neg\operatorname{acc}(d),\neg\operatorname{defeat}(d):
+                                                  d\in D\setminus A\}.
+\end{aligned}
+\]
+For a literal set \(I\) on \(H_{\mathcal F}\), its lift is
+\(\iota_D(I)=B_D\cup I\). Put
+\[
+             m_D(S)=B_D^+\cup m_Q(S),\qquad
+             L_D(S)=\iota_D(L_Q(S)).
+\]
+The signed sets \(L_Q(S),L_D(S)\) are partial interpretations
+exactly when \(S\cap S^+=\varnothing\).
+For the source program on \(D=A\), omit the
+\(\operatorname{arg}\) predicate and its literals from these formulas.
+Denote the resulting positive and signed maps by \(m_0(S)\)
+and \(L_0(S)\), respectively: they are obtained from \(m_A(S)\)
+and \(L_A(S)\) by deleting all domain literals.
+\end{hbdefinition}
+
+All reducts, positive least models, unfounded sets, and Fitting
+operators below use the exact definitions and arbitrary-ground-program
+domain of \cref{def:p18-program-reduct,def:p18-unfounded-operators,
+def:p18-completion-semantics}. In particular
+\(\Gamma_P(X)=\operatorname{LM}(P^X)\),
+\(\Phi_P(I)=T_P(I)\cup\neg Z_P(I)\), and
+\(V_P(I)=T_P(I)\cup\neg U_P(I)\).
+
+\begin{hblemma}{thm:p18-meta-reduct}{proved=annex:p18.meta.reduct}{The complete reduct calculation}
+For any set \(X\) of ground atoms of the appropriate program, let
+\[
+                         d_X=\{a\in A:a^\bullet\in X\}.
+\]
+Then
+\[
+\begin{aligned}
+ \Gamma_Q(X)&=m_Q(A\setminus d_X),\\
+ \Gamma_{P_D}(X)&=m_D(A\setminus d_X).
+\end{aligned}
+\]
+For \(A\ne\varnothing\), also
+\(\Gamma_{P^0_{\mathcal F}}(X)=m_0(A\setminus d_X)\).
+These formulas cover every atom, not just the accepted arguments.
+If \(N(S)=A\setminus S^+\), then, for each corresponding output map \(m\),
+\[
+                   \Gamma(m(S))=m(N(S)),\qquad
+                   \Gamma^2(m(S))=m(\mathsf F(S)).
+\]
+All equalities allow infinitely many attackers.
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p18-meta-stable}{proved=annex:p18.meta.stable}{Both directions of the stable-model correspondence}
+The maps
+\[
+                   E\longmapsto m_Q(E),\qquad
+                   E\longmapsto m_D(E)
+\]
+are bijections from stable extensions of \(\mathcal F\) onto
+stable models of \(Q_{\mathcal F}\) and \(P_D\), respectively.
+For \(A\ne\varnothing\), \(E\mapsto m_0(E)\) is the same
+bijection for the literal source program \(P^0_{\mathcal F}\).
+The inverse extracts the arguments whose acceptance atoms are true.
+This includes an empty extension, self-attacks and infinite frameworks.
+For a stable \(E\), \(L_Q(E)\) and \(L_D(E)\) are exactly the full
+total interpretations determined by those positive stable models.
+The analogous total interpretation for the source program is \(L_0(E)\).
+\end{hbtheorem}
+
+\begin{hblemma}{thm:p18-meta-specialization}{proved=annex:p18.meta.specialization}{Specialization preserves the full partial semantics}
+A literal set \(J\) is a consistent fixed point of \(\Phi_{P_D}\)
+if and only if
+\[
+                     J=\iota_D(I),\qquad I=\Phi_Q(I)
+\]
+for a consistent \(I\) on \(H_{\mathcal F}\).
+The maps are inverse order isomorphisms. Consequently
+\[
+                       \operatorname{FM}(P_D)
+                                      =\iota_D(\operatorname{FM}(Q)).
+\]
+The same assertion holds for the source program on \(D=A\), with
+the stated omission of domain literals.
+Thus replacing an extensional attack body by its actual edge
+instances is a proved specialization of these programs.
+\end{hblemma}
+
+\begin{hblemma}{thm:p18-meta-defense-steps}{proved=annex:p18.meta.defense.steps}{Four precise Fitting steps for one defense step}
+For every \(S\subseteq A\), on the auxiliary literal powerset,
+\[
+                             \Phi_Q^4(L_Q(S))=L_Q(\mathsf F(S)).
+\]
+Let \(S_0=\varnothing\), \(S_{\alpha+1}=\mathsf F(S_\alpha)\),
+with unions at limits. Define
+\[
+ \tau_0=0,\qquad \tau_{\alpha+1}=\tau_\alpha+4,\qquad
+ \tau_\lambda=\sup_{\beta<\lambda}\tau_\beta
+                   \quad(\lambda\ne0\text{ a limit}).
+\]
+Then the actual Fitting iteration satisfies
+\[
+                        \Phi_Q^{\tau_\alpha}(\varnothing)=L_Q(S_\alpha).
+\]
+The iteration on the left uses unions at limit ordinals.
+In particular \(\operatorname{FM}(Q)=L_Q(G)\).
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p18-meta-completion}{proved=annex:p18.meta.completion}{Complete extensions are exactly the partial completion models}
+The map \(E\mapsto L_Q(E)\) is an order isomorphism between
+the complete extensions of \(\mathcal F\) and the consistent
+fixed points of \(\Phi_Q\), with inverse the true acceptance set.
+Together with \(\iota_D\), it gives the same correspondence
+for \(P_D\). It sends grounded extensions to the least partial
+completion models, preferred extensions to maximal partial
+completion models, and stable extensions to total completion
+models, in both directions.
+
+For infinite input this refers to the head-by-head operator
+semantics of completion in \cref{def:p18-completion-semantics};
+it does not replace an infinite disjunction by a finitary formula.
+The truth-value equality convention for partial completion is
+retained.
+\end{hbtheorem}
+
+\begin{hblemma}{thm:p18-meta-positive-rank}{proved=annex:p18.meta.positive.rank}{Why well-founded and Fitting semantics agree here}
+Suppose a ground normal program has a rank on its atoms in
+\(\{0,\ldots,r\}\), for a nonnegative integer \(r\), such that every positive body atom has
+strictly smaller rank than its head. Its operators \(\Phi\)
+and \(V\) have exactly the same fixed points on the auxiliary
+literal powerset, and hence the same least fixed point.
+
+This applies to \(Q_{\mathcal F}\), with acceptance rank 0
+and defeat rank 1. It applies to \(P_D\), with domain and
+attack rank 0, acceptance rank 1 and defeat rank 2.
+It also applies to the source program, with attack and
+acceptance rank 0 and defeat rank 1. Therefore
+\[
+                           \operatorname{WFM}(P)=\operatorname{FM}(P)
+\]
+for each of these three encodings, even if \(A,D,R\) are infinite.
+No acyclicity of the original attack graph is assumed.
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p18-meta-full-correspondence}{proved=annex:p18.meta.full.correspondence}{The complete signed form of Dung's interpreter theorem}
+For every \(E\subseteq A\),
+\[
+\begin{aligned}
+ E\text{ is grounded}
+ &\quad\Longleftrightarrow\quad L_Q(E)=\operatorname{WFM}(Q)\\
+ &\quad\Longleftrightarrow\quad L_D(E)=\operatorname{WFM}(P_D).
+\end{aligned}
+\]
+For \(A\ne\varnothing\), these are also equivalent to
+\(L_0(E)=\operatorname{WFM}(P^0_{\mathcal F})\).
+In these well-founded models the accepted arguments are exactly \(G\);
+the defeated arguments are exactly \(G^+\). Their dynamic literals are
+\[
+       a^\circ,\neg a^\bullet\quad(a\in G),\qquad
+       b^\bullet,\neg b^\circ\quad(b\in G^+).
+\]
+For \(c\in A\setminus(G\cup G^+)\), both \(c^\circ\) and
+\(c^\bullet\) are undefined. The guarded model's background
+literals are exactly \(B_D\); the source program omits domain
+literals, and the reduced program has no background predicates.
+Parts (1)--(3) of the source theorem are thus supplied by the
+stable-model bijection, this full grounded equivalence, and
+the well-founded/Fitting equality.
+
+If the programs are themselves turned into Dung's literal
+support or clause argument graphs, then
+\[
+\begin{aligned}
+ \operatorname{con}(G_{\mathcal A_\infty(P_D)})
+  &=L_D(G)
+   =\operatorname{con}(G_{\mathcal A_{\rm c}(P_D)}).
+\end{aligned}
+\]
+The support graph retains every finite support and every negative
+unit argument from \cref{def:p18-source-program-graphs}.
+It is not replaced by the original framework \(\mathcal F\).
+Writing \(H_{P_D}\) for the full ground atom base, its stable
+support extensions are exactly
+\[
+       {\cal E}_\infty(H_{P_D}\setminus m_D(E))
+                         \qquad(E\in\operatorname{Stab}(\mathcal F)).
+\]
+The inverse extracts true acceptance atoms from the positive conclusions.
+\end{hbtheorem}
+
+\begin{hbmethod}{def:p18-meta-finite-procedure}{Constructing and evaluating a finite interpreter}
+Input a complete finite list of \(n\) argument names and \(m\)
+directed attacks. Emit one acceptance clause per argument and
+one defeat clause per edge, obtaining \(Q_{\mathcal F}\) with
+\(n+m\) clauses and \(2n\) atoms. Keep isolated arguments in the list.
+Index the names by \(1,\ldots,n\); the bounds below count operations
+on these indices and assume constant-time membership in finite Boolean arrays.
+
+To compute the grounded answer, iterate \(\mathsf F\) from the empty
+set and then output \(L_Q(G)\), or its full lift \(L_D(G)\).
+For each step, scan the edges once to form \(S^+\); initialize
+every argument as defended, and reject a target \(b\) whenever
+an edge \(a\to b\) has \(a\notin S^+\).
+To enumerate stable answers, enumerate all \(E\subseteq A\)
+and retain precisely those with \(E\cap E^+=\varnothing\)
+and \(E\cup E^+=A\); output their \(m_Q(E)\) or \(m_D(E)\).
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p18-meta-finite-procedure}{proved=annex:p18.meta.finite.procedure}{Termination and the exact finite input bounds}
+The stated construction and procedures are correct.
+The grounded procedure uses at most \(n+1\) defense evaluations
+and time \(O((n+1)(n+m+1))\) with explicit finite adjacency data.
+The stable enumeration uses time \(O(2^n(n+m+1))\).
+Construction of the sparse dynamic program uses \(O(n+m)\)
+output space. These bounds concern the supplied finite framework
+and dynamic output; if all negative attack literals are also
+listed for \(D=A\), the background output can require \(O(n^2)\)
+space.
+
+Infinite ground programs retain the semantic theorems. They do
+not inherit these terminating finite enumeration procedures.
+Effective generation of arguments and attacks is a separate
+input obligation of an argument-generation unit.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p18-meta-boundary-examples}{proved=annex:p18.meta.boundary.examples}{Exact examples of domain and semantic failures}
+The following consequences follow from the declared encodings.
+\begin{enumerate}
+\item For \(A=\{a,b\}\), \(R=\{(a,b)\}\), the grounded and sole
+      stable extension is \(\{a\}\). The dynamic well-founded
+      model is
+      \[
+              \{a^\circ,\neg a^\bullet,b^\bullet,\neg b^\circ\}.
+      \]
+      A purported full model omitting \(\neg b^\circ\) is incomplete.
+\item For an isolated \(a\), the unique dynamic answer is
+      \(\{a^\circ,\neg a^\bullet\}\). Inferring argument names
+      solely from attack facts loses this argument.
+\item On a domain with an extra name \(d\notin A\), omitting the
+      domain guard from the acceptance rule makes acceptance of \(d\)
+      true in the well-founded and Fitting models.
+      For \(A=\varnothing,D=\{d\}\), this
+      happens even though the framework has no argument at all.
+      The guarded program makes both acceptance and defeat of
+      \(d\) false.
+\item For a single self-attacking argument, there is no stable
+      model, while the dynamic well-founded and Fitting models
+      leave both atoms undefined. For a two-argument mutual attack
+      there are two stable models, corresponding to \(\{a\}\)
+      and \(\{b\}\), while the dynamic grounded answer is empty.
+\item Using ordinary classical models of the program implications
+      gives a different result: for an isolated \(a\), the
+      assignment \(a^\circ=\mathrm{false}\),
+      \(a^\bullet=\mathrm{true}\) satisfies those implications
+      but is not a stable or completion model.
+\item If the generator writes \(\operatorname{attacks}(a,b)\)
+      while the processing rule reads a distinct predicate
+      \(\operatorname{atk}\), the one-edge input in (1) produces
+      acceptance of both arguments. A uniform predicate signature
+      is essential.
+\end{enumerate}
+In the literal support graph even an acceptance conclusion can
+attack an argument: a support proof for \(a^\circ\) attacks
+the unit \((\{\neg a^\circ\},\neg a^\circ)\).
+Thus the program-to-argumentation bridge must include all units
+and their attacks.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p18-meta-infinite-input}{proved=annex:p18.meta.infinite.input}{Decidable infinite attack data need not give decidable answers}
+There is a countable framework with decidable argument names
+and a decidable attack relation, of incoming-path length at
+most one, for which grounded acceptance is undecidable.
+Its grounded extension is its unique stable extension, and
+its generated well-founded model is total on the dynamic atoms.
+Thus the difficulty persists even with agreement of all these
+semantics and with no cycles.
+\end{hbtheorem}
+
+The generator/processor architecture specifies a semantics for the
+framework supplied to it. It does not establish the truth of the
+arguments' premises or complete an unfinished enumeration of attacks.
+The edge specialization above is one fully proved program
+transformation. The source's further suggestions about partial
+evaluation are implementation directions; they do not assert that
+every transformation, search order, or interpreter terminates.

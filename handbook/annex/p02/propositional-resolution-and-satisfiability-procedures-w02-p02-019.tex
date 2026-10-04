@@ -1,0 +1,637 @@
+%% toc: P2 15 15.5,15.6,15.7
+\section{Proofs for Horn-SAT, 2-SAT and propositional decision complexity}
+\label{sec:annex-p02-w02-p02-019-sat-procedures}
+
+Throughout, clause lists, \(A_S\), \(n\), \(m\), \(N\), literal codes and the
+random-access machine are as in
+Convention~\ref{def:p02-w02-p02-019-clause-input}.  Satisfaction of a clause
+is used in the form of Lemma~\ref{lem:prop-clause-satisfaction}: \(v\)
+satisfies \(C\) iff some literal of \(C\) is true under \(v\).
+
+\begin{annexitem}{annex:p02-w02-p02-019-hc}{thm:p02-w02-p02-019-horn-closure}{Forward closure}
+\begin{proof}
+Write \(F=\operatorname{Fwd}(S)\), and let \(\mathcal K\) be the family of
+subsets of \(A_S\) closed under \(S\).
+
+\emph{Clause 1.}  \(A_S\in\mathcal K\): the head of every definite clause of
+\(S\) occurs in \(S\), so it belongs to \(A_S\).  Let \(C\) be a definite
+clause of \(S\) with \(B(C)\subseteq F\).  For every \(X\in\mathcal K\),
+\(F\subseteq X\), so \(B(C)\subseteq X\) and, \(X\) being closed,
+\(\operatorname{hd}(C)\in X\).  Hence \(\operatorname{hd}(C)\) lies in every
+member of \(\mathcal K\), that is, in \(F\).  So \(F\) is closed, and by its
+definition as an intersection it is contained in every member of
+\(\mathcal K\).
+
+\emph{Clause 2.}  Let \(v\) satisfy \(S\) and put
+\(X_v=\{q\in A_S: v(q)=\mathbf{T}\}\).  Let \(C\) be a definite clause of \(S\)
+with \(B(C)\subseteq X_v\).  Every negative literal \(\neg q\) of \(C\) has
+\(q\in B(C)\), so \(v(q)=\mathbf{T}\) and \(\neg q\) is false under \(v\).  Since
+\(v\) satisfies \(C\), some literal of \(C\) is true; the only literal of \(C\)
+that is not negative is its head, so \(v(\operatorname{hd}(C))=\mathbf{T}\) and
+\(\operatorname{hd}(C)\in X_v\).  Thus \(X_v\in\mathcal K\), and by clause~1,
+\(F\subseteq X_v\): every atom of \(F\) is true under \(v\).
+
+\emph{Clause 3.}  Let \(C\) be a definite clause of \(S\).  If
+\(B(C)\subseteq F\), then \(\operatorname{hd}(C)\in F\) by clause~1, so the
+head is true under \(v_F\) and \(v_F\) satisfies \(C\).  Otherwise some
+\(q\in B(C)\) is not in \(F\); then \(v_F(q)=\mathbf{F}\), the literal \(\neg q\)
+of \(C\) is true, and \(v_F\) satisfies \(C\).  Let \(C\) be a negative clause.
+Its literals are exactly the \(\neg q\) with \(q\in B(C)\).  So \(v_F\)
+satisfies \(C\) iff some \(q\in B(C)\) has \(v_F(q)=\mathbf{F}\), iff some
+\(q\in B(C)\) is not in \(F\), iff \(B(C)\not\subseteq F\).  For the empty
+clause, \(B(C)=\varnothing\subseteq F\) and the clause is false, as it must
+be.
+
+\emph{Clause 4.}  Suppose \(S\) contains a negative clause \(C\) with
+\(B(C)\subseteq F\), and let \(v\) be any valuation satisfying \(S\).  By
+clause~2 every \(q\in B(C)\) is true under \(v\), so every literal of \(C\) is
+false and \(v\) does not satisfy \(C\), a contradiction.  So \(S\) is
+unsatisfiable.  Conversely, if every negative clause \(C\) of \(S\) has
+\(B(C)\not\subseteq F\), clause~3 shows that \(v_F\) satisfies every definite
+and every negative clause of \(S\); a Horn clause is one or the other, so
+\(v_F\) satisfies \(S\).  The two directions together give the contradiction
+condition.  If \(S\) is satisfiable and \(v\) satisfies \(S\), the atoms true
+under \(v_F\) are those of \(F\), and they are true under \(v\) by clause~2.
+
+\emph{Clause 5.}  If \(S\) has no positive unit clause, every definite clause
+of \(S\) has a nonempty body, which is not a subset of \(\varnothing\); so
+\(\varnothing\in\mathcal K\) and \(F=\varnothing\).  A negative clause with
+\(B(C)\subseteq\varnothing\) has empty body and is the empty clause.  If there
+is no empty clause, clause~4 gives that \(v_\varnothing\), the valuation
+making every variable false, satisfies \(S\).  For the empty list,
+\(A_S=\varnothing\), \(\mathcal K=\{\varnothing\}\) and \(F=\varnothing\);
+there is no clause to falsify, so every valuation satisfies it.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p02-w02-p02-019-hp}{thm:p02-w02-p02-019-horn-procedure}{Forward chaining is correct and linear}
+\begin{proof}
+If \(S\) contains an empty clause, step~(0) finds the first one, say \(C_j\),
+and halts with ``unsatisfiable'', which is correct by
+Theorem~\ref{thm:p02-w02-p02-019-horn-closure}, clause~4.  It inspected
+\(j\) clauses, and the \(j-1\) clauses before \(C_j\) are nonempty, so
+\(j-1\leq N\).  From now on assume that no clause is empty.
+
+\emph{Step (1).}  Each \(C_j\) is a list without repetition, so after
+step~(1): \(\mathit{cnt}[j]=|B(C_j)|\); \(\mathit{hd}[j]\) is the index of the
+head if \(C_j\) is definite and \(0\) if it is negative (a Horn clause has at
+most one positive literal, so \(\mathit{hd}[j]\) is written at most once); and
+\(\mathit{occ}[q]\) lists, once each, the \(j\) with \(p_q\in B(C_j)\).
+
+\emph{Invariants.}  At any moment after step~(1), let \(M\) be the set of
+marked atoms and \(D\) the set of atoms already removed from \(Q\).  Before
+step~(2) and after each complete iteration of step~(2) or of the loop in
+step~(3), the following hold.
+\begin{enumerate}
+  \item[(a)] An atom is appended to \(Q\) only at the moment it is marked,
+        and marks are never removed.  Hence each atom is appended at most
+        once, \(D\subseteq M\), and \(Q\) contains exactly the atoms of
+        \(M\setminus D\).
+  \item[(b)] \(\mathit{cnt}[j]=|B(C_j)\setminus D|\) for every \(j\).
+  \item[(c)] For every definite \(C_j\) with \(\mathit{cnt}[j]=0\),
+        \(\operatorname{hd}(C_j)\in M\).
+  \item[(d)] \(M\subseteq\operatorname{Fwd}(S)\).
+\end{enumerate}
+Before step~(2), \(M=D=\varnothing\), \(Q\) is empty and (b) is the
+statement about step~(1).  For (c) at that moment, note that a clause with
+\(\mathit{cnt}[j]=0\) then has empty body; it is a positive unit clause, and
+step~(2) marks its head.  Step~(2) does not remove atoms, so (b) persists
+through it, and after it (c) holds.  In step~(3), removing \(q\) from \(Q\)
+adds \(q\) to \(D\); by (a), \(q\notin D\) before.  The loop then decrements
+\(\mathit{cnt}[j]\) exactly once for each \(j\) with \(p_q\in B(C_j)\), so
+(b) is preserved.  A counter changes only by these decrements; whenever one
+becomes \(0\) for a definite clause, the head is marked at once if it was not
+already marked.  Together with (c) before the iteration, this gives (c) after
+it.  For (d), consider the moment an atom \(r\) is marked.  It is the head of
+a definite clause \(C_j\) with \(\mathit{cnt}[j]=0\), so by (b)
+\(B(C_j)\subseteq D\subseteq M\) at that moment.  By (d) before the mark,
+\(B(C_j)\subseteq\operatorname{Fwd}(S)\).  Since \(\operatorname{Fwd}(S)\) is
+closed (Theorem~\ref{thm:p02-w02-p02-019-horn-closure}, clause~1),
+\(r\in\operatorname{Fwd}(S)\).
+
+\emph{Termination and the closure.}  By (a), at most \(n\) atoms are ever
+appended, so the loop of step~(3) runs at most \(n\) times, and each run
+handles the finite list \(\mathit{occ}[q]\).  When the loop ends, \(Q\) is
+empty, so \(D=M\) by (a).  Let \(C_j\) be definite with
+\(B(C_j)\subseteq M\).  By (b), \(\mathit{cnt}[j]=|B(C_j)\setminus M|=0\), and
+by (c) \(\operatorname{hd}(C_j)\in M\).  So \(M\) is closed under \(S\).  By
+Theorem~\ref{thm:p02-w02-p02-019-horn-closure}, clause~1,
+\(\operatorname{Fwd}(S)\subseteq M\), and with (d),
+\(M=\operatorname{Fwd}(S)\).
+
+\emph{Output.}  In step~(4), for a negative clause \(C_j\), (b) and \(D=M\)
+give \(\mathit{cnt}[j]=0\) iff \(B(C_j)\subseteq\operatorname{Fwd}(S)\).  So
+step~(4) outputs ``unsatisfiable'' iff some negative clause has its body
+inside \(\operatorname{Fwd}(S)\), iff \(S\) is unsatisfiable, by
+Theorem~\ref{thm:p02-w02-p02-019-horn-closure}, clause~4.  Otherwise the
+returned valuation makes true exactly the atoms of \(M=\operatorname{Fwd}(S)\);
+it is \(v_{\operatorname{Fwd}(S)}\), which satisfies \(S\) by the same clause.
+
+\emph{Cost.}  Step~(0) costs \(O(m)\).  Step~(1) creates arrays of total
+length \(2n+2m\) in \(O(n+m)\) steps and reads every literal occurrence once,
+doing \(O(1)\) work for it: \(O(N)\).  Step~(2) inspects \(m\) counters:
+\(O(m)\).  In step~(3) each atom is removed at most once by (a); removing
+\(q\) costs \(O(1)\) plus \(O(1)\) for each entry of \(\mathit{occ}[q]\).  The
+entries of all the lists \(\mathit{occ}[q]\) correspond one to one to the
+negative literal occurrences of \(S\), so step~(3) costs
+\(O(n)+O(N)\), and each negative occurrence is the source of at most one
+decrement.  Step~(4) costs \(O(m)\) for the goal check and \(O(n)\) to write
+the valuation.  The total is \(O(m+n+N)\).  With no empty clause,
+\(m\leq N\) and \(n\leq N\) by
+Convention~\ref{def:p02-w02-p02-019-clause-input}, so the total is \(O(N)\).
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p02-w02-p02-019-scc}{thm:p02-w02-p02-019-scc}{Two-pass strong components}
+\begin{proof}
+For a call \(\mathrm{Visit}(u)\) of the first pass, its \emph{interval} is
+the time from the moment \(u\) turns grey to the moment \(u\) turns black.
+
+\emph{Fact 1 (nesting).}  Every vertex turns grey exactly once: a call is made
+only on a white vertex, which it turns grey, and no vertex turns white again;
+the outer loop calls \(\mathrm{Visit}\) on every vertex still white.  If
+\(\mathrm{Visit}(w)\) is called during the interval of \(\mathrm{Visit}(u)\),
+with \(w\neq u\), the call is made from a call that is itself active, and
+calls return in the reverse order in which they were made.  So the interval of
+\(w\) lies inside that of \(u\), and \(f(w)<f(u)\).
+
+\emph{Fact 2 (only reachable vertices).}  Every vertex turned grey during the
+interval of \(\mathrm{Visit}(u)\) is reachable from \(u\).  Indeed it is
+turned grey by a call made through an edge from a vertex that turned grey
+earlier in the same interval, or from \(u\) itself; induction on the order in
+which vertices turn grey gives a path from \(u\).
+
+\emph{Fact 3 (white paths).}  Suppose that, when \(u\) turns grey, there is a
+path \(u=x_0\to x_1\to\cdots\to x_k=w\) whose vertices \(x_1,\ldots,x_k\) are
+all white.  Then \(w\) turns grey during the interval of \(\mathrm{Visit}(u)\),
+and if \(w\neq u\) then \(f(w)<f(u)\).  Suppose not, and let \(i\geq 1\) be
+least such that \(x_i\) does not turn grey during the interval.  Then
+\(x_{i-1}\) is \(u\) or turned grey during the interval, and by Fact~1 its
+call runs inside the interval and examines the edge \(x_{i-1}\to x_i\) before
+returning.  The vertex \(x_i\) was white when \(u\) turned grey and does not
+turn grey during the interval, so it is white at that examination, and
+\(\mathrm{Visit}(x_i)\) is called inside the interval.  This contradicts the
+choice of \(i\).  The inequality follows by Fact~1.
+
+\emph{Fact 4.}  A path between two vertices of one strong component \(C\)
+stays inside \(C\): a vertex \(z\) on a path from \(x\in C\) to \(y\in C\)
+satisfies \(x\leadsto z\leadsto y\leadsto x\), so \(z\in C\).
+
+For a strong component \(C\) put \(F(C)=\max\{f(x):x\in C\}\).
+
+\emph{Lemma A.}  If \(G\) has an edge \(a\to b\) with \(a\in C\),
+\(b\in C'\) and \(C\neq C'\), then \(F(C)>F(C')\).  Let \(x\) be the first
+vertex of \(C\cup C'\) to turn grey.  At that moment every other vertex of
+\(C\cup C'\) is white.
+\emph{Case \(x\in C\).}  Every \(y\in C\) is reached from \(x\) by a path
+inside \(C\) (Fact~4), and every \(y\in C'\) by a path running inside \(C\) to
+\(a\), across the edge to \(b\), and inside \(C'\) to \(y\).  All vertices of
+these paths other than \(x\) are white, so by Fact~3 every
+\(y\in(C\cup C')\setminus\{x\}\) has \(f(y)<f(x)\).  Hence
+\(F(C)=f(x)>F(C')\).
+\emph{Case \(x\in C'\).}  As before, Fact~3 gives \(f(y)\leq f(x)\) for every
+\(y\in C'\), so \(F(C')=f(x)\).  No vertex of \(C\) is reachable from \(x\):
+if \(x\leadsto z\) with \(z\in C\), then also \(z\leadsto a\to b\leadsto x\),
+and \(x\) would lie in \(C\).  By Fact~2 no vertex of \(C\) turns grey during
+the interval of \(\mathrm{Visit}(x)\).  They were white at its start, so they
+are still white at its end and finish later: \(f(y)>f(x)\) for every
+\(y\in C\).  Hence \(F(C)>f(x)=F(C')\).
+
+\emph{Consequence of Lemma A.}  If \(y\leadsto z\) in \(G\) and
+\(C(y)\neq C(z)\), then \(F(C(y))>F(C(z))\).  Along the path, an edge inside
+one component leaves \(F\) of the current component unchanged, an edge between
+distinct components lowers it strictly by Lemma~A, and at least one edge of the
+path joins distinct components because the end components differ.
+
+\emph{The second pass.}  We show by induction on the number of trees already
+built that, before each new tree is started, the set \(U\) of visited
+vertices is a union of strong components, and that the tree started at \(r\)
+is exactly \(C(r)\).  Initially \(U=\varnothing\).  Suppose the claim holds
+for the earlier trees and a tree is started at an unvisited vertex \(r\).
+Because \(U\) is a union of components, all of \(C(r)\) is unvisited.  The
+vertices are taken in decreasing order of \(f\), and every vertex taken
+earlier is visited (it was either already visited or the root of a tree).
+Hence every unvisited vertex has finishing number at most \(f(r)\), and
+\(F(C(r))=f(r)\).
+
+The facts for the first pass hold for \(\mathrm{Visit}^{\mathrm R}\) on
+\(G^{\mathrm R}\) with ``unvisited'' in place of ``white'', by the same proofs.
+So the tree of \(r\) consists of vertices reachable from \(r\) in
+\(G^{\mathrm R}\) (Fact~2), and contains every vertex reached from \(r\) in
+\(G^{\mathrm R}\) by a path of unvisited vertices (Fact~3).  Each \(y\in C(r)\)
+is reached from \(r\) in \(G^{\mathrm R}\) by the reverse of a path from \(y\)
+to \(r\) in \(G\), which lies inside \(C(r)\) by Fact~4 and so consists of
+unvisited vertices.  Hence \(C(r)\) lies in the tree.  Conversely, let \(y\)
+be in the tree.  Then \(y\) is reachable from \(r\) in \(G^{\mathrm R}\), so
+\(y\leadsto r\) in \(G\).  If \(C(y)\neq C(r)\), the consequence of Lemma~A
+gives \(F(C(y))>F(C(r))=f(r)\), so some \(z\in C(y)\) has \(f(z)>f(r)\).
+Such a \(z\) was taken earlier and is visited, so \(C(y)\subseteq U\) because
+\(U\) is a union of components, and \(y\) was visited before this tree began.
+A call is never made on a visited vertex, so \(y\) is not in the tree, a
+contradiction.  Therefore the tree is exactly \(C(r)\), and
+\(U\cup C(r)\) is again a union of components.  Every vertex is taken at some
+point and is then visited, so every component is a tree.
+
+\emph{Topological numbering.}  The tree with number \(k\) is the component
+\(C_k\) of its root \(r_k\), and \(F(C_k)=f(r_k)\) by the paragraph above.
+Roots are taken in decreasing order of \(f\), so \(F(C_1)>F(C_2)>\cdots\).
+If \(G\) has an edge \(X\to Y\) with \(C(X)\neq C(Y)\), Lemma~A gives
+\(F(C(X))>F(C(Y))\), hence \(\operatorname{idx}(X)<\operatorname{idx}(Y)\).
+
+\emph{Cost.}  In each pass every vertex is the argument of exactly one call
+(Fact~1 and its analogue), and a call on \(u\) scans the adjacency list of
+\(u\) once, doing \(O(1)\) work per entry with the explicit stack.  The
+adjacency lists of \(G\) together have \(E\) entries, and so do those of
+\(G^{\mathrm R}\).  Colouring, the outer loops and the list \(\mathit{fin}\)
+cost \(O(V)\).  The second pass reads \(\mathit{fin}\) backwards, so no sorting
+is needed.  The total is \(O(V+E)\).
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p02-w02-p02-019-2sat}{thm:p02-w02-p02-019-two-sat}{The 2-SAT test}
+\begin{proof}
+\emph{Clause 1.}  Each edge of \(G_S\) comes from a clause of \(S\).  An edge
+\(\overline L\to K\) comes from a clause \(\{L,K\}\), or from the unit clause
+\(\{L\}\) with \(K=L\).  Suppose \(v\) satisfies \(S\) and \(v\entails\overline L\).
+Then \(L\) is false; the clause \(\{L,K\}\) (or \(\{L\}\)) has a true
+literal, which must be \(K\); so \(v\entails K\).  Conversely, suppose every
+edge is respected by \(v\), and let \(C\) be a clause.  If \(C=\{L,K\}\) and
+\(L\) is false, then \(\overline L\) is true and the edge \(\overline L\to K\)
+makes \(K\) true.  If \(C=\{L\}\) and \(L\) is false, then \(\overline L\) is
+true and the edge \(\overline L\to L\) makes \(L\) true, which is impossible;
+so \(L\) is true.  Every clause is satisfied.  By induction on length, a
+valuation that respects every edge also respects every path: if
+\(X\leadsto Y\) and \(v\entails X\), then \(v\entails Y\).
+
+\emph{Clause 2.}  The edges contributed by a clause \(\{L,K\}\) are
+\(\overline L\to K\) and \(\overline K\to L\).  The companion of the first,
+\(\overline K\to\overline{\overline L}\), is the second, since
+\(\overline{\overline L}=L\), and conversely.  For a unit clause \(\{L\}\)
+the edge \(\overline L\to L\) is its own companion.  So \(X\to Y\) is an edge
+iff \(\overline Y\to\overline X\) is.  Reversing a path and complementing its
+vertices gives a path, so \(X\leadsto Y\) iff
+\(\overline Y\leadsto\overline X\).  Hence \(Z\in C(X)\), that is
+\(X\leadsto Z\leadsto X\), holds iff \(\overline X\leadsto\overline Z\leadsto
+\overline X\), iff \(\overline Z\in C(\overline X)\).
+
+\emph{Clause 3.}  Let \(C(p_q)=C(\neg p_q)\), so \(p_q\leadsto\neg p_q\) and
+\(\neg p_q\leadsto p_q\).  Let \(v\) satisfy \(S\).  By clause~1, \(v\)
+respects both paths.  If \(v(p_q)=\mathbf{T}\), the first path makes \(\neg p_q\)
+true; if \(v(p_q)=\mathbf{F}\), then \(\neg p_q\) is true and the second path makes
+\(p_q\) true.  Both are impossible, so no valuation satisfies \(S\).
+
+\emph{Clause 4.}  Write \(h(X)=\operatorname{idx}(X)\).  By
+Theorem~\ref{thm:p02-w02-p02-019-scc}, \(h\) is constant on each component,
+different on different components, and \(h(X)\leq h(Y)\) for every edge
+\(X\to Y\) (with equality iff the edge lies inside one component).  By
+hypothesis \(h(p_q)\neq h(\neg p_q)\) for every \(q\).  For every literal
+\(X\) over \(p_1,\ldots,p_n\),
+\[
+ v_S\entails X\quad\Longleftrightarrow\quad h(X)>h(\overline X).
+\]
+For \(X=p_q\) this is the definition of \(v_S\).  For \(X=\neg p_q\):
+\(v_S\entails\neg p_q\) iff not \(h(p_q)>h(\neg p_q)\), iff
+\(h(\neg p_q)>h(p_q)\), because the two values differ.
+
+Let \(X\to Y\) be an edge with \(v_S\entails X\), and suppose
+\(v_S\not\entails Y\).  Then \(h(\overline X)<h(X)\) and \(h(Y)<h(\overline
+Y)\).  The edge gives \(h(X)\leq h(Y)\), and its companion
+\(\overline Y\to\overline X\) (clause~2) gives
+\(h(\overline Y)\leq h(\overline X)\).  Together,
+\[
+ h(\overline X)<h(X)\leq h(Y)<h(\overline Y)\leq h(\overline X),
+\]
+which is impossible.  So \(v_S\) respects every edge, and by clause~1 it
+satisfies \(S\).  This is the argument of Annex~\ref{annex:p04.dh.two-sat}
+for the particular rank \(h=\operatorname{idx}\).
+
+\emph{Clause 5.}  Step~(0) is correct, since the empty clause is false under
+every valuation.  If step~(3) answers ``unsatisfiable'', some
+\(\operatorname{idx}(p_q)=\operatorname{idx}(\neg p_q)\); by
+Theorem~\ref{thm:p02-w02-p02-019-scc} the two literals then lie in one
+component, and \(S\) is unsatisfiable by clause~3.  If step~(3) passes, no
+opposite pair shares a component and \(v_S\) satisfies \(S\) by clause~4.  So
+the answer is correct in both cases and a satisfying valuation accompanies
+every positive answer.
+
+Cost: step~(0) costs \(O(m)\).  Step~(1) creates \(2n\) empty adjacency lists
+for each graph and, for each clause, computes two complements by changing a
+binary digit and appends two edges to each graph: \(O(n+m)\).  Step~(2) costs
+\(O(V+E)=O(2n+2m)\) by Theorem~\ref{thm:p02-w02-p02-019-scc}.  Steps~(3)
+and~(4) compare and assign \(n\) pairs of numbers: \(O(n)\).  The total is
+\(O(n+m)\); with no empty clause, \(m\leq N\) and \(n\leq N\), so it is
+\(O(N)\).
+
+For the empty list, \(n=m=0\): the graph is empty, step~(3) checks nothing,
+and step~(4) returns the valuation making every variable false, whose
+restriction to the empty set of occurring variables is the empty assignment;
+it satisfies the empty list, as every valuation does.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p02-w02-p02-019-xor}{thm:p02-w02-p02-019-xor}{Elimination decides XOR-SAT}
+\begin{proof}
+Identify a valuation \(v\) with the vector \(x\in\{0,1\}^n\) of
+Convention~\ref{def:p02-w02-p02-019-parity-input}; then \(v\) satisfies
+equation \(j\) iff \(a_{j1}x_1+\cdots+a_{jn}x_n=b_j\) holds in the
+two-element field, because a sum of zeros and ones modulo \(2\) is the parity
+of the number of ones.  So satisfying valuations of the system correspond
+exactly to its solutions \(x\).
+
+\emph{Row operations preserve solutions.}  Exchanging two rows does not change
+the set of equations.  Replacing row \(i'\) by its sum with row \(r\), where
+\(i'\neq r\): if \(x\) solves rows \(i'\) and \(r\), adding the two equations
+shows that \(x\) solves the new row \(i'\); conversely, if \(x\) solves the
+new row \(i'\) and row \(r\), adding them gives back row \(i'\), because
+\(y+y=0\) for every entry \(y\).  The other rows are unchanged.  By induction
+on the number of operations, the system after the loop has the same solutions
+as the input.
+
+\emph{Loop invariant.}  Say that the columns \(1,\ldots,c\) have been
+\emph{processed} after the pass for \(c\), and let \(t=r-1\) be the number of
+pivots recorded so far, at columns \(c_1<\cdots<c_t\).  The invariant is:
+\begin{enumerate}
+  \item[(a)] for each \(s\leq t\), row \(s\) has \(a_{sc_s}=1\), and
+        \(a_{jc_s}=0\) for every row \(j\neq s\);
+  \item[(b)] every row \(j\geq r\) has \(a_{ji}=0\) for every processed
+        column \(i\).
+\end{enumerate}
+Before the loop no column is processed and \(t=0\), so both parts hold
+vacuously.  Suppose they hold after the pass for \(c-1\), and consider the
+pass for \(c\).  If no row \(i\geq r\) has \(a_{ic}=1\), nothing changes;
+(a) still holds, and rows \(j\geq r\) are now zero in column \(c\) as well,
+so (b) holds with \(c\) processed.  Otherwise step 2 exchanges two rows with
+indices at least \(r\); this leaves rows \(1,\ldots,t\) in place and keeps
+(b) for columns before \(c\), so (a) is unaffected and the new row \(r\) has
+zeros in columns \(1,\ldots,c-1\) and \(a_{rc}=1\).  In step 3, adding row
+\(r\) to another row changes that row only in columns where row \(r\) has a
+\(1\), all of which are at least \(c\).  Hence every entry in columns
+\(1,\ldots,c-1\) is unchanged, which keeps the pattern of (a) in the earlier
+pivot columns \(c_s<c\), and every row other than \(r\) ends with a \(0\) in
+column \(c\), since exactly the rows with a \(1\) there received row \(r\).
+Thus (a) holds for the \(t+1\) pivots including \((r,c)\).  Rows \(j\geq r+1\)
+are zero in columns before \(c\), which were unchanged, and in column \(c\),
+so (b) holds after \(r\) is increased by one.  This completes the induction.
+
+\emph{Bound on \(t\).}  Each pivot uses a different row and a different
+column, so \(t\leq\min\{m,n\}\).
+
+\emph{Correctness of the answer.}  After the pass for \(c=n\), all columns
+are processed, so by (b) every row \(j>t\) has all coefficients zero and
+reads \(0=b_j\).  If some such \(b_j=1\), the final system has no solution;
+by the preservation of solutions neither has the input, and the answer
+``unsatisfiable'' is correct.  Otherwise let \(x^{*}\) be the vector of
+\(v^{*}\): \(x^{*}_{c_s}=b_s\) for \(s\leq t\) and \(x^{*}_i=0\) for every
+column \(i\) that is not a pivot column.  Consider row \(s\leq t\).  Its
+coefficient at \(c_s\) is \(1\); by (a), its coefficient at every other pivot
+column \(c_{s'}\) is \(0\); its coefficients at non-pivot columns multiply
+zeros.  So its left side evaluates to \(x^{*}_{c_s}=b_s\), and the equation
+holds.  Every row \(j>t\) reads \(0=0\).  Hence \(x^{*}\) solves the final
+system, and so the input, which proves the claim that \(v^{*}\) satisfies
+every equation.  Since the method answers ``satisfiable'' exactly when no row
+\(j>t\) has \(b_j=1\), and in that case a satisfying valuation exists, while
+in the other case none exists, the answer is correct in both cases.  This
+proves item 1.
+
+\emph{Field operations.}  Field additions occur only in step 3.  Each pivot
+runs step 3 once, adding row \(r\) to at most \(m-1\) other rows, each by
+\(n+1\) entrywise additions.  So there are at most \(t(m-1)(n+1)\) field
+operations.  When \(m,n\geq 1\), \(t\leq\min\{m,n\}\) and \(n+1\leq 2n\)
+give at most \(2mn\min\{m,n\}\), which is item 2.
+
+\emph{Other steps.}  For each of the \(n\) columns, step 1 inspects at most
+\(m\) entries, and step 3 inspects the entry in column \(c\) of each of the
+\(m\) rows to select the rows to change: \(O(mn)\) steps in all.  Step 2
+exchanges two pointers and step 4 appends one pair, \(O(1)\) steps per
+pivot.  Loop control costs \(O(n)\).  The final test inspects at most \(m\)
+right-hand sides, and writing \(v^{*}\) costs \(O(n+t)\) steps: initialize
+all \(n\) values to false and set one value per pivot.  The total besides
+the field operations is \(O(mn+m+n)\), which with item 2 gives item 3.
+
+\emph{Degenerate sizes.}  If \(m=0\), there is no row, every search fails,
+\(t=0\), no row \(j>t\) exists, and the answer is ``satisfiable'' with the
+all-false valuation; the empty system is indeed satisfied by every valuation.
+If \(n=0\), the loop does not run, \(t=0\), and every row reads \(0=b_j\);
+the answer is ``unsatisfiable'' iff some \(b_j=1\).  This is item 4.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p02-w02-p02-019-tt}{thm:p02-w02-p02-019-truth-table}{Truth tables decide}
+\begin{proof}
+\emph{Reduction to finitely many assignments.}  Let \(X=\{p_1,\ldots,p_k\}\)
+be the jointly occurring variables.  Every valuation \(v\) agrees on \(X\)
+with \(u^{\circ}\) for \(u=v\mathbin{\upharpoonright}X\), and both agree on
+every variable occurring in each \(\varphi_i\).  By
+Lemma~\ref{lem:prop-coincidence}, \(\widehat v(\varphi_i)=
+\widehat{u^{\circ}}(\varphi_i)\) for every \(i\).  Conversely each \(u\) is the
+restriction of the valuation \(u^{\circ}\).  So the vectors of values
+\((\widehat v(\varphi_1),\ldots,\widehat v(\varphi_r))\) taken over all
+valuations \(v\) are exactly those taken over the \(2^k\) assignments \(u\).
+
+\emph{Correctness.}  By this, some valuation makes \(\varphi_1\) true iff some
+\(u\) does; every valuation does iff every \(u\) does; every valuation gives
+\(\varphi_1,\varphi_2\) the same value iff every \(u\) does, which is the
+definition of \(\varphi_1\equiv\varphi_2\) in
+\cref{sec:prop-syntax-semantics-02}; and a countervaluation to
+\(\{\varphi_1,\ldots,\varphi_{r-1}\}\entails\varphi_r\), a valuation
+satisfying the premises and falsifying the conclusion, exists iff some \(u\)
+gives \(\mathbf{T}\) to the premises and \(\mathbf{F}\) to \(\varphi_r\).  When
+\(r=1\) the premise set is empty, and the answer coincides with validity, as
+\(\varnothing\entails\varphi\) iff \(\entails\varphi\).
+
+\emph{The evaluation scan.}  Write \(\neg^j\chi\) for \(\chi\) preceded by
+\(j\) negation signs.  We show by induction on the formation of \(\chi\): if
+the scan begins to read \(\chi\) when the operator stack is \(O\) followed by
+\(j\geq 0\) copies of \(\neg\), where \(O\) is empty or ends in a symbol other
+than \(\neg\), and the value stack is \(W\), then after reading \(\chi\) the
+operator stack is \(O\) and the value stack is \(W\) followed by the single
+value \(\widehat{u^{\circ}}(\neg^j\chi)\).
+For \(\chi=p_q\) or \(\chi=\bottom\), the scan pushes \(u^{\circ}(p_q)\) or
+\(\mathbf{F}\), the value the truth clauses give, and absorbs the \(j\) waiting
+negations, each by the negation clause; absorption stops at the last symbol
+of \(O\), which is not \(\neg\).
+For \(\chi=\neg\chi'\), the scan pushes \(\neg\), so it begins to read
+\(\chi'\) with \(j+1\) waiting negations; by the induction hypothesis it ends
+with operator stack \(O\) and the value of \(\neg^{j+1}\chi'=\neg^j\chi\).
+For \(\chi=(\chi_1\circ\chi_2)\), the scan pushes the opening parenthesis,
+which is not \(\neg\); by the induction hypothesis with no waiting negation,
+reading \(\chi_1\) adds its value \(b_1\).  It then pushes \(\circ\), and
+reading \(\chi_2\) adds \(b_2\) in the same way.  At the closing parenthesis it
+pops \(b_2\), \(\circ\), \(b_1\) and the parenthesis, pushes the value of
+\(b_1\circ b_2\) given by the truth clause for \(\circ\), which is
+\(\widehat{u^{\circ}}(\chi)\), and absorbs the \(j\) negations now on top.
+Applied to a whole formula with empty stacks and \(j=0\), the scan leaves
+exactly its value.  Each symbol is pushed at most once and popped at most
+once, so one scan of \(\chi\) costs \(O(|\chi|)\).
+
+\emph{Bound.}  The binary counter steps through the \(2^k\) assignments,
+changing \(O(k)\) bits per step in the worst case; for \(k\geq 1\),
+\(k\leq\ell\) because every variable of \(X\) occurs.  For each assignment the
+scans cost \(O(\ell)\) in total, and the comparison of the \(r\) values
+\(O(r)\subseteq O(\ell)\).  So the run costs \(O(2^k\ell)\); for
+\(k=0\) there is one assignment and the cost is \(O(\ell)\).  Since
+\(2^k\ell\) is finite for every input, the procedure terminates.  For a single
+formula, \(\ell=|\varphi|\).
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p02-w02-p02-019-np}{thm:p02-w02-p02-019-sat-in-np}{SAT is in NP under the fixed encoding}
+\begin{proof}
+Let \(x\) have length \(n\).  A machine deciding \(R(x,y)\) proceeds as follows.
+
+\emph{1.  Decode and recognize.}  Cut \(x\) into fixed-width blocks and
+translate each into its character, rejecting if the length is not a multiple
+of the block width or some block codes no character: \(O(n)\) steps.  Check
+that the resulting character string is a formula: replace each variable
+token, the letter \texttt{p} followed by binary digits and the terminator
+\texttt{;}, and each occurrence of \(\bottom\), by a marker \(\mathtt A\); then
+repeat a pass that replaces every \(\neg\mathtt A\) by \(\mathtt A\) and
+every \((\mathtt A\circ\mathtt A)\) with \(\circ\in\{\land,\lor,\to\}\) by
+\(\mathtt A\), copying to a second tape, until a pass changes nothing.  Call
+a string a \emph{marked formula} if it arises from a formula by replacing
+some subformula occurrences by \(\mathtt A\).  In a marked formula, a
+\(\neg\) begins the subformula it governs, and a subformula that begins with
+\(\mathtt A\) is that marker; so an occurrence of \(\neg\mathtt A\) or of
+\((\mathtt A\circ\mathtt A)\) is a subformula occurrence, and replacing it
+gives a marked formula.  Conversely, if the result of such a replacement is a
+marked formula, so was the string before it, by the formation clauses.  A
+marked formula other than \(\mathtt A\) contains such a pattern: take a
+subformula occurrence of least length that is not a marker; its immediate
+subformulas are shorter, so they are markers, all atomic ones having been
+replaced at the start.  Hence the string
+is a formula iff the passes end with the single marker \(\mathtt A\).  Each
+pass that does not stop
+shortens the string, so there are at most \(n\) passes of \(O(n)\) steps:
+\(O(n^2)\).  This polynomial bound is all that is used; the linear-time
+recognition noted in Definition~\ref{def:p02-sat-taut} is not needed.
+
+\emph{2.  Number the variables.}  For each variable token, compare its digit
+string with those of all earlier tokens to decide whether it is the first
+occurrence of its variable, and count the earlier first occurrences to obtain
+its rank \(i\), so that the token names \(p_{a_i}\).  There are at most \(n\)
+tokens, each compared with at most \(n\) others, each comparison taking
+\(O(n)\) symbols with \(O(n)\) head movement per symbol: \(O(n^4)\) steps.  The
+number \(k\) of first occurrences is computed on the way; reject unless
+\(|y|=k\).
+
+\emph{3.  Evaluate.}  Rewrite the formula with each token of rank \(i\)
+replaced by the \(i\)-th bit of \(y\) and \(\bottom\) by \(0\), then apply
+passes that replace every \(\neg b\) by \(1-b\) and every \((b\circ c)\) by the
+value of the truth table of \(\circ\) at \(b,c\).  As in step~1 there are at
+most \(n\) passes of \(O(n)\) steps, ending in one bit, which is
+\(\widehat{v_y}(\varphi)\) by the truth clauses.  Accept iff it is \(1\).
+
+The total is \(O(n^4)\), a polynomial in \(n\), and \(R\) is the predicate of
+the statement.  Every accepted \(y\) has length \(k\); distinct variables
+have disjoint first-occurrence tokens of at least one block each, so
+\(k\leq n\).
+
+Now \(x\in\mathsf{SAT}\) iff \(x\) encodes a formula \(\varphi\) and some
+valuation \(v\) satisfies \(\varphi\).  Given such \(v\), let \(y\) have
+\(i\)-th bit \(1\) iff \(v(p_{a_i})=\mathbf{T}\).  Then \(v_y\) agrees with \(v\) on
+every variable of \(\varphi\), so \(v_y\entails\varphi\) by
+Lemma~\ref{lem:prop-coincidence}, \(R(x,y)\) holds and \(|y|=k\leq n\).
+Conversely, if \(R(x,y)\) holds, then \(x\) encodes \(\varphi\) and \(v_y\)
+satisfies it, so \(x\in\mathsf{SAT}\).  A malformed \(x\) is rejected in
+step~1 for every \(y\), and it is not in \(\mathsf{SAT}\) by
+Definition~\ref{def:p02-sat-taut}.  With \(q(n)=n\) and this \(R\), the
+condition of Convention~\ref{def:p02-complexity-standing} holds, so
+\(\mathsf{SAT}\in\mathsf{NP}\).
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p02-w02-p02-019-red}{thm:p02-w02-p02-019-reductions}{Complements and composites of reductions}
+\begin{proof}
+\emph{Clause 1.}  For every \(x\), \(x\in A\) iff \(f(x)\in B\).  Negating
+both sides, \(x\in\overline A\) iff \(f(x)\in\overline B\).  The map and its
+running time are unchanged.
+
+\emph{Clause 2.}  Let \(f\) and \(g\) be computed within \(t_f(n)\) and
+\(t_g(n)\) steps, polynomials which we may take nondecreasing.  A machine
+writes at most one output symbol per step, so \(|f(x)|\leq t_f(|x|)\).
+Computing \(f(x)\) and then \(g(f(x))\) takes at most
+\(t_f(n)+t_g(t_f(n))\) steps plus the \(O(t_f(n))\) steps needed to move the
+intermediate string to an input position, a polynomial in \(n\).  And
+\(x\in A\) iff \(f(x)\in B\) iff \(g(f(x))\in D\).
+
+\emph{Clause 3.}  Let \(f\) reduce \(A\) to \(B\) within \(t_f\), and let
+\(B\) have polynomial \(q\) and polynomial-time predicate \(R_B\) as in
+Convention~\ref{def:p02-complexity-standing}, with \(q\) nondecreasing.  Put
+\(R_A(x,y)\) iff \(R_B(f(x),y)\), and \(q_A(n)=q(t_f(n))\).  Then \(R_A\) is
+decided in polynomial time by computing \(f(x)\) and running the machine for
+\(R_B\), whose input has length at most \(t_f(n)+|y|\).  If \(x\in A\), then
+\(f(x)\in B\), so some \(y\) with \(|y|\leq q(|f(x)|)\leq q_A(n)\) satisfies
+\(R_B(f(x),y)\).  If some \(y\) satisfies \(R_A(x,y)\), then \(f(x)\in B\)
+and \(x\in A\).  So \(A\in\mathsf{NP}\).
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p02-w02-p02-019-neg}{thm:p02-w02-p02-019-negation-maps}{Negation maps}
+\begin{proof}
+By the negation clause, \(v\entails\neg\varphi\) iff \(v\not\entails\varphi\).
+Hence every valuation satisfies \(\varphi\) iff no valuation satisfies
+\(\neg\varphi\): \(\varphi\) is valid iff \(\neg\varphi\) is unsatisfiable.
+
+By the formation clauses, \(\neg\varphi\) is the string \(\neg\) followed by
+\(\varphi\), so \(\nu\) prefixes one fixed block.  If \(x\) encodes
+\(\varphi\): \(x\in\mathsf{TAUT}\) iff \(\varphi\) is valid iff \(\neg\varphi\)
+is unsatisfiable iff \(\nu(x)\notin\mathsf{SAT}\), since \(\nu(x)\) is a
+well-formed encoding.  So \(x\in\mathsf{TAUT}\) iff
+\(g_1(x)\in\overline{\mathsf{SAT}}\), and \(x\in\overline{\mathsf{SAT}}\)
+iff \(\varphi\) is unsatisfiable iff \(\neg\varphi\) is valid iff
+\(g_2(x)\in\mathsf{TAUT}\).  If \(x\) is malformed: \(x\notin\mathsf{TAUT}\),
+and \(g_1(x)\), the encoding of \(p_0\), is in \(\mathsf{SAT}\) because the
+valuation making \(p_0\) true satisfies it, so
+\(g_1(x)\notin\overline{\mathsf{SAT}}\); and \(x\in\overline{\mathsf{SAT}}\),
+while \(g_2(x)\), the encoding of \(\neg\bottom\), is in \(\mathsf{TAUT}\)
+because \(\widehat v(\bottom)=\mathbf{F}\) and so \(\widehat v(\neg\bottom)=\mathbf{T}\)
+for every \(v\).  Both maps are therefore many-one reductions as stated.
+Each decides well-formedness in \(O(n^2)\) steps as in step~1 of
+Annex~\ref{annex:p02-w02-p02-019-np} and then writes \(x\) with one
+block in front, or a fixed string: polynomial time.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p02-w02-p02-019-taut}{thm:p02-w02-p02-019-taut-conp}{TAUT is coNP-complete}
+\begin{proof}
+\emph{Membership.}  By Lemma~\ref{thm:p02-w02-p02-019-negation-maps}, \(g_1\)
+reduces \(\mathsf{TAUT}\) to \(\overline{\mathsf{SAT}}\), so by
+Lemma~\ref{thm:p02-w02-p02-019-reductions}, clause~1, it reduces
+\(\overline{\mathsf{TAUT}}\) to \(\mathsf{SAT}\).  Since
+\(\mathsf{SAT}\in\mathsf{NP}\) (Theorem~\ref{thm:p02-w02-p02-019-sat-in-np}),
+clause~3 of the same lemma gives \(\overline{\mathsf{TAUT}}\in\mathsf{NP}\).
+So \(\mathsf{TAUT}\) is the complement of an \(\mathsf{NP}\) problem, that is,
+\(\mathsf{TAUT}\in\mathsf{coNP}\) by Convention~\ref{def:p02-complexity-standing}.
+
+\emph{Hardness.}  Let \(L\in\mathsf{coNP}\).  Then \(L=\overline K\) for some
+\(K\in\mathsf{NP}\), and \(\overline L=K\).  By the hardness half of
+Theorem~\ref{thm:p02-sat-np-complete} there is a polynomial-time reduction
+\(f\) of \(K\) to \(\mathsf{SAT}\).  By
+Lemma~\ref{thm:p02-w02-p02-019-reductions}, clause~1, \(f\) reduces
+\(\overline K=L\) to \(\overline{\mathsf{SAT}}\), and \(g_2\) reduces
+\(\overline{\mathsf{SAT}}\) to \(\mathsf{TAUT}\)
+(Lemma~\ref{thm:p02-w02-p02-019-negation-maps}).  By clause~2 of the
+reduction lemma, \(g_2\circ f\) is a polynomial-time reduction of \(L\) to
+\(\mathsf{TAUT}\).  Membership and hardness together are
+\(\mathsf{coNP}\)-completeness under polynomial-time many-one reductions.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p02-w02-p02-019-npco}{thm:p02-w02-p02-019-np-conp}{Validity, equivalence and NP}
+\begin{proof}
+Let \(H\) be \(\mathsf{TAUT}\) or the equivalence language of
+Theorem~\ref{thm:p14-dc-finite-cpl}.  Both are \(\mathsf{coNP}\)-complete:
+the first by Theorem~\ref{thm:p02-w02-p02-019-taut-conp}, the second by
+Theorem~\ref{thm:p14-dc-finite-cpl}, whose hardness proof reduces validity to
+equivalence.
+
+Suppose \(H\in\mathsf{NP}\).  Every \(L\in\mathsf{coNP}\) reduces to \(H\), so
+\(L\in\mathsf{NP}\) by Lemma~\ref{thm:p02-w02-p02-019-reductions}, clause~3;
+thus \(\mathsf{coNP}\subseteq\mathsf{NP}\).  If \(K\in\mathsf{NP}\), then
+\(\overline K\in\mathsf{coNP}\subseteq\mathsf{NP}\), so
+\(K=\overline{\overline K}\) is the complement of an \(\mathsf{NP}\) problem
+and \(K\in\mathsf{coNP}\); thus \(\mathsf{NP}\subseteq\mathsf{coNP}\).  Hence
+\(\mathsf{NP}=\mathsf{coNP}\).  Conversely, if \(\mathsf{NP}=\mathsf{coNP}\),
+then \(H\in\mathsf{coNP}=\mathsf{NP}\).
+\end{proof}
+\end{annexitem}

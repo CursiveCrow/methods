@@ -1,0 +1,925 @@
+%% toc: P2 21 21.4,21.5,21.6,21.7
+\section{Decision procedures for the decidable fragments}
+\label{sec:p02-w02-p02-035-decision-procedures}
+
+\emph{Purpose.}  Table~\ref{tab:p02-decidable-fragments} in
+\cref{sec:p02-decidable-fragments} states, row by row, the input language and
+the decision complexity of four classical fragments.  This section supplies
+the constructions behind all four rows: the relational monadic class,
+two-variable logic \(\mathrm{FO}^2\), the Bernays--Sch\"onfinkel class and
+the guarded fragment \(\mathrm{GF}\).  For each of the first three rows it
+states the input, proves a finite-model bound, derives a decision procedure
+from that bound, analyses its running time, and proves a matching
+\(\mathsf{NEXPTIME}\) lower bound.  The guarded row needs a different method:
+a tree-like model construction, a finite-model construction, a type-elimination
+procedure with a doubly exponential running time, and a matching
+\(2\mathsf{EXPTIME}\) lower bound.  It also records, for each row, a
+nearby class whose satisfiability problem is undecidable.
+
+\emph{Inputs and conclusions.}  The input to every procedure is a closed
+first-order sentence, coded as a string over a fixed finite alphabet; its
+length is written \(n\) or \(s\), following the source used in each
+subsection.  The question decided is satisfiability; validity of
+\(\varphi\) is the complement of satisfiability of \(\neg\varphi\).  The
+complexity classes are those of
+Definition~\ref{def:p02-exponential-time-classes}, and hardness is with
+respect to polynomial-time many-one reductions.
+
+\emph{Common conventions.}  Structures have nonempty domains.  A
+\emph{relational} vocabulary contains relation symbols only: no constants and
+no function symbols of positive arity.  Logical equality is part of the
+language only where a statement says so.  The exception is
+\cref{sec:p02-w02-p02-035-gf}, whose source allows individual constants; there
+they are part of the input language and are removed by
+\cref{thm:p02-w02-p02-035-gf-constants}, or, for the classes with a bound on
+variables or arity, by the reduction behind
+\cref{thm:p02-w02-p02-035-gf-bounded-constants}.  For a structure \(\mathfrak A\), a
+\emph{\(k\)-type} of a tuple \((a_1,\ldots,a_k)\) is the set of atomic and
+negated atomic formulas in variables \(x_1,\ldots,x_k\), equalities included
+when equality is in the language, that the tuple satisfies
+\cite[def.~4.1]{GradelKolaitisVardi1997}.
+
+\subsection{The bounded torus domino problem}
+\label{sec:p02-w02-p02-035-domino}
+
+All three lower bounds below reduce from one combinatorial problem.  The
+definition follows the source's torus convention: the space to be tiled wraps
+around in both directions, so no border conditions are needed.
+
+\begin{hbdefinition}{def:p02-w02-p02-035-domino}{Domino systems and the bounded torus problem}
+A \emph{domino system} \(\mathcal D=(D,H,V)\) consists of a finite set \(D\)
+of tiles and two relations \(H,V\subseteq D\times D\).  Write
+\(\mathbb Z_s\) for the integers modulo \(s\), \(U(s,t)\defeq
+\mathbb Z_s\times\mathbb Z_t\) and \(Z(t)\defeq U(t,t)\).  For a word
+\(w=w_0\cdots w_{n-1}\in D^{*}\) with \(n\leq s\), \(\mathcal D\)
+\emph{tiles \(U(s,t)\) with initial condition \(w\)} if there is a map
+\(\tau:U(s,t)\to D\) such that, for all \((x,y)\in U(s,t)\),
+\((\tau(x,y),\tau(x+1,y))\in H\), \((\tau(x,y),\tau(x,y+1))\in V\), and
+\(\tau(i,0)=w_i\) for \(0\leq i<n\).  The set
+\(\mathrm{DOMINO}(\mathcal D,2^n)\) consists of the words \(w\in D^{*}\) such
+that \(\mathcal D\) tiles \(Z(2^{\lvert w\rvert})\) with initial condition
+\(w\) \cite[defs.~6.1.1 and 6.1.5]{BorgerGradelGurevich1997}.
+\index{domino system}
+\end{hbdefinition}
+
+\begin{proofboundary}{def:p02-w02-p02-035-domino-import}{Imported machine-to-tiling simulation}
+The following facts about Turing machines are used as premises and are not
+proved in this handbook.  (i) Every language accepted by a nondeterministic
+multitape Turing machine in time \(T(n)\) is accepted by a nondeterministic
+one-tape machine in time \(O(T(n)^2)\)
+\cite[p.~246]{BorgerGradelGurevich1997}.  (ii) Every language accepted by a
+one-tape nondeterministic machine within time \(T(n)\) and space \(S(n)\), with
+\(S(n),T(n)\geq 2n\), is accepted within the same bounds by a \emph{simple}
+machine in the source's sense: it never moves left of cell \(0\), and it has a
+unique accepting configuration \cite[p.~243]{BorgerGradelGurevich1997}.
+(iii) For every simple nondeterministic one-tape machine \(M\) with input
+alphabet \(\Sigma\) there are a domino system \(\mathcal D\) and a linear-time
+map \(x\mapsto w\) with \(\lvert w\rvert=\lvert x\rvert\) such that: if \(M\)
+accepts \(x\) in time \(t_0\) with space \(s_0\), then \(\mathcal D\) tiles
+\(U(s,t)\) with initial condition \(w\) for all \(s\geq s_0+2\) and
+\(t\geq t_0+2\); and if \(M\) does not accept \(x\), then \(\mathcal D\) tiles
+no \(U(s,t)\) with \(s,t\geq2\) with initial condition \(w\)
+\cite[thm.~6.1.2]{BorgerGradelGurevich1997}.  The source itself gives the
+tile set and horizontal relation of (iii) explicitly but leaves the full
+vertical relation as an exercise \cite[pp.~244--245]{BorgerGradelGurevich1997}.
+\end{proofboundary}
+
+\begin{hblemma}{thm:p02-w02-p02-035-domino-hard}{proved=annex:p02-w02-p02-035-domino-hard}{The bounded torus domino problem is NEXPTIME-hard}
+For every language \(L\in\mathsf{NEXPTIME}\) there are a domino system
+\(\mathcal D\) and a polynomial-time map \(g\) such that
+\(x\in L\) iff \(g(x)\in\mathrm{DOMINO}(\mathcal D,2^n)\).
+\end{hblemma}
+
+The padding in the proof makes the torus side \(2^{N}\), where \(N\) is the
+length of the padded input, large enough for the whole computation.  The
+lemma depends on the imported premises of
+\cref{def:p02-w02-p02-035-domino-import}; the padding argument itself is
+proved in full.
+
+\subsection{The relational monadic class}
+\label{sec:p02-w02-p02-035-monadic}
+
+\begin{hbdefinition}{def:p02-w02-p02-035-monadic}{Relational monadic sentences}
+A \emph{relational monadic sentence with \(m\) predicates} is a closed
+first-order formula whose only nonlogical symbols are unary predicate letters
+\(P_1,\ldots,P_m\).  It contains no equality, no constants and no function
+symbols; quantifier prefixes and nesting are unrestricted.  The source writes
+this class \([\mathit{all},(m)]\); with an unbounded number of predicates it is
+\([\mathit{all},(\omega)]\), the L\"owenheim class
+\cite[p.~249]{BorgerGradelGurevich1997}.  For an element \(a\) of a structure
+\(\mathfrak A=(A,P_1,\ldots,P_m)\), its \emph{colour} is the word
+\(c(a)=c_1\cdots c_m\in\{0,1\}^m\) with \(c_i=1\) iff
+\(\mathfrak A\entails P_ia\) \cite[proof of prop.~6.2.1]{BorgerGradelGurevich1997}.
+\index{monadic first-order logic!colour of an element}
+\end{hbdefinition}
+
+The colour of an element is its \(1\)-type: with no equality and no relation
+of arity above one, an atomic formula in one variable \(x\) is some
+\(P_ix\).
+
+\begin{hbtheorem}{thm:p02-w02-p02-035-monadic-small-model}{proved=annex:p02-w02-p02-035-monadic-small-model}{Colour collapse and the \(2^m\) bound}
+Let \(\mathfrak A\) be a structure for \(P_1,\ldots,P_m\), and let
+\(\mathfrak A_{\mathrm{col}}\) be the structure whose universe is the set
+\(\{c(a):a\in A\}\) of realized colours, with
+\(P_i^{\mathfrak A_{\mathrm{col}}}=\{c:c_i=1\}\).  For every relational
+monadic formula \(\varphi(x_1,\ldots,x_l)\) without equality and all
+\(a_1,\ldots,a_l\in A\),
+\[
+ \mathfrak A\entails\varphi[a_1,\ldots,a_l]
+ \iff
+ \mathfrak A_{\mathrm{col}}\entails\varphi[c(a_1),\ldots,c(a_l)].
+\]
+Consequently every satisfiable relational monadic sentence with \(m\)
+predicates has a model with at most \(2^m\) elements.
+\end{hbtheorem}
+
+The bound is the one the source sets as an exercise for
+\([\mathit{all},(m)]\) \cite[ex.~6.2.3]{BorgerGradelGurevich1997}.  Once
+equality is in the language, collapsing colours is no longer sound, because
+\(\exists x\exists y\,x\neq y\) distinguishes a two-element model from its
+one-element collapse.  For that case the source proves the weaker bound
+\(q2^m\), where \(q\) is the quantifier rank, by keeping up to \(q\) elements
+of each colour \cite[prop.~6.2.1]{BorgerGradelGurevich1997}.  The present
+theorem concerns only the equality-free row of
+Table~\ref{tab:p02-decidable-fragments}.
+
+\begin{hbmethod}{def:p02-w02-p02-035-monadic-procedure}{Deciding monadic satisfiability by colour sets}
+\emph{Input:} a relational monadic sentence \(\psi\) of length \(n\) with
+predicates \(P_1,\ldots,P_m\).
+\emph{Step 1.} Choose a nonempty set \(S\subseteq\{0,1\}^m\).
+\emph{Step 2.} Form the structure \(\mathfrak B_S\) with universe \(S\) and
+\(P_i^{\mathfrak B_S}=\{c\in S:c_i=1\}\).
+\emph{Step 3.} Evaluate \(\psi\) in \(\mathfrak B_S\) by the recursive truth
+definition.
+\emph{Output:} \(\psi\) is satisfiable iff Step 3 succeeds for some choice in
+Step 1.  The deterministic version tries all \(2^{2^m}-1\) choices; the
+nondeterministic version guesses one.
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p02-w02-p02-035-monadic-procedure}{proved=annex:p02-w02-p02-035-monadic-procedure}{Correctness and an exponential-time bound}
+The procedure of \cref{def:p02-w02-p02-035-monadic-procedure} is correct, and
+its nondeterministic version runs in time \(2^{O(n^2)}\).  Hence
+satisfiability of relational monadic sentences is in \(\mathsf{NEXPTIME}\),
+and validity is in \(\mathsf{coNEXPTIME}\).
+\end{hbtheorem}
+
+The source obtains the sharper bound
+\(\mathrm{Sat}[\mathit{all},(\omega)]_{=}\in\mathrm{NTIME}(2^{cn/\log n})\),
+with equality in the language, by guessing a structure and eliminating quantifiers
+one at a time over disjunctive normal forms
+\cite[prop.~6.2.9 and cor.~6.2.10]{BorgerGradelGurevich1997}.  The procedure
+above is cruder but suffices for membership in \(\mathsf{NEXPTIME}\).
+
+\begin{hbdefinition}{def:p02-w02-p02-035-monadic-tiling-sentence}{The monadic tiling sentence}
+Fix a domino system \(\mathcal D=(D,H,V)\) and \(w=w_0\cdots w_{n-1}\in D^n\),
+\(n\geq1\).  A point \((x,y)\) of \(Z(2^n)\) is coded by the bits of
+\(x=\sum_{i<n}x_i2^i\) and \(y=\sum_{i<n}y_i2^i\).  The vocabulary has unary
+predicates \(X_i,X_i^{*},Y_i,Y_i^{*}\) for \(0\leq i<n\), \(N_i\) for
+\(0\leq i\leq n\), and \(P_d\) for \(d\in D\), with intended meanings
+\(X_iz\): \(x_i=1\); \(X_i^{*}z\): \(x_j=1\) for all \(j<i\); likewise for
+\(Y_i,Y_i^{*}\); \(N_iz\): \(z=(i,0)\); and \(P_dz\): \(\tau(z)=d\).  Writing
+\(\oplus\) for exclusive or, the sentence is
+\[
+ \psi_w\defeq\forall z\exists v\,\alpha\land\forall z\forall z'\beta,
+\]
+where \(\alpha\) is the conjunction of
+\[
+\begin{gathered}
+ X_0^{*}z\land Y_0^{*}z,\qquad
+ \textstyle\bigwedge_{i=1}^{n-1}\bigl(X_i^{*}z\leftrightarrow(X_{i-1}^{*}z\land X_{i-1}z)\bigr),\qquad
+ \textstyle\bigwedge_{i=1}^{n-1}\bigl(Y_i^{*}z\leftrightarrow(Y_{i-1}^{*}z\land Y_{i-1}z)\bigr),\\
+ \textstyle\bigwedge_{i=0}^{n-1}\bigl(X_iv\leftrightarrow(X_iz\oplus X_i^{*}z)\bigr),\qquad
+ \textstyle\bigwedge_{i=0}^{n-1}\bigl(Y_iv\leftrightarrow
+   [Y_iz\oplus(Y_i^{*}z\land X_{n-1}z\land X_{n-1}^{*}z)]\bigr),\\
+ N_0z\leftrightarrow\textstyle\bigwedge_{i=0}^{n-1}(\neg X_iz\land\neg Y_iz),\qquad
+ \textstyle\bigwedge_{i=0}^{n-1}(N_iz\leftrightarrow N_{i+1}v),
+\end{gathered}
+\]
+and \(\beta\) is the conjunction of: exactly one \(P_dz\) with \(d\in D\);
+\(H(z,z')\to\bigvee_{(d,d')\in H}(P_dz\land P_{d'}z')\);
+\(V(z,z')\to\bigvee_{(d,d')\in V}(P_dz\land P_{d'}z')\); and
+\(\bigwedge_{i=0}^{n-1}(N_iz\to P_{w_i}z)\).  Here
+\[
+ H(z,z')\defeq\textstyle\bigwedge_{i<n}(Y_iz'\leftrightarrow Y_iz)\land
+   \bigwedge_{i<n}\bigl(X_iz'\leftrightarrow(X_iz\oplus X_i^{*}z)\bigr),
+ \quad
+ V(z,z')\defeq\textstyle\bigwedge_{i<n}(X_iz'\leftrightarrow X_iz)\land
+   \bigwedge_{i<n}\bigl(Y_iz'\leftrightarrow(Y_iz\oplus Y_i^{*}z)\bigr).
+\]
+This is the source's construction \cite[proof of thm.~6.2.13]{BorgerGradelGurevich1997}.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p02-w02-p02-035-monadic-hard}{proved=annex:p02-w02-p02-035-monadic-hard}{Monadic satisfiability is NEXPTIME-complete}
+For every domino system \(\mathcal D\) and \(w\in D^n\), \(\psi_w\) is
+satisfiable iff \(w\in\mathrm{DOMINO}(\mathcal D,2^n)\), and \(\psi_w\) has
+length \(O(n\log n)\) and is computable from \(w\) in polynomial time.
+Consequently satisfiability of relational monadic sentences without equality
+is \(\mathsf{NEXPTIME}\)-complete, and validity is
+\(\mathsf{coNEXPTIME}\)-complete.  The lower bound already holds for sentences
+of the form \(\forall x\exists y\,\alpha\land\forall x\forall y\,\beta\) with
+\(\alpha,\beta\) quantifier-free and monadic.
+\end{hbtheorem}
+
+The source states the sharper lower bound
+\(\mathrm{Sat}[\forall^2\exists,(\omega)]\notin\mathrm{NTIME}(2^{cn/\log n})\)
+for some \(c>0\), and attributes the two-variable form to F\"urer
+\cite[thm.~6.2.13 and cor.~6.2.14]{BorgerGradelGurevich1997}.  The upper and
+lower bounds together match the monadic row of
+Table~\ref{tab:p02-decidable-fragments}.
+
+\begin{hbexample}{def:p02-w02-p02-035-monadic-example}{Collapsing a monadic model}
+Let \(\psi\defeq\exists x(P_1x\land\neg P_2x)\land\exists x(P_2x\land\neg P_1x)
+\land\forall x(P_1x\lor P_2x)\).  The structure on \(\{1,\ldots,10\}\) with
+\(P_1\) the odd numbers and \(P_2\) the even numbers satisfies \(\psi\).  It
+realizes exactly the colours \(10\) and \(01\), so its collapse has two
+elements, \(10\) and \(01\), and satisfies \(\psi\), as
+\cref{thm:p02-w02-p02-035-monadic-small-model} requires.  The bound \(2^m=4\)
+is not attained here.  Now add the conjunct \(\exists x(P_1x\land P_2x)\).
+The ten-element structure no longer satisfies it, but the procedure does not
+inspect that structure: it searches the colour sets.  The conjunct
+\(\forall x(P_1x\lor P_2x)\) rules out every set containing \(00\), and the
+three existential conjuncts require \(10\), \(01\) and \(11\).  So
+\(S=\{10,01,11\}\) is the only successful choice, and the extended sentence is
+satisfiable by the three-element structure \(\mathfrak B_S\).
+\end{hbexample}
+
+\begin{hbwarning}{def:p02-w02-p02-035-monadic-boundary}{Where the monadic bounds stop}
+The collapse fails once equality is in the language, as noted above.  Adding a
+single binary predicate gives undecidability: the class of sentences
+\(\psi\land\varphi\) with \(\psi\in[\forall\exists,(0,1)]\) and
+\(\varphi\in[\forall^{*},(0,1)]\), whose only predicate is one binary
+relation, is a conservative reduction class
+\cite[thm.~3.1.23]{BorgerGradelGurevich1997}, so its satisfiability problem
+is undecidable.  Adding unary function symbols keeps decidability for the
+full monadic class \cite[cor.~6.2.8]{BorgerGradelGurevich1997}, but two unary
+function symbols with equality already give an undecidable one-variable
+class \cite[p.~11]{GradelKolaitisVardi1997}.  These boundary results are
+cited, not proved here.
+\end{hbwarning}
+
+The colour-collapse proof is the finite-model side of the monadic
+constituent analysis in Part~15.  There, every closed monadic formula is
+shown equivalent to a disjunction of constituents \(C_S\), one for each
+nonempty set \(S\) of realized profiles, and each \(C_S\) has the model with
+one element per profile in \(S\)
+(Theorem~\ref{thm:p15-hintikka-monadic-normal-form}).  A profile there is a
+colour here, and that one-representative model is the structure
+\(\mathfrak B_S\) of \cref{def:p02-w02-p02-035-monadic-procedure}.  The
+constituent theorem therefore gives a second proof of the \(2^m\) bound: a
+satisfiable sentence is equivalent to a nonempty disjunction of constituents,
+and any one of its disjuncts \(C_S\) has a model with \(\lvert S\rvert\leq 2^m\)
+elements.  It also gives a second decision procedure: compute the constituent
+normal form and test whether it is nonempty.  That procedure is deterministic
+and doubly exponential, since there are \(2^{2^m}-1\) constituents.
+
+\subsection{Two-variable logic}
+\label{sec:p02-w02-p02-035-fo2}
+
+\begin{hbdefinition}{def:p02-w02-p02-035-fo2}{\(\mathrm{FO}^2\) and the Scott class}
+\(\mathrm{FO}^2\) is the set of relational first-order sentences, with
+equality, using at most two distinct individual variables \(x,y\), which may
+be requantified \cite[sect.~2]{GradelKolaitisVardi1997}.  The size \(s\) of a
+sentence is the length of its code over a fixed alphabet.  The \emph{Scott
+class} consists of the sentences
+\[
+ \forall x\forall y\,\alpha(x,y)\ \land\
+ \bigwedge_{i=1}^{m}\forall x\exists y\,\beta_i(x,y),
+\]
+with \(\alpha\) and every \(\beta_i\) quantifier-free; all relation symbols
+have arity at most \(2\), and \(0\)-ary relation symbols are allowed
+\cite[sect.~4]{GradelKolaitisVardi1997}.  An element \(a\) of a structure
+\(\mathfrak A\) is a \emph{king} if no other element realizes its
+\(1\)-type \cite[def.~4.2]{GradelKolaitisVardi1997}.
+\index{two-variable logic!Scott class}\index{king (two-variable logic)}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p02-w02-p02-035-scott}{proved=annex:p02-w02-p02-035-scott}{Scott reduction}
+There is a polynomial-time map sending each \(\mathrm{FO}^2\)-sentence
+\(\varphi\) of size \(s\) to a sentence \(\varphi^{*}\) in the Scott class such
+that: \(\varphi^{*}\) is satisfiable iff \(\varphi\) is; for every model of
+\(\varphi^{*}\) there is a model of \(\varphi\) with the same universe, and
+conversely; \(\varphi^{*}\) has size \(O(s\log s)\) and contains \(O(s)\)
+relation symbols, all of arity at most \(2\).  Moreover, for structures with
+at least two elements, each conjunct \(\forall x\exists y\,\beta_i\) may be
+replaced by \(\forall x\exists y\bigl(x\neq y\land(\beta_i(x,x)\lor
+\beta_i(x,y))\bigr)\) without changing truth.
+\end{hbtheorem}
+
+The source states the reduction as Scott's and records the size bound
+\cite[prop.~3.1 and pp.~4--6]{GradelKolaitisVardi1997}.  The reduction is
+carried out in two stages: first relation symbols of arity above two are
+replaced by binary and unary ones, then every subformula receives a defining
+relation symbol.
+
+\begin{hbtheorem}{thm:p02-w02-p02-035-scott-model}{proved=annex:p02-w02-p02-035-scott-model}{Small models for the Scott class}
+Let \(\theta\) be a Scott-class sentence of size \(s\) in which every
+\(\beta_i\) entails \(x\neq y\), and let \(r\) be the number of relation
+symbols in \(\theta\).  If \(\theta\) is satisfiable, it has a model with at
+most \(3s2^r\) elements.  More precisely, if \(\mathfrak A\entails\theta\),
+\(m\geq1\), \(K\) is the set of kings of \(\mathfrak A\) and \(P\) its set of
+realized \(1\)-types, then \(\theta\) has a model with
+\((m+1)\lvert K\rvert+3m(\lvert P\rvert-\lvert K\rvert)\) or fewer elements and
+with exactly the same kings.
+\end{hbtheorem}
+
+This is the source's Theorem~4.3 \cite[thm.~4.3]{GradelKolaitisVardi1997}.
+The construction keeps the kings and a \emph{royal court} of their chosen
+witnesses, and replaces every other element by three banks of copies of its
+\(1\)-type.  Witnesses are assigned cyclically from one bank to the next.  The
+annex proof verifies both conjuncts of \(\theta\) in the new structure.
+
+\begin{hbcorollary}{thm:p02-w02-p02-035-fo2-emp}{proved=annex:p02-w02-p02-035-fo2-emp}{Exponential model property for \(\mathrm{FO}^2\)}
+There is a constant \(c\) such that every satisfiable \(\mathrm{FO}^2\)-sentence
+of size \(s\) has a model with at most \(2^{cs}\) elements.  In particular
+\(\mathrm{FO}^2\) has the finite-model property, and finite and unrestricted
+satisfiability coincide on it.
+\end{hbcorollary}
+
+\begin{hbmethod}{def:p02-w02-p02-035-fo2-procedure}{Guess and check for \(\mathrm{FO}^2\)}
+\emph{Input:} an \(\mathrm{FO}^2\)-sentence \(\varphi\) of size \(s\).
+\emph{Step 1.} Compute the Scott-class sentence \(\varphi^{*}\) of
+\cref{thm:p02-w02-p02-035-scott}, with \(r\) relation symbols and size
+\(s^{*}\).
+\emph{Step 2.} Check the finitely many one-element structures for
+\(\varphi^{*}\); accept if one is a model.
+\emph{Step 3.} Replace each \(\beta_i\) by the formula in the last clause of
+\cref{thm:p02-w02-p02-035-scott}, obtaining \(\theta\).  Guess a structure
+\(\mathfrak B\) with at most \(3s^{*}2^r\) elements, written as one truth value
+for every \(0\)-ary symbol, every symbol at every element, and every binary
+symbol at every pair.
+\emph{Step 4.} Check \(\alpha\) at all pairs and, for each element and each
+\(i\), search for a \(\beta_i\)-witness.  Accept iff all checks succeed.
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p02-w02-p02-035-fo2-complexity}{proved=annex:p02-w02-p02-035-fo2-complexity}{\(\mathrm{FO}^2\) satisfiability is NEXPTIME-complete}
+For Scott-class input of size \(s\), Steps 2--4 run in nondeterministic time
+\(2^{O(s/\log s)}\); for \(\mathrm{FO}^2\)-input of size \(s\), the whole
+procedure runs in nondeterministic time \(2^{O(s)}\), and it is correct.
+Satisfiability of \(\mathrm{FO}^2\), with or without equality, is
+\(\mathsf{NEXPTIME}\)-hard, already for equality-free monadic sentences of the
+form \(\forall x\exists y\,\alpha\land\forall x\forall y\,\beta\).  Hence
+\(\mathrm{FO}^2\) satisfiability and finite satisfiability are
+\(\mathsf{NEXPTIME}\)-complete.
+\end{hbtheorem}
+
+The upper bounds are the source's Theorem~5.3 and the completeness statement
+is its Corollary~5.4 \cite[thm.~5.3 and cor.~5.4]{GradelKolaitisVardi1997}.
+For the lower bound the source cites F\"urer's domino reduction to
+\(\forall\forall\land\forall\exists\) sentences without proving it.  The
+annex proof uses the monadic tiling sentence of
+\cref{def:p02-w02-p02-035-monadic-tiling-sentence}, which has exactly that
+form; the reuse of the monadic bound for two-variable logic is noted in
+\cite[remark after cor.~6.2.14]{BorgerGradelGurevich1997}.
+
+\begin{hbexample}{def:p02-w02-p02-035-king-example}{Why kings need care}
+Consider
+\(\forall x\exists y(Ty\land Exy)\land\forall x\exists y(Ty\land\neg Exy)\).
+Without further conjuncts one can give each element two separate
+\(T\)-witnesses.  If another conjunct forces the \(1\)-type containing \(Ty\)
+to be realized by at most one element, that element would have to be both an
+\(E\)-successor and a non-\(E\)-successor of each element.  The construction of
+\cref{thm:p02-w02-p02-035-scott-model} never duplicates a king, so it can
+never introduce such a conflict \cite[p.~7]{GradelKolaitisVardi1997}.
+\end{hbexample}
+
+\begin{hbwarning}{def:p02-w02-p02-035-fo2-boundary}{Where the two-variable bounds stop}
+Constants may be added: they are kings, and the model bound and complexity
+bound survive \cite[p.~11]{GradelKolaitisVardi1997}.  Function symbols of
+positive arity may not: \(\mathrm{FO}^2\) without equality and with one unary
+function symbol is undecidable \cite[p.~11]{GradelKolaitisVardi1997}.  The
+three-variable fragment, even without equality, is undecidable because it
+contains the \(\forall\exists\forall\) prefix class
+\cite[p.~1]{GradelKolaitisVardi1997}.  The class
+\(\forall\forall\forall\land\forall\exists\) contains an infinity axiom and has
+an undecidable satisfiability problem \cite[p.~11]{GradelKolaitisVardi1997}.
+Counting quantifiers keep decidability but lose the finite-model property
+\cite[p.~11]{GradelKolaitisVardi1997}.  All of these are cited boundary
+results.  Using only two banks of copies would fail: an element of one bank
+and an element of the other could be each other's witnesses and require
+different \(2\)-types for the same pair \cite[p.~10]{GradelKolaitisVardi1997}.
+\end{hbwarning}
+
+\subsection{The Bernays--Sch\"onfinkel class}
+\label{sec:p02-w02-p02-035-bsr}
+
+\begin{hbdefinition}{def:p02-w02-p02-035-bsr}{Bernays--Sch\"onfinkel sentences and their grounding}
+A \emph{Bernays--Sch\"onfinkel sentence} is a relational prenex sentence
+\[
+ \varphi\defeq\exists x_1\cdots\exists x_p\forall y_1\cdots\forall y_m\,
+ \theta(x_1,\ldots,x_p,y_1,\ldots,y_m)
+\]
+with \(\theta\) quantifier-free; the source's class \([\exists^{*}\forall^{*},
+\mathit{all}]_{=}\) allows equality and the class without the subscript does
+not \cite[sect.~6.2.2]{BorgerGradelGurevich1997}.  Let \(c_1,\ldots,c_p\) be
+fresh constants, and if \(p=0\) let \(c_1\) be one fresh constant; write
+\(q=\max(1,p)\).  The \emph{grounding} of \(\varphi\) is the set
+\(G(\varphi)\) of the \(q^m\) ground instances
+\(\theta(c_1,\ldots,c_p,c_{j_1},\ldots,c_{j_m})\) with
+\(j_1,\ldots,j_m\in\{1,\ldots,q\}\).  An \emph{equality pattern} is an
+equivalence relation \(\equiv\) on \(\{c_1,\ldots,c_q\}\).  The set
+\(G_\equiv\) results from \(G(\varphi)\) by replacing every constant by the
+least-indexed member of its class, and every equality atom \(c_i=c_j\) by
+\(\top\) if \(c_i\equiv c_j\) and by \(\bot\) otherwise.  Without equality only
+the identity pattern is used, and then \(G_\equiv=G(\varphi)\).
+\index{Bernays--Schonfinkel class@Bernays--Sch\"onfinkel class!grounding}
+\end{hbdefinition}
+
+\begin{hbmethod}{def:p02-w02-p02-035-bsr-procedure}{Deciding Bernays--Sch\"onfinkel satisfiability by grounding}
+\emph{Input:} \(\varphi\) as in \cref{def:p02-w02-p02-035-bsr}, of length
+\(n\).
+\emph{Step 1.} Write down \(G(\varphi)\) and choose an equality pattern
+\(\equiv\); if \(\theta\) contains no equality, choose the identity pattern.
+\emph{Step 2.} Treat each ground relation atom of \(G_\equiv\) as a
+propositional variable and decide whether \(G_\equiv\) is propositionally
+satisfiable.
+\emph{Output:} \(\varphi\) is satisfiable iff Step 2 succeeds for some
+pattern.  The nondeterministic version guesses the pattern and the valuation;
+the deterministic version tries all of them.
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p02-w02-p02-035-bsr-grounding}{proved=annex:p02-w02-p02-035-bsr-grounding}{Correctness of grounding}
+A Bernays--Sch\"onfinkel sentence \(\varphi\) is satisfiable iff
+\(G_\equiv\) is propositionally satisfiable for some equality pattern
+\(\equiv\).  A pattern with a satisfying valuation determines a model of \(\varphi\) with at
+most \(\max(1,p)\) elements.
+\end{hbtheorem}
+
+The forward direction uses the small-model argument recorded in
+\cref{sec:p09-presentation-n-c-005}, which is the source's
+Proposition~6.2.17: the substructure induced on the existential witnesses is
+again a model \cite[prop.~6.2.17]{BorgerGradelGurevich1997}.
+
+\begin{hbtheorem}{thm:p02-w02-p02-035-bsr-complexity}{proved=annex:p02-w02-p02-035-bsr-complexity}{Bernays--Sch\"onfinkel satisfiability is NEXPTIME-complete}
+The grounding procedure runs in nondeterministic time \(2^{O(n)}\).
+Satisfiability of Bernays--Sch\"onfinkel sentences is
+\(\mathsf{NEXPTIME}\)-hard already without equality and with prefix
+\(\exists\exists\forall^{*}\).  Hence satisfiability, with or without
+equality, is \(\mathsf{NEXPTIME}\)-complete, and validity of the dual
+\(\forall^{*}\exists^{*}\) sentences is \(\mathsf{coNEXPTIME}\)-complete.
+\end{hbtheorem}
+
+The source proves the sharper bounds
+\(\mathrm{Sat}[\exists^{*}\forall^{*},\mathit{all}]_{=}\in\mathrm{NTIME}(2^{cn})\)
+and \(\mathrm{Sat}[\exists^{*}\forall^{*},\mathit{all}]\notin
+\mathrm{NTIME}(2^{cn})\) for suitable constants, the second by an
+\(m\)-ary encoding of the grid
+\cite[thms.~6.2.19 and 6.2.21]{BorgerGradelGurevich1997}.  The annex proof of
+hardness instead encodes grid points by tuples of two existentially chosen
+elements.  That encoding gives polynomial-time reductions, which is what
+\(\mathsf{NEXPTIME}\)-hardness requires, but not the sharper source bound.
+
+\begin{hbexample}{def:p02-w02-p02-035-bsr-example}{A grounding with two witnesses}
+Let \(\varphi\defeq\exists x_1\exists x_2\forall y\,
+(Rx_1y\leftrightarrow\neg Rx_2y)\land Rx_1x_1\).  Here \(p=2\), \(m=1\), and
+\(G(\varphi)\) consists of
+\((Rc_1c_1\leftrightarrow\neg Rc_2c_1)\land Rc_1c_1\) and
+\((Rc_1c_2\leftrightarrow\neg Rc_2c_2)\land Rc_1c_1\).  The valuation making
+\(Rc_1c_1\) and \(Rc_2c_2\) true and \(Rc_2c_1\), \(Rc_1c_2\) false satisfies
+both, and the structure on \(\{c_1,c_2\}\) with \(R=\{(c_1,c_1),(c_2,c_2)\}\)
+is a model of \(\varphi\).
+\end{hbexample}
+
+\begin{hbwarning}{def:p02-w02-p02-035-bsr-boundary}{Where the Bernays--Sch\"onfinkel bounds stop}
+The grounding is finite only because the universal block is instantiated by
+constants alone.  A positive-arity function symbol produces infinitely many
+ground terms, and the induced-substructure step fails.  Placing an existential
+quantifier after a universal one leaves the class: already without equality,
+the prefix classes \(\forall^{3}\exists\) and \(\forall\exists\forall\) of pure
+predicate logic are reduction classes, and so have undecidable satisfiability
+problems \cite[p.~311]{BorgerGradelGurevich1997}.  This boundary is cited, not
+proved here.
+\end{hbwarning}
+
+\subsection{The guarded fragment}
+\label{sec:p02-w02-p02-035-gf}
+
+The guarded fragment lifts no restriction on arity, on the number of
+variables or on the quantifier prefix.  Instead every quantifier is
+relativized by an atom that contains all variables still free.  Its models
+can be unravelled into tree-like models, and that is the source of both its
+decidability and its finite-model property.  This subsection follows
+\cite{Gradel1999}, read in its revised version of July~1998.  The
+input language is that of the guarded row of
+Table~\ref{tab:p02-decidable-fragments}.
+
+\begin{hbdefinition}{def:p02-w02-p02-035-gf}{The guarded fragment \(\mathrm{GF}\)}
+The vocabulary consists of relation symbols of any arity and individual
+constants; there are no function symbols of positive arity, and logical
+equality is available \cite[sect.~2]{Gradel1999}.  The set \(\mathrm{GF}\) of
+\emph{guarded formulas} is the least set such that:
+(1) every atomic formula, equalities included, is in \(\mathrm{GF}\);
+(2) \(\mathrm{GF}\) is closed under \(\neg,\land,\lor,\to,\leftrightarrow\);
+(3) if \(\bar x,\bar y\) are tuples of variables with \(\bar y\) nonempty,
+\(\alpha(\bar x,\bar y)\) is a relation atom, \(\psi(\bar x,\bar y)\in\mathrm{GF}\),
+and \(\mathrm{free}(\psi)\subseteq\mathrm{free}(\alpha)=\{\bar x,\bar y\}\),
+then \(\exists\bar y(\alpha\land\psi)\) and \(\forall\bar y(\alpha\to\psi)\) are
+in \(\mathrm{GF}\).  The atom \(\alpha\) is the \emph{guard}; these formulas
+are written \((\exists\bar y\,.\,\alpha)\psi\) and \((\forall\bar y\,.\,\alpha)\psi\)
+\cite[def.~2.1 and sect.~2]{Gradel1999}.  For \(k\geq1\),
+\(\mathrm{GF}_k\) is the set of guarded formulas all of whose variables, free
+or bound, are among \(x_1,\ldots,x_k\).  The length of a sentence is written
+\(n\).
+\index{guarded fragment}\index{guard (guarded fragment)}
+\end{hbdefinition}
+
+The source's rule~(3) asks only that the guard be atomic.  Here, as in the
+catalog row, the guard is a relation atom, so an equality \(x=y\) may occur
+in \(\psi\) but cannot be a guard.  The restriction is used: the first step
+of the normal form below appends a fresh variable to every relation atom,
+and an equality guard could not absorb it.  A nonempty \(\bar y\) loses
+nothing, since for empty \(\bar y\) the formula \(\alpha\land\psi\) is already
+built by rules (1) and (2).
+
+\begin{hblemma}{thm:p02-w02-p02-035-gf-constants}{proved=annex:p02-w02-p02-035-gf-constants}{Constants can be removed}
+From every guarded sentence \(\psi\) with constants \(c_1,\ldots,c_k\) one can
+compute in polynomial time a constant-free guarded sentence \(\psi'\) such that,
+for every set \(A\), \(\psi\) has a model with universe \(A\) iff \(\psi'\)
+does.  Each \(m\)-ary symbol \(R\) of \(\psi\) is replaced by a
+\((k+m)\)-ary symbol \(R^{*}\), a fresh \(k\)-ary symbol \(Z\) is added, and
+\(\psi'\defeq(\exists\bar c\,.\,Z\bar c)\psi[R\bar x/R^{*}\bar c\bar x]\), the
+constants \(\bar c\) now being read as variables.  The source states the
+translation with a linear time bound \cite[lem.~2.3]{Gradel1999}; the annex
+proves the polynomial bound used below.
+\end{hblemma}
+
+\begin{hbdefinition}{def:p02-w02-p02-035-gf-normal}{Guarded normal form}
+A constant-free guarded sentence is in \emph{normal form} if it is
+\[
+ \psi\defeq\exists\bar x\,C\bar x\ \land\
+ \bigwedge_{i\in I}(\forall\bar x\,.\,\alpha_i)\exists\bar y\,\psi_i(\bar x,\bar y),
+\]
+where, for each \(i\), \(\bar x=(x_1,\ldots,x_{k_i})\) with \(k_i\geq1\) and
+\(\bar y=(x_{k_i+1},\ldots,x_{k_i+\ell_i})\) with \(\ell_i\geq0\) are tuples of
+distinct variables, \(\alpha_i\) is a relation atom whose variables are
+exactly \(x_1,\ldots,x_{k_i}\), and \(\psi_i\) is quantifier-free.  The
+number of distinct variables of \(\psi\) is written \(m\)
+\cite[lem.~3.1 and the remark after it]{Gradel1999}.
+\end{hbdefinition}
+
+The existential quantifier inside a conjunct need not be guarded.  The source
+reaches this shape from guarded existentials \((\exists\bar y\,.\,\beta_i)\varphi_i\)
+by taking the matrix \(\beta_i\land\varphi_i\), which is the step used here.
+
+\begin{hblemma}{thm:p02-w02-p02-035-gf-normal-form}{proved=annex:p02-w02-p02-035-gf-normal-form}{Normal form}
+From every constant-free guarded sentence \(\varphi\) one can compute in
+polynomial time a sentence \(\psi\) in normal form such that, for every set
+\(A\), \(\varphi\) has a model with universe \(A\) iff \(\psi\) does.  If
+\(\varphi\) has \(v\) variables and every relation symbol of \(\varphi\) has
+arity at most \(a\), then \(\psi\) has at most \(v+1\) variables and every
+relation symbol of \(\psi\) has arity at most \(a+1\).
+\end{hblemma}
+
+This is the guarded part of the source's Lemma~3.1, whose proof introduces
+one fresh variable and one fresh symbol \(R_\chi\) for each quantified
+subformula \(\chi\) \cite[lem.~3.1]{Gradel1999}.
+
+\begin{hbdefinition}{def:p02-w02-p02-035-gf-types}{\(\psi\)-types, witnesses and \(k\)-trees}
+Let \(\psi\) be in normal form with \(m\) variables.  For \(1\leq k\leq m\),
+the set \(\mathrm{At}_k(\psi)\) consists of the equalities \(x_p=x_q\)
+(\(p,q\leq k\)) and every atom \(R(x_{h(z_1)},\ldots,x_{h(z_r)})\) such that
+\(R(z_1,\ldots,z_r)\) is a relation atom occurring in \(\psi\) and \(h\) maps
+the variables of \(\psi\) into \(\{1,\ldots,k\}\).  For a structure
+\(\mathfrak A\) and \(\bar a\in A^k\), the \emph{\(\psi\)-type}
+\(\mathrm{atp}^{\psi}_{\mathfrak A}(\bar a)\) is the set of formulas
+\(\lambda\) and \(\neg\lambda\), \(\lambda\in\mathrm{At}_k(\psi)\), true of
+\(\bar a\) in \(\mathfrak A\).  In this subsection a \emph{\(k\)-type} is any
+set of this form, not the full atomic type of the common conventions.
+A \(k\)-type \(s\) is a \emph{reduction} of a \(k'\)-type \(t\) if there is a
+map \(\rho:\{1,\ldots,k\}\to\{1,\ldots,k'\}\) such that, whenever \(\bar a\)
+realizes \(t\), \((a_{\rho(1)},\ldots,a_{\rho(k)})\) realizes \(s\).  A
+\((k+\ell)\)-type \(t\) \emph{extends} a \(k\)-type \(s\) if \(s\subseteq t\),
+and it extends \(s\) \emph{by \(j\) new elements} if moreover a realization of
+\(t\) has \(j\) more distinct components than one of \(s\).  A \emph{witness}
+for \(\psi\) is a triple \((P,t_0,(\mathrm{ext}_i)_{i\in I})\): \(P\) is a set of
+\(k\)-types, \(k\leq m\), closed under reductions; \(t_0\in P\) and
+\(C\bar x\in t_0\); and for each \(i\),
+\(\mathrm{ext}_i:P^{(k_i)}\to P^{(k_i+\ell_i)}\) maps each \(k_i\)-type \(s\in P\)
+to an extension of \(s\) containing \(\alpha_i\to\psi_i\) in the sense that
+\(\alpha_i\to\psi_i\) is true under the valuation the type gives its atoms.
+A structure \(\mathfrak B\) is a \emph{\(k\)-tree} if there are a tree
+\(T=(V,E)\) and a map \(F\) from \(V\) to the subsets of \(B\) with at most
+\(k\) elements such that (i) for every relation atom \(\alpha(x_1,\ldots,x_r)\)
+and every tuple with \(\mathfrak B\entails\alpha(b_1,\ldots,b_r)\) some node
+\(v\) has \(\{b_1,\ldots,b_r\}\subseteq F(v)\), and (ii) for every \(b\in B\)
+the set \(\{v\in V:b\in F(v)\}\) is connected.  It has \emph{bounded degree}
+if the degrees in \(T\) are bounded
+\cite[defs.~3.2, 3.3 and 3.5]{Gradel1999}.
+\index{guarded fragment!witness for satisfiability}\index{k-tree@\(k\)-tree}
+\end{hbdefinition}
+
+The source's types are full atomic types over the whole vocabulary.  The
+\(\psi\)-types above keep only the atoms that are substitution instances of
+atoms of \(\psi\).  Nothing in the criterion changes, and the count of types
+becomes polynomial in the exponent once the variables or the arities are
+bounded, which the \(\mathsf{EXPTIME}\) analysis needs.
+
+\begin{hbtheorem}{thm:p02-w02-p02-035-gf-tree}{proved=annex:p02-w02-p02-035-gf-tree}{Witness criterion and tree-model property}
+For a sentence \(\psi\) in normal form with \(m\) variables the following are
+equivalent: (a) \(\psi\) is satisfiable; (b) \(\psi\) has a witness;
+(c) \(\psi\) has a model that is an \(m\)-tree of bounded degree.
+Consequently, if a constant-free guarded sentence with \(v\) variables is
+satisfiable, its normal form has a model that is a \((v+1)\)-tree of bounded
+degree.
+\end{hbtheorem}
+
+The proof of (b)\(\Rightarrow\)(c) is the unravelling.  Its root carries a
+realization of \(t_0\).  Below a node \(v\) and for every tuple \(\bar a\)
+over \(F(v)\) that contains an element new at \(v\) and satisfies a guard
+\(\alpha_i\), a child \(w\) is created exactly when
+\(\mathrm{ext}_i(\mathrm{atp}(\bar a))\) needs new elements; \(F(w)\) is
+\(\bar a\) together with fresh elements realizing that extension.  Every
+relation atom on a tuple that lies in no single set \(F(v)\) is made false.
+The source proves sufficiency for the loosely guarded fragment
+\cite[lem.~3.4, lem.~3.6 and thm.~3.7]{Gradel1999}; the annex proof is
+written for the guarded fragment and for \(\psi\)-types.
+
+\begin{proofboundary}{def:p02-w02-p02-035-herwig-import}{Imported extension theorem}
+The following theorem is used as a premise and is not proved in this
+handbook.  Call a tuple \(\bar a\) of a structure \emph{live} if it satisfies
+some relation atom \(\beta(x_1,\ldots,x_r)\) in which all of
+\(x_1,\ldots,x_r\) occur.  For every finite structure \(\mathfrak A\) with
+finite relational vocabulary there is a finite structure \(\mathfrak A^{+}\)
+containing \(\mathfrak A\) as an induced substructure such that (i) every
+partial isomorphism of \(\mathfrak A\) extends to an automorphism of
+\(\mathfrak A^{+}\), and (ii) for every live tuple \(\bar a\) of
+\(\mathfrak A^{+}\) some automorphism \(g\) of \(\mathfrak A^{+}\) maps
+\(\bar a\) into \(A\).  The source states this as Herwig's theorem and refers
+to Herwig's papers for its proof \cite[def.~3.8 and thm.~3.9]{Gradel1999}.
+\end{proofboundary}
+
+\begin{hbtheorem}{thm:p02-w02-p02-035-gf-fmp}{proved=annex:p02-w02-p02-035-gf-fmp}{Finite-model property}
+Every satisfiable guarded sentence, with or without constants and equality,
+has a finite model.  Hence finite and unrestricted satisfiability coincide on
+\(\mathrm{GF}\).
+\end{hbtheorem}
+
+The construction cuts the tree model of \cref{thm:p02-w02-p02-035-gf-tree} to
+a finite subtree \(S\) that is closed under predecessors and contains a node
+of every isomorphism type of the bounded structures \(F(v)\).  It then takes
+the extension \(\mathfrak A^{+}\) of the part of the tree model on \(S\).  A
+guard satisfied in \(\mathfrak A^{+}\) is moved into that part by an
+automorphism.  Its witness obligation is met in a node of \(S\) isomorphic to
+the node where the tree model met it, and the composed automorphism carries
+the witness back \cite[thm.~3.10]{Gradel1999}.  The source leaves open
+whether the loosely guarded fragment has the finite-model property
+\cite[remark after thm.~3.10]{Gradel1999}.
+
+\begin{hbmethod}{def:p02-w02-p02-035-gf-procedure}{Deciding guarded satisfiability by type elimination}
+\emph{Input:} a guarded sentence \(\varphi\) of length \(n\).
+\emph{Step 1.} Remove constants by \cref{thm:p02-w02-p02-035-gf-constants}
+and bring the result into normal form \(\psi\) by
+\cref{thm:p02-w02-p02-035-gf-normal-form}; let \(m\) be its number of
+variables.
+\emph{Step 2.} List the sets \(\mathrm{At}_k(\psi)\), \(k\leq m\), and the set
+\(P_0\) of all \(k\)-types, \(k\leq m\).  A set \(t\) that contains exactly one
+of \(\lambda,\neg\lambda\) for each \(\lambda\in\mathrm{At}_k(\psi)\) is a
+\(k\)-type iff its equalities form an equivalence relation \(\approx\) on
+\(\{1,\ldots,k\}\) and any two atoms of \(\mathrm{At}_k(\psi)\) with the same
+symbol and \(\approx\)-equivalent arguments are both in \(t\) or both negated
+in \(t\).
+\emph{Step 3.} Given \(P_j\), let \(P_{j+1}\) consist of the \(t\in P_j\) such
+that every reduction of \(t\) with at most \(m\) variables lies in \(P_j\),
+and, for every \(i\) with \(t\) a \(k_i\)-type and \(\alpha_i(x_1,\ldots,x_{k_i})\in t\),
+some \((k_i+\ell_i)\)-type \(t'\in P_j\) extends \(t\) and makes \(\psi_i\)
+true.  Stop when
+\(P_{j+1}=P_j\), and call this set \(P^{*}\).
+\emph{Output:} \(\varphi\) is satisfiable iff some \(t_0\in P^{*}\) contains
+\(C\bar x\).
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p02-w02-p02-035-gf-upper}{proved=annex:p02-w02-p02-035-gf-upper}{Correctness and running time of type elimination}
+The procedure of \cref{def:p02-w02-p02-035-gf-procedure} is correct and runs
+in deterministic time \(2^{2^{O(n\log n)}}\), so guarded satisfiability is in
+\(2\mathsf{EXPTIME}\).  For every fixed \(k\), on constant-free guarded
+sentences with at most \(k\) variables, and on constant-free guarded
+sentences whose relation symbols have arity at most \(k\), it runs in time
+\(2^{n^{O(1)}}\), so these problems are in \(\mathsf{EXPTIME}\).
+\end{hbtheorem}
+
+The source obtains the same upper bounds from an alternating test that
+guesses types and universally chooses reductions within exponential space,
+then uses the equality of alternating exponential space and deterministic
+doubly exponential time \cite[thm.~4.3]{Gradel1999}.  The procedure above
+computes the largest set of types that satisfies the witness conditions
+directly, so no alternation theorem is needed for the upper bound.
+
+The bounded statements of the source, Corollary~4.6, concern its language
+with individual constants \cite[cor.~4.6]{Gradel1999}.  The translation of
+\cref{thm:p02-w02-p02-035-gf-constants} does not preserve those bounds: it
+adds every constant as an argument of every relation symbol and as a variable,
+so both the arity and the number of variables grow by the number of constants.
+The bounded classes with constants need a different reduction.
+
+\begin{hbcorollary}{thm:p02-w02-p02-035-gf-bounded-constants}{proved=annex:p02-w02-p02-035-gf-bounded-constants}{Bounded guarded sentences with constants}
+For every fixed \(k\geq1\), satisfiability of guarded sentences with
+individual constants and at most \(k\) variables, and of guarded sentences
+with individual constants whose relation symbols have arity at most \(k\), is
+decidable in deterministic time \(2^{n^{O(1)}}\).  Both problems are therefore
+in \(\mathsf{EXPTIME}\).
+\end{hbcorollary}
+
+The reduction splits the universe of a model into the elements named by
+constants and the rest.  Each variable is either sent to a named element or
+kept as a variable over the unnamed elements.  An atom \(R(t_1,\ldots,t_r)\)
+becomes an atom of a new symbol \(R_\kappa\), where \(\kappa\) records which
+argument places carry which constant, applied to the remaining variables
+only.  Arity and variable count do not grow.  The number of cases for one
+quantified block is polynomial when the number of variables in a guard is
+bounded.  To keep the nesting of quantifiers from multiplying these cases,
+the split is applied after the sentence has been flattened as in
+\cref{thm:p02-w02-p02-035-gf-normal-form}.  The annex proof also uses a
+property of guarded sentences that holds with or without constants: adding
+an element that lies in no relation does not change their truth.
+
+\begin{proofboundary}{def:p02-w02-p02-035-alternation-import}{Imported facts on alternating machines}
+The lower bounds use the following premises, which are not proved in this
+handbook.  (i) For every space bound \(s(n)\geq\log n\), the problems
+decided by alternating Turing machines in space \(s(n)\) are exactly those
+decided deterministically in time \(2^{d\,s(n)}\) for some \(d\); in
+particular alternating exponential space equals \(2\mathsf{EXPTIME}\) and
+alternating polynomial space equals \(\mathsf{EXPTIME}\)
+\cite[defs.~4.1 and 4.2 and sect.~4.1]{Gradel1999}.  (ii) Every problem
+decided by an alternating machine within space \(S(n)\) is decided within the
+same space by a one-tape alternating machine \(M\) whose states are
+existential, universal, accepting or rejecting, every computation of which
+halts, and every non-final configuration of which has exactly two successor
+configurations \cite[proof of thm.~4.4]{Gradel1999}.  The machine model has
+tape cells numbered from \(0\), and the head of \(M\) stays in cells
+\(0,\ldots,S(n)-1\).
+\end{proofboundary}
+
+\begin{hbdefinition}{def:p02-w02-p02-035-gf-accept}{The guarded acceptance sentence}
+Let \(M\) be as in premise (ii) with space \(2^{s}\), \(s=p(n)\) for a
+polynomial \(p\), state set \(Q\) with initial state \(q_0\), tape alphabet
+\(\Gamma\) with blank \(\square\), and successor transitions
+\(\delta_1(q,\sigma),\delta_2(q,\sigma)\in Q\times\Gamma\times\{-1,0,1\}\) for
+non-final \(q\).  Fix an input \(w=w_0\cdots w_{n-1}\).  Nodes of a
+computation tree are coded by pairs \((a,b)\); a cell number \(r<2^{s}\) is
+coded by the tuple \(\hat r(a,b)\in\{a,b\}^{s}\) whose \(i\)-th entry is \(b\)
+iff bit \(i-1\) of \(r\) is \(1\).  A unary \(N\) marks \(a\) and not \(b\).
+With \(\bar x=(x_1,\ldots,x_s)\) and \(\bar x'\) similar, put
+\[
+\begin{aligned}
+ \mathit{succ}(\bar x,\bar x')&\defeq\textstyle\bigvee_{i}\bigl(
+   \bigwedge_{j<i}(\neg Nx_j\land Nx'_j)\land Nx_i\land\neg Nx'_i\land
+   \bigwedge_{j>i}(Nx_j\leftrightarrow Nx'_j)\bigr),\\
+ \mathit{diff}(\bar x,\bar x')&\defeq\textstyle\bigvee_{i}\neg(Nx_i\leftrightarrow Nx'_i).
+\end{aligned}
+\]
+The vocabulary has \(N\), binary \(T\) (node), \(R\) (root) and \(Q_q\)
+(\(q\in Q\)); \((s+2)\)-ary \(U\), \(Z\) (head) and \(P_\sigma\)
+(\(\sigma\in\Gamma\)); \(4\)-ary \(S_1,S_2\) (successors); and \((4s+4)\)-ary
+\(E\).  Let \(\mathrm{EXIST}(a,b)\), \(\mathrm{UNIV}(a,b)\) and
+\(\mathrm{REJECT}(a,b)\) be the disjunctions of \(Q_qab\) over existential,
+universal and rejecting \(q\).  \(\mathrm{NEXT}_i(a,b,c,d)\) is the
+conjunction of
+\[
+ (\forall\bar x\bar x'\bar y\bar y'\,.\,E\bar x\bar x'ab\bar y\bar y'cd)
+ \bigl((Z\bar x'ab\land\mathit{diff}(\bar x,\bar x'))\to
+ \textstyle\bigwedge_{\sigma}(P_\sigma\bar xab\to P_\sigma\bar ycd)\bigr)
+\]
+and, for each non-final \(q\) and each \(\sigma\) with
+\(\delta_i(q,\sigma)=(q',\sigma',\mu)\), the formula
+\[
+ (\forall\bar x\bar x'\bar y\bar y'\,.\,E\bar x\bar x'ab\bar y\bar y'cd)
+ \bigl((Q_qab\land Z\bar xab\land P_\sigma\bar xab\land\gamma_\mu)\to
+ (Q_{q'}cd\land P_{\sigma'}\bar ycd\land Z\bar y_\mu cd)\bigr),
+\]
+where
+\(\gamma_1=\mathit{succ}(\bar x,\bar x')\), \(\gamma_{-1}=\mathit{succ}(\bar x',\bar x)\),
+\(\gamma_0=\top\), \(\bar y_{\pm1}=\bar y'\) and \(\bar y_0=\bar y\).  Then
+\(\mathrm{ACCEPT}_{M,w}\) is the conjunction of the following nine
+sentences, numbered for reference:
+\begin{enumerate}
+\item \((\exists ab\,.\,Rab)Tab\);
+\item \((\forall ab\,.\,Tab)\bigl(Na\land\neg Nb\land U(a,\ldots,a,a,b)\bigr)\);
+\item \((\forall\bar xab\,.\,U\bar xab)\bigwedge_{i}U\bar x[x_i/b]ab\);
+\item the sentence
+  \[
+   (\forall ab\,.\,Tab)\bigl((\mathrm{EXIST}(a,b)\lor\mathrm{UNIV}(a,b))\to
+   \theta_1\land\theta_2\bigr),
+  \]
+  where \(\theta_i\defeq(\exists cd\,.\,S_iabcd)Tcd\);
+\item for \(i=1,2\), the sentence
+  \((\forall abcd\,.\,S_iabcd)\bigl(E\bar aab\bar ccd\land\epsilon\bigr)\), where
+  \[
+   \epsilon\defeq(\forall\bar u\bar v\,.\,E\bar uab\bar vcd)
+   \textstyle\bigwedge_{j\leq2s}E\bar u[u_j/b]ab\bar v[v_j/d]cd;
+  \]
+\item the sentence
+  \(
+   (\forall ab\,.\,Rab)\bigl(Q_{q_0}ab\land Z\hat0ab\land
+   \bigwedge_{r<n}P_{w_r}\hat rab\land\iota\bigr)
+  \), where
+  \[
+   \iota\defeq(\forall\bar x\,.\,U\bar xab)
+   \bigl(\textstyle\bigwedge_{r<n}\mathit{diff}(\hat r,\bar x)\to P_\square\bar xab\bigr);
+  \]
+\item \((\forall abcd\,.\,S_1abcd)\bigl(\mathrm{EXIST}(a,b)\to
+  \mathrm{NEXT}_1(a,b,c,d)\lor\mathrm{NEXT}_2(a,b,c,d)\bigr)\);
+\item for \(i=1,2\), \((\forall abcd\,.\,S_iabcd)
+  \bigl(\mathrm{UNIV}(a,b)\to\mathrm{NEXT}_i(a,b,c,d)\bigr)\);
+\item \((\forall ab\,.\,Tab)\neg\mathrm{REJECT}(a,b)\).
+\end{enumerate}
+where \(\bar a\) and \(\bar c\) repeat \(a\) and \(c\) \(2s\) times and
+\(\bar u,\bar v\) are \(2s\)-tuples of variables.  The symbols \(T,R,U,Z,
+P_\sigma,Q_q,S_i,E,N\), the formula \(\mathit{succ}\),
+and the names \(\mathrm{EXIST}\), \(\mathrm{UNIV}\), \(\mathrm{REJECT}\),
+\(\mathrm{NEXT}_i\) and \(\mathrm{ACCEPT}_{M,w}\) follow the source
+\cite[proof of thm.~4.4]{Gradel1999}; \(\mathit{diff}\) replaces the source's
+use of \(\mathit{less}\) and of tuple inequality.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p02-w02-p02-035-gf-hard}{proved=annex:p02-w02-p02-035-gf-hard}{Guarded satisfiability is 2EXPTIME-complete}
+\(\mathrm{ACCEPT}_{M,w}\) is a guarded sentence without equality and without
+constants, computable from \(w\) in polynomial time, and it is satisfiable
+iff \(M\) accepts \(w\).  Hence satisfiability of guarded sentences, with or
+without equality, is \(2\mathsf{EXPTIME}\)-complete.  Moreover, for every
+\(k\geq2\), satisfiability of guarded sentences with at most \(k\) variables,
+and of guarded sentences whose relation symbols have arity at most \(k\), is
+\(\mathsf{EXPTIME}\)-hard already for equality-free sentences in
+\(\mathrm{GF}_2\) with relation symbols of arity at most \(2\).  With or
+without individual constants, these bounded problems are
+\(\mathsf{EXPTIME}\)-complete.
+\end{hbtheorem}
+
+The source's sentence differs in two places.  It forces in every model a
+binary tree of depth \(2^{2^{n}}\) through an \(n\)-ary depth counter \(D\)
+and requires two successors at every node.  As printed, every successor
+must carry a counter one larger, an increment needs a zero bit, and the
+counter is bounded; an infinite chain of successors is therefore impossible,
+so the printed conjunction has no model.  The sentence above
+drops the counter.  It requires successors only at existential and universal
+configurations, and it relies on premise (ii): every computation halts.  The
+source also uses equality in \(\mathit{less}\) and \(\mathit{succ}\); the
+predicate \(N\) is the source's own device for removing equality, applied
+here from the start \cite[proof of thm.~4.4 and cor.~4.5]{Gradel1999}.  For the
+\(\mathsf{EXPTIME}\) lower bound the source sketches an encoding of
+linear-space configurations by monadic predicates
+\cite[cor.~4.6]{Gradel1999}; the annex writes that encoding out in
+\(\mathrm{GF}_2\).
+
+\begin{hbexample}{def:p02-w02-p02-035-gf-example}{An infinite tree model and a finite model}
+Let \(\varphi\defeq(\exists xy\,.\,Exy)\top\land(\forall xy\,.\,Exy)(\exists z\,.\,Eyz)\top\),
+where \(\top\) abbreviates \(Exy\lor\neg Exy\) inside the first guard and
+\(Eyz\lor\neg Eyz\) inside the second.  Every \(E\)-edge must be followed by
+another, so the natural numbers with \(E=\{(r,r+1)\}\) form a model.  It is a
+\(2\)-tree of bounded degree: the path \(v_0,v_1,\ldots\) with
+\(F(v_r)=\{r,r+1\}\) satisfies conditions (i) and (ii).  Up to the auxiliary symbols of the normal form, this is the shape the
+unravelling of \cref{thm:p02-w02-p02-035-gf-tree} produces: each node below
+the root holds one old element and one new witness.  All structures
+\(F(v_r)\) are isomorphic, so the finite subtree \(S=\{v_0\}\) already
+represents every isomorphism type.  The finite-model construction then takes
+an extension of the edge \(\{0,1\}\) in which the partial isomorphism
+\(0\mapsto1\) extends to an automorphism; such an extension needs a further
+element to receive the image of \(1\).  The directed \(E\)-cycle on
+\(\{0,1,2\}\) is one such structure: rotations extend each partial
+isomorphism and move each edge onto \((0,1)\).  It is a finite model of
+\(\varphi\), and it also satisfies the guarded conjuncts
+\((\forall xy\,.\,Exy)\neg Eyx\) and \((\forall x\,.\,Exx)\neg\top\), with \(\top\) read as \(Exx\lor\neg Exx\), which rule out
+two-element and one-element cycles.
+\end{hbexample}
+
+\begin{hbwarning}{def:p02-w02-p02-035-gf-boundary}{Where the guarded bounds stop}
+A conjunction of atoms is not a guard: transitivity,
+\(\forall xyz(Exy\land Eyz\to Exz)\), is neither guarded nor loosely guarded,
+since no single atom contains \(x\) and \(z\)
+\cite[sect.~2]{Gradel1999}.  Small extensions are undecidable.  Sentences
+\(\psi\land\mathrm{functional}[D]\) with \(\psi\in\mathrm{GF}_3\) without
+equality, where \(\mathrm{functional}[D]\) says that the binary relation \(D\)
+is a partial function, form a conservative reduction class
+\cite[thm.~5.8]{Gradel1999}; so does \(\mathrm{GF}_3\) with counting
+quantifiers \cite[cor.~5.9]{Gradel1999}, and so do the sentences
+\(\psi\land\mathrm{transitive}[E_0,\ldots,E_m]\) with \(\psi\in\mathrm{GF}_3\)
+\cite[thm.~5.10]{Gradel1999}.  Their satisfiability problems are therefore
+undecidable.  These boundary results are cited, not proved here.  The
+loosely guarded fragment shares the tree-model property and the
+\(2\mathsf{EXPTIME}\) bound, but its finite-model property was left open by
+the source \cite[remark after thm.~3.10]{Gradel1999}.
+\end{hbwarning}
+
+The guarded fragment contains the first-order translation of propositional modal
+logic; that translation and the bisimulation side of guarded logic are in
+\cref{sec:p09-presentation-n-c-007} and
+Theorem~\ref{thm:p09-modal-guarded}.
+
+\subsection{Relationships}
+\label{sec:p02-w02-p02-035-relationships}
+
+The monadic, two-variable and Bernays--Sch\"onfinkel rows share one method: a satisfiable sentence has a model whose
+size is bounded by a computable function of the sentence, a nondeterministic
+machine guesses such a model, and a model check confirms it.  The bounds
+differ in kind.  For monadic sentences the bound \(2^m\) counts colours; for
+\(\mathrm{FO}^2\) the bound \(3s2^r\) counts \(1\)-types times witness
+obligations; for Bernays--Sch\"onfinkel sentences the bound \(\max(1,p)\)
+counts existential witnesses, so the exponential cost lies in the number of
+ground instances rather than in the model.  The guarded row does not fit this
+pattern.  Its finite models come from an extension theorem, not from a
+computable size bound proved here, so the procedure searches sets of types
+instead of models.  The extra exponential is the number of types: a type
+records atoms of unbounded arity over up to \(m\) variables.  Bounding the
+variables or the arity removes it, which is why the bounded guarded classes
+fall to \(\mathsf{EXPTIME}\).  The finite-model consequences of
+these bounds bear on the distinction between finite and unrestricted validity
+in \cref{sec:p02-w02-p02-036-finite-validity}.  The decision and complexity
+summary in Part~14 lists the same rows in Table~\ref{tab:p14-dc-finite}.

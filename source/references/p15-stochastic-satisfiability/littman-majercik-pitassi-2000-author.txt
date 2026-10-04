@@ -1,0 +1,2547 @@
+Stochastic Boolean Satis ability
+
+Michael L. Littman (mlittman@cs.duke.edu) 
+Stephen M. Majercik (majercik@cs.duke.edu) y
+Department of Computer Science
+Duke University, Durham, NC 27708-0129
+Toniann Pitassi (toni@cs.arizona.edu) z
+Department of Computer Science
+The University of Arizona, Tucson, AZ 85721-0077
+January, 2000
+Abstract. Satis ability problems and probabilistic models are core topics of ar-
+ti cial intelligence and computer science. This paper looks at the rich intersection
+between these two areas, opening the door for the use of satis ability approaches in
+probabilistic domains. The paper examines a generic stochastic satis ability prob-
+lem, SSat, which can function for probabilistic domains as Sat does for deterministic
+domains. It shows the connection between SSat and well studied problems in belief
+network inference and planning under uncertainty, and de nes algorithms, both
+systematic and stochastic, for solving SSat instances. These algorithms are validated
+on random SSat formulae generated under the xed-clause model. In spite of the
+large complexity gap between SSat (PSPACE) and Sat (NP), the paper suggests
+that much of what we have learned about Sat transfers to the probabilistic domain.
+
+
+                               1. Introduction
+There has been a recent focus in arti cial intelligence (AI) on solving
+problems exhibiting various forms of uncertainty. In parallel, there is
+a great deal of work in AI and computer science on solving determin-
+istic problems using techniques for testing Boolean satis ability. Some
+recent work has looked at combinations of these ideas, viewing plan-
+ning under uncertainty as stochastic Boolean satis ability (Majercik &
+Littman, 1998). This paper extends these ideas, and provides a general
+approach for combining reasoning about uncertainty and satis ability.
+    The remainder of this section reviews deterministic satis ability,
+introduces the stochastic satis ability (SSat) framework, describes the
+relationship between special cases of SSat and planning and reasoning
+under uncertainty, and discusses the family of random SSat instances.
+   Research supported in part by NSF CAREER grant IRI-9702576.
+  y Research supported by a NASA Graduate Student Research Program Fellow-
+ship.
+  z Research supported by NSF grant CCR-9457782 and US-Israel BSF Grant 95-
+00238.
+
+      c 1999 Kluwer Academic Publishers. Printed in the Netherlands.
+
+
+
+
+                                               paper.tex; 1/09/1999; 0:14; p.1
+2                       Littman, Majercik, and Pitassi
+Section 2 describes three algorithms for SSat, one based on the Davis-
+Putnam-Logemann-Loveland (DPLL) algorithm for Sat, a variation
+based on a \universal" search algorithm for Sat, and one that com-
+bines stochastic sampling and local search. Section 4 presents empirical
+results and puts them into perspective.
+1.1. Deterministic Satisfiability
+In the deterministic satis ability problem, or Sat, we are given a
+Boolean formula and wish to determine whether there is some as-
+signment to the variables in the formula that results in the formula
+evaluating to True. This problem is connected to problems throughout
+computer science, from circuit design and complexity theory to AI.
+The last several years has seen tremendous progress in our ability to
+solve Sat problems. In part due to the success of solving satis ability
+problems, researchers are nding ecient ways of modeling diverse
+problems within the satis ability framework, such as planning (Kautz
+& Selman, 1996).
+   A formal de nition of the Sat decision problem follows. Let x =
+hx1; x2 ; : : : ; xni be a collection of n Boolean (0/1) variables, and (x)
+be a k-CNF Boolean formula on these variables with m clauses. For
+example, (x1 _ x2 _ x4 )(x2 _ x3 _ x4 )(x1 _ x2 _ x3 ) is a formula with
+k = 3 literals per clause, n = 4 variables and m = 3 clauses. An
+assignment to the Boolean variables x is satisfying if it makes the
+formula True (( ) = 1) and unsatisfying if it makes the formula False
+(( ) = 0). The decision problem Sat asks, given a Boolean formula
+(x) in k-CNF, does it have a satisfying assignment? Or, symbolically,
+we want to know whether 9x1 ; : : : ; 9xn ((x) = 1). Table I summarizes
+notation.
+1.2. Stochastic Satisfiability
+Papadimitriou (1985) explored an extension of Sat in which a random-
+ized quanti er is introduced. The stochastic Sat (SSat) problem is to
+evaluate a Boolean formula containing both existential and randomized
+quanti ers. For example:
+              9x1; y2; 9x3; : : : ; 9xn 1; yn(E [(x)]  ):
+                   R                       R
+
+In words, this formula asks whether there is a value for x1 such that for
+random values of y2 (choose 0 or 1 with equal probability), there exists
+a value of x3 , such that... the expected value of the Boolean formula
+(x) meets or exceeds a threshold 0    1. This particular example
+of stochastic satis ability consists of alternating between making a
+
+
+
+
+                                            paper.tex; 1/09/1999; 0:14; p.2
+                           Stochastic Boolean Satis ability                         3
+Table I. Summary of notation used for Boolean formulae. Some notation is introduced in
+later sections.
+  0<n                      number of Boolean variables
+  0<k P                  
+                           number    of literals per clause
+  0 < m  ki=1 2in number of clauses
+  b 2 f0; 1g               Boolean value
+  x = hx1; x2; : : : ; xni Boolean variables, xi 2 f0; 1g
+  (x)                     Boolean formula in CNF
+  dxi =b                  restriction (variable assignment) of  (renumbers variables)
+                           assignment to x
+  Q(xi ) 2 f9; 8; g
+                R
+                           quanti er for variable xi (existential, universal, or randomized)
+  Fmk;n                      xed-clause distribution
+  3  s  2n+1 1           size of smallest DPLL tree
+  0w                      size of an assignment sample
+  01                    stochastic satisfaction threshold
+  0tn                    satisfaction threshold, where 2t is the number of assignments
+                             needed for a positive instance
+  0cn                    number of choice variables in E-Majsat
+
+
+choice of value for an x variable (perhaps based on values of lower-
+numbered variables) and a chance selection of a value for a y variable.
+For this reason, Papadimitriou referred to SSat as a \game against
+nature." An instance of SSat is positive if the threshold is met or
+exceeded. This paper also considers a generalization of Papadimitriou's
+class, Extended SSat, that allows universal, existential and random-
+ized quanti ers, and a more constrained version, Alternating SSat, in
+which existential and randomized quanti ers strictly alternate.
+
+1.2.1. Semantics of Extended SSat and Decision Trees
+An Extended SSat formula is de ned by a triple (; ; Q) where  is a
+CNF formula with underlying ordered variables x1 ; : : : ; xn , 0    1
+is a threshold, and Q is a mapping from variables to quanti ers (exis-
+tential 9, universal 8, and randomized ). De ne 0 = dxi =b , where
+                                                 R
+0 is the (n 1)-variable CNF formula obtained from assigning the
+single variable xi the Boolean value b in the n-variable CNF formula 
+and simplifying the result (including any necessary variable renumber-
+ing). Variables are numbered so that x1 corresponds to the outermost
+(leftmost) quanti er and xn to the innermost.
+    The value of  (under quanti er order Q), val(; Q), is de ned by
+induction on the number of quanti ers as follows. Let x1 be the variable
+associated with the outermost quanti er: (1) if  contains an empty
+
+
+
+
+                                                paper.tex; 1/09/1999; 0:14; p.3
+4                          Littman, Majercik, and Pitassi
+clause, then val(; Q) = 0; (2) if  contains no clauses then val(; Q) =
+1; (3) if Q(x1 ) = 9, then val(; Q) = max(val(dx1 =0 ; Q); val(dx1 =1 ; Q));
+(4) if Q(x1 ) = 8, then val(; Q) = min(val(dx1 =0 ; Q); val(dx1 =1 ; Q));
+(5) if Q(x1 ) = , then val(; Q) = (val(dx1 =0 ; Q) + val(dx1 =1 ; Q))=2.
+                R
+    For example, the formula
+               R
+                   x; 9y; z(E [(x _ y)(y _ z)(x _ y)]  1=2):
+                       R
+has value 3=4. Now, given , Q, and a threshold , (; ; Q) is True if
+and only if val(; Q)  .
+    Note that this coincides with the usual de nition of the quanti ed
+Boolean formula problem (QBF), where all of the quanti ers are 8
+or 9. The usual de nition of truth for  on an instance of QBF is as
+follows. If  contains an empty clause, then  is False; if  contains no
+clauses, then  is True; otherwise, if  = 9x1 0 , then  is True if and
+only if 0 dx1 =0 is True or 0 dx1 =1 is True, and nally if  = 8x1 0 , then
+ is True if and only if both 0 dx1 =0 and 0 dx1 =1 are True. Using the
+de nition of value,  is True if and only if val(; Q) > 0. The base case,
+when  contains an empty clause or no clauses clearly coincide. If  =
+9x10, then  is True if and only if 0 dx1=0 is True or 0dx1 =1 is True,
+which is the case if and only if max(val(0 dx1 =0 ; Q); val(0 dx1 =1 ; Q)) >
+0, as desired. The de nitions similarly coincide when  = 8x1 0 .
+    It will be useful to visualize the above inductive procedure as a deci-
+sion tree. A decision tree T over variables x1 ; : : : ; xn is a binary decision
+tree where each internal node in the tree is labeled with a variable xi ,
+and the two outgoing edges are labeled with the two di erent settings
+of xi : xi = 0 and xi = 1. Each leaf of the tree is labeled with either 0 or
+1. Note that any total truth assignment to the underlying variables is
+consistent with exactly one path of T . A decision tree T over x1 ; : : : ; xn
+represents a CNF formula (x1 ; : : : ; xn ) if for every truth assignment ,
+the value of the leaf node on the path consistent with is equal to ( ).
+A decision tree T for  is complete if it is a full binary tree of height n;
+notice that a given  will have many decision trees that can represent
+it; some may be very small while others (such as the complete tree)
+can have exponential size in n. Figure 1 gives an example of a decision
+tree for (x _ y)(y _ z )(x _ y).
+    A canonical decision tree for an Extended SSat instance (; ; Q) is
+a decision tree T where the ordering of the variables in T is consistent
+with the quanti er order.
+    Given a canonical tree T for an Extended SSat formula , the value
+of , val(; Q), can be computed from T by labeling the intermediate
+nodes of T in a bottom-up fashion: Inductively, if v is unlabeled, and
+has children v0 , v00 with labels L(v0 ), L(v00 ) respectively, then: (i) if
+Q(v) = 9, then L(v) = max(L(v0 ); L(v00 )); (ii) if Q(v) = 8, then L(v) =
+
+
+
+
+                                               paper.tex; 1/09/1999; 0:14; p.4
+                         Stochastic Boolean Satis ability                     5
+                                         x
+                         x=1                       x = 0
+
+                 y                                             y
+     y=1                 y=0                        y=1              y=0
+
+                           z
+       0         z=1               z=0               1                 0
+
+
+
+
+                     0             1
+Figure 1. A decision tree for the formula (x _ y)(y _ z)(x _ y) encodes which
+assignments are satisfying and which are not.
+
+min(L(v0 ); L(v00 )); and (iii) if Q(v) = , then L(v) = (L(v0 )+ L(v00 ))=2.
+                                             R
+The value of  is the value of the root, and  is a positive instance if
+and only if that value is greater than or equal to .
+   Note that, while not explored in detail in this paper, the de nition of
+the randomized quanti er can be extended to allow arbitrary ratio-
+                               R
+nal probability distributions over the set f0; 1g instead of the uniform
+distribution considered in this paper. The resulting generalization does
+not change any of the complexity results described in the next sec-
+tion, and is key to making a connection between SSat, planning under
+uncertainty, and belief network inference.
+1.3. Satisfiability and Uncertainty
+As AI techniques are used more and more to attack real-world prob-
+lems, many researchers have embraced probability theory as a way of
+representing the pervasive uncertainty they nd. Two speci c examples
+of this trend are the increasing use of Markov decision process models in
+planning and learning, and belief networks in reasoning and knowledge
+representation; however, the in uence of probabilistic models in AI is
+felt quite broadly.
+    Whereas many basic deterministic problems are complete for the
+well-known complexity class NP, and are therefore formally equivalent
+to Sat, many planning and reasoning problems in probabilistic models
+lie in other complexity classes, such as #P or PP (Roth, 1996; Littman,
+Goldsmith, & Mundhenk, 1998). This means that, with respect to the
+current state of complexity theory, these problems cannot be polyno-
+
+
+
+
+                                                 paper.tex; 1/09/1999; 0:14; p.5
+6                        Littman, Majercik, and Pitassi
+mially reduced to Sat. However, many standard uncertain reasoning
+problems can be reduced to special cases of SSat, as described next.
+The probabilistic problems discussed are complete for NP, PP, NPPP ,
+and PSPACE.
+    The NP-complete problem Sat is the SSat problem obtained by
+using only existential quanti ers and setting  = 1. The problem of nd-
+ing the most probable explanation (MPE) in a belief network (Dechter,
+1996) is (polynomially) equivalent to Sat. A related problem from
+planning under uncertainty is determining whether there is some choice
+of actions such that the probability of the most likely trajectory through
+state space to the goal exceeds a given probability threshold.
+    The class PP, or probabilistic polynomial time, can be de ned in
+several ways. For the purposes of this paper, it is useful to de ne it
+by one of its complete problems, Majsat. In its standard formulation,
+Majsat asks whether, given a Boolean formula (x) in CNF, at least
+half of its assignments are satisfying. Thus, Majsat is concerned, not
+just with the existence of a satisfying assignment, but the number of
+satisfying assignments.
+    The Majsat problem connects satis ability to probability in the
+sense that, if we imagine that all assignments are equally likely, Majsat
+asks whether the probability of a satisfying assignment is at least 1=2.
+Thus, Majsat can be expressed as an instance of SSat:
+                     R
+                       x1 ; : : : ; xn(E [(x)]  1=2)
+                                 R
+
+(or , more generally; Papadimitriou (1985) refers to this as \Thresh-
+old Sat", but this paper uses simply \Majsat" for this generaliza-
+tion). Thus, Majsat is obtained from SSat by using only randomized
+quanti ers.
+   As with many decision problems, Majsat is polynomially equivalent
+to the problem of actually computing the probability of a satisfying
+assignment, since binary search on  can be used to nd the exact value
+of  for which the probability is at least as big, but no bigger than, .
+Thus, the class PP can be viewed as the decision-problem version of
+#P, which actually counts the number of satisfying assignments.
+   The problem of belief network inference|given a belief network,
+values for its evidence nodes, and the value for a query node, what is
+the probability that the query node takes on the given value given the
+evidence?|is #P-complete (Roth, 1996). In addition, any belief net-
+work (with rational conditional probability tables) can be represented
+as a Boolean formula. Thus, belief network inference is equivalent to
+Majsat. A PP-complete planning problem is plan evaluation in a
+probabilistic domain (Littman, Goldsmith, & Mundhenk, 1998).
+
+
+
+
+                                             paper.tex; 1/09/1999; 0:14; p.6
+                        Stochastic Boolean Satis ability                    7
+    The complexity class NPPP is formed by combining NP and PP.
+It is the class of problems that can be solved by guessing a solution
+(NP) and then performing a PP calculation for veri cation. A satis -
+ability problem that is complete for this class is E-Majsat (\exists"
+Majsat) (Littman, Goldsmith, & Mundhenk, 1998), which combines
+elements of Sat and Majsat. An E-Majsat instance is de ned by a
+CNF Boolean formula (x) on n Boolean variables, a threshold value ,
+and a number 0  c  n. The variables xc+1; : : : ; xn are the \chance"
+variables, and the decision problem is to report whether there is an
+assignment to the \choice" variables x1 ; : : : ; xc so that the probability
+that they combine with the chance variables to constitute a satisfying
+assignment of (x) is at least . Thus, E-Majsat is also an SSat
+problem:
+               9x1; : : : ; 9xc; xc+1; : : : ; xn(E [(x)]  ):
+                             R             R
+    Note that, if c = n, E-Majsat is simply Sat (for  = 1). If c = 0,
+E-Majsat is exactly Majsat. In terms of complexity classes, NP 
+PP  NPPP ; E-Majsat is at least as hard as Majsat, which is at
+least as hard as Sat. In some sense, then, the peak complexity for
+E-Majsat is achieved with intermediate values of c.
+    Other problems have been shown to be NPPP -complete, such as
+  nding optimal size-bounded plans in uncertain domains (Littman,
+Goldsmith, & Mundhenk, 1998) and generating \explanations" in be-
+lief networks (Peot, 1998). In addition, the belief network problems of
+calculating a maximum a posteriori (MAP) hypothesis or a maximum
+expected utility (MEU) solution (Dechter, 1996) are also complete for
+NPPP . In these problems, the choice variables correspond to the plan
+or explanation and the chance variables to the uncertainty.
+    The class PSPACE consists of the problems solvable using a poly-
+nomial amount of space. All the previously mentioned classes (NP,
+PP, NPPP ) can be solved in polynomial space by enumerating all
+assignments and combining the results in the appropriate way. The
+stochastic Sat problem SSat and the deterministic QBF are satis-
+  ability problems that are PSPACE-complete. As mentioned earlier,
+each existential quanti er in an SSat problem can be viewed as a
+simple type of maximization operator; the problem then becomes one
+of maximizing the probability that (x) is satis ed, given that some of
+the variables are under the control of \nature." This is closely related
+to solving a nite-horizon partially observable Markov decision process
+(pomdp), which is also PSPACE-complete (Papadimitriou & Tsitsiklis,
+1987). The problem remains PSPACE-complete when the domain is
+speci ed compactly via probabilistic strips operators or an equivalent
+representation (Mundhenk et al., 1997), even if the domain is \fully
+observable" (Littman, 1997). The connection between SSat and these
+
+
+
+
+                                               paper.tex; 1/09/1999; 0:14; p.7
+        8                             Littman, Majercik, and Pitassi
+        Table II. Di erent arrangements of quanti ers result in SSat problems complete for di erent
+        complexity classes and correspond to basic problems in uncertain reasoning and planning.
+               satis ability problem                                belief network problem
+class          Boolean formula                                      planning problem
+               Sat                                                  most probable explanation
+NP             9x1; : : : ; 9xn (E [(x)]  )                      best trajectory
+               Majsat                                               belief updating (inference)
+PP             R
+                x1 ; : : : ; xn (E [(x)]  )
+                         R
+                                                                    plan evaluation
+                                                                    maximum a posteriori hypothesis
+NPPP
+               E-Majsat
+               9x1; : : : ; 9xc; xc+1 ; : : : ; xn (E [(x)]  )
+                              R            R
+                                                                    best polynomial-size plan
+               Alternating SSat                                     in uence diagrams
+PSPACE
+               9x1; x2 ; : : : ; 9xn 1 ; xn (E [(x)]  )
+                     R                 R
+                                                                    best polynomial-horizon plan
+
+
+
+        planning problems has been exploited to create a competitive planning
+        algorithm (Majercik & Littman, 1999). In uence diagrams (Shachter,
+        1986) are a belief-network-like representation for the same type of
+        problem.
+           Table II summarizes the relations between the complexity classes,
+        stochastic satis ability problems, belief network problems, and plan-
+        ning problems discussed.
+        1.3.1. Approximability of SSat
+        For applications in planning and decision making, the underlying prob-
+        lem is often the related optimization problem associated with SSat:
+        Given an instance (; ; Q) output val(). Moreover, an ecient al-
+        gorithm that will return a close approximation to the actual value is
+        nearly as good as an exact solution. Below is a brief review of what is
+        known about the approximability of SSat.
+            Let Opt be an optimization problem; that is, Opt(x) is a real-valued
+        function with domain D  f0; 1g (bit strings). Let A be an algorithm
+        that approximates Opt(x): on input x 2 f0; 1g , the algorithm produces
+        an output A(x). Let  be a function from integers (input string lengths)
+        to real numbers between 0 and 1. We say that algorithm A approximates
+        Opt to within ratio 0 < () < 1 if for all x 2 D, (jxj)  A(x)=Opt(x) 
+        1=((jxj)). In other words, for all inputs x, A(x) and Opt(x) di er by a
+        factor of at most (jxj), where jxj is the length of the input string x. If
+        such an A exists for Opt, then Opt can be approximated to within ratio
+        (). Condon et al. (1997) observed that there exists a constant c > 0
+
+
+
+
+                                                             paper.tex; 1/09/1999; 0:14; p.8
+                        Stochastic Boolean Satis ability                  9
+such that approximating SSat to within ratio 2 nc is PSPACE-hard.
+Thus, the general problem, with unbounded alternations of quanti ers,
+is very hard to approximate. However, what about special cases of
+SSat, such as SSat with i alternations of quanti ers where i is a small
+constant, independent of n? The argument of Condon et al. (1997)
+breaks down, and it is open whether or not the problem remains as
+hard to approximate as the general version.
+   Lusena, Goldsmith, & Mundhenk (1998) found that approximat-
+ing solutions to Markov decision processes to within ratio  is also
+intractable.
+1.4. Random Formulae
+To empirically evaluate algorithms for satis ability and stochastic sat-
+is ability, it is useful to have a good testbed of hard formulae. This is a
+nontrivial problem: speci c hand-coded instances of Sat are known to
+be satis able or not, and usually for a clear (easily computable) reason.
+What is sought is a natural distribution over Sat instances that is hard
+on average. This has led many researchers to study randomly generated
+formulae (although this distribution is not known to be average-case
+hard). The usual xed-clause random k-CNF model is used in this
+paper, which is de ned in terms of three integer parameters n; k and
+m; a formula is generated by selecting m clauses of size k independently.
+A clause is generated by randomly selecting one of n variables k times,
+rejecting duplicate selections, and randomly negating it with probabil-
+ity 1=2. This distribution is denoted Fmk;n. In the experiments described
+in Section 3, a program called makewff, available from AT&T Labs {
+Research, was used to generate random formulae from this distribution.
+   The random k-CNF model has been widely studied for several good
+reasons. First, it is an intrinsically natural model, analogous to the ran-
+dom graph model, that sheds light on fundamental structural properties
+of the satis ability problem. As with Sat, it is possible to gain insight
+into the mathematical structure of SSat by looking at the behavior
+of randomly generated formulae. Second, using an appropriate choice
+of parameters, randomly chosen formulae are empirically dicult for
+satis ability algorithms, and are a commonly used benchmark (Gu
+et al., 1997). The next section brie y reviews some analytical results
+concerning random Sat and Majsat instances.
+1.4.1. Random Sat
+An interesting property of random k-CNF formulae is that when m
+is small relative to n, almost all formulae are satis able, and most
+algorithms nd it easy to show this satis ability. When m is large
+
+
+
+
+                                             paper.tex; 1/09/1999; 0:14; p.9
+10                      Littman, Majercik, and Pitassi
+relative to n, almost all formulae are unsatis able and unsatis ability
+is relatively easy to show. For intermediate values of m (around 4:2n
+for k = 3), approximately half of the formulae are satis able and it is
+very dicult to show satis ability. Thus, with respect to m, random
+Sat instances exhibit an \easy-hardest-hard" pattern. This pattern is
+consistent for various values of n but becomes more pronounced with
+larger n. In addition, the hard region is very large for large n.
+    A key conjecture about the random k-CNF Sat formula model is
+that there exists a constant k such that a random k-CNF formula
+from Fmk;n is almost certainly satis able for m=n < k (as n gets large),
+and almost certainly unsatis able if m=n > k . As mentioned above,
+empirical evidence (Selman, Mitchell, & Levesque, 1996) suggests that
+this 0{1 threshold value for k = 3 occurs at around 4:2, and a recent
+theoretical result by Friedgut (1997) shows that for each n, there is a
+sharp 0{1 threshold k (n) that possibly varies with n. It is known that
+  2 = 1 (Chvatal & Reed, 1992; Goerdt, 1996), and that for k = 3,
+3:003  k (n)  4:601 (Frieze & Suen, 1996; Kirousis et al., 1998).
+    An interesting feature of the threshold is that the dual problems
+of bounding the threshold value from above and below appear to be
+asymmetric. At slightly below the 0{1 threshold, there are simple linear-
+time algorithms for nding a satisfying assignment, but at slightly
+above the 0{1 threshold, there are no known algorithms that quickly
+produce proofs of unsatis ability. Moreover, it has been proven that no
+Resolution-based method (including the DPLL procedure that forms
+the basis of several algorithms in this paper) will succeed in sub-
+exponential time on a broad range of randomly generated formulae
+(Chvatal & Reed, 1992; Beame & Pitassi, 1996; Beame et al., 1998).
+In particular, Beame et al. (1998) show that for k = 3 and m 
+n2 = log n, almost certainly a random formula has a polynomial-size deci-
+sion tree, but for m < n6=5 , almost certainly a random formula requires
+a superpolynomial-size decision tree. This suggests that DPLL will per-
+form very badly (asymptotically in n) even for ranges of m way above
+the 0{1 threshold (up to n6=5 ), and that the easy-hardest-hard pattern
+observed empirically may actually be misleading|for large enough n,
+the expected pattern is more like easy-hardest-...-hardest-easy. This
+points out that when analyzing algorithms for random instances of
+Sat it is important to know whether the algorithm is applied above,
+below, or at the threshold.
+1.4.2. Random Majsat
+A random Majsat instance is de ned in terms of four integer parame-
+ters, k, n, m, and t. A random Majsat formula with these parameters
+is obtained by selecting a k-CNF formula uniformly and at random
+
+
+
+
+                                           paper.tex; 1/09/1999; 0:14; p.10
+                       Stochastic Boolean Satis ability                 11
+from the distribution Fmk;n . The instance is positive if and only if the
+probability of a satisfying assignment is at least  = 1=2n t , that is,
+there are at least 2t satisfying assignments.
+    Let f (k; n; m; t) be the probability that a random k-CNF formula on
+n variables with m clauses has at least 2t satisfying truth assignments.
+Given m and a function t(n) of n, what can be said about the limit of f
+as n gets large? Surprisingly, in spite of a number of articles concerning
+the counting of satisfying assignments, there are very few analytical
+results known about this function f , and its 0{1 threshold behavior is
+far from determined. Some simple results are summarized next.
+    The expected number of satisfying assignments for a random 3-CNF
+formula from Fm3;n is 2n (7=8)m = (2(7=8)m=n )n . For m  (log8=7 2)n
+(about 5:19n), 2(7=8)m=n < 1, and, thus, by Markov's inequality, with
+probability 1 o(1), a random formula with parameters (3; n; m; t = 0)
+is unsatis able for m in this range. What happens to this calculation
+for larger values of t? We want to calculate for what values of m does
+(2(7=8)m=n )n 2 t go to zero as n goes to in nity. This will happen
+whenever 2(7=8)m=n < 2t=n . Solving for m, whenever
+                     m  (log8=7 2)(n t)  5:19(n t);                  (1)
+a random 3-CNF formula with m clauses and n variables almost cer-
+tainly has fewer than 2t satisfying assignments. As expected, as t in-
+creases, fewer random clauses are needed to generate an instance that
+is not positive. Empirical estimates of the 0{1 threshold in Section 3.1
+con rm the form of Equation 1.
+    While the above calculation gives an upper bound on m as a function
+of t and n, this upper bound is likely larger than the actual number.
+In several papers (Kamath et al., 1995; Kirousis et al., 1998), it has
+been demonstrated that most formulae will have a much smaller num-
+ber of satisfying assignments than the expected number of satisfying
+assignments, because for those formulae that are satis able, they actu-
+ally have many satisfying assignments (thus skewing the average). In
+particular, Kamath et al. (1995) show that if a random k-CNF formula
+is satis able, then with exponentially high probability (probability at
+least 1 2 n ) it has an exponential number of satisfying truth assign-
+ments. Let Z be the number of variables that are not mentioned at all
+when m clauses are chosen randomly. For k = 3, the expectation of
+Z , E [Z ], is n(1 1=n)3m , which is approximately ne 3m=n. Kamath et
+al. (1995) show amazingly tight tail bounds on this quantity. In fact,
+the weakest of their results shows that the probability of being more
+than a constant factor away from the expectation is exponentially small
+in n. This implies that if  is a random formula where m is below the
+0{1 threshold, then  almost certainly will be satis able and, by the
+
+
+
+
+                                           paper.tex; 1/09/1999; 0:14; p.11
+12                       Littman, Majercik, and Pitassi
+
+above result, almost certainly will have at least 2ne 3m=n satisfying as-
+signments, since each of the variables that are not mentioned at all can
+be set in any possible way. Thus, almost certainly, whenever m is less
+than the 0{1 threshold, a random Majsat instance with parameters
+(3; m; n; t) is positive whenever t  ne 3m=n .
+    The above argument states that while the expected number of sat-
+isfying assignments is (2(7=8)m=n )n , almost certainly the number of
+satisfying assignments will be substantially below the expected value.
+The beautifully simple argument of Kirousis et al. (1998) demonstrates
+that this is not the only source of wastefulness in these calculations.
+(See the thesis of Achlioptas (1999) for more details.)
+    What can be said of a lower bound on m as a function of t? Here
+again, very little seems to be known. Assume that almost certainly,
+there are l disjoint clauses, C1 ; C2 ; : : : ; Cl in a random Majsat formula
+with parameters k; m; n; t.
+    Let k = 3. There are 23l total assignments for the l disjoint clauses.
+There are 7 ways to make each clause True for 3-CNF formulae. Since
+the clauses are disjoint, there are 7l ways to make all the clauses true, so
+the exact number of assignments that make one or more clauses False
+is 23l 7l , which is between 23(l 1) and 23l . This gives a lower bound
+on m as a function of t, the number of satisfying assignments, since
+l can be chosen as a function of m and n such that almost certainly
+a 3-CNF random formula with m clauses over n variables contains at
+least l variable-disjoint clauses.
+    The above gives very coarse upper and lower bounds on the value of
+m for which a random Majsat formula is False/True almost certainly
+as a function of t. Do we know that f (k; m; n; t) actually exhibits a
+sharp 0{1 threshold behavior? As mentioned earlier, Friedgut (1997)
+has proven that random Sat has a sharp 0{1 threshold, although the
+0{1 threshold value k may be a function of n. The ideas in his proof
+are general enough that they extend to Majsat. In other words, from
+Friedgut (1997), it follows that there exists a function k (n) such that
+for any  > 0, there exists t > 1 such that a random Majsat instance
+with parameters (k; m; n; t), where m = ( k (n) )n, is positive with
+high probability, while a random formula with parameters (k; m; n; t),
+where m = ( k (n) + )n, is not a positive instance with high prob-
+ability, and moreover has zero satisfying truth assignments with high
+probability. Therefore, although this line of argument doesn't lead to a
+prediction of where the 0{1 threshold is, or even whether it is a linear
+function of n, it does imply that it exists.
+    For random instances of more general SSat problems, there are more
+parameters, since the validity of the formula is highly dependent on the
+
+
+
+
+                                            paper.tex; 1/09/1999; 0:14; p.12
+                      Stochastic Boolean Satis ability                 13
+exact sequence of quanti ers. To date, there are no theoretical results
+concerning the threshold behavior of random instances of general SSat.
+
+          2. Algorithms for Stochastic Satis ability
+The SSat problem is PSPACE complete, and therefore would seem to
+require a di erent set of algorithmic approaches from those developed
+for the NP-complete Sat. In fact, this section shows that the funda-
+mental algorithmic ideas developed in the Sat community provide an
+excellent starting point for SSat algorithms|the gap between NP and
+PSPACE may not be as large as it seems.
+   This section describes three algorithms for SSat. Section 2.1 devel-
+ops a DPLL-based algorithm. It shows that the basic structure of the
+Sat DPLL algorithm is applicable to Extended SSat.
+   Section 2.2 describes another algorithm that is similar to the DPLL-
+based algorithm, but that has a guarantee of being ecient with respect
+to other decision-tree-based algorithms. This type of algorithm can be
+viewed as a \universal" search algorithm for DPLL-based procedures.
+The algorithm is guaranteed to solve the Extended SSat instance in
+time that is ecient in the size of the smallest decision tree. As dis-
+cussed in Section 4, although the theoretical performance of the uni-
+versal algorithm is superior in the worst case, it does not perform as
+well on random formulae as the DPLL algorithm.
+   The algorithms in Section 2.1 and Section 2.2 are both sound and
+complete algorithms: given an arbitrary Extended SSat instance (; ; Q),
+both of these algorithms are guaranteed to return the correct answer,
+although the running time can be exponential. As with Sat, incomplete
+or approximate algorithms can often solve large problems more quickly
+than complete algorithms like DPLL. For Sat, randomized local search
+procedures like walksat have been shown to be successful for large
+problem instances. Similarly, Majsat instances are very naturally ap-
+proximated using random sampling. Section 2.3 describes a new SSat
+algorithm that combines local search with random sampling to compute
+approximate answers to SSat problems (existential and randomized
+quanti ers only).
+2.1. A Davis-Putnam-Logemann-Loveland Algorithm
+The Davis-Putnam-Logemann-Loveland (DPLL) algorithm for Boolean
+satis ability (Davis, Logemann, & Loveland, 1962) works by enumer-
+ating partial assignments and monitoring for opportunities to simplify
+the formula. These simpli cations, or pruning rules, make it possible
+
+
+
+
+                                          paper.tex; 1/09/1999; 0:14; p.13
+14                       Littman, Majercik, and Pitassi
+to solve problems whose entire set of assignments could not be fully
+enumerated.
+   DPLL is designed to solve Sat problems, and, thus, only needs to
+deal with existential quanti ers. The algorithm described in this section
+can be viewed as an extension of the DPLL algorithm to Extended SSat
+by providing pruning rules for universal and randomized quanti ers.
+Cadoli, Giovanardi, & Schaerf (1998) provide a set of pruning rules for
+universal quanti ers (for solving QBF problems); the puri cation and
+unit propagation pruning rules described here are introduced and jus-
+ti ed there. Birnbaum & Lozinskii (1999) describe a similar adaptation
+to DPLL for counting satisfying assignments.
+   The evalssat algorithm in Figure 2 takes formula  and low and
+high thresholds l and h. It returns a value less than l if and only if
+the value of the Extended SSat formula is less than l , a value greater
+than h if and only if the value of the Extended SSat formula is greater
+than h, and otherwise the exact value of the Extended SSat formula.
+Thus, it can be used to solve the Extended SSat decision problem
+by setting l = h = . It can also be used to compute the exact
+value of the formula by setting l = 0 and h = 1. The algorithm's
+basic structure is to compute the value of the Extended SSat formula
+from its de nition (Section 1.2.1); this takes place in the section of
+the pseudocode labeled \Splitting", which enumerates all assignments,
+applying operators recursively from left to right. However, it is made
+more complex (and ecient) by a set of pruning rules, described next.
+2.1.1. Unit Resolution
+When a Boolean formula  is evaluated that contains a variable xi that
+appears alone in a clause in  with sign b (0 if xi is in the clause, 1 if xi
+is in the clause), the normal left-to-right evaluation of quanti ers can
+be interrupted to deal with this variable. This is called unit resolution ,
+by analogy with DPLL.
+    If the quanti er associated with xi is existential, xi can be eliminated
+from the formula by assigning it value b and recursing. As in DPLL,
+this is because assigning xi = 1 b is guaranteed to make  False, so
+xi = b can be no worse. Similarly, if the quanti er associated with xi
+is randomized, it is the case that one branch of the computation will
+return a zero, so xi can be eliminated from the formula by assigning
+it value b and continuing recursively. The resulting value is divided by
+two (or multiplied by the probability associated with the randomized
+quanti er, more generally), since it represents the value of only one
+branch.
+    On the other hand, if the quanti er associated with xi is universal,
+it is immediate that the entire formula is False since it will not be the
+
+
+
+
+                                            paper.tex; 1/09/1999; 0:14; p.14
+                           Stochastic Boolean Satis ability                   15
+
+
+evalssat(; Q; l ; h ) := f
+    if  is the empty set, return 1
+    if  contains an empty clause, return 0
+    /* Unit Resolution */
+    if xi is a unit variable with sign b and Q(xi ) = 9,
+       return evalssat(dxi =b ; Q; l ; h )
+    if xi is a unit variable and Q(xi ) = 8,
+       return 0
+    if xi is a unit variable with sign b and Q(xi ) = ,       R
+       return evalssat(dxi =b ; Q; 2l ; 2h )=2
+    /* Puri cation */
+    if xi is a pure variable with sign b and Q(xi ) = 9,
+       return evalssat(dxi =b ; Q; l ; h )
+    if xi is a pure variable with sign b and Q(xi ) = 8,
+       return evalssat(dxi =1 b ; Q; l ; h)
+    /* Splitting */
+    if Q(x1 ) = 9, f
+       v0 = evalssat(dx1 =0 ; Q; l ; h)
+       if v0  h, return v0
+       v1 = evalssat(dx1 =1 ; Q; max(l ; v0 ); h )
+       return max(v0 ; v1 )
+    g
+    if Q(x1 ) = 8, f
+       v0 = evalssat(dx1 =0 ; Q; l ; h)
+       if v0 < l , return v0
+       v1 = evalssat(dx1 =1 ; Q; l ; min(v0 ; h))
+       return min(v0 ; v1 )
+    g
+    if Q(x1 ) = , f
+                R
+       v0 = evalssat(dx1 =0 ; Q; 2l 1; 2h )
+       if (v0 + 1)=2 < l , return v0 =2
+       if v0 =2  h, return v0 =2
+       v1 = evalssat(dx1 =1 ; Q; 2l v0 ; 2h v0 )
+       return (v0 + v1 )=2
+    g
+g
+Figure 2. The evalssat algorithm generalizes the DPLL algorithm for satis ability
+to solve Extended SSat problems.
+
+
+
+
+                                               paper.tex; 1/09/1999; 0:14; p.15
+16                      Littman, Majercik, and Pitassi
+case that all values of xi make the formula True. The algorithm can
+return a zero in this case. This is stronger than the pruning possible
+for either existential or randomized variables.
+
+2.1.2. Puri cation and Thresholding
+The puri cation pruning rules apply when there is a variable xi that
+appears only with one sign b in . If Q(xi ) = 9, the algorithm assigns
+xi = b and recurses. This is valid because any clause satis ed by an
+assignment with xi = 1 b will also be satis ed by assigning xi = b. By
+similar reasoning, if Q(xi ) = 8, the algorithm recurses after assigning
+xi = 1 b. Interestingly, puri cation pruning does not appear possible
+for randomized variables. Both assignments to a randomized variable
+give some contribution to the value of the Extended SSat formula, and
+must be considered independently.
+     Another useful class of pruning rules concerns the threshold param-
+eters l and h. While some care must be taken to pass meaningful
+thresholds when applying unit resolution, threshold pruning mainly
+comes into play when variables are split to try to prevent recursively
+computing both assignments to x1 , the outermost quanti ed variable.
+     If Q(x1 ) = 9, after the rst recursive call computing v0 (the value
+of the current formula with x1 set to False), it is possible that h has
+already been exceeded. In this case, the algorithm can simply return
+v0 , without ever computing v1 (the value of the current formula with
+x1 set to True). In particular, it is possible that v1 > v0 , but all that
+is signi cant is whether the larger of the two exceeds h . If v0 exceeds
+l but falls short of h, this can be used to increase the lower threshold
+for the recursive computation of v1 ; since the algorithm must take the
+larger of v0 and v1 , the precise value of v1 is not needed if it less than
+v0 .
+     The complement of this argument provides a threshold pruning rule
+for universal quanti ers.
+     Threshold pruning is not as strong for randomized variables, al-
+though it can be done. There are two types of threshold pruning that
+apply. First, if assigning 0 to x1 is sucient to meet the threshold h ,
+then the algorithm need not recurse on assigning the variable to 1: if
+v0 =2  h , return v0 =2.
+     If the rst value v0 is so low that, even if v1 = 1, (v0 + v1 )=2 <
+l , then again the algorithm need not compute v1 . If both tests fail,
+the algorithm needs to compute v1 , but can adjust the thresholds
+accordingly.
+     All of these pruning rules are incorporated into the algorithm given
+in Figure 2. Appendix A gives a correctness proof for the algorithm.
+
+
+
+
+                                           paper.tex; 1/09/1999; 0:14; p.16
+                        Stochastic Boolean Satis ability                 17
+2.1.3. Complexity of evalssat
+Not surprisingly, the worst-case running time of evalssat is exponential
+in the size of the formula. The reason is that on even simple instances,
+often the underlying decision tree is always large, and in addition,
+pruning does not help. A particular example of this is applying evalssat
+to unsatis able Sat formulae that are known to require exponential size
+Resolution proofs. Since the algorithm (in this special case) produces a
+Resolution refutation, the Resolution lower bounds for speci c formulae
+(such as the propositional pigeonhole principle) imply exponential time
+lower bounds on the running time of evalssat on these examples.
+   It is also interesting to understand the average-case running time
+of evalssat and its performance on more general formulae, such as in-
+stances of Majsat or Alternating SSat. This question can be partially
+answered in the context of random formulae, yielding results on the
+complexity of the DPLL algorithm assuming no pruning rules, that is,
+assuming that the algorithm needs to generate the entire decision tree
+before terminating. This is interesting, since for many hard formulae
+the entire decision tree must be generated in order to determine truth or
+falsity of the formula, and, thus, lower bounds on the decision-tree size
+yield lower bounds on the running time of the algorithm. The following
+theorem follows from the results of Beame et al. (1998).
+THEOREM 1. Let  be a 3-CNF formula chosen uniformly at random
+from Fmk;n. For all n suciently large, for all m, n  m  n5=4 , with
+high probability any decision tree for  requires exponential size in n.
+    This theorem shows that for random formulae in a large range, the
+decision-tree complexity of the underlying 3-CNF formula will be huge,
+and therefore the running time of any decision-tree-based algorithm
+without pruning will be exponential. To make matters worse, the DPLL
+algorithm above searches for a decision tree in a very speci c way; that
+is, it is not guaranteed to even search for the smallest tree. This leads to
+the following interesting question: Given a CNF formula , is it possible
+to eciently produce a decision tree for  that is close to an optimal
+one? An armative answer to this question suggests a more ecient
+algorithm for Sat, and moreover suggests that if one is using a decision-
+tree-based method, that an \optimal" algorithm within this class exists.
+The next section describes such an algorithm: it is guaranteed to nd
+a close-to-optimal size tree eciently.
+
+
+
+
+                                            paper.tex; 1/09/1999; 0:14; p.17
+18                      Littman, Majercik, and Pitassi
+2.2. A Universal Search Algorithm for Extended SSat
+As indicated earlier, it may be possible to determine whether a Majsat
+instance (; ; Q) is positive without actually constructing the entire
+decision tree, via pruning. On the other hand, to determine the exact
+value of , the entire decision tree must be examined, and therefore
+a lower bound on the best possible running time of the algorithm de-
+scribed here will be a linear function of the size of the smallest decision
+tree for . Thus, it is useful to understand how hard it is to search for
+the smallest such decision tree.
+    Let (; ; Q) be an instance of Extended SSat. A block is a maximal
+set of variables that appear in the formula with the same quanti-
+  er and are adjacent in the quanti er ordering. Note that, within a
+block, quanti ers commute. In what follows, assume that (; ; Q) has
+ consecutive blocks of variables X 1 ; : : : ; X  .
+    If  is an Extended SSat formula, then  can be determined to
+be True or False by examining a canonical decision tree for  as
+described in Section 1.2.1. Given an Extended SSat instance , the
+evalssat algorithm described in Section 2.1 can be generalized to search
+for a decision tree that is more general than a canonical decision tree
+(splits need not follow the precise quanti er ordering), but has the
+following properties: for every i; j i < j , every variable in the block
+X i is split upon in the decision tree before every variable in the block
+X j , with the possible exception of variables that appear in unit clauses
+or pure variables. A decision tree for  with these properties will be
+called a DPLL tree for . The evaluation of a DPLL tree for  is again
+obtained by evaluating each vertex, starting at the leaves, in the manner
+described in Section 1.2.1. To summarize, a decision tree ignores the
+quanti er ordering, a canonical tree follows it precisely, and the DPLL
+tree can consider variables in a block in any order.
+    It was shown implicitly by Clegg, Edmonds, & Impagliazzo (1996)
+and more explicitly by Beame & Pitassi (1996) and Ben-Sasson &
+Wigderson (1999) that there is a relatively ecient deterministic proce-
+dure for nding a small tree-like Resolution proof. Following the proof
+of their theorem, it can be shown that there is an ecient deterministic
+procedure for nding a small DPLL tree.
+
+THEOREM 2. There is a deterministic algorithm that takes as input
+an Extended SSat formula  with m clauses and n underlying variables
+and outputs a DPLL decision tree, T for . Moreover, the running time
+of the algorithm is at most nO(log s) O(m), where s is the size of the
+smallest DPLL decision tree for .
+
+
+
+
+                                           paper.tex; 1/09/1999; 0:14; p.18
+                         Stochastic Boolean Satis ability                   19
+Proof: The proof follows Beame et al. (1998), with small modi ca-
+tions. As above, let (; ; Q) be an instance of Extended SSat with 
+blocks of consecutive variables X 1 ; : : : ; X  . Assume that  has a size s
+DPLL decision tree, and assume without loss of generality that the root
+node is labeled by the variable x. It follows that one of the two subtrees
+has size at most s=2. Therefore, the algorithm can search through all
+literals l occurring in the rst block until it nds one, l , such that
+dl =1 has a decision tree of size at most s=2. The tree T constructed
+for  will, thus, have root labeled with l (not necessarily x, but not
+much worse, as indicated by the overall running time).
+    The main algorithm, DPLLsearch, takes as input a Boolean for-
+mula . If there is a literal l occurring in a unit clause, then the
+output of DPLLsearch() consists of a DPLL tree for dl=1 followed
+by a DPLL tree for dl=0 , and then these two trees are combined by
+adding a top node and splitting on l. Otherwise (if there is no unit
+clause), then for each of the literals l occurring in the current block
+(the leftmost block of variables that have not already been set), apply
+DPLLsearch to the formula dl=1 to identify the literal l for which
+DPLLsearch(dl=1 ) terminates fastest.
+    These calls to DPLLsearch are executed in a sequence of parallel
+rounds so that in round i the ith step of each of the calls is performed.
+In other words, if l1 ; : : : ; lp are the variables in the current block, then
+the algorithm will execute the p recursive calls, DPLLsearch(dli =1 ),
+i = 1; : : : ; p, in a dovetail fashion, executing each for one time step, and
+then each for two time steps, etc. The rst time that one of the recursive
+calls terminates, say for literal l , DPLLsearch(dl =1 ) terminates,
+then we abort all other calls, except for the call corresponding to l ,
+which is run to completion.
+    The output of DPLLsearch() consists of a DPLL tree for dl =1
+followed by a DPLL tree for dl =0 , and then these two trees are
+combined by adding a top node and splitting on l .
+    The analysis of the algorithm follows that of Beame et al. (1998).
+Let T1 (n; s; m) denote the maximum running time of DPLLsearch()
+over all formulae  with at most n variables, m clauses and such that
+there exists a decision tree for  of size at most s. Consider a decision
+tree of size at most s and let x be the splitting variable at the root.
+The left and right branches of the tree give decision trees for dx=0
+and dx=1 , and the smaller of these is of size at most s=2. Hence, at
+least one of the recursive calls terminates after at most T1 (n 1; s=2; m)
+steps, and so the literal l is found after at most that number of rounds.
+The time for each round is at most Cn for some constant C . Once l
+is found, it takes at most T1 (n 1; s; m) steps to complete the call to
+DPLLsearch(dl=0 ) (the smallest tree for l = 0 can be no larger
+
+
+
+
+                                             paper.tex; 1/09/1999; 0:14; p.19
+20                      Littman, Majercik, and Pitassi
+than the smallest tree). Thus, for xed m, the following recurrence
+relation is obtained: T1 (n; s)  CnT1 (n 1; s=2)+ T1 (n 1; s) whenever
+n  1 and s > 1; T1 (0; s) = 1 and T1 (n; 1) = time(O(m)), which
+is the time to compute the value of a CNF formula with m clauses
+under a given truth assignment. It can be shown by induction that
+T1 (n; s)  O(m)nO(log s).
+   For Sat and Majsat formulae, any decision tree is a DPLL tree,
+but for more complicated Extended SSat instances, the DPLL tree is
+more restricted since it must split on all the variables in the outermost
+block before splitting on any variables that appear later in the quanti er
+ordering (with the exception of unit resolution and puri cation). In par-
+ticular, it might be that for a given formula , there is a small decision
+tree for  but not a small DPLL tree for , because of the quanti er
+ordering. Unfortunately, the following theorem due to Umans (1999)
+shows that an arbitrary decision tree cannot be used to evaluate an
+Extended SSat formula eciently.
+THEOREM 3. (Umans (1999)). Let QBF(i) denote the complexity class
+of deciding an Extended SSat formula with only 9 and 8 quanti ers,
+and with i quanti er alternations (blocks). Let QBF-tree(i) be the fol-
+lowing problem. The input is a pair (; T ), where  is a QBF(i) formula
+and where T is a decision tree that captures the CNF part of the for-
+mula  (ignoring quanti ers). Then, QBF-tree(i) is in P if and only
+if QBF(i 1) = P.
+   In other words, the above theorem tells us that it is impossible to
+determine in polynomial time the value of an Extended SSat formula
+given an arbitrary polynomial-size decision tree for the CNF part of the
+formula, unless a surprising collapse of complexity classes occurs. Thus,
+the restriction to searching for DPLL trees, which respect quanti er
+order, is necessary, in a sense. Nonetheless, there are somewhat less
+restricted decision trees than DPLL trees that could be used to evalu-
+ate an Extended SSat formula. For instance, variables can be skipped
+altogether and still the values of the internal nodes can be calculated,
+as long as the variables that are mentioned are consistent with the
+quanti cation ordering (again, with the exception of unit resolution).
+However, at this time, there is no method known to eciently search
+for these more general types of trees.
+
+
+
+
+                                           paper.tex; 1/09/1999; 0:14; p.20
+                       Stochastic Boolean Satis ability                 21
+2.3. A Stochastic Sampling Algorithm
+Randomized local search algorithms, like walksat (Kautz & Selman,
+1996), have been extremely successful in solving dicult satis abil-
+ity problems. walksat initially makes a random assignment to the
+variables in the Sat formula. If this is not a satisfying assignment, it
+randomly selects an unsatis ed clause. If it can satisfy this clause by
+  ipping a variable without unsatisfying any other clauses, it does so.
+If not, with probability 1/2, it randomly ips that variable that would
+unsatisfy the fewest clauses. This process continues until a satisfying
+assignment is found or until a speci ed maximum number of variables
+have been ipped. This entire process can also be repeated a speci-
+  ed number of times starting with a new random assignment. Clearly,
+walksat is not complete; it may not nd a satisfying assignment when
+one exists. Further, it cannot determine when no satisfying assignment
+exists. But, compared to existing systematic solvers, randomized local
+search algorithms can solve random satis ability problems that are
+orders of magnitude larger (Selman, Kautz, & Cohen, 1996).
+    The presence of randomly quanti ed variables in SSat problems,
+however, makes it impossible to apply local search techniques directly
+to SSat problems. A possible approach is suggested by an approxi-
+mation technique for Majsat problems: stochastic sampling. In this
+approach, some number of assignments to the random variables are
+generated according to their probabilities, and then the probability that
+the formula is satis able is estimated from that sample. This section
+develops an approximation algorithm for SSat problems that combines
+stochastic sampling to reduce the size of the problem (Section 2.3.2)
+and randomized local search to solve the reduced problem eciently
+(Section 2.3.3).
+2.3.1. Policy Trees
+The starting point for the stochastic sampling algorithm for SSat is
+the policy-tree representation. Figure 3 provides an example policy tree
+for the SSat instance
+9x1; 9x2; y1; y2; 9x3; 9x4 ; y3; y4; E [(x1 _x3_y3)(x2 _x4_y2)(x3 _y1_y4)]  :
+         R    R              R     R
+
+   Each existential variable can take on a di erent Boolean value as a
+function of the assignment to the randomized variables that appear
+to its left in the quanti er ordering. The policy-tree representation
+makes this evident by including a copy of the variable for each of
+these assignments. Existential variables, and their copies, can be called
+decision variables and are represented as rectangular decision nodes in
+the policy tree. If xi is an existential variable such that r randomized
+
+
+
+
+                                           paper.tex; 1/09/1999; 0:14; p.21
+22                                          Littman, Majercik, and Pitassi
+
+                                                                      x1( 1 )
+
+                                                                      x2( 2 )
+
+                                                                       y1
+                                                     1                                   0
+
+                                       y2                                                                  y2
+                              1              0                                                1                  0
+
+                    x3( 3 )                      x3( 5 )                             x3( 7 )                         x3( 9 )
+
+                    x4( 4 )                      x4( 6 )                             x4( 8 )                         x4( 10 )
+
+                    y3                               y3                                  y3                              y3
+            1               0                1               0                   1                0              1              0
+           y4                 y4            y4               y4                 y4                y4            y4              y4
+      1         0      1           0    1        0       1        0       1          0        1        0    1        0    1          0
+
+       1        2       3         4     5        6       7        8       9      10 11 12 13 14 15 16
+
+       Original Formula:                    ( x1 ∨ x3 ∨ y3 ) ( x2 ∨ x4 ∨ y2 ) ( x3 ∨ y1 ∨ y4 )
+
+       Simplified Formulae at Leaves Given Random Variable Assignments
+     Leaf 1: ( x 1 ∨ x 3 )                                            Leaf 9:             ( x1 ∨ x7 ) ( x7 )
+     Leaf 2: ( x 1 ∨ x 3 )                                            Leaf 10:            ( x1 ∨ x7 )
+     Leaf 3: Satisfied                                                Leaf 11:            ( x7 )
+     Leaf 4: Satisfied                                                Leaf 12:            Satisfied
+     Leaf 5: ( x 1 ∨ x 5 ) ( x 2 ∨ x 6 )                              Leaf 13:            ( x 1 ∨ x 9 ) ( x 2 ∨ x 10 ) ( x 9 )
+     Leaf 6: ( x 1 ∨ x 5 ) ( x 2 ∨ x 6 )                              Leaf 14:            ( x 1 ∨ x 9 ) ( x 2 ∨ x 10 )
+     Leaf 7: ( x 2 ∨ x 6 )                                            Leaf 15:            ( x 2 ∨ x 10 ) ( x 9 )
+     Leaf 8: ( x 2 ∨ x 6 )                                            Leaf 16:            ( x 2 ∨ x 10 )
+Figure 3. A policy tree represents the set of contingent choices in an SSat problem.
+
+
+variables are to its left, then there will be 2r copies of xi in the policy-
+tree representation. In the policy tree in Figure 3, for example, two
+randomized variables (y1 and y2 ) appear to the left of the existential
+variables x3 and x4 in the quanti er ordering, so there are four copies
+of x3 and x4 . To emphasize that the value of each instance of a copied
+
+
+
+
+                                                                                paper.tex; 1/09/1999; 0:14; p.22
+                        Stochastic Boolean Satis ability                  23
+variable can be set independently, these variables are renumbered in
+the policy tree such that, given two decision nodes at the same level in
+the tree (and, therefore, containing the same variables), the variables
+in one decision node will be distinct from the variables in the other
+decision node. The renumbering of a variable appears in a parenthesized
+subscript next to the original number. Thus, x3(7) is the relevant copy of
+variable x3 when y1 is False and y2 is True. Note that the existential
+variables in the simpli ed formulae in Figure 3 are subscripted only
+with the new numbers.
+   Each leaf of the policy tree represents a partial assignment consisting
+of an assignment to all randomized variables in the SSat formula. The
+probability of a leaf is 1=2R in a formula with R randomized variables
+(more generally, it is the product of the probabilities of the outcomes
+along the path from the root to the leaf). A policy is an assignment
+of Boolean values to the existential nodes in the policy tree (boxes in
+Figure 3). Given a policy, all the root-to-leaf paths in the policy tree
+represent complete assignments to the variables in the formula, each of
+which is either satisfying (value 1) or unsatisfying (value 0). The value
+of a policy is the weighted sum of the probabilities of the satis ed
+leaves. For example, the policy that assigns \0" to all existential nodes
+in the policy tree in Figure 3 has value 3=4 (leaves 9, 11, 13, and 15 are
+unsatis ed).
+   The value of a policy tree is the maximum over all policies of the
+policy values. The value of the policy tree in Figure 3 is 1 because
+the policy x1(1) = 0, x2(2) = 0, x3(7) = 1, x3(9) = 1 satis es all leaves
+(unmentioned variables can take on either value). Note that a policy
+tree is simply an alternative representation of the DPLL tree for a
+formula (Section 2.2), and the value of a policy tree is exactly that of a
+DPLL tree for the formula. However, it is a convenient representation
+for organizing the sampling algorithm described next.
+2.3.2. Stochastic Sampling
+The value of a xed policy with respect to an SSat instance can be
+computed in time linear in the size of the policy tree. However, in
+a formula with R randomized variables, the size of the policy tree is
+roughly 2R . An accurate estimate of the value of the policy can be ob-
+tained by constructing and evaluating a partial policy tree . Choose a set
+W of w assignments to the randomized variables proportional to their
+probability and independently of the policy. The sampled assignments
+select out a set of leaves from the full policy tree, with the probability of
+an assignment given by its frequency of selection in the random sample.
+The top of Figure 4 gives a partial policy tree derived from the sample
+in the bottom of the gure and the policy tree of Figure 3. The value of
+
+
+
+
+                                            paper.tex; 1/09/1999; 0:14; p.23
+24                                     Littman, Majercik, and Pitassi
+
+
+
+
+                                                                x1( 1 )
+
+                                                                x2( 2 )
+
+                                                                 y1
+                                               1                           0
+
+                                  y2                                               y2
+                              1          0                                                 0
+
+                    x3( 3 )                  x3( 5 )                                           x3( 9 )
+
+                    x4( 4 )                  x4( 6 )                                          x4( 10 )
+
+                    y3                        y3                                                  y3
+            1                            1             0                                  1              0
+           y4                          y4              y4                                y4              y4
+      1         0                  1                        0                       1         0    1
+
+       1        2                  5                        8                       13 14 15
+
+     Original Formula:                 ( x1 ∨ x3 ∨ y3 ) ( x2 ∨ x4 ∨ y2 ) ( x3 ∨ y1 ∨ y4 )
+           Assignments Responsible for Leaves in Partial Decision Tree
+            Leaf 1:                y1 = 1                  y2 = 1         y3 = 1        y4 = 1
+            Leaf 2:                y1 = 1                  y2 = 1         y3 = 1        y4 = 0
+            Leaf 5:                y1 = 1                  y2 = 0         y3 = 1        y4 = 1
+            Leaf 8:                y1 = 1                  y2 = 0         y3 = 0        y4 = 0
+            Leaf 13:               y1 = 0                  y2 = 0         y3 = 1        y4 = 1
+            Leaf 14:               y1 = 0                  y2 = 0         y3 = 1        y4 = 0
+            Leaf 15:               y1 = 0                  y2 = 0         y3 = 0        y4 = 1
+Figure 4. Randomized local search can be applied to a partial policy tree, obtained
+by sampling, to provide an approximate answer for an SSat instance. Boxes in the
+ gure represent decision nodes and circles random nodes.
+
+
+
+
+                                                                      paper.tex; 1/09/1999; 0:14; p.24
+                        Stochastic Boolean Satis ability                 25
+sampleevalssat(; Q; W ) := f
+    if  is the empty set, return 1
+    if  contains an empty clause, return 0
+    if Q(x1 ) = 9, return
+          max(sampleevalssat(dx1 =0 ; Q; W );
+                sampleevalssat(dx1 =1 ; Q; W ))
+    else if Q(x1 ) = , f
+                   R
+       Let W0 be the samples in W that assign x1 = 0
+       Let W1 be the samples in W that assign x1 = 1
+       return jjWW0jj sampleevalssat(dx1 =0 ; Q; W0 )+
+               jW1 j sampleevalssat(d
+                jW j                   x1 =1 ; Q; W1 )
+    g
+g
+Figure 5. A stochastic sampling algorithm for SSat problems chooses the best
+approximate value.
+
+the policy is estimated as the proportion of the w sampled leaves that
+are satis ed by the policy. Let v be the true value of the policy and v^
+be the estimate found via sampling.
+LEMMA 4. Let  > 0 be a target approximation error. The probability
+that jv v^j >  is less than 2e 22 w .
+    This is a direct application of a Cherno bound.
+    Thus, to be sure with probability 1  of having an estimate no
+further than  away from the true value, w = O( 12 log( 1 )) samples are
+sucient. Note that this number does not depend on n, m, k, or how
+the SSat formula or the policy was created!
+    Lemma 4 directly gives an approximation algorithm for Majsat
+and can be extended to solve SSat problems via systematic search,
+described next.
+    Given a sample W of size w of assignments to the randomized vari-
+ables in an SSat formula, it is straightforward to recursively compute
+the value of the policy with the largest approximate value. Figure 5
+sketches this procedure; as before x1 refers to the outermost quanti ed
+variable.
+    The running time of sampleevalssat is w  2E , where E is the number
+of existential variables in the formula. The next theorem shows that,
+if the random sample W is large enough, sampleevalssat gives a good
+approximation to the true value of the given SSat formula with high
+probability.
+
+
+
+
+                                            paper.tex; 1/09/1999; 0:14; p.25
+26                      Littman, Majercik, and Pitassi
+THEOREM 5. Let (; Q; ) be an instance of SSat and W be a size
+w random sample of the assignments to the randomized variables in .
+Let P be the number of possible policies for the SSat instance. Let v =
+val(; Q) be the true value of the SSat formula and v^ be the estimate
+found via sampleevalssat. Let  > 0 be a target approximation error.
+The probability that jv v^j >  is less than P 2e 22 w . Thus,
+                           1 1 1                
+                   w = O 2 log  + 2 log(P )
+samples are sucient to be sure with probability 1  of having an
+estimate no further than  away from the true value.
+Proof: Imagine that we use the sample W to approximately evaluate
+all P policies. By Lemma 4,2 the probability that any given estimate is
+o by more than  is 2e 2 w . Therefore, the probability that2at least
+one estimate out of P is o by more than  is less than P 2e 2 w . If all
+P policies have approximate values within  of their true values, then
+the maximum of the approximate values, that is, v^, cannot di er by
+more than  from the maximum of the true values, that is, v.
+    The sample complexity of the algorithm is the number of samples
+needed to insure an accurate estimate of the value of the formula
+with high probability. Note that for Sat, the number of policies is
+P = 2n , Majsat, P = 1, and E-Majsat, P = 2c  2n. Since the
+sample complexity for sampleevalssat is logarithmically dependent on
+P , these SSat problems have polynomial   sample complexity. However,
+for Alternating SSat, P = (22n=2 ), so Theorem 5 gives an exponential
+sample bound. Appendix B shows that this is a necessary feature of
+the algorithm by providing a family of SSat instances that require
+an exponential sized sample for sampleevalssat to give accurate results
+with high probability.
+2.3.3. Randomized Local Search
+The basic approach described in the previous section is to randomly
+sample a set of assignments to be used to evaluate policies, then sys-
+tematically search the space of policies to nd one with the best ap-
+proximate value. Although, for many problems, the number of sam-
+ples required is not too large, the search for the best policy will be
+exponential in the number of existential variables in the formula.
+   Randomized local search can be used to substantially reduce the
+search time for a good policy, at the cost of nding one that is only
+locally optimal. As described in Section 2.3.2, stochastic sampling can
+be used to construct a partial policy tree and, given a policy, the partial
+
+
+
+
+                                           paper.tex; 1/09/1999; 0:14; p.26
+                        Stochastic Boolean Satis ability                  27
+policy tree can be evaluated (its value is the proportion of the sample
+corresponding to satis ed leaves). The goal is to search the space of
+policies to nd one with high value.
+    The randevalssat algorithm in Figure 6 takes SSat formula  and re-
+turns an approximation of its value, along with the policy that approxi-
+mately produces this value. The algorithm's local search component op-
+erates by rst converting the partial policy tree to a two-level Boolean
+formula, called a treeSAT formula (function construct treesat formula
+in Figure 6). As illustrated in Figure 3, the e ect of a policy on a
+leaf can be summarized by a Boolean formula, called a path formula,
+for that leaf. Each random sample can potentially produce a di erent
+path formula, and the union of all the path formulae produces the
+treeSAT formula. Thus, on one level the treeSAT formula is a collection
+of clauses, while on another level it is a collection of path formulae.
+    A satisfying assignment to the treeSAT formula corresponds to a
+setting of the decision variables that satis es the original SSat formula
+along all paths in the partial policy tree. In general, it will not be possi-
+ble to nd such a setting, so the challenge here is to nd an assignment
+to the treeSAT formula that maximizes the number of path formulae
+that are satis ed. This can be accomplished by randomized local search.
+In the experiments in this paper, this is done by hillclimbing on an
+objective function that counts both clauses satis ed and path formulae
+satis ed. A satis ed path formula is weighted as heavily as the number
+of clauses in the original SSat formula, so that satisfying all the clauses
+in a path formula contributes more to the treeSAT formula's value than
+satisfying the same number of clauses scattered over more than one
+path formula. The function eval treesat formula calculates the value of
+the treeSAT formula using this objective function.
+    The operation of randevalssat is similar to that of walksat (Kautz
+& Selman, 1996). The main di erence is in the objective function.
+walksat searches for an assignment that maximizes the number of
+satis ed clauses. As described above, the two-level structure of the
+treeSAT formula requires randevalssat to use an objective function that
+counts both clauses satis ed and path formulae satis ed. (In fact, in
+the tests conducted, counting satis ed clauses did not seem to be as
+important as counting satis ed path formulae; randevalssat performed
+as well with an objective function that counted only satis ed path
+formulae. Larger problems might exhibit di erent behavior.)
+    Essentially, randevalssat randomly sets the values of the treeSAT
+variables, then hillclimbs on the objective function described above.
+On each iteration (up to a maximum of IterationLimit iterations), the
+algorithm randomly chooses an unsatis ed clause. If it is possible to
+improve the value of the objective function by ipping the truth value
+
+
+
+
+                                            paper.tex; 1/09/1999; 0:14; p.27
+28                      Littman, Majercik, and Pitassi
+of a variable in that clause, it does so. Otherwise, it calculates which
+variable ip in that clause will lead to the least decrease in the value
+of the objective function, and accepts that ip with a probability of
+0.5. The algorithm returns the treeSAT assignment that produced the
+highest value of the objective function over all iterations. If the algo-
+rithm fails to make progress on a prespeci ed number of consecutive
+iterations (FailureLimit) it restarts with a new random setting of the
+treeSAT variables. A prespeci ed number of restarts (RestartLimit) is
+allowed.
+   Empirical results with randevalssat are discussed in Section 3.4.
+2.3.4. Related Work
+Many other researchers have explored approximations for probability-
+based problems. Roth (1996) studied the complexity of inference in
+belief networks. He showed that computing the probability of a query
+node (akin to evaluating a Majsat formula) is #P-complete. In ad-
+dition, approximating the probability of a query node to within a
+multiplicative factor of its true value is just as hard as computing the
+exact value. In contrast, Lemma 4 shows that the complexity of getting
+within an additive factor for Majsat is polynomial.
+   Kearns, Mansour, & Ng (1999) show how approximately optimal ac-
+tions can be chosen with high probability in in nite-horizon discounted
+Markov decision processes. Their strategy is to show that it is sucient
+to consider the rst H actions in the sequence, for an appropriate choice
+of H . The space of all H -step action sequences is then evaluated using
+random sampling. The sampleevalssat algorithm in Section 2.3.2 was
+directly inspired by this work.
+2.3.5. Summary
+In summary, the stochastic sampling algorithm randevalssat appears to
+be a promising approximation method for SSat problems. Its primary
+strength is the use of sampling to convert the problem to a lower
+complexity problem and its use of randomized local search to solve
+that problem eciently. A feature of this process is that it does not
+necessarily completely discard the probabilities of the original problem
+(as would, say, a conversion that merely rounded o the probabilities of
+the random variables to 0 and 1 and set their truth values accordingly).
+It would, for example, be possible to modify the algorithm such that the
+probabilities of the random variables are used to direct the construction
+of the partial policy tree. A more substantial modi cation would be to
+iteratively build the partial policy tree by using the solution of the
+partial policy tree in a given iteration to construct a better partial
+policy tree (and solution) in the next iteration.
+
+
+
+
+                                           paper.tex; 1/09/1999; 0:14; p.28
+                            Stochastic Boolean Satis ability                 29
+randevalssat(; W ) := f
+   := construct treesat formula(; W );
+    currentpolicy := generate a random truth assignment for ;
+    P := eval treesat formula(); bestP := P;
+    bestpolicy := currentpolicy;
+    for (r = 1 to RestartLimit) f
+       numfailures := 0;
+       for (i = 1 to IterationLimit) f
+          if (all clauses in  are satis ed)
+             return(P; currentpolicy);
+          randomly choose an unsatis ed clause c in ;
+          best ipvar := 0; bestnewP := 0;
+          for (each literal l in c) f
+               ip the truth assignment of the variable v corresponding to l;
+             newP = eval treesat formula();
+             if (newP > P ) f
+                numfailures = 0;
+                P = newP;
+                if (newP > bestP) f
+                   bestP = newP; bestpolicy = currentpolicy;
+                 g
+                 break out of literal loop and start next iteration;
+             g
+             else if (newP > bestnewP) f
+                best ipvar = v; bestnewP = newP;
+             g
+             restore the truth assignment of the variable v corresponding to l;
+         g /* literal loop */
+         with probability 0.5 f
+            ip the truth assignment of variable best ipvar;
+           P = bestnewP;
+         g
+         numfailures := numfailures + 1;
+         if (numfailures > FailureLimit)f
+            currentpolicy := generate a random truth assignment for ;
+            P := eval treesat formula();
+            break out of iteration loop and start next restart;
+       g /* iteration loop */
+    g /* restart loop */
+    return(bestP; bestpolicy);
+g
+Figure 6. A randomized algorithm for SSat problems uses hillclimbing on a Sat
+formula derived from a partial policy tree created by sampling.
+
+
+
+
+                                                paper.tex; 1/09/1999; 0:14; p.29
+30                      Littman, Majercik, and Pitassi
+   This algorithm has some weaknesses. First, unlike walksat, randevalssat
+does not return an answer whose correctness is \easy" to certify; this
+is to be expected, given the complexity of SSat problems. Second,
+there are SSat problems for which the algorithm needs provably large
+samples (see Section B for an example of such a problem). Third,
+randevalssat is subject to the same pitfalls as other randomized local
+search algorithms; in particular, it may become stuck in local optima.
+Allowing the algorithm to restart after a period of no progress helps
+minimize, but does not erase, this problem. Finally, the memory re-
+quirements of the algorithm can be prohibitively large. This weakness
+can be partially overcome by more memory-ecient implementations,
+but problems that require a large number of samples to produce an
+accurate answer will inherently generate large treeSAT formulae.
+
+                               3. Results
+This section describes some empirical explorations of solving SSat
+problems of various types using the algorithms presented in Section 2.
+3.1. Varying Problem Type
+Throughout the experiments in this section, the DPLL-based SSat
+algorithm from Section 2.1 (variable to split next chosen by strict
+quanti er order) is used. A set of 1,000 formulae with n = 20 variables,
+k = 3 literals per clause, and 141 clauses were randomly generated
+using makewff. All thresholds were expressed as  = 1=2n t for integer
+t in the range 0 to n; this de nes t so that 2t is the number of satisfying
+assignments required. Formulae with m clauses were created by using
+the rst m clauses from each of the 1,000 formulae.
+3.1.1. Majsat vs. Sat
+The rst experiment compares and contrasts Majsat with Sat. Fig-
+ure 7 illustrates the average work required to solve random Majsat
+instances, varying the number of clauses and values of the threshold
+parameter t.
+   The line on the plot labeled t = 0 is the curve for Sat; this prob-
+lem is asking whether the probability of satisfaction is at least 1=2n ,
+which is reached as long as there is even a single satisfying assignment.
+The classic easy-hardest-hard pattern is visible. In fact, nearly all the
+threshold values produce the same basic shape.
+   Note that the peak diculty over all thresholds occurs at t = 16; it is
+much higher than the peak diculty for Sat and occurs at a much lower
+
+
+
+
+                                           paper.tex; 1/09/1999; 0:14; p.30
+                                        Stochastic Boolean Satis ability                 31
+
+                                                 MAJSAT For n=20
+       Recursive Calls (Work)
+                                10000                       (SAT) t=0
+                                                                   t=4
+                                                                   t=8
+                                                                  t=12
+                                 1000                      (peak) t=16
+                                                                  t=18
+                                 100
+
+
+                                  10
+                                         20      40     60 80          100 120 140
+                                                        Clauses
+Figure 7. For random n = 20 variable formulae (k = 3 literals per clause), the
+diculty of solving random Majsat instances via DPLL varies with both the number
+of clauses to variables and the satisfaction threshold t. The plot includes curves for
+thresholds t = 0 through t = 18 by 2s (not all curves are labeled). Peak diculty
+occurs at t = 16 at roughly 20 clauses.
+
+setting of the number of clauses m. High values of the threshold are
+dicult because the threshold pruning rules for randomized quanti ers
+rarely apply|it is almost always necessary to check both branches to
+determine whether the probability threshold can be met.
+   Note that when no pruning rules are used, Majsat and Sat are
+equally dicult for the DPLL algorithm; it must create the entire
+DPLL tree for both, and has the freedom to split in any order. This
+implies that, for unsatis able formulae, Majsat is actually easier to
+decide than Sat, since threshold pruning is only possible in the case of
+Majsat. Figure 8 shows that the average diculty for solving Majsat
+problems based on the 689 random n = 30 formulae that are unsat-
+is able at m = 141 clauses does decrease with increasing satis ability
+threshold.
+
+3.1.2. E-Majsat
+On average, Majsat instances were substantially more dicult to solve
+than Sat instances. That Majsat is more dicult to solve on average
+than Sat is not surprising, since it belongs to a higher complexity
+class. A more interesting pattern occurs in E-Majsat formulae. As
+mentioned in Section 1.3, the E-Majsat parameter c interpolates be-
+tween Majsat (c = 0) and Sat (c = n). In terms of complexity theory,
+
+
+
+
+                                                            paper.tex; 1/09/1999; 0:14; p.31
+32                                        Littman, Majercik, and Pitassi
+                                          MAJSAT on Unsatisfiable Instances
+                                600
+       Recursive Calls (Work)   500
+
+                                400
+
+                                300
+
+                                200
+
+                                100
+
+                                 0
+                                      0       5      10    15     20        25     30
+                                                      Threshold (t)
+Figure 8. For random unsatis able n = 30 variable formulae (m = 141 clauses,
+k = 3 literals per clause), the diculty of solving random Majsat instances via
+DPLL varies with the satisfaction threshold t. When the threshold is high, pruning
+becomes more e ective, allowing instances to be solved more quickly.
+
+however, intermediate values of c place E-Majsat in a more dicult
+complexity class than either endpoint. This suggests analyzing the peak
+diculty of E-Majsat as a function of c.
+   The following experiment was carried out. For each value of c from
+0 to n = 20, the formulae were solved for each clause size m from 1 to
+141 by 5s and threshold parameter t from 0 to 19. Work was averaged
+separately for each combination of settings, and the value for t and m
+that resulted in the maximum average work was selected for each value
+of c. Figure 9 summarizes the results.
+   The results of these experiments are somewhat counterintuitive.
+Instead of the peak diculty being obtained for c = n=2 as might be
+assumed from complexity theory, the diculty is logarithmically related
+to the number of choice variables. It appears that the main e ect is that
+each randomized quanti er that is changed to an existential quanti er
+results in a constant fraction of savings of work. This result calls for
+more careful study|perhaps by systematically varying the instance
+size.
+3.1.3. SSat Subtypes
+Figure 10 plots the work vs. number of clauses for each of four types of
+SSat problems described earlier. For each problem class, the most di-
+cult (on average) setting of the threshold parameter observed was used.
+
+
+
+
+                                                             paper.tex; 1/09/1999; 0:14; p.32
+                                            Stochastic Boolean Satis ability                 33
+                                            Peak Work for E-MAJSAT For n=20
+
+       Recursive Calls (Work)   10000
+
+
+
+
+                                 1000
+
+
+
+
+                                 100
+                                        0        5        10        15                20
+                                              Number of Choice Variables (c)
+Figure 9. The diculty of solving random E-Majsat instances via DPLL decreases
+with increasing number of choice variables c. The plot is for random formulae with
+k = 3 literals per clause.
+
+There are several things to note here. One is that all these random-
+ized satis ability problems exhibit the same easy-hardest-hard pattern
+described for Sat. However, the number of clauses corresponding to
+the peak work di ers for each problem. Also, the higher the peak, the
+smaller the number of clauses at the peak.
+   Another observation is that the relative peak diculty of di erent
+problems does not match what might be predicted by complexity the-
+ory. In particular, as NP  PP  NPPP  PSPACE, one might expect
+Sat < Majsat < E-Majsat < Alternating SSat in terms of peak
+work (here, \<" is being used as shorthand for \requiring less work
+than"). In fact, the experiments come out with Sat < E-Majsat <
+Alternating SSat < Majsat. That is, Majsat comes out as the hard-
+est instead of the second easiest. This pattern can be observed with a
+wide range of values of n, with the Majsat instances getting harder
+much faster than the other problems with increasing n.
+   The facts that E-Majsat is easier for DPLL than Majsat and that
+Sat is easier than Alternating SSat probably stem from the fact that
+randomized quanti ers are harder to prune than are existential quan-
+ti ers. Recall from the DPLL algorithm of Section 2.1 that existential
+quanti ers can be simpli ed by puri cation whereas randomized quan-
+ti ers cannot. In addition, the threshold pruning rules for randomized
+quanti ers are weaker and will apply less often. Thus, the presence
+of randomized quanti ers can make an SSat problem more challeng-
+
+
+
+
+                                                                paper.tex; 1/09/1999; 0:14; p.33
+34                                          Littman, Majercik, and Pitassi
+                                            Probabilistic Satisfiability For n=20
+
+                                10000                   MAJSAT (t=16)
+       Recursive Calls (Work)                               SSAT (t=8)
+                                                    E-MAJSAT (c=10,t=7)
+                                                                  SAT
+                                 1000
+
+
+                                 100
+
+
+                                  10
+                                        0    20      40     60 80            100 120 140
+                                                            Clauses
+Figure 10. The peak diculty of solving di erent SSat instances via DPLL varies
+with the structure of the operators and the number of clauses. The plot is for random
+formulae with k = 3 literals per clause. Majsat problems appear to be the hardest,
+on average.
+
+ing. Supporting this observation is the fact that Alternating SSat and
+E-Majsat (c = n=2) both consist of half existential and half random-
+ized quanti ers, and have very similar curves in Figure 10.
+   A similar observation concerning problem diculty and quanti er
+type was made by Gent & Walsh (1998); they argue that random QBF
+formulae are trivially easy because of the fact that a single clause
+consisting of all (or nearly all) universal variables can be solved with
+no backtracking at all. Thus, in spite of the fact that QBF is PSPACE-
+complete, QBF < Sat for random CNF formulae. This e ect was also
+observed by Cadoli, Giovanardi, & Schaerf (1997), who found that in-
+creasing the number of universal quanti ers at the expense of existential
+quanti ers makes problems easier to solve.
+   Figure 11 shows a similar pattern when the number of literals per
+clause k = 5, although the curves for Majsat and Alternating SSat
+have grown closer together.
+3.1.4. Threshold
+With Sat, the peak hardness of determining whether an instance is
+positive appears to correspond to the point at which about half of all
+random instances are positive; informal tests support the same conclu-
+sion for Majsat. Figure 12 examines the threshold, showing results
+for Majsat for k = 3, n = 30, varying the number of clauses m
+
+
+
+
+                                                               paper.tex; 1/09/1999; 0:14; p.34
+                                            Stochastic Boolean Satis ability                 35
+
+                                        Probabilistic Satisfiability For n=12, k=5
+                                10000
+       Recursive Calls (Work)                         MAJSAT (t=10)
+                                                  E-MAJSAT (c=6,t=5)
+                                                         SSAT (t=5)
+                                 1000                          SAT
+
+
+                                 100
+
+
+                                  10
+                                        0    20      40     60 80          100 120 140
+                                                            Clauses
+Figure 11. The peak diculty of solving di erent SSat instances via DPLL varies
+with the structure of the operators and the number of clauses. With more than k = 3
+literals per clause, the di erence in diculty of the problem types lessens.
+
+and threshold t. As the satisfaction threshold increases, few clauses
+are needed to prevent a random instance from being positive. There is
+a strong linear relationship between m and t visible in the graph that
+begs explanation; the observed relationship between n, m, and t at the
+threshold is m  4:2(n t). This relation makes sense for t = 0, since it
+says that the 0{1 threshold for Sat occurs at m  4:2n. It also makes
+sense for t = n, since only a single clause is needed to prevent there
+from being 2t = 2n satisfying assignments. Equation 1 gives a lower
+bound on this threshold with this form, but no upper bound of this
+type has been proven.
+
+3.2. Varying Problem Size
+To see how peak problem diculty scales with n, the following exper-
+iment was carried out. For each of n = 5; 10; 15; 20; 25; 30, a thousand
+k = 3-CNF Majsat formulae were generated. For each n, the DPLL
+solver solved all 1,000 formulae for all values of t from 0 to n and all
+values of m from 1 to about 7n (at intervals of approximately n=4
+clauses). This was used to identify the hardest settings of t and m.
+At this point, all values of m and t in the vicinity of the maximum
+were run to get a more accurate answer. Finally, a peak combination
+of values of m and t was identi ed for each n.
+
+
+
+
+                                                                paper.tex; 1/09/1999; 0:14; p.35
+36                               Littman, Majercik, and Pitassi
+
+
+
+
+             prob
+             1
+
+
+            0.5
+
+
+
+            00
+                  5                                                              30
+                       10                                                   25
+                            15                                         20
+                      m/7                                     15
+                                 20                      10        t
+                                      25            5
+
+
+
+Figure 12. The probability that a random instance of Majsat (n = 30, k = 3) is
+positive varies with both the satisfaction threshold t and the number of clauses m.
+Peak diculty for a xed t occurs around the number of clauses m for which half of
+the instances are positive.
+
+   The results were quite clean (the lines are suciently straight that
+they are not shown). For all values of n, the peak work was achieved
+with t  0:80n and m  1:14n. The peak work for these settings follows
+a clear exponential growth curve of 3:96  1:49n . This is interesting,
+because, even with a dicult problem like Majsat, this simple version
+of DPLL achieves a running time that is asymptotically faster than
+that of full enumeration (O(2n )).
+3.3. An Evaluation of Heuristics for evalssat
+In all but the most trivial Sat problems, the DPLL algorithm will
+exhaust opportunities to apply unit resolution and puri cation before
+a satisfying assignment has been discovered. When this occurs, the algo-
+rithm must select an unassigned variable x from the current simpli ed
+formula to split on, i.e. check for satisfying assignments both when x is
+assigned True and when x is assigned False. For peak performance, the
+order in which variables are selected is critical. For example, suppose a
+Sat problem is presented to DPLL with n variables and, for the sake
+of this example, that no pruning is done. Suppose further that if the
+variable xa is set to True the formula becomes unsatis able. If xa is
+the last variable the algorithm chooses to split on, it will potentially
+generate 2n 1 assignments, discovering as many times that setting xa
+
+
+
+
+                                                    paper.tex; 1/09/1999; 0:14; p.36
+                       Stochastic Boolean Satis ability                 37
+to True makes the formula unsatis able. If, however, it selects xa as the
+  rst variable to split on, it will discover that setting that variable to
+True leads to unsatis ability before generating and checking those 2n 1
+assignments. Unit resolution, as described in Section 2.1.1, handles this
+extreme case; other ideas are needed to address this more generally.
+    Considerations such as this have prompted a great deal of research
+into ecient splitting heuristics for Sat (Hooker & Vinay, 1994; Ba-
+yardo & Schrag, 1997; Gallo & Urbani, 1989; Harche, Hooker, & Thomp-
+son, 1994; Jeroslow & Wang, 1990; Li & Anbulagan, 1997; Crawford
+& Auton, 1996; Freeman, 1995). An appropriate splitting heuristic can
+reduce the running time of the DPLL algorithm by several orders of
+magnitude. But, do these splitting heuristics improve eciency in SSat
+problems?
+    Relative to its counterpart in Sat problems, splitting in SSat is
+restricted to selection from among a speci c class of variables: To ensure
+that the value of the formula is computed correctly, splitting heuristics
+for SSat must choose a variable from the rst (leftmost or outermost)
+block, as described in Section 1.2.1.
+    The reasoning behind this restriction is because adjacent quanti ers
+commute if they are of the same type, but not if they are of di erent
+types. Returning to the example from Section 1.2, consider the formula
+               R R
+                  x; z; 9y; E [(x _ y)(y _ z)(x _ y)]  3=5:
+The value of the formula is 3=4, and this can be determined by splitting
+either on x or z rst (both are in the rst block). On the other hand,
+if y is used as the variable in the rst split, the value is calculated
+incorrectly as 1=2.
+    A hypothesis is that splitting heuristics would have the greatest
+impact when there are large blocks of interchangeable variables (the
+extremes being Sat and Majsat, both of which consist of a single
+block of size n), and would not be as useful when there was a great deal
+of quanti er alternation (since, barring unit clauses and pure variables,
+DPLL must split on all variables in the rst block before splitting on
+a variable from another block). In the case where blocks are single
+variables, the splitting heuristic can be expected to have no impact on
+performance.
+    To test this hypothesis, tests were conducted using six splitting
+heuristics (where, in all cases, it is understood that the choice is made
+from the outermost block of variables):
+      RAND chooses a variable randomly,
+      SATS MOST nds the literal that satis es the most clauses in the
+      current formula and chooses that variable,
+
+
+
+
+                                           paper.tex; 1/09/1999; 0:14; p.37
+38                     Littman, Majercik, and Pitassi
+     2S JW (2-sided Jeroslow-Wang, described by Hooker & Vinay (1994))
+     chooses a variable whose literals appear in a large number of short
+     clauses,
+     POS 2S JW (positive, 2-sided Jeroslow-Wang, described by Hooker
+     & Vinay (1994)) is 2S JW applied to the subset of variables that
+     appear in at least one clause containing all positive literals,
+     MOMS chooses the variable that has Maximum Occurrences in
+     clauses of Minimum Size, and
+     MAX UNIT, a splitting heuristic used by Bayardo & Schrag (1997)
+     in some of their work on satis ability algorithms, is similar to
+     heuristics used by the successful POSIT (Freeman, 1995) and
+     Tableau (Crawford & Auton, 1996) solvers, preferring variables
+     that will lead to a maximal number of unit resolutions.
+With the exception of RAND, these heuristics try to select the variable
+that will most simplify the formula and establish its satis ability (or
+lack thereof) most quickly. SATS MOST attempts to do this by choos-
+ing the literal that will satisfy, and thus eliminate, the most clauses.
+The remaining heuristics try to choose a variable that maximizes the
+number of unit clauses likely to be produced. The baseline for compar-
+ison is the splitting rule in Figure 2, which splits on the next variable
+in the initially speci ed quanti er ordering.
+    To test the performance of these heuristics on problems with varying
+block sizes, eight sets of 100 random formulae were generated with the
+following characteristics:
+              24 variables, 24 clauses, 3 literals per clause
+              24 variables, 48 clauses, 3 literals per clause
+              24 variables, 72 clauses, 3 literals per clause
+              24 variables, 96 clauses, 3 literals per clause
+              32 variables, 32 clauses, 3 literals per clause
+              32 variables, 64 clauses, 3 literals per clause
+              32 variables, 96 clauses, 3 literals per clause
+              32 variables, 128 clauses, 3 literals per clause.
+These sets were generated according to Fmk;n (Section 1.4) using makewff.
+In order to ensure that the formulae generated contained exactly n
+variables, however, makewff was modi ed to repeatedly generate a
+formula with the desired characteristics until one was generated that
+contained all n variables. For each block size in a speci ed range of
+block sizes (1, 2, 3, 4, 6, 12, and 24 for problems with 24 variables
+and 1, 2, 4, 8, 16, and 32 for problems with 32 variables) two problem
+
+
+
+
+                                          paper.tex; 1/09/1999; 0:14; p.38
+                        Stochastic Boolean Satis ability                 39
+types were generated: a type E problem, which has an existentially
+quanti ed outermost block, and an R problem, which has a randomly
+quanti ed outermost block. The block sizes chosen were all those that
+generate an equal number of existential and randomized quanti ers,
+plus Sat and E-Majsat (block size 24 or 32). In this manner, each set
+of 100 24-variable problems generated 1400 instances, and each set of
+100 32-variable problems generated 1200 instances.
+   The evalssat algorithm was implemented in C and each splitting
+heuristic was tested on all 10,400 problem instances generated as de-
+scribed above. These tests were conducted on a Sun Ultra-1 running
+SunOS-5.7 with 128 MB of RAM. Performance was measured by count-
+ing the change in the number of recursive calls to the central function in
+the algorithm. This function rst tests for satisfaction of the formula; if
+the current partial assignment is insucient to establish satisfaction or
+unsatisfaction, the function extends the partial assignment. In the most
+general case, the function selects an unassigned variable, rst setting
+the variable to True and calling itself recursively, and then setting the
+variable to False and calling itself recursively. Whenever possible, as
+in the case of a variable in a unit clause, one of these recursive calls is
+eliminated. Measuring the number of calls to this function is equivalent
+to measuring the size of the DPLL tree generated by the algorithm
+and is thus a more direct measure of the eciency of the heuristic
+than measuring, for example, CPU time. For perspective, however,
+the running time, measured in CPU seconds, for a non-Majsat 24-
+variable, 48-clause problem was typically less than a second. Running
+times for Majsat problems varied from 1 to 5 seconds. A connection
+between these two ways of measuring performance is provided by the
+fact that for the results reported below (problems with 24 variables,
+48 clauses, 3 literals per clause) the algorithm performs approximately
+20,000 recursive calls per cpu second.
+   Although the results of the tests (Figure 13) generally supported
+the hypothesis stated above, there are some peculiarities that warrant
+further study. (Note that the results for all eight sets of problems were
+similar; we show the results only for 24-variable, 48-clause problems.)
+On both type E and type R problems, four of the heuristics tested
+(POS 2S JW, MAX UNIT, SATS MOST, and MOMS) provided some
+improvement in performance (reduction in the size of the DPLL tree
+generated). For type E problems, this improvement was positively cor-
+related with block size (see Figure 13(b)). For type R problems the
+improvement was positively correlated with block size up to a block
+size of 12; all four of these heuristics show less improvement for a block
+size of 24 (Majsat problems, in which the formula cannot be simpli ed
+by puri cation) than they do for a block size of 12 (see Figure 13(a)).
+
+
+
+
+                                            paper.tex; 1/09/1999; 0:14; p.39
+40                     Littman, Majercik, and Pitassi
+SATS MOST and MOMS were particularly e ective, reducing the num-
+ber of recursive calls in DPLL by approximately half (over both problem
+types) for a block size of 12. RAND performed as expected on type
+R problems, neither improving nor degrading performance. 2S JW, a
+heuristic which might have demonstrated improved performance, was
+similarly neutral. Neither of these two heuristics performed as expected
+on type E problems; both heuristics degraded performance, and this
+degradation was positively correlated with block size. The fact that
+2S JW performed no better than RAND agrees with results reported
+by Hooker & Vinay (1994); on a set of hard, random Sat instances,
+they reported that the DPLL trees constructed using the 2S JW heuris-
+tic were signi cantly larger than those constructed using a random
+heuristic.
+   For the heuristics that improved performance, the block size did
+not have to be very large to produce signi cant reductions in the size
+of the DPLL tree generated. For the four successful heuristics, tree
+size was reduced as soon as blocks were larger than a single variable
+and, in some cases, the reduction became signi cant even for relatively
+small block sizes. MAX UNIT, SATS MOST, and MOMS, for example,
+provided average reductions in tree size of approximately 23%, 28%,
+and 32%, respectively, for a block size of six.
+   The results suggest that a successful Sat heuristic is likely to be
+a successful heuristic in Majsat and SSat problems, but block size
+is a limiting factor. In the case where blocks are single variables, the
+splitting heuristic has no impact on performance. It is important to
+note, however, that the tests were conducted on small, random prob-
+lems. For problems with more structure, such as SSat formulae that
+encode planning problems, these results may not hold. In addition,
+there may be other good splitting heuristics that take advantage of this
+structure. For example, Majercik & Littman (1998) report improved
+performance on such SSat problems using a time-ordered splitting
+heuristic in which variables with a lower time index are chosen rst.
+The success of SATS MOST, which is computationally much simpler
+than MAX UNIT or MOMS, was somewhat surprising and warrants
+further study. It is possible that performance disparities might appear
+in these three splitting heuristics as the problem size increases beyond
+that of the problems in these tests. Finally, it is possible that split-
+ting heuristics unique to Extended SSat problems could be developed.
+Such heuristics might use the probabilities associated with the random
+variables to select variables in a way that provides potentially greater
+simpli cation of the problem.
+
+
+
+
+                                          paper.tex; 1/09/1999; 0:14; p.40
+                                                                            Stochastic Boolean Satis ability                   41
+                                                       100
+                                                                                              RANDOM (RAND)
+                                                                             2-SIDED JEROSLOW-WANG (2S_JW)
+                                                        80         POS. 2-SIDED JEROSLOW-WANG (POS_2S_JW)
+
+
+          AVERAGE PERCENT INCREASE IN DPLL TREE SIZE
+                                                                       MAXIMIZE UNIT RESOLUTIONS (MAX_UNIT)
+                                                                        SATISFIES MOST CLAUSES (SATS_MOST)
+                                                        60        MAX. OCCURRS. IN MIN-SIZED CLAUSES (MOMS)
+
+
+                                                        40
+
+
+                                                        20
+
+
+                                                         0
+
+
+                                                        -20
+
+
+                                                        -40
+
+
+                                                        -60
+
+
+                                                        -80
+
+
+                                                       -100
+                                                              0     2   4      6   8   10   12   14   16   18   20   22   24
+                                                                                        BLOCK SIZE
+
+                                                                                (a) rst block R
+                                                       100
+                                                                                              RANDOM (RAND)
+                                                                             2-SIDED JEROSLOW-WANG (2S_JW)
+                                                        80         POS. 2-SIDED JEROSLOW-WANG (POS_2S_JW)
+          AVERAGE PERCENT INCREASE IN DPLL TREE SIZE
+
+
+
+
+                                                                       MAXIMIZE UNIT RESOLUTIONS (MAX_UNIT)
+                                                                        SATISFIES MOST CLAUSES (SATS_MOST)
+                                                        60        MAX. OCCURRS. IN MIN-SIZED CLAUSES (MOMS)
+
+
+                                                        40
+
+
+                                                        20
+
+
+                                                         0
+
+
+                                                        -20
+
+
+                                                        -40
+
+
+                                                        -60
+
+
+                                                        -80
+
+
+                                                       -100
+                                                              0     2   4      6   8   10 12 14 16         18   20   22   24
+                                                                                        BLOCK SIZE
+
+                                                                               (b) rst block E
+Figure 13. The heuristics POS 2S JW, MAX UNIT, SATS MOST, and MOMS reduce
+the size of the DPLL tree generated relative to splitting in strict quanti er order
+when the formula block size is greater than 1. For the most part, larger block sizes
+yield more improvement.
+
+
+
+
+                                                                                                 paper.tex; 1/09/1999; 0:14; p.41
+42                      Littman, Majercik, and Pitassi
+3.4. Experiments with the Stochastic Sampling Algorithms
+The performance of randevalssat for computing the value of SSat in-
+stances was tested on 27 sets of 100 random formulae. The characteris-
+tics of these 27 sets were generated by taking the cross product of the
+following sets: fn = 8; 12; 16g, fm = n; 2n; 3ng, and fk = 3; 4; 5g. As
+was the case for the evaluation of heuristics in Section 3.3, these sets
+were generated according to Fmk;n (Section 1.4) using a modi ed version
+of makewff that guarantees a formula with exactly n variables. For each
+problem a Sat instance (all existential variables), a Majsat instance
+(all randomized variables), and all possible instances that contain an
+equal number of existential and randomized variables in alternating
+blocks of the same size were constructed. This generated 8 instances for
+each 8-variable problem (block sizes 1, 2, 4, and 8, each with an instance
+in which the initial block is existentially quanti ed and an instance in
+which the initial block is randomly quanti ed), 10 instances for each 12-
+variable problem (block sizes 1, 2, 3, 6, and 12 with instances di ering
+by initial quanti er), and 10 instances for 16-variable problems (block
+sizes 1, 2, 4, 8, and 16 with instances di ering by initial quanti er).
+Thus, each set of 100 8-variable problems generated 800 distinct prob-
+lems, and all other sets generated 1000 distinct problems, for a total
+of 25,200 problems. For each of these problems, 10 di erent partial
+policy trees were created by sampling random variable assignments
+and constructing the tree paths speci ed by the samples. The number
+of assignments sampled w ranged from 5 to 4086 on an approximate
+logarithmic scale; the larger the number of samples, the greater the
+similarity of the partial tree to the full tree.
+    Both sampleevalssat and randevalssat were implemented in C. Each
+of the partial policy trees generated for the 25,200 problem instances
+described above was solved using randevalssat. For comparison, those
+problem instances with 12 variables, 24 clauses, and 3 literals per clause
+were also solved using sampleevalssat. For randevalssat, the number of
+restarts and the number of iterations were both speci ed as a multiple
+of the number of variables in the CNF formula constructed from the
+tree, so increasing the number of samples tended to increase the number
+of restarts and iterations. Performance was measured by comparing the
+estimate of (or, in the case of sampleevalssat, the exact calculation of)
+the value of the partial policy tree to the exact value of the full policy
+tree (and, hence, the formula). This di erence is referred to below as
+the error in the value estimate. Note that since the running time is
+proportional to the number of restarts and iterations allowed, and since
+these limits are increased for larger problems, running time is not a very
+informative measure of performance. For perspective, however, running
+
+
+
+
+                                           paper.tex; 1/09/1999; 0:14; p.42
+                                                                Stochastic Boolean Satis ability                 43
+                                                     0.07
+                                                                                                  SAT
+                                                                                               MAJSAT
+      MEAN SQUARED ERROR IN FORMULA VALUE ESTIMATE
+                                                                                           OTHER SSAT
+                                                     0.06
+
+
+
+                                                     0.05
+
+
+
+                                                     0.04
+
+
+
+                                                     0.03
+
+
+
+                                                     0.02
+
+
+
+                                                     0.01
+
+
+
+                                                       0
+                                                            1     10          100       1000             10000
+                                                                NUMBER OF ASSIGNMENTS SAMPLED
+Figure 14. The partial policy tree produced by random sampling can be solved
+exactly using a DPLL-style approach. Approximation error decreases as sample size
+increases.
+
+times, measured in CPU seconds, for 12-variable, 24-clause problems,
+with 4086 assignment samples, varied from 1 to 5 seconds.
+   Figure 14 shows results for the sampleevalssat algorithm on problems
+with 12 variables, 24 clauses, and 3 literals per clause; the graph shows
+mean squared error in the value estimate as a function of the number
+of sampled assignments for all problem types. Since the algorithm is
+performing perfect optimization on the partial tree, any error is due
+entirely to the incompleteness of the partial tree due to sampling. As
+expected, the mean and variance of the squared error approach zero
+as the number of assignment samples increases, and the partial tree
+constructed approaches the full policy tree.
+   Figure 15 shows the same graphs for the results of the randevalssat
+algorithm. (Note that the results for all 27 sets of problems were similar;
+we show the results only for the set of problems with 12 variables, 24
+clauses, and 3 literal per clause.) Here, the mean and variance of the
+squared error decrease as the number of assignment samples increases.
+But, even in the limiting case, where the number of assignments sam-
+
+
+
+
+                                                                                    paper.tex; 1/09/1999; 0:14; p.43
+44                                                              Littman, Majercik, and Pitassi
+
+                                                     0.07
+                                                                                                 SAT
+                                                                                              MAJSAT
+      MEAN SQUARED ERROR IN FORMULA VALUE ESTIMATE
+                                                                                          OTHER SSAT
+                                                     0.06
+
+
+
+                                                     0.05
+
+
+
+                                                     0.04
+
+
+
+                                                     0.03
+
+
+
+                                                     0.02
+
+
+
+                                                     0.01
+
+
+
+                                                       0
+                                                            1     10          100       1000            10000
+                                                                NUMBER OF ASSIGNMENTS SAMPLED
+Figure 15. As the number of sampled assignments increases, the accuracy of the
+randomized local search algorithm increases. Because of local optima in the search
+space, increasing the number of sampled assignments does not drive the error to
+zero.
+
+
+pled is sucient to construct the full policy tree with high probability,
+randevalssat is not always capable of nding the optimal setting of the
+decision variables. (Note that in some cases, however, randevalssat can
+generate almost as accurate an answer as sampleevalssat in far less
+time. For one problem with 36 variables, 72 clauses, and 3 literals
+per clause, randevalssat was able to return an answer with squared
+error of approximately 10 4 in 442 cpu seconds, while sampleevalssat
+required over 4 times as long to compute an answer with squared error
+of approximately 10 5 .)
+    It should also be noted that the randevalssat algorithm can exhibit
+anomalous behavior as the number of assignment samples increases. A
+set of 100 random problems with 12 variables, 24 clauses, and 3 literals
+per clause was generated, but with a block size of 4 and an initial block
+of existential variables. This set was not included in the results reported
+above, since this quanti er ordering results in problem instances with
+an unequal number of existential and random variables. The mean
+
+
+
+
+                                                                                   paper.tex; 1/09/1999; 0:14; p.44
+                       Stochastic Boolean Satis ability                 45
+squared error for this set of problems decreases to approximately 0.008
+as the number of sampled assignments increases to 55. As the number
+of sampled assignments increases further, however, the mean squared
+error also increases, appearing to asymptote at approximately 0.016.
+Since this behavior does not appear when the same problem instances
+are solved using sampleevalssat, the anomaly appears to be due to the
+imperfect optimization technique employed by randevalssat becoming
+trapped in local optima. Initially, generating a policy tree with more
+branches allows the algorithm to return a more accurate estimate of the
+value of the formula. Beyond a certain point, however, this advantage
+seems to be outweighed by the increasing diculty of the optimiza-
+tion problem; because more policy-tree nodes means more treeSAT
+variables, the algorithm is increasingly likely to become stuck in local
+maxima and so less likely to nd the global maximum within the per-
+mitted number of restarts. Future work will examine striking the proper
+balance between sampling completeness and optimization diculty.
+   Future work will also consider more sophisticated randomized local
+search procedures. For instance, the algorithm could be modi ed to
+select the decision node or the variable to ip in that decision node
+according to some set of criteria. Another variation would use the entire
+local search algorithm in Figure 6 as a subroutine in an algorithm that
+periodically restarts with a new set of samples. The approach could
+also be re ned using simulated annealing.
+
+                 4. Conclusion and Future Work
+This paper described a stochastic satis ability framework, relating it
+to existing problems in reasoning and planning under uncertainty. It
+described several algorithms, inspired by work in deterministic satis -
+ability: a DPLL-based algorithm, a \universal" search algorithm, and
+a stochastic sampling algorithm. The paper also explored the behavior
+of the algorithms on randomly generated satis ability problems.
+   This paper takes a rst stab at developing practical algorithms for
+SSat, with particular emphasis on understanding which algorithms,
+intuitions and ideas developed for the satis ability problem extend
+to more general satis ability-type problems. In spite of the gap in
+computational complexity between the general form of stochastic sat-
+is ability (SSat, PSPACE-complete) and deterministic satis ability
+(Sat, NP-complete), this work shows that many insights obtained from
+studying Sat carry over to the more general probabilistic setting. Many
+more questions remain unanswered; some directions for future work are
+sketched next.
+
+
+
+
+                                           paper.tex; 1/09/1999; 0:14; p.45
+46                      Littman, Majercik, and Pitassi
+   A primary motivation for studying Extended SSat problems is to
+gain a better understanding of algorithms for decision making under
+uncertainty. These problems are modeled by Extended SSat in that
+existential quanti ers act like \maximizing" decisions, universal quan-
+ti ers act like a \minimizing" decisions, and randomized quanti ers
+act like an oblivious random in uence. Condon (1992) studied a simple
+stochastic game model with precisely these three types of nodes. There
+are two fundamental di erences between simple stochastic games and
+stochastic satis ability. Stochastic games have no prede ned \horizon";
+games can continue inde nitely. Extended SSat problems, in contrast,
+model domains with a xed number of decisions or events (one for
+each quanti er), at which point the \game" ends. On the other hand,
+Extended SSat problems model very complex decisions, in that a value
+for an existential quanti er can be conditioned on all the preceding ran-
+domized quanti ers|possibly an exponential-sized set of conditions.
+This allows Extended SSat problems to model compactly represented
+AI planning domains, an insight that has led to an implemented state-
+of-the-art planning algorithm (Majercik & Littman, 1999). Represent-
+ing a planning problem via a simple stochastic game, however, leads
+to a state-space explosion, rendering it an inecient formalism for
+complex domains. An important direction for future work involves com-
+bining the core propositional representation of Extended SSat with the
+unbounded horizon of simple stochastic games.
+   The study of randomized satis ability algorithms has helped spur
+the development of algorithms and applications of deterministic satis-
+  ability. While this paper has proposed an initial stochastic sampling
+algorithm for SSat, more experiments and more algorithmic insights
+are needed. One area in need of more research is how the approximation
+algorithm can be applied to solve planning problems. In particular, the
+algorithm returns a partial assignment strategy, or policy, that speci es
+how each existential variable should be set given the settings of the vari-
+ables that precede it in the quanti er ordering, but this only happens
+for those situations represented by paths in the random sample. The
+algorithm implicitly assumes that performance on missing branches
+is the same as the average performance over all paths in the partial
+tree, but doesn't actually nd a plan that achieves this performance. A
+topic for future work is extending the stochastic sampling algorithm to
+return successful plans, perhaps in an iterative approach that integrates
+planning and execution.
+   In addition, it is not clear how to apply the proposed algorithm
+to formulae with intermixed existential, randomized, and universal
+quanti ers. Such problems arise, for example, in applications in which
+two competitive agents interact with a stochastic environment, and a
+
+
+
+
+                                           paper.tex; 1/09/1999; 0:14; p.46
+                       Stochastic Boolean Satis ability                 47
+randomized algorithm for this broader class of SSat problems would
+be useful.
+   The proposed universal search algorithm is a promising approach to
+solving Extended SSat problems exactly and eciently. Future work
+will be to implement and test the algorithm, comparing it to the split-
+ting heuristics examined in Section 3.3. Although they are not well
+understood theoretically, the threshold pruning rules described in Sec-
+tion 2.1.2 could be helpful in a practical implementation of the universal
+search algorithm.
+   There has been a recent urry of activity in analyzing common
+Davis-Putnam algorithms, and proving that these algorithms are guar-
+anteed to solve any k-SAT instance in subexponential-time (Monien &
+Speckenmeyer, 1985; Paturi, Pudlak, & Zane, 1997; Paturi et al., 1998).
+(For example, a very simple randomized DPLL-type algorithm solves
+3-CNF Sat in worst-case time 2(2=3)n .) It would be interesting to show
+that these analyses carry over to the SSat setting.
+   In addition to Resolution-based methods, there are several alterna-
+tive methods for solving satis ability instances. In particular, algebraic
+approaches based on discrete versions of the Grobner basis algorithm
+are looking promising for solving satis ability problems (Clegg, Ed-
+monds, & Impagliazzo, 1996). Future work will examine to what extent
+these methods carry over to the SSat domain.
+   A number of recent studies have shown that the satis ability frame-
+work is useful for examining a variety of search problems. An exciting
+element of the present work is that it illustrates how the satis ability
+approach applies outside of Sat's complexity class, greatly expanding
+the realm of problems that can be attacked.
+Acknowledgments
+Thanks to Pankaj Agarwal, Julien Basch, Ian Gent, Judy Goldsmith,
+Moises Goldszmidt, Henry Kautz, Don Loveland, Matt Peters, John
+Reif, Bart Selman, and Toby Walsh for feedback and suggestions. Avrim
+Blum suggested the use of sampling and Cherno bounds, and Noam
+Shazeer provided the insight behind the counter example in Appendix B.
+We would also like to thank Steve Cook, Mike Molloy, and especially
+Dimitris Achlioptas for illuminating conversations on the 0{1 threshold
+properties of Sat and Majsat formulae.
+
+
+
+
+                                           paper.tex; 1/09/1999; 0:14; p.47
+48                       Littman, Majercik, and Pitassi
+                            Appendix
+                      A. Correctness of evalssat
+This section proves that the evalssat algorithm described in Section 2.1
+produces the correct value of the given SSat instance (; Q; ).
+LEMMA 6. For all n, for all formulae  with at most n variables, for
+all thresholds l , h , such that l  h , evalssat(; Q; l ; h ) returns a
+value v such that: (i) if l  val(; Q)  h, then val(; Q) = v; (ii) if
+val(; Q)  l , then v  l ; and (iii) if val(; Q)  h, then v  h .
+Proof: The correctness of the algorithm will be proved by induction
+on the number of variables of the formula. If there are no variables,
+then  either consists of no clauses (i.e., it contains the empty set), or
+it contains an empty clause. If  consists of no clauses, then  evaluates
+to 1 by de nition. Likewise, if  contains an empty clause, this implies
+that val(; Q) = 0, and thus the lemma holds in this case.
+    Now, assume that  has n > 0 variables, and as usual, the vari-
+ables are named x1 ; : : : ; xn where x1 is the outermost quanti ed vari-
+able. As above, the lemma holds if  consists of no clauses or con-
+tains an empty clause. In all other cases, a single variable is removed.
+The rst case is where a variable xi is removed because it occurs in
+a singleton clause in  with sign b, and Q(xi ) = 9. In this case,
+val(; Q) = val(dxi =b ; Q) because when xi is set to 1 b,  evalu-
+ates to 0. Then, by the inductive hypothesis, the algorithm outputs
+a correct value on dxi =b . Similarly, if xi is a unit variable in  and
+Q(xi ) = 8, then val(; Q) = 0 and, thus, the algorithm outputs a
+correct value. Finally, if xi is a unit variable and Q(xi ) = , then  R
+val(; Q) = (val(dxi =b ; Q) + val(dxi =1 b ; Q))=2 = val(dxi =b ; Q)=2.
+In this case, when calling evalssat recursively on dxi =b , the low and
+high bounds l and h must be shifted by a factor of two. That is,
+when val(; Q) = x, val(dxi =b ; Q) is 2x; thus if l  x  h, then
+by induction evalssat(dxi =b ; Q; 2l ; 2h ) will return the value 2x since
+2l  2x  2h . Similarly, the algorithm is correct for x  l and
+x  h .
+    The second case is where xi is a pure variable with sign b and Q(xi ) =
+8. In this case, val(; Q) = min(val(dxi =b; Q); val(dxi =1 b; Q)) =
+val(dxi =1 b ; Q), so by induction the algorithm is correct. Similarly,
+when xi is a pure variable and Q(xi ) = 9, then
+   val(; Q) = max(val(dxi =b ; Q); val(dxi =1 b ; Q)) = val(dxi =b ; Q):
+    The third case is when x1 is removed and Q(x1 ) = 9. Let v0 =
+evalssat(dx1 =0 ; Q; l ; h). If val(dx1 =0 ; Q)  h , then v0  h by the
+
+
+
+
+                                            paper.tex; 1/09/1999; 0:14; p.48
+                           Stochastic Boolean Satis ability                 49
+induction hypothesis, so v0 is a correct value. Otherwise, v0 < h . Let
+v1 = evalssat(dx1 =1 ; Q; max(l ; v0 ); h ). There are several simple cases
+to check: If val(dx1 =0 ; Q)  l , then v0 will equal val(dx1 =0 ; Q) by the
+inductive hypothesis, so max(l ; v0 ) = v0 , and thus it is easy to check
+that max(v0 ; v1 ) is a correct answer. Similarly, it can be checked that
+the answer returned is correct if val(dx1 =0 ; Q) < l .
+   The fourth case, when x1 is removed and Q(x1 ) = 8, is very similar
+to the above case.
+    The fth and nal case is when x1 is removed and Q(x1 ) = . Let       R
+v00 = val(dx1 =0 ; Q) and let v10 = val(dx1 =1 ; Q). If v00 < 2l 1 then
+(v00 + v10 )=2 < (2l 1 + 1)=2 = l . If v00 > 2h , then (v00 + v10 )=4 >
+(2h )=2 = h . So, no detailed answer is needed if v00 < 2l 1 or v00 >
+2h . Thus, it suces to calculate v0 = evalssat(dx1 =0 ; Q; 2l 1; 2h ).
+If (v0 + 1)=2 < l , then (v00 + v10 )=2 < l , so return v0 =2 (anything
+less than l ). If v0 =2  h , then (v00 + v10 )=2  v0 =2  h, so return
+v0 =2. Otherwise, calculate v1 = evalssat(dx1 =1 ; 2l v0 ; 2h v0 ). Now,
+if v1 < 2l v0 , then (v00 + v10 )=2 < l , and if v1 > 2h v0 , then
+(v00 + v10 )=2 > h.
+
+
+             B. A Dicult Instance for sampleevalssat
+This section shows that sampleevalssat can require exponentially many
+samples to accurately approximate some SSat problems. Consider the
+n-variable SSat formula
+       R
+         y1 ; y2 ; : : : ; yn 2 ; 9xn 1 ; yn((xn 1 _ yn)(xn 1 _ yn)):
+            R          R                 R
+
+The value of this formula is 1=2, since the formula is True if and only
+if xn 1 = yn , which happens half of the time regardless of the value of
+xn 1 .
+    The number of policies for this SSat formula is P = 22n 2 since the
+setting for xn 1 can be conditioned on the preceding n 2 randomized
+variables.
+   Let W be a size w sample of the assignments to the randomized
+variables in the formula. The estimated value of the formula is
+                 X
+                       match( ; W; n)=match( ; W; n 2);
+                  2W
+where match( ; W; i) is the number of samples in W that match in
+the setting of the rst i variables. The justi cation for this expression
+is that the existential variable immediately above any given sampled
+
+
+
+
+                                               paper.tex; 1/09/1999; 0:14; p.49
+50                         Littman, Majercik, and Pitassi
+leaf will be set to maximize the number of sampled leaves below it
+that are made True. That is, it will be set to match the majority of
+the assignments to yn immediately below it. For example, if a decision
+node has only one leaf beneath, the value of that leaf will be 1.
+   For any sample, , with probability at least 1 w=2n 1 ,
+                    match( ; W; n) = match( ; W; n 2)
+because the second set is only larger than the rst set if there is a
+sample that matches in its assignment to y1 ; : : : ; yn 2 but di ers in
+its assignment to yn. Thus, the expected value of the sampleevalssat
+estimate E [^v ]  1 w=2n 1 .
+   Let  be a target approximation error and 1  be the desired
+probability of the estimate being within  of the true value. This re-
+stricts E [^v ]  (1 )(1=2 + ) + ()(1): Thus, 1 w=2n 1  E [^v] 
+(1 )(1=2 + ) + , or
+                      w  2n 2 (1 (1 2) 2)):
+This means that the number of samples needed to insure a good esti-
+mate from sampleevalssat is exponential in n.
+
+                                  References
+Achlioptas, D. 1999. Threshold phenomena in random graph colouring and
+   satis ability. Ph.D. Dissertation, University of Toronto.
+Bayardo, Jr., R. J., and Schrag, R. C. 1997. Using CSP look-back techniques to solve
+   real-world SAT instances. In Proceedings of the Fourteenth National Conference
+   on Arti cial Intelligence, 203{208. AAAI Press/The MIT Press.
+Beame, P., and Pitassi, T. 1996. Simpli ed and improved resolution lower bounds. In
+   37th Annual Symposium on Foundations of Computer Science, 274{282. IEEE.
+Beame, P.; Karp, R.; Pitassi, T.; and Saks, M. 1998. On the complexity of unsatis -
+   ability of random k-CNF formulas. In Proceedings of the Thirtieth Annual ACM
+   Symposium on Theory of Computing, 561{571.
+Ben-Sasson, E., and Wigderson, A. 1999. Short proofs are narrow: Resolution made
+   simple. To appear in STOC 1999.
+Birnbaum, E., and Lozinskii, E. L. 1999. The good old Davis-Putnam procedure
+   helps counting models. Journal of Arti cial Intelligence Research 10:457{477.
+Cadoli, M.; Giovanardi, A.; and Schaerf, M. 1997. Experimental analysis of the com-
+   putational cost of evaluating quanti ed Boolean formulae. In Fifth Conference
+   of the Italian Association for Arti cial Intelligence (AI*IA'97), number 1321,
+   207{218. Springer-Verlag.
+Cadoli, M.; Giovanardi, A.; and Schaerf, M. 1998. An algorithm to evaluate quan-
+   ti ed Boolean formulae. In Proceedings of the Fifteenth National Conference on
+   Arti cial Intelligence (AAAI-98), 262{267. The AAAI Press/The MIT Press.
+Chvatal, V., and Reed, B. 1992. Mick gets some (the odds are on his side). In 33nd
+   Annual Symposium on Foundations of Computer Science, 620{627.
+
+
+
+
+                                              paper.tex; 1/09/1999; 0:14; p.50
+                           Stochastic Boolean Satis ability                       51
+Clegg, M.; Edmonds, J.; and Impagliazzo, R. 1996. Using the Grobner basis al-
+    gorithm to nd proofs of unsatis ability. In Proceedings of the Twenty-Eighth
+    Annual ACM Symposium on Theory of Computing, 174{183.
+Condon, A.; Feigenbaum, J.; Lund, C.; and Shor, P. 1997. Random debators and the
+    hardness of approximating stochastic functions. SIAM Journal on Computing
+    26(2):369{400.
+Condon, A. 1992. The complexity of stochastic games. Information and
+    Computation 96(2):203{224.
+Crawford, J. M., and Auton, L. D. 1996. Experimental results in the crossover point
+    in random 3SAT. Arti cial Intelligence 81(1-2):31|57.
+Davis, M.; Logemann, G.; and Loveland, D. 1962. A machine program for theorem
+    proving. Communications of the ACM 5:394{397.
+Dechter, R. 1996. Bucket elimination: A unifying framework for probabilistic
+    inference. In Proceedings of the 12th Conference on Uncertainty in Arti cial
+    Intelligence (UAI-96), 211{219. Morgan Kaufmann Publishers.
+Freeman, J. W. 1995. Improvements to propositional satis ability search algo-
+    rithms. Ph.D. Dissertation, Department of Computer and Information Science,
+    University of Pennsylvania.
+Friedgut, E. 1997. Necessary and sucient conditions for sharp thresholds of graph
+    properties, and the k-SAT problem. Preprint.
+Frieze, A., and Suen, S. 1996. Analysis of two simple heuristics on a random instance
+    of k-SAT. Journal of Algorithms 20(2):312{355.
+Gallo, G., and Urbani, G. 1989. Algorithms for testing the satis ability of
+    propositional formulae. Journal of Logic Programming 7:45{61.
+Gent, I., and Walsh, T. 1998. Beyond NP: the QSAT phase transition. Technical
+    Report APES-05-1998.
+Goerdt, A. 1996. A threshold for unsatis ability. Journal of Computer and System
+    Sciences 53:469{486.
+Gu, J.; Purdom, P. W.; Franco, J.; and Wah, B. J. 1997. Algorithms for the
+    satis ability (SAT) problem: A survey. In Satis ability (SAT) Problem, 19{151.
+    DIMACS, American Mathematical Society.
+Harche, F.; Hooker, J. N.; and Thompson, G. 1994. A computational study of
+    satis ability algorithms for propositional logic. ORSA Journal on Computing
+    6:423|435.
+Hooker, J. N., and Vinay, V. 1994. Branching rules for satis ability. Technical
+    Report GSIA Working Paper 1994-09, Carnegie Mellon University. Revised
+    January 1995.
+Jeroslow, R., and Wang, J. 1990. Solving propositional satis ability problems.
+    Annals of Mathematics and AI 1:167|187.
+Kamath, A.; Motwani, R.; Palem, K.; and Spirakis, P. 1995. Tail bounds for
+    occupancy and the satis ability threshold conjecture. Random Structures and
+    Algorithms 7(1):59{80.
+Kautz, H., and Selman, B. 1996. Pushing the envelope: Planning, propositional logic,
+    and stochastic search. In Proceedings of the Thirteenth National Conference on
+    Arti cial Intelligence, 1194{1201. AAAI Press/The MIT Press.
+Kearns, M.; Mansour, Y.; and Ng, A. Y. 1999. A sparse sampling algorithm for
+    near-optimal planning large markov decision processes. Submitted.
+Kirousis, L. M.; Kranakis, E.; Krizanc, D.; and Stamatiou, Y. C. 1998. Approx-
+    imating the unsatis ability threshold of random formulas. Random Structures
+    and Algorithms 12(3):253{269.
+
+
+
+
+                                               paper.tex; 1/09/1999; 0:14; p.51
+52                          Littman, Majercik, and Pitassi
+Li, C. M., and Anbulagan. 1997. Heuristics based on unit propagation for satis a-
+    bility problems. In Proceedings of the Fifteenth International Joint Conference
+    on Arti cial Intelligence, 366|371.
+Littman, M. L.; Goldsmith, J.; and Mundhenk, M. 1998. The computational
+    complexity of probabilistic plan existence and evaluation. Journal of Arti cial
+    Intelligence Research 9:1{36.
+Littman, M. L. 1997. Probabilistic propositional planning: Representations and
+    complexity. In Proceedings of the Fourteenth National Conference on Arti cial
+    Intelligence, 748{754. AAAI Press/The MIT Press.
+Lusena, C.; Goldsmith, J.; and Mundhenk, M. 1998. Nonapproximability results for
+    Markov decision processes. Technical Report UK CS Dept TR 275-98, University
+    of Kentucky.
+Majercik, S. M., and Littman, M. L. 1998. MAXPLAN: A new approach to proba-
+    bilistic planning. In Simmons, R.; Veloso, M.; and Smith, S., eds., Proceedings of
+    the Fourth International Conference on Arti cial Intelligence Planning, 86{93.
+    AAAI Press.
+Majercik, S. M., and Littman, M. L. 1999. Contingent planning under uncer-
+    tainty via probabilistic satis ability. In Proceedings of the Sixteenth National
+    Conference on Arti cial Intelligence, 549{556. The AAAI Press.
+Monien, B., and Speckenmeyer, E. 1985. Solving satis ability in less than 2n steps.
+    Discrete Applied Mathematics 10:287{295.
+Mundhenk, M.; Goldsmith, J.; Lusena, C.; and Allender, E. 1997. Encyclopaedia of
+    complexity results for nite-horizon Markov decision process problems. Technical
+    Report UK CS Dept TR 273-97, University of Kentucky.
+Papadimitriou, C. H., and Tsitsiklis, J. N. 1987. The complexity of Markov decision
+    processes. Mathematics of Operations Research 12(3):441{450.
+Papadimitriou, C. H. 1985. Games against nature. Journal of Computer Systems
+    Science 31:288{301.
+Paturi, R.; Pudlak, P.; Saks, M.; and Zane, F. 1998. An improved exponential time
+    algorithm for k-SAT.
+Paturi, R.; Pudlak, P.; and Zane, F. 1997. Satis ability coding lemma. In FOCS,
+    566{574.
+Peot, M. 1998. Personal communication.
+Roth, D. 1996. On the hardness of approximate reasoning. Arti cial Intelligence
+    82(1{2):273{302.
+Selman, B.; Kautz, H.; and Cohen, B. 1996. Local search strategies for satis ability
+    testing. In Johnson, D. S., and Trick, M. A., eds., Cliques, Coloring, and Satis-
+     ability. American Mathematical Society. 521{531. DIMACS Series in Discrete
+    Mathematics and Theoretical Computer Science, v. 26.
+Selman, B.; Mitchell, D.; and Levesque, H. 1996. Generating hard satis ability
+    problems. Arti cial Intelligence 81:17{29.
+Shachter, R. D. 1986. Evaluating in uence diagrams. Operations Research
+    34(6):871{882.
+Umans, C. 1999. Personal communication.
+
+
+
+
+                                               paper.tex; 1/09/1999; 0:14; p.52
+

@@ -1,0 +1,597 @@
+\chapter{Proofs for Small-Clause Optimizations}
+\label{annex:p12-opt-small-clauses}
+
+\begin{annexitem}{annex:p12.opt-renaming}{thm:p12-opt-renaming}{Interpretation of a new predicate}
+\begin{proof}
+Fix a \(\Sigma\)-structure \(M\). Set
+\[
+ R^{M'}=\{\bar d\in D^{|\bar y|}:M,s[\bar y/\bar d]\models A\}.
+\]
+This is independent of the values of variables outside \(\bar y\):
+term evaluation depends only on its occurring variables, by term
+induction; atom truth therefore does too; each Boolean operation
+preserves this property; and a quantifier removes its bound variable
+from the relevant free-variable set by ranging through all its
+values. This proves the required free-variable dependence by
+formula induction. Thus the displayed set is well defined.
+For a nullary predicate \(D^0\) is the singleton empty tuple,
+so the definition includes that case.
+
+In this expansion \(R(\bar y)\) and \(A\) agree at all assignments.
+The defining sentence holds in every polarity case, and contextual
+equivalence proves the forward assertion.
+Conversely, a model of the renamed sentence has
+\(R(\bar y)\to A\) at all assignments in the positive case, or
+\(A\to R(\bar y)\) in the negative case, or equality of truth
+values in the zero case. Contextual replacement therefore takes
+truth of the renamed context to truth of \(F\). Its evaluation
+uses only \(\Sigma\), so it is true in the reduct.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.opt-counts}{thm:p12-opt-counts}{Every count recurrence}
+\begin{proof}
+An atom and its negation each produce one clause. Negation
+interchanges the positive and negative translations.
+Conjunction concatenates two clause lists and hence adds their
+lengths. Disjunction distributes each clause of the first list
+against each clause of the second, forming their Cartesian product;
+its length is the product. De Morgan's laws therefore give,
+respectively, \(q_1q_2\) and \(q_1+q_2\) on the negative side.
+Implication translates as \(\neg A_1\lor A_2\); its negation as
+\(A_1\land\neg A_2\). These give \(q_1p_2\) and \(p_1+q_2\).
+For a positive biconditional use
+\((\neg A_1\lor A_2)\land(A_1\lor\neg A_2)\), obtaining
+\(q_1p_2+p_1q_2\). For a negative one use
+\((A_1\lor A_2)\land(\neg A_1\lor\neg A_2)\), obtaining
+\(p_1p_2+q_1q_2\). Eliminating an existential quantifier replaces
+terms, and retaining a universal quantifier changes the prefix;
+neither changes a list length. Quantifier duality gives the same
+conclusion for \(q\). Structural induction proves the table.
+
+For the numerical bound, an atom satisfies \(1\le2^N\).
+A unary node inherits a child count. At a binary node put
+\(N=1+N_1+N_2\). Each product is bounded by
+\(2^{N_1+N_2}\), and a sum of two such products by \(2^N\).
+A sum of child counts is also at most \(2^N\), since
+\(2^{N_1}+2^{N_2}\le2^{N_1+N_2+1}\).
+These are all the table operations. Storing both values once at
+each node avoids repeated recursion. Addition of \(O(N)\)-bit
+integers costs \(O(N)\) bit operations and elementary multiplication
+costs \(O(N^2)\); over \(N\) nodes, \(O(N^3)\) is a sufficient
+polynomial upper bound. This bound concerns computing the count,
+not printing the potentially exponentially many clauses it counts.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.opt-coefficients}{thm:p12-opt-coefficients}{Coefficients and the saving inequality}
+\begin{proof}
+At the root take \(a=1,b=c=0\).
+Suppose the affine identity holds at a parent.
+At a conjunction with selected first child \(B\), its contribution is
+\[
+ a(p(B)+p_2)+bq(B)q_2+c
+   =a p(B)+(bq_2)q(B)+(ap_2+c).
+\]
+At a disjunction it is
+\(ap(B)p_2+b(q(B)+q_2)+c\), giving coefficients
+\((ap_2,b)\) and constant \(bq_2+c\).
+At an implication's first child it is
+\(aq(B)p_2+b(p(B)+q_2)+c\), giving
+\((b,ap_2)\); at its second child it is
+\(aq_1p(B)+b(p_1+q(B))+c\), giving \((aq_1,b)\).
+At a biconditional its contribution is
+\[
+ a[p(B)q_2+q(B)p_2]+b[p(B)p_2+q(B)q_2]+c,
+\]
+giving \((aq_2+bp_2,ap_2+bq_2)\).
+The other child in each symmetric connective gives the same formulas
+with indices interchanged. Negation exchanges the coefficients;
+quantifiers preserve them. Every new constant is nonnegative.
+Induction proves the affine formula.
+
+All counts are at least one. Starting at \((1,0)\), a nonzero
+coefficient remains positive through multiplication by a sibling
+count. Negation or an antecedent exchanges the zero/nonzero roles;
+a biconditional makes both coefficients positive. This proves
+the polarity assertions.
+Replacing the occurrence by an atom changes its affine contribution
+from \(ap+bq+c\) to \(a+b+c\).
+The additional definition costs \(p\), \(q\), or \(p+q\),
+respectively in the positive, negative or zero case. Therefore the
+three nonincrease conditions are \(ap\ge a+p\),
+\(bq\ge b+q\), and \(ap+bq\ge a+b+p+q\).
+Subtract and factor to obtain the displayed inequalities.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.opt-capped}{thm:p12-opt-capped}{Capped arithmetic and an explicit finite construction}
+\begin{proof}
+For nonnegative integers \(u,v\), direct cases give
+\[
+ \min(u+v,3)=\min(\min(u,3)+\min(v,3),3),
+\]
+\[
+ \min(uv,3)=\min(\min(u,3)\min(v,3),3).
+\]
+For the product, a zero factor gives zero on both sides. Otherwise
+both factors are positive; a factor at least three makes both
+capped products at least three, and factors below three are
+represented exactly. The sum identity follows because either
+summand at least three saturates both sums, or both are exact.
+Induction in the two tables proves that every stored value is the
+correct capped count or coefficient.
+
+In a single-sign test a product of nonnegative integers is at least
+one exactly when both are at least one. For the zero-sign test the
+two terms are nonnegative. Whether \((a-1)(p-1)\) is zero, one,
+or at least two is determined exactly by the capped positive
+inputs \(a,p\): a value one gives zero; two values two give one;
+otherwise two inputs at least two with one at least three give
+at least two. Thus capping these products at two preserves whether
+their sum reaches two. The negative-sign case is identical.
+The explicit threshold table follows by separating the cases that
+one input is one from the case both are at least two.
+
+Each node requires boundedly many operations and stores boundedly
+many values, proving the linear bound for one pass.
+A polynomial implementation uses the markers in
+Definition~\ref{def:p12-opt-schedule}. A failed test removes one marker.
+An accepted replacement also removes exactly the visited marker:
+its descendant markers move to the single copied subformula in the
+new definition. They are not present in the replaced occurrence,
+which is now a new atom. The new surrounding syntax has no markers,
+and binder renaming preserves the remaining markers. Consequently
+the number of unvisited markers decreases by one at every visit,
+so there are at most \(N\) visits.
+
+At an accepted step, the freshly recomputed coefficients are those
+of the current whole formula, including every earlier definition.
+The exact saving theorem therefore proves nonincrease for that
+whole formula. Its expansion and reduct maps compose with those
+of every previous step, proving satisfiability preservation for
+the finite sequence. Failed tests change no formula. Induction
+over the visits establishes both claimed invariants.
+
+Store each defining formula once, rather than recursively
+reinserting its meaning or expanding its biconditionals mid-traversal.
+There are at most \(N\) copied original subtrees, each with at most
+\(N\) nodes and at most \(N\) free-variable arguments per new
+name, giving a polynomial intermediate representation. Recomputing
+on those representations is consequently polynomial. No claim of
+termination is made for an instruction to rename new definitions
+indefinitely.
+
+Here is the complete, independent output construction asserted in
+the theorem. For each original nonliteral occurrence \(A\), let
+\(R_A\) have its free variables as arguments. In each definition
+replace a nonliteral child by its name and retain literal children.
+For a binary connective the clause conversion of
+\(R_A\leftrightarrow(B\circ C)\), where \(B,C\) are names or
+literals, has at most four clauses of at most three literals.
+Conjunction and disjunction need three; implication also needs
+three; biconditional needs four. For a negation, two suffice.
+A quantifier definition has, with the argument lists suppressed,
+the form \(R\leftrightarrow QxS\).
+For \(Q=\forall\) its clauses are
+\[
+ \neg R(Z)\lor S(Z,x),\qquad
+ R(Z)\lor\neg S(Z,f(Z));
+\]
+for \(Q=\exists\) they are
+\[
+ \neg R(Z)\lor S(Z,f(Z)),\qquad
+ R(Z)\lor\neg S(Z,x).
+\]
+Here \(S\) can have a sublist of the displayed arguments, and
+\(f\) is fresh for this definition. Any vacuous binder is simply
+removed. Each quantified child can be a literal, with the same
+substitution applied inside its terms. Names and witnesses for
+different occurrences are distinct. There are at most \(4N+1\)
+clauses, including the root assertion.
+
+Before introducing the witnesses, interpret every name as the
+relation defined by its original subformula. All shallow
+equivalences then hold simultaneously, by induction from children
+to parents. Conversely the equivalences determine these meanings
+by the same induction; the root assertion implies the original
+sentence. For the displayed quantified clauses, a model of
+\(R\leftrightarrow\forall xS\) chooses a counterexample when \(R\)
+is false and an arbitrary value when it is true; a model of
+\(R\leftrightarrow\exists xS\) chooses a witness when \(R\) is
+true and an arbitrary value when false. This gives the required
+total \(f\) for every tuple \(Z\). The two clauses imply the
+respective equivalence in the reduct by the same witness and
+counterexample reasoning. Finitely many distinct new symbols can
+be interpreted simultaneously.
+
+Each clause has at most a constant number of literal occurrences.
+A literal before substitution has at most \(O(N)\) symbols:
+it is either a name with at most \(N\) arguments or an original
+literal of size at most \(N\). A displayed witness term has at
+most \(N+1\) symbols and no previously introduced witness occurs
+inside it, because each shallow quantifier definition is processed
+separately. Replacing at most \(N\) occurrences therefore gives
+\(O(N^2)\) symbols per clause and \(O(N^3)\) overall.
+This deliberately explicit bound does not identify this construction
+with every historical renaming strategy.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.opt-sharing}{thm:p12-opt-sharing}{Instances of a common name}
+\begin{proof}
+Interpret \(R(\bar d)\) by the truth of \(A\) at \(\bar y=\bar d\),
+as in the single-name proof. The substitution lemma makes every
+\(R(\bar y)\sigma_i\) equivalent to \(A\sigma_i\).
+That lemma follows by induction: variable and function evaluation
+commute with assigning the substituted terms; atoms inherit term
+equality; Boolean operations preserve truth equality; and at a
+quantifier, prior renaming avoids capture so that assignment of
+its fresh bound variable commutes with the substitution.
+Thus the expansion satisfies all instances simultaneously.
+In a reduct, instantiate the retained definition at the term tuple
+\(\bar y\sigma_i\). The resulting directional implication is
+exactly the one needed at that occurrence. Replace the finitely
+many nonoverlapping occurrences successively using contextual
+monotonicity. Other occurrences retain their positions and polarities.
+Mixed signs use equivalence and cause no directional conflict.
+
+For syntactic matching, traverse the pattern and target together.
+At matching nonvariable symbols check symbol identity and arity,
+then recurse on corresponding children. A bound-variable position
+must have the same aligned binder identifier. At a substitutable
+free-variable occurrence, store the target subtree on its first
+visit. At a repeated occurrence, compare the current target subtree
+with that stored subtree, rejecting on any difference. Reject a
+candidate containing a bound variable that would escape its scope;
+under the stipulated capture-safe alignment this is the admissibility
+check. If traversal succeeds the collected assignments define the
+matching substitution by induction on the pattern; any matching
+substitution must pass every comparison, proving the converse.
+The target subtrees matched against distinct free-variable
+occurrences are disjoint because descent stops at those occurrences.
+Comparing a stored subtree to a repeated occurrence costs at most
+a constant times the size of that repeated target subtree.
+Their sum is at most the whole target size. All other nodes are
+visited a bounded number of times. With variable identifiers giving
+constant-time access to their recorded matches, the claimed linear
+bound follows. Matching modulo logical identities is a different
+problem and is not covered by this traversal.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.opt-standard-skolem}{thm:p12-opt-standard-skolem}{Arbitrary inner and outer occurrences}
+\begin{proof}
+For an inner step, fix any original structure \(M\).
+At every tuple of values of \(\operatorname{FV}(\exists xA)\)
+choose a witness for \(A\) if one exists, otherwise an arbitrary
+element of \(D\). This defines one total function and makes
+\(\exists xA\) and \(A[x/f(\bar y)]\) equivalent at every
+assignment. The other free variables of the context cannot affect
+the choice because they do not occur free in this subformula.
+This is valid even if a variable in \(\bar y\) is bound by an
+enclosing existential. Contextual equivalence proves expansion.
+The replacement implies the existential in every expansion,
+proving the reduct assertion.
+
+For the outer step, first construct a fully outer-Skolemized
+version of \(F\), temporarily using one distinct fresh function
+for every existential binder. Process them in order with every
+ancestor before its descendants. At each step all free variables
+of its existential subformula are among the universally bound
+ancestors: previously enclosing existentials have already been
+replaced by terms in those variables. Choose a witness at each
+tuple of all those universal variables whenever one exists,
+otherwise a fixed domain element. Extra unused universal
+parameters can be ignored by the chosen function.
+Exactly the inner witness proof just given, with these padded
+arguments, makes the step truth preserving in the selected
+expansion. Induction on the finite number of existential binders
+therefore constructs a same-domain expansion satisfying the
+fully transformed sentence whenever \(M\models F\).
+
+Call the function chosen for the designated occurrence \(g\).
+Its arguments are exactly that occurrence's originally enclosing
+universal variables. Ancestor existential substitutions may have
+changed the body in which its witnesses were chosen, but have
+introduced no other free variables into \(g\)'s argument list.
+Keep \(g\), and restore all other existential binders in reverse
+of the order just used. At a restoration of a binder \(\exists y\),
+the current instantiated body implies the restored existential
+body, with its former witness term as witness. The \(g\)-terms
+remain unchanged because they contain only universal-variable
+arguments, never the restored \(y\).
+Rectification ensures that no restored binder captures an
+argument. For any other previously processed witness term,
+reverse order restores descendants before ancestors, so that
+its substitution is exactly the one being reversed.
+Contextual monotonicity at these positive occurrences preserves
+truth at every restoration. The result is precisely \(F\) with
+only the designated outer step performed.
+Forgetting the other temporary functions gives the asserted
+expansion. Conversely \(A[x/g(\bar z)]\) implies \(\exists xA\)
+at every assignment in any expansion, so the single-step
+sentence implies \(F\) in its reduct.
+
+The distinction about local equivalence is real.
+On a two-element domain, \(\exists y\exists x(x\ne y)\)
+is true. An outer step at the inner binder uses a constant \(c\).
+The whole \(\exists y(c\ne y)\) remains true, but
+\(\exists x(x\ne y)\) is true for every \(y\), whereas
+\(c\ne y\) is false when \(y=c\).
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.opt-optimized-skolem}{thm:p12-opt-optimized-skolem}{The two witness cases}
+\begin{proof}
+Let \(M\models F\). For each tuple \(\bar d\) of values for \(\bar y\),
+if \(\exists\bar x(A\land B)\) is true choose a simultaneous
+witness tuple for \(A\land B\). If it is false choose a witness
+for \(A\), which exists by the premise
+\(F\models\forall\bar y\exists\bar x A\).
+Use its \(i\)-th coordinate as \(f_i^{M'}(\bar d)\).
+This defines total functions; all formulas are evaluated in \(M\)
+before interpreting the fresh symbols. The choices ensure
+\(\forall\bar y A\sigma\), and also ensure at every assignment
+that \(E\) implies \(B\sigma\). Since its occurrence is positive
+in NNF, contextual monotonicity gives \(F[\pi/B\sigma]\).
+This is the asserted expansion.
+
+Conversely take a model \(M'\) of the transformed sentence.
+At every tuple \(\bar d\), \(A\sigma\) holds. If \(B\sigma\)
+also holds, the tuple \((f_i^{M'}(\bar d))_{i=1}^k\) witnesses
+\(E\) in the reduct. Hence \(B\sigma\to E\) at all assignments,
+and contextual monotonicity proves \(F\).
+This direction uses no choice and no unproved inference about
+the truth of \(B\) where \(E\) was false.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.opt-selector}{thm:p12-opt-selector}{Empty and nonempty fibers}
+\begin{proof}
+For each parameter tuple \(\bar b\), define
+\[
+ S(\bar b)=\{\bar a\in D^k:M[\bar y/\bar b,\bar x/\bar a]\models A\}.
+\]
+Choose \(d_0\in D\). At a nonempty fiber choose
+\(\bar a_0(\bar b)\in S(\bar b)\), and set
+\[
+ h(\bar b,\bar w)=
+ \begin{cases}
+ \bar w,&\bar w\in S(\bar b),\\
+ \bar a_0(\bar b),&\bar w\notin S(\bar b),\ S(\bar b)\ne\varnothing,\\
+ (d_0,\ldots,d_0),&S(\bar b)=\varnothing.
+ \end{cases}
+\]
+Its coordinate projections interpret the fresh \(h_j\).
+On a nonempty fiber this is a retraction, so all its values satisfy
+\(A\) and it fixes every tuple that satisfies \(A\).
+Given a witness \(\bar a\) for \(A\land B\), take
+\(\bar v=\bar a\); then \(h(\bar b,\bar v)=\bar a\), preserving
+\(B\), and every \(\bar w\) gives \(A\).
+Other free variables of \(B\) are simply left at their original
+values. Thus the implication is uniform over all assignments,
+although its antecedent is false at an empty fiber.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.opt-strong-skolem}{thm:p12-opt-strong-skolem}{Two complete uniform constructions}
+\begin{proof}
+First note that \(\operatorname{FV}(A_i)\setminus\{\bar x\}\)
+is contained in \(Z_1\cup\cdots\cup Z_i\).
+The proof works more generally for disjoint ordered parameter blocks
+with this containment property, even if a block contains parameters
+unused by that conjunct. We prove this slightly more general uniform
+statement to justify the source's intermediate padded parameter lists.
+
+\emph{Selector-composition construction.}
+Induct on \(n\). For \(n=1\), at every parameter tuple with a
+witness choose a witness; elsewhere choose \((d_0,\ldots,d_0)\).
+The coordinates define \(f_j(Z_1)\), establishing the uniform
+implication. Suppose \(n>1\). Apply the selector construction
+to \(A_1\), with parameters \(Z_1\), obtaining the vector function
+\(h(Z_1,\bar v)\). Put
+\[
+ B_i=A_i\{\bar x\mapsto h(Z_1,\bar v)\}\quad(2\le i\le n).
+\]
+Use parameter blocks \(Z_1Z_2,Z_3,\ldots,Z_n\) for these \(n-1\)
+conjuncts. The containment condition holds: substitution only adds
+the variables in \(Z_1\) and the existential tuple \(\bar v\).
+This remains true when an \(A_i\) contains no variable from
+\(\bar x\), which is why exact equality of lexical free-variable
+sets is unnecessary.
+
+In the already expanded structure, the induction hypothesis supplies
+total functions \(g_1,\ldots,g_k\) for the residual existential
+\(\exists\bar v(B_2\land\cdots\land B_n)\), uniformly over
+all full parameter tuples. Define, for every tuple \(z\),
+\[
+ f_j(z)=h_j(z_1,g_1(z),\ldots,g_k(z)).
+\]
+Now fix a tuple \(z\) at which \(E\) holds. Its witness lies in
+the nonempty \(A_1\)-fiber. Retraction fixes that witness, so the
+residual existential holds at \(z\).
+The induction hypothesis yields, for every \(i\ge2\) and every
+replacement of its later parameter blocks by \(w_{i+1},\ldots,w_n\),
+the truth of \(B_i\) with \(\bar v\) interpreted by
+\(g(z_1,\ldots,z_i,w_{i+1},\ldots,w_n)\).
+After the definition of \(f\), this is precisely conjunct \(i\)
+of \(\Xi\). For conjunct \(1\), its nonempty fiber makes
+\(A_1(h(z_1,\bar v))\) true for \emph{every} \(\bar v\).
+In particular it is true for every value of
+\(g(z_1,w_2,\ldots,w_n)\). This proves the first conjunct of
+\(\Xi\). The construction was made once for the entire structure,
+not separately for assignments later selected by an enclosing
+quantifier. Finally discard the auxiliary \(h,g\) symbols, retaining
+the composed \(f\)'s. This completes the induction and the source's
+composition route with totality at empty fibers made explicit.
+
+\emph{Direct prefix-witness construction.}
+For a full parameter tuple \(z=(z_1,\ldots,z_n)\), let
+\[
+ S_i(z_1,\ldots,z_i)=
+ \{\bar a:M[\bar x/\bar a,Z_{\le i}/z_{\le i}]
+                     \models A_1\land\cdots\land A_i\},
+\]
+and let \(S_0=D^k\). Evaluation is well defined because the first
+\(i\) conjuncts use only the displayed parameters. For fixed \(z\),
+these sets are nested decreasing as \(i\) increases.
+Let \(j(z)\) be the largest \(i\in\{0,\ldots,n\}\) with
+\(S_i(z_{\le i})\ne\varnothing\).
+Choose \(f(z)\in S_{j(z)}(z_{\le j(z)})\).
+These choices define total functions coordinatewise.
+
+If \(E\) is true at \(z\), each \(S_i(z_{\le i})\) is nonempty.
+Fix \(i\) and replace the later blocks of \(z\) arbitrarily to
+obtain \(z'\). The \(i\)-th prefix set is unchanged and nonempty,
+so \(j(z')\ge i\). The chosen \(f(z')\) lies in
+\(S_{j(z')}(z'_{\le j(z')})\subseteq S_i(z_{\le i})\).
+It therefore satisfies \(A_i\), which is the universal assertion
+in conjunct \(i\) of \(\Xi\). This holds for every \(i\) and
+every later tuple, proving the same uniform implication directly.
+
+\emph{Reduct and surrounding context.}
+In any expansion satisfying \(\Xi\) at \(z\), instantiate all its
+later universal blocks by the corresponding actual blocks of \(z\).
+Each conjunct is then true for the single tuple \(f(z)\);
+that tuple witnesses \(E\). This direction does not use either
+witness construction. At an arbitrary positive occurrence in an NNF
+sentence, the uniform forward implication preserves truth in the
+chosen expansion; the uniform reverse implication preserves truth
+in the reduct. Contextual monotonicity includes every surrounding
+universal and existential binder, so there is no restriction to
+an outermost existential or to finite domains.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.opt-equality}{thm:p12-opt-equality}{Equality, capture avoidance and cardinality}
+\begin{proof}
+Fix \(M,s\), and let \(a=t^{M,s}\).
+Since \(x\) does not occur in \(t\), its value is unchanged when
+the assignment to \(x\) changes. Thus
+\(M,s[x/b]\models x=t\) exactly when \(b=a\).
+The existential formula therefore holds exactly when
+\(M,s[x/a]\models A\), and the universal implication has the
+same condition: all other \(b\)'s have a false antecedent.
+Capture-free substitution gives
+\[
+ M,s[x/a]\models A\quad\Longleftrightarrow\quad M,s\models A[x/t].
+\]
+For completeness, this substitution fact follows from term induction
+for atoms and from preservation of truth by each Boolean operation.
+At a binder \(\forall z\) or \(\exists z\), first choose \(z\)
+different from \(x\) and all variables of \(t\); assignment to
+\(z\) then commutes with changing \(x\) to \(a\).
+Apply the induction hypothesis for each value of \(z\), and use
+respectively all values or one witnessing value. A binder for \(x\)
+itself protects its occurrences and is unchanged. This proves the
+substitution fact in every case.
+
+Identity makes \(t=t\) true. If \(y\) is absent from \(t\), put
+\(a=t^{M,s}\); choosing \(y=a\) refutes \(\forall y(t\ne y)\)
+and witnesses \(\exists y(t=y)\).
+On a singleton domain every \(y\) equals \(a\); on a larger domain
+choose \(b\ne a\), which refutes the universal equality and
+witnesses the existential inequality. These prove all six
+cardinality cases. Contextual equivalence gives replacement on
+any class on which the same conditions hold on both sides.
+
+For termination, equality substitution removes its quantified
+binder and inserts only terms, hence reduces the total number
+of quantifiers. Reflexive and cardinality reductions cannot
+increase that number and decrease size if they preserve it.
+The standard Boolean simplifications do not increase quantifier
+count and decrease size when it is unchanged.
+The lexicographically ordered pair (quantifier count, formula size)
+therefore decreases at every such step and is well founded on
+nonnegative integers. Term size alone would not justify termination
+of the substitution step.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.opt-atom-expansion}{thm:p12-opt-atom-expansion}{Retained definitions and guards}
+\begin{proof}
+In a model of \(\Theta\), universal instantiation of its implied
+definition at \(\sigma\) gives equality of the truth values of
+\(P(\bar s)\) and \(A\sigma\) at every assignment.
+The substitution induction in the preceding proofs licenses that
+instantiation. Contextual equivalence proves replacement for any
+polarity. A globally established guard gives the same equivalence.
+For the guarded-context interface, fix the outside assignment.
+If the guard is false, the guarded implication is true on both
+sides. If it is true, the conditional definition supplies the
+needed equivalence throughout the occurrence's context, provided
+no intervening binder changes a free variable of the guard.
+This last scope condition is required when the guard is outside
+that binder; alternatively establish its universal closure as in
+the first interface. Applying contextual equivalence then proves
+the assertion in the true-guard case.
+
+With one \(P\)-free definition body, substitution inserts no
+occurrence of \(P\). Each expansion deletes one targeted occurrence,
+so their finite count strictly decreases.
+For elimination, interpret \(P(\bar d)\) in a reduct by the truth
+of \(A\) at \(\bar x=\bar d\). The distinct head variables let
+every tuple have that interpretation, and \(P\)-freeness means the
+truth of \(A\) was already defined in the reduct. The resulting
+expansion satisfies the defining equivalence, hence every other
+formula exactly when its expanded version holds.
+Conversely the defining equivalence in any original model forces
+this same interpretation of \(P\) for every tuple. This proves
+existence and uniqueness of the expansion and the claimed set of
+reducts. Retaining a recursively self-referential definition does
+not supply this uniqueness argument.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.opt-bdd}{thm:p12-opt-bdd}{Splitting, canonical reduction and clauses}
+\begin{proof}
+Fix a valuation. If \(A\) is true, replacement of its designated
+occurrence by \(\top\) leaves the value of \(F\) unchanged;
+the first implication on the right therefore has value \(F\),
+and the second has false antecedent and is true.
+If \(A\) is false the roles reverse, with replacement by \(\bot\).
+These two exhaustive cases prove the splitting identity even
+when other occurrences of \(A\) remain in \(F\).
+
+For complete splitting choose \(v_1\), substitute its value at
+all its occurrences, and recurse on the remaining ordered variables.
+At each recursion the number of available variables decreases,
+ending in a constant after at most \(m\) decisions.
+Its full tree has at most \(1+2+\cdots+2^m=2^{m+1}-1\)
+nodes. The truth computed by the tree follows the substituted
+valuation and equals the formula's truth.
+Merging identical nodes changes no successor or decision value.
+If both successors agree, testing that variable changes no value,
+so deletion is also sound. Each reduction decreases the number
+of vertices, making repeated reduction terminate.
+Discarding unreachable vertices preserves every path from the root
+and hence preserves the represented function. It also ensures that
+the graph being compared contains no unrelated components.
+
+For uniqueness induct on the number of available variables.
+A constant function has only its terminal in a reduced graph:
+by the induction applied to each root child, both children of
+any node representing a constant would be that terminal and the
+node would have been removed.
+For a nonconstant function \(f\), its root variable must be the
+least variable on which \(f\) actually depends. Indeed a later
+root would skip a dependency; an earlier root with no dependency
+would have equal restricted functions on its two branches.
+By induction their reduced child graphs would be identical,
+forcing deletion of that root. At the required least variable,
+the low and high functions are the uniquely determined restrictions
+of \(f\), and induction determines both child graphs. Sharing
+identical triples is forced by reduction. Thus every node and
+edge are determined up to the stated isomorphism.
+
+A valuation reaches \(0\) exactly when its branch choices extend
+one of the root-to-\(0\) paths. The clause associated with that
+path is false exactly for those extensions: each of its literals
+negates the branch choice. Hence all path clauses hold exactly
+when no such path is followed, that is, when the diagram evaluates
+to \(1\). A \(0\)-terminal at the root contributes the empty
+clause; a \(1\)-terminal with no false path contributes the empty
+conjunction. These cover both degenerate functions.
+\end{proof}
+\end{annexitem}

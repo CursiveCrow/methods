@@ -1,0 +1,421 @@
+\begin{annexitem}{annex:p05-rep-bounded-decisions}{thm:p05-rep-bounded-decisions}{Finite arithmetic and bounded decisions without induction}
+\begin{proof}
+We construct finite \(\mathsf Q\) derivations by inductions in the
+metatheory. None is an application of an induction axiom in \(\mathsf Q\).
+For standard \(a,b\), unroll \(a+0=a\) and
+\(a+Sb=S(a+b)\) exactly \(b\) times; similarly unroll
+\(a\times0=0\) and \(a\times Sb=(a\times b)+a\).
+These give proofs evaluating each operation on numerals. Recursing over
+the finite syntax of a closed term gives a proof that it equals its value
+numeral. Successor injectivity reduces equality of distinct numerals to
+\(S^r0=0\) for some \(r>0\), contradicted by \(Sx\ne0\).
+Equality reflexivity handles equal numerals, and \(\bottom\) is refutable.
+
+For the source order \(u\leq\bar n\),
+\cref{lem:q-bounded-cases} gives the finite-case implication. Conversely,
+each \(\bar j\leq\bar n\), \(j\leq n\), has the explicit witness
+\(\overline{n-j}\) in \(z+\bar j=\bar n\), justified by the foregoing
+evaluation. Equality substitution and disjunction elimination therefore
+give both finite-quantifier equivalences for \(\leq\), for an arbitrary
+formula matrix, not merely a bounded one.
+
+The book's different orientation for \(<\) must be checked separately.
+For each fixed \(n\), \(\mathsf Q\) proves
+\[
+ \forall x\forall z\bigl(x+Sz=\bar n\to
+              \bigvee_{j<n}x=\bar j\bigr).
+\]
+For \(n=0\), \(x+Sz=S(x+z)\ne0\). For the passage from \(n\) to
+\(n+1\), injectivity turns \(x+Sz=S\bar n\) into \(x+z=\bar n\).
+Classical logic and the predecessor axiom give \(z=0\) or
+\(z=Sw\). In the first case \(x=\bar n\). In the second, use the
+already constructed proof for \(x+Sw=\bar n\). This is a finite
+proof-construction recursion on the external \(n\). Conversely, for
+each \(j<n\), the numeral witness \(\overline{n-j-1}\) proves
+\(\bar j+S\overline{n-j-1}=\bar n\).
+This proves the finite-quantifier equivalences for \(<\), including its
+empty zero range, without asserting that its comparison is universally
+\(\mathsf Q\)-equivalent to the other order abbreviation.
+
+Finally perform structural recursion on a closed marked-bounded formula.
+The atomic case was proved above; Boolean connectives use their classical
+truth tables. In a bounded-quantifier case its closed bounding term is
+first replaced by its numeral value. Replace the quantifier by the proved
+finite conjunction or disjunction, substitute each numeral in the matrix,
+and apply the already constructed proofs for those smaller formulas.
+This also works when later bounds depend on earlier bound variables:
+substitute the earlier fixed numeral before evaluating the later term.
+Every branch is finite. It supplies the positive or negative derivation
+according to standard truth, proving the assertion.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p05-rep-trace}{thm:p05-rep-trace}{Compilation, beta packing, and exact trace checking}
+\begin{proof}
+We first give the promised program construction, including its finite
+termination argument. A jump without changing registers is a zero-test
+on a dedicated permanently zero register with identical targets.
+A zeroing subroutine repeatedly tests/decrements its target register,
+returning when it is zero. To copy a source \(A\) into a distinct target
+\(B\) while preserving \(A\), first zero \(B\) and a fresh temporary
+\(U\); repeatedly decrement \(A\), incrementing \(B,U\) each time;
+then repeatedly decrement \(U\), incrementing \(A\) each time.
+For initial standard value \(a\), the first loop after \(j\leq a\)
+iterations has values \((A,B,U)=(a-j,j,j)\); the restoring loop after
+\(j\leq a\) iterations has \((A,B,U)=(j,a,a-j)\).
+Thus the loops halt after exactly \(a\) iterations apiece and return
+\((a,a,0)\). Zeroing likewise terminates after the original target
+value iterations. These are external finite invariants, not formal
+\(\mathsf Q\) induction claims.
+
+Construct subprograms by recursion on the finite description, with
+specified input, output, scratch, and return-label registers. All input
+registers are preserved, and scratch registers are fresh and cleared on
+entry. For zero, clear the output; for a projection, copy the appropriate
+input; for successor, copy its input then increment the output.
+For composition \(g(h_1(\vec x),\ldots,h_m(\vec x))\), give each
+\(h_j\) fresh input copies, scratch registers, and an output register.
+Run these subprograms in order, copy their outputs into the dedicated
+inputs of \(g\), and run \(g\). Relabel instruction addresses in each
+copy and replace its halt by the next fixed return address. Inputs
+\(\vec x\) are untouched. The already proved termination and correctness
+of the finitely many subprograms prove termination and the composition
+value. Nullary descriptions and empty argument lists use the same rule
+with no input-copy operations.
+
+For primitive recursion, preserve \((\vec x,n)\), copy \(n\) to a
+counter \(C\), zero an index \(I\), and run \(g\) into an accumulator
+\(A\). At the loop head test \(C\). If zero, copy \(A\) into the final
+output and return. Otherwise decrement \(C\), give \(h\) fresh copies
+of \((\vec x,I,A)\), run it, copy its output back to \(A\), increment
+\(I\), and jump to the loop head. After \(j\leq n\) completed
+iterations the invariant is
+\(C=n-j, I=j, A=f_d(\vec x,j)\); the base is the defining equation
+for \(g\), and the successor is the defining equation for \(h\).
+Each invocation of \(h\) terminates by the description recursion.
+There are exactly \(n\) iterations, followed by a zero exit, so the
+output is \(f_d(\vec x,n)\). Fresh disjoint register blocks prevent
+interference with \(C,I,A,\vec x\). There are only finitely many nested
+descriptions, hence finitely many registers and instructions. These
+recipes are effective finite text transformations. Put input registers
+first and relabel the output as \(R_k\); unused registers start zero.
+This proves the promised compilation for every description, not just a
+termination assertion about an unspecified machine.
+
+Next recall the exact sequence existence used to encode a standard run.
+The numerical pairing satisfies its atomic graph \(\mathsf P\), and
+\(\mathsf B(w,i,v)\) extracts the remainder of the uniquely decoded
+first component by \(1+(i+1)m\), as proved in
+\cref{lem:pairing-graph,lem:goedel-beta}. Given finitely many desired
+entries, set the unspecified entries to zero up to the greatest index.
+Choose \(N\) larger than that length and all entries, and \(m=N!\).
+The moduli \(1+(i+1)m\) are pairwise coprime: a common prime divides
+\((j-i)m\), not \(m\), hence \(j-i\); but \(0<j-i<N\) then makes it
+a divisor of \(N!\), a contradiction.
+For completeness, the finite Chinese-remainder step here is constructive:
+for coprime \(a,b\), the Euclidean division algorithm terminates with gcd
+\(1\); back-substitution gives integers \(u,v\) with \(ua+vb=1\).
+Given residues \(r\pmod a,t\pmod b\), choose the nonnegative residue
+\(h\) of \(u(t-r)\pmod b\). Then \(r+ah\) realizes both residues.
+Its nonnegative residue modulo \(ab\) is a natural simultaneous
+solution. Iterating this combination over the finite coprime list gives
+the required \(t\), with all desired entries smaller than their moduli.
+Pair \((t,m)\) to obtain \(w\). Euclidean division gives exactly the
+desired beta entries, each at most \(w\). This is an argument about
+standard finite sequences, not an internal assertion that all
+nonstandard sequence requests have solutions in \(\mathsf Q\).
+
+The two tagged extractors pair their indices, with the bound
+\(\operatorname{pair}_{\N}(a,b)<(a+b+1)^2\), as proved in
+\cref{lem:p04-tagged-history-extraction}. The arity of each family is
+fixed; distinct positions give distinct paired indices. Therefore the
+preceding finite packing realizes simultaneously the header, label and
+register entries of any finite run in one \(s\). All assigned values,
+including \(\ell\), the input and output, are at most \(s\).
+The witnesses for \(\operatorname{Le}(y,s)\) can be chosen as \(s-y\),
+which is also at most \(s\). No paired-index bound by \(s\) is assumed:
+the extractor has its separate polynomial index bounds.
+
+If the standard program run has output \(b\), pack this finite assignment.
+Each transition satisfies its displayed increment or decrement clause;
+unchanged registers satisfy their equality clauses; its initial and final
+rows satisfy the other conjuncts. Thus \(C_d(\vec a,b,s)\) holds.
+Conversely, suppose \(C_d(\vec a,b,s)\) holds in \(\mathcal N\).
+Uniqueness of tagged beta extraction identifies all overlapping row
+entries. At time zero they are exactly the input configuration. Induct
+externally on \(i<\ell\). Its stored label is a valid instruction;
+the finite step disjunction selects that instruction and gives its actual
+deterministic successor. Thus the stored next row is the actual next
+configuration. There is no step clause for a halt instruction, so no
+earlier halt can be continued. The final stored halt and output give the
+actual output \(b\), which by compilation is \(f_d(\vec a)\).
+The zero-step case is also covered: it is accepted precisely if the fixed
+program already halts with the specified initial output. There is no
+hidden positive-length assumption.
+
+All quantifiers in \(C_d\) are marked bounded, and the extractor
+expansions are bounded; all other clauses are finite Boolean combinations
+of equations. Fresh renaming avoids variable capture. To evaluate this
+one fixed formula numerically, evaluate its terms primitively recursively,
+use equality and Boolean tests, and evaluate each bounded existential by
+a bounded sum followed by a positivity test, each bounded universal by a
+bounded product. Substitute the primitively recursive value of the bound
+into that recursion. Empty ranges give the correct Boolean values.
+Structural recursion on the fixed formula proves its truth characteristic
+primitive recursive. Finally existential elimination on
+\(\exists w\leq s(w+y=s)\) immediately gives
+\(\exists w(w+y=s)\), which is the source \(y\leq s\), already in
+\(\mathsf Q\). This proves all assertions.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p05-rep-strong-graph}{thm:p05-rep-strong-graph}{The least-certificate guard excludes nonstandard outputs}
+\begin{proof}
+Fix standard \(\vec a\) and \(m=f_d(\vec a)\). By standard trace
+adequacy at least one certificate exists. Let \(r\) be the least
+\emph{standard} number coding any successful trace for that input and
+any output. Every successful standard trace has output \(m\), and its
+output is at most its certificate. Thus \(m\leq r\),
+\(C_d(\overline{\vec a},\bar m,\bar r)\) is true, and for every
+standard \(t<r\),
+\(\exists z\leq\bar t\,C_d(\overline{\vec a},z,\bar t)\) is false.
+These are closed bounded facts. The bounded-decisions lemma proves their
+truth values in \(\mathsf Q\). Finite aggregation over \(t\leq\bar r\)
+then proves the minimum guard at \(\bar r\), using its equality
+disjunct for \(t=\bar r\). Hence
+\(\mathsf Q\derives\delta_d(\overline{\vec a},\bar m,\bar r)\),
+and existential introduction proves \(\gamma_d\) at \(\bar m\).
+
+We also need finite-certificate decisions with an unrestricted output.
+For each standard \(t\leq r\), the logical consequence
+\(C_d(\overline{\vec a},y,\bar t)\to y\leq\bar t\) reduces \(y\)
+to its finitely many numeral cases. In each such case bounded decisions
+refute the certificate when \(t<r\). For \(t=r\), they refute every
+output other than \(\bar m\). Therefore \(\mathsf Q\) proves
+\[
+ \forall y\neg C_d(\overline{\vec a},y,\bar t)\ (t<r),\qquad
+ \forall y(C_d(\overline{\vec a},y,\bar r)\to y=\bar m).
+\]
+These are actual finite derivations obtained by the bound on \(y\), not
+an inference from all numeral instances to a universal statement.
+
+Now argue in \(\mathsf Q\) from
+\(\delta_d(\overline{\vec a},y,s)\), with arbitrary \(y,s\).
+The fixed-standard comparison \cref{lem:q-dichotomy} gives
+\(s\leq\bar r\lor\bar r\leq s\). In the first case finite cases
+for \(s\) reduce it to \(\bar0,\ldots,\bar r\). The displayed
+refutations leave only \(s=\bar r\), and then give \(y=\bar m\).
+In the second case the premise is exactly
+\(\exists u\,(u+\bar r=s)\), because the source defines
+\(\bar r\leq s\) by that left-witness equation. Here is the complete
+guard-instantiation derivation, including the relevant abbreviation
+expansions. Put
+\[
+ J(t)\defeq\exists z\bigl((\exists v\,(v+z=t))\land
+                                  C_d(\overline{\vec a},z,t)\bigr).
+\]
+Thus \(J(t)\) is precisely the expansion of
+\(\exists z\leq t\,C_d(\overline{\vec a},z,t)\), not a version in
+which the membership comparison has been replaced by
+\(\operatorname{Le}(z,t)\). Fresh variables in each expansion avoid
+capture. Conjunction elimination from the assumed \(\delta_d\) gives
+\[
+ \forall t\bigl((\exists u\,(u+t=s))\to(t=s\lor\neg J(t))\bigr).
+\]
+Universal elimination at the closed term \(\bar r\) gives
+\[
+ (\exists u\,(u+\bar r=s))\to(\bar r=s\lor\neg J(\bar r)).
+\]
+Implication elimination with the \emph{exact} second-case premise gives
+\(\bar r=s\lor\neg J(\bar r)\). These three steps are first-order
+logical derivations valid already over the axioms of \(\mathsf Q\);
+they require no equation about arbitrary addition and do not require
+\(\operatorname{Le}(\bar r,s)\).
+For hierarchy bookkeeping, these expanded displays exhibit meaning and
+logical inference, not a claimed bounded raw-language expansion.
+\Cref{def:language-arithmetic} explicitly defines marked
+\(\forall t\leq s\) by this implication, and declares such
+\(\leq\)-marked quantifiers counted as bounded exactly like its
+\(<\)-marked quantifiers. The following syntactic-hierarchy definition
+generates bounded formulas from atomic formulas, Boolean connectives and
+marked bounded quantifiers, and treats marked duality before eliminable
+expansion. Thus the original displayed \(\delta_d\) is a bounded
+matrix and \(\exists s\delta_d\) a literal existential-prefix formula
+\emph{in that presentation}. The hidden unbounded comparison witnesses
+in the full \(\Lang_A\) expansion have not been bounded by a
+\(\mathsf Q\) equivalence. No such equivalence is used or needed here.
+
+To eliminate its second disjunct, \(m\leq r\) is a relation between
+fixed standard numbers. The already constructed finite addition proof is
+\[
+ \mathsf Q\derives
+       \overline{r-m}+\bar m=\bar r.
+\]
+Existential introduction on its left witness gives
+\(\exists v(v+\bar m=\bar r)\). Conjoin this with the previously
+proved \(C_d(\overline{\vec a},\bar m,\bar r)\), then existentially
+introduce \(z\) with witness \(\bar m\), obtaining \(J(\bar r)\).
+Disjunction elimination now contradicts the \(\neg J(\bar r)\)
+branch and leaves \(\bar r=s\). Equality symmetry gives \(s=\bar r\);
+substitute it into \(C_d(\overline{\vec a},y,s)\) and use the proved
+fixed-certificate universal implication to obtain \(y=\bar m\).
+In particular the argument never infers a bounded witness from
+\(\exists u(u+\bar r=s)\), never assumes \(0+s=s\), and never switches
+to the different \(<\) comparison. The separate
+\(\operatorname{Le}(y,s)\) conjunct in a certificate is used only in
+the first, finite-certificate argument, where forgetting its witness bound
+logically gives the source \(y\leq s\).
+Both cases discharge to
+\(\forall y\forall s(\delta_d(\overline{\vec a},y,s)\to y=\bar m)\).
+Existential elimination gives the forward graph implication. The reverse
+implication follows from the proved graph at \(\bar m\) by equality
+substitution. Universal generalization on \(y\) proves the requested
+biconditional.
+
+In \(\mathcal N\), the minimum certificate and correct output satisfy
+the graph, and any satisfying graph has a successful trace, whose output
+is correct. Thus standard-model graph accuracy follows too. The only
+comparison involving an arbitrary certificate used a fixed numeral
+\(\bar r\). We used neither general order trichotomy nor induction on a
+possibly nonstandard run nor universal existence of an internal minimum.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p05-rep-numeralwise-relations}{thm:p05-rep-numeralwise-relations}{Characteristic graphs and bounded aggregates}
+\begin{proof}
+For any standard tuple, its characteristic value is either \(1\) or
+\(0\). The strong-graph theorem gives
+\(\forall y(\gamma_{d_R}(\overline{\vec a},y)\leftrightarrow y=\bar1)\)
+in the first case and the corresponding biconditional with \(0\) in
+the second. Specialize to \(y=\bar1\); reflexivity proves the positive
+instance, and \(S0\ne0\) proves the negative instance. The literal
+existential prefix and standard-model accuracy follow from the selected
+definition and graph theorem. For a fixed finite bound, use the
+\(\leq\)-finite-quantifier equivalence proved in the first annex item
+with the actual matrix \(\rho_R\) or its negation. This argument is
+pure finite case analysis and imposes no complexity restriction on that
+matrix.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p05-rep-certified-proof}{thm:p05-rep-certified-proof}{Why enumeration certificates make proof checking primitive recursive}
+\begin{proof}
+We spell out the link to the governing checker rather than deciding
+membership in the c.e. axiom set. The positive-cons coding
+\(C(a,b)=1+\operatorname{pair}_{\N}(a,b)\) has components strictly
+smaller than its positive code; at zero both projections default to zero.
+Iterating the tail at most the initial code reaches the empty list.
+Triangular pairing, bounded searches for its inverse, tail iteration,
+length, entries, concatenation and filters are primitive recursive, as
+explicitly constructed in \cref{thm:arithmetization-syntax}.
+Course-of-values tables on child codes similarly compute type, free
+variable, numeral and substitution tests; wrong tags, wrong arities,
+wrong child types and zero input trees are rejected, not silently
+interpreted as formulas.
+
+For a candidate \(N_{15}(R)\), iterate over the finite row list. Each
+row has exactly five fields. Check the rule tag against its finite
+twenty-rule table, formula types, parameter types, premise arity and
+earlier-row references. Bounded sums count parents to ensure a tree with
+exactly one parent for each nonroot and none for the last row. Store each
+row's computed open-assumption list in the accumulating table. Each
+update concatenates child lists and performs the rule's specified
+discharge filters and nonvacuity tests. Universal introduction checks
+absence from free variables of all remaining assumptions; existential
+elimination uses the actual all-occurrence condition in this calculus.
+Equality elimination and quantifier eliminations use the already computed
+capture-avoiding substitution; alpha conversion is allowed only by its
+explicit alpha rule. These are primitive recursive updates iterated for
+the primitive recursive row length. Numerical sizes of intermediate
+lists need not have a polynomial bound: primitive recursion on the
+iteration counter already constructs them.
+
+For \(N_{16}(d,W)\), require a valid derivation with sentence root and
+the specified conclusion code, and require the length of \(W\) to equal
+the computed root open-list length. At each open occurrence with formula
+code \(a\), evaluate the fixed bounded formula
+\(\mathsf{Comp}(\overline{e_T},\bar a,\bar s)\) for its supplied
+history \(s\). Its numerical truth characteristic is primitive recursive
+by structural recursion on this fixed formula, using term evaluation,
+Boolean tests, bounded sums and products as above. It is not a uniform
+truth predicate for arbitrary arithmetic formulas. The finite loop over
+open leaves is therefore primitive recursive. Wrong outer tags,
+malformed records, nonsentence roots or leaves, mismatching conclusions,
+wrong witness lengths, or a failed history check return zero. A closed
+logical derivation requires the empty witness list and makes no membership
+call. Together these rules give a finite primitive recursive description
+\(d_T\) of the complete Boolean checker, even if membership in \(T\)
+is undecidable. The finite-axiom direct-check convention is not substituted
+for it halfway through an argument.
+
+The adequacy proof in \cref{thm:arithmetization-syntax} applies unchanged.
+For clarity, its two directions use external induction over the finite
+postorder rows to identify the checked rule tree and its exact remaining
+open occurrences. A successful axiom history means that
+\(\varphi_{e_T}(a)\) is defined by \cref{thm:bounded-verification}, hence
+that leaf is a given axiom. The extracted tree is a genuine derivation
+from \(T\). Conversely take such a finite derivation, put its nodes in
+postorder and encode its actual rule parameters and discharge markers.
+For each of its finitely many open axiom occurrences, membership in the
+domain of \(e_T\) supplies an accepting history by the other direction
+of bounded verification. Their finite ordered list supplies \(W\);
+none is required for discharged assumptions. All tests then pass.
+
+Apply the characteristic-graph corollary to this particular \(d_T\).
+It yields the literal formula \(\exists s\kappa_T(p,x,s)\), its
+standard-model accuracy and every positive and negative numeral
+instance. Combine graph accuracy with the preceding adequacy directions
+to obtain the theoremhood equivalence. The finite aggregate of negative
+instances follows from the proved finite-case equivalence for a fixed
+\(\bar n\), with this \(\Sigma^0_1\) matrix. Consistency and soundness
+have not entered any step. Finally, this selection supplies no
+\(\mathsf Q\) equivalence to some other formula solely because the
+other formula has the same numeral instances.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p05-rep-diagonal-graph}{thm:p05-rep-diagonal-graph}{Total syntax operations, defaults, and strong diagonal representation}
+\begin{proof}
+The governing constructor codes have proper children smaller than their
+parent. Their primitive recursive type and variable tests were proved by
+an accumulating course-of-values table in
+\cref{thm:arithmetization-syntax}. The numeral code \(\nu(n)\) is
+primitive recursion on \(n\). Numeral substitution traverses proper
+children, replaces exactly the designated variable occurrences, leaves
+other variables and constants unchanged, and commutes with function,
+equality and Boolean constructors. At a binder for the designated
+variable it leaves the entire subtree untouched; at any other binder it
+recurses on the matrix. The inserted numeral has no variables, so no
+fresh-variable renaming is needed and no capture is possible. An
+accumulating child-code table computes this operation primitively
+recursively even though the resulting numeral and formula codes can be
+larger than the original code.
+
+For arbitrary term substitution used by the proof checker, the separate
+bounded stack traversal in the same coding theorem handles the fresh
+index case: take the least index absent from the matrix, replacement
+term and designated indices, with bound one above their largest index.
+The renaming pass stops at a rebinding of that variable and introduces a
+fresh variable absent from the entire matrix, so it needs no further
+renaming. The supplied bound \(20(n+1)^2\) on stack updates, where
+\(n\) is the original node count, accounts for the main traversal and
+its at most \(n\) renaming passes of at most \(n\) nodes. This is a
+bounded primitive recursive loop, not an unbounded search. The type test
+precedes it and malformed inputs have the declared zero default.
+
+Apply these functions to the input code \(n\), test formulahood and that
+the free-variable list is contained in \(\{0\}\), and return its numeral
+substitution with \(\nu(n)\) if both tests pass, the fixed code
+\(\tau=\ulcorner0=0\urcorner\) otherwise.
+Primitive recursive case selection and composition give a fixed
+description of this total \(\mathsf{diag}\), including every invalid-code
+case. For negation, the same formula type test followed by the single
+constructor \(N_7\), or the constant \(N_7(\tau)\) default, gives a primitive recursive
+description. Apply the strong-graph theorem separately to each fixed
+description. The resulting literal existential-prefix diagonal formula
+has a bounded matrix, existence and unrestricted-output uniqueness at
+each standard numeral input, exactly as stated. If \(n\) is invalid,
+the diagonal biconditional has output \(\bar\tau\), not an unproved partiality exception.
+\end{proof}
+\end{annexitem}
+

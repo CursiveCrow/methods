@@ -1,0 +1,388 @@
+%% Elementary categorical definitions and complete proof-annex statements.
+
+\subsection{Categories, functors, and natural transformations}
+\label{sec:p10-categorical-toolkit}
+
+\begin{hbconvention}{def:p10-categorical-size}{Size conventions for categorical constructions}
+The fixed universe \(\mathcal U\) of small sets is transitive,
+has \(\mathbb N\in\mathcal U\), and is closed under pairing, powersets,
+and unions of small-indexed families:
+\[
+ \begin{gathered}
+ a\in\mathcal U\ \Longrightarrow\ a\subseteq\mathcal U,\qquad
+ a,b\in\mathcal U\ \Longrightarrow\ \{a,b\}\in\mathcal U,\\
+ a\in\mathcal U\ \Longrightarrow\ \mathcal P(a)\in\mathcal U,\\
+ I\in\mathcal U,\quad A_i\in\mathcal U\ (i\in I)
+       \ \Longrightarrow\ \bigcup_{i\in I}A_i\in\mathcal U .
+ \end{gathered}
+\]
+These closures also keep subsets, function sets, quotients, and
+small-indexed products within \(\mathcal U\).
+The ambient collection of all sets is a permitted default:
+in that reading small means set-sized, with the ordinary
+set/class distinction, and the closures are ordinary set-theoretic
+properties.  If a set-sized \(\mathcal U\) is used for relativization,
+it is required to be a Grothendieck universe with the stated
+closures.  The existence of such a set universe, or a larger
+containing one, is an additional size hypothesis when invoked;
+no universe-existence assertion is part of the categorical proofs.
+
+A category is small when its object and arrow sets are small.
+A diagram is small when its indexing category is small; its
+values may be objects of a large category.
+Families indexed by a large category are handled in the containing
+ambient framework.  Statements about class-sized natural
+transformations use their displayed component families and
+parametrizations; they do not assert a set of all such families.
+A small set of parameters need not make every entire component
+family a small object.
+\end{hbconvention}
+
+\begin{hbdefinition}{def:p10-category}{Category, functor, and natural transformation}
+A category \(\mathcal C\) consists of objects, arrows with specified
+domains and codomains, an identity \(1_A:A\to A\) for each object,
+and a composite \(g\circ f:A\to C\) whenever \(f:A\to B\) and
+\(g:B\to C\).  For composable arrows,
+\[
+ h\circ(g\circ f)=(h\circ g)\circ f,\qquad
+ 1_B\circ f=f=f\circ1_A.
+\]
+Write \(\mathcal C(A,B)\) for the arrows \(A\to B\).
+The category is locally small if each such collection is a small
+set, and small if its objects and all its arrows form small sets.
+An isomorphism \(f:A\to B\) has an arrow \(g:B\to A\) with
+\(g f=1_A\) and \(f g=1_B\).
+
+A functor \(F:\mathcal C\to\mathcal D\) assigns objects and arrows
+with the indicated domains and codomains, and satisfies
+\[
+ F(1_A)=1_{F A},\qquad F(g\circ f)=F(g)\circ F(f).
+\]
+The identity functor is \(1_{\mathcal C}\).
+The opposite category \(\mathcal C^{\mathrm{op}}\) reverses every
+arrow and the order of composition.  A contravariant set-valued
+functor is an ordinary functor
+\(F:\mathcal C^{\mathrm{op}}\to\mathsf{Set}\): thus \(f:A\to B\)
+induces \(F(f):F(B)\to F(A)\).
+
+For functors \(F,G:\mathcal C\to\mathcal D\), a natural
+transformation \(\alpha:F\Rightarrow G\) consists of arrows
+\(\alpha_A:F A\to G A\) satisfying
+\[
+                  G(f)\circ\alpha_A=\alpha_B\circ F(f)
+                  \quad(f:A\to B).
+\]
+It is a natural isomorphism when every component is an
+isomorphism.  The naturality equation then also holds for the
+componentwise inverses.  Transformations compose componentwise;
+identity components give the identity transformation.
+\index{category}\index{functor}\index{natural transformation}
+\index{opposite category}\index{locally small category}
+\end{hbdefinition}
+
+The category \(\mathsf{Set}\) has small sets as objects and functions
+as arrows.  A small partially ordered set gives a small category with one
+arrow \(a\to b\) when \(a\leq b\), and none otherwise.  Its identity
+and composition laws are reflexivity and transitivity; antisymmetry
+makes isomorphic objects equal.
+
+\begin{hbdefinition}{def:p10-category-equivalence}{Fullness, faithfulness, and equivalence}
+A functor \(F:\mathcal C\to\mathcal D\) is full when each map
+\(\mathcal C(A,B)\to\mathcal D(F A,F B)\) is surjective, and faithful
+when each is injective.  It is essentially surjective when every
+object of \(\mathcal D\) is isomorphic to some \(F A\).
+An equivalence consists of functors \(F:\mathcal C\to\mathcal D\)
+and \(G:\mathcal D\to\mathcal C\), together with natural
+isomorphisms \(1_{\mathcal C}\Rightarrow GF\) and
+\(FG\Rightarrow1_{\mathcal D}\).
+The functor \(G\) is a quasi-inverse.  The particular equivalence
+constructed below supplies these functors and isomorphisms
+explicitly.
+\index{equivalence!of categories}\index{full functor}
+\index{faithful functor}\index{essentially surjective functor}
+\end{hbdefinition}
+
+These definitions use the elementary conventions of
+\cite[Chapter~1, especially Definitions~1.1.1, 1.3.1, 1.4.1,
+and 1.4.3]{Riehl2026ContextOnline}.  The classical references
+\cite{MacLane1998,Awodey2010} give separate book presentations.
+The Riehl locators in this section refer to the author-hosted
+second-edition text retrieved on 6 September 2026.
+
+\subsection{Limits and colimits}
+
+\begin{hbdefinition}{def:p10-limit}{Diagrams, cones, limits, and colimits}
+Let \(J\) be a small category and \(D:J\to\mathcal C\) a functor,
+called a diagram of shape \(J\).
+A cone with vertex \(X\) is a family \(p_j:X\to D j\) satisfying
+\[
+                         D(u)\circ p_j=p_k
+                         \quad(u:j\to k\text{ in }J).
+\]
+A limit is a cone \((L,(\ell_j)_j)\) such that every cone
+\((X,(p_j)_j)\) has exactly one mediating arrow \(a:X\to L\)
+with \(\ell_j a=p_j\) for all \(j\).
+Equivalently, it is a terminal object in the category of cones,
+whose arrows preserve every cone leg.
+
+A cocone with vertex \(X\) has arrows \(q_j:D j\to X\) satisfying
+\(q_k D(u)=q_j\).  A colimit is a cocone \((K,(k_j)_j)\) such that
+every cocone \(q_j:D j\to X\) has exactly one arrow \(b:K\to X\)
+with \(b k_j=q_j\).  It is an initial object in the category of
+cocones.  The empty diagram has no legs or commutativity conditions.
+Its limits are terminal objects and its colimits are initial
+objects.
+\index{limit!categorical}\index{colimit}\index{cone!categorical}
+\index{terminal object}\index{initial object}
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p10-products-equalizers}{Products, equalizers, and their duals}
+For a small family \((A_i)_{i\in I}\), a product is an object
+\(\prod_i A_i\) with projections \(\pi_i\) for which every family
+\(f_i:X\to A_i\) has a unique arrow
+\(\langle f_i\rangle_i:X\to\prod_i A_i\) satisfying
+\(\pi_i\langle f_i\rangle_i=f_i\).
+It is the limit of the discrete diagram on \(I\).
+A coproduct \(\coprod_i A_i\) has injections \(\iota_i\) and the
+dual unique-arrow property for families \(A_i\to X\).
+The empty product is terminal; the empty coproduct is initial.
+
+For parallel arrows \(f,g:A\to B\), an equalizer is an arrow
+\(e:E\to A\) with \(f e=g e\), universal among arrows with this
+property: every \(a:X\to A\) with \(f a=g a\) factors uniquely
+as \(a=e h\).
+A coequalizer is \(q:B\to Q\) with \(q f=q g\), and every
+\(b:B\to X\) with \(b f=b g\) factors uniquely as \(b=h q\).
+
+A pullback of \(f:A\to C\) and \(g:B\to C\) consists of
+\(p:P\to A\), \(q:P\to B\), with \(f p=g q\), such that every
+commuting pair \(a:X\to A,b:X\to B\) factors uniquely through
+\((p,q)\).  A pushout is the dual construction for
+\(A\leftarrow C\to B\).  These are limits and colimits of the
+indicated three-object diagrams.
+
+An arrow \(m:A\to B\) is a monomorphism when
+\(m r=m s\) implies \(r=s\) for every pair \(r,s:X\to A\).
+An epimorphism satisfies the dual right-cancellation property.
+\index{product!categorical}\index{coproduct}\index{equalizer}
+\index{coequalizer}\index{pullback}\index{pushout}
+\index{monomorphism}\index{epimorphism}
+\end{hbdefinition}
+
+For chosen binary products, write
+\[
+ f\times g=\langle f\pi_1,g\pi_2\rangle:
+           A\times B\longrightarrow A'\times B'
+ \quad(f:A\to A',\ g:B\to B').
+\]
+The projections distinguish arrows into a product.  Thus equations
+between such arrows can be established by composing with both
+projections.
+
+\begin{hbtheorem}{thm:p10-limits-unique}{proved=annex:p10.cat.1}{Uniqueness of universal constructions}
+Two limiting cones for the same diagram have a unique isomorphism
+that preserves every cone leg.  Two colimiting cocones have the
+dual unique isomorphism.
+Every equalizer arrow is monic, and every coequalizer arrow is epic.
+For products, pairing commutes with precomposition and product
+arrows preserve identities and composition:
+\[
+ \langle f,g\rangle a=\langle f a,g a\rangle,\qquad
+ 1_A\times1_B=1_{A\times B},\qquad
+ (f'\times g')(f\times g)=(f'f)\times(g'g).
+\]
+The uniqueness assertion concerns isomorphisms compatible with
+the specified legs; it imposes no uniqueness on arbitrary
+isomorphisms of the underlying objects.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p10-limits-products-equalizers}{proved=annex:p10.cat.2}{Constructing limits and colimits}
+A locally small category with all small products and equalizers
+has all small limits.  A locally small category with all small
+coproducts and coequalizers has all small colimits.
+Terminal objects, binary products, and equalizers suffice for
+finite limits; initial objects, binary coproducts, and
+coequalizers suffice for finite colimits.
+
+For a small diagram \(D:J\to\mathsf{Set}\), a limit is the set
+\[
+ \left\{(x_j)_j\in\prod_{j\in\operatorname{Ob}J}D j:
+       D(u)(x_j)=x_k\text{ for every }u:j\to k\right\}.
+\]
+A colimit is the disjoint union of the \(D j\)'s modulo the least
+equivalence relation identifying
+\((j,x)\) with \((k,D(u)(x))\) for every \(u:j\to k\).
+The empty-diagram cases give a singleton and the empty set.
+\end{hbtheorem}
+
+Cones and their universal properties are presented in
+\cite[Section~3.1, Definitions~3.1.1--3.1.6 and
+Proposition~3.1.7]{Riehl2026ContextOnline}.
+The general product/equalizer and coproduct/coequalizer
+constructions are Theorem~3.5.11, pp.~112--113, of that text.
+
+\subsection{Representable functors and Yoneda}
+
+For an object \(A\) of a locally small category, the representable
+functor \(\mathcal C(-,A):\mathcal C^{\mathrm{op}}\to\mathsf{Set}\)
+sends \(X\) to \(\mathcal C(X,A)\), and \(u:Y\to X\) to
+precomposition \(f\mapsto f u\).
+Write \(\operatorname{Nat}(H,F)\) for natural transformations
+between functors with the same domain and codomain.
+
+\begin{hbtheorem}{thm:p10-yoneda}{proved=annex:p10.cat.3}{Yoneda lemma}
+For a locally small category \(\mathcal C\), a functor
+\(F:\mathcal C^{\mathrm{op}}\to\mathsf{Set}\), and an object \(A\),
+evaluation at \(1_A\) gives a bijection
+\[
+ \operatorname{Nat}(\mathcal C(-,A),F)\longrightarrow F(A),
+ \qquad \alpha\longmapsto\alpha_A(1_A).
+\]
+The inverse sends \(x\in F(A)\) to the transformation
+\(\alpha^x_X(f)=F(f)(x)\).
+This bijection is natural in \(A\) and \(F\).
+It gives a canonical parametrization of the displayed family of
+transformations by the small set \(F(A)\).
+When \(\mathcal C\) is large, this does not assert that each
+transformation's entire component family belongs to the fixed
+universe.
+
+Every natural transformation
+\(\mathcal C(-,A)\Rightarrow\mathcal C(-,B)\) has the form
+\(f\mapsto h f\) for a unique \(h:A\to B\).
+Thus the Yoneda assignment \(A\mapsto\mathcal C(-,A)\) is full
+and faithful on these hom-sets, and isomorphic representable
+functors have isomorphic representing objects.
+\index{Yoneda lemma}\index{representable functor}
+\end{hbtheorem}
+
+This is the contravariant form of
+\cite[Theorem~2.2.4, pp.~61--63; Exercise~2.2.i,
+p.~66]{Riehl2026ContextOnline}, with its proof supplied here.
+
+\subsection{Adjunctions}
+
+\begin{hbdefinition}{def:p10-adjunction}{Adjunction by natural hom-set bijections}
+Let \(F:\mathcal C\to\mathcal D\) and \(G:\mathcal D\to\mathcal C\)
+be functors between locally small categories.
+An adjunction \(F\dashv G\) is a family of bijections
+\[
+ \Phi_{A,B}:\mathcal D(F A,B)\longrightarrow\mathcal C(A,G B)
+\]
+natural in both variables.  Explicitly, for
+\(u:A'\to A\), \(f:F A\to B\), and \(v:B\to B'\),
+\[
+ \Phi_{A',B'}(v f F(u))=G(v)\,\Phi_{A,B}(f)\,u.
+\]
+The functor \(F\) is the left adjoint and \(G\) the right adjoint.
+The image \(\Phi(f)\) and its inverse image are called
+transposes with respect to this adjunction.
+\index{adjunction}\index{left adjoint}\index{right adjoint}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p10-adjunction-data}{proved=annex:p10.cat.4}{Units, counits, and triangle identities}
+Adjunction bijections \(\Phi\) determine natural transformations
+\[
+ \eta:1_{\mathcal C}\Rightarrow GF,\qquad
+ \varepsilon:FG\Rightarrow1_{\mathcal D}
+\]
+by
+\[
+ \eta_A=\Phi_{A,F A}(1_{F A}),\qquad
+ \varepsilon_B=\Phi^{-1}_{G B,B}(1_{G B}).
+\]
+They satisfy the triangle identities
+\[
+ \varepsilon_{F A}\circ F(\eta_A)=1_{F A},\qquad
+ G(\varepsilon_B)\circ\eta_{G B}=1_{G B}.
+\]
+Conversely, natural transformations \(\eta,\varepsilon\) of these
+types satisfying these identities determine an adjunction by the
+mutually inverse maps
+\[
+ f\longmapsto G(f)\circ\eta_A,\qquad
+ g\longmapsto\varepsilon_B\circ F(g).
+\]
+The constructions recover the original bijections and the original
+unit and counit.
+\index{unit!of an adjunction}\index{counit}
+\index{triangle identities}
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p10-adjoint-preservation}{proved=annex:p10.cat.5}{Adjoints preserve universal constructions}
+If \(F\dashv G\), then \(F\) sends every existing small colimiting
+cocone in \(\mathcal C\) to a colimiting cocone in \(\mathcal D\),
+and \(G\) sends every existing small limiting cone in
+\(\mathcal D\) to a limiting cone in \(\mathcal C\).
+Consequently left adjoints preserve initial objects, coproducts,
+coequalizers, and pushouts whenever these exist; right adjoints
+preserve terminal objects, products, equalizers, and pullbacks.
+The conclusion identifies the image cone or cocone by its
+universal property, independently of any different chosen
+representative of the same limit or colimit.
+\end{hbtheorem}
+
+The hom-set and unit/counit presentations are
+\cite[Definition~4.1.1, p.~132; Definition~4.2.5 and
+Theorem~4.2.7, pp.~140--142]{Riehl2026ContextOnline}.
+Preservation of existing limits and colimits is Theorem~4.5.2,
+pp.~158--159, of that text.
+
+\subsection{Cartesian closed categories}
+
+\begin{hbdefinition}{def:p10-ccc}{Cartesian closed category}
+A cartesian closed category is a locally small category with a
+terminal object, binary products, and exponentials.
+When interpreting syntax, specify choices of these constructions.
+For objects \(A,B\), an exponential consists of an object \(B^A\)
+and an evaluation arrow
+\[
+                    \operatorname{ev}_{A,B}:B^A\times A\to B
+\]
+such that every \(f:X\times A\to B\) has a unique transpose
+\(\Lambda(f):X\to B^A\) satisfying
+\[
+ \operatorname{ev}_{A,B}\circ(\Lambda(f)\times1_A)=f.
+\]
+Equivalently, the two maps
+\[
+ \mathcal C(X\times A,B)\ \longleftrightarrow\
+ \mathcal C(X,B^A),\qquad
+ f\longmapsto\Lambda(f),\quad
+ k\longmapsto\operatorname{ev}_{A,B}\circ(k\times1_A)
+\]
+are inverse.  The inverse laws are the categorical \(\beta\)
+and \(\eta\) equations.
+In particular,
+\(\Lambda(\operatorname{ev}_{A,B}\circ(k\times1_A))=k\).
+\index{cartesian closed category}\index{exponential!categorical}
+\index{evaluation!of an exponential}
+\index{Curry--Howard--Lambek correspondence}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p10-exponential-adjunction}{proved=annex:p10.cat.6}{Exponential adjunction and examples}
+In a cartesian closed category, transposition is natural in its
+parameter:
+\[
+ \Lambda(f\circ(s\times1_A))=\Lambda(f)\circ s
+       \quad(f:X\times A\to B,\ s:Y\to X).
+\]
+For fixed \(A\), the assignments \(X\mapsto X\times A\) and
+\(B\mapsto B^A\) extend to functors with
+\[
+                         (-)\times A\dashv(-)^A.
+\]
+The category \(\mathsf{Set}\) is cartesian closed, with a singleton
+as terminal object, Cartesian products as products, and the set
+of functions \(A\to B\) as \(B^A\).
+A Heyting algebra, regarded as a category under its order, is
+cartesian closed with terminal object \(1\), product \(a\wedge b\),
+and exponential \(b^a=(a\Rightarrow b)\).
+\end{hbtheorem}
+
+Function-type semantics uses precisely these evaluation and
+transposition operations
+\cite[Section~3.3, pp.~22--24]{Pitts1995Draft}.
+The next construction applies them to the registered arrow-only
+typed lambda calculus; the following internal-language construction
+gives an explicit equivalence for a named small category.

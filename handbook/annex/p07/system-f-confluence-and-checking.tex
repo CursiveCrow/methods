@@ -1,0 +1,355 @@
+\section{System F confluence and checking: proofs}
+\label{sec:annex-p07-system-f-confluence-and-checking}
+
+\begin{annexitem}{annex:p7.system-f.parallel-closure}
+ {thm:p07-system-f-parallel-closure}{Reflexivity and both inclusions}
+\begin{proof}
+Structural induction gives parallel reflexivity: a variable uses clause~1;
+term application uses the two inductive reflexivities and clause~2; lambda
+abstraction, type abstraction and type application use clauses~3, 4 and~5.
+
+Each ordinary root term-beta contraction is an instance of clause~6 using
+reflexivity in its body and argument. Each root type-beta contraction is
+an instance of clause~7 using reflexivity in its body. A contraction at
+an interior position is propagated by the corresponding constructor clause;
+in a term application, use reflexivity in the unaffected child. This
+proves \(\to_{\mathsf F}\subseteq\Rrightarrow_{\mathsf F}\).
+
+Conversely, induct on a parallel derivation. Clause~1 is zero ordinary
+steps. In clause~2, sequentially perform the finitely many steps supplied
+by induction in the function and argument positions. Clauses~3, 4 and~5
+place the premise's finite sequence under the same constructor. In
+clause~6, first reduce the body and argument to their inductively supplied
+parallel reducts, under the enclosing lambda and application; then contract
+the displayed root term-beta redex. Clause~7 similarly reduces the body
+under its type abstraction and then contracts the root type-beta redex.
+These are finite sequences even when the raw term also admits infinite
+reductions. Thus parallel reduction is included in ordinary finite
+reduction. Taking reflexive transitive closures in the two inclusions
+proves equality of those closures.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p7.system-f.parallel-substitution}
+ {thm:p07-system-f-parallel-substitution}{Every parallel constructor and the mixed substitution cases}
+\begin{proof}
+The following equalities are the capture-avoiding substitution identities
+proved for the same raw syntax in
+Annex~\ref{annex:p7.system-f.substitution-reduction}:
+\[
+ (P[Q/x])\tau=(P\tau)[Q\tau/x],
+\]
+and, for a type binder \(a\) fresh for \(\tau\)'s domain and images,
+\[
+ (P[\beta/a])\tau=(P\tau)[\beta\tau/a].
+\]
+For distinct term variables \(x,z\), with \(z\) fresh for \(N'\),
+the term-substitution composition law is
+\[
+ (P'[Q'/z])[N'/x]
+    =(P'[N'/x])[Q'[N'/x]/z].
+\]
+For \(a\) absent from the free type variables of \(N'\), the mixed
+law is
+\[
+ (P'[\beta/a])[N'/x]=(P'[N'/x])[\beta/a].
+\]
+These identities include changes in annotations and type arguments. All
+bound variables in a finite derivation can be renamed fresh for the
+finitely many substitution images under consideration. No free context
+variable is renamed.
+
+Prove type-substitution stability by induction on the parallel derivation.
+At a variable the substitution leaves the term variable unchanged.
+For term application apply induction in both children. For lambda
+abstraction apply induction to its body and substitute in the annotation;
+the lambda congruence clause then applies with that substituted annotation.
+For type abstraction first choose its binder fresh for \(\tau\), apply
+induction to the body, and retain the binder. Type application applies
+induction to its term and replaces the common type argument by its
+substituted type. In clause~6, induction yields \(P\tau\Rrightarrow
+_{\mathsf F}P'\tau\) and \(Q\tau\Rrightarrow_{\mathsf F}Q'\tau\).
+Parallel root term contraction yields \((P'\tau)[Q'\tau/x]\), equal
+to the substituted original contractum by the first identity. In clause~7,
+choose the type binder fresh. Induction on the body and parallel root
+type contraction yield \((P'\tau)[\beta\tau/a]\), equal to
+\((P'[\beta/a])\tau\). This exhausts the seven clauses.
+
+For term substitution, induct on the derivation of
+\(M\Rrightarrow_{\mathsf F}M'\), keeping the additional premise
+\(N\Rrightarrow_{\mathsf F}N'\) arbitrary. At the variable \(x\)
+the desired assertion is exactly that premise; at any other variable use
+parallel reflexivity. At a term application, apply induction to both
+children and use clause~2. At a lambda abstraction rename its binder
+fresh for \(x,N,N'\), apply induction to the body and use clause~3.
+At a type abstraction rename its binder fresh for all free type variables
+of \(N,N'\), apply induction to the body and use clause~4. At a type
+application the type argument contains no term variables, so induction
+on its term followed by clause~5 gives the result.
+
+In the root term case write \(M=(\lambda z{:}\alpha.P)Q\) and
+\(M'=P'[Q'/z]\). Rename \(z\) away from \(x\) and from the free
+term variables of both inserted images. The two premise inductions give
+\[
+ P[N/x]\Rrightarrow_{\mathsf F}P'[N'/x],\qquad
+ Q[N/x]\Rrightarrow_{\mathsf F}Q'[N'/x].
+\]
+Clause~6 contracts the substituted root to
+\((P'[N'/x])[Q'[N'/x]/z]\), which is \(M'[N'/x]\) by the
+composition identity. The source is exactly \(M[N/x]\).
+This single parallel contraction covers every duplicated occurrence of
+the inserted argument, including the case in which the bound variable
+does not occur and the argument is erased.
+
+In the root type case write \(M=(\Lambda a.P)[\beta]\) and
+\(M'=P'[\beta/a]\), choosing \(a\) fresh for the free type variables
+of \(N,N'\). Premise induction gives
+\(P[N/x]\Rrightarrow_{\mathsf F}P'[N'/x]\). Clause~7 contracts the
+substituted root to \((P'[N'/x])[\beta/a]\). The mixed identity makes
+this equal to \((P'[\beta/a])[N'/x]=M'[N'/x]\). There are no other
+parallel derivation cases. The proof uses neither typability nor termination.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p7.system-f.development-join}
+ {thm:p07-system-f-development-join}{All original root and contextual overlap cases}
+\begin{proof}
+Induct on the size of the original term \(M\), considering all possible
+parallel derivations from it. The definition of \(M^\star\) is
+structural: substitutions in its output are finite and are not recursively
+developed again in that same call.
+It is also well defined on alpha classes. Renaming a binder preserves
+the original constructor cases, and the recursively developed bodies
+and capture-avoiding substitutions respect that renaming. Structural
+induction gives the same alpha class for the resulting development.
+
+A variable has only its reflexive parallel derivation, and its development
+is itself. If \(M=\lambda x{:}\alpha.P\), the only parallel clause
+with that outer source constructor is lambda congruence. Thus
+\(N=\lambda x{:}\alpha.P'\), with \(P\Rrightarrow_{\mathsf F}P'\).
+Induction gives \(P'\Rrightarrow_{\mathsf F}P^\star\), and lambda
+congruence gives the result. A type abstraction has the identical argument
+with clause~4. No eta rule can remove either abstraction constructor.
+
+For a term application \(M=PQ\), first suppose \(P\) is not a
+lambda abstraction in the original term. The last parallel clause must
+be application congruence, giving \(N=P'Q'\) from parallel reducts
+of \(P,Q\). Induction and clause~2 give
+\(P'Q'\Rrightarrow_{\mathsf F}P^\star Q^\star=M^\star\).
+Even if \(P'\) becomes a lambda abstraction, the congruence clause
+can retain the newly exposed root redex; contraction of that new redex
+is not required by the development definition.
+
+Now suppose \(P=\lambda x{:}\alpha.R\). There are exactly two
+possibilities for the last parallel clause from \(M\). A root
+contraction gives \(N=R'[Q'/x]\), with \(R\Rrightarrow_{\mathsf F}R'\)
+and \(Q\Rrightarrow_{\mathsf F}Q'\). The smaller-term induction
+hypotheses and parallel substitution give
+\[
+ R'[Q'/x]\Rrightarrow_{\mathsf F}R^\star[Q^\star/x]=M^\star.
+\]
+Alternatively, application congruence retains the root. Because a
+parallel reduct of a lambda abstraction is again a lambda abstraction
+with the same annotation, it has the form
+\(N=(\lambda x{:}\alpha.R')Q'\), with the same kind of premise
+reductions. Induction and clause~6 now give its parallel root contraction
+to \(R^\star[Q^\star/x]\). Thus contracting and retaining the
+original term redex meet at the same development.
+
+For a type application \(M=P[\alpha]\), if \(P\) is not originally
+a type abstraction, only type-application congruence applies. Write
+\(N=P'[\alpha]\); induction gives
+\(N\Rrightarrow_{\mathsf F}P^\star[\alpha]=M^\star\), whether
+or not its head becomes a type abstraction later.
+If \(P=\Lambda a.R\), a root contraction gives
+\(N=R'[\alpha/a]\), where \(R\Rrightarrow_{\mathsf F}R'\).
+Induction and type-substitution stability give
+\[
+ R'[\alpha/a]\Rrightarrow_{\mathsf F}R^\star[\alpha/a]=M^\star.
+\]
+If the root is retained, inversion of the type-abstraction clause gives
+\(N=(\Lambda a.R')[\alpha]\); induction followed by clause~7
+contracts it to the same result.
+
+The five outer constructors are exhaustive. In the root cases the premise
+inductions allow any parallel reductions inside the body and, for term
+application, the argument. Thus two term redexes, two type redexes, mixed
+nestings, duplicated or erased arguments, disjoint positions and newly
+exposed heads have all been included. Types themselves supply no additional
+redex overlap. If \(M\Rrightarrow_{\mathsf F}N\) and
+\(M\Rrightarrow_{\mathsf F}P\), the result just proved gives
+\(N\Rrightarrow_{\mathsf F}M^\star\) and
+\(P\Rrightarrow_{\mathsf F}M^\star\), proving the diamond property.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p7.system-f.confluence}
+ {thm:p07-system-f-confluence}{Finite joins for all raw combined reductions}
+\begin{proof}
+By the closure lemma, convert the two given finite ordinary reductions
+from \(M\) into parallel paths, say of lengths \(m,n\). Construct
+a rectangular array \(A_{i,j}\), \(0\leq i\leq m\),
+\(0\leq j\leq n\). Let \(A_{0,0}=M\); put the first path along
+the edge \(A_{i,0}\) and the second along \(A_{0,j}\).
+For each \(i\geq1\), fill its row in increasing \(j\). The
+already constructed terms \(A_{i,j-1}\) and \(A_{i-1,j}\) are
+parallel successors of \(A_{i-1,j-1}\). The diamond property supplies
+\(A_{i,j}\) as a parallel successor of both. The array is finite,
+so this process finishes without any normalization hypothesis.
+
+The lower and right edges give parallel paths from the two original
+endpoints to \(A_{m,n}\). If either original path has length zero,
+the other endpoint itself supplies the required join. Each finite parallel
+path is an ordinary finite reduction by the other inclusion in the
+closure lemma. This proves exactly the stated common-reduct property.
+
+If two resulting terms are normal, neither has a genuine further
+contraction. Their common reduct must therefore be each of them, modulo
+the permitted alpha-renaming. This proves uniqueness of a normal form
+when one exists, without proving its existence for arbitrary raw terms.
+The separate strong-normalization theorem supplies existence for well-typed
+inputs; it has not been used in this confluence proof.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p7.system-f.type-syntax-decision}
+ {thm:p07-system-f-type-syntax-decision}{Finite formation and bound-name comparison}
+\begin{proof}
+The formation procedure recurses only on proper type subexpressions.
+At a variable its membership test is finite and agrees with the type-variable
+rule. At an arrow the two recursive tests agree with the two formation
+premises. At a universal type a fresh name can be found effectively by
+searching the fixed name supply outside the finite set of names to avoid.
+Consistent renaming changes no free variable. Checking the body in the
+extended context is exactly the universal formation premise. Induction
+therefore proves both termination and exactness. Equivalently, a parsed
+type forms over \(\Delta\) exactly when all its free variables are
+in that context.
+
+The stack encoding of a type also traverses a finite tree. Renaming a
+binder and all occurrences bound by it preserves every bound index and
+every free-name token, so alpha-equal types have identical encodings.
+Conversely, suppose the encodings agree. Traverse both types together,
+and at each matching binder marker rename the two binders to the same
+new name, fresh for all free names and for previously chosen binders.
+At matching bound indices, the corresponding variable occurrences then
+have the same chosen name. At free-name tokens they already have the
+same free name. The arrow and universal constructor markers agree by
+hypothesis. Structural induction shows that the two resulting named
+types are literally identical, proving alpha equality of the originals.
+In particular, a free variable is never confused with a bound index.
+
+For substitution, a variable is either replaced by its specified finite
+image or retained. An arrow substitutes in both children. At a universal
+binder, its own bound occurrences are excluded; other substitutions proceed
+under a name first freshened for their images. The recursion follows the
+original type tree and does not revisit inserted images, so it terminates
+even when an image itself contains a variable from the substitution domain.
+The result is finite, since finitely many finite images are inserted.
+The earlier type-formation substitution proof gives preservation of
+formation under the stated source and target contexts.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p7.system-f.synthesis-correct}
+ {thm:p07-system-f-synthesis-correct}{Every synthesis case and every possible typing derivation}
+\begin{proof}
+Freshening is effective: the current finite contexts and finite syntax
+contain only finitely many names. Alpha-renaming of a term binder changes
+only its bound term occurrences. Alpha-renaming of a type binder changes
+its bound type occurrences, including occurrences in annotations and
+type arguments, and respects inner shadowing. Free names in the context
+are not changed. Typing is preserved under these allowed bound renamings,
+by the fresh-variable cases of the earlier typing-substitution lemma.
+We may therefore prove the result for the consistently freshened input.
+
+Every recursive synthesis call concerns a proper term subexpression.
+The finite formation, alpha-equality and type-substitution procedures
+terminate by the preceding lemma. New result types can be larger than
+input annotations, but they are not passed back as new terms to synthesize.
+Thus induction on term size proves termination of the whole procedure.
+The recursive contexts stay valid: an annotation is checked before its
+term variable is added, and a fresh type-variable extension preserves the
+formation of all existing context types.
+
+For soundness and completeness, strengthen the induction statement to
+include well-formedness of a returned type and uniqueness up to alpha
+equality among all types derivable for the same term and contexts.
+
+At a variable, the unique context declaration is the only possible
+variable-rule conclusion. A missing declaration cannot be supplied by
+any other rule, since their conclusions have other term constructors.
+Hence the returned type, or failure, is exact.
+
+At \(\lambda x{:}\alpha.P\), successful formation of \(\alpha\)
+and successful premise synthesis give a derivation for the body in
+\(\Gamma,x:\alpha\). Arrow introduction gives exactly the returned
+arrow type. Conversely, any derivation of this term must end in arrow
+introduction with that same explicit annotation. Its premise exists
+only if formation passes and body synthesis succeeds by induction.
+The body's type is unique by induction, and therefore so is the arrow
+result. Failure of either check precludes any such derivation.
+
+At \(PN\), if synthesis returns an arrow for \(P\) and a matching
+domain type for \(N\), induction supplies the two typing premises,
+and arrow elimination gives the returned codomain. Conversely any
+typing of \(PN\) must end in arrow elimination. By induction, the
+type synthesized for \(P\) must be alpha-equal to that premise's
+arrow type; its domain and codomain are consequently determined. The
+type synthesized for \(N\) must match the domain. Thus every possible
+derivation is accepted and has the same result. A universal type is
+not an arrow type, and the rules contain no implicit instantiation that
+could repair a failed shape check.
+
+At \(\Lambda a.P\), after freshening, the sheet's two eigenvariable
+conditions are the explicitly checked conditions. If body synthesis
+under \(\Delta,a;\Gamma\) succeeds at \(\beta\), induction gives
+its typing derivation and formation. Universal introduction gives
+\(\forall a.\beta\), a type formed over \(\Delta\). Conversely,
+the only possible last rule for this constructor is universal introduction,
+with the same side conditions and a derivable premise. Body induction
+therefore makes synthesis succeed, and every premise type is alpha-equal
+to its result. Consistently closing the same binder preserves that equality.
+This proves uniqueness and the rejection conclusion in this case.
+
+At \(P[\alpha]\), successful formation of the explicit instance type
+and synthesis of a universal function type provide the premises of
+universal elimination. That rule's conclusion is exactly the computed
+capture-avoiding instance. Formation is preserved by the type-substitution
+lemma. Conversely, any typing derivation of this constructor must have
+a universal function premise and that same supplied type argument.
+Induction identifies the universal type up to alpha equality. Rename
+its bound variable consistently before substitution; substituting in
+alpha-equal types gives alpha-equal results by the same structural
+substitution procedure. Thus the returned result is unique and agrees
+with every derivation. A failed function-shape or formation check
+precludes the required elimination rule.
+
+All five constructors have now been treated. No reduction, normal form,
+unification problem or guessing of missing type information occurs in
+the argument.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p7.system-f.church-checking}
+ {thm:p07-system-f-church-checking}{Decision for the exact explicit judgment}
+\begin{proof}
+Take the finite contexts, explicit term and proposed type from the
+statement. Validate their finite syntax and the proposed type's formation.
+Run \(\mathsf{Synth}(\Delta,\Gamma,M)\). If it fails, its correctness
+theorem rules out every typing derivation in those contexts, so reject.
+If it returns \(\beta\), compare \(\beta\) and the proposed
+\(\alpha\) by the terminating alpha-equality test. Accept exactly
+when they agree. Soundness of synthesis and equality modulo the permitted
+bound renamings prove that acceptance yields the required judgment.
+Conversely, if that judgment is derivable, completeness and uniqueness of
+synthesis force a successful return alpha-equal to \(\alpha\), so the
+comparison accepts. Every part of this procedure terminates.
+
+This decides only the supplied Church-style judgment, whose lambda
+annotations, type abstractions and type arguments are explicit input.
+It does not supply an algorithm to infer absent annotations or absent
+instances for an erased Curry-style term. Neither confluence nor the
+normalization theorem is a premise of this decision proof.
+\end{proof}
+\end{annexitem}

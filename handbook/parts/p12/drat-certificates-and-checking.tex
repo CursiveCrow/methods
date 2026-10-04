@@ -1,0 +1,469 @@
+%% Separately authored finite-CNF certificate construction; no inherited text replaced.
+\chapter{DRAT Certificates and Checked Unsatisfiability}
+\label{sec:p12-drat-certificates-and-checking}
+
+The certificate boundary of
+Definition~\ref{def:p12-sat-certificate-boundary} becomes a mathematical
+guarantee only after the accepted log operations have been specified and proved
+sound.  This chapter supplies that guarantee for finite propositional CNF.
+The source presentation of Wetzler, Heule, and Hunt is the 2014 DRAT-trim
+paper: its asymmetric-literal-addition definition, its pivot-retaining RAT
+test, its clause-set update, and its first-literal pivot convention are retained
+below \cite[Secs.~2--3]{WetzlerHeuleHunt2014AuthorDRAT}.  The separately dated
+2016 format description has a multiset interpretation and additional parser
+and deletion conventions.  Those differences are stated in
+Section~\ref{sec:p12-drat-format-versions}, not attributed retrospectively to
+the 2014 paper.  The proofs in the annex are complete mathematical
+reconstructions of the checking core, not a verification of an executable
+DRAT-trim implementation.
+
+\section{Clauses, assumptions, and unit propagation}
+
+\begin{hbdefinition}{def:p12-drat-finite-cnf}{Finite-CNF semantic interface}
+Fix a finite variable set \(X\).  A literal \(l\) is \(x\) or \(\neg x\)
+for \(x\in X\); its complement \(\bar l\) interchanges those two forms, so
+\(\overline{\bar l}=l\).  A clause \(C\) is a finite set of literals,
+interpreted as their disjunction.  In particular \(\varnothing\), when typed
+as a clause, is false.  A clause containing both \(l\) and \(\bar l\) is
+\emph{tautological} and is true under every valuation.  A CNF database \(F\)
+is a finite set of clauses, interpreted conjunctively; the empty database is
+true.  A valuation \(v:X\to\{0,1\}\) satisfies a clause when one of its
+literals is true, and satisfies \(F\), written \(v\models F\), when it
+satisfies every clause of \(F\).  The proposition \(\operatorname{Sat}(F)\)
+means that such a valuation exists.  These types distinguish an empty clause
+from an empty database and literal complement from negation of a CNF.  They
+are the input types used in every checking result below; no restriction to
+Horn clauses, bounded width, or a fixed clause count is imposed.
+
+Repeated occurrences of a literal have no semantic effect and are represented
+once by this mathematical clause type.  A serialized clause remains an
+ordered list, however: its first literal specifies the RAT pivot.  Retaining
+that first literal is necessary even when the remaining list is normalized.
+The mathematical interface admits tautological clauses in order to state its
+boundary cases; it is not permission to submit a tautological clause to a
+format version whose grammar restrictions forbid it.
+\index{CNF!certificate semantics}\index{clause!empty}
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p12-drat-up}{Trails and the conflict test}
+A \emph{trail} \(\tau=(l_1,\ldots,l_k)\) is a sequence of signed
+assignments to distinct variables.  It determines the partial valuation that
+makes every listed literal true.  A finite assumption set \(A\) initializes
+the trail; if it contains complementary literals, the check immediately
+returns the conflict token \(\bot\).  Otherwise list its literals in any
+order.  For a database clause \(D\), first ignore it if a trail literal makes
+it true.  If it is not already true, its residual
+\(\operatorname{res}_{\tau}(D)\) consists of the literals not made false
+by the trail.  An empty residual is a conflict.  A singleton residual
+\(\{l\}\) permits appending the previously unassigned literal \(l\).
+Repeat until a conflict occurs or no singleton residual remains.  Write
+\(\operatorname{UP}(F,A)=\bot\) for the conflict outcome.  A saturated
+nonconflicting trail is only a failed conflict test, not a SAT certificate.
+
+The empty input clause conflicts before any propagation; the empty database
+does not conflict under consistent assumptions.  A tautological clause can
+neither conflict nor force a literal: it is either already satisfied or still
+has both unassigned polarities.  These conventions prevent the disappearance
+of an already satisfied clause from being confused with a falsified clause.
+The trail here has assumptions and forced assignments, but no solver decision
+levels, restarts, or backjump operation.  It is needed solely to make each
+local redundancy test explicit.
+\index{trail!certificate checking}\index{unit propagation!certificate checking}
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p12-drat-up-sound}{proved=annex:p12-drat-up-sound}{Unit-propagation termination and conflict soundness}
+For every finite \(F,X,A\) as above, the conflict test terminates.  Every
+model of \(F\) satisfying the initial assumptions satisfies every literal
+subsequently propagated.  If \(\operatorname{UP}(F,A)=\bot\), no model
+of \(F\) satisfies all assumptions in \(A\).
+\end{hblemma}
+
+\section{The 2014 asymmetric-tautology presentation}
+
+\begin{hbdefinition}{def:p12-drat-ala-rup}{ALA, AT, and reverse unit propagation}
+For a clause \(C\), the 2014 operation
+\(\operatorname{ALA}(F,C)\) is the least clause containing \(C\) closed
+under asymmetric literal addition: whenever
+\(\{l_1,\ldots,l_k,l\}\in F\) and all
+\(l_1,\ldots,l_k\) belong to the current clause, add \(\bar l\).
+Here \(k\) may be zero.  Equivalently, for each \(D\in F\) and
+\(l\in D\), add \(\bar l\) when
+\(D\setminus\{l\}\) is contained in the current clause.  Stop at the
+finite least fixed point; the order of eligible additions does not change it.
+The source calls \(C\) an \emph{asymmetric tautology} (AT) when that
+closure contains complementary literals
+\cite[Def.~1]{WetzlerHeuleHunt2014AuthorDRAT}.
+
+The operational predicate \(\operatorname{RUP}(F,C)\), called
+\emph{reverse unit propagation}, means
+\[
+ \operatorname{UP}(F,\bar C)=\bot,
+ \qquad \bar C=\{\bar l:l\in C\}.
+\]
+Thus \(\bar C\) is a set of simultaneously true assumption literals,
+equivalently a conjunction of unit assumptions, not a clause asserting their
+disjunction.  When \(C=\varnothing\), it is the empty assumption set and
+the test is ordinary unit refutation of \(F\).  A tautological \(C\)
+passes immediately because its assumptions are inconsistent.
+
+For databases without an empty clause, the source's AT and this RUP predicate
+coincide.  If \(F\) already contains the empty clause, conflict must instead
+be recognized directly: the literal-extension rule has no literal to select
+from that clause.  This explicit terminal case completes the checking
+interface at arbitrary finite CNF; it is not an unstated alteration of the
+source's literal-extension formula.  These names are needed to distinguish a
+finite syntactic conflict check from semantic entailment, and are used in the
+RAT tests and the trace induction.
+\index{asymmetric literal addition}\index{asymmetric tautology}
+\index{reverse unit propagation}
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p12-drat-ala-rup}{proved=annex:p12-drat-ala-rup}{ALA--RUP correspondence and monotonicity}
+The ALA operation is well defined.  If \(F\) has no empty clause, then
+\(\operatorname{ALA}(F,C)\) is tautological if and only if
+\(\operatorname{RUP}(F,C)\).  Every RUP clause is entailed by \(F\).
+Moreover, if \(F\subseteq G\), \(C\subseteq E\), and
+\(\operatorname{RUP}(F,C)\), then \(\operatorname{RUP}(G,E)\).
+The entailment and monotonicity statements include empty clauses and
+tautological clauses under the operational definition.
+\end{hblemma}
+
+\section{RAT, resolvents, and model repair}
+
+\begin{hbdefinition}{def:p12-drat-rat}{The exact pivot-retaining RAT test}
+Let \(C\ne\varnothing\) and choose \(l\in C\).  For every current
+clause \(D\in F\) containing \(\bar l\), the ordinary resolvent and the
+2014 test clause are respectively
+\[
+ \operatorname{Res}_{l}(C,D)
+   =(C\setminus\{l\})\cup(D\setminus\{\bar l\}),
+ \qquad
+ C\cup(D\setminus\{\bar l\}).
+\]
+The \emph{resolution asymmetric tautology} predicate
+\(\operatorname{RAT}(F,C,l)\) requires
+\[
+ \operatorname{RUP}\bigl(F,C\cup(D\setminus\{\bar l\})\bigr)
+ \quad\text{for every }D\in F\text{ with }\bar l\in D.
+\]
+This is the pivot-retaining formula of the 2014 paper and also of the 2016
+format note \cite[Sec.~2]{WetzlerHeuleHunt2014AuthorDRAT}
+\cite[Clause Addition Preconditions]{Heule2016DRATFormatV1}.
+The clause \(C\) has RAT with respect to \(F\) exactly when some
+\(l\in C\) satisfies this predicate.  The quantifier ranges over the entire
+active database, not merely the clauses
+chosen by a solver or supplied as a partial hint list.  If there are no
+opposing clauses, the condition is vacuous.  An empty added clause has no pivot
+and cannot use this vacuity; it must pass RUP.  A tautological test clause
+passes by inconsistent assumptions; a non-tautological test clause needs an
+actual unit conflict.  RAT is a clause-redundancy condition preserving the
+existence of a model, not a claim that the added clause is already true in
+every old model.
+
+The ordinary-resolvent formulation can be used only with its side conditions
+\(l\in C\), \(\bar l\in D\), and \(D\in F\) in force.  The following
+bridge justifies it; the name ``resolvent'' alone does not justify dropping the
+pivot from the source test.
+\index{resolution asymmetric tautology}\index{RAT!pivot}
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p12-drat-resolvent-test}{proved=annex:p12-drat-resolvent-test}{Pivot-retaining and ordinary-resolvent tests}
+If \(l\in C\), \(\bar l\in D\), and \(D\in F\), then
+\[
+ \operatorname{RUP}\bigl(F,C\cup(D\setminus\{\bar l\})\bigr)
+ \quad\text{if and only if}\quad
+ \operatorname{RUP}\bigl(F,\operatorname{Res}_{l}(C,D)\bigr).
+\]
+In particular every nonempty RUP clause is RAT on each of its literals.
+Neither statement gives an empty clause a pivot.
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p12-drat-rat-preservation}{proved=annex:p12-drat-rat-preservation}{RAT preserves satisfiability by pivot repair}
+For every finite database \(F\), nonempty clause \(C\), and pivot
+\(l\in C\), if \(\operatorname{RAT}(F,C,l)\), then
+\[
+ \operatorname{Sat}(F)\quad\text{if and only if}\quad
+ \operatorname{Sat}(F\cup\{C\}).
+\]
+More precisely, each model \(v\) of \(F\) already satisfying \(C\) is
+retained; a model falsifying \(C\) can be repaired by changing only the
+pivot variable so that \(l\) becomes true.  The repaired valuation satisfies
+every old clause and \(C\).  This statement permits fresh variables in
+\(C\) once valuations are extended to the finite combined variable set.
+It is an equisatisfiability theorem, not formula equivalence or preservation
+of the set or number of models.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p12-drat-nonrup-rat}{A source RAT addition that is not RUP}
+The 2014 source example has
+\[
+ F=\{\{\neg a,b\},\{a,c\},\{b,\neg c\}\},\qquad C=\{a\}.
+\]
+To test RUP, assume \(\neg a\).  The clause \(\{a,c\}\) forces
+\(c\), and \(\{b,\neg c\}\) forces \(b\).  All clauses are then
+satisfied; there is no conflict.  Indeed \(a=0,b=1,c=1\) is a model of
+\(F\) falsifying \(C\), so entailment itself fails.
+
+For RAT on \(a\), the only opposing clause is \(\{\neg a,b\}\).
+Its source test clause is \(\{a,b\}\), retaining the pivot.  Assume
+\(\neg a,\neg b\): \(\{a,c\}\) forces \(c\), whereas
+\(\{b,\neg c\}\) forces \(\neg c\), producing a conflict.  Therefore
+\(C\) is RAT and can be added.  Repairing the displayed countermodel
+changes only \(a\) to \(1\); the resulting model still satisfies all three
+old clauses.  The source also identifies \(\{b\}\) as AT: assuming
+\(\neg b\) forces \(\neg a\) from the first clause and \(\neg c\)
+from the third, falsifying \(\{a,c\}\)
+\cite[Example~1]{WetzlerHeuleHunt2014AuthorDRAT}.
+This example witnesses the distinction needed in the general preservation
+theorem; it is not substituted for that theorem's proof.
+\end{hbexample}
+
+\section{Trace construction and the independent checking guarantee}
+
+\begin{hbdefinition}{def:p12-drat-trace}{The 2014 set-based addition/deletion trace}
+A proof log \(P\) is a finite ordered sequence of clause additions and
+clause deletions.  In the 2014 clause-set presentation, with \(L_i\) the
+clause at step \(i\), define the active database by
+\[
+ F^0_P=F,\qquad
+ F^i_P=
+ \begin{cases}
+  F^{i-1}_P\setminus\{L_i\},&\text{a deletion step},\\
+  F^{i-1}_P\cup\{L_i\},&\text{an addition step}.
+ \end{cases}
+\]
+The source expects the deleted clause to be present.  A strict checker may
+reject an absent deletion; permitting it as a no-op is a separately declared
+policy and cannot manufacture a conflict.  No redundancy test is required
+for deletion.  Its guarantee is only
+\(\operatorname{Sat}(F^{i-1}_P)\Rightarrow\operatorname{Sat}(F^i_P)\).
+For example deleting \(\{\neg p\}\) from
+\(\{\{p\},\{\neg p\}\}\) produces a satisfiable database.
+Thus deletion is not an equisatisfiability step in general.
+
+Before inserting an addition, test RUP against \(F^{i-1}_P\).  If that
+fails and the clause is nonempty, test RAT on the first literal of its
+serialized list against that same database.  Reject if both tests fail.
+The final empty-clause addition must pass RUP against the database
+\emph{before} it is inserted.  Testing after insertion would make every such
+step trivially pass.  A verified 2014-format refutation ends with that
+validated empty-clause addition \cite[Sec.~3 and Fig.~1]{WetzlerHeuleHunt2014AuthorDRAT}.
+All local assumption trails are reset between tests; they are not added to
+the permanent database.
+\index{DRAT!addition and deletion trace}\index{DRAT!empty-clause check}
+\end{hbdefinition}
+
+\begin{hbmethod}{def:p12-drat-forward-checker}{A complete forward checking procedure}
+Parse the CNF and the finite ordered proof according to the declared format
+version; retain literal signs, pivot order, and the deletion interpretation.
+Set the active database to the parsed CNF.  Process each record in order.  A
+deletion performs the declared removal or no-op.  An addition runs the RUP
+test; on failure it runs every opposing-clause RAT test if a pivot exists.
+Commit the addition only after acceptance.  Reject malformed records and
+failed additions.  Accept UNSAT only on a verified empty-clause addition.
+For a finite trace containing fresh variables, take \(X\) to include all
+variables of the input and that trace; existence of a valuation of the input
+is unchanged by arbitrary extension to this finite superset.
+
+This deliberately explicit checking method is needed to expose the trusted
+logical condition.  It is not a claim that the 2014 optimized implementation
+literally performs this forward pass.  The source describes backward
+dependency checking, conflict-based marking, core-first propagation, and
+scanning active clauses for a failed-RUP RAT test
+\cite[Sec.~5]{WetzlerHeuleHunt2014AuthorDRAT}.  Such optimizations need their
+own implementation invariants; the theorem below proves the stated method,
+not omitted code paths.
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p12-drat-trace-sound}{proved=annex:p12-drat-trace-sound}{A verified DRAT refutation certifies UNSAT}
+The finite checking procedure terminates.  For every accepted prefix its
+active database satisfies
+\[
+ \operatorname{Sat}(F)\ \Rightarrow\ \operatorname{Sat}(F^i_P).
+\]
+Consequently, if the procedure accepts a verified empty-clause addition,
+the original finite CNF \(F\) is unsatisfiable.  The guarantee also holds
+for a multiset database with single-copy deletion, and for declared deletion
+no-ops, because those operations remove constraints or leave them unchanged.
+It does not require trust in the solver's search or in the correctness of
+unaccepted log records.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p12-drat-native-refutation}{The complete 2014 certificate example}
+The source's Figure~1 input has variables \(a,b,c,d\), represented by the
+integers \(1,2,3,4\), and these ten clauses:
+\[
+\begin{array}{lll}
+ D_1=\{a,b,\neg c\},&D_2=\{\neg a,\neg b,c\},&D_3=\{\neg a,\neg b,\neg c\},\\
+ D_4=\{b,c,\neg d\},&D_5=\{\neg b,\neg c,d\},&D_6=\{\neg a,\neg c,\neg d\},\\
+ D_7=\{a,c,d\},&D_8=\{\neg a,b,d\},&D_9=\{a,\neg b,\neg d\},\\
+ D_{10}=\{\neg a,b,\neg d\}.&&
+\end{array}
+\]
+Its complete four-record proof is
+\begin{verbatim}
+-1 0
+d -1 2 4 0
+2 0
+0
+\end{verbatim}
+For the first addition \(\{\neg a\}\), assuming \(a\) leaves no unit
+clause, so RUP fails.  RAT has exactly three opposing clauses, \(D_1,D_7,D_9\).
+Their pivot-retaining tests and complete conflict witnesses are:
+\begin{itemize}
+ \item \(\{\neg a,b,\neg c\}\): assume \(a,\neg b,c\).
+       Clause \(D_6\) forces \(\neg d\), which falsifies \(D_8\).
+ \item \(\{\neg a,c,d\}\): assume \(a,\neg c,\neg d\).
+       Clause \(D_8\) forces \(b\), which falsifies \(D_2\).
+ \item \(\{\neg a,\neg b,\neg d\}\): assume \(a,b,d\).
+       Clause \(D_6\) forces \(\neg c\), which falsifies \(D_2\).
+\end{itemize}
+The first record therefore passes RAT.  The second deletes the present clause
+\(D_8\).  To check the third, assume \(\neg b\) in the remaining
+database, which contains the accepted unit \(\neg a\).  Then \(D_1\)
+forces \(\neg c\), \(D_7\) forces \(d\), and \(D_4\) is false.
+Thus the unit \(b\) passes RUP.  For the final empty-clause test no temporary
+assumptions are added.  The retained units \(\neg a,b\) make \(D_9\)
+force \(\neg d\); \(D_5\) then forces \(\neg c\), and \(D_7\)
+is false.  The last record is verified, so the original ten-clause input is
+UNSAT \cite[Fig.~1]{WetzlerHeuleHunt2014AuthorDRAT}.
+The extra clauses \(D_3,D_{10}\) of this exact 2014 input have not been
+silently replaced by the eight-clause input used in the 2016 note.
+\end{hbexample}
+
+\begin{hbexample}{def:p12-drat-failed-refutation}{A failed log with a countermodel}
+For the input \(F=\{\{\neg p\}\}\), encode \(p\) by the variable
+index \(1\) and consider the proposed records
+\begin{verbatim}
+1 0
+0
+\end{verbatim}
+The input is SAT, witnessed by \(p=0\).  The attempted addition \(\{p\}\)
+is not RUP: its sole assumption \(\neg p\) satisfies the input.  Nor is it
+RAT: its opposing clause is \(\{\neg p\}\), giving the test clause
+\(\{p\}\) again, which still fails RUP.  The checker must reject the
+first record.  If an incorrect checker inserted it anyway, the pair of units
+\(p,\neg p\) would make the final empty-clause test succeed; that conflict
+would certify only the corrupted database, not the original input.
+This independently worked failure case identifies the missing universal RAT
+obligation and demonstrates why checking only the final conflict is unsound.
+\end{hbexample}
+
+\section{Construction, completeness, and logging obligations}
+
+\begin{hbdefinition}{def:p12-drat-truth-tree}{An explicit finite certificate construction}
+List the input variables as \(x_1,\ldots,x_n\).  For a prefix assignment
+\(s\) to \(x_1,\ldots,x_k\), let its blocking clause \(B_s\) contain
+the literal opposite to its value at each assigned variable.  Thus \(B_s\)
+is false exactly on extensions of \(s\), and \(B_{\varnothing}\) is the
+empty clause.  If \(F\) is unsatisfiable, add all full-assignment blocking
+clauses, then the shorter prefix blocking clauses in decreasing prefix length,
+ending with \(B_{\varnothing}\).  Each internal prefix has the two child
+clauses \(B_s\cup\{x_{k+1}\}\) and
+\(B_s\cup\{\neg x_{k+1}\}\) already present.  No deletions or fresh
+variables are required.  This is a finite mathematical construction of a log,
+not a performance prescription for production solvers.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-drat-drup-complete}{proved=annex:p12-drat-drup-complete}{Finite-CNF DRUP certificate completeness}
+Every unsatisfiable finite CNF has a finite verified refutation using only RUP
+additions.  The construction in Definition~\ref{def:p12-drat-truth-tree}
+uses at most \(2^{n+1}-1\) additions and ends with a verified empty clause,
+including the case \(n=0\).  Hence the mathematical DRUP subsystem and the
+stated DRAT checking core are refutationally complete.  This existential
+construction gives no polynomial bound on certificate size and no termination
+guarantee for an arbitrary solver's heuristic search.
+\end{hbtheorem}
+
+A solver emitting a refutation must log every database change on which a later
+certificate step depends, preserve the pivot as the first literal of each
+non-RUP addition, and synchronize the declared deletion semantics with the
+checker.  The solver's in-memory reason clauses or successful search are not
+substitutes for the log.  Conversely a SAT claim is checked by a valuation of
+the original input, not by a successful RAT prefix.  A timeout, interrupted
+log, rejected proof, or log with no verified empty clause establishes no UNSAT
+claim.  Completeness of the proof system, successful proof production, soundness
+of the mathematical checker, and correctness of a particular checker binary
+are four different obligations.
+
+\section{Dated format variants and the trusted boundary}
+\label{sec:p12-drat-format-versions}
+
+\begin{hbdefinition}{def:p12-drat-format-2016}{The separately dated 2016 format conventions}
+Heule's version~1 format note, arXiv:1610.06229v1, has these additional
+conventions \cite[Syntax of Input Files; Clause Syntax Restrictions; Clause
+Deletion Details]{Heule2016DRATFormatV1}.  Literals are nonzero signed
+integers with positive variable indices at most \(2^{31}-1\); clauses end
+at \texttt{0}, and a deletion has prefix \texttt{d}.
+The input header gives an upper bound on the input variable indices and the
+exact number of input clauses; every occurring index must be within that bound
+and the clause count must match.  Both input and proof clauses exclude
+duplicate literals and complementary pairs.  Here \(F\) denotes the input
+as a \emph{multiset}, rather than the 2014 clause set:
+two identical clause records are two copies, and a deletion removes only one
+copy.  An absent-clause deletion is ignored with a warning.  The mathematical
+trace semantics removes one present copy; the described DRAT-trim
+implementation additionally ignores deletions of unit clauses and warns.
+Acceptance is on a validated empty addition; records after it are ignored.
+These are distinct parser and operational policies, not a new proof of RAT.
+
+Removing a copy or doing nothing preserves satisfiability in the direction
+needed by Theorem~\ref{thm:p12-drat-trace-sound}.  But a checker that ignores
+unit deletions is checking its own modified active database; it need not accept
+the same traces as literal single-copy deletion.  For example from
+\(\{\{p\}\}\), deleting \(\{p\}\) makes adding \(\{\neg p\}\)
+a vacuous RAT step; retaining the unit makes that same addition fail.
+RUP is monotone under retention of extra clauses, whereas RAT also introduces
+new opposing-clause obligations.  Therefore deletion policy is an observable
+format boundary even when each policy is sound for its own accepted traces.
+\end{hbdefinition}
+
+\subsection{The separately dated binary serialization}
+\label{sec:p12-drat-binary-2016}
+
+The 2016 note also supplies a binary serialization: an addition begins with
+the byte for \texttt{a}, a deletion with the byte for \texttt{d}, and a zero
+byte ends the clause.  In this serialization paragraph \(l\) is a nonzero
+signed integer literal code, not the abstract literal of the earlier semantic
+definitions.  This code maps to \(2l\) for
+\(l>0\) and \(-2l+1\) for \(l<0\); the resulting unsigned integer is
+written in least-significant-first seven-bit groups, with a continuation bit
+on all but the last byte \cite[Sec.~1]{Heule2016DRATFormatV1}.  This changes
+representation, not the logical redundancy criterion.  A claim about a binary
+checker additionally requires correct decoding, range handling, record
+termination, and reconstruction of the same pivot and clause.
+
+\begin{proofboundary}{def:p12-drat-trusted-boundary}{What independent checking establishes}
+The mathematical theorem establishes UNSAT of the exact parsed CNF whenever
+the specified procedure accepts its certificate.  Applying it to an executable
+checker requires a correct parser and correspondence to that procedure, plus
+the declared execution path: executable/compiler/runtime or a verified
+extraction and its stated assumptions.  The independent checker need not trust
+the SAT solver, its heuristics, or a proof-producing preprocessor.  It still
+needs the exact input and certificate bytes.  A proof of the CNF says nothing
+about the intended informal problem until the encoding's implication or
+equisatisfiability theorem is supplied, as required by
+Method~\ref{def:p12-encoding-audit}.  Independence of a checker is not itself
+a theorem of checker correctness; the 2014 paper's timings and coverage of
+then-known solving techniques are not universal complexity bounds.
+\end{proofboundary}
+
+The later LRAT interface adds clause identifiers and propagation/RAT hints
+that a checker verifies; it does not permit trusting a hint merely because an
+elaborator emitted it \cite[Secs.~1, 3]{CruzFilipeEtAl2016LRATV1}.  The
+separately identified September~2021 FRAT preprint uses optional annotations,
+clause identifiers, and final-database information for communication from a
+solver to an elaborator \cite[Secs.~1--2]{BaekCarneiroHeule2021FRATV1}.
+Neither format nor its verified-checker results is attributed to the original
+2014 DRAT-trim paper.  A DRAT-to-LRAT or FRAT-to-LRAT pipeline can leave its
+translator untrusted only when the final checker checks the produced proof
+against the exact original input under its own proved specification.
+
+RAT also does not preserve ordinary or projected model counts.  With a declared
+single variable \(p\), the empty database has two models; adding the vacuous
+RAT unit \(\{p\}\) leaves one.  Projecting onto \(\{p\}\) likewise
+changes the two projected valuations to one.  Thus counting, projected
+counting, enumeration, optimization, and QBF certificates need their own
+semantic preservation conditions and checking formats.  They are not supplied
+by the existence-of-a-model invariant proved here, nor by relabelling an
+ordinary DRAT log.

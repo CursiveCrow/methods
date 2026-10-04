@@ -1,0 +1,438 @@
+\subsection{The generic primitive-recursive computation construction}
+
+\begin{hbdefinition}{def:p12-har-prcompiler-source}{The actual internal program and the external syntax boundary}
+The chapter's generic computation promise cites Oostdijk--Geuvers.
+The author-held preprint, dated 14 April 2000, gives an \emph{internal}
+datatype \(\mathsf{form}:\mathsf{Set}\), an interpretation into
+\(\mathsf{Prop}\), an interpreter into \(\mathsf{bool}:\mathsf{Set}\),
+and one universal correctness proof. This is stronger than a metalevel
+assertion that primitive-recursive functions have representing terms.
+Conversely, its atomic arguments are already Coq nat terms: the paper
+does not define an internal datatype of primitive-recursive function
+prescriptions. Its discussion expressly leaves automatic inverse
+translation from an arbitrary proposition to form outside the object
+language, and distinguishes the older external Lego generator.
+The dated preprint and the eventual 2002 journal article are distinct
+manifestations; the chapter's provisional 2001 citation is not a claim
+of byte or pagination identity
+\cite{OostdijkGeuvers2002ProofByComputation}.
+The chapter promise is located at pp.~1222--1223
+\cite{BarendregtGeuvers2001}; the construction source is the author preprint
+\cite[\S\S4--5, pp.~17--25]{OostdijkGeuvers2000ProofByComputationPreprint}.
+
+Use the historical nat:Set, its data recursion and Prop induction,
+and the equality/order library of
+\cref{def:p12-har-prime-regime,thm:p12-har-prime-equality,thm:p12-har-prime-order}.
+For a fixed admitted target C, write
+\(\mathsf{nat\_rec}_C:C\to(\mathsf{nat}\to C\to C)\to\mathsf{nat}\to C\),
+with zero and successor computation. The source extension also admits
+bool and the strictly positive form declaration below, including its
+higher-order recursive fields. These are the selected inductive
+extensions of the paper's \(\lambda\mathsf{PRED}\omega\), not
+nat:Type, the beta-only HOL calculus, or a theorem of consistency for
+every inductive extension. No DN or Prop-to-Set witness extraction is used.
+The paper's base sorts are
+\(\{\mathsf{Prop},\mathsf{Set},\mathsf{Type},\mathsf{Type}^{s}\}\),
+with axioms \(\mathsf{Prop}:\mathsf{Type}\) and
+\(\mathsf{Set}:\mathsf{Type}^{s}\). Its product sort pairs are
+\((\mathsf{Set},\mathsf{Set}),(\mathsf{Set},\mathsf{Type}),
+(\mathsf{Type},\mathsf{Type}),(\mathsf{Prop},\mathsf{Prop}),
+(\mathsf{Set},\mathsf{Prop}),(\mathsf{Type},\mathsf{Prop})\),
+with result the second sort. Thus the proposition-code target Prop
+is in Type, distinct from a proof target in Prop. Constructor computation
+belongs to the separately selected inductive extension, not the base
+beta conversion \cite[Definition~1, p.~6; \S3]{OostdijkGeuvers2000ProofByComputationPreprint}.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p12-har-prcompiler-prescriptions}{Explicit arities and all external primitive-recursive templates}
+To state function representation precisely, use the following
+\emph{editorial metalevel} finite ranked syntax. It is not attributed as
+an internal datatype printed in the primary paper. At arity k allow
+\(Z_k\); allow \(\mathsf{Succ}\) at arity one; allow
+\(P_i^k\) for \(k\ge1\) and \(1\le i\le k\). If f has arity m
+and each \(g_i\) arity k, then \(\mathsf{Comp}_k(f;g_1,\ldots,g_m)\)
+has arity k. If g has arity k and h arity \(k+2\), then
+\(\mathsf{Rec}_k(g,h)\) has arity \(k+1\), with the recursion
+argument \emph{last}. Both k and m may be zero. There is no projection
+of arity zero. Put \(T_0:=\mathsf{nat}\) and
+\(T_{k+1}:=\mathsf{nat}\to T_k\); an empty argument list means
+no application, not an assumed unit datatype.
+
+The compiler \(\mathcal C\) emits these actual annotated templates:
+\[
+\begin{aligned}
+ \mathcal C Z_k&:=\lambda x_1:\mathsf{nat}\ldots\lambda x_k:\mathsf{nat}.O,\\
+ \mathcal C\mathsf{Succ}&:=\lambda x:\mathsf{nat}.Sx,\\
+ \mathcal C P_i^k&:=\lambda x_1:\mathsf{nat}\ldots\lambda x_k:\mathsf{nat}.x_i,\\
+ \mathcal C\mathsf{Comp}_k(f;\vec g)&:=
+   \lambda\vec x:\mathsf{nat}.(\mathcal C f)
+           ((\mathcal C g_1)\vec x)\cdots((\mathcal C g_m)\vec x),\\
+ \mathcal C\mathsf{Rec}_k(g,h)&:=\lambda\vec x:\mathsf{nat}.
+   \mathsf{nat\_rec}_{\mathsf{nat}}
+      ((\mathcal C g)\vec x)
+      (\lambda n:\mathsf{nat}.\lambda r:\mathsf{nat}.
+                         (\mathcal C h)\vec x\ n\ r).
+\end{aligned}
+\]
+Here \(\lambda\vec x\) abbreviates exactly k annotated abstractions.
+At \(k=0\), \(\mathcal C Z_0=O\); at \(m=0\), the composition
+body is just \(\mathcal C f:T_0\). The last template itself returns a
+function of the recursion argument, so no argument is omitted.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p12-har-prcompiler-typing}{proved=annex:p12.har.prcompiler-typing}{Typing every ranked prescription}
+For every finite prescription e of arity k,
+\(\mathcal C e:T_k\) in the historical data regime. The template
+construction is effective structural recursion on the finite prescription;
+it requires no oracle for whether an arbitrary term is primitive recursive.
+Its only recursion target is nat, with the indicated parameter context.
+\end{hblemma}
+
+\begin{hbdefinition}{def:p12-har-prcompiler-denotation}{The independently specified numerical meaning}
+On ordinary metalevel natural numbers define \(\langle e\rangle\)
+by zero, successor and projection, by ordinary function composition, and
+by the equations
+\[
+ \langle\mathsf{Rec}_k(g,h)\rangle(\vec a,0)=\langle g\rangle(\vec a),
+ \qquad
+ \langle\mathsf{Rec}_k(g,h)\rangle(\vec a,n+1)
+ =\langle h\rangle(\vec a,n,
+          \langle\mathsf{Rec}_k(g,h)\rangle(\vec a,n)).
+\]
+This numerical recursion specifies a total function by ordinary induction
+on n, independently of the emitted syntax. Write \(\overline a:=S^aO\).
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-har-prcompiler-representation}{proved=annex:p12.har.prcompiler-representation}{Uniform numerical representation, including zero arity}
+For every prescription e of arity k and every numerical tuple \(\vec a\),
+\[
+ (\mathcal C e)\overline{a_1}\cdots\overline{a_k}
+       \longrightarrow_{\beta\delta\iota}^{*}
+                         \overline{\langle e\rangle(\vec a)}.
+\]
+Consequently every standard-natural-number valuation of its free
+parameters gives the independently specified numerical result. This is
+a universal representation theorem, not a claim that an arbitrary opaque
+open variable contracts to a numeral, or that every Coq nat term belongs
+to the finite prescription language.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p12-har-prcompiler-booleans}{The primary paper's actual boolean datatype and programs}
+Retain \(\mathsf{bool}:\mathsf{Set}\) with constructors true and false,
+not the earlier natural-number codes O and one. Its generated data
+selector is \(\mathsf{if}_C:\mathsf{bool}\to C\to C\to C\),
+namely \(\lambda b:\mathsf{bool}.\lambda u:C.\lambda v:C.
+\mathsf{Rec}_{\mathsf{bool}}^C\ u\ v\ b\),
+with the two constructor computations, and its Prop induction has both
+literal cases. Define \(\mathsf{istrue}\ b\) by case analysis into
+Prop, with true mapped to TT and false to FF; these are the historical
+aliases for the paper's True and False. Explicitly,
+\(\mathsf{istrue}:=\lambda b:\mathsf{bool}.
+\mathsf{Rec}_{\mathsf{bool}}^{\mathsf{Prop}}\ \mathsf{TT}\ \mathsf{FF}\ b\).
+Here Prop:Type is an admitted fixed target of this data recursor
+\cite[Example~5, p.~14]{OostdijkGeuvers2000ProofByComputationPreprint}.
+Define
+\[
+\begin{aligned}
+ \mathsf{b\_not}\ a&:=\mathsf{if}_{\mathsf{bool}}\ a\ \mathsf{false}\ \mathsf{true},&
+ \mathsf{b\_and}\ a\ b&:=\mathsf{if}_{\mathsf{bool}}\ a\ b\ \mathsf{false},\\
+ \mathsf{b\_or}\ a\ b&:=\mathsf{if}_{\mathsf{bool}}\ a\ \mathsf{true}\ b,&
+ \mathsf{b\_imp}\ a\ b&:=\mathsf{if}_{\mathsf{bool}}\ a\ b\ \mathsf{true},\\
+ \mathsf{code}\ b&:=\mathsf{if}_{\mathsf{nat}}\ b\ \mathsf{one}\ O.
+\end{aligned}
+\]
+For the paper's atomic comparisons, the following are complete fixed-target
+terms, not only desired equations:
+\[
+\begin{aligned}
+ q_0&:=\lambda m:\mathsf{nat}.\mathsf{true},\\
+ e_0&:=\mathsf{nat\_rec}_{\mathsf{bool}}\ \mathsf{true}
+             (\lambda j:\mathsf{nat}.\lambda r:\mathsf{bool}.\mathsf{false}),\\
+ d&:=\lambda n:\mathsf{nat}.\lambda q:\mathsf{nat}\to\mathsf{bool}.
+       \lambda m:\mathsf{nat}.
+        \mathsf{nat\_rec}_{\mathsf{bool}}\ \mathsf{false}
+           (\lambda j:\mathsf{nat}.\lambda r:\mathsf{bool}.q j)\ m,\\
+ \mathsf{b\_le}&:=\mathsf{nat\_rec}_{\mathsf{nat}\to\mathsf{bool}}\ q_0\ d,
+ &\mathsf{b\_eq}&:=\mathsf{nat\_rec}_{\mathsf{nat}\to\mathsf{bool}}\ e_0\ d,\\
+ \mathsf{b\_lt}\ n\ m&:=\mathsf{b\_le}\ (S n)\ m,
+ &\mathsf{b\_ge}\ n\ m&:=\mathsf{b\_le}\ m\ n,\\
+ \mathsf{b\_gt}\ n\ m&:=\mathsf{b\_lt}\ m\ n.
+\end{aligned}
+\]
+The equations are exactly zero/zero and zero/successor true for b\_le,
+successor/zero false, and successor/successor the previous comparison;
+b\_eq differs only at zero/successor, which is false
+\cite[Definitions~12--14,17, pp.~21--22]{OostdijkGeuvers2000ProofByComputationPreprint}.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p12-har-prcompiler-boolean}{proved=annex:p12.har.prcompiler-boolean}{Boolean typing, logical operations and the numerical-code bridge}
+The displayed programs have their indicated data types. For all a,b:bool,
+istrue preserves not, and, or and implication in both directions:
+\(\mathsf{istrue}(\mathsf{b\_imp}\ a\ b)
+ \leftrightarrow(\mathsf{istrue}\ a\to\mathsf{istrue}\ b)\),
+and analogously for the other three connectives. Also
+\[
+ (\mathsf{code}\ b=O)\vee(\mathsf{code}\ b=\mathsf{one}),\quad
+ \mathsf{istrue}\ b\leftrightarrow\mathsf{code}\ b=\mathsf{one},\quad
+ \neg\mathsf{istrue}\ b\leftrightarrow\mathsf{code}\ b=O.
+\]
+The last bridge is an actual computed conversion between two data
+representations, not their silent identification.
+\end{hblemma}
+
+\begin{hblemma}{thm:p12-har-prcompiler-atoms}{proved=annex:p12.har.prcompiler-atoms}{All five atomic adequacy statements}
+For every n,m:nat, istrue of b\_eq, b\_le, b\_lt, b\_ge and b\_gt
+is respectively equivalent to \(n=m,n\le m,n<m,m\le n,m<n\).
+The equalities and orders are the actual historical library relations.
+\end{hblemma}
+
+\begin{hbdefinition}{def:p12-har-prcompiler-bounds}{Both exclusive bounded-quantifier programs}
+Let \(C:=(\mathsf{nat}\to\mathsf{bool})\to\mathsf{bool}\). Define
+\[
+\begin{aligned}
+ \mathsf{b\_all}&:=\mathsf{nat\_rec}_C
+    (\lambda f:\mathsf{nat}\to\mathsf{bool}.\mathsf{true})
+    (\lambda m:\mathsf{nat}.\lambda r:C.
+     \lambda f:\mathsf{nat}\to\mathsf{bool}.
+                         \mathsf{b\_and}\ (f m)\ (r f)),\\
+ \mathsf{b\_ex}&:=\mathsf{nat\_rec}_C
+    (\lambda f:\mathsf{nat}\to\mathsf{bool}.\mathsf{false})
+    (\lambda m:\mathsf{nat}.\lambda r:C.
+     \lambda f:\mathsf{nat}\to\mathsf{bool}.
+                         \mathsf{b\_or}\ (f m)\ (r f)).
+\end{aligned}
+\]
+Thus at O the results are true/false, and at S m the endpoint f m is
+combined with the old prefix. These scan \(0\le x<b\), not \(x\le b\),
+and their evaluation order is the source's descending conjunction or
+disjunction \cite[Definitions~15--16, p.~22]{OostdijkGeuvers2000ProofByComputationPreprint}.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-har-prcompiler-bounds}{proved=annex:p12.har.prcompiler-bounds}{Both bounded quantifier equivalences, with zero and endpoint cases}
+For every b:nat and every f:nat-to-bool,
+\[
+\begin{aligned}
+ \mathsf{istrue}(\mathsf{b\_all}\ b\ f)&\leftrightarrow
+                 \Pi x:\mathsf{nat}.(x<b)\to\mathsf{istrue}(f x),\\
+ \mathsf{istrue}(\mathsf{b\_ex}\ b\ f)&\leftrightarrow
+                 \exists x:\mathsf{nat}.(x<b)\wedge\mathsf{istrue}(f x).
+\end{aligned}
+\]
+Both reverse implications are constructive; the existential proof is
+used only to prove a proposition, never to construct the boolean datum.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p12-har-prcompiler-form}{The exact eleven-constructor internal formula datatype}
+The source declaration has five constructors
+\(\mathsf{f\_lt},\mathsf{f\_le},\mathsf{f\_eq},\mathsf{f\_ge},\mathsf{f\_gt}:
+\mathsf{nat}\to\mathsf{nat}\to\mathsf{form}\),
+one \(\mathsf{f\_not}:\mathsf{form}\to\mathsf{form}\),
+three \(\mathsf{f\_and},\mathsf{f\_or},\mathsf{f\_imp}:
+\mathsf{form}\to\mathsf{form}\to\mathsf{form}\), and
+\[
+ \mathsf{f\_all},\mathsf{f\_ex}:
+        \mathsf{nat}\to(\mathsf{nat}\to\mathsf{form})\to\mathsf{form}.
+\]
+In particular the last argument is a typed family, not an untyped string
+or an assumed finite list of formulas
+\cite[Definition~7 and generated induction, pp.~18--19]{OostdijkGeuvers2000ProofByComputationPreprint}.
+For a fixed target C, its generated fold takes five branches
+\(\mathsf{nat}\to\mathsf{nat}\to C\), one branch
+\(\mathsf{form}\to C\to C\), three branches
+\(\mathsf{form}\to C\to\mathsf{form}\to C\to C\), and two branches
+\(\mathsf{nat}\to(\mathsf{nat}\to\mathsf{form})\to
+(\mathsf{nat}\to C)\to C\).
+At a quantifier constructor the supplied recursive result is exactly
+\(\lambda x:\mathsf{nat}.\mathsf{fold}_C(h x)\).
+Here \(\mathsf{fold}_C\) means the source-generated primitive
+\(\mathsf{Rec}_{\mathsf{form}}^C\) applied to these eleven branches,
+in constructor order; it is not an additional postulated evaluator.
+The generated Prop induction similarly supplies
+\(\Pi x:\mathsf{nat}.P(h x)\) at a family constructor; no unproved
+parametricity principle is substituted for this induction.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p12-har-prcompiler-interpreters}{Every branch of the two internal interpreters}
+Define \(\mathcal P:\mathsf{form}\to\mathsf{Prop}\) and
+\(\mathsf{comp}:\mathsf{form}\to\mathsf{bool}\) by the preceding
+fixed-target folds, at Prop and bool respectively. Their actual branches are
+\[
+\begin{array}{c|c|c}
+ \text{constructor}&\mathcal P&\mathsf{comp}\\\hline
+ \mathsf{f\_lt}\ n\ m&n<m&\mathsf{b\_lt}\ n\ m\\
+ \mathsf{f\_le}\ n\ m&n\le m&\mathsf{b\_le}\ n\ m\\
+ \mathsf{f\_eq}\ n\ m&n=m&\mathsf{b\_eq}\ n\ m\\
+ \mathsf{f\_ge}\ n\ m&m\le n&\mathsf{b\_ge}\ n\ m\\
+ \mathsf{f\_gt}\ n\ m&m<n&\mathsf{b\_gt}\ n\ m\\
+ \mathsf{f\_not}\ p&\neg\mathcal P p&\mathsf{b\_not}(\mathsf{comp}\ p)\\
+ \mathsf{f\_and}\ p\ q&\mathcal P p\wedge\mathcal P q&
+                   \mathsf{b\_and}(\mathsf{comp}\ p)(\mathsf{comp}\ q)\\
+ \mathsf{f\_or}\ p\ q&\mathcal P p\vee\mathcal P q&
+                   \mathsf{b\_or}(\mathsf{comp}\ p)(\mathsf{comp}\ q)\\
+ \mathsf{f\_imp}\ p\ q&\mathcal P p\to\mathcal P q&
+                   \mathsf{b\_imp}(\mathsf{comp}\ p)(\mathsf{comp}\ q)\\
+ \mathsf{f\_all}\ b\ h&\Pi x.(x<b)\to\mathcal P(h x)&
+                   \mathsf{b\_all}\ b\ (\lambda x.\mathsf{comp}(h x))\\
+ \mathsf{f\_ex}\ b\ h&\exists x.(x<b)\wedge\mathcal P(h x)&
+                   \mathsf{b\_ex}\ b\ (\lambda x.\mathsf{comp}(h x))
+\end{array}
+\]
+This table gives code templates: for example, the all branches are
+\(\lambda b:\mathsf{nat}.\lambda h:\mathsf{nat}\to\mathsf{form}.
+\lambda r:\mathsf{nat}\to\mathsf{Prop}.\Pi x.(x<b)\to r x\)
+and the corresponding bool branch
+\(\lambda b.\lambda h.\lambda r.\mathsf{b\_all}\ b\ r\),
+with the fold interface fixing every omitted annotation. Each other row
+is the same fully typed abstraction over its constructor fields and
+recursive results; a recursive result is used, not a second hidden call
+to an unspecified evaluator. In particular the complete comp term is
+\[
+\begin{aligned}
+ \mathsf{comp}:={}&\mathsf{Rec}_{\mathsf{form}}^{\mathsf{bool}}
+  \ \mathsf{b\_lt}\ \mathsf{b\_le}\ \mathsf{b\_eq}\ \mathsf{b\_ge}\ \mathsf{b\_gt}\\
+ & (\lambda p:\mathsf{form}.\lambda u:\mathsf{bool}.\mathsf{b\_not}\ u)\\
+ & (\lambda p:\mathsf{form}.\lambda u:\mathsf{bool}.
+     \lambda q:\mathsf{form}.\lambda v:\mathsf{bool}.\mathsf{b\_and}\ u\ v)\\
+ & (\lambda p:\mathsf{form}.\lambda u:\mathsf{bool}.
+     \lambda q:\mathsf{form}.\lambda v:\mathsf{bool}.\mathsf{b\_or}\ u\ v)\\
+ & (\lambda p:\mathsf{form}.\lambda u:\mathsf{bool}.
+     \lambda q:\mathsf{form}.\lambda v:\mathsf{bool}.\mathsf{b\_imp}\ u\ v)\\
+ & (\lambda b:\mathsf{nat}.\lambda h:\mathsf{nat}\to\mathsf{form}.
+     \lambda r:\mathsf{nat}\to\mathsf{bool}.\mathsf{b\_all}\ b\ r)\\
+ & (\lambda b:\mathsf{nat}.\lambda h:\mathsf{nat}\to\mathsf{form}.
+     \lambda r:\mathsf{nat}\to\mathsf{bool}.\mathsf{b\_ex}\ b\ r).
+\end{aligned}
+\]
+The Prop-target term uses the eleven analogous, fully annotated
+branches specified in its typing proof. This primitive-recursion form
+reconstructs the source's structural Fixpoint definitions, rather than
+claiming a new axiom for comp. The primary paper writes these interpreters
+as \(\llbracket-\rrbracket\) and
+\(\llparenthesis-\rrparenthesis\), respectively
+\cite[Definitions~10--11, pp.~20--21]{OostdijkGeuvers2000ProofByComputationPreprint}.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p12-har-prcompiler-form-typing}{proved=annex:p12.har.prcompiler-form-typing}{All interpreter branches and generated induction are well typed}
+The two fold terms have exactly the stated types; every displayed
+equation is their constructor computation. The correctness motive
+\(P(p):=(\mathcal P p\leftrightarrow\mathsf{istrue}(\mathsf{comp}\ p))\)
+is admitted by the generated form induction, including its two
+\(\Pi x.P(h x)\) premises.
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p12-har-prcompiler-ok}{proved=annex:p12.har.prcompiler-ok}{The single internal universal adequacy proof}
+There is a proof term, constructed by form induction,
+\[
+ \mathsf{ok}:\Pi p:\mathsf{form}.
+            \mathcal P p\leftrightarrow\mathsf{istrue}(\mathsf{comp}\ p).
+\]
+It holds in every valid open parameter context, for arbitrary typed nat
+fields and arbitrary typed quantifier families. It does not require
+closed inputs, DN, induction on a formula string, or proof irrelevance.
+It is the actual internal reusable correctness component of the source
+promise, not a separately assumed theorem for each input formula.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p12-har-prcompiler-extraction}{proved=annex:p12.har.prcompiler-extraction}{Predicate instances, numerical characteristic codes and closed proof objects}
+Put \(F_0:=\mathsf{form}\) and \(F_{k+1}:=\mathsf{nat}\to F_k\).
+For any well-typed family \(p:F_k\),
+including \(k=0\) with no arguments, define the actual program
+\[
+ K_p:=\lambda\vec x:\mathsf{nat}.
+           \mathsf{code}(\mathsf{comp}(p\vec x)).
+\]
+It has type \(T_k\), zero/one range, and for every open tuple
+\(\mathcal P(p\vec x)\leftrightarrow K_p\vec x=\mathsf{one}\),
+as well as \(\neg\mathcal P(p\vec x)\leftrightarrow K_p\vec x=O\).
+If a particular closed \(\mathsf{comp}\ p\) contracts to true, then
+\((\mathsf{ok}\ p)_{\leftarrow}\ \mathsf{trivial}\) is a proof of
+\(\mathcal P p\) by conversion. No claim that every arbitrary closed
+axiomatic nat term computes is needed for this implication.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p12-har-prcompiler-predicate}{proved=annex:p12.har.prcompiler-predicate}{Every prescribed primitive-recursive predicate has a characteristic program}
+Let e be any ranked primitive-recursive prescription of arity k and
+define its metalevel numerical predicate
+\(R_e(\vec a):\!\iff\langle e\rangle(\vec a)=1\).
+Construct, without a supplied per-input correctness theorem,
+\[
+ p_e:=\lambda\vec x:\mathsf{nat}.
+          \mathsf{f\_eq}\ ((\mathcal C e)\vec x)\ \mathsf{one},
+ \qquad K_e:=K_{p_e}.
+\]
+For every numerical tuple, the finite program computation yields
+\(K_e\overline{\vec a}\longrightarrow^*\mathsf{one}\) if
+\(R_e(\vec a)\), and yields O otherwise. For arbitrary typed open
+tuples its internally proved adequacy is
+\[
+ ((\mathcal C e)\vec x=\mathsf{one})
+                 \leftrightarrow K_e\vec x=\mathsf{one},
+ \quad
+ \neg((\mathcal C e)\vec x=\mathsf{one})
+                 \leftrightarrow K_e\vec x=O.
+\]
+In particular any predicate specified by a finite prescription for
+its zero/one characteristic function is included. The convention
+\(R_e=\{\vec a:\langle e\rangle\vec a=1\}\) also defines a
+predicate when e's values are not confined to zero/one; the resulting
+\emph{new} \(K_e\) still has zero/one range. Neither membership testing
+for an arbitrary host function nor an internal inverse on Prop is
+asserted by this uniform external template plus internal comp program.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p12-har-prcompiler-source-prime}{The primary paper's actual division and Prime formula inputs}
+At the source unary arithmetic library, Example~9 supplies the two
+\emph{formula-valued} programs
+\[
+\begin{aligned}
+ \mathsf{f\_Divides}&:=\lambda n,m:\mathsf{nat}.
+  \mathsf{f\_ex}\ (S m)
+       (\lambda k:\mathsf{nat}.\mathsf{f\_eq}\ (\mathsf{times}\ k\ n)\ m),\\
+ \mathsf{f\_Prime}&:=\lambda n:\mathsf{nat}.
+  \mathsf{f\_and}\ (\mathsf{f\_gt}\ n\ \mathsf{one})\\
+ &\hspace{35mm}(\mathsf{f\_all}\ n\ (\lambda d:\mathsf{nat}.
+    \mathsf{f\_imp}\ (\mathsf{f\_Divides}\ d\ n)
+                         (\mathsf{f\_eq}\ d\ \mathsf{one}))).
+\end{aligned}
+\]
+Their types are nat-to-nat-to-form and nat-to-form, respectively.
+Expanding \(\mathcal P\) gives, on these same terms,
+\(\exists k.(k<S m)\wedge(kn=m)\) and
+\((n>\mathsf{one})\wedge\Pi d.(d<n)\to
+ ((\exists k.(k<S n)\wedge(kd=n))\to d=\mathsf{one})\).
+These are the exact bounded division and Prime inputs of this
+implementation, not a new axiom naming ordinary primality. Applying
+\cref{thm:p12-har-prcompiler-extraction} supplies their actual
+characteristic programs and open universal adequacy proofs without
+a second per-input proof search. The bounded coefficient convention,
+strict d<n fold and formula's conjunction order are retained
+\cite[Examples~6,9, pp.~17,19]{OostdijkGeuvers2000ProofByComputationPreprint}.
+No definitional identity with the chapter's separate unbounded div/
+proper-divisor prime declaration or the earlier direct KPrime program
+is inferred merely from the name. The primary paper reports its
+Prime 61 computation and unary/nonoptimized costs historically; this
+entry does not claim a newly executed kernel computation or a finite
+61 trace for this different generic search
+\cite[pp.~24--25]{OostdijkGeuvers2000ProofByComputationPreprint}.
+\end{hbexample}
+
+\begin{proofboundary}{def:p12-har-prcompiler-boundary}{What the generic construction supplies and what it does not}
+Finite primitive-recursive function prescriptions now have an actual
+external syntax compiler and a universal numerical representation proof.
+The source's internal formula program and its universal adequacy proof
+are separately supplied, with all eleven constructor branches. One can
+put compiled primitive-recursive terms in the atomic nat fields and
+abstract over free data parameters; this does not require a function-AST
+datatype or a choice principle. Arbitrary Prop-to-form reification is not
+claimed: it is expressly an unimplemented external interface in the
+primary source. The paper's further extension by an atomic R requires
+an actual boolean function and a proof
+\(\Pi\vec x.R\vec x\leftrightarrow\mathsf{istrue}(f_R\vec x)\);
+adding that constructor alone cannot manufacture this proof.
+The direct KPrime program already supplies a different concrete
+characteristic construction; no identity of its search algorithm with
+the generic compiler or the printed Prime 61 implementation is asserted.
+Pocklington/Fermat and large certificates, differentiation/continuity,
+arithmetic coding, and global inductive-extension/C001 metatheory retain
+their separate obligations.
+\end{proofboundary}

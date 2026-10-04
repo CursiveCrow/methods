@@ -1,0 +1,2167 @@
+% Source presentations for register row N-c-016.
+
+\subsection{CTL, CTL*, and state-labelling model checking presentations}
+\label{sec:p09-presentation-n-c-016}
+
+\subsubsection{Clarke--Emerson's branching-time synthesis presentation}
+\label{sec:p09-presentation-n-c-016-clarke-emerson}
+
+Clarke and Emerson's conference paper appeared in \emph{Logics of Programs},
+LNCS~131, on original pages 52--71 in 1982; the meeting itself was held in
+1981.  The source used here is the authors' institutionally hosted, authorized
+2008 Springer reprint, whose first page identifies those original publication
+facts.  Its reprint pagination is 196--215, but citations below use the
+original 52--71 pagination.  A different author-hosted scan runs to 37
+numbered manuscript pages plus separately scanned figures.  That longer
+manuscript can explain what the conference paper calls the \emph{full paper},
+but it is not silently treated here as part of the published twenty-page body
+\cite[pp.~52--53, 70--71]{ClarkeEmerson1981}.
+
+\paragraph{The program abstraction and its semantic structure.}
+The source needs to suppress code details which do not affect
+synchronization.  It therefore calls the following per-process object a
+\emph{synchronization skeleton}: a finite flowgraph whose uniquely labelled
+nodes are regions or blocks of code, whose arcs are possible transitions
+between regions, and whose arc labels are the conditions enabling those
+transitions.  This is a program abstraction, not a temporal formula or a
+semantic state structure.  It differs from an ordinary control-flow graph by
+deliberately leaving the computation internal to each region uninterpreted,
+and the construction neither synthesizes that suppressed computation nor
+proves a refinement from low-level code to the skeleton.  It also differs
+from the \emph{global system flowgraph} constructed later:
+that object is the finite joint-behavior graph obtained from the synthesized
+model by retaining propositional state labels and distinguishing duplicate
+labels with auxiliary assignments.  The skeleton belongs to one process,
+whereas the global graph records the region of every process.  Unique global
+labels are needed to recover unambiguous local enabling conditions, and the
+distinction is used when the last synthesis stage factors one global model
+into one skeleton per process
+\cite[pp.~53--54, 63, 67--70]{ClarkeEmerson1981}.
+
+Fix \(k\in\mathbb N\) with \(k\geq1\) and processes
+\(P_1,\ldots,P_k\).  The paper gives the branching-time formulas a semantics
+in a structure
+\[
+ M=(S,A_1,\ldots,A_k,L).
+\]
+Here \(S\) is countable, \(A_i\subseteq S\times S\) is the transition
+relation for one atomic step of process \(P_i\), and \(L(s)\) is the set of
+atomic propositions true at \(s\).  Writing
+\(A=A_1\cup\cdots\cup A_k\), the source requires \(A\) to be total:
+\[
+ \forall s\in S\;\exists t\in S\;((s,t)\in A).
+\]
+A path from \(s_0\) is consequently an infinite sequence
+\(s_0,s_1,\ldots\) with \((s_i,s_{i+1})\in A\) for every \(i\).
+The computation tree rooted at \(s_0\) is the unfolding of these paths, with
+an arc marked by process \(i\) exactly when its underlying transition belongs
+to \(A_i\).  Thus the computation tree is neither a per-process skeleton nor
+the finite global flowgraph eventually extracted from a model
+\cite[pp.~53--54]{ClarkeEmerson1981}.
+
+\paragraph{The source's CTL syntax and semantics.}
+The paper calls its language Computation Tree Logic, or CTL, but its primitive
+next operator retains the identity of the moving process.  With
+\(1\leq j\leq k\), its grammar is
+\[
+ f ::= p
+ \mid \neg f
+ \mid (f\land f)
+ \mid EX_j f
+ \mid A[f\,U\,f]
+ \mid E[f\,U\,f].
+\]
+This is the source's statement family of state formulas.  In particular,
+\(EX_j\) is not the unindexed \(EX\) of many later CTL presentations.
+Atomic and Boolean satisfaction are classical, while
+\[
+\begin{aligned}
+ M,s\models EX_j f
+ &\iff \exists t\in S\,
+        \bigl((s,t)\in A_j \land M,t\models f\bigr),\\
+ M,s_0\models A[f_1\,U\,f_2]
+ &\iff
+   \forall(s_0,s_1,\ldots)\,
+   \exists i\geq0\,
+   \bigl(M,s_i\models f_2
+     \land \forall r<i\;M,s_r\models f_1\bigr),\\
+ M,s_0\models E[f_1\,U\,f_2]
+ &\iff
+   \exists(s_0,s_1,\ldots)\,
+   \exists i\geq0\,
+   \bigl(M,s_i\models f_2
+     \land \forall r<i\;M,s_r\models f_1\bigr).
+\end{aligned}
+\]
+The quantifiers in the last two clauses range over paths from \(s_0\).
+Because \(i=0\) is permitted, until is inclusive at its right endpoint;
+because a witness \(i\) is required, it is strong until
+\cite[pp.~54--55]{ClarkeEmerson1981}.
+
+Writing \(\mathit{true}\) for the state formula true at every state, the
+source then defines, rather than adds as primitives,
+\[
+\begin{aligned}
+ A[f_1\,V\,f_2]&:=\neg E[\neg f_1\,U\,\neg f_2],
+ &
+ E[f_1\,V\,f_2]&:=\neg A[\neg f_1\,U\,\neg f_2],\\
+ AFf&:=A[\mathit{true}\,U\,f],
+ &
+ EFf&:=E[\mathit{true}\,U\,f],\\
+ AGf&:=\neg EF\neg f,
+ &
+ EGf&:=\neg AF\neg f,\\
+ AX_i f&:=\neg EX_i\neg f,
+ &
+ EXf&:=\bigvee_{i=1}^{k}EX_i f,
+ \qquad AXf:=\neg EX\neg f.
+\end{aligned}
+\]
+The \(V\)-forms are dual release-like operators.  Process-indexed
+\(AX_i\) can be vacuously true when process \(i\) has no enabled successor,
+even though totality guarantees that some process has a successor.  That
+distinction is essential in the mutual-exclusion specification below
+\cite[pp.~55--56]{ClarkeEmerson1981}.
+
+\paragraph{The finite-state model checker.}
+For a finite \(M\) and an input formula \(f_0\), let
+\(\operatorname{sub}^{+}(f_0)\) be the subformulas whose main connective is
+not negation.  A state is labelled with exactly one of \(f\) and \(\neg f\)
+for each such \(f\), according to its truth.  If
+\(n=\operatorname{length}(f_0)\), the source makes \(n+1\) bottom-up passes,
+using results for shorter formulas in the pass for formulas of length \(i\).
+Atomic, conjunction, and \(EX_j\) cases are immediate.  Until is calculated
+by outward radiation from the right-operand states
+\cite[pp.~56--58]{ClarkeEmerson1981}.
+
+More explicitly, put
+\[
+\begin{aligned}
+ X_0&=\{s:M,s\models f_2\},&
+ X_{r+1}
+   &=X_r\cup
+     \{s:M,s\models f_1
+       \text{ and every }A\text{-successor of }s\text{ lies in }X_r\},\\
+ Y_0&=\{s:M,s\models f_2\},&
+ Y_{r+1}
+   &=Y_r\cup
+     \{s:M,s\models f_1
+       \text{ and some }A\text{-successor of }s\text{ lies in }Y_r\}.
+\end{aligned}
+\]
+Then \(X_{\lvert S\rvert}\) and \(Y_{\lvert S\rvert}\) are respectively
+the sets of states satisfying \(A[f_1\,U\,f_2]\) and
+\(E[f_1\,U\,f_2]\).  The \(Y_r\) recurrence is reconstructed from the
+paper's printed base case and guarded propagation loop; it is not misreported
+as a second displayed recurrence.  Each sequence is monotone over the finite
+set \(S\) and therefore stabilizes after at most \(\lvert S\rvert\) strict
+additions.  Semantically, a universal until that could postpone \(f_2\) past
+every loop-free prefix would admit an infinite path on which \(f_2\) never
+occurs; existential until needs only a loop-free witness prefix.  This yields
+the paper's
+\[
+ \operatorname{length}(f_0)\,\lvert S\rvert^2
+\]
+time bound for basic CTL under its representation and accounting convention.
+The later linear edge-sensitive bound below is a different implementation
+bound, not a correction to the theorem stated here
+\cite[pp.~56--59]{ClarkeEmerson1981}.
+
+There is one typographical defect in the source's displayed approximation.
+Its preceding expansion identity, its prose condition, and its printed
+Algol-like loop all require the guard \(f_1\):
+\[
+ A[f_1\,U\,f_2]
+ \equiv
+ f_2\lor\bigl(f_1\land AX\,A[f_1\,U\,f_2]\bigr).
+\]
+The intervening display for the \((r+1)\)-st approximation omits
+\(f_1\land\).  Reading that display literally would admit a predecessor at
+which \(f_1\) is false and would contradict both the semantics and the
+algorithm on the next page.  The reconstruction above follows the
+proof-supported form and records the omission rather than silently copying it
+\cite[pp.~56--57]{ClarkeEmerson1981}.
+
+The paper's worked graph has a root labelled \(a,\neg b\) with successors
+labelled \(\neg a,b\) and \(a,\neg b\); the left successor loops, while the
+right successor and a state labelled \(a,b\) form a two-cycle.  For
+\[
+ AFb\land EGa
+ \equiv AFb\land\neg AF\neg a,
+\]
+the \(b\)-states seed \(AFb\).  Backward universal growth next reaches the
+right-cycle \(a,\neg b\)-state and then the root, so \(AFb\) holds
+everywhere.  By contrast, \(AF\neg a\) grows no farther than the looping
+\(\neg a,b\)-state: the all-\(a\) cycle blocks it.  Hence the root receives
+\(AFb\) and \(\neg AF\neg a\), exactly the four snapshots in the source's
+Figures~4.1--4.4 \cite[pp.~57--58]{ClarkeEmerson1981}.
+
+The paper separately extends its notation with \(E^{\infty}Fp\), meaning
+that some path visits \(p\)-states infinitely often.  Proposition~4.1 proves
+that, in a finite structure, this holds at \(s\) exactly when some reachable
+\(p\)-state \(s'\) either has a self-loop or belongs to a strongly connected
+component of cardinality greater than one.  Reachability plus one graph
+search therefore preserves the same displayed quadratic bound.  This
+infinitary addition is not one of the basic grammar clauses above
+\cite[pp.~57--59]{ClarkeEmerson1981}.
+
+Nor does the paper claim that arbitrary linear-time path assertions retain
+that bound.  Proposition~4.2 prefixes an LTL assertion by a path quantifier
+and reduces directed Hamiltonian path to model checking.  Given a directed
+graph \(G=(V,E)\) with \(n\geq1\) and
+\(V=\{v_1,\ldots,v_n\}\), retain every edge in \(E\), add fresh states
+\(u_1,u_2\), and add exactly the new edges
+\[
+ u_1\to v_i,\qquad v_i\to u_2\quad(1\leq i\leq n),
+ \qquad u_2\to u_2.
+\]
+Label \(v_i\) only by \(p_i\), and give \(u_1,u_2\) none of the \(p_i\).
+At \(u_1\), the source tests the formula
+\[
+ E\left[
+   \bigwedge_{i=1}^{n}Fp_i
+   \land
+   \bigwedge_{i=1}^{n}G\bigl(p_i\to XG\neg p_i\bigr)
+ \right].
+\]
+Any satisfying path from \(u_1\) must visit every labelled vertex and may
+visit none twice before remaining at \(u_2\); it therefore encodes a directed
+Hamiltonian path in \(G\), and every such Hamiltonian path extends through
+\(u_2\) to a satisfying infinite path.  The literal conclusion is
+\(\mathsf{NP}\)-hardness
+for this extended model-checking problem, not an \(\mathsf{NP}\)-completeness
+classification and not the later full CTL* theorem
+\cite[pp.~59--60]{ClarkeEmerson1981}.
+
+\paragraph{What the satisfiability section actually supplies.}
+Section~5 expressly calls its tableau decision procedure an \emph{outline}.
+Its announced input/output contract is: on \(f_0\), return satisfiable or
+unsatisfiable and, in the satisfiable case, construct a finite model.  The
+three advertised stages are to build a finite directed AND/OR tableau, delete
+its inconsistent portions, and unravel what remains into a model.  The
+twenty-page paper does not print a numbered soundness-and-completeness theorem
+or its full proof; it directs the reader to the \emph{full paper}.  Its
+footnote also says that the related \([BM81]\) algorithm is incorrect because
+it can reject satisfiable formulas, and it cites corrected procedures instead.
+Those limitations belong to the source's proof status
+\cite[pp.~60--63]{ClarkeEmerson1981}.
+
+The source uses \(G\) for an OR-node label and \(H\) for an AND-node label.
+The publication names two successor constructions on finite formula sets.  It
+defines \(\operatorname{Blocks}(G)\) through the local Boolean and fixed-point
+closure below, but it illustrates \(\operatorname{Tiles}(H)\) only through the
+printed example below rather than giving the full general process-indexed
+clauses.  Their announced roles are nonredundant: a block chooses one locally
+satisfiable alternative, while every successor obligation represented by the
+printed tiles must be satisfiable.  The publication alternates the two named
+constructions in its AND/OR-tableau outline:
+\[
+ G\longrightarrow\operatorname{Blocks}(G)
+ \longrightarrow\operatorname{Tiles}(H)
+ \longrightarrow\operatorname{Blocks}(G')
+ \longrightarrow\cdots.
+\]
+
+For the first operation, an \(\alpha\)-formula has two required components
+and a \(\beta\)-formula has two alternative components.  Thus
+\(f\land g\) is \(\alpha\), \(f\lor g\) is \(\beta\), and the fixed-point
+expansions make
+\[
+ EFp\equiv p\lor EXEFp
+ \quad\text{a }\beta\text{-formula},\qquad
+ AGp\equiv p\land AXAGp
+ \quad\text{an }\alpha\text{-formula}.
+\]
+A formula with no modality, or with main connective \(EX\) or \(AX\), is
+called \emph{elementary} and is not expanded further.  Every other formula is
+nonelementary; the stated \(\alpha/\beta\) component rules govern those
+nonelementary expansions.  A finite formula
+set is downward closed when it contains both components of every
+\(\alpha\)-formula it contains and at least one component of every
+\(\beta\)-formula it contains.  The members
+\(H\in\operatorname{Blocks}(G)\) are precisely the downward-closed results
+of repeatedly making those expansions; \(G\) is satisfiable exactly when
+some such \(H\) is satisfiable.
+
+For the second operation, suppose the elementary part of \(H\) is
+\[
+ \{AXh_1,AXh_2,EXg_1,EXg_2,EXg_3\}.
+\]
+Then the source's example gives
+\[
+ \operatorname{Tiles}(H)
+ =
+ \bigl\{
+   \{h_1,h_2,g_1\},
+   \{h_1,h_2,g_2\},
+   \{h_1,h_2,g_3\}
+ \bigr\}.
+\]
+Each existential next formula needs a witness successor; every such witness
+must also meet both universal next obligations.  Provided \(H\) has no
+propositional inconsistency, \(H\) is satisfiable exactly when all of these
+tiles are satisfiable.  Labels of the same node type are merged.  Since there
+are at most \(2^{\operatorname{length}(f_0)}\) labels and each may occur once
+as each of the two node types, construction terminates
+\cite[pp.~60--62]{ClarkeEmerson1981}.
+
+The worked tableau begins with
+\(G_0=\{EFp\land EF\neg p\}\).  Boolean/fixed-point expansion produces four
+candidate AND-nodes, including one containing both \(p\) and \(\neg p\),
+which is deleted.  Consistency deletion also requires each eventuality
+\(EFh\) or \(AFh\) to have a reachable node where \(h\) holds.  In the
+remaining tableau the root is not deleted.  Choosing the root copy where
+\(p\) already fulfills \(EFp\), then its successor copy where
+\(\neg p\) fulfills \(EF\neg p\), yields a finite model; the latter state can
+loop.  This example illustrates the announced construction, but it does not
+turn the abridged outline into a printed full correctness proof
+\cite[pp.~61--63]{ClarkeEmerson1981}.
+
+\paragraph{Synthesis and the mutual-exclusion derivation.}
+The synthesis method has exactly three stages: write the required concurrent
+behavior in the source's CTL; apply the satisfiability procedure to obtain a
+finite global model; then factor the individual synchronization skeletons
+from that model's global system flowgraph.  The central example has two
+processes, each with the atomic region labels
+\(\mathsf{NCS}_i\), \(\mathsf{TRY}_i\), and \(\mathsf{CS}_i\) for its
+noncritical, trying, and critical regions.  In the following nine requirement
+groups, \(i\in\{1,2\}\) and \(j\) is the other process.  Their conjunction is
+the formula passed to the tableau:
+\begin{enumerate}
+\item The designated start state is
+\[
+ \mathsf{NCS}_1\land\mathsf{NCS}_2.
+\]
+\item Mutual exclusion is
+\[
+ AG\neg(\mathsf{CS}_1\land\mathsf{CS}_2).
+\]
+\item Absence of starvation for each process is
+\[
+ AG(\mathsf{TRY}_i\to AF\,\mathsf{CS}_i).
+\]
+\item Exactly one region is occupied:
+\[
+\begin{gathered}
+ AG(\mathsf{NCS}_i\lor\mathsf{TRY}_i\lor\mathsf{CS}_i),\\
+ AG(\mathsf{NCS}_i\to
+     \neg(\mathsf{TRY}_i\lor\mathsf{CS}_i)),\\
+ AG(\mathsf{TRY}_i\to
+     \neg(\mathsf{NCS}_i\lor\mathsf{CS}_i)),\\
+ AG(\mathsf{CS}_i\to
+     \neg(\mathsf{NCS}_i\lor\mathsf{TRY}_i)).
+\end{gathered}
+\]
+\item Entry from the noncritical region into the trying region remains
+possible:
+\[
+ AG(\mathsf{NCS}_i\to EX_i\mathsf{TRY}_i).
+\]
+\item Every enabled move by process \(i\) from its trying region enters its
+critical region:
+\[
+ AG\bigl(
+   \mathsf{TRY}_i\land EX_i\mathit{true}
+   \to AX_i\mathsf{CS}_i
+ \bigr).
+\]
+The existential conjunct prevents the universal next clause from satisfying
+the requirement merely because process \(i\) has no enabled move.
+\item Return from the critical region to the noncritical region remains
+possible:
+\[
+ AG(\mathsf{CS}_i\to EX_i\mathsf{NCS}_i).
+\]
+\item A step by \(j\) cannot change the region occupied by \(i\):
+\[
+\begin{gathered}
+ AG(\mathsf{NCS}_i\to AX_j\mathsf{NCS}_i),\\
+ AG(\mathsf{TRY}_i\to AX_j\mathsf{TRY}_i),\\
+ AG(\mathsf{CS}_i\to AX_j\mathsf{CS}_i).
+\end{gathered}
+\]
+\item Some process can always move:
+\[
+ AG(EX\mathit{true}).
+\]
+\end{enumerate}
+Under the standing totality condition on
+\(A=A_1\cup\cdots\cup A_k\), group~9 is semantically redundant: every state
+already has an \(A_i\)-successor for some \(i\).  It is retained because it is
+one of the source's printed requirement groups.
+These are formulas in the source's indexed logic, not informal requirements
+retrofit to a later unindexed CTL grammar
+\cite[pp.~63--65]{ClarkeEmerson1981}.
+
+The tableau is simplified by propagating the consequences of invariants
+without copying every invariant into every label and by suppressing
+propositional consequences already forced by a region label.  It deletes,
+among other nodes, the candidate containing both
+\(\mathsf{CS}_1\) and \(\mathsf{CS}_2\).  Here a \emph{model fragment} is a
+rooted finite directed acyclic graph of AND-nodes embeddable in the tableau
+and chosen so that every eventuality at its root is fulfilled inside it.  It
+is a construction artifact, not a complete model; its root supplies the
+checkpoint which permits later cycle closure without abandoning an
+eventuality.  The global model is assembled from these fragments, and cycles
+are closed only through checked fragment roots.  Its states initially
+carry the pair of current process regions.  Two model nodes nevertheless have
+the same pair
+\((\mathsf{TRY}_1,\mathsf{TRY}_2)\).  The source introduces
+\(\mathsf{TURN}\) solely to distinguish those nodes: incoming arcs assign
+\(\mathsf{TURN}:=1\) or \(\mathsf{TURN}:=2\), and the corresponding equality
+is added to the target label.  This auxiliary program variable is a component
+of the global-state label, not a temporal connective.  It is nonredundant
+because the factorization rule below requires global nodes to have distinct
+labels, and it is used in the enabling conditions of the resulting skeletons
+\cite[pp.~65--68]{ClarkeEmerson1981}.
+
+For example, the factored skeleton for \(P_1\) has the following
+synchronization-relevant transitions:
+\[
+\begin{array}{rcll}
+ \mathsf{NCS}_1&\longrightarrow&\mathsf{TRY}_1
+   &\text{when }\mathsf{NCS}_2\lor\mathsf{CS}_2,\\
+ \mathsf{NCS}_1&\longrightarrow&\mathsf{TRY}_1
+   &\text{when }\mathsf{TRY}_2,
+     \text{ assigning }\mathsf{TURN}:=2,\\
+ \mathsf{TRY}_1&\longrightarrow&\mathsf{CS}_1
+   &\text{when }\mathsf{NCS}_2
+     \lor(\mathsf{TRY}_2\land\mathsf{TURN}=1),\\
+ \mathsf{CS}_1&\longrightarrow&\mathsf{NCS}_1
+   &\text{when }\mathsf{NCS}_2\lor\mathsf{TRY}_2.
+\end{array}
+\]
+The skeleton for \(P_2\) is obtained by the source's displayed symmetry,
+interchanging process indices and assigning \(\mathsf{TURN}:=1\) when
+\(P_2\) starts trying while \(P_1\) is already trying.  The two
+\(\mathsf{TRY}\)-states with different turn values thereby enable different
+critical-section entries; the auxiliary value is not decorative
+\cite[pp.~67--69]{ClarkeEmerson1981}.
+
+The general factorization makes this calculation precise.  Retain only the
+propositional labels of model nodes.  The reader-facing typed form of the
+source's auxiliary-value step is as follows.  If one such label \(\Lambda\)
+occurs on distinct nodes \(v_1,\ldots,v_d\), where \(d\geq2\), introduce a
+fresh auxiliary program variable \(z_{\Lambda}\) with value domain
+\(\{0,1,\ldots,d\}\).  At every global node \(w\), add exactly one state
+proposition for this variable:
+\[
+ z_{\Lambda}=r\quad\text{if }w=v_r,
+ \qquad
+ z_{\Lambda}=0\quad\text{if }w\notin\{v_1,\ldots,v_d\}.
+\]
+Initialize every \(z_{\Lambda}\) at every designated initial node to the value
+shown by that node's proposition, regardless of its incoming arcs.  On every
+global arc, assign each \(z_{\Lambda}\) the value shown at the target node.
+Thus every fresh variable is total, \(\Lambda\) remains a propositional label,
+and \(z_{\Lambda}\) records exactly which member of its duplicate class is
+current, or \(0\) outside that class.  The result is the \emph{global system
+flowgraph}: a finite, uniquely labelled joint-behavior graph.  For process
+\(P_i\) with \(m\geq1\) regions \(R_1,\ldots,R_m\), begin its
+skeleton with those region nodes and no arcs.  This rule applies only when
+every global \(i\)-arc preserves every other process's region component:
+\[
+ \forall j\ne i,\qquad
+ \text{the \(P_j\)-region at the target equals its region at the source}.
+\]
+Requirement group~8 establishes this premise for the displayed
+mutual-exclusion construction.  A global arc violating it lies outside this
+factorization rule because a local \(P_i\) transition cannot update a
+\(P_j\)-region.  For a global \(i\)-arc \(e\)
+whose \(P_i\)-component changes from \(R_u\) to \(R_v\), let \(\gamma_e\) be
+the conjunction of every conjunct in the global source label except the atom
+asserting \(P_i\)'s own current region.  Thus \(\gamma_e\) contains the
+\(k-1\) other-process region components and every auxiliary equality true
+at the source node.  Each empty part of this conjunction is
+\(\mathit{true}\).  Let \(\sigma_e\) be the arc's complete auxiliary update
+map, with the absence of an assignment to a variable represented by the
+identity update for that variable.  Here \(\gamma_e\) is a state-formula guard
+and \(\sigma_e\) is a transition update; they are metalinguistic
+abbreviations with different standings.
+For every \(u,v\in\{1,\ldots,m\}\) and every update map \(\sigma\) realized
+by at least one such global arc, create one local transition
+\(R_u\to R_v\), attach update \(\sigma\), and give it the guard
+\[
+ \bigvee\left\{
+   \gamma_e
+   \;\middle|\;
+   e\text{ is a global }i\text{-arc from }R_u\text{ to }R_v
+   \text{ and }\sigma_e=\sigma
+ \right\}.
+\]
+Only arcs with the same complete update map are merged.  Distinct updates,
+including identity versus a nonidentity assignment, remain parallel local
+transitions, exactly as in the two displayed
+\(\mathsf{NCS}_1\to\mathsf{TRY}_1\) branches.  This is the point at which a
+finite global model becomes executable per-process enabling conditions
+\cite[pp.~68--70]{ClarkeEmerson1981}.
+
+The source's conclusion is deliberately provisional.  It says the synthesis
+algorithm may have exponential behavior, argues only that small skeletons
+might make this manageable, and calls practical feasibility an open research
+problem.  Its empirical claim is limited to an experimental C implementation
+of the model checker on a DEC~11/70; that implementation is not a proof of
+the synthesis procedure.  Accordingly, this presentation preserves four
+different statuses: a printed finite-state labelling algorithm with its source
+argument and bound; a proposition-level SCC characterization and
+\(\mathsf{NP}\)-hardness reduction with printed proofs; an abridged tableau
+decision-procedure outline whose details the publication refers to the full
+paper; and a worked synthesis/factorization construction for which this
+publication states no separate general correctness theorem
+\cite[pp.~59--63, 69--70]{ClarkeEmerson1981}.
+
+\subsubsection{Queille--Sifakis's CESAR presentation}
+\label{sec:p09-presentation-n-c-016-queille-sifakis}
+
+The controlling publication is the fifteen-page LNCS chapter of 1982.
+Springer's 2008 reprint preserves it as pp.~216--230.  The complete original
+body was read in a publicly accessible institutional scan and authenticated
+against Springer's original and reprint previews; the scan's distribution
+authorization is not established, and the subscription-only reprint pages
+218--230 were not independently inspected.  Those rights and version limits
+affect access provenance, not the textual identity of the reconstructed
+original body \cite{QueilleSifakis1982}.
+
+\paragraph{CESAR's program model and its exact output claim.}
+CESAR takes two unlike inputs: a high-level description program for
+communicating sequential processes and branching-time specification formulas.
+The translator maps the program to an \emph{interpreted Petri net} (IPN):
+a Petri net equipped with a vector \(\mathbf X\) of the program variables
+retained in the IPN and, for each transition \(t_i\), a guarded command
+\[
+ c_i(\mathbf X)\longrightarrow \mathbf X:=\alpha_i(\mathbf X).
+\]
+The translator type-checks and deletes internal variables of non-specified
+types; such deleted source-program variables are not components of
+\(\mathbf X\).
+This source term is necessary because an ordinary Petri net records only
+control-token flow, whereas CESAR's transition also tests and changes data.
+Its standing is the program model analyzed by the system, not a
+formula or a proof.  It differs from an ordinary net exactly by those guards
+and assignments, and it is used to calculate the predecessor transformer
+below.  A transition fires only when both its Petri-net enabling condition and
+\(c_i\) hold, and firing performs \(\alpha_i\).  A missing inscription means
+the true guard and identity assignment.
+
+Processes communicate by rendezvous on exchanged variables: an output
+\(!V:=e\) in one process synchronizes with an input \(?V\) in another.
+The translator constructs one safe state graph per sequential process and
+merges rendezvous transitions.  The paper asserts preservation of each
+process's safety, but sends the graph-grammar translation elsewhere and does
+not prove translation correctness here.  Figure~1 names the final system
+output only as \emph{diagnostics}; it supplies no counterexample format,
+synthesis algorithm, or low-level refinement theorem
+\cite[pp.~337--340]{QueilleSifakis1982}.
+
+The complete example is the alternating-bit protocol.  In this example,
+scalar \(X\) is the sender's data value, not the IPN variable vector
+\(\mathbf X\); \(Y\) and \(Z\) are respectively the sender's and receiver's
+control bits.  Its four processes
+are a sender, a receiver, a sender-to-receiver line, and a
+receiver-to-sender line.  The sender transmits \((X,Y)\), accepts only an
+acknowledgement carrying its current bit \(Y\), and then complements \(Y\).
+The receiver accepts only a message carrying its current bit \(Z\), sends the
+matching acknowledgement, and then complements \(Z\).  Each line can either
+transmit its value or take a true-guarded loss branch.  Figure~2 is the
+translated four-component safe IPN, with initially marked places
+\[
+ s_1,\quad r_1,\quad m_1,\quad a_1
+\]
+and the merged rendezvous transitions, guards, and assignments.
+
+The outgoing message is \(M=(X,Y)\), \(MM\) is its
+receiver-side copy, \(AA\) is the outgoing acknowledgement, and the field
+projection \((\cdot).B\) returns a message or acknowledgement bit.  The
+identifiers \(\mathsf{SENDER}\) and \(\mathsf{RECEIVER}\) name the first two
+processes.  The action labels used below have these exact program-event
+standings:
+\[
+\begin{array}{c|l}
+\mathit{send}&\text{initial output of }M:=(X,Y)\\
+\mathit{repeat}&\text{retransmission of that same message}\\
+\mathit{receive}&\text{receiver input of }MM\\
+\mathit{accept}&\text{receiver acceptance when }MM.B=Z\\
+\mathit{repeatack}&\text{retransmission of the previous acknowledgement}\\
+\mathit{sendack}&\text{acknowledgement output after acceptance}\\
+\mathit{receiveack}&\text{sender input of an acknowledgement}
+\end{array}
+\]
+The labels are noninterchangeable because the \(\operatorname{after}\) and
+\(\operatorname{enable}\) formulas below distinguish these events.
+
+The prose assumes that the line cannot lose every message and
+acknowledgement.  The displayed programs do not encode that assumption:
+both line processes may choose the loss branch forever, and the temporal
+semantics below has no fairness clause.  The assumption is therefore external
+to the printed transition model.  Nothing proved from the program alone may
+silently use it \cite[pp.~340--343]{QueilleSifakis1982}.
+
+\paragraph{The literal branching-time language.}
+Let \(F\) be the atomic state predicates.  The source language is
+\[
+\begin{aligned}
+ f::={}&p\mid\mathsf{true}\mid\mathsf{false}\mid
+ \neg f\mid f\land f\mid f\lor f\mid f\Rightarrow f\\
+ &\mid\operatorname{POT}(f)\mid\operatorname{INEV}(f),
+ \qquad p\in F,
+\end{aligned}
+\]
+with the defined duals
+\[
+ \operatorname{ALL}(f):=\neg\operatorname{POT}(\neg f),
+ \qquad
+ \operatorname{SOME}(f):=\neg\operatorname{INEV}(\neg f).
+\]
+These are unary state-formula operators; the source has no separate
+path-formula grammar, next operator, or until operator.  In later CTL
+terminology their behaviors are respectively \(EF,AF,AG,EG\), but the 1982
+language is not thereby the full later CTL grammar.
+
+Write the transition structure as \(S=(Q,\to)\).  An execution from \(q\) is
+a finite or infinite sequence \(s\) with \(s(0)=q\) and
+\(s(i)\to s(i+1)\) whenever the next position is defined.  It is maximal when
+it is infinite or finite at a sink.  These start and adjacency clauses are
+this presentation's explicit completion of the printed omission recorded
+below.  For an execution \(s\), let
+\[
+ D_s:=\{k\in\mathbb N:s(k)\text{ is an actual position of }s\}.
+\]
+Thus \(D_s=\mathbb N\) for an infinite execution and
+\(D_s=\{0,\ldots,n\}\) for a finite execution
+\(s(0),\ldots,s(n)\).  The paper adjoins a fictitious inaccessible state
+\(\omega\) after a finite execution ends, and its indexed reachability glyph
+satisfies \(q\xrightarrow{k}s(k)\) exactly when \(k\in D_s\).  Because formula
+satisfaction is defined on \(Q\), not on \(\omega\), the total typed form of
+the temporal clauses quantifies only over \(D_s\).  With \(EX_q\) the maximal
+executions from \(q\), they are
+\[
+\begin{aligned}
+ q\models\operatorname{POT}(f)
+ &\Longleftrightarrow
+ \exists s\in EX_q\;\exists k\in D_s\;(s(k)\models f),\\
+ q\models\operatorname{INEV}(f)
+ &\Longleftrightarrow
+ \forall s\in EX_q\;\exists k\in D_s\;(s(k)\models f),\\
+ q\models\operatorname{ALL}(f)
+ &\Longleftrightarrow
+ \forall s\in EX_q\;\forall k\in D_s\;(s(k)\models f),\\
+ q\models\operatorname{SOME}(f)
+ &\Longleftrightarrow
+ \exists s\in EX_q\;\forall k\in D_s\;(s(k)\models f).
+\end{aligned}
+\]
+All four permit the current state as \(k=0\).  Restriction to \(D_s\) is the
+typed form of the source's reachability guard and never asks the fictitious
+post-terminal state to satisfy a formula.
+
+The printed definition is formally incomplete at two places.  Its sentence
+introducing an execution from \(q\) omits both \(s(0)=q\) and the adjacency
+clauses \(s(i)\to s(i+1)\).  It also names
+\(\mathsf{false},\lor,\Rightarrow\) but prints interpretation clauses only
+for \(\mathsf{true},\neg,\land\) and the temporal operators.  The intended
+ordinary clauses are determinate from use, but they are not misreported as
+displayed source text \cite[pp.~344--345]{QueilleSifakis1982}.
+
+\paragraph{Program predicates and the complete property families.}
+For a translated program, \(\operatorname{Init}\) is the initial-state
+predicate.  For a labelled action \(a\),
+\(\operatorname{enable}a\) holds exactly where \(a\) can execute, and
+\(\operatorname{after}a\) holds immediately after it terminates.  These are
+atomic state predicates derived from the program/IPN, not temporal operators.
+Their distinction is necessary because an action may be enabled without
+being selected and a state after an action need not retain that enabledness.
+They are used in every source specification below.
+
+For every \(k\in\mathbb N\) and finite action family
+\((a_i)_{i=1}^{k}\), the source's finite-family abbreviations are
+\[
+\begin{aligned}
+ \operatorname{enable}(a_1,\ldots,a_k)
+   &:=\bigvee_{i=1}^{k}\operatorname{enable}a_i,\\
+ \operatorname{after}(a_1,\ldots,a_k)
+   &:=\bigvee_{i=1}^{k}\operatorname{after}a_i.
+\end{aligned}
+\]
+For a process \(\mathcal P\) with finite action set \(A(\mathcal P)\), the
+source also writes \(\operatorname{enable}\mathcal P\) for the actions in that
+set.  Its reader-facing eliminable value is
+\[
+ \operatorname{enable}\mathcal P
+ :=\bigvee_{a\in A(\mathcal P)}\operatorname{enable}a.
+\]
+For the reader-facing finite-family notation, adopt the nullary conventions
+\[
+ \bigvee\varnothing=\mathsf{false},
+ \qquad
+ \bigwedge\varnothing=\mathsf{true}.
+\]
+Thus at \(k=0\) both finite-family abbreviations are false, and a process with
+\(A(\mathcal P)=\varnothing\) has
+\(\operatorname{enable}\mathcal P=\mathsf{false}\); the conjunction saying
+that every member of an empty family is live is true.  For a Boolean program
+predicate \(P\), the source's invariant schema is
+\[
+ \operatorname{Init}\Rightarrow\operatorname{ALL}(P).
+\]
+For the protocol, the three printed instances say that a sent message carries
+the sender bit, the line preserves a received message, and the received bit
+equals the sender bit:
+\[
+\begin{aligned}
+\operatorname{Init}&\Rightarrow
+ \operatorname{ALL}(
+   \operatorname{after}(\mathit{send},\mathit{repeat})\Rightarrow M.B=Y),\\
+\operatorname{Init}&\Rightarrow
+ \operatorname{ALL}(\operatorname{after}\mathit{receive}\Rightarrow MM=M),\\
+\operatorname{Init}&\Rightarrow
+ \operatorname{ALL}(\operatorname{after}\mathit{receive}\Rightarrow MM.B=Y).
+\end{aligned}
+\]
+
+The source calls \(a\) live when it is possible to reach an enabling state
+from every reachable state:
+\[
+ \operatorname{Init}\Rightarrow
+ \operatorname{ALL}\operatorname{POT}\operatorname{enable}a.
+\]
+For a set of actions, liveness of every member uses a conjunction of those
+targets, whereas absence of deadlock uses their disjunction:
+\[
+\begin{aligned}
+\operatorname{Init}&\Rightarrow
+ \operatorname{ALL}\left(
+   \bigwedge_{i=1}^{k}\operatorname{POT}\operatorname{enable}a_i\right),\\
+\operatorname{Init}&\Rightarrow
+ \operatorname{ALL}\operatorname{POT}
+   \operatorname{enable}(a_1,\ldots,a_k).
+\end{aligned}
+\]
+The four protocol targets are, in increasing source strength,
+\(\operatorname{enable}(\mathsf{SENDER})\),
+\(\operatorname{enable}(\mathsf{RECEIVER})\),
+\(\operatorname{enable}\mathit{send}\), and
+\(\operatorname{enable}\mathit{accept}\).  These formulas assert possible
+future enabledness; they neither assert occurrence on every execution nor add
+fairness.
+
+The two response schemas are
+\[
+\begin{aligned}
+\operatorname{Init}&\Rightarrow
+ \operatorname{ALL}(\operatorname{after}a\Rightarrow
+   \operatorname{POT}\operatorname{enable}b),\\
+\operatorname{Init}&\Rightarrow
+ \operatorname{ALL}(\operatorname{after}a\Rightarrow
+   \operatorname{INEV}\operatorname{enable}b).
+\end{aligned}
+\]
+Again the conclusion is that \(b\) becomes executable, not that it executes.
+The first three printed protocol instances use:
+\[
+\begin{array}{c|c|c}
+\text{trigger}&\text{temporal demand}&\text{target}\\ \hline
+\operatorname{after}(\mathit{send},\mathit{repeat})&\operatorname{POT}
+  &\operatorname{enable}\mathit{receive}\\
+\operatorname{after}(\mathit{sendack},\mathit{repeatack})&\operatorname{POT}
+  &\operatorname{enable}\mathit{receiveack}\\
+\operatorname{after}(\mathit{send},\mathit{repeat})&\operatorname{INEV}
+  &\operatorname{enable}\mathit{receiveack}
+\end{array}
+\]
+The fourth is the single formula
+\[
+ \operatorname{Init}\Rightarrow
+ \operatorname{ALL}\Bigl(
+   (\operatorname{after}\mathit{accept}\Rightarrow
+     \operatorname{INEV}(\operatorname{enable}\mathit{sendack}))
+   \land
+   (\operatorname{after}\mathit{sendack}\Rightarrow AA.B=MM.B)
+ \Bigr).
+\]
+In the second and third displayed source formulas, the identifier is
+misprinted as \(\operatorname{receivack}\); the program and Figure~2 define
+only \(\operatorname{receiveack}\).  The reader-facing table repairs the
+identifier while recording the defect
+\cite[pp.~345--347]{QueilleSifakis1982}.
+
+\paragraph{The four fixed-point calculations.}
+Identify a predicate with its subset of \(Q\), and write
+\(\lvert f\rvert=\{q\in Q:q\models f\}\).  Definition~1 gives the
+existential predecessor transformer
+\(\operatorname{pre}:\mathcal P(Q)\to\mathcal P(Q)\),
+\[
+ \operatorname{pre}(P)
+ =\{q\in Q:\exists q'\,(q\to q'\land q'\in P)\},
+\]
+and its Boolean dual is
+\[
+ \widetilde{\operatorname{pre}}(P)
+ =Q\setminus\operatorname{pre}(Q\setminus P).
+\]
+The first asks for some immediate successor in \(P\); the dual says that no
+immediate successor lies outside \(P\), and therefore includes a sink.  Put
+\(\operatorname{Id}:\mathcal P(Q)\to\mathcal P(Q)\),
+\(\operatorname{Id}(P)=P\).  For transformers
+\(g,h:\mathcal P(Q)\to\mathcal P(Q)\), define their pointwise union and
+intersection by
+\[
+ (g\cup h)(P):=g(P)\cup h(P),
+ \qquad
+ (g\cap h)(P):=g(P)\cap h(P).
+\]
+These are metalinguistic operations on predicate transformers, and every
+union or intersection of transformers in Propositions~1--2 has this pointwise
+standing.  For
+\(h:\mathcal P(Q)\to\mathcal P(Q)\), put \(h^0=\operatorname{Id}\) and
+\(h^{i+1}=h\circ h^i\).  Pointwise, the source defines
+\[
+ h^*(P)=\bigcup_{i\in\mathbb N}h^i(P),
+ \qquad
+ h^x(P)=\bigcap_{i\in\mathbb N}h^i(P).
+\]
+The superscript \(x\) is the source's literal name for the pointwise
+intersection of all finite iterates, not multiplication and not an otherwise
+undefined greatest-fixed-point binder.  No claim is made that the successive
+sets form a descending chain for an arbitrary transformer.
+
+Under the printed hypothesis that \(\to\) is image-finite---every state has
+only finitely many immediate successors---Propositions~1--2 state:
+\[
+\begin{aligned}
+\lvert\operatorname{ALL}(f)\rvert
+ &=\widetilde{\operatorname{pre}}^{\,x}\lvert f\rvert,\\
+\lvert\operatorname{SOME}(f)\rvert
+ &=\bigl(\operatorname{Id}\cap
+   (\operatorname{pre}\cup\widetilde{\operatorname{pre}})\bigr)^x
+   \lvert f\rvert,\\
+\lvert\operatorname{POT}(f)\rvert
+ &=\operatorname{pre}^*\lvert f\rvert,\\
+\lvert\operatorname{INEV}(f)\rvert
+ &=\bigl(\operatorname{Id}\cup
+   (\operatorname{pre}\cap\widetilde{\operatorname{pre}})\bigr)^*
+   \lvert f\rvert.
+\end{aligned}
+\]
+In the last line, the existential predecessor factor prevents a non-\(f\)
+sink from entering vacuously.  The paper does not prove either proposition:
+it says the fixed-point results are proved in detail in Sifakis's 1979 report.
+Image-finiteness and this delegated-proof boundary are therefore parts of the
+result \cite[pp.~347--348]{QueilleSifakis1982}.
+
+\paragraph{What the analyzer actually computes.}
+The analyzer assigns a Boolean variable to every IPN place, expresses
+\(\operatorname{Init}\), \(\operatorname{after}a\), and
+\(\operatorname{enable}a\) as predicates, reduces the net while protecting
+places used by those predicates, computes \(\operatorname{pre}\), and
+evaluates temporal subformulas in formula order.  The chapter does not print
+the net-reduction rules, an IPN-to-\(\operatorname{pre}\) formula, or their
+preservation proofs.
+
+Its one complete calculation checks
+\[
+ \operatorname{Init}\Rightarrow
+ \operatorname{ALL}\operatorname{POT}
+ \operatorname{enable}(\mathsf{SENDER}).
+\]
+For every displayed Figure-2 place, a lower-case symbol
+\(s_i,r_i,m_i,a_i\) is the Boolean characteristic predicate that the
+like-named IPN place is marked.  In particular, the place predicate \(a_i\)
+is not the action metavariable \(a\) used in the schemas above.  With
+juxtaposition for Boolean conjunction, an overbar for Boolean negation, and
+\(\cup\) for Boolean disjunction, the four translator-generated one-token
+invariants used by the calculation are
+\[
+\begin{aligned}
+s_1\bar s_2\bar s_3\cup\bar s_1s_2\bar s_3
+ \cup\bar s_1\bar s_2s_3&=\mathsf{true},\\
+r_1\bar r_2\bar r_3\cup\bar r_1r_2\bar r_3
+ \cup\bar r_1\bar r_2r_3&=\mathsf{true},\\
+m_1\bar m_2\cup\bar m_1m_2&=\mathsf{true},\\
+a_1\bar a_2\cup\bar a_1a_2&=\mathsf{true}.
+\end{aligned}
+\]
+In that notation,
+\[
+\begin{aligned}
+\operatorname{Init}
+ &=s_1m_1a_1r_1\bar Y\bar Z,\\
+P_0=\operatorname{enable}(\mathsf{SENDER})
+ &=s_1m_1\cup s_2m_1\cup s_2a_2\cup s_3,\\
+\operatorname{pre}(P_0)
+ &=s_3\cup r_2\cup r_3\cup a_2\cup m_2.
+\end{aligned}
+\]
+Using these four one-token invariants, the source simplifies
+\[
+ P_1=P_0\cup\operatorname{pre}(P_0)=\mathsf{true}.
+\]
+Hence
+\(\operatorname{POT}\operatorname{enable}(\mathsf{SENDER})\),
+its \(\operatorname{ALL}\)-closure, and the whole implication all evaluate to
+\(\mathsf{true}\).  None of the other property formulas is worked through
+\cite[pp.~348--349]{QueilleSifakis1982}.
+
+There is no asymptotic time or space bound and no theorem that the analyzer
+always answers.  The source says there is no convergence-speed criterion:
+the user chooses a maximum number of iterations, and if an iteration has not
+finished by then the analyzer returns no answer.  The then-current
+implementation supports Boolean, enumerated, and bounded-integer variables,
+encoding the latter two into Booleans.  An iteration cap is therefore an
+implementation boundary, not a proof by approximation.  This presentation
+supplies a model-checking architecture and four predicate-transformer
+identities at their stated image-finite strength; it does not supply CTL
+satisfiability, a complete calculus, a general complexity theorem, or a CESAR
+synthesis result \cite[pp.~348--350]{QueilleSifakis1982}.
+
+\subsubsection{Emerson--Halpern's typed CTL* and expressiveness presentation}
+\label{sec:p09-presentation-n-c-016-emerson-halpern}
+
+The controlling source is the complete twenty-eight-page JACM article,
+pp.~151--178.  An archived ACM publisher PDF was read page by page; its first
+page carries ACM's conditional copying terms, not an open-content licence.
+The POPL 1983 preliminary paper and the two 1984 reports named by the journal
+are distinct source states.  This reconstruction therefore paraphrases the
+1986 mathematical presentation and does not reproduce the scan, its figures,
+or protected prose \cite[pp.~151--153]{EmersonHalpern1986}.
+
+\paragraph{Why one untyped temporal syntax is not enough.}
+The paper begins with Lamport's structure
+\[
+ M=(S,X,L),
+\]
+where \(S\neq\varnothing\) is a set of states,
+\(X\neq\varnothing\) is a set of nonempty finite or infinite state
+sequences, and \(L(s)\) is the set of atoms true at \(s\).  A path with
+\(1+k\) states has length \(k\); an infinite path has length \(\omega\).
+For a path \(x\), \(first(x)\) is its first state,
+\(x^{succ}\) removes that state when possible and otherwise fixes a
+length-zero path, and
+\[
+ x^0=x,\qquad x^{m+1}=(x^m)^{succ}.
+\]
+These operations define the suffixes used below.
+
+Lamport's shared syntax has a primitive \(\Box p\), “always \(p\),”
+and a different primitive \(\rightsquigarrow p\), “sometimes \(p\).”
+The paper writes
+\[
+ \Diamond p:=\neg\Box\neg p
+\]
+for “not never \(p\).”  The distinction is necessary because the same
+glyphs receive two semantic types.  Under the branching reading they are
+state assertions:
+\[
+\begin{aligned}
+ M,s\models_B\Box p
+ &\Longleftrightarrow
+ \forall x\in X\,
+ \bigl(first(x)=s\Rightarrow
+       \forall n\geq 0\;
+       M,first(x^n)\models_Bp\bigr),\\
+ M,s\models_B\rightsquigarrow p
+ &\Longleftrightarrow
+ \forall x\in X\,
+ \bigl(first(x)=s\Rightarrow
+       \exists n\geq 0\;
+       M,first(x^n)\models_Bp\bigr).
+\end{aligned}
+\]
+Under the linear reading they are assertions about one path:
+\[
+\begin{aligned}
+ M,x\models_L\Box p
+ &\Longleftrightarrow
+   \forall n\geq0\;M,x^n\models_Lp,\\
+ M,x\models_L\rightsquigarrow p
+ &\Longleftrightarrow
+   \exists n\geq0\;M,x^n\models_Lp.
+\end{aligned}
+\]
+Thus \(\rightsquigarrow p\) and \(\Diamond p\) coincide on a single
+linear path but not under the branching reading.
+
+The first structure-class hypothesis used below is a property of the path set:
+\(X\) is \emph{suffix closed} exactly when
+\[
+ \forall x\in X\;(x^{succ}\in X).
+\]
+It preserves each individual path's suffixes; unlike the two additional
+closure properties defined below, it neither splices two paths nor takes an
+infinite limit.  The distinction is used immediately in Theorems~1--2.
+
+Definition~1 calls a formula model-valid when it is true at every state
+under the branching reading or on every member of \(X\) under the linear
+reading.  Definition~2 calls formulas under possibly different readings
+\emph{strongly equivalent} over a structure class when their model-validity
+agrees on every structure in the class.  Theorems~1--2 restate Lamport's
+claims that branching \(\Diamond P\) has no strongly equivalent linear
+assertion and that linear
+\(\rightsquigarrow\Box P\) has no strongly equivalent branching assertion,
+over suffix-closed structures.  Their proofs are not reproduced here.
+Proposition~1 then exposes the coarseness of model-level comparison:
+\(\rightsquigarrow P\land\neg P\) is satisfiable at an individual state or
+path but is strongly equivalent to \(\mathsf{false}\), because no whole
+model satisfies it everywhere \cite[pp.~153--155]{EmersonHalpern1986}.
+
+\paragraph{The structure classes used by the comparison.}
+Let \(S^*\) be the finite state strings, including the empty string,
+\(S^+\) the nonempty finite state strings, and \(S^\omega\) the infinite state
+strings.  Juxtaposition denotes string concatenation.  In a fusion
+decomposition \(x_1sy_1\), take
+\(x_1\in S^*\), \(s\in S\), and \(y_1\in S^*\cup S^\omega\), and likewise
+for the second decomposition, whenever the displayed concatenations are
+well-formed nonempty paths.  In a limit decomposition, take each
+\(x_i\in S^+\) and each \(y_i\in S^*\cup S^\omega\), again only when every
+displayed concatenation is a well-formed path.  The following implications are
+universally quantified over these compatible decompositions and define
+properties of \(X\), not temporal operators:
+\[
+\begin{array}{ll}
+\text{suffix closed}
+ &x\in X\Rightarrow x^{succ}\in X,\\[2pt]
+\text{fusion closed}
+ &x_1sy_1,x_2sy_2\in X\Rightarrow x_1sy_2\in X,\\[2pt]
+\text{limit closed}
+ &\bigl(\forall n\geq1\;x_1\cdots x_ny_n\in X\bigr)
+   \Rightarrow x_1x_2x_3\cdots\in X.
+\end{array}
+\]
+For an infinite-path set \(X\subseteq S^\omega\), the set \(X\) is
+\(R\)-generable when some total relation \(R\subseteq S\times S\) satisfies
+\[
+ X=\{x\in S^\omega:\forall n\in\mathbb N\;((x(n),x(n+1))\in R)\}.
+\]
+A structure is \emph{state complete} when every \(s\in S\) begins a path
+in \(X\).  For \(X\subseteq S^\omega\), the characterization is
+\[
+ \text{\(R\)-generable}
+ \quad\Longleftrightarrow\quad
+ \text{suffix closed, fusion closed, limit closed, and state complete}.
+\]
+For the forward implication, suffixes and fusions of \(R\)-paths are
+\(R\)-paths because each adjacent pair remains an \(R\)-edge.
+Every adjacent pair of a limiting path already occurs in one of its
+extendible finite prefixes, so that path is also an \(R\)-path.
+Totality supplies an infinite \(R\)-path from each state, using dependent
+choice in the ambient metatheory.
+
+For the converse, define
+\[
+ R=\{(s,t)\in S^2:\text{some }x\in X
+                         \text{ begins with }st\}.
+\]
+State completeness makes \(R\) total, since each path in \(X\) is infinite.
+Suffix closure shows that every adjacent pair of every member of \(X\)
+belongs to \(R\).  Thus \(X\) is contained in the set of all \(R\)-paths.
+Let \(s_0s_1\cdots\) be an arbitrary \(R\)-path.
+Its first edge extends to a member of \(X\).
+If \(s_0\cdots s_n\) extends to a member of \(X\), fuse that extension at
+\(s_n\) with a witness for \((s_n,s_{n+1})\in R\).
+This extends \(s_0\cdots s_{n+1}\) to a member of \(X\).
+Induction therefore makes every nonempty finite prefix extendible;
+limit closure puts the entire path in \(X\).
+This proves the reverse containment and the characterization.
+
+State completeness cannot be omitted: adjoining a state that appears in
+no member of \(X\) preserves the three closure properties but prevents
+generation by a total relation on the enlarged \(S\).
+Fusion closure supports splicing futures at a shared state, limit closure
+supports an infinite limiting computation, and state completeness supplies
+paths at every state.
+Lamport's original
+Theorem~1 witnesses need not be fusion closed and his Theorem~2 witnesses
+need not be limit closed.  Section~4 therefore re-establishes the
+separations over \(R\)-generable structures
+\cite[pp.~155--156]{EmersonHalpern1986}.
+
+\paragraph{The two formula types of CTL*.}
+The source now replaces the shared syntax by mutually defined state and path
+formulas:
+\[
+\begin{aligned}
+ \varphi &::=
+ P\mid\neg\varphi\mid(\varphi\land\varphi)
+ \mid A\psi\mid E\psi,\\
+ \psi &::=
+ \varphi\mid\neg\psi\mid(\psi\land\psi)
+ \mid F\varphi\mid F\psi
+ \mid X\varphi\mid X\psi\\
+ &\qquad
+ \mid(\varphi U\varphi)\mid(\psi U\psi)
+ \mid\widetilde F\varphi\mid\widetilde F\psi.
+\end{aligned}
+\]
+Here \(\varphi\) has standing as a state assertion and \(\psi\) as a path
+assertion; \(A/E\) are the only constructors that turn a path assertion into
+a state assertion.  This type distinction is used by every sublanguage and
+nondefinability result below.  It differs from Lamport's syntax exactly by
+making the state/path standing visible, rather than asking one formula to
+change type with its interpretation.
+
+For \(M=(S,X,L)\),
+\[
+\begin{aligned}
+ s\models A\psi
+ &\Longleftrightarrow
+   \forall x\in X\,
+   (first(x)=s\Rightarrow x\models\psi),\\
+ s\models E\psi
+ &\Longleftrightarrow
+   \exists x\in X\,
+   (first(x)=s\land x\models\psi).
+\end{aligned}
+\]
+A state formula used as a path formula is evaluated at the path's first
+state.  The temporal clauses are
+\[
+\begin{aligned}
+ x\models F\psi
+ &\Longleftrightarrow
+   \exists i\geq0\;x^i\models\psi,\\
+ x\models X\psi
+ &\Longleftrightarrow
+   |x|\geq1\land x^1\models\psi,\\
+ x\models\psi_1U\psi_2
+ &\Longleftrightarrow
+   \exists i\geq0\,
+   \bigl(x^i\models\psi_2
+     \land\forall j<i\;x^j\models\psi_1\bigr),\\
+ x\models\widetilde F\psi
+ &\Longleftrightarrow
+   \text{\(x^i\models\psi\) for infinitely many distinct \(i\)}.
+\end{aligned}
+\]
+The duplicated source clauses for state operands replace
+\(x^i\models\varphi\) by \(first(x^i)\models\varphi\).
+The \(F\) and strong-\(U\) clauses include the current position, while \(X\)
+is false at the last state of a finite path.  A footnote makes a further
+distinction: path formulas are semantically evaluated on all nonempty finite
+or infinite state sequences over \(S\), paths in the preceding sense; only
+\(A/E\) restrict their quantified paths to members of \(X\).
+
+The source defines
+\[
+\begin{gathered}
+ G\psi:=\neg F\neg\psi,\qquad
+ \widetilde G\psi:=\neg\widetilde F\neg\psi,\\
+ A\psi:=\neg E\neg\psi,\qquad
+ F\psi:=(\mathsf{true}\ U\psi),\qquad
+ \widetilde F\psi:=GF\psi.
+\end{gathered}
+\]
+Thus \(E,X,U,\neg,\land\) can serve as primitives.  The full state language
+is CTL*.  The exact named fragments are
+\[
+\begin{gathered}
+ L(F),\quad L(F,U),\quad L(F,X,U),\\
+ B(F),\quad B(F,X,U),\quad
+ B(F,X,U,\land,\neg),\quad
+ B(F,X,U,\widetilde F,\land,\neg).
+\end{gathered}
+\]
+The \(L\)-languages contain path formulas without state-level path
+quantification.  \(B(F)\) permits \(A/E\) followed by \(F\) applied directly
+to state formulas; \(B(F,X,U)\) adds the corresponding direct \(X/U\)
+forms.  Adding \(\land,\neg\) in the fragment name permits Boolean
+combinations \emph{inside} path formulas, not merely the state-level Boolean
+operations already present.  The source identifies \(B(F,X,U)\) with CTL
+and defines \(|p|\) as the number of symbols in the formula string
+\cite[pp.~156--158]{EmersonHalpern1986}.
+
+\paragraph{From whole-model validity to formula equivalence.}
+For a Lamport formula \(p\), let \(p^L\) replace
+\(\Box,\rightsquigarrow\) by \(G,F\), and let \(p^B\) replace them by
+\(AG,AF\).  Proposition~2 gives the two pointwise satisfaction
+equivalences.  In particular, the linear principle
+\[
+ FP\lor G\neg P
+\]
+is valid, whereas \(AFP\lor AG\neg P\) is not.  Its correctly typed
+branching assertion is \(A(FP\lor G\neg P)\).
+
+Definition~3 associates with a path language \(L\) the state language
+\[
+ B(L):=\{A\psi:\psi\in L\}.
+\]
+This is a metalinguistic language construction, not an object-language
+operator, and the source warns that it is not closed under semantic negation
+or disjunction.  Definition~4 then compares state formulas pointwise at
+every state of every structure in the chosen class.
+
+Proposition~3 proves that any path formula \(p\), considered model-wide, is
+strongly equivalent to \(Ap\).  For a structure class \(\mathcal C\), write
+\(p\equiv_s^{\mathcal C}q\) when \(p\) and \(q\) have the same model-validity
+status in every member of \(\mathcal C\), and write
+\(p\equiv^{\mathcal C}q\) when the two state formulas agree at every state of
+every member of \(\mathcal C\).  Let \(\mathcal F\) be the class of
+fusion-closed, state-complete structures.  Proposition~4 proves
+\[
+ p\equiv_s^{\mathcal F}q
+ \quad\Longleftrightarrow\quad
+ AGp\equiv^{\mathcal F}AGq
+\]
+for state formulas \(p,q\).  Its forward proof restricts a fusion-closed
+model to the states occurring on paths from the selected state; its reverse
+proof uses state completeness.  The source demonstrates nonredundancy of
+the two hypotheses with
+\[
+\begin{array}{lll}
+\text{no fusion closure:}
+ &p=P\land EFEX\neg P,&q=\mathsf{false},\\
+\text{no state completeness:}
+ &p=AGEF\mathsf{true}\land EF\mathsf{true},&
+ q=p\lor AG\mathsf{false}.
+\end{array}
+\]
+Corollary~1 gives the mixed path/state form
+\[
+ p\equiv_s^{\mathcal F}q
+ \quad\Longleftrightarrow\quad
+ AGAp\equiv^{\mathcal F}AGq.
+\]
+Definition~5 finally orders languages by the existence of pointwise
+equivalent state formulas \cite[pp.~158--160]{EmersonHalpern1986}.
+
+\paragraph{The exact expressiveness map.}
+All comparisons in Section~4 are over \(R\)-generable structures.  The
+paper says its proofs also work over suffix-closed, fusion-closed structures,
+but leaves that extension to the reader.  Figure~1 is equivalently the three
+chains and one cross-edge
+\[
+\begin{aligned}
+ B(L(F))
+ &<B(L(F,U))
+ <B(L(F,X,U))
+ <CTL^*,\\
+ B(F)
+ &<B(F,X,U)
+ =B(F,X,U,\land,\neg)\\
+ &<B(F,X,U,\widetilde F,\land,\neg)
+ <CTL^*,\\
+ B(L(F))
+ &<B(F,X,U,\widetilde F,\land,\neg).
+\end{aligned}
+\]
+Any two displayed languages not connected by the transitive closure of
+these \(<\) and \(=\) relations are incomparable.  The absence of another
+edge is therefore mathematical content, not blank space in the diagram
+\cite[pp.~160--163]{EmersonHalpern1986}.
+
+Theorem~3 supplies one complete separating proof.  Let \(M\) have states
+\(s_1,s_2\),
+\[
+ R=\{(s_1,s_1),(s_1,s_2),(s_2,s_2)\},
+ \qquad s_1\models\neg P,\quad s_2\models P,
+\]
+and let \(M'\) be its one-state restriction to \(s_1\).
+Then \(M,s_1\models EFP\) but \(M',s_1\not\models EFP\).
+If \(EFP\) were equivalent to \(Aq\), truth of \(Aq\) in \(M\) would survive
+deletion of paths and hold in \(M'\), a contradiction.  Hence \(EFP\) is
+not expressible by any \(B(L(F,X,U))\) formula.  The invariant is preservation
+of a universal path assertion under path deletion; existential reachability
+does not have that preservation property.
+
+Theorem~4 proves
+\[
+ B(L(F))\leq
+ B(F,X,U,\widetilde F,\land,\neg).
+\]
+The Appendix first normalizes every linear \(F/G\) formula into proof-local
+forms and their finite conjunctions and disjunctions.  Those auxiliary forms
+are not the associated-language constructor \(B(L)\).  The normalization uses
+propositional formulas and, for positive arity \(n\geq1\), the segment forms
+\[
+ [p_1]:=Gp_1,
+ \qquad
+ [p_1,\ldots,p_n]:=p_1U[p_2,\ldots,p_n]\quad(n\geq2),
+\]
+\(GFp\), and the source's nested \(F\)-forms, and then translates their Boolean
+combinations.  Conjoined segment forms are replaced by a
+disjunction over consistent interleavings.  The final induction decreases
+the number of nested \(F\)-subformulas by choosing which eventuality is met
+first and in which segment.  No \(X\) occurs, so the proof
+lands in the displayed rich branching language even after every
+\(X\)-forming clause is removed
+\cite[Theorem~4, pp.~167--169]{EmersonHalpern1986}.
+
+\paragraph{The separating model families.}
+Theorem~5 states that
+\[
+ A[F(P\land XP)]
+\]
+is not equivalent to any
+\(B(F,X,U,\widetilde F,\land,\neg)\) formula.
+Figures~2--3 start with
+\(M_1\), a \(P,P,\neg P\) chain ending in a self-loop, and \(N_1\), a
+\(P,\neg P\) chain ending in a self-loop.
+The unique path of \(M_1\) witnesses \(F(P\land XP)\) at its first
+position.  The unique path of \(N_1\) has no consecutive \(P\)-states.
+
+Here is the recursive construction in Figure~3.  For each new model,
+take a new \(P\)-root \(a_{i+1}\), a new \(\neg P\)-state \(b_{i+1}\),
+and disjoint copies \(M_i'\), \(N_i'\), and one further lower-level model.
+Add edges from \(a_{i+1}\) to \(b_{i+1}\) and to the roots of both
+\(M_i'\) and \(N_i'\).  In \(M_{i+1}\), the only successor of
+\(b_{i+1}\) is the root of the further copy \(M_i\); in \(N_{i+1}\),
+it is the root of the further copy \(N_i\).  Retain all edges and
+labels within the copies, and add no other edges.
+
+Every path taking one of the two direct copy edges begins with \(P,P\).
+Every remaining path in \(M_{i+1}\) reaches \(M_i\), where the induction
+hypothesis supplies a consecutive \(P\)-pair.  In \(N_{i+1}\), follow
+\(b_{i+1}\) into \(N_i\) and then a path without such a pair.
+The newly traversed labels \(P,\neg P,P\) add no consecutive pair.
+This proves the first of the three invariants:
+\[
+\begin{array}{ll}
+(1)&M_i,a_i\models A[F(P\land XP)],
+     \quad
+     N_i,a_i\not\models A[F(P\land XP)];\\
+(2)&\text{on these families, every }
+ B(F,X,U,\widetilde F,\land,\neg)\text{ formula}\\
+&\quad\text{has an equivalent }B(F,X,U)\text{ formula};\\
+(3)&|p|\leq i\Rightarrow
+ (M_i,a_i\models p\Longleftrightarrow N_i,a_i\models p)
+ \quad\text{for }p\in B(F,X,U).
+\end{array}
+\]
+For invariant~(3), the Appendix prints the \(EXq,E[qUr],A[qUr]\) induction
+cases.  Atoms agree because the paired roots have the same labels.
+Conjunction and negation preserve agreement by the induction hypotheses
+for their strictly smaller operands.
+For invariant~(2), every path in every model eventually stays at a
+\(\neg P\)-self-loop.  These terminal loops have identical future
+structures.  Hence, on these models, each
+\(\widetilde F/\widetilde G\) subformula has the constant truth value
+determined by its operand on that terminal loop.  Eliminating these
+operators from the inside outward leaves Boolean path combinations;
+apply
+Theorem~8(a)'s Boolean-path elimination,
+\[
+ B(F,X,U)=B(F,X,U,\land,\neg).
+\]
+If a formula in the rich branching fragment defined the witness,
+invariant~(2) would give an equivalent \(B(F,X,U)\) formula on these
+families.  Choosing \(i\) at least its size would make that formula agree
+at the two roots by invariant~(3), contrary to invariant~(1).
+
+Theorem~6 gives a second formula not definable in
+\(B(F,X,U,\widetilde F,\land,\neg)\):
+\[
+ \Theta:=
+ E[((P_1UP_2)\lor(Q_1UQ_2))UR].
+\]
+Figures~4--5 begin with two five-state chains whose middle labels order
+\(P_2,Q_1\) differently.  At the next stage, both structures receive an
+identically labelled \(P_1,P_2,Q_1,Q_2\) prefix, but copies of the preceding
+\(M_i\) and \(N_i\) are attached in different arrangements.  The source
+records \(M_i,a_i\models\Theta\), \(N_i,a_i\not\models\Theta\), and the same
+reduction and bounded-formula invariants as for Theorem~5.  It leaves the
+repeated induction to the reader.  The same bounded-size contradiction
+establishes the stated nondefinability.
+
+The dual
+\(\neg\Theta\) is in \(B(L(F,X,U))\).  If it were expressible in the rich
+branching fragment, closure of that fragment under state negation would make
+\(\Theta\) expressible there, contradicting Theorem~6.  Hence
+\(B(L(F,X,U))\) is not contained in the rich branching fragment
+\cite[Theorems~5--6, pp.~161--163, 169--171]{EmersonHalpern1986}.
+
+Theorem~7 uses Figures~6--8 to show
+\[
+ E\widetilde FP
+\]
+is not expressible in \(B(F,X,U,\land,\neg)\).  Its \(M_i\) and \(N_i\)
+families use \(P\)-states \(a_i,c_i\) and \(\neg P\)-states \(b_i,d_i\).
+Each \(M_{i+1}\) adds a return edge from \(b_{i+1}\) to \(a_{i+1}\) before
+descending into \(N_i\); \(N_{i+1}\) has the corresponding descending
+prefix without that return edge.  Hence
+\(M_i,a_i\models E\widetilde FP\) and
+\(N_i,c_i\not\models E\widetilde FP\).  The first induction proves that,
+beyond \(|p|\), truth of a \(B(F,X,U)\) formula at all \(c_j\) states is
+equivalent to truth at some such state, and likewise for the \(d_j\).  A
+second induction proves
+\[
+ i\geq|p|\Rightarrow
+ \bigl(a_i\models p\Longleftrightarrow c_i\models p\bigr)
+ \land
+ \bigl(b_i\models p\Longleftrightarrow d_i\models p\bigr).
+\]
+Theorem~8(a)'s cited Boolean-path elimination transfers the invariant to
+\(B(F,X,U,\land,\neg)\), while \(E\widetilde FP\) separates the roots.
+The Appendix prints the \(EX,E[U],A[U]\) cases and leaves Boolean cases to
+the reader.
+
+Theorem~8, cited from the authors' earlier paper, states
+\[
+ B(F,X,U)=B(F,X,U,\land,\neg)
+\]
+and says \(E(PUQ)\) is not expressible in \(B(F)\).  Theorem~9, cited from
+Process Logic, says \(PUQ\) is not expressible in \(L(F)\) and \(XP\) is
+not expressible in \(L(F,U)\).  This article supplies neither cited proof
+nor its separating structures.  Those citations, rather than new local
+proofs, establish the strict edges from \(B(F)\), \(B(L(F))\), and
+\(B(L(F,U))\) in this source presentation
+\cite[pp.~161--175]{EmersonHalpern1986}.
+
+\paragraph{What the comparison says about specifications.}
+For the transition under discussion, \(\mathit{enabled}\) and
+\(\mathit{executed}\) are atomic state predicates: the first holds when the
+transition is enabled, and the second when it executes.  Lamport's
+strong-eventual-fairness assertion is represented by
+\[
+ A(\widetilde G\neg\mathit{enabled}\lor F\mathit{executed}).
+\]
+Because \(\widetilde G\neg\mathit{enabled}\) says that enabledness occurs only
+finitely often, the formula says that infinite recurring enabledness entails
+eventual execution.  It is a specification formula, not a fairness condition
+built into \(X\).
+
+\paragraph{The PL translation and its proof boundary.}
+To a CTL* structure \(M=(S,X,L)\), the paper associates a PL path model in
+which one atomic program \(A\) denotes exactly \(X\) and the atomic labels
+agree.  The operator \(\mathsf f\) tests the unique length-zero initial prefix,
+while \(\mathrm{suf}\) selects a proper suffix after an interval satisfying
+its left operand.  Taking \(E,X,U\) as primitive, the source prints
+\[
+\begin{aligned}
+ P'&=P,
+ &( \neg p)'&=\neg p',
+ &(p\land q)'&=p'\land q',\\
+ (pUq)'&=q'\lor(p'\mathbin{\mathrm{suf}}q'),
+ &(Ep)'&=\mathsf f(\langle A\rangle p'),
+ &(Xp)'&=\mathsf{false}\mathbin{\mathrm{suf}}p'.
+\end{aligned}
+\]
+Proposition~5 asserts preservation for all path formulas on
+\(x\in X\) and all state formulas at \(s\in S\).  The paper calls the proof
+a straightforward structural induction but does not print its cases.  Its
+Appendix supplies only the needed test-free-PDL and path-model definitions,
+not a complete new proof theory for PL
+\cite[pp.~164, 175--176]{EmersonHalpern1986}.
+
+\paragraph{The MPL semantics and translation.}
+\label{sec:p09-mpl-translation}
+MPL formulas are generated from atoms by \(\neg,\land,X,U,\Diamond\).
+An MPL formula is evaluated at \(M,x,y\), where \(x\in X\) and the
+\emph{stage} \(y\) is a nonempty finite prefix of \(x\).  Prefix order is
+\(y\leq z\).  The term is needed because MPL may change to another path
+sharing the already traversed prefix; it stands for that finite prefix, not
+for a state or a new temporal connective, and Lemmas~1--2 use it to relate
+arbitrary structures to suffix- and fusion-closed ones.
+
+An atom \(P\) is true at \(M,x,y\) exactly when \(P\in L(last(y))\),
+where \(last(y)\) is the final state of the finite string \(y\).
+Negation and conjunction have their ordinary Boolean clauses.
+In the following temporal and path-choice clauses, \(z,w\) range over
+nonempty finite prefixes of \(x\):
+\[
+\begin{aligned}
+ M,x,y\models pUq
+ \Longleftrightarrow{}&
+ \exists z\bigl(
+ y\leq z\leq x\land M,x,z\models q\\
+ &\qquad\land
+ \forall w\,
+ (y\leq w<z\Rightarrow M,x,w\models p)\bigr),\\
+ M,x,y\models Xp
+ \Longleftrightarrow{}&
+ \exists z\bigl(
+ M,x,z\models p\land y<z\leq x\\
+ &\qquad\land
+ \neg\exists w\,(y<w<z)\bigr),\\
+ M,x,y\models\Diamond p
+ \Longleftrightarrow{}&
+ \exists x'\in X\,
+ (y\leq x'\land M,x',y\models p).
+\end{aligned}
+\]
+Thus \(pUq\) requires \(p\) strictly before the witnessing \(q\)-stage,
+and \(Xp\) requires the next stage.  A current \(q\)-stage witnesses
+\(pUq\) regardless of the current value of \(p\).  At the last stage
+of a finite path, \(Xp\) is false.
+
+The source motivates its closure hypotheses with two further exact
+separations.  The CTL* formula
+\[
+ EGX\mathsf{true}\land\neg EXEGX\mathsf{true}
+\]
+is satisfiable only outside suffix-closed structures, and
+\[
+ EFEFp\land\neg EFp
+\]
+is satisfiable only outside fusion-closed structures.  By contrast,
+Lemma~1 says that every pointed MPL model has a satisfaction-equivalent point
+in a structure possessing both closure properties.  These claims explain why
+Theorem~10 restricts its embedding.
+
+Lemma~1's Appendix construction unwinds the paths extending a stage into a
+fresh-state tree and closes it under suffix; for an uncountable path family
+the authors say they appear to need the well-ordering principle.
+
+The translation on a suffix-closed, fusion-closed structure is as follows.
+Use the CTL* primitives \(E,X,U,\neg,\land\), and define \(\tau\)
+recursively by
+\[
+\begin{aligned}
+ \tau(P)&=P,&
+ \tau(\neg\alpha)&=\neg\tau(\alpha),&
+ \tau(\alpha\land\beta)&=\tau(\alpha)\land\tau(\beta),\\
+ \tau(X\alpha)&=X\tau(\alpha),&
+ \tau(\alpha U\beta)&=\tau(\alpha)U\tau(\beta),&
+ \tau(E\alpha)&=\Diamond\tau(\alpha).
+\end{aligned}
+\]
+A state formula embedded in a path formula has the same translation.
+The other operators are expanded by their stated definitions.
+
+For \(x=s_0s_1\cdots\in X\), write \(y_i=s_0\cdots s_i\) at each
+actual position \(i\) of \(x\).  The preservation statements are
+\[
+\begin{aligned}
+ M,x,y_i\models_{\mathrm{MPL}}\tau(\psi)
+ &\Longleftrightarrow M,x^i\models_{\mathrm{CTL}^*}\psi
+ &&\text{for path formulas }\psi,\\
+ M,x,y_i\models_{\mathrm{MPL}}\tau(\varphi)
+ &\Longleftrightarrow M,s_i\models_{\mathrm{CTL}^*}\varphi
+ &&\text{for state formulas }\varphi.
+\end{aligned}
+\]
+We prove them simultaneously by structural induction.
+The atomic case is the definition of \(L(s_i)\).
+Negation and conjunction follow from the induction hypotheses, and
+embedding a state formula into the path language uses
+\(first(x^i)=s_i\).
+
+For \(X\psi\), a proper prefix successor of \(y_i\) exists exactly
+when \(i+1\) is an actual position of \(x\); it is then \(y_{i+1}\).
+The induction hypothesis at that stage gives the CTL* next-time clause.
+If no such position exists, both sides are false.
+For \(\psi U\chi\), the MPL witness is a prefix \(y_j\) with
+\(j\geq i\).  The prefixes \(w\) with \(y_i\leq w<y_j\) are
+exactly \(y_i,\ldots,y_{j-1}\).  Applying the induction hypotheses at
+these finitely many stages gives the CTL* until clause on \(x^i\).
+Conversely, a CTL* until witness on a finite path can always be chosen
+at an actual position: if its index is past the end, replace it by
+the final index.  The suffix there is the same, and the requirements
+before it only decrease.  It therefore gives an MPL witness \(y_j\).
+
+For \(E\psi\), an MPL witness is \(x'\in X\) extending \(y_i\).
+Suffix closure gives \(v=(x')^i\in X\) with \(first(v)=s_i\).
+The induction hypothesis on \(x'\) at \(y_i\) turns its MPL truth
+into \(M,v\models_{\mathrm{CTL}^*}\psi\), witnessing the state formula.
+Conversely, let \(v\in X\) start at \(s_i\) and satisfy \(\psi\).
+Fusion closure, applied to \(x\) at \(s_i\) and to \(v\) at its first
+state, gives
+\[
+ x'=s_0\cdots s_{i-1}v\in X.
+\]
+For \(i=0\), the displayed prefix before \(v\) is empty.
+The path \(x'\) extends \(y_i\) and \((x')^i=v\), so the induction
+hypothesis supplies the MPL witness.  This proves both directions of
+the path-choice step and completes the induction.
+
+The same calculation also proves Lemma~2's suffix invariance.
+Every MPL formula \(p\) is the translation of a CTL* path formula,
+obtained recursively by replacing \(\Diamond\) with \(E\).
+Apply preservation at \(y_i\) on \(x\) and at the first stage on
+\(x^i\); both sides equal the CTL* truth of that path formula on \(x^i\).
+Thus, writing \(x/y_i=x^i\), satisfaction at \(M,x,y_i\) agrees
+with satisfaction at the first stage of \(M,x/y_i\).
+In particular the displayed translation proves Theorem~10 at every
+path's first stage and at every state that starts a path in \(X\)
+\cite[Lemma~2 and Theorem~10, pp.~165--166]{EmersonHalpern1986}.
+
+The final comparison says that Lehmann--Shelah's TC replaces \(A\) by a
+measure-one path operator.  It reports that TC and MPL have the same complete
+axiomatizations and hence the same valid and satisfiable formulas, then says
+one would \emph{expect} a CTL*/MPL-to-TC translation.  No such translation
+is constructed in this paper
+\cite[pp.~165--166, 176--177]{EmersonHalpern1986}.
+
+\paragraph{The terminal-server example and the scope of the conclusion.}
+For a terminal-server process \(P_i\), let \(\mathit{inNCS}_i\) and
+\(\mathit{inTRY}_i\) be atomic state predicates holding exactly when
+\(P_i\) is respectively in its noncritical or trying region.  The article
+requires a possible path that remains forever in \(\mathit{inNCS}_i\), another
+possible path that reaches \(\mathit{inTRY}_i\), and a universal constraint
+that every path either remains or eventually tries:
+\[
+ EG(\mathit{inNCS}_i)\land EF(\mathit{inTRY}_i)\land
+ A(G(\mathit{inNCS}_i)\lor F(\mathit{inTRY}_i)).
+\]
+The linear candidate
+\(A(G(\mathit{inNCS}_i)\lor F(\mathit{inTRY}_i))\) admits a degenerate
+model in which every path eventually reaches \(\mathit{inTRY}_i\) and no path
+remains in \(\mathit{inNCS}_i\).  Explicit existential path quantification
+therefore has an actual use in a nondeterministic specification and in excluding a
+single-path synthesized implementation.
+
+Section~6 nevertheless presents an application argument, not a dominance
+theorem.  It says linear time is often adequate and simpler for manual
+verification of an existing program when all executions are quantified
+universally; it favors branching constructs for model checking, negating
+universal path claims, and requiring alternative behaviors.  The paper
+concentrates on expressiveness and refers elsewhere for satisfiability and
+finite-model truth complexity.  It supplies no CTL state-labelling
+algorithm, no general complexity bound, and no synthesis correctness theorem
+\cite[pp.~166--167]{EmersonHalpern1986}.
+
+\subsubsection{Clarke--Grumberg--Peled's 1999 acquisition boundary}
+\label{sec:p09-presentation-n-c-016-clarke-grumberg-peled}
+
+The audited official routes did not yield an anonymously readable complete
+first-edition body or a public author-accepted manuscript as of 22 August
+2026.  This is not a claim that the book is unavailable: physical copies,
+access-restricted Internet Archive lending, and institution-only EBSCO access
+exist.  Google Books is a searchable partial preview, HathiTrust's
+standard-identifier queries returned no item, and the MIT Press first-edition
+page is an out-of-print product record without a body file.  Its contents page
+locates the starts of CTL/CTL* at p.~27, explicit model checking at p.~35,
+BDDs at p.~51, and symbolic model checking at p.~61, but locator metadata
+supports no literal algorithm, proof, example, or complexity claim
+\cite{ClarkeGrumbergPeled1999}.
+
+The complete 156-page Clarke--Schlingloff 2001 handbook chapter, the
+Clarke--Grumberg--Long 1996 survey, the expanded five-author 2018 second
+edition, and the Baier--Katoen 2008 book presented next are different works or
+source states; none supplies the missing first-edition text.  Accordingly,
+the four complexity classifications in
+Theorem~\ref{thm:p09-ctl-star-complexity} retain their independent citations;
+none is attributed to the unacquired 1999 body at source-content strength.
+
+\subsubsection{Baier--Katoen's CTL labelling presentation}
+\label{sec:p09-presentation-n-c-016-baier-katoen}
+
+This presentation follows the complete Baier--Katoen book.  Its copyright leaf
+says \emph{All rights reserved}; the pages and protected expression are not
+reproduced here.  The relevant page map also needs care:
+Chapter~6 begins on printed p.~313, CTL syntax begins on p.~317, the model-
+checking section occupies pp.~341--358, and the requested CTL* section begins
+on p.~422.  Printed pp.~311--312 are Chapter~5 exercises, and pp.~417--421 are
+still symbolic CTL rather than CTL* \cite{BaierKatoen2008}.
+
+\paragraph{Inherited transition systems and paths.}
+The book does not replace its earlier transition-system definition by an
+unlabelled Kripke tuple.  It retains
+\[
+ TS=(S,Act,{\to},I,AP,L),
+\]
+where \({\to}\subseteq S\times Act\times S\), \(I\subseteq S\), and
+\(L:S\to2^{AP}\).  It calls the system finite when \(S\), \(Act\), and
+\(AP\) are finite.  For \(s\in S\), put
+\[
+ \operatorname{Post}(s,\alpha)
+   =\{t\in S:s\xrightarrow{\alpha}t\},
+ \qquad
+ \operatorname{Post}(s)
+   =\bigcup_{\alpha\in Act}\operatorname{Post}(s,\alpha).
+\]
+A terminal state has \(\operatorname{Post}(s)=\varnothing\).  Chapter~6's
+standing hypothesis is literally that the transition system has no terminal
+states:
+\[
+ \forall s\in S\;\bigl(\operatorname{Post}(s)\ne\varnothing\bigr).
+\]
+The source does not introduce the term \emph{total transition system} as a new
+Chapter~6 term, although this displayed condition is the corresponding graph
+property.
+
+The source tuple and the shared handbook method have different types, so an
+explicit bridge is necessary.  Forget the action name, but not the transition,
+by defining
+\[
+ sR_0t\iff\exists\alpha\in Act\;(s\xrightarrow{\alpha}t),
+ \qquad
+ V_0(a)=\{s\in S:a\in L(s)\}\quad(a\in AP).
+\]
+These are handbook-supplied metalinguistic definitions: \(R_0\) is a binary
+relation among the source states and \(V_0:AP\to\mathcal P(S)\) is its
+propositional valuation; neither is a new Baier--Katoen transition system or
+source term.  For this instantiation, take the host proposition alphabet
+\(\mathsf{Prop}\) to be exactly \(AP\), so \(V_0\) has the host's required
+type.
+
+A Baier--Katoen CTL state formula \(\Phi\) is built from \(true\), atoms
+\(a\in AP\), negation, conjunction, and the four immediate path-quantified
+next/until forms.  Define the metalinguistic translation \(\operatorname{tr}\)
+into the
+host CTL syntax recursively by
+\[
+\begin{aligned}
+ \operatorname{tr}(true)&:=\top,&
+ \operatorname{tr}(a)&:=a,\\
+ \operatorname{tr}(\neg\Phi)&:=\neg\operatorname{tr}(\Phi),&
+ \operatorname{tr}(\Phi\land\Psi)
+   &:=\operatorname{tr}(\Phi)\land\operatorname{tr}(\Psi),\\
+ \operatorname{tr}(\exists\bigcirc\Phi)
+   &:=\mathsf{EX}\operatorname{tr}(\Phi),&
+ \operatorname{tr}(\forall\bigcirc\Phi)
+   &:=\mathsf{AX}\operatorname{tr}(\Phi),\\
+ \operatorname{tr}(\exists(\Phi\mathbin{U}\Psi))
+   &:=\mathsf E[\operatorname{tr}(\Phi)\mathbin{\mathsf U}
+                   \operatorname{tr}(\Psi)],&
+ \operatorname{tr}(\forall(\Phi\mathbin{U}\Psi))
+   &:=\mathsf A[\operatorname{tr}(\Phi)\mathbin{\mathsf U}
+                   \operatorname{tr}(\Psi)].
+\end{aligned}
+\]
+This translation is necessary because the source and host use different
+constructor glyphs; it changes no atom, Boolean structure, or temporal
+meaning.  It is not an object-language operator.  When \(S\ne\varnothing\)
+and the source transition system is finite, together with
+\(\mathcal K_0=(S,R_0,V_0)\), it supplies the exact typed input to
+Method~\ref{def:p09-ctl-labelling}.
+Directly from the definitions,
+\[
+ \operatorname{Post}(s)=\{t:sR_0t\},
+ \qquad
+ \operatorname{Pre}^{R_0}_{\exists}(X)
+   =\{s:\operatorname{Post}(s)\cap X\ne\varnothing\}.
+\]
+If \(S\ne\varnothing\), the no-terminal-state condition makes \(R_0\) total;
+when the source transition system is finite,
+\(\mathcal K_0=(S,R_0,V_0)\) is therefore a finite total transition structure
+of the host method's type.  If \(S=\varnothing\), then \(I=\varnothing\), every
+satisfaction set is empty, and system satisfaction is vacuous; the host method
+is not instantiated in that case.
+If \(K\) counts the source's action-labelled transition triples, then
+\(\lvert R_0\rvert\le K\): distinct action-labelled transitions can collapse
+to the same binary edge.  Thus the shared theorem's binary-edge parameter and
+Theorem~6.30's source-transition parameter must not be identified literally.
+
+A finite path fragment is a sequence \(s_0\ldots s_n\) with
+\(s_i\in\operatorname{Post}(s_{i-1})\) for \(0<i\le n\); the infinite case
+is defined analogously.  For an infinite path
+\(\pi=s_0s_1\ldots\), write
+\(\pi[i..]=s_is_{i+1}\ldots\) for its suffix from position \(i\).  A maximal
+path fragment is infinite or ends in a terminal state.  The set
+\(\operatorname{Paths}(s)\) contains the maximal
+fragments beginning at \(s\), whether or not \(s\in I\).  A path of the
+transition system, by contrast, is initial as well as maximal.  Under the
+no-terminal-state hypothesis, every member of \(\operatorname{Paths}(s)\) is
+infinite \cite[defs.~2.1, 2.3--2.4 and 3.4--3.6; pp.~20, 23,
+95--96]{BaierKatoen2008}.
+
+\paragraph{Typed CTL syntax and semantics.}
+For fixed \(AP\), Definition~6.1 gives the state-formula and path-formula
+grammars
+\[
+\begin{aligned}
+ \Phi&::=true\mid a\mid\Phi_1\land\Phi_2\mid\neg\Phi
+          \mid\exists\varphi\mid\forall\varphi,
+          &&a\in AP,\\
+ \varphi&::=\bigcirc\Phi\mid\Phi_1\mathbin{U}\Phi_2.
+\end{aligned}
+\]
+Thus a CTL temporal operator occurs immediately below a path quantifier; CTL
+does not permit arbitrary Boolean or temporal nesting at path-formula level.
+The displayed derived operators include
+\[
+\begin{aligned}
+ \exists\Diamond\Phi&:=\exists(true\mathbin{U}\Phi),&
+ \forall\Diamond\Phi&:=\forall(true\mathbin{U}\Phi),\\
+ \exists\Box\Phi&:=\neg\forall\Diamond\neg\Phi,&
+ \forall\Box\Phi&:=\neg\exists\Diamond\neg\Phi.
+\end{aligned}
+\]
+
+For \(\pi=s_0s_1\ldots\in\operatorname{Paths}(s)\), Definitions~6.4--6.5
+give
+\[
+\begin{aligned}
+ s\models\exists\varphi
+   &\iff \text{some }\pi\in\operatorname{Paths}(s)\text{ satisfies }\varphi,\\
+ s\models\forall\varphi
+   &\iff \text{every }\pi\in\operatorname{Paths}(s)\text{ satisfies }\varphi,\\
+ \pi\models\bigcirc\Phi
+   &\iff s_1\models\Phi,\\
+ \pi\models\Phi\mathbin{U}\Psi
+   &\iff \exists j\ge0\;\bigl(s_j\models\Psi\ \land\
+      \forall k<j\;(s_k\models\Phi)\bigr).
+\end{aligned}
+\]
+The until witness may be \(j=0\).  Atomic and Boolean clauses have their usual
+state meanings.  Finally,
+\[
+ \operatorname{Sat}(\Phi)=\{s\in S:s\models\Phi\},
+ \qquad
+ TS\models\Phi\iff I\subseteq\operatorname{Sat}(\Phi).
+\]
+In particular, the system clause is vacuously true if \(I=\varnothing\); the
+book explicitly permits that case \cite[defs.~6.1, 6.4--6.5;
+pp.~317--321]{BaierKatoen2008}.
+
+With these source satisfaction clauses now in place, forgetting action names
+does not change any state sequence.  For nonempty \(S\), every Baier--Katoen
+CTL state formula \(\Phi\), and every \(s\in S\), induction on the translation
+gives
+\[
+ TS,s\models_{\mathrm{BK}}\Phi
+ \iff
+ \mathcal K_0,s\models\operatorname{tr}(\Phi).
+\]
+For finite nonempty \(S\), Method~\ref{def:p09-ctl-labelling} therefore
+returns exactly
+\[
+ \{s\in S:\mathcal K_0,s\models\operatorname{tr}(\Phi)\}
+ =\{s\in S:TS,s\models_{\mathrm{BK}}\Phi\},
+\]
+and Theorem~\ref{thm:p09-ctl-labelling} supplies correctness and the host bound
+\[
+ O\bigl((|S|+|R_0|)\,|\operatorname{tr}(\Phi)|\bigr).
+\]
+
+\paragraph{Existential normal form and the translation boundary.}
+Definition~6.13 calls the following class existential normal form:
+\[
+ \Phi::=true\mid a\mid\Phi_1\land\Phi_2\mid\neg\Phi
+       \mid\exists\bigcirc\Phi
+       \mid\exists(\Phi_1\mathbin{U}\Phi_2)
+       \mid\exists\Box\Phi.
+\]
+Theorem~6.14 gives rewrites eliminating universal modalities.  Its proof is a
+rewrite outline, not a displayed structural induction, and the source warns
+that the right operand can be duplicated enough to make an explicit
+translation exponentially larger.  Consequently Algorithm~14 accepts an ENF
+formula for exposition, but the complexity theorem must be implemented by
+handling the original modalities directly rather than by first materializing
+that translation \cite[pp.~332--333, 355]{BaierKatoen2008}.
+
+\paragraph{Satisfaction sets and their proof.}
+Algorithm~13 processes genuine subformulas in increasing length and finally
+tests \(I\subseteq\operatorname{Sat}(\Phi)\).  Theorem~6.23 supplies the
+set equations needed by that traversal.  Besides the atomic and Boolean
+clauses, it gives
+\[
+ \operatorname{Sat}(\exists\bigcirc\Phi)
+ =\{s:\operatorname{Post}(s)\cap\operatorname{Sat}(\Phi)\ne\varnothing\}.
+\]
+It characterizes \(\operatorname{Sat}(\exists(\Phi\mathbin{U}\Psi))\) as
+the least \(T\subseteq S\) satisfying
+\[
+ \operatorname{Sat}(\Psi)\subseteq T,
+ \qquad
+ s\in\operatorname{Sat}(\Phi)\ \land\
+ \operatorname{Post}(s)\cap T\ne\varnothing
+ \ \Longrightarrow\ s\in T,
+\]
+and \(\operatorname{Sat}(\exists\Box\Phi)\) as the greatest
+\(T\subseteq S\) satisfying
+\[
+ T\subseteq\operatorname{Sat}(\Phi),
+ \qquad
+ s\in T\ \Longrightarrow\
+ \operatorname{Post}(s)\cap T\ne\varnothing.
+\]
+The least and greatest qualifications are with respect to inclusion.  They
+are the source-level content represented by the \(\mu\)- and \(\nu\)-notation
+in Method~\ref{def:p09-ctl-labelling}; that notation is not substituted
+for the book's stated set characterizations.
+
+For until, the source uses the semantic expansion law to prove the two closure
+properties, then follows a finite witness backward: induction on the distance
+to its final \(\Psi\)-state puts every earlier \(\Phi\)-state into any set
+having those properties, proving leastness.  For \(\exists\Box\Phi\), every
+satisfying path stays inside \(\operatorname{Sat}(\Phi)\), proving the two
+displayed conditions.  In the converse direction the source, under its
+standing no-terminal-state convention, repeatedly selects an in-set successor
+to construct a path that stays in the set, proving greatestness.  These are the
+detailed arguments it prints for the two nontrivial clauses; clauses (a)--(e)
+of Theorem~6.23 are called straightforward rather than expanded line by line.
+
+The handbook adds one clarification to that source proof: the displayed
+post-fixed-set condition itself supplies an in-\(T\) successor at every stage.
+Recursive choice therefore constructs the required infinite path; when the
+state space is finite, repeated states instead expose a cycle.  This
+clarification neither removes the source's standing no-terminal-state
+semantic convention nor changes the stated greatest-set result
+\cite[thm.~6.23; pp.~343--345]{BaierKatoen2008}.
+
+Algorithm~14 has its own complete input/output contract.  Given a finite
+transition system and an ENF formula, it returns the formula's satisfaction set
+by the following seven branches:
+\[
+\begin{aligned}
+ \operatorname{Sat}(true)&=S,\qquad&
+ \operatorname{Sat}(a)&=\{s\in S:a\in L(s)\},\\
+ \operatorname{Sat}(\Phi_1\land\Phi_2)
+   &=\operatorname{Sat}(\Phi_1)\cap\operatorname{Sat}(\Phi_2),&
+ \operatorname{Sat}(\neg\Psi)&=S\setminus\operatorname{Sat}(\Psi),\\
+ \operatorname{Sat}(\exists\bigcirc\Psi)
+   &=\{s:\operatorname{Post}(s)\cap\operatorname{Sat}(\Psi)
+             \ne\varnothing\}.&&
+\end{aligned}
+\]
+For \(\exists(\Phi_1\mathbin{U}\Phi_2)\), it initializes
+\(T:=\operatorname{Sat}(\Phi_2)\) and repeatedly chooses one
+\[
+ s\in\operatorname{Sat}(\Phi_1)\setminus T
+ \quad\text{with}\quad
+ \operatorname{Post}(s)\cap T\ne\varnothing
+\]
+and adds \(s\), stopping when no such state remains.  For
+\(\exists\Box\Phi\), it initializes \(T:=\operatorname{Sat}(\Phi)\) and
+repeatedly chooses and deletes one \(s\in T\) for which
+\(\operatorname{Post}(s)\cap T=\varnothing\).  These are the source's naive
+one-state-at-a-time loops, not the optimized worklists of Algorithms~15--16.
+Finiteness and Theorem~6.23 identify their results with the least and greatest
+sets above \cite[alg.~14; p.~348]{BaierKatoen2008}.
+
+Equivalently, their simultaneous approximation chains are
+\[
+\begin{aligned}
+ T_0&=\operatorname{Sat}(\Psi),&
+ T_{i+1}&=T_i\cup
+   \{s\in\operatorname{Sat}(\Phi):
+        \operatorname{Post}(s)\cap T_i\ne\varnothing\},\\
+ U_0&=\operatorname{Sat}(\Phi),&
+ U_{i+1}&=U_i\cap
+   \{s\in\operatorname{Sat}(\Phi):
+        \operatorname{Post}(s)\cap U_i\ne\varnothing\}.
+\end{aligned}
+\]
+Finiteness makes both chains stabilize.  Algorithm~15 realizes the increasing
+chain with a work set initially equal to \(\operatorname{Sat}(\Psi)\) and
+inverse adjacency lists: each extracted state contributes previously unseen
+\(\Phi\)-predecessors.  Algorithm~16 realizes the decreasing chain by putting
+\(S\setminus\operatorname{Sat}(\Phi)\) in a work set, assigning each
+\(s\in\operatorname{Sat}(\Phi)\) the count
+\(\lvert\operatorname{Post}(s)\rvert\), and deleting a predecessor when its
+count reaches zero.  Writing \(T\) for the retained set and \(E\) for the
+current work set, its invariant is
+\[
+ \forall s\in T,\qquad
+ count[s]=\lvert\operatorname{Post}(s)\cap(T\cup E)\rvert,
+\]
+\cite[algs.~15--16; pp.~349--352]{BaierKatoen2008}.
+
+Now induct on the length of a subformula in Algorithm~13.  The clauses for
+\(true\), atoms, negation, and conjunction compute their semantic sets from
+already correct proper subformulas.  The next clause is the displayed
+successor equation.  The two worklist clauses terminate at exactly the least
+and greatest sets just proved.  Hence every table entry equals its semantic
+satisfaction set, in particular the entry for the input formula; the final
+subset test is exactly the source definition of \(TS\models\Phi\).  This
+paragraph makes explicit the global induction assembled from Algorithm~13 and
+Theorem~6.23; the book does not print it as a separately labelled theorem
+proof.
+
+\paragraph{The source's worked graph.}
+Examples~6.26--6.28 use the eight states labelled
+\[
+\begin{array}{c|cccccccc}
+s&s_0&s_1&s_2&s_3&s_4&s_5&s_6&s_7\\\hline
+L(s)&\{a,b,c\}&\{a,b\}&\{b,c\}&\{a\}&
+      \{b\}&\{a,c\}&\{c\}&\varnothing
+\end{array}
+\]
+and the edges
+\[
+\begin{gathered}
+s_0\to s_2,\quad s_1\to s_3,\quad
+s_2\to s_0,\ s_2\to s_1,\quad s_3\to s_0,\\
+s_4\to s_0,\ s_4\to s_1,\quad
+s_5\to s_1,\ s_5\to s_7,\quad s_6\to s_4,\quad
+s_7\to s_3,\ s_7\to s_6.
+\end{gathered}
+\]
+Figure~6.11 marks \(I=\{s_1\}\).  That component is immaterial to the
+global satisfaction-set calculations below, but it is required for the final
+system-level test \(I\subseteq\operatorname{Sat}(\Phi)\).
+
+The printed example compares the Boolean truth values of \(a,b,c\), whereas
+the grammar above treats them as atomic propositions.  To make that notation
+eliminable, put
+\[
+ \alpha\lor\beta:=\neg(\neg\alpha\land\neg\beta),\qquad
+ (\alpha=\beta):=(\alpha\land\beta)\lor(\neg\alpha\land\neg\beta),
+ \qquad
+ (\alpha\ne\beta):=(\alpha\land\neg\beta)\lor(\neg\alpha\land\beta).
+\]
+These comparison signs are metalinguistic propositional abbreviations needed
+only to parse the source's formula; they add neither a new state-variable sort
+nor new atomic predicates.  Thus, for
+\(\Theta=((a=c)\land(a\ne b))\), direct evaluation of the label table gives
+\(\operatorname{Sat}(\Theta)=\{s_4,s_5\}\).  Backward search for
+\(\exists\Diamond\Theta=\exists(true\mathbin{U}\Theta)\) first adds \(s_6\)
+and then \(s_7\), so
+\[
+ \operatorname{Sat}(\exists\Diamond\Theta)
+   =\{s_4,s_5,s_6,s_7\}.
+\]
+For \(\exists\Box b\), Algorithm~16 starts from
+\(\{s_0,s_1,s_2,s_4\}\) and removes \(s_1\), returning
+\(\{s_0,s_2,s_4\}\).  Example~6.28 obtains the same result by restricting
+to the \(b\)-states: \(\{s_0,s_2\}\) is its only nontrivial strongly
+connected component, \(s_4\) can reach it, and \(s_1\) cannot.  Thus the
+examples instantiate both fixed-point directions on the source's own graph,
+rather than on a replacement example \cite[pp.~349--354]{BaierKatoen2008}.
+
+\paragraph{Exact complexity claim.}
+Let \(N\) be the number of states and \(K\) the number of transitions.  With
+predecessor sets stored as linked lists, Algorithms~15--16 take
+\(O(N+K)\) time for one temporal subformula.  The parse-tree traversal is
+linear in \(\lvert\Phi\rvert\), and a linked list of initial states makes the
+last subset test linear in \(\lvert I\rvert\).  Theorem~6.30 therefore states
+\[
+ \operatorname{time}(TS\models\Phi)
+   \in O((N+K)\lvert\Phi\rvert).
+\]
+This bound inherits finiteness, the no-terminal-state convention, the stated
+adjacency representation, and direct treatment of modalities.  It does not
+license an exponentially expanded ENF intermediate.  Although the section
+heading mentions time and space, these pages print no separate asymptotic
+space theorem \cite[p.~355]{BaierKatoen2008}.
+
+The linear dependence on the supplied CTL formula is not a comparison of how
+succinctly different logics express the same property.  Example~6.31 makes
+that qualification explicit.  For \(G=(V,E)\) with \(n\geq1\) and
+\(V=\{v_1,\ldots,v_n\}\), it first defines the following transition system
+without terminal states:
+\[
+ TS(G)=(V\cup\{b\},\{\tau\},{\to},V,V,L),
+\]
+where
+\[
+ L(v_i)=\{v_i\},\qquad L(b)=\varnothing,
+\]
+and
+\[
+ v_i\xrightarrow{\tau}v_j\iff(v_i,v_j)\in E,
+ \qquad
+ x\xrightarrow{\tau}b\quad(x\in V\cup\{b\}).
+\]
+Thus every graph vertex is initial, every state can enter \(b\), and \(b\)
+loops to itself; the added state exists solely to preserve the chapter's
+no-terminal-state hypothesis.
+
+The source then defines
+\[
+ \Psi(v_{i_1})=v_{i_1},
+\]
+and, for \(2\le k\le n\),
+\[
+ \Psi(v_{i_1},\ldots,v_{i_k})
+   =v_{i_1}\land\exists\bigcirc
+       \Psi(v_{i_2},\ldots,v_{i_k}).
+\]
+Let \(\Phi_n\) be the disjunction of
+\(\Psi(v_{i_1},\ldots,v_{i_n})\) over all permutations of
+\(1,\ldots,n\).  Direct induction on the tuple length gives
+\[
+ \operatorname{Sat}(\Psi(v_{i_1},\ldots,v_{i_n}))
+ =
+ \begin{cases}
+  \{v_{i_1}\},&
+    v_{i_1},\ldots,v_{i_n}\text{ is a Hamiltonian path in }G,\\
+  \varnothing,&\text{otherwise}.
+ \end{cases}
+\]
+Consequently,
+\[
+ G\text{ has a Hamiltonian path}
+ \iff TS(G)\not\models\neg\Phi_n.
+\]
+The explicit enumeration makes \(\Phi_n\) exponential in \(n\), while the
+book recalls a polynomial-length LTL encoding.  It informally argues that
+polynomial-length equivalent CTL formulas would combine with polynomial CTL
+model checking to imply \(\mathsf P=\mathsf{NP}\).  That printed inference
+omits a uniformity premise: it is valid if a polynomial-time procedure
+constructs the polynomial-size CTL family, whereas mere existence of such a
+family gives only nonuniform advice and does not by itself imply
+\(\mathsf P=\mathsf{NP}\).  This presentation records that gap rather than
+promoting the source's informal argument to a theorem.  The example remains a
+formula-succinctness warning, not part of Theorem~6.30 itself
+\cite[ex.~6.31; pp.~355--358]{BaierKatoen2008}.
+
+\paragraph{CTL versus LTL: the actual witness systems.}
+Theorem~6.21 states incomparability, but its proof surface is not complete.
+For the LTL formula \(\Diamond\Box a\), the base system \(TS_0\) has an
+empty-labelled initial state \(s_0\), an \(a\)-labelled state \(t_0\), and
+edges \(s_0\to t_0\), \(t_0\to t_0\), and \(t_0\to s_0\).  The base system
+\(TS'_0\) instead has empty-labelled initial \(s'_0\), \(a\)-labelled
+\(t'_0\), and only \(s'_0\to t'_0\), \(t'_0\to t'_0\).
+
+For \(n>0\), both inductive members contain a copy of \(TS'_{n-1}\).
+The unprimed \(TS_n\) adds fresh empty-labelled initial \(s_n\) and fresh
+\(a\)-labelled \(t_n\), with exactly the new edges
+\[
+ s_n\to t_n,\qquad t_n\to t_n,
+ \qquad t_n\to s'_{n-1},\qquad t_n\to s_n.
+\]
+The primed \(TS'_n\) adds fresh empty-labelled initial \(s'_n\) and fresh
+\(a\)-labelled \(t'_n\), with exactly the new edges
+\[
+ s'_n\to t'_n,\qquad t'_n\to t'_n,
+ \qquad t'_n\to s'_{n-1}.
+\]
+The unprimed member fails \(\Diamond\Box a\) on
+\((s_nt_n)^\omega\); every path of the primed member eventually remains in
+an \(a\)-labelled state.  The indispensable assertion that no CTL formula of
+length at most \(n\) distinguishes the pair is left to the reader, and the
+second LTL witness is merely said to be similar.
+
+For the other direction, Figure~6.10(a) has an empty-labelled state \(s\)
+with a self-loop and an edge to an \(a\)-labelled self-loop state \(s'\).  It
+satisfies \(\forall\Box\exists\Diamond a\).  Figure~6.10(b) retains only the
+empty-labelled self-loop and fails that CTL formula.  If an LTL formula were
+equivalent to it, the first system's path \(s^\omega\) would satisfy that LTL
+formula; because the same word is the only path of the second system, the
+second system would satisfy it too, a contradiction.  This trace argument is
+printed, but Theorem~6.18, used for two additional witnesses, has its proof
+expressly omitted \cite[pp.~334--340]{BaierKatoen2008}.
+
+\paragraph{CTL* typing, embedding, and strictness.}
+Definition~6.80 replaces the CTL path grammar by
+\[
+\begin{aligned}
+ \Phi&::=true\mid a\mid\Phi_1\land\Phi_2\mid\neg\Phi\mid\exists\varphi,\\
+ \varphi&::=\Phi\mid\varphi_1\land\varphi_2\mid\neg\varphi
+             \mid\bigcirc\varphi\mid\varphi_1\mathbin{U}\varphi_2.
+\end{aligned}
+\]
+Here a state formula can be an elementary path formula, and path-level Boolean
+and temporal nesting is legal.  Universal path quantification is derived by
+\(\forall\varphi:=\neg\exists\neg\varphi\).  At path level,
+\(\pi\models\Phi\) iff its first state satisfies \(\Phi\), next evaluates
+the suffix \(\pi[1..]\), and until evaluates the appropriate suffixes at a
+non-strict witness position.
+
+For every transition system without terminal states, every state \(s\), and
+every LTL formula \(\varphi\), Theorem~6.83 states
+\[
+ s\models_{\mathrm{LTL}}\varphi
+ \quad\Longleftrightarrow\quad
+ s\models_{\mathrm{CTL}^*}\forall\varphi.
+\]
+This is a direct match of the two semantic definitions, not a CTL* model-
+checking algorithm.  Theorem~6.84 then uses the well-typed state formula
+\[
+ (\forall\Diamond\Box a)\lor
+ (\forall\Box\exists\Diamond b)
+\]
+and states that it has neither an LTL nor a CTL equivalent.  Its printed proof
+is one sentence referring back to Theorem~6.21.  The omitted elementary step
+is substitution: make \(a\) false everywhere to isolate the CTL-only
+disjunct, or make \(b\) false everywhere to isolate the LTL-only disjunct.
+Thus CTL* contains both languages strictly, while the bottom-up CTL algorithm
+above establishes no CTL* model-checking result
+\cite[defs.~6.80--6.82 and thms.~6.83--6.84; pp.~422--425]{BaierKatoen2008}.
+
+\paragraph{Printed defects and proof boundary.}
+This presentation uses the formulas forced by the surrounding definitions
+rather than copying several local defects: p.~333 drops a negation in the
+expansion of \(\forall\Box\Phi\); p.~338 mislabels the primed witness tuple
+and writes an inductive clause as though an undefined index \(-1\) existed; p.~340
+changes \(\forall\Box\exists\Diamond a\) to a different modality in one
+line; p.~347 repeats the wrong operand in the universal weak-until expansion;
+p.~352 attaches a stale comment to later Algorithm~16 work items; and p.~354
+misnumbers two subfigures.  Theorem~6.21 also leaves its central bounded-
+formula induction to the reader, while Theorem~6.84 supplies only the cited
+one-sentence argument.  The source provides a complete body and complete
+algorithm descriptions, but not a complete printed proof of every theorem.
+The presentation above therefore instantiates
+Method~\ref{def:p09-ctl-labelling} and supports
+Theorem~\ref{thm:p09-ctl-labelling} only at these explicitly separated source
+and handbook-proof strengths.

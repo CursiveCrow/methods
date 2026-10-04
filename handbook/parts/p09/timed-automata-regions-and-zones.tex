@@ -1,0 +1,369 @@
+\chapter{Timed Automata, Regions, and Zones}
+\label{sec:p09-timed-automata-regions-and-zones}
+
+Timed automata combine a finite control graph with real-valued clocks that
+all advance at rate one. A finite region partition supports an exact
+time-abstract reachability construction. Zones instead retain convex sets
+of valuations and admit efficient difference-bound operations; their raw
+reachable graph need not be finite. This treatment develops those two
+constructions separately, following the clock and cell representation of
+\textcite[\S\S3.1--3.4,4.1--4.3,5.5]{AlurDill1994TimedOriginal}
+and the invariant/zone presentation of
+\textcite[\S\S29.2--29.3,29.7.1--29.7.3]{BouyerEtAl2018TimedChapter}.
+The result here is finite location reachability, not a replacement for their
+infinite-word acceptance, temporal-logic, weighted, or game treatments.
+
+\section{Clocks and the two kinds of transition}
+\label{sec:p09-timed-clock-semantics}
+
+\begin{hbdefinition}{def:p09-timed-model}{The specified timed-automaton class}
+A clock valuation on a finite set \(C\) is a map
+\(v:C\to\mathbb R_{\geq0}\). Write \(0_C\) for the all-zero valuation,
+\((v+d)(x)=v(x)+d\), and \(v[r]\) for simultaneously resetting every
+clock in \(r\subseteq C\) to zero and leaving the other clocks unchanged.
+A diagonal-free clock constraint is a finite conjunction of atoms
+\(x\bowtie k\), with \(k\in\mathbb Q\) and
+\(\bowtie\in\{<,\leq,=,\geq,>\}\). The empty conjunction is true.
+An extended difference constraint additionally permits \(x-y\bowtie k\).
+
+A timed automaton is \(A=(L,\ell_0,C,\Sigma,I,E)\), with finite locations,
+finite action alphabet, finite edge set, invariant \(I(\ell)\) at each
+location, and edges \(e=(\ell,g,a,r,\ell')\). Unless the diagonal extension
+is explicitly invoked, guards and invariants are diagonal-free constraints.
+A state is \((\ell,v)\) with \(v\models I(\ell)\). Assume
+\(0_C\models I(\ell_0)\); otherwise there is no initial state in this
+semantics. Delay \(d\geq0\) is permitted at \((\ell,v)\) exactly when
+\(v+t\models I(\ell)\) for every \(t\in[0,d]\). An edge may then fire
+when \(v+d\models g\), producing \((\ell',(v+d)[r])\), which must satisfy
+\(I(\ell')\). Write this combined delay/action step as
+\((\ell,v)\xrightarrow{d,a}(\ell',(v+d)[r])\).
+
+The original Alur--Dill transition tables have no location invariants and
+use Boolean combinations of unary rational comparisons. The invariant
+class above is the separately declared later convention. A finite Boolean
+guard can be split into finitely many conjunctive guarded edges; arbitrary
+Boolean invariants are not silently added, because the endpoint argument
+below uses convexity. The chosen finite-reachability semantics allows zero
+delays; this does not identify it with a convention requiring strictly
+increasing timestamps of an infinite timed word.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p09-timed-rescaling}{proved=annex:p09-timed-rescaling}{Rational constants may be scaled to integers}
+Let \(q>0\) be an integer divisible by all denominators of the finitely
+many rational constants in \(A\). Multiply every constant, clock value,
+and delay by \(q\). This gives a bijection between finite runs of the
+original and scaled automata, preserving control locations, actions,
+resets, invariant satisfaction, and time divergence of infinite runs when
+such runs are otherwise defined. The following region construction is
+therefore stated for integer constants. This rescaling changes the unit of
+time, not the event order or the rates relative to that new unit.
+\end{hblemma}
+
+\begin{hbexample}{def:p09-timed-two-clock-trace}{Independent resets, one global rate}
+Alur--Dill's two-clock example constrains an \(a,c\) delay to be less than
+one and a \(b,d\) delay to be greater than two. Reset \(x\) on \(a\),
+reset \(y\) on \(b\), test \(x<1\) on \(c\), and test \(y>2\) on
+\(d\). For timestamps \(2,2.7,2.8,5\), the post-event valuations are
+\((0,2),(0.7,0),(0.8,0.1),(3,2.3)\). Both tests pass. Different reset
+times measure different elapsed intervals, but both clocks still share the
+same rate-one time; these are not drifting local distributed clocks
+\cite[exs.~3.5,3.9, pp.~192--195]{AlurDill1994TimedOriginal}.
+\end{hbexample}
+
+\section{The bounded-cell region partition}
+\label{sec:p09-timed-region-partition}
+
+\begin{hbdefinition}{def:p09-timed-region-equivalence}{Region descriptors with an explicit over-limit bit}
+For every clock choose an integer \(M_x\geq0\) at least as large as the
+absolute value of every unary constant tested for that clock in guards or
+invariants; an otherwise unused clock may use \(M_x=0\). Put
+\(n=|C|\), and write \(\langle t\rangle=t-\lfloor t\rfloor\).
+Valuations \(v,w\) satisfy \(v\sim_M w\) iff all these requirements hold:
+
+\begin{enumerate}
+\item For each \(x\), \(v(x)>M_x\) iff \(w(x)>M_x\).
+\item If \(v(x)\leq M_x\), their integer parts agree and
+      \(\langle v(x)\rangle=0\) iff \(\langle w(x)\rangle=0\).
+\item For bounded clocks \(x,y\),
+      \(\langle v(x)\rangle\leq\langle v(y)\rangle\) iff
+      \(\langle w(x)\rangle\leq\langle w(y)\rangle\).
+\end{enumerate}
+
+Thus each clock occupies exactly one member of the cell family
+\[
+ \bigl\{\{k\}:k\in\mathbb Z,\ 0\leq k\leq M_x\bigr\}
+ \ \cup\ \bigl\{(k,k+1):k\in\mathbb Z,\ 0\leq k<M_x\bigr\}
+ \ \cup\ \bigl\{(M_x,\infty)\bigr\},
+\]
+which for \(M_x=0\) consists exactly of \(\{0\}\) and
+\((0,\infty)\),
+and the descriptor records the weak ordering, including ties, of the
+bounded nonzero fractional parts. A \emph{region} is an equivalence class
+of this explicitly typed partition. This is the point/open-cell
+descriptor presentation used for the construction
+\cite[\S4.2]{AlurDill1994TimedOriginal}; the maximum integer point and the
+over-limit cell are distinct. Extend equivalence to states only at the same
+location. Guard and invariant constants must be included in the bounds.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p09-timed-region-properties}{proved=annex:p09-timed-region-properties}{Finite regions, stable guards/resets, and matched time elapse}
+The number \(R_M\) of regions satisfies
+\[
+ R_M\leq n!\,2^n\prod_{x\in C}(2M_x+2).
+\]
+This includes \(n=0\), with empty product and \(0!\) equal to one.
+Equivalent valuations agree on every allowed unary constraint, and remain
+equivalent after any simultaneous reset. If \(v\sim_M w\), there is a
+continuous strictly increasing bijection
+\(h:[0,\infty)\to[0,\infty)\), with \(h(0)=0\), such that
+\(v+t\sim_M w+h(t)\) for every \(t\geq0\).
+Consequently state-region equivalence is a time-abstract bisimulation of
+the specified combined-step semantics: it matches the same action/edge but
+may change the numerical delay. It is not an equality-of-delays bisimulation.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p09-timed-region-graph}{The exact quotient graph}
+Vertices are the state regions satisfying their location invariant, with
+initial vertex \((\ell_0,[0_C])\). An edge labelled \(a\) joins two
+vertices iff some representatives make an allowed combined \(d,a\) step.
+The target set is all vertices whose location lies in a fixed
+\(F\subseteq L\). The witnesses in this definition are existential,
+not a choice of independently incompatible representatives at every step.
+The bisimulation theorem is what justifies splicing quotient edges.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p09-timed-region-reachability}{proved=annex:p09-timed-region-reachability}{Finite exact time-abstract reachability}
+A location in \(F\) is reachable by a finite run iff a target vertex is
+reachable in the region graph. There are at most \(|L|R_M\) vertices.
+The graph can be constructed effectively from its cell descriptors by
+enumerating their finite ordered integer-hit events, testing guards and
+invariants, and applying resets. Thus finite location reachability is
+decidable. This statement does not impose a non-Zeno acceptance condition
+on infinite paths.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p09-timed-28-regions}{The original two-clock region example}
+For \(M_x=2,M_y=1\), the Alur--Dill example has 28 regions
+\cite[ex.~4.4, fig.~9]{AlurDill1994TimedOriginal}. In the bounded rectangle
+there are six integer points, seven horizontal/vertical open edges, two
+fractional-equality diagonals, and four open two-dimensional cells: 19
+regions. Outside that rectangle there are five one-dimensional rays and
+four open cells, giving nine more. Hence the source's dimensional counts
+are six point regions, fourteen one-dimensional regions, and eight
+two-dimensional regions. For example \((0.3,0.7)\) is in \(0<x<y<1\).
+The valuations \((1.3,0.7)\) and \((1.7,0.3)\) have the same integer
+parts but lie on opposite sides of \(y=x-1\): the first has
+\(\langle x\rangle<\langle y\rangle\), the second the reverse.
+Integer parts alone would miss this difference.
+\end{hbexample}
+
+\begin{hbdefinition}{def:p09-timed-diagonal-refinement}{A finite diagonal-sensitive refinement}
+For an automaton using extended difference constraints, let \(\mathcal D\)
+be its finite set of tested diagonal atoms. Choose a common integer
+\(M\geq0\) bounding the absolute values of all unary and diagonal
+constants, and use \(M_x=M\) in the ordinary partition. Define
+\(v\sim_{M,\mathcal D}w\) iff \(v\sim_Mw\) and \(v,w\) agree on
+the truth value of every atom in \(\mathcal D\). These extra bits are
+part of the descriptor, not assertions that differences are bounded by
+the individual clock bounds.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p09-timed-diagonal-refinement}{proved=annex:p09-timed-diagonal-refinement}{The diagonal refinement preserves finite reachability}
+The refined partition has at most \(2^{|\mathcal D|}R_M\) regions. Guard,
+invariant, reset and matched-delay properties, and the quotient finite-run
+reachability equivalence, hold for this refinement. Its feasible descriptors
+and edges are effectively obtainable using the difference-constraint
+feasibility construction below. The \emph{unrefined} ordinary partition is
+not sufficient for arbitrary diagonal guards.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p09-timed-diagonal-failure}{Why the extra diagonal bits matter}
+Start with \(x=y=0\), wait until \(y=1\), reset \(x\), and enter \(p\).
+In \(p\), allow arbitrary delay but no further reset. Every reachable
+valuation satisfies \(y=x+1\). An outgoing guard \(x-y>0\) is never
+enabled. With ordinary bounds \(M_x=M_y=1\), reachable \((2,3)\) and
+unreachable \((3,2)\) are in the same over-limit region, but disagree on
+that guard. Ordinary region saturation could therefore create a false
+target path. The refined truth bit separates them; exact zones retain the
+difference \(y-x=1\) as well.
+\end{hbexample}
+
+\section{Zones and strict difference-bound matrices}
+\label{sec:p09-timed-dbm}
+
+\begin{hbdefinition}{def:p09-timed-dbm}{The DBM constraint class and conventions}
+Index the clocks by \(1,\ldots,n\) and add a fixed coordinate \(x_0=0\).
+A bound is \((c,\triangleleft)\), where \(c\in\mathbb Q\) and
+\(\triangleleft\in\{<,\leq\}\), or \(\infty\). Bound order
+\(\preceq_b\) means no weaker: smaller constants are tighter, and
+\((c,<)\prec_b(c,\leq)\). Bound addition \(\oplus_b\) adds constants
+and makes the result strict iff either summand is strict; infinity is
+absorbing. A DBM \(D\) represents
+\[
+ Z(D)=\{v\in\mathbb R_{\geq0}^n:
+               v_i-v_j\mathrel{\triangleleft_{ij}}c_{ij}
+               \text{ for every finite }D_{ij}\},\qquad v_0=0.
+\]
+Always insert \(D_{ii}\preceq_b(0,\leq)\) and the nonnegativity bounds
+\(D_{0i}\preceq_b(0,\leq)\). Equalities use two nonstrict bounds;
+lower bounds reverse the two indices and negate the constant. Empty
+zones have a separate empty marker propagated by every operation.
+
+The weighted graph convention used in the feasibility proof is an edge
+\(j\to i\) of bound \(D_{ij}\); it implements the displayed
+\(v_i-v_j\) constraint. This is the transpose orientation of the
+constraint-labelled arrows in the chapter's illustration, not a change
+of constraint meaning. Shortest-path closure is computed by the
+Floyd--Warshall updates
+\(D_{ij}\leftarrow\min_b(D_{ij},D_{ik}\oplus_bD_{kj})\), for each
+\(k=0,\ldots,n\). A closed nonempty matrix is called canonical here.
+The class is rational difference constraints only: not arbitrary linear
+polyhedra, clock sums, or parametric bounds.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p09-timed-dbm-closure}{proved=annex:p09-timed-dbm-closure}{Closure and strict-bound consistency}
+Closure preserves \(Z(D)\). The zone is empty iff closure has some
+\(D_{ii}\prec_b(0,\leq)\): a negative constant or a zero strict bound.
+Otherwise it has a rational valuation. Closure uses \(O((n+1)^3)\)
+bound operations; that count does not treat unbounded rational bit
+arithmetic as unit-cost in a complexity claim.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p09-timed-dbm-inclusion}{proved=annex:p09-timed-dbm-inclusion}{Exact inclusion of canonical zones}
+For canonical nonempty DBMs \(D,E\),
+\(Z(D)\subseteq Z(E)\) iff \(D_{ij}\preceq_bE_{ij}\) for all indices.
+The empty-marker cases are decided first. Comparing constants without
+their strictness flags is not an inclusion test.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p09-timed-dbm-operations}{proved=annex:p09-timed-dbm-operations}{Exact intersection, reset, and time elapse}
+For a nonempty canonical matrix \(D\):
+\begin{enumerate}
+\item Intersection with another zone or conjunctive guard is represented
+      by entrywise minimum followed by closure and an emptiness check.
+\item To reset \(r\), put \(\rho(i)=0\) for reset indices and
+      \(\rho(i)=i\) otherwise, including \(\rho(0)=0\). The matrix
+      \(D^r_{ij}=D_{\rho(i),\rho(j)}\) represents exactly \(Z(D)[r]\).
+\item To allow arbitrary common delay, replace \(D_{i0}\) by infinity
+      for every \(i>0\), retaining all other entries. The result represents
+      exactly \(Z(D)^\uparrow=\{v+d:v\in Z(D),d\geq0\}\).
+\end{enumerate}
+Zero resets leave the set unchanged. Empty inputs remain empty; resetting
+coordinates in an inconsistent raw matrix must not erase its inconsistency.
+Canonical closure is an actual precondition for the simple reset/time-up
+formulas, not an optional formatting step.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p09-timed-dbm-calculation}{One exact DBM calculation}
+Take \(Z=\{0\leq x\leq2,\ y=x+1\}\). In order \(0,x,y\), its closed
+nonstrict-bound matrix has constants
+\[
+ D=\begin{pmatrix}0&0&-1\\2&0&-1\\3&1&0\end{pmatrix}.
+\]
+Time-up removes the entries \(2,3\) in column zero and gives
+\(\{x\geq0,y=x+1\}\). Intersecting the original zone with \(x<1\)
+and closing also derives \(y<2\). Resetting \(x\) then yields
+\(\{x=0,1\leq y<2\}\), with the strict upper bound retained.
+Resetting \(x\) in the original \(Z\) instead gives
+\(\{x=0,1\leq y\leq3\}\): reset forgets its old value; it does not
+substitute zero into every old difference equation.
+\end{hbexample}
+
+\begin{hbexample}{def:p09-timed-clock-domain-check}{Nonnegativity is part of the zone}
+Among the constraints in the chapter's Figure~12 are \(x_1\leq3\) and
+\(x_1-x_2\geq4\) \cite[p.~1025]{BouyerEtAl2018TimedChapter}.
+As constraints on nonnegative clocks, these already imply
+\(4\leq x_1\leq3\), so their clock zone is empty. A weighted graph
+without the implicit nonnegativity rows can still describe a nonempty
+real-coordinate polyhedron. Our DBMs always include those rows and do
+not mistake that polyhedron for a nonempty clock zone.
+\end{hbexample}
+
+\section{Exact posts and a genuinely finite normalization}
+\label{sec:p09-timed-zone-reachability}
+
+\begin{hbdefinition}{def:p09-timed-zone-post}{Symbolic combined-step post}
+For \(Z\subseteq\llbracket I(\ell)\rrbracket\), define
+\[
+ \operatorname{Post}_e(Z)=
+    \bigl(Z^\uparrow\cap\llbracket I(\ell)\rrbracket
+                         \cap\llbracket g\rrbracket\bigr)[r]
+                         \cap\llbracket I(\ell')\rrbracket.
+\]
+A symbolic path starts at the singleton zero zone, and uses this post for
+each selected edge, discarding empty results. Keep separate zones or their
+exact union; replacing that union by its convex hull is not this algorithm.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p09-timed-zone-post}{proved=annex:p09-timed-zone-post}{Zone posts describe precisely the finite runs of each edge sequence}
+For conjunctive difference-constraint invariants and guards, the symbolic
+post is exactly the set of combined-step successors. Consequently the
+zone associated with a finite edge sequence is exactly the set of valuations
+reached by its concrete runs. Every needed post is computed by the proved
+DBM operations. This gives exact symbolic finite-path reachability but
+does not, without a separate finiteness argument, give a terminating search
+over every zone path.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p09-timed-infinite-zones}{An infinite raw zone graph}
+Use clocks \(x,y\), one location with invariant \(x\leq1\), and a loop
+guarded by \(x=1\) which resets only \(x\). After its \(k\)-th traversal
+the exact zone is \(\{x=0,y=k\}\), for every \(k\geq0\). These are
+infinitely many distinct DBMs, although finite regions abstract them:
+\(M_x=1,M_y=0\) suffices, and all \(k>0\) share the same over-limit
+\(y\) descriptor. Each iteration takes one time unit, so this failure
+of zone-graph finiteness is not caused by Zeno behavior.
+\end{hbexample}
+
+\begin{hbexample}{def:p09-timed-hull-failure}{A convex hull can create an error path}
+From the zero state, two edges into \(p\) use guards \(x=0\) and \(x=2\),
+respectively, and reset an auxiliary clock \(z\). At \(p\), invariant
+\(z\leq0\) forbids positive delay. The exact reachable set there is
+\(\{(x,z)=(0,0),(2,0)\}\). An outgoing guard \(x=1\) is impossible.
+Its convex hull contains \((1,0)\), falsely enabling that edge. A union
+of zones is therefore not in general one zone or an exact DBM hull.
+\end{hbexample}
+
+\begin{hbdefinition}{def:p09-timed-region-saturation}{Region-union normalization}
+For the applicable ordinary or diagonal-refined partition, put
+\[
+ \alpha(Z)=\bigcup\{R:R\cap Z\ne\varnothing\}.
+\]
+This is a finite union of regions, not generally a single zone. Normalize
+symbolic successors using \(\alpha\), representing unions as explicit
+region sets. This mathematical normalization is distinct from practical
+maximum-bound/LU DBM extrapolations; no unproved extrapolation is substituted
+for it \cite[\S29.7.1]{BouyerEtAl2018TimedChapter}.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p09-timed-finite-normalization}{proved=annex:p09-timed-finite-normalization}{Finite normalized search with exact location reachability}
+For the appropriate bisimulation partition,
+\[
+ \alpha\bigl(\operatorname{Post}_e(\alpha(Z))\bigr)
+       =\alpha\bigl(\operatorname{Post}_e(Z)\bigr).
+\]
+Normalized symbolic search preserves finite location reachability. There
+are at most \(|L|2^{R}\) normalized symbolic states, where \(R\) is the
+applicable region bound. Alternatively accumulate a set of reachable
+regions at each location; at most \(|L|R\) new region entries can be added.
+Guard satisfaction and every finite symbolic path lift to concrete runs by
+bisimulation, not by treating arbitrary abstract valuations as reachable.
+Ordinary normalization in the presence of unchecked diagonal guards does
+not satisfy these hypotheses.
+\end{hbtheorem}
+
+\begin{hbwarning}{def:p09-timed-acceptance-boundary}{Finite reachability does not establish infinite acceptance}
+A loop with guard and invariant \(x<1\), never resetting \(x\), can have
+infinitely many traversals at increasing times converging to one, but no
+time-divergent such run. A control/region cycle alone is not an accepting
+progressing timed run. Alur--Dill's original infinite-word construction
+adds progressive-run conditions; the 2018 chapter separately defines
+time-divergent runs and non-Zeno extendibility. Those conditions are not
+conclusions of the finite reachability theorem. Likewise, time-abstract
+matching does not preserve exact timestamps, drifted clocks, arbitrary
+clock sums, stopped clocks, general hybrid updates, parametric bounds,
+language inclusion, or controller winning conditions. Each requires its
+own model and proof. The CTMC residence-time semantics of
+\cref{sec:p09-csl-endpoints} is probabilistic timing, not this clock-guard
+transition semantics.
+\end{hbwarning}

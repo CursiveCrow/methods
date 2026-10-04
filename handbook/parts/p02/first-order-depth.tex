@@ -1,0 +1,507 @@
+%% Part 2.2 depth entries and lookup tables.
+%% Register coverage: D-P3-003, D-P3-004, D-P3-006, D-P3-014;
+%% apparatus A-035 and A-036.  D-P3-005 and D-P3-007 are pointers only
+%% and deliberately remain open at their Part-3 and Part-2.4 homes.
+
+\chapter{First-Order Reference Entries}
+\label{sec:p02-first-order-depth}
+
+\noindent\textit{Reader note.}  This chapter is an editorial reference layer
+after the exact inherited first-order sequence.  Its entries and tables retain
+their own citations and do not replace, rename, or change the proof status of
+any inherited statement.
+
+This chapter collects semantic reductions and metatheorem lookups that do not
+belong to a single calculus presentation.  Herbrand's theorem is stated in its
+validity form; its clause-set form remains with resolution.  Interpolation,
+definability, and the quantified subformula property are citation-only entries:
+no proof status is inferred from their inclusion here.
+
+\section{Herbrand universe, structures, and finite expansions}
+\label{sec:p02-herbrand-validity}
+
+Fix an equality-free first-order signature \(\Lang\) with at least one ground
+term.  If \(\Lang\) has none, first add one fresh constant \(c\).  A sentence
+of the old signature is valid exactly when it is valid in that fresh-constant
+expansion, because every expanded structure has an old-signature reduct and
+every nonempty old-signature structure admits an interpretation of \(c\).
+
+\begin{hbdefinition}{def:p02-herbrand-universe-base}{Herbrand universe and Herbrand base}
+The \emph{Herbrand universe} of \(\Lang\) is the set of all ground
+\(\Lang\)-terms.  The \emph{Herbrand base} is the set of all ground atoms
+\[
+  R(t_1,\ldots,t_n),
+\]
+where \(R\) is an \(n\)-ary relation symbol of \(\Lang\) and every \(t_i\)
+belongs to the Herbrand universe.  Nullary relation symbols contribute their
+own atoms.  Logical equality is excluded from this base and from the theorem
+below; it is not treated as an arbitrary binary predicate.
+\index{Herbrand universe}
+\index{Herbrand base}
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p02-herbrand-structure}{Herbrand structure}
+For a set \(B\) of members of the Herbrand base, the corresponding
+\emph{Herbrand structure} \(\mathcal M_B\) has the Herbrand universe as its
+domain, interprets each constant \(d\) by the ground term \(d\), and interprets
+each \(n\)-ary function symbol by term formation:
+\[
+ f^{\mathcal M_B}(t_1,\ldots,t_n)
+   \defeq f(t_1,\ldots,t_n).
+\]
+Its relations are fixed by
+\[
+ \mathcal M_B\entails R(t_1,\ldots,t_n)
+ \quad\Longleftrightarrow\quad
+ R(t_1,\ldots,t_n)\in B.
+\]
+Thus a Herbrand structure varies only in which ground relation atoms it makes
+true; constants and functions always have their syntactic interpretations.
+\index{Herbrand structure}
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p02-herbrand-expansion}{Finite Herbrand expansion}
+Let
+\[
+ \sigma\defeq\exists x_1\cdots\exists x_n\,\varphi(x_1,\ldots,x_n)
+\]
+be a sentence with quantifier-free matrix \(\varphi\), where \(n\geq0\).  Given
+finitely many \(n\)-tuples \(\bar t_1,\ldots,\bar t_m\) of ground terms, with
+\(m\geq1\), the associated \emph{finite Herbrand expansion} is
+\[
+ \varphi(\bar t_1)\lor\cdots\lor\varphi(\bar t_m).
+\]
+Each substitution is the total capture-avoiding substitution fixed in the
+syntax chapter.  For propositional evaluation, each distinct ground atom is
+regarded as one propositional variable.  When \(n=0\), the tuple is empty and
+the quantifier-free case is the trivial one-member expansion \(\varphi\) (take
+\(m=1\)).
+\index{Herbrand expansion}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p02-herbrand-validity}{cited=AfshariEnqvistLeigh2025}{Herbrand's theorem, validity form}
+Let \(\Lang\) be equality-free and contain a ground term, and let
+\(\sigma=\exists\bar x\,\varphi(\bar x)\) be a prenex existential \(\Lang\)-sentence
+with quantifier-free matrix.  Then \(\sigma\) is first-order valid iff some
+finite Herbrand expansion of \(\sigma\) is propositionally valid.  If the
+original signature has no ground term, the same equivalence holds after adding
+one fresh constant as above.
+\index{Herbrand's theorem!validity form}
+\end{hbtheorem}
+
+Both directions are proved in
+Theorem~\ref{thm:p02-w02-p02-028-existential-validity}, and
+Theorem~\ref{thm:p02-w02-p02-028-general-validity} extends the equivalence to
+arbitrary equality-free sentences through the Herbrand form.
+The theorem does not say that validity supplies one uniformly valid ground
+instance: a finite disjunction of instances may be necessary.  Nor does it
+identify three different constructions.  Theorem~\ref{thm:herbrand-clauses}
+is the dual finite-ground-instance criterion for unsatisfiable universal clause
+sets.  The term structure in Section~\ref{sec:fol-metatheory-02} instead quotients all
+terms by provable equality in a maximal consistent witness theory.  A Herbrand
+structure is an unquotiented ground-term structure and the validity theorem is
+equality-free; neither is the Henkin term model.
+
+\section{Interpolation and implicit definability}
+\label{sec:p02-craig-beth}
+
+\begin{hbtheorem}{thm:p02-craig-interpolation}{cited=Craig1957}{Craig interpolation, sentence form}
+Let \(\varphi\) and \(\psi\) be first-order sentences, possibly in different
+signatures, and suppose \(\entails\varphi\to\psi\).  Then there is a sentence
+\(\chi\) such that
+\[
+ \entails\varphi\to\chi,
+ \qquad
+ \entails\chi\to\psi,
+\]
+and every nonlogical constant, function symbol, and relation symbol occurring
+in \(\chi\) occurs in both \(\varphi\) and \(\psi\).  When equality is logical,
+it is exempt from the shared-vocabulary condition.
+\index{Craig interpolation theorem}
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p02-beth-definability}{Implicit and explicit predicate definability}
+Let \(\Lang(P)\) extend \(\Lang\) by an \(n\)-ary predicate \(P\),
+let \(T(P)\) be a \(\Lang(P)\)-theory, let
+\(x_1,\ldots,x_n\) be pairwise distinct, and let \(P'\) be fresh.
+Write \(T(P')\) for the uniform replacement of \(P\) by \(P'\).  The theory
+\emph{implicitly defines} \(P\) over \(\Lang\) iff
+\[
+ T(P)\cup T(P')\entails
+ \forall x_1\cdots\forall x_n
+ \bigl(P(x_1,\ldots,x_n)\leftrightarrow
+       P'(x_1,\ldots,x_n)\bigr).
+\]
+It \emph{explicitly defines} \(P\) over \(\Lang\) iff some
+\(\Lang\)-formula \(\chi\), whose free variables are among
+\(x_1,\ldots,x_n\), satisfies
+\[
+ T(P)\entails
+ \forall x_1\cdots\forall x_n
+ \bigl(P(x_1,\ldots,x_n)\leftrightarrow
+       \chi(x_1,\ldots,x_n)\bigr).
+\]
+These are metalinguistic properties of a theory and its distinguished
+predicate, not new object-language connectives.
+\index{implicit definability}
+\index{explicit definability}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p02-beth-definability}{cited=Beth1953}{Beth definability theorem}
+For every first-order theory \(T(P)\) as in
+Definition~\ref{def:p02-beth-definability}, \(T(P)\) implicitly defines \(P\)
+over \(\Lang\) iff it explicitly defines \(P\) over \(\Lang\).
+\index{Beth definability theorem}
+\end{hbtheorem}
+
+Complete proofs of both theorems are given elsewhere in the book.  For
+interpolation, Theorem~\ref{thm:craig-interpolation} is proved in
+Annex~\ref{annex:p7.interp.3} by Maehara's partition method on cut-free
+derivations, and Theorem~\ref{thm:p03-craig-robinson-beth}
+(Annex~\ref{annex:p3.abstract.5}) derives it from Robinson joint consistency,
+Theorem~\ref{thm:p03-robinson-joint-consistency}
+(Annex~\ref{annex:p3.abstract.1}).  For definability,
+Theorem~\ref{thm:beth} is proved in Annex~\ref{annex:p7.interp.4} and
+Theorem~\ref{thm:p03-beth-definability} in Annex~\ref{annex:p3.abstract.2}.
+The formula form of interpolation, with its free-variable condition, is
+Theorem~\ref{thm:p02-w02-p02-037-craig-formula} in
+\cref{sec:p02-w02-p02-037-craig}.  \Cref{sec:p02-w02-p02-037-beth} shows
+that Definition~\ref{def:p02-beth-definability} agrees with the model
+formulation used by those proofs and derives
+Theorem~\ref{thm:p02-beth-definability} as
+Corollary~\ref{thm:p02-w02-p02-037-beth}.  Lyndon interpolation is not
+claimed here.
+
+\section{Decidable fragments: exact scopes}
+\label{sec:p02-decidable-fragments}
+
+Decision and complexity claims are sensitive to vocabulary, equality,
+function symbols, model class, and whether the input problem is satisfiability
+or validity.  Table~\ref{tab:p02-decidable-fragments} fixes those parameters
+row by row.  Its catalog is a synthesis of the cited results, not a claim that
+the fragment names retain the displayed bounds under arbitrary extensions.
+
+\begin{hbdefinition}{def:p02-exponential-time-classes}{Exponential-time classes used in this table}
+For input length \(n\), let
+\[
+\begin{aligned}
+ \mathsf{EXPTIME}&\defeq\bigcup_{k\geq1}\mathsf{DTIME}(2^{n^k}),&
+ \mathsf{NEXPTIME}&\defeq\bigcup_{k\geq1}\mathsf{NTIME}(2^{n^k}),\\
+ \mathsf{coNEXPTIME}&\defeq
+   \{L:\overline L\in\mathsf{NEXPTIME}\},&
+ 2\mathsf{EXPTIME}&\defeq
+   \bigcup_{k\geq1}\mathsf{DTIME}(2^{2^{n^k}}).
+\end{aligned}
+\]
+Here \(\mathsf{DTIME}\) and \(\mathsf{NTIME}\) use deterministic and
+nondeterministic multitape Turing machines under the standard finite encoding
+of formulas.  These names are needed because the table distinguishes
+determinism, nondeterminism, complementation, and one versus two exponential
+levels.  They denote decision-problem complexity classes, not logical systems,
+and are used only with the reductions and input languages stated row by row.
+\index{EXPTIME}\index{NEXPTIME}\index{2EXPTIME}
+\end{hbdefinition}
+
+\begin{landscape}
+\begingroup\scriptsize\setlength{\tabcolsep}{3pt}
+\begin{longtable}{@{}p{.90in}p{2.20in}p{2.10in}p{2.00in}@{}}
+\caption{Decidable fragments of first-order logic.}
+\label{tab:p02-decidable-fragments}\\
+\toprule
+Fragment & Exact input language and semantics & Model and decision complexity & Boundary and source \\ \midrule
+\endfirsthead
+\caption[]{Decidable fragments of first-order logic (continued)}\\
+\toprule
+Fragment & Exact input language and semantics & Model and decision complexity & Boundary and source \\ \midrule
+\endhead
+\midrule\multicolumn{4}{r}{\emph{continued on next page}}\\
+\endfoot
+\endlastfoot
+Monadic FOL
+\index{monadic first-order logic} &
+Closed formulas over unary predicate letters, with nonempty-domain semantics;
+Lewis's language has neither identity nor function signs, and no constants are
+imported as zero-ary functions. &
+Satisfiability is decidable and \(\mathsf{NEXPTIME}\)-complete; more sharply,
+Lewis gives
+matching nondeterministic bounds of the form \(c^{n/\log n}\), with different
+constants.  Validity is \(\mathsf{coNEXPTIME}\)-complete by complementation
+\cite{Lewis1980}.  Without equality every satisfiable sentence with \(m\)
+predicates has a model with at most \(2^m\) elements, so the row has the
+finite-model property; the colour-set procedure and the matching lower bound are in
+\cref{sec:p02-w02-p02-035-monadic}. &
+Equality, constants, and function symbols are outside this cited complexity
+claim; adding them is not a notational variant.
+Undecidable boundary: a single binary predicate symbol already yields a
+conservative reduction class \cite[thm.~3.1.23]{BorgerGradelGurevich1997}. \\
+\addlinespace
+Two-variable logic \(\mathrm{FO}^{2}\)
+\index{two-variable logic} &
+Relational first-order sentences using at most two distinct variable symbols,
+reused under quantifiers; the theorem holds with or without logical equality.
+No function symbols are present.  Individual constants may be added; they are
+kings, and the model and complexity bounds are unchanged
+\cite[p.~11]{GradelKolaitisVardi1997}. &
+Finite-model property; every satisfiable sentence has a model of exponential
+size.  Finite and unrestricted satisfiability coincide.  Satisfiability, and
+hence finite satisfiability, is
+\(\mathsf{NEXPTIME}\)-complete \cite{GradelKolaitisVardi1997}.
+Construction and algorithm:
+\cref{sec:p02-w02-p02-035-fo2,sec:p09-presentation-n-c-006}. &
+The three-variable relational fragment already has an undecidable
+satisfiability problem; the two-variable bound is therefore load-bearing
+\cite{GradelKolaitisVardi1997}. \\
+\addlinespace
+Guarded fragment\newline\(\mathrm{GF}\)
+\index{guarded fragment} &
+Relational first-order formulas in the cited presentation, with no function
+symbols.  Logical equality may occur as an atom but may not itself serve as a
+guard.  Every quantified tuple is relativized by a non-equality relation atom
+containing all variables free in the quantified subformula.
+Individual constants may occur in the input; a polynomial-time translation
+removes them and preserves satisfiability over every universe
+\cite[lem.~2.3]{Gradel1999} (\cref{thm:p02-w02-p02-035-gf-constants}).
+That translation raises arity and variable count; the bounded-variable and
+bounded-arity \(\mathsf{EXPTIME}\) bounds hold with constants by a different
+reduction (\cref{thm:p02-w02-p02-035-gf-bounded-constants}). &
+Tree-model property and finite-model property; satisfiability is decidable and
+general satisfiability is \(2\mathsf{EXPTIME}\)-complete.  With a fixed bound
+on the number of variables or relation arity it is
+\(\mathsf{EXPTIME}\)-complete \cite{Gradel1999}.
+Tree-model and finite-model constructions, type-elimination procedure and
+lower bounds: \cref{sec:p02-w02-p02-035-gf}; source presentation:
+\cref{sec:p09-presentation-n-c-007}. &
+An atom beside a quantifier is not a guard unless it covers all relevant
+variables.  Loosely guarded and fixed-point extensions are different rows.
+Undecidable boundary: adding functionality statements, or transitivity
+statements, to the three-variable guarded fragment gives conservative
+reduction classes \cite[thms.~5.8 and 5.10]{Gradel1999}. \\
+\addlinespace
+Bernays--Sch\"onfinkel\newline(\(\mathrm{EPR}\))
+\index{Bernays--Schonfinkel class@Bernays--Sch\"onfinkel class}
+\index{effectively propositional logic} &
+Closed, function-free relational sentences in prenex
+\(\exists^{*}\forall^{*}\) form with quantifier-free matrix.  The cited
+complexity convention omits identity; Skolemizing the leading existentials
+introduces constants only. &
+Finite-model property; satisfiability is decidable by finite grounding and is
+\(\mathsf{NEXPTIME}\)-complete \cite{Lewis1980}.
+Grounding procedure, correctness and bounds:
+\cref{sec:p02-w02-p02-035-bsr}. &
+The reversed prefix, logical equality, and positive-arity function symbols are
+not included in this row's theorem.
+Undecidable boundary: the equality-free prefix classes
+\(\forall^{3}\exists\) and \(\forall\exists\forall\) are reduction classes
+\cite[p.~311]{BorgerGradelGurevich1997}. \\
+\addlinespace
+Presburger arithmetic
+\index{Presburger arithmetic} &
+Sentences of the complete first-order theory of
+\((\N,0,1,+,<)\), with logical equality; multiplication of two variables is
+absent.  Integer presentations require an explicit standard intertranslation. &
+Decidable by quantifier elimination \cite{Presburger1929}.  Classically, a
+nondeterministic doubly-exponential lower bound
+\cite{FischerRabin1974} and a deterministic triply-exponential upper bound
+\cite{Oppen1978}; this row does not assert a tight complexity class. &
+Adding multiplication of two variables yields the full first-order theory of
+\((\N,0,1,+,\times,<)\), whose decision problem is undecidable
+\cite{DavisPutnamRobinson1961,Matiyasevich1970}; changing numeral encoding or the domain
+convention changes the quoted complexity problem. \\
+\bottomrule
+\end{longtable}
+\endgroup
+\end{landscape}
+
+The boundary column names an undecidable neighbouring class for each row---one
+binary predicate beyond the monadic class, three variables beyond
+\(\mathrm{FO}^{2}\), functionality or transitivity statements beyond the
+guarded fragment, the prefixes \(\forall^{3}\exists\) and \(\forall\exists\forall\)
+beyond the Bernays--Sch\"onfinkel class, and variable multiplication beyond
+Presburger arithmetic---and distinguishes these from features merely excluded
+from a cited scope.
+Dropping all restrictions reaches unrestricted first-order validity, which is
+undecidable \cite{Church1936,Turing1937}; satisfiability is therefore
+undecidable as well, by negation.  No row makes the generally false assertion
+that every excluded feature, by itself, destroys decidability.
+Part~14 lists the same fragments, with their semantic ranges, in
+Table~\ref{tab:p14-dc-finite}; the decision procedures for the monadic,
+two-variable, guarded and Bernays--Sch\"onfinkel rows are written out in
+\cref{sec:p02-w02-p02-035-decision-procedures}.
+
+\section{The quantified subformula property}
+\label{sec:p02-fol-subformula-property}
+
+\begin{hbdefinition}{def:p02-fol-subformula-instance}{First-order subformula instance}
+The relation ``\(\psi\) is a \emph{first-order subformula instance} of
+\(\chi\)'' is the least metalinguistic relation on formulas satisfying:
+\begin{enumerate}
+  \item \(\chi\) is a first-order subformula instance of itself;
+  \item whenever an admitted formula has an immediate propositional
+        subformula, that immediate subformula is admitted; and
+  \item whenever \(Qx\,\varphi\) is admitted, where
+        \(Q\in\{\forall,\exists\}\), every capture-avoiding instance
+        \(\varphi[t/x]\) is admitted for every term \(t\) in the language of
+        the derivation.
+\end{enumerate}
+The clauses reapply to newly admitted formulas.  This extension of literal
+syntactic subformulahood is necessary because \(\forall L\) and \(\exists R\)
+use arbitrary term instances, while \(\forall R\) and \(\exists L\) use fresh
+eigenvariables, which are variable terms.  It is a relation among formula
+occurrences in proof syntax, not formula equivalence, and it differs from the
+propositional operation \(\operatorname{Sub}\) exactly by clause~3.
+\index{subformula!first-order instance}
+\index{eigenvariable!subformula property}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p02-fol-subformula-property}{cited=RathjenSieg2024}{Subformula property for cut-free first-order \(\mathsf{LK}\)}
+In every derivation using neither Cut nor Mix on the equality-free registered
+sheet \hyperref[sheet:lk]{\texttt{sheet:lk}}, every formula occurrence is a
+first-order subformula instance of some formula occurrence in the endsequent.
+In particular, the claim includes the term instances introduced by
+\(\forall L\) and \(\exists R\), and the fresh eigenvariable instances
+introduced by \(\forall R\) and \(\exists L\).  It is not the false claim that
+every proof formula is a literal string-subformula of the endsequent, and it
+does not apply to a derivation still containing Cut or Mix.
+\end{hbtheorem}
+
+\section{Many-sorted destination}
+\label{sec:p02-first-order-depth-pointers}
+
+The registered home for many-sorted first-order syntax, nonempty carrier
+semantics, and the translation to one-sorted logic is
+Section~\ref{sec:p02-many-sorted}.  Its guard translation supplies unary sort
+predicates, relativized quantifiers, nonemptiness axioms, and symbol-typing
+axioms; it is not the erasure of sort annotations \cite{Manzano1996}.  The
+exact reduction is Theorem~\ref{thm:p02-many-sorted-translation}.
+
+\section{First-order metatheorem summary}
+\label{sec:p02-fol-metatheorem-summary}
+
+Table~\ref{tab:p02-fol-metatheorems} distinguishes object-level hypotheses from
+the set-theoretic assumptions under which this handbook invokes each result.
+For a citation-only row, ``ZFC lookup'' means exactly that the result is used in
+ordinary ZFC metatheory, so AC is available; it neither claims that AC is
+necessary nor asserts a proof over a weaker base theory.
+
+For the Lindstr\"om row, a \emph{regular abstract logic}
+\index{regular abstract logic} has this fixed metalinguistic meaning in the
+relational presentation.  It assigns to each relational signature \(\tau\) a
+class of sentences and an isomorphism-invariant satisfaction relation.  Each
+sentence has a finite occurrence signature, and satisfaction depends only on
+the reduct to that signature; arity-preserving renamings transport both
+sentences and satisfaction.  The logic contains relational first-order logic,
+is closed under negation and conjunction, and has the following two exact
+operations: abstraction of a fresh constant has the usual first-order
+quantifier semantics, and for a fresh unary predicate \(U\), relativization
+\(\varphi^{U}\) is true in \(\mathcal M\) exactly when \(\varphi\) is true in
+the induced \(\tau\)-structure on the nonempty set \(U^{\mathcal M}\).  This
+package is a condition on a logic-and-satisfaction assignment, not an
+object-language connective and not the proof-theoretic fragment also called
+regular logic.  Its only use here is to make the characterization row
+unambiguous; see \cite[Chapter~XIII, \S1]{EbbinghausFlumThomas1994}.
+
+\begin{landscape}
+\begingroup\scriptsize\setlength{\tabcolsep}{3pt}
+\begin{longtable}{@{}p{1.15in}p{2.15in}p{2.25in}p{1.65in}@{}}
+\caption{First-order metatheorem summary.}
+\label{tab:p02-fol-metatheorems}\\
+\toprule
+Result & Exact hypotheses & Lookup conclusion & Choice, evidence, and locator \\ \midrule
+\endfirsthead
+\caption[]{First-order metatheorem summary (continued)}\\
+\toprule
+Result & Exact hypotheses & Lookup conclusion & Choice, evidence, and locator \\ \midrule
+\endhead
+\midrule\multicolumn{4}{r}{\emph{continued on next page}}\\
+\endfoot
+\endlastfoot
+Natural-deduction soundness &
+Arbitrary signature; arbitrary \(\Gamma\cup\{\varphi\}\); nonempty set-based
+structures; logical equality is identity. &
+\(\Gamma\derives_{\mathsf{ND}_{\mathsf{FOL}}}\varphi\) implies
+\(\Gamma\entails\varphi\). &
+No choice used; complete inherited proof,
+Theorem~\ref{thm:fol-soundness}. \\
+\addlinespace
+Strong completeness &
+Arbitrary signature and formula set under AC; alternatively a finite or
+countable signature with no choice assumption. &
+\(\Gamma\entails\varphi\) implies
+\(\Gamma\derives_{\mathsf{ND}_{\mathsf{FOL}}}\varphi\). &
+Proved: AC in the arbitrary-signature construction; choice-free in the
+countable construction.  Theorem~\ref{thm:fol-completeness} and
+Corollary~\ref{cor:fol-completeness-countable}. \\
+\addlinespace
+Compactness &
+Under AC, \(T\) is any set of \(\Lang\)-sentences and \(\sigma\) is a
+\(\Lang\)-sentence. &
+\(T\) has a model iff every finite subset does; if \(T\entails\sigma\), some
+finite \(T_0\subseteq T\) entails \(\sigma\). &
+AC in this handbook's derivation; complete inherited proof,
+Theorem~\ref{thm:fol-compactness}. \\
+\addlinespace
+Downward L\"owenheim--Skolem &
+Under AC, \(\mathcal M\) is a structure and \(A\subseteq\dom\mathcal M\). &
+Some \(\mathcal N\preccurlyeq\mathcal M\) contains \(A\) and has size at most
+\(\max(\abs{A},\abs{\Lang},\aleph_0)\). &
+AC in the stated theorem; complete inherited proof,
+Theorem~\ref{thm:downward-ls}. \\
+\addlinespace
+Upward L\"owenheim--Skolem &
+Under AC, \(T\) is an \(\Lang\)-theory with an infinite model and
+\(\kappa\) is a cardinal with \(\kappa\geq\max(\abs{\Lang},\aleph_0)\). &
+\(T\) has a model of cardinality exactly \(\kappa\). &
+AC in the stated theorem; complete inherited proof,
+Theorem~\ref{thm:upward-ls}. \\
+\addlinespace
+Herbrand validity &
+Equality-free prenex existential sentence with quantifier-free matrix;
+signature has a ground term, or is expanded by one fresh constant. &
+Validity iff some finite ground expansion is propositionally valid. &
+ZFC lookup: AC is available and no weaker-base claim is made; citation only.
+Theorem~\ref{thm:p02-herbrand-validity};
+\cite{AfshariEnqvistLeigh2025}. \\
+\addlinespace
+Craig interpolation &
+\(\varphi,\psi\) are first-order sentences, possibly in different
+signatures, and \(\entails\varphi\to\psi\); every nonlogical constant,
+function symbol and relation symbol of the interpolant occurs in both
+\(\varphi\) and \(\psi\), and logical equality is exempt from this
+shared-vocabulary condition. &
+There is \(\chi\) with \(\entails\varphi\to\chi\) and
+\(\entails\chi\to\psi\). &
+ZFC lookup: AC is available and no weaker-base claim is made.  Statement
+Theorem~\ref{thm:p02-craig-interpolation}; \cite{Craig1957}; formula form
+with free-variable condition
+Theorem~\ref{thm:p02-w02-p02-037-craig-formula}; proofs
+Theorem~\ref{thm:craig-interpolation} (Annex~\ref{annex:p7.interp.3}) and
+Theorem~\ref{thm:p03-craig-robinson-beth} (Annex~\ref{annex:p3.abstract.5}). \\
+\addlinespace
+Beth definability &
+An \(\Lang(P)\)-theory; implicit uniqueness is expressed by a renamed
+copy \(P'\) over the shared \(\Lang\)-reduct. &
+Implicit definability of \(P\) iff a \(\Lang\)-formula explicitly
+defines \(P\) modulo the theory. &
+ZFC lookup: AC is available and no weaker-base claim is made.  Statement
+Theorem~\ref{thm:p02-beth-definability}; \cite{Beth1953}; proved in this
+formulation as Corollary~\ref{thm:p02-w02-p02-037-beth}, from
+Theorem~\ref{thm:beth} (Annex~\ref{annex:p7.interp.4}) or
+Theorem~\ref{thm:p03-beth-definability} (Annex~\ref{annex:p3.abstract.2});
+Robinson route Theorem~\ref{thm:p03-robinson-joint-consistency}
+(Annex~\ref{annex:p3.abstract.1}) and
+Theorem~\ref{thm:p03-craig-robinson-beth} (Annex~\ref{annex:p3.abstract.5}). \\
+\addlinespace
+Lindstr\"om characterization &
+A regular abstract logic in the exact preceding sense.  Every countable set of
+its sentences whose finite subsets are satisfiable is satisfiable, and every
+satisfiable sentence has a countable model. &
+Every sentence of the abstract logic is equivalent, over its occurrence
+signature, to a relational first-order sentence; the converse holds because
+the logic extends first-order logic. &
+ZFC lookup: AC is available and no weaker-base claim is made; cited statement
+from \cite{Lindstrom1969,EbbinghausFlumThomas1994}; the public destination is
+Theorem~\ref{thm:p03-lindstrom}. \\
+\bottomrule
+\end{longtable}
+\endgroup
+\end{landscape}

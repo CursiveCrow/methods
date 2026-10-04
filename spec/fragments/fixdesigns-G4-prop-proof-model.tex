@@ -1,0 +1,328 @@
+% Phase-2 fix designs for defects R-011, R-012, R-013, R-015, R-016.
+% Section 2 fragment of the gap-analysis document.  Plain LaTeX; compiles
+% under amsmath/amssymb; each design fits one page.  Line anchors refer to
+% the v1.0 manuscript source/formal-logic-reference.tex (14780 lines).
+
+\subsection*{R-011 --- CNF half of the normal-form theorem (v1.0 lines 1919--1966; defective half 1958--1965)}
+
+\paragraph{Defect.} The CNF half of the theorem at 1919--1923 reads ``Apply
+the disjunctive construction to \(\neg\varphi\), negate the result, and use
+De Morgan equivalences'' (1958--1959).  Against the string-valued CNF
+definition at 1878--1897 (a CNF formula is \(\top\), or the right-associated
+conjunction \(N_1\) of clause interpretations \(\operatorname{form}(C_i)\),
+each clause listed in strictly increasing code order), this fails: for valid
+\(\varphi\) the DNF of \(\neg\varphi\) is \(\bot\), and \(\neg\bot\) is not a
+CNF string; for variable-free false \(\varphi\) it yields \(\neg\top\)
+instead of \(\bot=\operatorname{form}(\varnothing)\); and ``use De Morgan''
+silently performs double-negation elimination and re-association that the
+definition does not supply.
+
+\paragraph{Repair.} Replace 1958--1965 by a dual direct construction
+mirroring 1924--1956, plus one auxiliary lemma inserted after 1897.
+\emph{Auxiliary lemma} (complete proof; two inductions on the definitional
+recursions at 1855--1870 and 1883--1890): (i) a valuation \(w\) satisfies
+\(\operatorname{form}(C)\) iff \(w\) satisfies some literal in \(C\)
+(induction on \(|C|\) along \(D_k=L_k\), \(D_i=(L_i\lor D_{i+1})\); the case
+\(C=\varnothing\) is the falsity of \(\bot\)); (ii) \(w\) satisfies \(N_1\)
+iff \(w\) satisfies \(\operatorname{form}(C_j)\) for every \(j\le m\)
+(induction on \(m\) along the \(N_i\) recursion).
+\emph{Construction.}  Let \(p_1,\ldots,p_n\) be the variables of
+\(\varphi\) in increasing index order; reuse the DNF half's valuations on
+this finite set and the coincidence lemma (1925--1930).  For a valuation
+\(v\) on \(\{p_1,\ldots,p_n\}\), let \(\bar\ell^{\,v}_i\) be \(\neg p_i\) if
+\(v(p_i)=\mathsf{T}\) and \(p_i\) if \(v(p_i)=\mathsf{F}\), and put
+\(K_v:=\{\bar\ell^{\,v}_1,\ldots,\bar\ell^{\,v}_n\}\).  The coding at
+1849--1854 gives the variable of index \(i\) the code \(2i\) and its negation
+the code \(2i+1\) --- both strictly increasing in \(i\) --- and the
+enumeration \(p_1,\ldots,p_n\) is in increasing index order (the indices need
+not form an initial segment), so any literal on \(p_j\) has smaller code than
+any literal on \(p_k\) for \(j<k\): if their indices are \(i_j<i_k\), then
+\(2i_j+1<2i_k\).  The definitional listing of \(K_v\) in increasing code
+order is therefore exactly \(\bar\ell^{\,v}_1,\ldots,\bar\ell^{\,v}_n\):
+\(\gamma_v:=\operatorname{form}(K_v)\) needs no re-ordering.  By lemma (i),
+\(w\) falsifies \(\gamma_v\) iff \(w(p_i)=v(p_i)\) for all \(i\le n\).  Let
+\(W_\varphi\) be the set of valuations on \(\{p_1,\ldots,p_n\}\) falsifying
+\(\varphi\), enumerated lexicographically (\(\mathsf{F}<\mathsf{T}\), as at
+1945--1948) as \(v_1,\ldots,v_m\).  Define \(C_\varphi:=\top\) if \(m=0\),
+and otherwise \(C_\varphi:=N_1\) built from the clauses \(C_j:=K_{v_j}\) by
+the recursion at 1883--1890.  Then \(C_\varphi\) is literally a CNF string
+of 1878--1897, including the degenerate cases: valid \(\varphi\) gives
+\(m=0\), the canonical \(\top\); variable-free true \(\varphi\) gives
+\(n=m=0\), again \(\top\); variable-free false \(\varphi\) gives \(n=0\),
+\(m=1\), \(K_{v_1}=\varnothing\), so
+\(C_\varphi=\operatorname{form}(\varnothing)=\bot\), the CNF whose single
+clause is empty.  \emph{Equivalence:} for a total valuation \(w\) with
+restriction \(w_0\) to \(\{p_1,\ldots,p_n\}\) and \(m>0\): by lemma (ii)
+and (i), \(w\) satisfies \(C_\varphi\) iff for every \(j\le m\) it satisfies
+some literal of \(K_{v_j}\), iff \(w_0\ne v_j\) for all \(j\), iff
+\(w_0\notin W_\varphi\), iff \(w_0\) satisfies \(\varphi\), iff
+(coincidence) \(w\) satisfies \(\varphi\).  If \(m=0\), every valuation on
+the variable set satisfies \(\varphi\), so by coincidence every \(w\)
+satisfies both \(\varphi\) and \(\top\).  The theorem keeps its plain proof
+environment; the DNF half is unchanged except that it may cite lemma (i).
+
+\paragraph{Acceptance.} (1) For the three degenerate inputs (valid;
+variable-free true; variable-free false) the constructed strings are
+\(\top\), \(\top\), \(\operatorname{form}(\varnothing)\), each satisfying
+the definition at 1878--1897 verbatim.  (2) The CNF half invokes only the
+definitional recursions, the auxiliary lemma, and the coincidence lemma ---
+no De Morgan, double negation, idempotence, or associativity.  (3) The
+auxiliary lemma carries a complete proof by induction on both recursions.
+
+\subsection*{R-012 --- Mix rule, measure, and honest corollary statuses (v1.0 lines 9505--9548, 9555--9565, 9575--9586)}
+
+\paragraph{Defect.} Step 3 of the cut-elimination sketch (9528--9532)
+appeals to ``the multicut (mix) rule'' and to elimination ``by the same
+lexicographic measure,'' but no mix rule is displayed anywhere, the measure
+at 9509--9511 is defined only for cut, and the equipollence of the cut and
+mix calculi is unstated.  The corollaries at 9555 and 9575 carry unlabeled
+proof environments, implying complete proofs, yet both consume the sketched
+theorem, contravening the status policy at 313--319.
+
+\paragraph{Repair.} (1) \emph{Display mix} after 9511, in the notation of
+9200--9224, where \(A^{k}\) abbreviates \(k\) comma-separated occurrences
+of \(A\).  For \(\mathsf{LK}\), with \(m,n\ge 1\) and \(\Delta,\Sigma\)
+permitted to contain further occurrences of \(A\):
+\[
+  \frac{\Gamma\Rightarrow\Delta,A^{m}\qquad A^{n},\Pi\Rightarrow\Sigma}
+       {\Gamma,\Pi\Rightarrow\Delta,\Sigma}\;\textsc{Mix}.
+\]
+For \(\mathsf{LJ}\) (single succedent, so the left premise's succedent
+multiplicity \(m\) is fixed at one): from \(\Gamma\Rightarrow A\) and
+\(A^{n},\Pi\Rightarrow C\) with \(n\ge1\),
+conclude \(\Gamma,\Pi\Rightarrow C\).
+(2) \emph{Equipollence lemma} (new; status: complete proof).  Cut is the
+instance \(m=n=1\).  Conversely, mix is derived from the displayed
+primitives: \(m-1\) applications of \textsc{CR} to the left premise,
+\(n-1\) of \textsc{CL} to the right, then one cut.  Hence the cut and mix
+formulations derive the same sequents (\(\mathsf{LJ}\): \textsc{CL} only),
+so eliminating mix eliminates cut.
+(3) \emph{Restate the measure} (replace 9505--9511): a mix instance with
+mix formula \(A\) and immediate subderivations \(D_1,D_2\) has rank
+\(r(A)\) and height \(h(D_1)+h(D_2)\); the reduction is controlled by the
+lexicographic order on \(\langle r(A),\,h(D_1)+h(D_2)\rangle\), with cut
+the case \(m=n=1\).
+(4) \emph{Preface the sketch} (after 9519) with: ``By the equipollence
+lemma, first replace every cut in the given derivation by the mix instance
+\(m=n=1\); the reduction below eliminates mixes, and steps 1, 2, 5, and 6
+apply verbatim with `mix' for `cut' and the mix formula for the cut
+formula.''  \emph{Rewrite sketch step 3} (9528--9532): if a premise of a mix ends
+in a contraction of the mix formula (\textsc{CL} above the right premise,
+\textsc{CR} above the left), replace that premise by the contraction's
+premise and raise the corresponding multiplicity by one: rank unchanged,
+height decreased by one.  Add to step 4: when the mix formula is principal
+on both sides with multiplicities \((m,n)\), the principal reduction yields
+mixes on proper subformulas (smaller rank) plus residual mixes on remaining
+occurrences at equal rank but smaller height; the full case table remains
+the omitted verification (citation at 9548 unchanged).
+(5) \emph{Honest statuses.}  Append \textit{Status: proof sketch.}\ to the
+theorem statement (9513--9517).  Split the corollary at 9555: a new lemma
+``every cut-free propositional \(\mathsf{LK}\)- or
+\(\mathsf{LJ}\)-derivation has the subformula property'' takes the existing
+induction (9560--9565) as a complete proof; the corollary (existence of a
+cut-free derivation with the property) is restated with \textit{Status:
+proof sketch.}, its proof converted to the sketch environment with the
+dependency sentence modeled on 7728--7729: ``This derivation uses the
+preceding proof sketch of the cut-elimination theorem; a complete proof
+supplies its reduction case table.''  The corollary at 9575 keeps its
+argument verbatim, converted to the sketch environment with the same
+dependency sentence and \textit{Status: proof sketch.}\ on its statement.
+When cut elimination is proved in full, exactly these two status lines and
+two sentences flip to complete proof.
+
+\paragraph{Acceptance.} (1) Mix is displayed for both calculi with explicit
+multiplicities \(m,n\ge1\), and the equipollence lemma is proved using only
+\textsc{CL}, \textsc{CR}, and \textsc{Cut} as displayed at 9204--9224 and
+9307--9375.  (2) The sketch opens by converting every cut to a mix via the
+equipollence lemma, so no step manipulates an object the measure does not
+cover; step 3 names only displayed rules and exhibits the measure decrease
+(rank equal, height \(-1\)).  (3) The theorem and both
+corollaries carry \textit{Status: proof sketch.}; the cut-free-subformula
+lemma and the equipollence lemma carry \textit{Status: complete proof.}; no
+complete-proof item in the chapter cites the cut-elimination theorem.
+
+\subsection*{R-013 --- Repetition and vacuous discharge in \(\mathsf{ND}_{\mathsf{CPL}}\) (v1.0 lines 2006--2021, 2351--2379, 2443--2455; first-order model 3799--3812)}
+
+\paragraph{Defect.} Line 2020--2021 licenses, in prose only, ``Repetition
+of an already available formula is permitted,'' though the calculus is
+defined (2006--2018) as a tree generated by the displayed rules and no
+repetition rule is displayed; and the definition never says whether a
+discharging rule may discharge zero occurrences.  Clause 2 of the closure
+lemma (2360--2362) and the completeness theorem (2446--2449) apply
+\(\neg I\)/\(\mathsf{RAA}\) to derivations that may contain no open
+occurrence of the discharged assumption, and clause 5 (2374--2375) says
+``assume \(\varphi\), repeat \(\psi\), and apply \(\to I\).''
+
+\paragraph{Repair.} Eliminate the uses, matching 3799--3812.
+(a) Delete the repetition sentence (2020--2021).  Append to the derivation
+definition (after 2011): ``An application of \(\to I\), \(\neg I\), or
+\(\mathsf{RAA}\) carries a label \(i\) and discharges exactly the open
+occurrences marked \(i\) of the bracketed assumption above its premise; an
+application of \(\lor E\) carries two labels \(i,j\), as displayed, and
+discharges exactly the open occurrences of the first disjunct marked \(i\)
+above its second premise and the open occurrences of the second disjunct
+marked \(j\) above its third premise.  Every label carried by such an
+application discharges at least one occurrence.  Marking any set of open
+occurrences of one formula with a common label fresh from every label in
+the derivation preserves the derivation and the occurrences discharged by
+each of its rule applications, since no rule application carries the fresh
+label; this merging relabeling is distinct from the injective renamings
+above, and is the operation used when a newly added root inference is to
+discharge several open occurrences at once.  There is no repetition step:
+where an informal presentation repeats a formula, the tree reuses the node
+already present.''
+(b) Closure clause 2 (2358--2362), mirroring 3803--3807: if
+\(\varphi\notin\Delta\), maximality yields a derivation \(D\) of \(\bot\)
+with open assumptions in \(\Delta\cup\{\varphi\}\); because \(\Delta\) is
+consistent, at least one open occurrence of \(\varphi\) remains in \(D\);
+mark all open occurrences of \(\varphi\) in \(D\) with a common fresh label
+\(i\) (the merging relabeling of (a)), and apply \(\neg I\) with label
+\(i\) at the root, discharging every such occurrence, to obtain
+\(\Delta\vdash\neg\varphi\); clause 1 gives \(\neg\varphi\in\Delta\).
+(c) Closure clause 5 (2374--2375), replacing repetition by a conjunction
+detour: if \(\psi\in\Delta\), assume \(\varphi\) with label \(i\) and take
+\(\psi\) as an open assumption; \(\land I\) gives \(\varphi\land\psi\);
+\(\land E_2\) gives \(\psi\); \(\to I\) discharges the single open
+occurrence marked \(i\), concluding \(\varphi\to\psi\) with open
+assumptions in \(\Delta\).  The discharge is of an occurrence genuinely
+present, and only displayed rules occur.
+(d) Completeness (2446--2449): suppose a derivation \(D\) of \(\bot\) has
+open assumptions in \(\Gamma\cup\{\neg\varphi\}\).  If no open occurrence
+of \(\neg\varphi\) appeared in \(D\), then \(D\) would witness
+\(\Gamma\vdash\bot\), and \(\bot E\) would give \(\Gamma\vdash\varphi\),
+contrary to the supposition \(\Gamma\nvdash\varphi\).  So at least one open
+occurrence remains; mark all open occurrences of \(\neg\varphi\) with a
+common fresh label \(i\) (the merging relabeling of (a)) and apply
+\(\mathsf{RAA}\) with label \(i\) at the root, discharging every such
+occurrence, to obtain \(\Gamma\vdash\varphi\) --- again contrary to
+the supposition.  Hence \(\Gamma\cup\{\neg\varphi\}\) is consistent.
+(e) Sweep every displayed \(\lor E\)/\(\to I\)/\(\neg I\)/\(\mathsf{RAA}\)
+application in the ND chapters, examples, exercises, and solutions for
+compliance (the examples at 2077--2110 already comply; the intuitionistic
+calculus, defined at 2106--2109 by omitting \(\mathsf{RAA}\), inherits the
+convention; 3799--3812 stands unchanged and now matches, its ``discharging
+every such occurrence'' being an instance of the merging relabeling
+followed by a single labeled application).
+
+\paragraph{Acceptance.} (1) ``Repetition'' no longer occurs in the
+\(\mathsf{ND}_{\mathsf{CPL}}\) section, and the derivation definition
+states explicitly both the at-least-one-occurrence discharge convention
+(with \(\lor E\) carrying two labels) and the fresh-label merging
+relabeling used by the closure and completeness proofs.
+(2) The proofs of closure clauses 2 and 5 and of completeness contain,
+respectively, the non-vacuity argument and the conjunction detour, and
+invoke no rule outside the display at 2022--2065.  (3) An audit of all
+discharging-rule applications in displayed derivations finds none that
+discharges zero occurrences.
+
+\subsection*{R-015 --- Reduction of arbitrary embeddings to substructure inclusions (v1.0 lines 5989--5992, 6009--6012; supporting definitions 5042--5057, 5093--5103)}
+
+\paragraph{Defect.} Model completeness is defined at 5989 as ``every
+embedding between its models is elementary,'' but the \(\mathsf{DLO}\)
+corollary's sketch verifies only inclusions: ``If
+\(\mathcal M\subseteq\mathcal N\) are models of \(\mathsf{DLO}\)
+\(\ldots\) This is model completeness'' (6009--6012).  The passage from
+inclusions to arbitrary embeddings is missing, and the manuscript nowhere
+proves that satisfaction is isomorphism-invariant or that an embedding is
+an isomorphism onto its image.
+
+\paragraph{Repair.} Insert Lemmas 1--2 after 5125 (end of the
+Substructures section) and Lemma 3 after 5992; patch 6011--6012.
+\emph{Lemma 1 (Isomorphism invariance; complete proof).}  If
+\(h:\mathcal M\to\mathcal N\) is an isomorphism, then for every formula
+\(\varphi(x_1,\ldots,x_k)\) and all \(a_1,\ldots,a_k\in M\):
+\(\mathcal M\models\varphi(\bar a)\iff\mathcal N\models\varphi(h\bar a)\);
+in particular isomorphic structures satisfy the same sentences.
+\emph{Route:} induction on \(\varphi\); atomic case by the
+term-preservation lemma (5060--5076), injectivity for equality atoms, and
+preservation with reflection (5042--5052) for relation atoms; Boolean cases
+by induction hypothesis; for \(\exists y\), a witness \(a'\in M\) maps to
+\(h(a')\), and conversely a witness \(b\in N\) is \(h(a')\) by
+surjectivity; \(\forall\) dually.
+\emph{Lemma 2 (Image of an embedding; complete proof).}  If
+\(h:\mathcal M\to\mathcal N\) is an embedding, then \(h(M)\) contains
+\(c^{\mathcal N}\) for every constant and is closed under every
+\(f^{\mathcal N}\); the structure \(h[\mathcal M]\) with domain \(h(M)\),
+constants \(c^{\mathcal N}\), the restrictions of the \(f^{\mathcal N}\),
+and relations \(R^{\mathcal N}\) restricted to \(h(M)\) is a substructure
+of \(\mathcal N\) per 5093--5103; and \(h\) with codomain \(h(M)\) is an
+isomorphism \(\mathcal M\to h[\mathcal M]\).  \emph{Route:}
+\(c^{\mathcal N}=h(c^{\mathcal M})\in h(M)\) and
+\(f^{\mathcal N}(h\bar a)=h(f^{\mathcal M}(\bar a))\in h(M)\) by the
+homomorphism clauses; the inclusion preserves and reflects atomic formulas
+because interpretations are restrictions, so \(h[\mathcal M]\subseteq
+\mathcal N\); the corestricted \(h\) is injective (given), surjective by
+construction, preserves and reflects relations since
+\(R^{h[\mathcal M]}=R^{\mathcal N}\cap h(M)^{k}\) while \(h\) reflects
+\(R^{\mathcal N}\); hence a surjective embedding, an isomorphism per
+5055--5057.
+\emph{Lemma 3 (Reduction to inclusions; complete proof).}  If
+\(\mathcal M\preccurlyeq\mathcal N\) whenever
+\(\mathcal M\subseteq\mathcal N\) are both models of \(T\), then \(T\) is
+model complete.  \emph{Route:} an embedding \(h:\mathcal M\to\mathcal N\)
+between models of \(T\) factors (Lemma 2) as the isomorphism
+\(h_0:\mathcal M\to h[\mathcal M]\) followed by the inclusion
+\(h[\mathcal M]\subseteq\mathcal N\); Lemma 1 gives
+\(h[\mathcal M]\models T\); the hypothesis gives
+\(h[\mathcal M]\preccurlyeq\mathcal N\); then for all \(\varphi,\bar a\):
+\(\mathcal M\models\varphi(\bar a)\iff h[\mathcal M]\models
+\varphi(h\bar a)\) (Lemma 1) \(\iff\mathcal N\models\varphi(h\bar a)\)
+(elementary inclusion).  Hence \(h\) is elementary.
+\emph{Patch 6011--6012:} replace ``This is model completeness.''\ by ``By
+the reduction lemma, every embedding between models of \(\mathsf{DLO}\) is
+elementary; this is model completeness.''  The corollary keeps
+\textit{Status: proof sketch.}\ (its remaining omission is the literal-case
+verification named at 6013--6014, not the embedding reduction).
+
+\paragraph{Acceptance.} (1) The three lemmas appear with complete proofs
+using only 5022--5057, 5093--5103, and the term-preservation lemma; Lemma
+1's quantifier case invokes surjectivity explicitly, and Lemma 2 verifies
+closure of \(h(M)\) before forming \(h[\mathcal M]\).  (2) The
+\(\mathsf{DLO}\) sketch derives model completeness by citing Lemma 3.
+(3) No passage concludes model completeness from inclusions alone.
+
+\subsection*{R-016 --- Extension clause in the back-and-forth test (v1.0 lines 6068--6093; corollary 6097--6110)}
+
+\paragraph{Defect.} The back-and-forth theorem (6068--6081) concludes only
+``\(\mathcal M\cong\mathcal N\),'' but the corollary's proof asserts ``The
+resulting isomorphism extends the original map'' (6108--6109) --- a
+property of the proof's construction, which begins at an arbitrary
+\(f_0\in\mathcal F\), not of the stated theorem.  The corollary's use is
+therefore unlicensed.
+
+\paragraph{Repair.} \emph{Restated theorem (6068--6081).}  Let
+\(\mathcal M,\mathcal N\) be countable structures and \(\mathcal F\) a
+nonempty set of finite partial isomorphisms from \(\mathcal M\) to
+\(\mathcal N\) such that for every \(f\in\mathcal F\): (1) for every
+\(a\in M\), some \(g\in\mathcal F\) extends \(f\) with \(a\) in its domain;
+(2) for every \(b\in N\), some \(g\in\mathcal F\) extends \(f\) with \(b\)
+in its range.  Then for every \(f_0\in\mathcal F\) there is an isomorphism
+\(h:\mathcal M\to\mathcal N\) with \(f_0\subseteq h\) (extension as sets of
+ordered pairs); in particular \(\mathcal M\cong\mathcal N\).
+\emph{Proof edits (6083--6093):} replace ``begin with any
+\(f_0\in\mathcal F\)'' by ``let \(f_0\) be the given member of
+\(\mathcal F\)''; the recursion and union argument are unchanged; append
+``Since \(f_0\subseteq f_1\subseteq\cdots\) and \(h=\bigcup_k f_k\), the
+isomorphism extends \(f_0\).''  \textit{Status: complete proof}\ retained.
+\emph{Corollary patch (6104--6110).}  Replace the final sentence by an
+explicit application: the set \(\mathcal F\) of finite elementary maps from
+\(\mathcal M\) to itself extending the given map \(f\) is nonempty
+(\(f\in\mathcal F\)); every member is a finite partial isomorphism, since
+elementary maps preserve and reflect atomic formulas and reflect equality,
+hence are injective; clause (1) holds within \(\mathcal F\) because the
+saturation-homogeneity theorem (5567--5571) extends any \(g\in\mathcal F\)
+by any prescribed domain element to an elementary map still extending
+\(f\); clause (2) holds by applying the same theorem to \(g^{-1}\) (the
+inverse of a finite elementary self-map is elementary) and inverting the
+result, which extends \(g\supseteq f\) and has the prescribed element in
+its range.  The restated theorem applied with \(f_0:=f\) yields an
+isomorphism \(h:\mathcal M\to\mathcal M\) with \(f\subseteq h\): an
+automorphism extending \(f\).  \textit{Status: complete proof}\ retained.
+The forward reference at 5563--5564 remains accurate.
+
+\paragraph{Acceptance.} (1) The theorem statement contains the quantified
+extension clause ``for every \(f_0\in\mathcal F\) there is an isomorphism
+\(h\supseteq f_0\).''  (2) Its proof starts the recursion at the given
+\(f_0\) and derives \(f_0\subseteq h\) from the chain union.  (3) The
+corollary invokes the extension clause with \(f_0:=\) the given map, and
+both results retain \textit{Status: complete proof.}

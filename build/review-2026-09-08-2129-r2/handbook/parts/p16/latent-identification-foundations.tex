@@ -1,0 +1,329 @@
+% P16-C4: structural and algebraic foundations for general identification.
+\section{Latent-variable identification foundations}
+\label{sec:p16-latent-identification-foundations}
+
+The identification algorithm of Shpitser and Pearl uses kernels attached
+to confounded components and reductions to ancestral subgraphs
+\cite[Definitions~2--3 and Lemmas~4--8, pp.~1220--1224]{ShpitserPearl2006JointIdentification}.
+This section supplies complete finite proofs of those foundations.
+The structural model class, the information encoded by the observed
+mixed graph, and the domains of conditional-ratio calculations are fixed
+explicitly before those calculations are used.
+
+\subsection{The independent-latent-input model class}
+
+\begin{hbdefinition}{def:p16-latent-input-model}{Finite observed equations with independent latent roots}
+Let \(N=\{1,\ldots,n\}\) index the observed variables \(V_i\),
+with finite nonempty value sets \(S_i\). Their declared observed
+parent sets \(\operatorname{pa}(i)\) form a directed acyclic graph.
+Let \(\Lambda\) be a finite index set of latent inputs. Each
+\(U_\alpha\) has a finite nonempty value set \(\mathcal U_\alpha\),
+mass function \(r_\alpha\), and declared observed child set
+\(C_\alpha\subseteq N\). The latent inputs are mutually independent:
+\[
+ r(u)=\prod_{\alpha\in\Lambda}r_\alpha(u_\alpha),
+ \qquad u\in\mathcal U=\prod_{\alpha\in\Lambda}\mathcal U_\alpha.
+\]
+Put \(\Lambda_i=\{\alpha:i\in C_\alpha\}\). The total equations are
+\[
+ V_i=f_i(V_{\operatorname{pa}(i)},U_{\Lambda_i}),
+ \qquad
+ f_i:S_{\operatorname{pa}(i)}\times
+          \prod_{\alpha\in\Lambda_i}\mathcal U_\alpha\longrightarrow S_i.
+\]
+An empty product contains one empty tuple. A listed argument may be
+ignored by a particular function. Latent inputs are exogenous roots;
+they have no equations using observed variables as parents.
+
+The \emph{observed mixed graph} \(G\) has a directed edge
+\(j\to i\) for each declared observed parent, and a bidirected
+edge \(i\leftrightarrow j\) between distinct vertices sharing a
+declared latent input. Directed acyclicity concerns the directed edges.
+The bidirected edge records the common input. A latent input may have
+one, two, or more children; its actual child set remains part of the
+model data. One input shared by three children is not replaced here
+by three independent pair-specific inputs.
+For \(H\subseteq N\), the induced graph \(G[H]\) retains the
+vertices \(H\) and both kinds of edge whose endpoints lie in \(H\).
+
+This is the independent finite input class in the source's model
+definition \cite[p.~1220]{ShpitserPearl2006JointIdentification}.
+The source's observed set \(\mathbf V\) is indexed here by \(N\).
+For a fixed mixed graph and observed value sets, the corresponding
+model class permits all finite latent data and total functions with
+those declared edges. Additional restrictions on latent child sets,
+cardinalities, or distributions specify smaller model classes and
+must be retained if they are imposed.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p16-latent-q-kernel}{The intervention kernel Q[H]}
+For \(H\subseteq N\) and a full assignment \(v\in S_N\), define
+\[
+ Q[H](v)=
+ \mathbb P\bigl(V_H=v_H\mid
+       \operatorname{do}(V_{N\setminus H}=v_{N\setminus H})\bigr).
+\]
+The argument \(v_H\) is the random output assignment and
+\(v_{N\setminus H}\) is a fixed intervention parameter. The bracket
+notation agrees with the source's \(Q[C]=P_{\mathbf v\setminus\mathbf c}(\mathbf c)\).
+The source's complement notation there means the assigned values on
+the observed complement of \(C\). One may also write the kernel
+as \(Q[H](v_H;v_{N\setminus H})\) to separate output and parameter.
+It does not mean conditioning on the observed outside assignment.
+Write \(p(v)=Q[N](v)\). The empty kernel is \(Q[\varnothing]=1\).
+Write \(p_H\) for the ordinary marginal of \(p\) on \(H\).
+For disjoint observed sets \(X,Y\), the source notation \(P_x(y)\)
+means \(\mathbb P(V_Y=y\mid\operatorname{do}(V_X=x))\), with
+\(x\in S_X\) and \(y\in S_Y\).
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p16-latent-kernel-semantics}{proved=annex:p16.latent-kernel-semantics}{A full-DAG representation and the exact kernel formula}
+The model is represented by an acyclic structural model with the
+latent inputs as explicit root vertices. For every \(H,v\),
+\[
+ Q[H](v)=\sum_{u\in\mathcal U}
+       \left[\prod_{\alpha\in\Lambda}r_\alpha(u_\alpha)\right]
+       \prod_{i\in H}
+       \mathbf1_{\{v_i=f_i(v_{\operatorname{pa}(i)},u_{\Lambda_i})\}}.
+\]
+For each outside assignment this is a normalized mass function on
+\(S_H\). It depends on outside values only at
+\(\operatorname{pa}(H)\setminus H\), where
+\(\operatorname{pa}(H)=\bigcup_{i\in H}\operatorname{pa}(i)\).
+It is defined even if the outside assignment never occurs observationally.
+
+For nonempty \(H\), fixing the outside equations and retaining only the observed
+vertices in \(H\) gives a model of the same class. Its latent child
+sets are \(C_\alpha\cap H\), its functions have the outside
+parent arguments fixed to their assigned values, its observed mixed
+graph is the induced graph \(G[H]\), and its distribution is
+the kernel \(Q[H]\) at those parameters. This is a proved
+restriction after intervention, not a general conversion of arbitrary
+hidden endogenous graphs into this model class.
+For empty \(H\), the retained observed assignment is the single
+empty tuple and its kernel is one.
+\end{hbtheorem}
+
+\subsection{Districts and directed ancestry}
+
+\begin{hbdefinition}{def:p16-latent-district}{Districts and the source C-components}
+In the induced graph \(G[H]\), a \emph{bidirected path}
+uses bidirected edges only. Two vertices of \(H\) are in the
+same \emph{district} if they can be joined by such a path, including
+the length-zero path from a vertex to itself. Write \(\mathcal D_H\)
+for the resulting maximal classes; these are the source's maximal
+\emph{C-components}. The empty graph has no districts, and an
+isolated vertex is a singleton district.
+
+Write \(\operatorname{an}_{G[H]}(A)\) for \(A\) together with
+the vertices in \(H\) having a positive-length directed path to \(A\).
+An \emph{ancestral subset within \(H\)} is \(A\subseteq H\)
+that contains every directed ancestor in \(G[H]\) of its members.
+Equivalently, every observed parent lying in \(H\) of a vertex
+in \(A\) also lies in \(A\). Bidirected connectivity is not
+used to define directed ancestry.
+\index{district!causal graph}\index{C-component}\index{Q-factor}
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p16-latent-district-partition}{proved=annex:p16.latent-district-partition}{The unique district partition and its latent input groups}
+The districts uniquely partition \(H\). A nonempty induced subgraph
+is bidirected-connected exactly when its bidirected edges contain a
+spanning tree, giving the source's equivalent C-component definition.
+For every latent input \(\alpha\), the nonempty set
+\(C_\alpha\cap H\), when present, lies in exactly one district.
+Thus the latent inputs with any child in \(H\) partition into
+\[
+ \Lambda_D=\{\alpha:\varnothing\ne C_\alpha\cap H\subseteq D\},
+ \qquad D\in\mathcal D_H.
+\]
+The remaining inputs have no child in \(H\).
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p16-latent-ancestral-reduction}{proved=annex:p16.latent-ancestral-reduction}{Ancestral summation of a Q kernel}
+If \(A\) is ancestral within \(H\), then
+\[
+ \sum_{v_{H\setminus A}}Q[H](v)=Q[A](v).
+\]
+The left side holds \(v_{N\setminus H}\) and \(v_A\) fixed.
+The right side is independent of the additionally displayed parameter
+\(v_{H\setminus A}\), since these vertices are not parents of
+\(A\). No positivity hypothesis is required.
+\end{hbtheorem}
+
+\begin{hbcorollary}{thm:p16-latent-target-reduction}{proved=annex:p16.latent-target-reduction}{Reducing a target to its remaining ancestors}
+For disjoint observed sets \(X,Y\), put \(H=N\setminus X\)
+and \(A=\operatorname{an}_{G[H]}(Y)\), with ancestry including
+\(Y\). For every intervention assignment \(x\),
+\[
+ P_x(y)=\sum_{v_{A\setminus Y}}Q[A](v),
+\]
+where \(v_X=x\), and the values on \(H\setminus A\) can
+be fixed arbitrarily. The right side is independent of those values.
+Consequently fixing the additional coordinates \(H\setminus A\)
+does not change this response law.
+
+One may also first restrict the whole model to
+\(A_0=\operatorname{an}_G(Y)\): its observed law is
+the marginal \(p_{A_0}\), and the effect on \(Y\) requires only the
+intervention coordinates \(X\cap A_0\). These are reductions
+of specified models and kernels; they introduce no conditional ratio.
+\end{hbcorollary}
+
+\begin{hbtheorem}{thm:p16-latent-district-decomposition}{proved=annex:p16.latent-district-decomposition}{The district product for every intervention kernel}
+For every \(H\subseteq N\) and full assignment \(v\),
+\[
+ Q[H](v)=\prod_{D\in\mathcal D_H}Q[D](v).
+\]
+Each factor is normalized on its own output set with the other
+observed coordinates fixed. Directed parents can occur in other
+districts, so this factorization is not an assertion of independence
+of the observed district tuples. The identity remains true at zero
+kernel values.
+\end{hbtheorem}
+
+\subsection{Recovering district factors from an available kernel}
+
+\begin{hbdefinition}{def:p16-latent-prefixes}{Topological prefixes and positive conditional ratios}
+For nonempty \(H\), choose an order \(h_1,\ldots,h_k\) in
+which every directed parent within \(H\) precedes its child.
+Let \(H_j=\{h_1,\ldots,h_j\}\), with \(H_0=\varnothing\),
+and define
+\[
+ \rho_j(v)=\sum_{v_{H\setminus H_j}}Q[H](v),
+ \qquad \rho_0=1.
+\]
+Outside values \(v_{N\setminus H}\) remain fixed. When
+\(\rho_{j-1}(v)>0\), define
+\(\theta_j(v)=\rho_j(v)/\rho_{j-1}(v)\).
+This is a conditional mass in the intervened model with law \(Q[H]\).
+For a district \(D\in\mathcal D_H\), put
+\(m(D)=\max\{j:h_j\in D\}\).
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p16-latent-prefix-chain}{proved=annex:p16.latent-prefix-chain}{Prefix kernels and the ordinary conditional chain}
+Each \(H_j\) is ancestral within \(H\), and
+\(\rho_j(v)=Q[H_j](v)\). The function \(\rho_j\) depends
+only on the prefix assignment and outside parameters. On a positive
+prefix, \(\theta_j\) sums to one over the next value. If
+\(\rho_{k-1}(v)>0\), then
+\[
+ Q[H](v)=\prod_{j=1}^k\theta_j(v).
+\]
+The final numerator may be zero. No ratio with zero denominator is
+defined by this construction.
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p16-latent-district-recovery}{proved=annex:p16.latent-district-recovery}{The topological conditional-factor identity for a district}
+For \(D\in\mathcal D_H\), at every assignment satisfying
+\(\rho_{m(D)-1}(v)>0\),
+\[
+ Q[D](v)=\prod_{\{j:h_j\in D\}}
+                \frac{\rho_j(v)}{\rho_{j-1}(v)}.
+\]
+All the displayed denominators are positive. In particular, if
+\(Q[H]\) is strictly positive on \(S_H\) at the fixed outside
+parameters, every district kernel is recovered there at all assignments.
+For \(H=N\), a strictly positive observed law therefore identifies
+all maximal district factors as
+\[
+ Q[D](v)=\prod_{\{j:h_j\in D\}}
+             p(v_{h_j}\mid v_{H_{j-1}}).
+\]
+The more local positive-prefix condition also permits some zero
+joint masses. A later recursive use must retain the available
+parameter domain and justify every required denominator. The result
+concerns maximal districts of the specified current graph; an
+arbitrary smaller connected subset need not be identifiable.
+\end{hbtheorem}
+
+\subsection{Calculated kernels, reductions and limits}
+
+\begin{hbdefinition}{def:p16-latent-foundation-example}{A three-variable model with two districts}
+Name the observed vertices \(A,B,C\). Let independent latent inputs
+\(U,E_A,E_B\) be bits with \(U\) fair,
+\(\mathbb P(E_A=1)=1/5\), and \(\mathbb P(E_B=1)=1/4\).
+Their declared child sets are \(\{A,C\}\), \(\{A\}\), and
+\(\{B\}\), respectively. Set
+\[
+ A=U\oplus E_A,\qquad B=A\oplus E_B,\qquad
+ C=\mathbf1_{\{B=1\text{ or }U=1\}}.
+\]
+The observed graph has \(A\to B\to C\) and \(A\leftrightarrow C\).
+Write \(\alpha(0)=4/5,\alpha(1)=1/5\) and
+\(\beta(0)=3/4,\beta(1)=1/4\).
+The outcome \((u,e_A,e_B)\) has mass
+\(\frac12\alpha(e_A)\beta(e_B)\).
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p16-latent-foundation-calculation}{proved=annex:p16.latent-foundation-calculation}{The full district calculation, including zero numerators}
+The full law and district kernels are
+\[
+\begin{array}{cc|cc}
+ a&b&p(a,b,0)&p(a,b,1)\\\hline
+ 0&0&12/40&3/40\\
+ 0&1&0&5/40\\
+ 1&0&1/40&4/40\\
+ 1&1&0&15/40
+\end{array}
+\]
+and
+\[
+ Q[\{B\}](a,b,c)=\beta(b\oplus a),\qquad
+ Q[\{A,C\}](a,b,c)=
+ \begin{cases}
+ \frac12\alpha(a\oplus c),&b=0,\\
+ \frac12\mathbf1_{\{c=1\}},&b=1.
+ \end{cases}
+\]
+The maximal districts are \(\{A,C\}\) and \(\{B\}\), and
+the product of these kernels gives every cell above. In order
+\(A,B,C\), the prefix masses are
+\(\rho_1=1/2\) and \(\rho_2=\frac12\beta(b\oplus a)>0\).
+Consequently the district recovery formula holds at every assignment,
+including the zero cells with \(b=1,c=0\).
+
+In \(H=\{A,C\}\), both singletons are directed-ancestral, though
+the vertices remain bidirected-connected. Summation gives
+\[
+ Q[\{C\}](a,b,1)=
+ \begin{cases}1/2,&b=0,\\1,&b=1,\end{cases}
+ \qquad Q[\{A\}]=1/2.
+\]
+This exhibits external kernel parameters, ancestral reduction, and
+district extraction in the same finite model.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p16-latent-foundation-limits}{proved=annex:p16.latent-foundation-limits}{Support and latent-incidence restrictions remain substantive}
+The following concrete limits hold.
+\begin{enumerate}
+\item With allowed graph \(A\to B\), the models \(A=0,B=0\)
+      and \(A=0,B=A\) have the same observed point mass, but
+      their kernels for \(B\) at \(A=1\) differ. The required
+      prefix denominator is zero.
+\item With graph \(A\to Y\) and \(A\leftrightarrow Y\),
+      let independent fair roots \(U,T\) have child sets
+      \(\{A,Y\}\) and \(\{Y\}\). The two models
+      \(A=U,Y=\mathbf1_{\{T=1\text{ or }U\oplus A=1\}}\)
+      and \(A=U,Y=T\) have the same strictly positive observed
+      law, but \(Q[\{Y\}](Y=1;A=a)\) equals \(3/4\) in
+      the first and \(1/2\) in the second. The singleton is
+      connected, but is not a maximal district of the full graph.
+\item A fair root shared by three observed children with equations
+      \(A=B=C=U\) gives probability \(1/2\) each to
+      \(000,111\). Three independent fair pair-specific roots,
+      with each observed variable the exclusive-or of its two incident
+      roots, instead give probability \(1/4\) each to
+      \(000,011,101,110\). Both declared mixed graphs are the
+      bidirected triangle. That particular root replacement does
+      not preserve the law.
+\end{enumerate}
+The third example compares specified constructions; it asserts no
+general impossibility theorem about every other pairwise representation.
+\end{hbtheorem}
+
+The complete identification algorithm and its recursive invariants are
+supplied in \cref{thm:p16-id-invariants,thm:p16-id-termination,
+thm:p16-id-success-soundness}. The hedge construction and its proved
+completeness classes follow in
+\cref{thm:p16-hedge-failure-extraction,thm:p16-hedge-completeness}.
+Every invocation retains its stated value sets and support conditions.

@@ -1,0 +1,249 @@
+%% parts/p04/universal-reductions.tex --- Phase-4 migration of v1.1 Part V,
+%% ch:universal-reductions, source lines 7851--8247.  Body = statements only;
+%% all source complete proofs and proof sketches live in the parallel annex.
+
+\chapter[Universal Computation and Reductions]{Universal Computation, Reductions, and Fixed Points}
+\label{sec:p04-universal-reductions}
+
+\section{An effective numbering of programs}
+\label{sec:p04-effective-numbering}
+
+\begin{hbconvention}{def:p04-program-numbering}{Fixed program numbering}
+A numerical-machine description is \emph{normalized} exactly when all of the
+following conditions hold:
+\begin{enumerate}
+\item its tape symbols are numbered
+      \(0,\ldots,\abs{\mathcal A_{\mathrm{tape}}}-1\), with
+      \(\sqcup\mapsto0\), digit \(0\mapsto1\), and digit \(1\mapsto2\);
+\item its states are numbered \(0,\ldots,\abs Q-1\), with
+      \(q_0\mapsto0\), \(q_{\mathrm{acc}}\mapsto1\), and
+      \(q_{\mathrm{rej}}\mapsto2\), while remaining numbers are assigned
+      arbitrarily; and
+\item its row list is the lexicographic listing, by numbered key \((q,a)\),
+      of the full transition table over its nonhalting domain.
+\end{enumerate}
+The designated
+assignments are part of validity: an ``order of first appearance'' would be
+circular because lexicographic row order already presupposes the numbering.
+
+Encode a description tuple \(\vec n\) of length \(k\) as
+\[
+  \operatorname{pair}_{\N}(k,\operatorname{code}_k(\vec n)).
+\]
+There is no canonical machine-to-code map, because indices need not be unique.
+An invalid code denotes a machine diverging everywhere.  In particular, a
+valid numerical-machine code must have
+\(\{0,1\}\subseteq\mathcal A_{\mathrm{in}}\), read at designated symbols
+\(1,2\), and its three designated states are pairwise distinct.  A source
+machine whose start state is halting is represented behaviorally by the
+surrogate-start construction in Theorem~\ref{thm:p04-enumeration}.
+
+For a valid code \(e\), \(\varphi_e(x)\) is the numerical output exactly when
+the decoded machine accepts with a valid numerical output; it is undefined if
+the machine rejects, diverges, or halts accepting with invalid output.  A fixed
+wrapper copies a valid result into canonical form and loops after rejection or
+invalid acceptance.  The number \(e\) is an \emph{index}.  For
+\(\vec x\in\N^k\), \(\varphi_e(\vec x)\) means the behavior of this same
+program on \(\operatorname{bin}(\operatorname{code}_k(\vec x))\): it is
+arity-dependent application notation, not another numbering or a second unary
+coding operation.
+\index{program numbering}
+\index{index!of a partial computable function}
+\end{hbconvention}
+
+\begin{hblemma}{thm:p04-renaming-invariance}{proved=annex:p04-universal.1}{Renaming invariance}
+Let \(\mathcal T\) be a numerical-function Turing machine, and let
+\(\iota=(\iota_Q,\iota_A)\) bijectively rename its states and tape symbols
+while preserving the roles of \(q_0,q_{\mathrm{acc}},q_{\mathrm{rej}}\) and
+\(\sqcup,0,1\).  If \(\mathcal T^\iota\) and \(C^\iota\) denote the renamed
+machine and configuration, then
+\[
+  C\longrightarrow_{\mathcal T}C'
+  \quad\Leftrightarrow\quad
+  C^\iota\longrightarrow_{\mathcal T^\iota}(C')^\iota.
+\]
+Consequently the two machines, on letterwise corresponding inputs, accept,
+reject, or diverge together and have corresponding tapes at every step.
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p04-enumeration}{proved=annex:p04-universal.2}{Adequacy of the numbering: enumeration theorem}
+\begin{enumerate}
+  \item[(a)] Every \(\varphi_e\) is partial computable.
+  \item[(b)] For every \(k\ge1\) and every partial computable
+        \(f:\N^k\rightharpoonup\N\), there is an index \(e\) such that
+        \[
+          \varphi_e(\vec x)\simeq f(\vec x)
+          \qquad\text{for every }\vec x\in\N^k,
+        \]
+        under Convention~\ref{def:p04-program-numbering}'s arity-\(k\)
+        application notation.
+\end{enumerate}
+\end{hbtheorem}
+
+\begin{hbcorollary}{thm:p04-numbering-partial-recursive}{proved=annex:p04-universal.9}{Range of the local numbering}
+For every \(k\geq1\) and partial map \(f:\N^k\rightharpoonup\N\), the
+following are equivalent:
+\begin{enumerate}
+  \item some index \(e\) in Convention~\ref{def:p04-program-numbering}
+        satisfies
+        \[
+          \varphi_e(\vec x)\simeq f(\vec x)
+          \qquad\text{for every }\vec x\in\N^k;
+        \]
+  \item \(f\) is partial recursive in the closure sense of
+        Definition~\ref{def:p04-partial-recursive}.
+\end{enumerate}
+\end{hbcorollary}
+
+Theorem~\ref{thm:p04-enumeration} is the exact R-005 repair.  Its in-document
+proof is primary because normalization, the binary-alphabet validity condition,
+and the wrapper are bespoke.  Kleene's enumeration and normal-form treatment
+for standard numberings is parallel reading \cite{Kleene1952}.
+
+\begin{hbtheorem}{thm:p04-universal-computation}{sketched=annex:p04-universal.3}{Universal computation}
+There is a partial computable function \(\mathsf{Univ}(e,x)\) such that
+\[
+  \mathsf{Univ}(e,x)\simeq\varphi_e(x)
+\]
+for all \(e,x\in\N\).
+\end{hbtheorem}
+
+Turing's original universal-machine construction is the historical source
+\cite{Turing1937}.
+
+\begin{hbtheorem}{thm:p04-parameter}{cited=Kleene1952}{Parameter theorem}
+For every \(m,n\ge1\), there is a total computable function
+\(\mathsf{par}_n^m:\N^{m+1}\to\N\) such that, for every index \(e\), every
+\(\vec a\in\N^m\), and every \(\vec x\in\N^n\),
+\[
+  \varphi_{\mathsf{par}_n^m(e,\vec a)}(\vec x)
+  \simeq\varphi_e(\vec a,\vec x).
+\]
+\end{hbtheorem}
+
+The compiler encoded by \(\mathsf{par}_n^m\) decodes the runtime input
+\(\vec x\), computes \(\operatorname{code}_{m+n}(\vec a,\vec x)\), writes its
+binary word, and simulates \(e\).  The previously fixed tuple algorithms,
+state renumbering, and finite-table concatenation make the index transformation
+total and computable; \cite{Kleene1952} supplies the complete theorem for
+effective numberings.
+
+\section{Many-one reductions}
+\label{sec:p04-many-one}
+
+\begin{hbdefinition}{def:p04-many-one-reduction}{Many-one reduction}
+For \(A,B\subseteq\N\), a \emph{many-one reduction} from \(A\) to \(B\) is a
+total computable \(f:\N\to\N\) such that
+\[
+  x\in A\quad\Leftrightarrow\quad f(x)\in B
+  \qquad\text{for every }x\in\N.
+\]
+Write \(A\leq_m B\) when one exists.
+The sets are \emph{many-one equivalent}, written \(A\sim_m B\), exactly when
+both \(A\leq_m B\) and \(B\leq_m A\); unlike one-way reducibility, this is
+the relation of mutual many-one reducibility.
+\index{many-one reduction}
+\index{many-one equivalence}
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p04-reduction-preservation}{proved=annex:p04-universal.4}{Preservation under many-one reduction}
+If \(A\leq_m B\) and \(B\) is decidable, then \(A\) is decidable.  If
+\(A\leq_m B\) and \(B\) is computably enumerable, then \(A\) is computably
+enumerable.
+\end{hblemma}
+
+\begin{hbwarning}{def:p04-reduction-direction}{Direction of a reduction}
+To prove that \(B\) is at least as hard as \(A\), construct \(A\leq_m B\).
+The reverse reduction does not establish that lower bound.
+\end{hbwarning}
+
+\section{The self-application domain problem}
+\label{sec:p04-self-application}
+
+\begin{hbdefinition}{def:p04-self-application-domain}{Self-application domain set}
+The \emph{self-application domain set} for the fixed numbering is
+\[
+  K=\{e\in\N:\varphi_e(e)\text{ is defined}\}.
+\]
+Here ``defined'' retains Convention~\ref{def:p04-program-numbering}'s exact
+accepting-with-valid-output meaning.
+\index{self-application domain set}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p04-halting-undecidable}{proved=annex:p04-universal.5}{Undecidability of the self-application domain set}
+The set \(K\) is computably enumerable but not decidable.
+\end{hbtheorem}
+
+\begin{hbcorollary}{thm:p04-k-complement}{proved=annex:p04-universal.6}{The complementary domain set}
+The complement \(\N\setminus K\) is not computably enumerable.
+\end{hbcorollary}
+
+\begin{hbdefinition}{def:p04-binary-application-domain}{Binary application domain set}
+The \emph{binary application domain set} is
+\[
+  H=\{\operatorname{pair}_{\N}(e,x):e,x\in\N
+       \text{ and }\varphi_e(x)\text{ is defined}\}.
+\]
+\index{binary application domain set}
+\end{hbdefinition}
+
+\begin{hbcorollary}{thm:p04-binary-application-equivalence}{proved=annex:p04-universal.10}{Binary and self-application domain problems}
+The sets \(H\) and \(K\) are many-one equivalent:
+\[
+  H\sim_m K.
+\]
+In particular, \(H\) is undecidable.
+\end{hbcorollary}
+
+\section{The recursion theorem}
+\label{sec:p04-recursion-theorem}
+
+\begin{hbtheorem}{thm:p04-recursion-theorem}{sketched=annex:p04-universal.7}{Kleene recursion theorem}
+If \(f:\N\to\N\) is total computable, then there is an index \(e\) such
+that
+\[
+  \varphi_e\simeq\varphi_{f(e)}.
+\]
+\end{hbtheorem}
+
+\begin{hbexample}{def:p04-self-reference-without-inspection}{Self-reference without a self-inspection primitive}
+If a total computable transformation \(f\) adds a fixed output header to the
+behavior of the program whose index it receives, the recursion theorem
+supplies \(e\) whose behavior is that of \(f(e)\).  It asserts
+\(\varphi_e\simeq\varphi_{f(e)}\), not \(e=f(e)\).
+\end{hbexample}
+
+\section{Rice's theorem}
+\label{sec:p04-rice}
+
+\begin{hbdefinition}{def:p04-extensional-index-property}{Extensional index property}
+A set \(A\subseteq\N\) is \emph{extensional} iff, for all \(e,d\in\N\),
+\[
+  \varphi_e\simeq\varphi_d
+  \quad\text{implies}\quad
+  (e\in A\Leftrightarrow d\in A).
+\]
+It is \emph{nontrivial} iff it is neither empty nor all of \(\N\).
+Thus extensionality classifies indices only through the partial functions they
+compute, whereas nontriviality excludes the two constant classifications; both
+distinctions are used in Theorem~\ref{thm:p04-rice}.
+\index{extensional index property}
+\index{nontrivial index property}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p04-rice}{proved=annex:p04-universal.8}{Rice's theorem}
+Every nontrivial extensional set of indices of unary partial computable
+functions is undecidable.
+\end{hbtheorem}
+
+\begin{hbwarning}{def:p04-rice-scope}{Semantic scope of Rice's theorem}
+Rice's theorem concerns semantic properties of the partial function computed
+by a program.  A syntactic property such as ``the source contains ten states''
+can be decidable and is not extensional.
+\end{hbwarning}
+
+% SOURCE ACCOUNTING -- RETIRED EXERCISE ex:universal-reductions-01.
+% The source exercise applying Rice's theorem to totality, range containing
+% zero, and nonempty-domain constant partial functions is deliberately omitted
+% because the handbook has no exercise layer.  The third property's nonempty
+% domain proviso is recorded here so the retirement does not erase its scope.

@@ -1,0 +1,421 @@
+% P16-C3 and a finite identification component of P16-C4.
+\chapter{Finite Structural Causal Models}
+\label{sec:p16-finite-causal-models}
+
+A structural causal model specifies how its variables are assigned values
+and how those assignments change under a specified intervention. Pearl's
+nonparametric structural equations and equation-replacement semantics supply
+the source presentation used here
+\cite[secs.~3.1--3.2.3, pp.~103--112]{Pearl2009CausalOverview}.
+This chapter gives a finite formulation with complete proofs, including the
+probability assumptions required for factorization. All numerical examples
+are stipulated mathematical models.
+
+The probability language is that of
+\cref{sec:p15-finite-conditioning,sec:p15-finite-independence}.
+The background implications of logical abduction in
+\cref{sec:p16-finite-abduction} do not themselves specify the assignments
+or interventions defined below.
+
+\section{Graphs, assignments and disturbances}
+\label{sec:p16-causal-model-data}
+
+\begin{hbdefinition}{def:p16-causal-dag}{A finite directed acyclic graph}
+Let \(N=\{1,\ldots,n\}\), with \(n\geq1\). A \emph{directed graph}
+\(G=(N,E)\) consists of the vertices \(N\) and a set
+\(E\subseteq N\times N\) of directed edges. Write \(j\to i\)
+for \((j,i)\in E\), and put
+\[
+ \operatorname{pa}_G(i)\defeq\{j\in N:j\to i\}.
+\]
+These vertices are the \emph{parents} of \(i\). A directed path of
+positive length is a sequence \(i_0,\ldots,i_m\), with \(m\geq1\),
+such that \(i_{r-1}\to i_r\) for every \(r\). A directed cycle
+is such a path with \(i_0=i_m\). The graph is \emph{acyclic} when
+there is no directed cycle, including a loop of length one. A finite
+directed acyclic graph is abbreviated \emph{DAG}.
+
+For \(I\subseteq N\), let \(\operatorname{de}_G(I)\) be the vertices
+reachable from a member of \(I\) by a directed path of positive length.
+A \emph{topological order} is an enumeration \(i_1,\ldots,i_n\) of
+all vertices in which every parent precedes its child.
+\index{causal graph!directed acyclic graph}\index{topological order}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p16-causal-topological-order}{proved=annex:p16.causal-topological-order}{Topological evaluation is available}
+Every finite DAG has a topological order. Repeatedly removing a vertex
+with no incoming edge in the remaining graph produces one after exactly
+\(n\) removals.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p16-finite-scm}{A finite structural causal model}
+A model \(M\) consists of the following data.
+\begin{enumerate}
+\item A DAG \(G=(N,E)\), whose vertices index the \emph{endogenous}
+      variables to be assigned by the equations, and a finite nonempty
+      value set \(S_i\) for each vertex \(i\). For \(J\subseteq N\), put
+      \(S_J=\prod_{j\in J}S_j\). Products are indexed tuples;
+      \(S_\varnothing\) contains the single empty tuple. If
+      \(v\in S_N\), write \(v_J=(v_j)_{j\in J}\).
+\item A finite nonempty outcome space \(\Omega\), with a mass
+      function \(q:\Omega\to[0,1]\) satisfying
+      \(\sum_{\omega\in\Omega}q(\omega)=1\). Its event probability
+      is \(\mathbb P(A)=\sum_{\omega\in A}q(\omega)\).
+\item For each \(i\), a finite nonempty disturbance value set
+      \(\mathcal U_i\), a function \(U_i:\Omega\to\mathcal U_i\),
+      and a total structural function
+      \[
+       f_i:S_{\operatorname{pa}_G(i)}\times\mathcal U_i\longrightarrow S_i.
+      \]
+\end{enumerate}
+The \(U_i\) are \emph{exogenous disturbances}: this model gives their
+joint probability law but no equations assigning them from the endogenous
+variables. They may share information or be dependent. Their independence
+will be an additional assumption when explicitly stated.
+
+At an outcome \(\omega\), a \emph{solution} is an assignment
+\(v\in S_N\) satisfying all the structural equations
+\[
+ v_i=f_i(v_{\operatorname{pa}_G(i)},U_i(\omega)),\qquad i\in N.
+\]
+The indexed left sides declare which variable each function assigns.
+Solving an equation algebraically for another variable does not replace
+that declaration. The parent sets state which endogenous inputs a function
+is allowed to use. A listed parent may be ignored by the function; an edge
+does not assert a nonzero effect or a detectable association.
+\index{structural causal model!finite}\index{exogenous disturbance}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p16-causal-solution}{proved=annex:p16.causal-solution}{Existence, uniqueness and the observational law}
+For every \(\omega\in\Omega\), the model has exactly one solution.
+Evaluating the structural functions in any topological order gives that
+solution. Denote its coordinates by \(V_i(\omega)\), and its tuple by
+\(V(\omega)\). The \(V_i\) are finite random variables. Their joint
+\emph{observational law} is the mass function
+\[
+ p_M(v)\defeq\mathbb P(V=v)
+       =\sum_{\omega:V(\omega)=v}q(\omega),\qquad v\in S_N.
+\]
+For \(J\subseteq N\), its marginal law is
+\[
+ p_{M,J}(s)=\mathbb P(V_J=s)
+           =\sum_{v:v_J=s}p_M(v),\qquad s\in S_J.
+\]
+All these laws are defined even when some outcomes or assignments have
+probability zero.
+\end{hbtheorem}
+
+\section{Interventions replace specified equations}
+\label{sec:p16-finite-interventions}
+
+\begin{hbdefinition}{def:p16-causal-intervention}{A fixed intervention and its distribution}
+Choose \(I\subseteq N\) and \(x\in S_I\). The intervention
+\(\operatorname{do}(V_I=x)\) replaces the equation for every \(i\in I\)
+by \(v_i=x_i\). It preserves \(\Omega,q\), all disturbances and
+every equation indexed outside \(I\). Write \(M_{I=x}\) for this
+model. Its graph deletes every edge whose terminal vertex is in \(I\).
+For \(i\in I\), the new structural function is the constant \(x_i\),
+with no endogenous parent; its old disturbance can be retained as an
+unused input.
+
+This operation stipulates that the unreplaced mechanisms and the
+exogenous probability law remain invariant under the modeled manipulation.
+That stipulation is part of the causal interpretation of the model. If an
+actual manipulation also changes another mechanism or the population's
+exogenous law, the displayed replacement alone does not model that change.
+
+Write \(V^{I=x}(\omega)\) for its solution and
+\(p_M^{I=x}(v)=\mathbb P(V^{I=x}=v)\) for its law. The traditional
+intervention notation means
+\[
+ \mathbb P_M(V_J=s\mid\operatorname{do}(V_I=x))
+ \defeq\mathbb P(V_J^{I=x}=s).
+\]
+Here the expression following the vertical bar names an operation on the
+model. It is not a conditioning event. In particular this definition
+requires no assumption that \(\mathbb P(V_I=x)>0\).
+
+For an event \(D\subseteq S_J\), sum the displayed law over \(s\in D\).
+For a real-valued function \(h:S_J\to\mathbb R\), the corresponding
+intervention mean is the finite expectation
+\(\mathbb E[h(V_J^{I=x})]\). A difference of such means at two fixed
+interventions is a model's \emph{average intervention effect} for that
+specified response function and contrast.
+\index{intervention!equation replacement}\index{do operator}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p16-causal-intervention-laws}{proved=annex:p16.causal-intervention-laws}{Laws of fixed equation replacement}
+Every intervention above has a unique solution at every outcome, and
+\[
+ p_M^{I=x}(v)=\sum_{\omega:V^{I=x}(\omega)=v}q(\omega)
+\]
+is a mass function. It vanishes unless \(v_I=x\). In addition:
+\begin{enumerate}
+\item If \(V_I(\omega)=x\), then
+      \(V^{I=x}(\omega)=V(\omega)\).
+\item If \(j\notin I\cup\operatorname{de}_G(I)\), then
+      \(V_j^{I=x}(\omega)=V_j(\omega)\) for every \(\omega\).
+\item Intervening on the empty set leaves the model unchanged.
+      For disjoint \(I,J\), performing the two replacements
+      \(I=x\) and \(J=y\) in either order gives the same model
+      as the single replacement on \(I\cup J\) with these values.
+\end{enumerate}
+The first two conclusions are pointwise, including outcomes of zero mass.
+\end{hbtheorem}
+
+Conditioning on \(V_I=x\), when this event has positive probability,
+reweights the original outcomes to
+\(q(\omega)\mathbf1_{\{V_I=x\}}(\omega)/\mathbb P(V_I=x)\)
+and retains the original solution functions. Equation replacement retains
+the original weights and evaluates the modified functions. The confounded
+example below calculates the resulting difference explicitly.
+
+\section{Independent disturbances and factorization}
+\label{sec:p16-causal-factorization}
+
+\begin{hbdefinition}{def:p16-causal-kernels}{Independent disturbances and structural kernels}
+Put \(r_i(u)=\mathbb P(U_i=u)\). The disturbances are
+\emph{mutually independent} if
+\[
+ \mathbb P(U_1=u_1,\ldots,U_n=u_n)=\prod_{i=1}^n r_i(u_i)
+ \quad\text{for every }(u_i)_{i\in N}\in\prod_{i\in N}\mathcal U_i.
+\]
+This is independence of the entire family, not just of every pair.
+Following the source, a model with an acyclic graph and mutually
+independent disturbances is called \emph{Markovian}
+\cite[sec.~3.2.3, p.~110]{Pearl2009CausalOverview}.
+
+For any model, define its structural kernels by
+\[
+ k_i(b\mid a)\defeq
+ \sum_{\substack{u\in\mathcal U_i\\f_i(a,u)=b}}r_i(u),
+ \qquad a\in S_{\operatorname{pa}_G(i)},\quad b\in S_i.
+\]
+For each fixed \(a\), this is a mass function on \(S_i\): the sets
+of disturbance values giving each output partition \(\mathcal U_i\).
+The kernel is defined at every parent assignment, including assignments
+which never occur observationally. Its vertical bar separates output from
+input; it does not define a conditional probability on a null event.
+\index{causal model!Markovian}\index{structural kernel}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p16-causal-factorization}{proved=annex:p16.causal-factorization}{The finite causal factorization}
+In a model with mutually independent disturbances,
+\[
+ p_M(v)=\prod_{i\in N}k_i(v_i\mid v_{\operatorname{pa}_G(i)})
+ \qquad(v\in S_N).
+\]
+If \(\mathbb P(V_{\operatorname{pa}_G(i)}=a)>0\), then
+\[
+ k_i(b\mid a)=
+ \mathbb P(V_i=b\mid V_{\operatorname{pa}_G(i)}=a).
+\]
+Thus the structural kernels supply the observational conditional factors
+on every parent event on which conditioning is defined. The product formula
+itself requires no positivity assumption.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p16-causal-truncation}{proved=annex:p16.causal-truncation}{Truncated factorization for simultaneous interventions}
+In the same model, for \(I\subseteq N\), \(x\in S_I\), and
+\(v\in S_N\),
+\[
+ p_M^{I=x}(v)=
+ \begin{cases}
+ \displaystyle\prod_{i\notin I}k_i(v_i\mid v_{\operatorname{pa}_G(i)}),
+       &v_I=x,\\[1ex]
+ 0,    &v_I\ne x.
+ \end{cases}
+\]
+In the first case the values in intervened parent positions are therefore
+the specified components of \(x\). Marginal intervention probabilities
+are obtained by summing this mass function over the remaining coordinates.
+For \(I=N\) the empty product is one, giving point mass at \(x\).
+\end{hbtheorem}
+
+This is a fully defined finite version of the source's causal Markov
+condition and truncated factorization
+\cite[Theorem~1 and Corollary~1, pp.~110--111]{Pearl2009CausalOverview}.
+Using observational conditional probabilities in place of the kernels
+also requires that the relevant conditioning events have positive mass.
+An intervention can assign a parent configuration that was absent from
+the observational distribution.
+
+\section{Identification from a specified observational law}
+\label{sec:p16-finite-causal-identification}
+
+\begin{hbdefinition}{def:p16-causal-identification}{Identification relative to a model class}
+Let \(\mathcal C\) be a class of models with common observed coordinates
+\(O\) and value sets \(S_O\), and let \(Q(M)\) be a specified
+quantity associated with each model in the class. The quantity is
+\emph{identified from the observational law on \(O\)} within
+\(\mathcal C\) if, for every \(M_1,M_2\in\mathcal C\),
+\[
+ p_{M_1,O}=p_{M_2,O}\quad\Longrightarrow\quad Q(M_1)=Q(M_2).
+\]
+Equality of laws means equality at every assignment in \(S_O\).
+A pair with equal observed laws and unequal values of \(Q\) proves
+\emph{nonidentification} in that class. This is the two-model criterion
+of the source's Definition~2 \cite[p.~109]{Pearl2009CausalOverview}.
+Identification treats the observational law as given exactly; recovering
+it or the target from finite sampled data is a separate estimation problem.
+\index{causal identification}\index{nonidentification}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p16-causal-positive-identification}{proved=annex:p16.causal-positive-identification}{Identification with full observation and positive support}
+Fix the DAG and finite value sets. Consider the class of models with
+mutually independent disturbances in which all endogenous variables are
+observed and \(p_M(v)>0\) for every \(v\in S_N\).
+For every fixed intervention \(I=x\), its full distribution is identified
+in this class. Explicitly, for \(v_I=x\), it is
+\[
+ p_M^{I=x}(v)=\prod_{i\notin I}
+ \frac{\displaystyle\sum_{w:w_i=v_i,\,
+                      w_{\operatorname{pa}_G(i)}=v_{\operatorname{pa}_G(i)}}p_M(w)}
+      {\displaystyle\sum_{w:w_{\operatorname{pa}_G(i)}=v_{\operatorname{pa}_G(i)}}p_M(w)}.
+\]
+It is zero for \(v_I\ne x\). Every denominator is positive.
+Consequently all its marginals and finite response means are identified.
+Full positive support is a sufficient hypothesis here; no claim that it is
+necessary for every particular target is made.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p16-causal-chain}{The source's three-variable chain in the finite formulation}
+Let the endogenous variables be \(Z,X,Y\), with graph
+\(Z\to X\to Y\) and mutually independent disturbances. Write their
+kernels as \(k_Z(z),k_X(x\mid z),k_Y(y\mid x)\).
+Then the preceding theorems give
+\[
+\begin{aligned}
+ p_M(z,x,y)&=k_Z(z)k_X(x\mid z)k_Y(y\mid x),\\
+ \mathbb P_M(Z=z,Y=y\mid\operatorname{do}(X=x))
+     &=k_Z(z)k_Y(y\mid x).
+\end{aligned}
+\]
+Summing the second expression over \(z\) gives \(k_Y(y\mid x)\),
+because \(\sum_z k_Z(z)=1\). If \(\mathbb P(X=x)>0\), this equals
+\(\mathbb P(Y=y\mid X=x)\) by
+\cref{thm:p16-causal-factorization}. This specializes the source's
+equations~(5)--(7) and (16)--(17). The stated independence and graph,
+together with positive mass for the conditional expression, justify the
+coincidence in this example.
+\end{hbexample}
+
+\section{A confounded association and two indistinguishable observations}
+\label{sec:p16-causal-confounding-example}
+
+\begin{hbdefinition}{def:p16-confounded-binary-model}{A binary common-cause model}
+For bits \(a,b\in\{0,1\}\), let \(a\oplus b\) equal zero when
+\(a=b\) and one otherwise. Take
+\(\Omega=\{0,1\}^3\), with coordinates \((z,a,b)\), and mass
+\[
+ q(z,a,b)=\tfrac12\alpha(a)\alpha(b),\qquad
+ \alpha(0)=\tfrac34,\quad\alpha(1)=\tfrac14.
+\]
+The coordinate disturbances \(U_Z(z,a,b)=z\),
+\(U_X(z,a,b)=a\), and \(U_Y(z,a,b)=b\) are mutually independent.
+Specify endogenous variables with values \(\{0,1\}\) by
+\[
+ Z=U_Z,\qquad X=Z\oplus U_X,\qquad Y=Z\oplus U_Y.
+\]
+Their DAG has edges \(Z\to X\) and \(Z\to Y\).
+Call this model \(M_A\). The shared parent \(Z\) is a common cause:
+its equation feeds both assignments. The following calculation makes the
+confounding of the observed \(X,Y\) association precise in this model.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p16-causal-confounded-example}{proved=annex:p16.causal-confounded-example}{Association differs from intervention in the common-cause model}
+The observational marginal of \((X,Y)\) in \(M_A\) is
+\[
+\begin{array}{c|cc|c}
+ &Y=0&Y=1&\text{row total}\\\hline
+ X=0&5/16&3/16&1/2\\
+ X=1&3/16&5/16&1/2\\\hline
+ \text{column total}&1/2&1/2&1
+\end{array}
+\]
+Hence
+\[
+ \mathbb P(Y=1\mid X=1)=\tfrac58,\qquad
+ \mathbb P(Y=1\mid X=0)=\tfrac38.
+\]
+For either \(x\in\{0,1\}\), however,
+\[
+ \mathbb P_{M_A}(Y=1\mid\operatorname{do}(X=x))=\tfrac12.
+\]
+With response \(Y\), the difference of the two observational conditional
+means is \(1/4\), whereas the average intervention effect of setting
+\(X=1\) instead of \(X=0\) is zero.
+
+If \(Z\) is also observed, every \((X,Z)\) assignment has positive
+mass and this model satisfies the explicit adjustment identity
+\[
+ \mathbb P_{M_A}(Y=1\mid\operatorname{do}(X=x))
+ =\sum_{z=0}^1\mathbb P(Y=1\mid X=x,Z=z)\mathbb P(Z=z).
+\]
+Its two response factors are \(1/4\) for \(z=0\) and \(3/4\)
+for \(z=1\). The identity here is proved directly from this model.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p16-causal-nonidentification}{proved=annex:p16.causal-nonidentification}{Equal observational laws with unequal intervention laws}
+The following two nonidentification statements hold.
+\begin{enumerate}
+\item Among finite acyclic models of binary observed variables \(X,Y\)
+      with allowed parent edge \(X\to Y\) and possibly dependent
+      disturbances, the full observational law does not identify
+      \(\mathbb P_M(Y=1\mid\operatorname{do}(X=1))\), even when
+      every observed pair has positive probability. There are two such
+      models with the table above as their common law, and target values
+      \(1/2\) and \(5/8\).
+\item In the class with the same binary graph and mutually independent
+      disturbances, removing the positive-support hypothesis also permits
+      nonidentification. There are two such models with observational
+      point mass at \((X,Y)=(0,0)\), but target values zero and one
+      under \(\operatorname{do}(X=1)\).
+\end{enumerate}
+\end{hbtheorem}
+
+\begin{hbwarning}{def:p16-causal-latent-projection}{Dependent disturbances do not inherit the product formula}
+The first common-cause example can be expressed using only endogenous
+\(X,Y\): on the same \(\Omega\), set
+\(\widetilde U_X=(z,a)\), \(\widetilde U_Y=(z,b)\),
+\(X=z\oplus a\), and \(Y=z\oplus b\). Allow the parent edge
+\(X\to Y\) while the function for \(Y\) ignores that input.
+The two disturbances both contain \(z\), and are dependent: their
+first coordinates agree with probability one, though each is a fair bit.
+Each structural output kernel is the constant mass function \((1/2,1/2)\).
+Multiplying those kernels would give \(1/4\) at every pair, contradicting
+the proved \(5/16,3/16\) table. The general structural model and its
+interventions remain defined; the independent-disturbance hypothesis of
+\cref{thm:p16-causal-factorization} is absent.
+\end{hbwarning}
+
+\begin{hbmethod}{def:p16-causal-finite-calculation}{Calculating a specified finite intervention}
+List the graph, value sets, outcome weights, disturbance functions and
+structural functions. Verify that every function is total on its stated
+finite domain and that the graph is acyclic. Choose the intervention and
+replace its equations. Evaluate once at each \(\omega\) in a
+topological order, and add \(q(\omega)\) to the mass of the resulting
+assignment. Group these masses for the requested marginal or response
+mean. \Cref{thm:p16-causal-solution,thm:p16-causal-intervention-laws}
+prove that this finite procedure terminates and returns the specified law.
+
+With mutually independent disturbances, one may instead calculate the
+kernels and apply \cref{thm:p16-causal-truncation}. To recover kernels
+from observational data, separately establish the conditional identity
+and its positive denominators. State the model class when claiming an
+identified effect. A table fitting observed frequencies does not provide
+the structural equations, their stability under intervention, the
+independence of disturbances, or measurement of an omitted variable.
+\end{hbmethod}
+
+These structural foundations establish finite acyclic equation-replacement
+semantics, factorization under independent disturbances, a sufficient
+identification result, and explicit nonidentification examples.
+The following sections develop graphical separation and back-door
+adjustment in \cref{sec:p16-graphical-separation-adjustment}, then
+front-door identification in \cref{sec:p16-front-door-identification}.
+Each result states its graph and support assumptions and supplies its
+own proof. \Cref{sec:p16-finite-counterfactuals} develops the finite
+same-unit counterfactual calculus and the binary potential-outcome bridge.
+General counterfactual identification and cyclic-model semantics require
+their further constructions.

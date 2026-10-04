@@ -1,0 +1,489 @@
+% Source presentations for register row N-c-021.
+
+\subsection{The relational, closure, completeness, and complexity presentations of PDL}
+\label{sec:p09-presentation-n-c-021}
+
+\subsubsection{Pratt's bridge from triples to internal modalities}
+
+Let \(S\) be a nonempty set of states, let a state assertion be a subset of
+\(S\), and let the program \(a\) denote a relation \(R_a\subseteq S\times S\).
+Pratt's external partial-correctness notation has the exact satisfaction
+condition
+\[
+ P\{a\}Q
+ \quad\Longleftrightarrow\quad
+ \forall s,t\in S\,
+   \bigl(s\in P\land (s,t)\in R_a\;\Longrightarrow\;t\in Q\bigr).
+\]
+The internal modal formulas instead have a truth value at one state:
+\[
+\begin{aligned}
+ s\models[a]Q
+   &\quad\Longleftrightarrow\quad
+   \forall t\in S\bigl((s,t)\in R_a\Longrightarrow t\in Q\bigr),\\
+ s\models\langle a\rangle Q
+   &\quad\Longleftrightarrow\quad
+   \exists t\in S\bigl((s,t)\in R_a\land t\in Q\bigr).
+\end{aligned}
+\]
+Thus programs, external ordered pairs of assertions, and internal modal
+formulas have three different standings.  Expanding the two definitions proves
+the bridge, rather than merely suggesting it:
+\[
+ P\{a\}Q
+ \quad\Longleftrightarrow\quad
+ \forall s\in S\,(s\in P\Longrightarrow s\models[a]Q)
+ \quad\Longleftrightarrow\quad
+ P\to[a]Q\text{ is valid}.
+\]
+
+The regular operations are already visible at the relational level.  With
+composition read from left to right,
+\[
+\begin{aligned}
+ R_{a;b}
+   &=\{(s,t):\exists u\,((s,u)\in R_a\land(u,t)\in R_b)\},\\
+ R_{a\cup b}&=R_a\cup R_b.
+\end{aligned}
+\]
+Direct substitution in the modal clauses gives
+\[
+\begin{aligned}
+ s\models[a;b]Q
+   &\Longleftrightarrow s\models[a][b]Q,\\
+ s\models[a\cup b]Q
+   &\Longleftrightarrow s\models[a]Q\land[b]Q,\\
+ s\models\langle a\cup b\rangle Q
+   &\Longleftrightarrow
+     s\models\langle a\rangle Q\lor\langle b\rangle Q,\\
+ s\models[a]Q
+   &\Longleftrightarrow s\models\neg\langle a\rangle\neg Q.
+\end{aligned}
+\]
+For example, take \(S=\{s,t\}\), \(P=\{s\}\), \(Q=\{t\}\),
+\(R_{a_{\mathrm{halt}}}=\{(s,t)\}\), and
+\(R_{a_{\mathrm{div}}}=\varnothing\).  Both
+\(P\{a_{\mathrm{halt}}\}Q\) and \(P\{a_{\mathrm{div}}\}Q\) hold: the second
+does so vacuously because it has no final state.  At \(s\), however,
+\[
+ \langle a_{\mathrm{halt}}\rangle\top
+ \qquad\text{and}\qquad
+ \neg\langle a_{\mathrm{div}}\rangle\top
+\]
+are true.  This pair isolates exactly what the external partial-correctness
+assertion cannot express: existence of a terminating transition
+\cite[technical-report pp.~4--10]{Pratt1976}.
+
+Pratt proves semantic results for the operations and fragments he actually
+defines.  The report predates the later Fischer--Ladner closure, the
+Kozen--Parikh completeness proof, and the final EXPTIME classification; those
+results are not back-attributed to it.
+
+\subsubsection{Fischer--Ladner closure and the finite-model argument}
+
+Definition~\ref{def:p09-pdl} gives the mutually generated formula and program
+syntax: the mutuality is required because a formula may contain a
+program-indexed modality and a program may contain a formula test.  In a model
+\(M=(S,(R_a)_a,V)\), the compound relations are
+\[
+\begin{aligned}
+ \llbracket a\rrbracket_M&=R_a,\\
+ \llbracket\alpha\cup\beta\rrbracket_M
+   &=\llbracket\alpha\rrbracket_M\cup\llbracket\beta\rrbracket_M,\\
+ \llbracket\alpha;\beta\rrbracket_M
+   &=\{(s,t):\exists u\,
+       ((s,u)\in\llbracket\alpha\rrbracket_M\land
+        (u,t)\in\llbracket\beta\rrbracket_M)\},\\
+ \llbracket\alpha^{*}\rrbracket_M
+   &=\bigcup_{n<\omega}\llbracket\alpha\rrbracket_M^{\,n},\\
+ \llbracket B?\rrbracket_M
+   &=\{(s,s):M,s\models B\}.
+\end{aligned}
+\]
+Here the zeroth relational power is the identity relation.  Formula truth is
+Boolean truth together with
+\[
+ M,s\models[\alpha]B
+ \quad\Longleftrightarrow\quad
+ \forall t\bigl((s,t)\in\llbracket\alpha\rrbracket_M
+                 \Longrightarrow M,t\models B\bigr),
+\]
+and \(\langle\alpha\rangle B\) is the dual
+\(\neg[\alpha]\neg B\).  These clauses separately define the standing of a
+program term, a formula, and the metalinguistic relation denoted by a program
+\cite[\S\S1--2]{FischerLadner1979}.
+
+Ordinary subformulas are not enough for filtration, because a box indexed by a
+compound program owes the one-step formulas through which its obligation is
+propagated.  In the Boolean basis fixed by this handbook, the exact simultaneous
+recursion for \(\operatorname{FL}\) and
+\(\operatorname{FL}_{\Box}\) is printed immediately before this presentation.
+It is the modern box-form normalization of the Fischer--Ladner construction;
+the auxiliary function decomposes only the outer program and thereby makes the
+star clause well-founded \cite[\S6.1]{HarelKozenTiuryn2000}.
+
+For a complete calculation, put
+\[
+ C_0=\left[(a;b^{*})\cup(p?;c)\right]q.
+\]
+Repeated application of the union, composition, star, test, and atomic-program
+clauses gives exactly
+\[
+\begin{aligned}
+ \operatorname{FL}(C_0)=\{\,
+   &C_0,
+   [a;b^{*}]q,
+   [a][b^{*}]q,
+   [b^{*}]q,
+   [b][b^{*}]q,\\
+   &[p?;c]q,
+   [p?][c]q,
+   p,
+   [c]q,
+   q
+ \,\}.
+\end{aligned}
+\]
+The entries \([b][b^{*}]q\) and \(p\) are not ordinary subformulas of
+\(C_0\): the first is owed by star unfolding and the second by evaluation of the
+test.  Conversely, this ten-formula set does not close under arbitrary program
+or formula formation.
+
+Here is the finite-model proof at the level needed to see why those extra
+entries suffice.  Let \(C\) be satisfiable in \(M\), put
+\(\Delta=\operatorname{FL}(C)\), and define
+\[
+ s\equiv_{\Delta}t
+ \quad\Longleftrightarrow\quad
+ \forall B\in\Delta\,
+   (M,s\models B\Longleftrightarrow M,t\models B).
+\]
+There are at most \(2^{|\Delta|}\) equivalence classes.  On those classes define
+the filtered atomic edge by
+\[
+ [s]R_a^{f}[t]
+ \quad\Longleftrightarrow\quad
+ \exists s'\equiv_{\Delta}s\,
+ \exists t'\equiv_{\Delta}t\,((s',t')\in R_a),
+\]
+and interpret the compound programs from these atomic edges by the five
+relational clauses above.  Propositional letters retain the truth value of
+their class.
+
+Two simultaneous inductions now do the work.  First, every original
+\(\alpha\)-edge maps to a filtered \(\alpha\)-edge.  Second, whenever
+\([\alpha]B\in\Delta\), truth of \([\alpha]B\) in a representative propagates
+\(B\) across every filtered \(\alpha\)-edge.  Union and composition use their
+displayed closure entries, and a test edge is an identity edge whose source
+satisfies its test formula.  For the only delicate case, suppose
+\([\beta^{*}]B\in\Delta\).  Closure also contains
+\([\beta][\beta^{*}]B\).  Along a finite filtered path
+\[
+ [s_0]R_\beta^{f}[s_1]R_\beta^{f}\cdots R_\beta^{f}[s_n],
+\]
+the second induction propagates \([\beta^{*}]B\) from each class to the next;
+the first class has it by hypothesis, while star unfolding gives both \(B\)
+there and the one-step obligation needed to continue.  Repeating this argument
+gives \(B\) at every class reached.  This proves the forward box direction.  For the reverse
+direction, failure of \([\alpha]B\) in the original model supplies an actual
+\(\alpha\)-successor where \(B\) fails, and the first induction maps that
+witness to the quotient.  Structural induction on \(B\in\Delta\) therefore
+gives the truth lemma
+\[
+ M,s\models B
+ \quad\Longleftrightarrow\quad
+ M^{f},[s]\models B.
+\]
+The class of the original satisfying state satisfies \(C\), so every
+satisfiable formula has a model with at most
+\(2^{|\operatorname{FL}(C)|}\) states.
+
+Fischer and Ladner then search this finite space.  Under their coding and input
+length \(n\), the paper states a nondeterministic upper bound \(c^n\) and a
+deterministic lower bound of the form \(d^n/\log n\), for constants
+\(c,d>1\).  Enumerating every exponential-size model deterministically would
+instead give a double-exponential procedure.  The deterministic
+single-exponential type-deletion algorithm and the exact
+\(\mathsf{EXPTIME}\)-complete classification below are later results and are
+kept under their later source \cite[pp.~199--211]{FischerLadner1979}.
+
+\subsubsection{Kozen--Parikh's exact completeness boundary}
+
+Kozen and Parikh use the test-free grammars
+\[
+ \alpha::=a\mid\alpha\cup\beta\mid\alpha;\beta\mid\alpha^{*},
+ \qquad
+ X::=p\mid X\lor Y\mid\neg X\mid\langle\alpha\rangle X,
+\]
+and define \([\alpha]X:=\neg\langle\alpha\rangle\neg X\).  Tests and converse
+are explicitly omitted.  In the paper's diamond notation, the seven
+Segerberg axiom groups are
+\[
+\begin{array}{rll}
+ (1)&\text{all propositional tautologies},\\
+ (2)&\langle\alpha\rangle\bot\leftrightarrow\bot,\\
+ (3)&\langle\alpha\cup\beta\rangle X
+       \leftrightarrow
+       (\langle\alpha\rangle X\lor\langle\beta\rangle X),\\
+ (4)&\langle\alpha\rangle(X\lor Y)
+       \leftrightarrow
+       (\langle\alpha\rangle X\lor\langle\alpha\rangle Y),\\
+ (5)&\langle\alpha;\beta\rangle X
+       \leftrightarrow\langle\alpha\rangle\langle\beta\rangle X,\\
+ (6)&\langle\alpha^{*}\rangle X
+       \leftrightarrow
+       (X\lor\langle\alpha\rangle\langle\alpha^{*}\rangle X),\\
+ (7)&\langle\alpha^{*}\rangle X
+       \to
+       X\lor\langle\alpha^{*}\rangle
+          (\neg X\land\langle\alpha\rangle X).
+\end{array}
+\]
+The rules are modus ponens and theorem-only generalization
+\(X/[\alpha]X\) \cite[pp.~113--114]{KozenParikh1981}.
+
+The two star axioms are sound for different reasons.  Since
+\(R_{\alpha^{*}}\) is the identity relation together with one
+\(R_{\alpha}\)-step followed by an \(R_{\alpha^{*}}\)-path, (6) is just the
+relational equation
+\[
+ R_{\alpha^{*}}=I\cup(R_{\alpha}\mathbin{;}R_{\alpha^{*}}).
+\]
+For (7), suppose a finite \(\alpha\)-path from \(s=s_0\) reaches an
+\(X\)-state.  If \(s\models X\), its first disjunct holds.  Otherwise choose the
+least \(j>0\) with \(s_j\models X\).  Then \(s_{j-1}\models\neg X\),
+\(s_{j-1}\models\langle\alpha\rangle X\), and \(s_{j-1}\) is
+\(\alpha^{*}\)-reachable from \(s\), proving the second disjunct.  Dually this is
+the familiar box induction principle
+\[
+ X\land[\alpha^{*}](X\to[\alpha]X)\to[\alpha^{*}]X.
+\]
+
+The completeness proof is finite and its three lemmas can be stated without
+hiding the star step.  Begin with a consistent formula \(W\).  The paper's
+test-free closure is the least set containing \(W\) and satisfying
+\[
+\begin{array}{ll}
+ X\lor Y\in\operatorname{FL}(W)&\Rightarrow X,Y\in\operatorname{FL}(W),\\
+ \neg X\in\operatorname{FL}(W)&\Rightarrow X\in\operatorname{FL}(W),\\
+ \langle\alpha\rangle X\in\operatorname{FL}(W)&\Rightarrow X\in\operatorname{FL}(W),\\
+ \langle\alpha\cup\beta\rangle X\in\operatorname{FL}(W)
+   &\Rightarrow\langle\alpha\rangle X,\langle\beta\rangle X
+     \in\operatorname{FL}(W),\\
+ \langle\alpha;\beta\rangle X\in\operatorname{FL}(W)
+   &\Rightarrow\langle\alpha\rangle\langle\beta\rangle X
+     \in\operatorname{FL}(W),\\
+ \langle\alpha^{*}\rangle X\in\operatorname{FL}(W)
+   &\Rightarrow\langle\alpha\rangle X,
+     \langle\alpha\rangle\langle\alpha^{*}\rangle X
+     \in\operatorname{FL}(W).
+\end{array}
+\]
+If this closure is \(\{X_1,\ldots,X_n\}\), an \emph{atom} is a consistent
+conjunction \(Y_1\land\cdots\land Y_n\), with each
+\(Y_i\in\{X_i,\neg X_i\}\).  This is the source's Boolean-algebra term, not a
+new kind of program state.  Write \(C\leq X\) for
+\(\derives C\to X\).  The canonical states are the atoms; for a primitive
+program \(a\), put
+\[
+ C R_a D
+ \quad\Longleftrightarrow\quad
+ C\land\langle a\rangle D\text{ is consistent},
+\]
+and extend \(R\) by union, composition, and reflexive-transitive closure.
+
+\paragraph{Lemma 1: consistent diamonds yield program edges.}
+For every program \(\alpha\), consistency of
+\(C\land\langle\alpha\rangle D\) implies \(C R_\alpha D\).  Choice follows
+from (3).  For composition, write truth as the finite disjunction of all atoms;
+axioms (4) and (5) produce an intermediate atom \(E\) for which both
+\(C\land\langle\beta\rangle E\) and
+\(E\land\langle\gamma\rangle D\) are consistent, and the induction hypothesis
+gives \(C R_\beta E R_\gamma D\).
+
+For \(\alpha=\beta^{*}\), let \(G\) be the least set of atoms containing \(C\)
+and closed under every consistent one-step demand
+\(E\land\langle\beta\rangle F\).  The program induction hypothesis makes every
+member of \(G\) \(\beta^{*}\)-reachable from \(C\).  Let
+\(Y=\bigvee_{E\in G}E\), a finite formula.  By closure of \(G\),
+\(Y\land\langle\beta\rangle\neg Y\) is inconsistent, so
+\(\derives Y\to[\beta]Y\).  Generalization and the induction axiom yield
+\(\derives Y\to[\beta^{*}]Y\).  If \(D\notin G\), then
+\(D\leq\neg Y\), making
+\(C\land\langle\beta^{*}\rangle D\) inconsistent.  Hence \(D\in G\), and
+\(C R_{\beta^{*}}D\).  This is the only place in Lemma~1 where the induction
+axiom is used.
+
+\paragraph{Lemma 2: modal witnesses are exactly canonical successors.}
+For every \(\langle\alpha\rangle X\in\operatorname{FL}(W)\),
+\[
+ C\leq\langle\alpha\rangle X
+ \quad\Longleftrightarrow\quad
+ \exists D\,(C R_\alpha D\land D\leq X).
+\]
+For the forward direction, \(X\) is provably the finite disjunction of the atoms
+below it; diamond distribution selects a consistent
+\(C\land\langle\alpha\rangle D\), and Lemma~1 supplies the edge.  The reverse
+direction is an induction on \(\alpha\).  Choice and composition use their
+closure clauses.  In the atomic base, if \(C\not\leq\langle a\rangle X\), the
+complete signed atom \(C\) entails its negation, contradicting consistency of
+\(C\land\langle a\rangle D\) and \(D\leq X\).  In the star case, take a
+finite \(\beta\)-path to \(D\), start
+with \(D\leq X\to\langle\beta^{*}\rangle X\), and propagate
+\(\langle\beta^{*}\rangle X\) backwards one edge at a time using the closure
+formula \(\langle\beta\rangle\langle\beta^{*}\rangle X\) and axiom (6).
+
+\paragraph{Lemma 3: truth lemma.}
+For \(X\in\operatorname{FL}(W)\),
+\[
+ C\models X\quad\Longleftrightarrow\quad C\leq X.
+\]
+The propositional cases follow from the complete signed choice in each atom;
+the diamond case is exactly Lemma~2 plus the formula induction hypothesis.
+Finally, because \(W\) is consistent, some atom \(C\) satisfies \(C\leq W\),
+and Lemma~3 gives \(C\models W\).  Thus every consistent test-free formula has
+a finite model, and every valid test-free formula is derivable
+\cite[pp.~114--118]{KozenParikh1981}.
+
+Nothing in this proof licenses inserting a test \(B?\) into the 1981 grammar.
+The next source adds the test axiom, the test closure case, and the corresponding
+model argument explicitly.
+
+\subsubsection{Harel--Kozen--Tiuryn's test-containing calculus and exact bounds}
+
+Harel, Kozen, and Tiuryn's Axiom System 5.5 is the exact test-containing
+controller for the registered sheet.  It adds
+\([B?]A\leftrightarrow(B\to A)\) and prints the box versions of choice,
+composition, star unfolding, and induction.  The sheet does not repeat the
+source's conjunction-distribution axiom as primitive because it follows from
+\(K\), necessitation, and propositional reasoning: necessitate
+\(A\to(B\to A\land B)\) for one direction, and necessitate the two projections
+for the other.  Its curried star-induction axiom is propositionally equivalent
+to the source's conjunctive form.  The registered calculus therefore has the
+strength of Axiom System 5.5 rather than a silently weakened fragment
+\cite[\S5.5]{HarelKozenTiuryn2000}.
+
+Tests can be seen directly in a three-state model.  Let
+\[
+ S=\{s,t,u\},\qquad
+ R_a=\{(s,t),(s,u)\},\qquad
+ V(p)=V(q)=\{t\}.
+\]
+Then \(R_{p?}=\{(t,t)\}\), so
+\(R_{a;p?}=\{(s,t)\}\).  Consequently
+\[
+ s\models\langle a;p?\rangle q,
+ \qquad
+ s\models[a;p?]q,
+ \qquad
+ s\not\models[a]p.
+\]
+The diamond has the surviving \(t\)-witness; the box quantifies only over that
+surviving witness; the untested box fails because \(u\) is an \(a\)-successor
+that does not satisfy \(p\).  At a state with no
+\(a;p?\)-successor, the corresponding box would be vacuously true while the
+diamond would be false.
+
+Section 6.1 supplies the simultaneous closure recursion used above.  Lemma 6.4
+proves filtration, and Theorem 6.5 gives a model with at most \(2^{|A|}\) states
+under the book's symbol-count convention.  Theorem 7.6 obtains deductive
+completeness by filtering the universal nonstandard model; this is the
+test-containing completion of the source route, not a restatement of the
+test-free 1981 theorem \cite[\S\S6.1--6.2,7.1]{HarelKozenTiuryn2000}.
+
+Algorithm 8.2 turns the finite vocabulary into a deterministic
+single-exponential procedure.  For \(\Delta=\operatorname{FL}(A)\), it proceeds
+as follows.
+\begin{enumerate}
+\item Form \(M_0\), the at most \(2^{|\Delta|}\) complete signed assignments to
+  \(\Delta\): for each \(B\in\Delta\), exactly one of \(B,\neg B\) occurs.
+\item Delete every assignment that fails a local propositional, choice,
+  composition, test, or star-unfolding axiom.  The survivors form \(M_1\).
+  Atomic edges satisfy
+  \[
+   uR_av
+   \quad\Longleftrightarrow\quad
+   \forall[a]B\in\Delta\,([a]B\in u\Longrightarrow B\in v),
+  \]
+  and compound relations are evaluated compositionally.
+\item Repeatedly delete a state \(u\) containing
+  \(\neg[\alpha]B\) when no current \(\alpha\)-successor \(v\) contains
+  \(\neg B\).  The source chooses a violating \(\alpha\) of minimum length;
+  continue until no deletion is possible.
+\end{enumerate}
+The third step enforces every existential demand
+\(\neg[\alpha]B\equiv\langle\alpha\rangle\neg B\).  Actual consistent
+filtered types are never deleted.  Conversely, at the fixed point the local
+constructor equations and realized diamond demands prove a truth lemma for
+the surviving structure.  Thus \(A\) is satisfiable exactly when a surviving
+type contains it.  There are exponentially many candidates, at most that many
+deletions, and even scanning all candidate edges costs only
+\(2^{O(|A|)}\); Theorem 8.4 therefore gives deterministic exponential time
+\cite[\S8.1]{HarelKozenTiuryn2000}.
+
+The matching lower bound has a separate role.  Theorem 8.5 reduces acceptance
+for a polynomial-space alternating one-tape Turing machine to PDL
+satisfiability.  One atomic program \(\mathsf{Next}\) links configurations;
+indexed proposition letters record the control state, head position, and tape
+symbol.  Local formulas enforce legal configurations and moves.  At an
+existential control state, \(\langle\mathsf{Next}\rangle\mathsf{Accept}\)
+requires one accepting successor; at a universal state,
+\([\mathsf{Next}]\mathsf{Accept}\) requires all successors to accept.  Star
+forces the local constraints at every reachable configuration:
+\[
+ \mathsf{Start}
+ \land[\mathsf{Next}^{*}]
+   (\mathsf{Config}\land\mathsf{Move}\land\mathsf{Acceptance})
+ \land\mathsf{Accept}.
+\]
+The construction is polynomial in the machine/input description and is
+satisfiable exactly when the machine accepts.  Alternating polynomial space is
+deterministic exponential time, so this supplies hardness; Algorithm 8.2
+supplies membership.  These two arguments, not the finite-model theorem alone,
+establish \(\mathsf{EXPTIME}\)-completeness
+\cite[\S8.2]{HarelKozenTiuryn2000}.
+
+The base theorem must not be transferred unchanged to a nearby logic merely
+because its name still contains \enquote{PDL}.  The source-separated boundaries
+are:
+\begin{center}
+\begin{tabularx}{\textwidth}{@{}l X X@{}}
+\toprule
+System & Exact change from base PDL & Why it is a separate result \\
+\midrule
+PDL
+  & Arbitrary binary atomic-program relations; union, composition, star, and
+    tests by arbitrary formulas.
+  & This is the language/model class of Axiom System 5.5 and Theorems 6.5,
+    7.6, 8.4, and 8.5. \\
+DPDL
+  & The syntax is unchanged, but atomic programs are interpreted as partial
+    functions.
+  & The model class validates
+    \(\langle a\rangle A\to[a]A\), which base PDL does not; completeness needs
+    that additional axiom and a modified construction. \\
+Test-free and poor-test PDL
+  & PDL(0) forbids tests; poor-test PDL permits only Boolean combinations of
+    proposition letters as tests.
+  & The languages have different expressive strength.  PDL(0) omits the test
+    axiom, although the source's EXPTIME lower bound already uses no tests. \\
+CPDL
+  & Adds program converse \(\alpha^{-}\), interpreted by reversing the binary
+    relation.
+  & Converse strictly increases expressive power and requires converse axioms
+    in its completeness proof. \\
+LPDL and RPDL
+  & Add predicates asserting termination of all computations or
+    well-foundedness of a program relation.
+  & Those properties are not expressible in base PDL, and the base filtration
+    lemma fails for these extensions. \\
+Concurrent PDL
+  & Adds a parallel program constructor and interprets a program by a relation
+    from one state to a set of possible final states.
+  & The denotation is no longer an ordinary binary relation; its semantics and
+    completeness axiom are separately proved. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+These distinctions are the organization of Chapter 10, not terminological
+variations on one inherited theorem \cite[ch.~10]{HarelKozenTiuryn2000}.

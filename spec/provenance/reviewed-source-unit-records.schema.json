@@ -1,0 +1,508 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "reviewed-source-unit-records.schema.json",
+  "title": "Input checked before inherited-unit crosswalk fields are changed",
+  "description": "Schema validity is necessary but not sufficient. The generator checks live unit identities, frozen authority, validated inherited-restoration provenance and reachable wrapper, destination and evidence hashes, labels, variants and recorded evidence. Full transcription and the closed version-4 full reconstruction / corrected-and-verified pair require every completeness field and all six verification gates. Version-4 candidate validation alone grants no admission.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "authority_path",
+    "authority_sha256",
+    "records"
+  ],
+  "properties": {
+    "schema_version": {"const": 5},
+    "authority_path": {"const": "source/formal-logic-reference.tex"},
+    "authority_sha256": {
+      "const": "0509750c13b88a4e18914bd52bde171c725cba14221cbfc2227d7693a2b421cc"
+    },
+    "records": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/record"}
+    }
+  },
+  "$defs": {
+    "nonemptyString": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^\\S(?:.*\\S)?$"
+    },
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "result": {"enum": ["pass", "fail", "pending"]},
+    "repositoryPath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
+    },
+    "destinationPath": {
+      "allOf": [
+        {"$ref": "#/$defs/repositoryPath"},
+        {
+          "pattern": "^handbook/(?:(?:(?:parts|annex)/p[0-9]{2}/.+|restoration/.+)\\.tex|parts/p[0-9]{2}\\.tex|frontmatter\\.tex)$"
+        },
+        {
+          "not": {
+            "enum": [
+              "handbook/parts/p01/symbol-registry.tex",
+              "handbook/parts/p14/master-tables.tex",
+              "handbook/parts/p14/rule-sheets.tex"
+            ]
+          }
+        }
+      ]
+    },
+    "restorationRecordPath": {
+      "allOf": [
+        {"$ref": "#/$defs/repositoryPath"},
+        {
+          "pattern": "^spec/provenance/(?:PRE|SRC|CTL|SEP)-[0-9]{5}-[0-9]{5}\\.json$"
+        }
+      ]
+    },
+    "restorationProvenanceId": {
+      "type": "string",
+      "pattern": "^(?:PRE|SRC|CTL|SEP)-[0-9]{5}-[0-9]{5}$"
+    },
+    "unitLabel": {
+      "type": "string",
+      "pattern": "^(?:sec|entry|def|thm|ex|tab|fig|annex):[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "restorationUnitLabel": {
+      "type": "string",
+      "pattern": "^(?:part|ch|sec|entry|def|thm|lem|cor|method|rem|prob|app|ex|tab|fig|annex):[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "completeness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "notation",
+        "definitions",
+        "rules",
+        "side_conditions",
+        "hypotheses",
+        "statements",
+        "proofs",
+        "examples",
+        "qualifications",
+        "attribution"
+      ],
+      "properties": {
+        "notation": {"$ref": "#/$defs/result"},
+        "definitions": {"$ref": "#/$defs/result"},
+        "rules": {"$ref": "#/$defs/result"},
+        "side_conditions": {"$ref": "#/$defs/result"},
+        "hypotheses": {"$ref": "#/$defs/result"},
+        "statements": {"$ref": "#/$defs/result"},
+        "proofs": {"$ref": "#/$defs/result"},
+        "examples": {"$ref": "#/$defs/result"},
+        "qualifications": {"$ref": "#/$defs/result"},
+        "attribution": {"$ref": "#/$defs/result"}
+      }
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_fidelity_ai",
+        "topic_specialist_ai",
+        "adversarial_publication_ai",
+        "static",
+        "build",
+        "visual"
+      ],
+      "properties": {
+        "source_fidelity_ai": {"$ref": "#/$defs/result"},
+        "topic_specialist_ai": {"$ref": "#/$defs/result"},
+        "adversarial_publication_ai": {"$ref": "#/$defs/result"},
+        "static": {"$ref": "#/$defs/result"},
+        "build": {"$ref": "#/$defs/result"},
+        "visual": {"$ref": "#/$defs/result"}
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "category",
+        "recorded_result",
+        "artifact_path",
+        "sha256",
+        "producer_identity",
+        "recorded_scope"
+      ],
+      "properties": {
+        "category": {
+          "enum": [
+            "source_fidelity_ai",
+            "topic_specialist_ai",
+            "adversarial_publication_ai",
+            "static",
+            "build",
+            "visual"
+          ]
+        },
+        "recorded_result": {"$ref": "#/$defs/result"},
+        "artifact_path": {"$ref": "#/$defs/repositoryPath"},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "producer_identity": {"$ref": "#/$defs/nonemptyString"},
+        "recorded_scope": {"$ref": "#/$defs/nonemptyString"},
+        "correction_snapshot": {"$ref": "#/$defs/correctionSnapshot"},
+        "model": {"$ref": "#/$defs/nonemptyString"},
+        "model_version": {"$ref": "#/$defs/nonemptyString"},
+        "instructions": {"$ref": "#/$defs/nonemptyString"},
+        "consulted_authorities": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/consultedAuthority"}
+        },
+        "findings": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/nonemptyString"}
+        },
+        "other_review_outputs_consulted": {"const": false}
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "category": {
+                "enum": [
+                  "source_fidelity_ai",
+                  "topic_specialist_ai",
+                  "adversarial_publication_ai"
+                ]
+              },
+              "recorded_result": {"const": "pass"}
+            },
+            "required": ["category", "recorded_result"]
+          },
+          "then": {
+            "required": [
+              "model",
+              "model_version",
+              "instructions",
+              "consulted_authorities",
+              "findings",
+              "other_review_outputs_consulted"
+            ]
+          },
+          "else": {
+            "not": {
+              "anyOf": [
+                {"required": ["model"]},
+                {"required": ["model_version"]},
+                {"required": ["instructions"]},
+                {"required": ["consulted_authorities"]},
+                {"required": ["findings"]},
+                {"required": ["other_review_outputs_consulted"]}
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "correctionSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["unit_ordinal", "source_sha256", "restoration_provenance_id", "restoration_record_sha256", "presentation_identity_value", "handbook_destination", "handbook_destination_sha256"],
+      "properties": {
+        "unit_ordinal": {"type": "integer", "minimum": 1},
+        "source_sha256": {"$ref": "#/$defs/sha256"},
+        "restoration_provenance_id": {"$ref": "#/$defs/restorationProvenanceId"},
+        "restoration_record_sha256": {"$ref": "#/$defs/sha256"},
+        "presentation_identity_value": {"$ref": "#/$defs/nonemptyString"},
+        "handbook_destination": {"$ref": "#/$defs/destinationPath"},
+        "handbook_destination_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "consultedAuthority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "locator", "sha256"],
+      "properties": {
+        "path": {"$ref": "#/$defs/repositoryPath"},
+        "locator": {"$ref": "#/$defs/nonemptyString"},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "variantLink": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "unit_ordinal",
+        "unit_source_label",
+        "source_start",
+        "source_end",
+        "source_sha256",
+        "relationship"
+      ],
+      "properties": {
+        "unit_ordinal": {"type": "integer", "minimum": 1},
+        "unit_source_label": {"type": "string"},
+        "source_start": {"type": "integer", "minimum": 1},
+        "source_end": {"type": "integer", "minimum": 1},
+        "source_sha256": {"$ref": "#/$defs/sha256"},
+        "relationship": {"$ref": "#/$defs/nonemptyString"}
+      }
+    },
+    "record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "unit_ordinal",
+        "unit_kind",
+        "unit_title",
+        "unit_source_label",
+        "source_start",
+        "source_end",
+        "source_sha256",
+        "restoration_record_path",
+        "restoration_record_sha256",
+        "restoration_provenance_id",
+        "authority_path",
+        "authority_sha256",
+        "authority_edition_status",
+        "authority_edition_value",
+        "presentation_identity_status",
+        "presentation_identity_value",
+        "presentation_identity_description",
+        "provenance_disposition",
+        "handbook_destination_status",
+        "handbook_destination",
+        "handbook_destination_sha256",
+        "stable_labels",
+        "audit_result",
+        "layout_changes",
+        "defect_exclusions",
+        "variant_links",
+        "completeness",
+        "verification",
+        "verification_evidence"
+      ],
+      "properties": {
+        "unit_ordinal": {"type": "integer", "minimum": 1},
+        "unit_kind": {"type": "string", "minLength": 1},
+        "unit_title": {"type": "string"},
+        "unit_source_label": {"type": "string"},
+        "source_start": {"type": "integer", "minimum": 1},
+        "source_end": {"type": "integer", "minimum": 1},
+        "source_sha256": {"$ref": "#/$defs/sha256"},
+        "restoration_record_path": {"$ref": "#/$defs/restorationRecordPath"},
+        "restoration_record_sha256": {"$ref": "#/$defs/sha256"},
+        "restoration_provenance_id": {"$ref": "#/$defs/restorationProvenanceId"},
+        "authority_path": {"const": "source/formal-logic-reference.tex"},
+        "authority_sha256": {
+          "const": "0509750c13b88a4e18914bd52bde171c725cba14221cbfc2227d7693a2b421cc"
+        },
+        "authority_edition_status": {"const": "identified"},
+        "authority_edition_value": {"const": "Version 1.0"},
+        "presentation_identity_status": {"const": "identified"},
+        "presentation_identity_value": {"$ref": "#/$defs/nonemptyString"},
+        "presentation_identity_description": {"$ref": "#/$defs/nonemptyString"},
+        "provenance_disposition": {
+          "enum": ["open/missing", "full transcription", "full reconstruction"]
+        },
+        "handbook_destination_status": {"const": "identified"},
+        "handbook_destination": {"$ref": "#/$defs/destinationPath"},
+        "handbook_destination_sha256": {"$ref": "#/$defs/sha256"},
+        "stable_labels": {
+          "type": "array",
+          "uniqueItems": true
+        },
+        "audit_result": {
+          "enum": [
+            "pending/unclassified",
+            "full-and-accurate",
+            "layout-only relocation",
+            "corrected-and-verified"
+          ]
+        },
+        "layout_changes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "wrapper",
+              "placement",
+              "pagination",
+              "typography",
+              "stable label",
+              "added navigation heading"
+            ]
+          }
+        },
+        "defect_exclusions": {
+          "type": "array",
+          "maxItems": 6,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "altered",
+              "unexplained alteration",
+              "abridged",
+              "omitted",
+              "hybridized",
+              "unsupported addition"
+            ]
+          }
+        },
+        "variant_links": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/variantLink"}
+        },
+        "completeness": {"$ref": "#/$defs/completeness"},
+        "verification": {"$ref": "#/$defs/verification"},
+        "verification_evidence": {
+          "type": "array",
+          "maxItems": 6,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/evidence"}
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {"handbook_destination": {"pattern": "^handbook/restoration/.+\\.tex$"}},
+            "required": ["handbook_destination"]
+          },
+          "then": {"properties": {"stable_labels": {"items": {"$ref": "#/$defs/restorationUnitLabel"}}}},
+          "else": {"properties": {"stable_labels": {"items": {"$ref": "#/$defs/unitLabel"}}}}
+        },
+        {
+          "if": {
+            "properties": {
+              "audit_result": {"const": "pending/unclassified"}
+            }
+          },
+          "then": {
+            "properties": {
+              "provenance_disposition": {"const": "open/missing"},
+              "layout_changes": {"maxItems": 0},
+              "defect_exclusions": {"maxItems": 0}
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {"audit_result": {"const": "full-and-accurate"}}
+          },
+          "then": {"properties": {"layout_changes": {"maxItems": 0}}}
+        },
+        {
+          "if": {
+            "properties": {"audit_result": {"const": "layout-only relocation"}}
+          },
+          "then": {"properties": {"layout_changes": {"minItems": 1}}}
+        },
+        {
+          "if": {
+            "properties": {
+              "audit_result": {
+                "enum": ["full-and-accurate", "layout-only relocation", "corrected-and-verified"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "defect_exclusions": {
+                "minItems": 5,
+                "maxItems": 5,
+                "prefixItems": [
+                  {"enum": ["altered", "unexplained alteration"]},
+                  {"const": "abridged"},
+                  {"const": "omitted"},
+                  {"const": "hybridized"},
+                  {"const": "unsupported addition"}
+                ],
+                "items": false
+              },
+              "completeness": {
+                "properties": {
+                  "notation": {"const": "pass"},
+                  "definitions": {"const": "pass"},
+                  "rules": {"const": "pass"},
+                  "side_conditions": {"const": "pass"},
+                  "hypotheses": {"const": "pass"},
+                  "statements": {"const": "pass"},
+                  "proofs": {"const": "pass"},
+                  "examples": {"const": "pass"},
+                  "qualifications": {"const": "pass"},
+                  "attribution": {"const": "pass"}
+                }
+              },
+              "verification": {
+                "properties": {
+                  "source_fidelity_ai": {"const": "pass"},
+                  "topic_specialist_ai": {"const": "pass"},
+                  "adversarial_publication_ai": {"const": "pass"},
+                  "static": {"const": "pass"},
+                  "build": {"const": "pass"},
+                  "visual": {"const": "pass"}
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provenance_disposition": {"enum": ["full transcription", "full reconstruction"]}
+            }
+          },
+          "then": {
+            "properties": {
+              "stable_labels": {"minItems": 1},
+              "completeness": {
+                "properties": {
+                  "notation": {"const": "pass"},
+                  "definitions": {"const": "pass"},
+                  "rules": {"const": "pass"},
+                  "side_conditions": {"const": "pass"},
+                  "hypotheses": {"const": "pass"},
+                  "statements": {"const": "pass"},
+                  "proofs": {"const": "pass"},
+                  "examples": {"const": "pass"},
+                  "qualifications": {"const": "pass"},
+                  "attribution": {"const": "pass"}
+                }
+              },
+              "verification": {
+                "properties": {
+                  "source_fidelity_ai": {"const": "pass"},
+                  "topic_specialist_ai": {"const": "pass"},
+                  "adversarial_publication_ai": {"const": "pass"},
+                  "static": {"const": "pass"},
+                  "build": {"const": "pass"},
+                  "visual": {"const": "pass"}
+                }
+              },
+              "verification_evidence": {"minItems": 6, "maxItems": 6}
+            }
+          }
+        },
+        {
+          "if": {"properties": {"provenance_disposition": {"const": "full reconstruction"}}},
+          "then": {"properties": {"audit_result": {"const": "corrected-and-verified"}}}
+        },
+        {
+          "if": {"properties": {"audit_result": {"const": "corrected-and-verified"}}},
+          "then": {
+            "properties": {
+              "provenance_disposition": {"const": "full reconstruction"},
+              "defect_exclusions": {"prefixItems": [{"const": "unexplained alteration"}]},
+              "verification_evidence": {"items": {"required": ["correction_snapshot"]}}
+            }
+          },
+          "else": {
+            "properties": {
+              "defect_exclusions": {"items": {"not": {"const": "unexplained alteration"}}}
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,275 @@
+%% parts/p12/first-order-automation.tex --- Part 12.3
+\chapter{First-Order Automation}
+\label{sec:p12-first-order-automation}
+
+\section{Canonical unification and resolution interfaces}
+
+The exact substitution, instance, unifier, most-general-unifier, and elementary
+unification definitions, together with the source's unification result and
+proof sketch, occur in Section~\ref{sec:fol-cardinality-normalforms-04}.
+Those particular definitions and that result are unlabeled in the exact
+source.  P12 therefore does not invent labels for the unlabeled source units
+or rename the proof sketch as a complete Martelli--Montanari proof.
+
+\begin{hbexample}{def:p12-occurs-check}{The finite-term occurs-check boundary}
+Unifying \(P(f(x,x))\) with \(P(f(g(y),y))\) requires both \(x=g(y)\) and
+\(x=y\).  Eliminating \(x\) leaves \(y=g(y)\), so the variable would have to
+occur properly inside its own finite image.  The occurs check therefore
+rejects the equation, and no finite first-order term substitution unifies the
+atoms.  Changing the term domain to permit such nonfinite self-referential
+solutions is outside the canonical P2 theorem.
+\end{hbexample}
+
+\begin{hbmethod}{def:p12-resolution-search}{Resolution search with an auditable derivation record}
+\index{resolution search}
+This method name is needed to distinguish clause-selection and redundancy
+control from the inference rules themselves.  Begin with the exact finite
+clause set and record every signature-changing clausification step.  Before a
+binary inference, rename the parent occurrences apart as specified in
+Section~\ref{sec:fol-cardinality-normalforms-04}; apply the declared refinement's
+literal restriction; call the P2 most-general-unifier
+procedure; and record the resulting instance of
+\hyperref[sheet:resolution-fol]{\texttt{sheet:resolution-fol}}.  Delete or
+simplify clauses only under a declared redundancy operation, and retain a DAG
+whose leaves are input clauses and whose internal nodes name their sheet
+instances.  Thus the method stands as a search-and-record discipline over a
+registered calculus, not as an additional inference rule.  Its output is used
+by the soundness/completeness audit below.
+\end{hbmethod}
+
+Resolution and Factoring soundness and its complete proof occur inline in
+Section~\ref{sec:fol-cardinality-normalforms-04}; the exact source theorem is
+unlabeled.  The separately identified editorial lookup
+\hyperref[sheet:resolution-fol]{\texttt{sheet:resolution-fol}} provides
+navigation and comparison but does not replace the inherited Rule displays.
+The equality-free, finite-clause refutational-completeness result has its exact
+inherited proof sketch at Theorem~\ref{thm:fol-resolution}, including
+its fresh-ground-term and factoring boundary.  Figure~\ref{fig:p02-fol-resolution-dag}
+is the first-order instance of the resolution-refutation diagram; the propositional master is
+Figure~\ref{fig:p02-resolution-dag}.
+
+\begin{hbexample}{def:p12-clausification-audit}{Equivalence before Skolem equisatisfiability}
+For the negation of
+\(\forall x(P(x)\to\exists y\,R(x,y))\), ordinary Boolean and quantifier
+rewrites give the formula-equivalence chain
+\[
+ \neg\forall x(P(x)\to\exists y\,R(x,y))
+ \ \Leftrightarrow\
+ \exists x\bigl(P(x)\land\forall y\,\neg R(x,y)\bigr).
+\]
+Introducing a fresh constant \(c\) at the existential step yields the clauses
+\(\{P(c)\}\) and \(\{\neg R(c,y)\}\).  Their universally closed
+interpretations are equisatisfiable with the negated sentence in the expanded
+signature; they are not asserted to be the same-signature formula equivalent.
+This example routes the full pipeline to the P2 normal-form treatment rather
+than duplicating it.
+\end{hbexample}
+
+\section{Resolution refinements}
+
+\begin{hbdefinition}{def:p12-resolution-refinement-roles}{Refinement roles}
+A \emph{resolution refinement} is a precisely declared restriction, inference
+family, search strategy, or redundancy operation applied around a fixed base
+calculus.  The umbrella name is necessary for comparison but does not erase
+those four different standings.  For the ordered-resolution surface compared
+here, fix a term ordering that is well founded, stable under substitution,
+monotone under term contexts, and total on ground terms, together with its
+declared extension to literals.  A \emph{literal selection function} maps each
+clause to a subset of its negative literals.  A clause literal is
+\emph{eligible} when it is selected, or, if that clause has no selected
+literal, when it is maximal in the declared literal ordering; ordered
+resolution admits only inferences whose resolved literals are eligible after
+the unifier is applied.  Thus the ordering restriction and literal selection
+are explicit and neither means that the underlying Resolution rule changed.
+
+In Robinson's nucleus/electron
+notation for hyperresolution, a nucleus clause \(N\) has designated literals
+that are paired with designated complementary literals in electron clauses
+\(E_1,\ldots,E_q\); one simultaneous most general unifier makes all pairs
+complementary, and the hyperresolvent contains the unpaired literals of all
+premises under that unifier.  A concrete positive or negative variant must
+also fix the required polarities and factoring convention.
+
+In Slagle's semantic-resolution notation, fix a ground interpretation \(M\).
+A \emph{semantic clash} is a finite family
+\(\{E_1,\ldots,E_q,N\}\) in which every electron \(E_i\) is false under
+\(M\), \(R_1=N\), each \(R_{i+1}\) is an ordinary resolvent of \(R_i\) and
+\(E_i\), and the final \(R_{q+1}\) is false under \(M\).  The clause \(N\)
+is the nucleus and \(R_{q+1}\) is the \(M\)-resolvent.  This clash condition
+is the exact fixed-interpretation eligibility test used here: it restricts
+which multi-premise resolution chains are admitted, while every conclusion
+remains a syntactic resolution consequence.  It differs from hyperresolution's
+polarity restriction and from the support partition below
+\cite{Robinson1965,Slagle1967}.
+
+For \emph{set of support}, partition the input clauses into a usable set
+\(U\) and a support set \(S\).  The support closure is the least clause set
+containing \(S\) and containing the conclusion of every Resolution or
+Factoring instance on
+\hyperref[sheet:resolution-fol]{\texttt{sheet:resolution-fol}} that has at
+least one premise already in that closure and has every other premise in
+\(U\) or that closure.  The strategy permits exactly those instances.  With
+no deletion or contraction, such a search is \emph{fair} when every permitted
+sheet instance is eventually performed after all of its premises have been
+generated.  This is a parent-selection strategy, not a new
+inference family.
+
+A clause \(C\) \emph{subsumes} \(D\) exactly
+when some term substitution \(\rho\) satisfies \(C\rho\subseteq D\), licensing
+deletion of \(D\) as redundant.  None is synonymous with unrestricted
+resolution, and each later completeness claim needs its own hypotheses.
+\index{ordered resolution}\index{hyperresolution}\index{hyperresolvent}
+\index{semantic resolution}
+\index{literal selection function}\index{eligible literal}
+\index{semantic clash}\index{nucleus}\index{electron}
+\index{M-resolvent}
+\index{set of support}\index{support closure}\index{fair search}
+\index{subsumption}
+\end{hbdefinition}
+
+\begin{longtable}{@{}p{.16\textwidth}p{.25\textwidth}p{.29\textwidth}p{.20\textwidth}@{}}
+\caption{Resolution-refinement taxonomy.}
+\label{tab:p12-resolution-refinements}\\
+\toprule
+Refinement & Standing & Completeness/soundness boundary & Evidence \\ \midrule
+\endfirsthead
+\caption[]{Resolution-refinement taxonomy (continued)}\\
+\toprule
+Refinement & Standing & Completeness/soundness boundary & Evidence \\ \midrule
+\endhead
+\midrule\multicolumn{4}{r}{\emph{continued on next page}}\\
+\endfoot
+\endlastfoot
+Ordered resolution & The ordering-and-literal-selection eligibility
+restriction defined above & Completeness requires the exact admissibility,
+redundancy, and fair-saturation hypotheses of the cited presentation;
+unrestricted completeness does not transfer automatically &
+\cite{BachmairGanzinger2001} \\ \addlinespace
+Hyperresolution & The nucleus/electron multi-premise inference family defined
+above & Its rule surface and completeness theorem must fix polarity and
+factoring; it is not identified with an informal batch of binary steps &
+\cite{Robinson1965} \\ \addlinespace
+Semantic resolution & Slagle's \(M\)-clash restriction with false electrons
+and a false final \(M\)-resolvent & The fixed interpretation determines clash
+eligibility; derived clauses remain syntactic consequences, and the cited
+completeness result belongs to this exact restriction &
+\cite{Slagle1967} \\ \addlinespace
+Set of support & The support-closure parent restriction defined above &
+Completeness requires a satisfiable usable partition and fair search, as stated
+in Theorem~\ref{thm:p12-set-of-support} &
+\cite{WosRobinsonCarson1965} \\ \addlinespace
+Subsumption & Contraction/redundancy deletion & Sound deletion requires the
+instance-containment condition; it creates no new consequence and its use must
+preserve the declared saturation fairness & \cite{BachmairGanzinger2001} \\
+\bottomrule
+\end{longtable}
+
+\begin{hbtheorem}{thm:p12-set-of-support}{cited=WosRobinsonCarson1965}{Set-of-support completeness boundary}
+Partition an equality-free first-order clause set into a usable set \(U\) and
+a support set \(S\), and use the support closure and fair search of
+Definition~\ref{def:p12-resolution-refinement-roles}, without clause deletion
+or contraction.  If \(U\) is satisfiable while \(U\cup S\) is unsatisfiable,
+every such fair search derives the empty clause.  Dropping the
+satisfiability of \(U\), factoring, or fairness is not licensed by this
+statement.
+\end{hbtheorem}
+
+\section{Equality and the deferred exact calculi}
+
+\begin{proofboundary}{def:p12-resolution-equality-boundary}{Equality is not an uninterpreted predicate}
+Ordinary first-order Resolution and Factoring are sound when equality atoms are
+treated like other atoms, but their cited refutational-completeness theorem is
+equality-free.  Treating the equality glyph as an arbitrary binary relation
+changes identity semantics; adding identity axioms without a named exact
+equality calculus changes the search and completeness hypotheses.  Ordered
+superposition controls equality replacement through term ordering,
+eligibility, and redundancy, none of which is optional implementation detail
+\cite{BachmairGanzinger2001}.
+\end{proofboundary}
+
+\begin{hbmethod}{def:p12-martelli-montanari}{Martelli--Montanari unification}
+The exact transformation system is
+\hyperref[sheet:unification-first-order]{\texttt{sheet:unification-first-order}}.
+Its retained-equation state has exactly the same unifiers as the initial
+multiset, as proved in \cref{thm:p12-ue-sheet-invariant}. Delete and Decompose
+preserve syntactic solutions; Orient changes only equation order. Eliminate
+retains the binding \(x\doteq t\) and substitutes it in the other equations;
+this sheet has no separate substitution accumulator. Clash is unsatisfiable by freeness of the
+term algebra, and Occurs fails because no finite term can equal a proper term
+containing itself. The method name is necessary to distinguish this finite
+syntactic procedure from unification modulo equations or higher-order
+unification. It stands as a transformation algorithm, differs through the
+occurs check and free-term semantics, and is used in the MGU theorem
+\cite{MartelliMontanari1982,BaaderSnyder2001}.
+\index{Martelli--Montanari algorithm}\index{occurs check}
+\end{hbmethod}
+
+The sheet states no rule priority. Termination under every legal enabled-rule
+choice uses the exact isolated-binding and term-node measure in
+\cref{def:p12-ue-measure,thm:p12-ue-sheet-termination}. A successful
+irreducible state has solved equations \(x_i\doteq t_i\) with distinct
+left variables absent from all right sides; simultaneous extraction and its
+most-generality argument are \cref{thm:p12-ue-extraction}.
+
+\begin{hbtheorem}{thm:p12-unification-mgu}{cited=MartelliMontanari1982}{Most-general-unifier factorization}
+For every finite first-order syntactic unification problem, the displayed
+algorithm terminates with failure exactly when no unifier exists. On success it
+returns a unifier \(\mu\) such that every unifier \(\theta\) factors as
+\(\theta=\delta\circ\mu\) on the variables of the problem, for some
+substitution \(\delta\). The factor substitution need not be unique.
+The uniqueness-up-to-renaming property concerns most general solutions
+themselves under the stated substitution equality, as proved in
+\cref{thm:p12-ue-renaming}; it is not a uniqueness claim about every
+factor witness. The full literal-sheet and separate accumulator derivations
+are \cref{thm:p12-ue-extraction,thm:p12-ue-accumulator}.
+\end{hbtheorem}
+
+Associative, commutative, or AC-unification changes equality from syntactic
+identity to congruence modulo a theory and may require multiple incomparable
+members of a minimal complete set of unifiers, rather than one MGU covering
+all solutions.
+Higher-order unification permits functional variables and is undecidable in
+general \cite{Goldfarb1981}. Neither boundary is implemented by the first-order
+sheet.
+
+\begin{hbdefinition}{def:p12-ordered-superposition}{Ordered-superposition saturation}
+The calculus is
+\hyperref[sheet:ordered-superposition]{\texttt{sheet:ordered-superposition}}.
+A clause is redundant in a set \(S\) when it is entailed by strictly smaller
+clauses under the fixed ground-clause ordering in the declared redundancy
+criterion. A fair saturation derivation eventually performs every persistent
+nonredundant eligible inference or makes its conclusion redundant. These names
+are needed because unrestricted equality replacement is neither terminating
+search nor the cited completeness calculus. They stand as an inference system,
+deletion criterion, and scheduling property, differ through the explicit
+ordering/selection constraints, and are used in the completeness boundary
+\cite{BachmairGanzinger2001,NieuwenhuisRubio2001}.
+\index{ordered superposition}\index{saturation}\index{redundancy!superposition}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-superposition-completeness}{cited=BachmairGanzinger2001}{Refutational completeness of ordered superposition}
+For clauses with identity semantics, a complete simplification ordering,
+admissible negative-literal selection, the sheet's eligible inferences, a
+sound redundancy criterion, and fair saturation, an unsatisfiable input
+derives the empty clause. The model-construction proof reads a saturated set
+without the empty clause into a rewrite interpretation; deleting any listed
+hypothesis changes the theorem.
+\end{hbtheorem}
+
+The description-logic obligation is now supplied at its Part-IX home:
+Definition~\ref{def:p09-alc} fixes \(\mathcal{ALC}\),
+Method~\ref{def:p09-alc-tableau} gives its blocking tableau, and
+Theorem~\ref{thm:p09-alc-modal} states the exact multimodal translation. The
+classical propositional and first-order tableau sheets remain distinct
+calculi.
+
+\section{Practical status of unrestricted first-order search}
+
+Under the fixed effective coding, unrestricted first-order validity is
+computably enumerable but undecidable
+(Theorem~\ref{thm:fol-validity-undecidable} and its immediately following
+enumerability corollary;
+\cite{Church1936,Turing1937}).  A sound complete proof search may therefore
+run forever on an invalid input; a timeout is not a countermodel.  The statement
+does not transfer without proof to every fixed signature or to the decidable
+fragments catalogued in Part~2.

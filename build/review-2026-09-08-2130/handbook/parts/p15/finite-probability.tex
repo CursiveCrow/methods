@@ -1,0 +1,467 @@
+% P15-U1: finite probability foundations, serving N-x-008.
+\chapter{Finite Probability}
+\label{sec:p15-finite-probability}
+
+A finite probability model assigns weights to a specified set of outcomes.
+From those weights one can compute probabilities of events, revise them after
+an event of positive probability, and average numerical quantities. These
+operations answer different questions: the probability of an observation
+under a hypothesis is not the probability of that hypothesis after the
+observation, and an average does not determine an individual outcome.
+
+This chapter develops the finite part of the discrete treatment in
+Grinstead and Snell's \emph{Introduction to Probability}, using the CHANCE
+Project version dated 4 July 2006
+\cite[secs.~1.2, 4.1 and 6.1]{GrinsteadSnellChance2006}.
+The presentation fixes an underlying outcome space separately from the
+values of its random variables. All proofs use elementary set operations,
+real arithmetic and finite sums. Infinite sample spaces, integration,
+limiting theorems and conditioning on null events require further results.
+
+\section{Outcomes, events and probability masses}
+\label{sec:p15-finite-probability-space}
+
+\begin{hbdefinition}{def:p15-finite-probability-space}{Finite probability space}
+Let \(\Omega\) be a finite nonempty set, whose elements \(\omega\) are
+\emph{outcomes}. An \emph{event} is a subset of \(\Omega\); the set of
+events is its power set \(2^\Omega\). A \emph{probability mass function}
+on \(\Omega\) is a function \(p:\Omega\to[0,1]\) satisfying
+\[
+ \sum_{\omega\in\Omega}p(\omega)=1.
+\]
+It defines the \emph{probability measure}
+\(\mathbb P:2^\Omega\to[0,1]\) by
+\[
+ \mathbb P(A)\defeq\sum_{\omega\in A}p(\omega).
+\]
+The triple \((\Omega,2^\Omega,\mathbb P)\) is the corresponding
+\emph{finite probability space}. An empty sum is zero and an empty product
+is one. In this chapter \(A^c\defeq\Omega\setminus A\) is complement
+relative to the declared outcome space. Events \(A,B\) are
+\emph{disjoint} when \(A\cap B=\varnothing\); a family is pairwise
+disjoint when every two events with distinct indices are disjoint.
+
+The \emph{support} of \(p\) is
+\(\{\omega\in\Omega:p(\omega)>0\}\). A \emph{null event} has
+probability zero. A property holds \emph{almost surely} when its event has
+probability one. Outcomes outside the support may remain in \(\Omega\).
+\index{probability!finite space}\index{probability!mass function}
+\end{hbdefinition}
+
+The source calls its atom-weight function a distribution function. Here
+\emph{mass function} names those weights; it does not mean a density or a
+cumulative distribution function. Uniform weights \(p(\omega)=1/|\Omega|\)
+give \(\mathbb P(A)=|A|/|\Omega|\). Counting favorable outcomes uses this
+uniformity assumption; a finite space alone does not supply it.
+
+\begin{hbtheorem}{thm:p15-finite-probability-laws}{proved=annex:p15.finite-laws}{Finite probability identities}
+For the space above:
+\begin{enumerate}
+\item \(\mathbb P(\varnothing)=0\), \(\mathbb P(\Omega)=1\), and
+      \(0\leq\mathbb P(A)\leq1\).
+\item If \(A\subseteq B\), then \(\mathbb P(A)\leq\mathbb P(B)\).
+      If \(A_1,\ldots,A_m\) are pairwise disjoint, then
+      \(\mathbb P(\bigcup_{i=1}^m A_i)=\sum_{i=1}^m\mathbb P(A_i)\),
+      also for \(m=0\).
+\item \(\mathbb P(A^c)=1-\mathbb P(A)\) and
+      \(\mathbb P(A\cup B)=\mathbb P(A)+\mathbb P(B)-\mathbb P(A\cap B)\).
+\item \(\mathbb P(A)=0\) exactly when every outcome in \(A\) has
+      mass zero. Consequently \(\mathbb P(A)=1\) exactly when \(A\)
+      contains the support.
+\end{enumerate}
+Conversely, let \(Q:2^\Omega\to[0,\infty)\) satisfy \(Q(\Omega)=1\)
+and \(Q(A\cup B)=Q(A)+Q(B)\) for disjoint events. Then exactly one
+mass function induces \(Q\), namely \(p(\omega)=Q(\{\omega\})\).
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p15-finite-random-variable}{Finite random variables and their laws}
+A \emph{random variable} on this space with values in a finite set \(S\)
+is a function \(X:\Omega\to S\). For \(D\subseteq S\), write
+\[
+ \{X\in D\}\defeq\{\omega\in\Omega:X(\omega)\in D\},\qquad
+ \{X=x\}\defeq\{\omega\in\Omega:X(\omega)=x\}.
+\]
+These are events; \(\mathbb P(X=x)\) abbreviates
+\(\mathbb P(\{X=x\})\). The \emph{law} of \(X\) is the mass
+function \(p_X(x)\defeq\mathbb P(X=x)\) on \(S\).
+
+For \(X:\Omega\to S\) and \(Y:\Omega\to T\), the \emph{joint
+variable} is \((X,Y):\Omega\to S\times T\), and its \emph{joint law}
+is \(p_{X,Y}(x,y)\defeq\mathbb P(\{X=x\}\cap\{Y=y\})\).
+The individual laws \(p_X,p_Y\) are its \emph{marginal laws}.
+For a function \(f\) defined on \(S\), \(f(X)\) denotes the
+composition \(f\circ X\).
+The chosen value sets may contain values with zero mass; the joint law may
+vanish on pairs that the functions cannot attain.
+\index{random variable!finite}\index{probability!joint and marginal laws}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p15-finite-law-projection}{proved=annex:p15.finite-law-projection}{Computing laws by grouping outcomes}
+The preceding laws are probability mass functions, and
+\[
+\begin{aligned}
+\mathbb P(X\in D)&=\sum_{x\in D}p_X(x),\\
+p_X(x)&=\sum_{y\in T}p_{X,Y}(x,y),\qquad
+p_Y(y)=\sum_{x\in S}p_{X,Y}(x,y).
+\end{aligned}
+\]
+More generally, if \(f:S\to U\) is a function to a finite set, the law
+of \(f(X)\) is
+\[
+ p_{f(X)}(u)=\sum_{\substack{x\in S\\f(x)=u}}p_X(x).
+\]
+\end{hbtheorem}
+
+\section{Conditioning and inversion of evidence}
+\label{sec:p15-finite-conditioning}
+
+\begin{hbdefinition}{def:p15-finite-conditioning}{Conditioning on an event of positive probability}
+For an event \(B\) with \(\mathbb P(B)>0\), define
+\[
+ \mathbb P(A\mid B)\defeq\frac{\mathbb P(A\cap B)}{\mathbb P(B)}.
+\]
+The conditional probability measure \(\mathbb P_B\) on the same event
+set is \(\mathbb P_B(A)\defeq\mathbb P(A\mid B)\). Its mass function is
+\[
+ p_B(\omega)\defeq
+ \begin{cases}
+ p(\omega)/\mathbb P(B),&\omega\in B,\\
+ 0,&\omega\notin B.
+ \end{cases}
+\]
+Thus outcomes outside \(B\) receive zero mass, and the relative weights
+within \(B\) are retained. This is a defined update of a specified model
+when the information is that \(B\) occurred; it is not a rule for an
+unspecified change in the process generating the outcomes.
+\index{conditional probability}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p15-finite-conditioning-laws}{proved=annex:p15.finite-conditioning}{Conditional measure, multiplication and successive conditioning}
+The function \(p_B\) is a probability mass function with induced measure
+\(\mathbb P_B\). In particular \(\mathbb P(B\mid B)=1\), and all
+finite probability identities hold with \(\mathbb P_B\) in place of
+\(\mathbb P\). Also
+\[
+ \mathbb P(A\cap B)=\mathbb P(A\mid B)\mathbb P(B).
+\]
+For events \(A_1,\ldots,A_n\), with \(n\geq1\), put
+\(B_0=\Omega\) and \(B_i=\bigcap_{j=1}^i A_j\). If
+\(\mathbb P(B_i)>0\) for \(0\leq i<n\), then the chain rule is
+\[
+ \mathbb P(B_n)=\prod_{i=1}^n\mathbb P(A_i\mid B_{i-1}).
+\]
+No independence is assumed. If \(\mathbb P(B\cap C)>0\), then
+conditioning \(\mathbb P_B\) on \(C\) gives
+\[
+ \mathbb P_B(A\mid C)=\mathbb P(A\mid B\cap C).
+\]
+\end{hbtheorem}
+
+\begin{hbwarning}{def:p15-null-conditioning}{A null conditioning event}
+Take \(\Omega=\{a,b,c\}\) with masses \(1,0,0\), and let
+\(B=\{b,c\}\). Although \(B\) is nonempty, \(\mathbb P(B)=0\).
+The proposed expression \(\mathbb P(\{b\}\mid B)\) is the undefined
+ratio \(0/0\). The multiplication equation would read \(0=q\cdot0\)
+for every \(q\in[0,1]\), so it cannot determine a conditional value.
+No convention assigning zero or one to that ratio is used here. The same
+space also shows that an almost-sure event need not contain every outcome:
+\(\{a\}\) has probability one but omits \(b,c\).
+\end{hbwarning}
+
+\begin{hbdefinition}{def:p15-finite-hypothesis-partition}{Hypotheses, likelihoods and posterior weights}
+A \emph{finite partition} \(H_1,\ldots,H_m\) of \(\Omega\), with
+\(m\geq1\), consists of nonempty, pairwise disjoint events whose union
+is \(\Omega\). Regard these events as mutually exclusive and exhaustive
+\emph{hypotheses}, and let \(E\) be an \emph{evidence event}.
+The \emph{prior weights} are \(\pi_i\defeq\mathbb P(H_i)\). Put
+\(J\defeq\{i:1\leq i\leq m,\ \pi_i>0\}\). For \(i\in J\),
+the \emph{likelihood} of the evidence under \(H_i\) is
+\(\ell_i\defeq\mathbb P(E\mid H_i)\). If \(\mathbb P(E)>0\),
+the \emph{posterior weights} are \(\mathbb P(H_i\mid E)\).
+Likelihoods are conditional probabilities of evidence; they need not sum
+to one across the hypotheses.
+For an event \(G\) with \(\mathbb P(G)<1\), its \emph{odds}
+against \(G^c\) are \(\mathbb P(G)/(1-\mathbb P(G))\).
+\index{Bayes' formula}\index{likelihood}\index{probability!prior and posterior}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p15-finite-bayes}{proved=annex:p15.finite-bayes}{Total probability and Bayes' formula}
+For the partition and evidence above,
+\[
+ \mathbb P(E)=\sum_{i=1}^m\mathbb P(E\cap H_i)
+             =\sum_{i\in J}\pi_i\ell_i.
+\]
+If \(\mathbb P(E)>0\), then
+\[
+ \mathbb P(H_i\mid E)=
+ \begin{cases}
+ \displaystyle\frac{\pi_i\ell_i}{\sum_{j\in J}\pi_j\ell_j},&i\in J,\\[1ex]
+ 0,&i\notin J.
+ \end{cases}
+\]
+These posterior weights sum to one. A prior-null hypothesis remains null
+after conditioning on evidence of positive probability.
+
+For two hypotheses \(H,H^c\), put \(\pi\defeq\mathbb P(H)\), assume
+\(0<\pi<1\), and write \(q_1\defeq\mathbb P(E\mid H)\) and
+\(q_0\defeq\mathbb P(E\mid H^c)\). If \(q_0>0\), the
+\emph{likelihood ratio} \(q_1/q_0\) and both odds below are defined, and
+\[
+ \frac{\mathbb P(H\mid E)}{\mathbb P(H^c\mid E)}
+ =\frac{\pi}{1-\pi}\,\frac{q_1}{q_0}.
+\]
+Thus posterior odds equal prior odds times the likelihood ratio.
+\end{hbtheorem}
+
+\section{Independence and its limits}
+\label{sec:p15-finite-independence}
+
+\begin{hbdefinition}{def:p15-finite-independence}{Event and random-variable independence}
+Events \(A,B\) are \emph{independent} when
+\(\mathbb P(A\cap B)=\mathbb P(A)\mathbb P(B)\).
+Events \(A_1,\ldots,A_n\) are \emph{mutually independent} when, for
+every nonempty \(I\subseteq\{1,\ldots,n\}\),
+\[
+ \mathbb P\left(\bigcap_{i\in I}A_i\right)
+       =\prod_{i\in I}\mathbb P(A_i).
+\]
+They are \emph{pairwise independent} when this holds for every two-element
+\(I\). The empty-intersection convention is \(\bigcap\varnothing=\Omega\).
+
+Finite-valued random variables \(X:\Omega\to S\) and
+\(Y:\Omega\to T\) are \emph{independent} when
+\[
+ p_{X,Y}(x,y)=p_X(x)p_Y(y)\quad(x\in S,\ y\in T).
+\]
+Given an event \(H\) of positive probability, events or random variables
+are \emph{conditionally independent given \(H\)} when the corresponding
+definition holds for the conditional measure \(\mathbb P_H\).
+\index{independence!pairwise and mutual}\index{conditional independence}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p15-finite-independence-laws}{proved=annex:p15.finite-independence}{Independence criteria and product construction}
+\par\nobreak
+If \(\mathbb P(B)>0\), events \(A,B\) are independent exactly when
+\(\mathbb P(A\mid B)=\mathbb P(A)\). Every null event is independent
+of every event. Independence of \(A,B\) implies independence of each
+of the pairs \((A^c,B)\), \((A,B^c)\), and \((A^c,B^c)\).
+
+The random variables \(X,Y\) are independent exactly when, for every
+\(D\subseteq S\) and \(F\subseteq T\), the events \(\{X\in D\}\)
+and \(\{Y\in F\}\) are independent.
+For any mass functions \(a:S\to[0,1]\) and \(b:T\to[0,1]\) on
+finite nonempty sets, the assignment \(p(x,y)\defeq a(x)b(y)\) is a mass
+function on \(S\times T\); its coordinate variables are independent
+with laws \(a,b\).
+\end{hbtheorem}
+
+\begin{hbexample}{def:p15-pairwise-not-mutual}{Pairwise independence and selection}
+\par\nobreak
+Let \(\Omega=\{(0,0),(0,1),(1,0),(1,1)\}\), with mass \(1/4\)
+at each point. Let \(A\) say that the first coordinate is one,
+\(B\) that the second is one, and \(C\) that the coordinates agree.
+Each event has probability \(1/2\), and each pairwise intersection is
+\(\{(1,1)\}\), with probability \(1/4\). Thus all three pairs are
+independent. However,
+\[
+ \mathbb P(A\cap B\cap C)=\tfrac14
+ \ne\tfrac18=\mathbb P(A)\mathbb P(B)\mathbb P(C),
+\]
+so the events are not mutually independent. Moreover,
+\[
+ \mathbb P(A\mid C)=\mathbb P(B\mid C)=\tfrac12,
+ \qquad \mathbb P(A\cap B\mid C)=\tfrac12\ne\tfrac14.
+\]
+Selecting the equal-coordinate outcomes destroys the independence of
+\(A,B\). Conditional independence must be checked in the specified
+conditional measure.
+\end{hbexample}
+
+\begin{hbexample}{def:p15-alert-bayes-case}{A rare defect, an alert and repeated evidence}
+\par\nobreak
+Consider a stipulated finite model of a component and an inspection alert.
+The four outcomes are defect/alert, defect/no alert, no defect/alert and
+no defect/no alert. Assign their masses by dividing the following weights
+by \(10000\). These are hypothetical model weights, not measured data.
+\[
+\begin{array}{c|rr|r}
+ &E\ (\text{alert})&E^c\ (\text{no alert})&\text{total}\\\hline
+ H\ (\text{defect})&90&10&100\\
+ H^c\ (\text{no defect})&495&9405&9900\\\hline
+ \text{total}&585&9415&10000
+\end{array}
+\]
+The model gives
+\[
+ \mathbb P(H)=\tfrac1{100},\qquad
+ \mathbb P(E\mid H)=\tfrac9{10},\qquad
+ \mathbb P(E\mid H^c)=\tfrac1{20}.
+\]
+Total probability gives \(\mathbb P(E)=585/10000=117/2000\).
+After an alert,
+\[
+ \mathbb P(H\mid E)=\frac{90}{585}=\frac2{13},\qquad
+ \mathbb P(H^c\mid E)=\frac{11}{13}.
+\]
+The likelihood ratio is \(18\), the prior odds are \(1/99\), and the
+posterior odds are \(18/99=2/11\), agreeing with these probabilities.
+The likelihood \(9/10\) is not the posterior \(2/13\). If the prior
+defect probability were instead \(1/10\), while the same conditional
+alert probabilities held, the posterior would be
+\[
+ \frac{(1/10)(9/10)}{(1/10)(9/10)+(9/10)(1/20)}=\frac23.
+\]
+The different base rate changes the conclusion despite the same likelihoods.
+
+For two alerts, extend the outcome space to triples
+\((h,u,v)\in\{0,1\}^3\), where \(h=1\) means a defect and
+\(u=1,v=1\) mean the first and second alerts. In this model let
+\(H=\{h=1\}\), \(E_1=\{u=1\}\), and \(E_2=\{v=1\}\).
+Set \(\pi_1=1/100\), \(\pi_0=99/100\),
+\(r_1(1)=9/10\), \(r_0(1)=1/20\), and
+\(r_h(0)=1-r_h(1)\). Assign mass
+\[
+ p_2(h,u,v)\defeq\pi_h r_h(u)r_h(v).
+\]
+Each \(r_h\) sums to one, so the total mass is
+\(\sum_h\pi_h(\sum_u r_h(u))(\sum_v r_h(v))=1\).
+Conditioning on \(h\) gives its two-coordinate product law. Thus this
+explicit model assumes that \(E_1,E_2\) are conditionally independent
+under each of \(H,H^c\), with the one-alert rates above. Two alerts give
+\[
+ \mathbb P(H\mid E_1\cap E_2)
+ =\frac{(1/100)(9/10)^2}
+        {(1/100)(9/10)^2+(99/100)(1/20)^2}
+ =\frac{36}{47}.
+\]
+If the second reported alert is merely a copy of the first, so that
+\(E_2=E_1\), both single-alert conditional probabilities still have the
+same values, but the posterior after both reports is only \(2/13\).
+Squaring likelihoods therefore requires the stated conditional independence;
+the one-alert rates alone cannot justify it. No independence of the two
+alerts in the unconditional population is asserted.
+\end{hbexample}
+
+\section{Finite expectation}
+\label{sec:p15-finite-expectation}
+
+\begin{hbdefinition}{def:p15-finite-expectation}{Expectation and event indicators}
+A real-valued random variable on this finite space is a function
+\(X:\Omega\to\mathbb R\). Its range is finite. Its
+\emph{expectation}, or \emph{mean}, is
+\[
+ \mathbb E[X]\defeq\sum_{\omega\in\Omega}X(\omega)p(\omega).
+\]
+The \emph{indicator} of an event \(A\) is the random variable
+\(\mathbf1_A(\omega)=1\) for \(\omega\in A\) and zero otherwise.
+Arithmetic of random variables is pointwise: for example,
+\((X+Y)(\omega)=X(\omega)+Y(\omega)\).
+Likewise \(\{X=Y\}\defeq\{\omega:X(\omega)=Y(\omega)\}\) is an
+event. Regard a real-valued variable as finite-valued on its range when
+applying the preceding definitions of law and independence.
+For a finite-valued \(X:\Omega\to S\) and a real-valued function
+\(f:S\to\mathbb R\), \(f(X)\) denotes the composition \(f\circ X\).
+\index{expectation!finite}\index{indicator of an event}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p15-finite-expectation-laws}{proved=annex:p15.finite-expectation}{Grouping, linearity and independent products}
+\par\nobreak
+For every finite-valued \(X\) and real-valued \(f\) as above,
+\[
+ \mathbb E[f(X)]=\sum_{x\in S}f(x)p_X(x).
+\]
+In particular \(\mathbb E[\mathbf1_A]=\mathbb P(A)\).
+For real-valued \(X_1,\ldots,X_n\), real constants
+\(c_0,c_1,\ldots,c_n\), and \(n\geq0\),
+\[
+ \mathbb E\left[c_0+\sum_{i=1}^n c_iX_i\right]
+       =c_0+\sum_{i=1}^n c_i\mathbb E[X_i].
+\]
+This requires no independence. If \(X(\omega)\leq Y(\omega)\) for
+every \(\omega\), then \(\mathbb E[X]\leq\mathbb E[Y]\).
+If real-valued \(X,Y\) are independent, then
+\(\mathbb E[XY]=\mathbb E[X]\mathbb E[Y]\).
+\end{hbtheorem}
+
+\begin{hbexample}{def:p15-expectation-with-dependence}{Counting and multiplying indicators}
+For any events \(A_1,\ldots,A_n\), the random variable
+\(N=\sum_{i=1}^n\mathbf1_{A_i}\) counts how many occur. Thus
+\(\mathbb E[N]=\sum_i\mathbb P(A_i)\), even when the events overlap
+or depend on one another. For instance, if \(A\) has probability
+\(1/2\), then \(\mathbb E[\mathbf1_A+\mathbf1_A]=1\), although
+the two summands coincide. In contrast,
+\[
+ \mathbb E[\mathbf1_A\mathbf1_A]=\mathbb E[\mathbf1_A]=\tfrac12
+ \ne\tfrac14=\mathbb E[\mathbf1_A]^2.
+\]
+Linearity permits dependent summands; factorization of products needs its
+own hypothesis.
+\end{hbexample}
+
+\begin{hbdefinition}{def:p15-finite-conditional-expectation}{Finite conditional expectation}
+For a real-valued \(X\) and event \(B\) with \(\mathbb P(B)>0\),
+\[
+ \mathbb E[X\mid B]
+ \defeq\sum_{\omega\in\Omega}X(\omega)p_B(\omega)
+ =\frac{\sum_{\omega\in B}X(\omega)p(\omega)}{\mathbb P(B)}.
+\]
+This is a number. For a finite-valued \(Y:\Omega\to T\), put
+\[
+ g(y)\defeq
+ \begin{cases}
+ \mathbb E[X\mid\{Y=y\}],&p_Y(y)>0,\\
+ 0,&p_Y(y)=0.
+ \end{cases}
+\]
+The random variable \(g(Y)\) is denoted \(\mathbb E[X\mid Y]\).
+The displayed zero is a chosen value on null fibers; it is not a
+definition of conditioning on those fibers. Changing it to another finite
+real value changes the resulting variable only on a null event.
+\index{conditional expectation!finite}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p15-finite-total-expectation}{proved=annex:p15.finite-total-expectation}{Averaging conditional means}
+Let \(X:\Omega\to\mathbb R\) and \(Y:\Omega\to T\), with \(T\)
+finite. For a partition \(H_1,\ldots,H_m\), put
+\(J=\{i:\mathbb P(H_i)>0\}\). Then
+\[
+ \mathbb E[X]=\sum_{i\in J}\mathbb P(H_i)\mathbb E[X\mid H_i].
+\]
+For \(Z=\mathbb E[X\mid Y]\) and every \(D\subseteq T\),
+\[
+ \sum_{\omega:Y(\omega)\in D} Z(\omega)p(\omega)
+ =\sum_{\omega:Y(\omega)\in D} X(\omega)p(\omega).
+\]
+In particular \(\mathbb E[\mathbb E[X\mid Y]]=\mathbb E[X]\).
+Among variables of the form \(h(Y)\), with \(h:T\to\mathbb R\),
+this averaging property determines \(Z\) almost surely.
+\end{hbtheorem}
+
+For the one-alert model in Example~\ref{def:p15-alert-bayes-case}, take
+\(X=\mathbf1_H\). Then
+\(\mathbb E[X\mid E]=2/13\), while
+\(\mathbb E[X\mid E^c]=10/9415\). Averaging by the two alert outcomes
+recovers the prior:
+\[
+ \frac{585}{10000}\frac{90}{585}
+ +\frac{9415}{10000}\frac{10}{9415}
+ =\frac{100}{10000}=\mathbb E[X].
+\]
+The conditional means vary with the evidence, but their probability-weighted
+average equals the original mean.
+
+\begin{hbwarning}{def:p15-finite-probability-limits}{Scope and use of a finite model}
+Every probability and expectation above follows from the stipulated weights.
+Using those numbers for an actual population additionally requires a justified
+model of its outcomes, sampling and observations. The identities do not
+estimate those weights, establish a causal effect, select a prior or prove
+that an inspection process satisfies an independence assumption.
+
+Finite real-valued expectations always exist. Their interpretation as limits
+of empirical averages requires a separate law of large numbers with its own
+hypotheses. This chapter provides neither continuous densities nor general
+measurable spaces, integration, infinite product constructions, conditional
+distributions on null events, convergence theorems or general conditional
+expectation. Those foundations and their boundary cases remain separate
+treatments.
+\end{hbwarning}

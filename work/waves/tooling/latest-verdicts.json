@@ -1,0 +1,237 @@
+{
+ "check": {
+  "round": 1,
+  "pass": true,
+  "selftest_ok": true,
+  "smoke_ok": true,
+  "defects": [
+   {
+    "severity": "minor",
+    "where": "Environment, not tools/check.py: `python -B -m unittest discover -s tools -p \"test_check*.py\"` (spec section 2) and the other tools/test_* suites that import check",
+    "problem": "Spec section 2 says to confirm these suites \"still pass\". They do not pass, but the failures are not caused by this change. The discover run gives 143 tests with 14 failures, all in test_check_compendium_volume_manifest_one_book and test_check_inherited_restoration. Neither module imports or runs tools/check.py; the failures are data drift such as 'restoration artifact byte count mismatch' for SRC-06792-06845 and SRC-06942-07134. The 11 suites that do import or run check.py give 219 tests with 49 failures. Some run the live tree with --strict and expect exit 0, but HEAD's check.py already exits 1 there with 353 hard failures (this version: 601, because the new categories become hard under --strict). The fixture runs fail on restoration-scope, annex-bidir and label-prefix findings, including the missing spec/EDITION-2026-CONTRACT.md. The rest are MiKTeX pdflatex compile or label-route assertions that do not touch the new code. So the spec's acceptance step cannot be met as written.",
+    "required_fix": "No change to check.py is needed. The lead should decide whether the pre-existing failures are accepted as a baseline or fixed separately, and record the baseline (14 and 49 failures) so the next run can be compared against it."
+   },
+   {
+    "severity": "minor",
+    "where": "tools/check.py _hb_scan_stub_markers / _hb_scan_file call (stub-marker gets the comment-stripped body)",
+    "problem": "_hb_scan_file passes the comment-stripped and verbatim-stripped body, so a marker in a TeX comment is never flagged. For example, `text % TODO prove this` in parts/p01/x.tex gives no stub-marker finding. The spec says to flag TODO/FIXME/TBD in any body file and says nothing about excluding comments. A `% TODO` left in a body file is exactly the unfinished-work signal this category exists to catch.",
+    "required_fix": "Get a decision on whether comments are in scope. If they are, run HB_STUB_MARKER_RE for the TODO, FIXME and TBD alternatives over the raw text (raw_bodies[rel], with verbatim stripped) and keep the prose phrases on the stripped body. Add one selftest case for a commented TODO."
+   },
+   {
+    "severity": "minor",
+    "where": "tools/check.py HB_STUB_MARKER_RE",
+    "problem": "Close variants of the listed markers slip past the regex. 'TODOs remain.' does not match (\\bTODO\\b fails before the 's'). 'By standard arguments' does not match. 'left~to~the~reader' does not match because ~ is not \\s. There is also a false positive: \\label{rem:tbd} is flagged as 'tbd' because labels are not masked.",
+    "required_fix": "Allow an optional plural (TODOs?, FIXMEs?, arguments?) and accept ~ as well as whitespace between phrase words ([\\s~]+). Mask or skip \\label, \\ref and \\cite arguments before matching. Add selftest cases for each."
+   },
+   {
+    "severity": "minor",
+    "where": "tools/check.py _hb_annex_marker_spans",
+    "problem": "The environment-span finder can be bypassed with inputs I built in temp fixtures: (a) nested proofs, `\\begin{proof}\\begin{proof}a\\end{proof} TODO\\end{proof}`, where the text after the inner \\end{proof} is not scanned; (b) `\\begin {proof}` or `\\begin {annexitem}` with a space; (c) `\\begin{proof*}`. In each case the annex marker is missed. The live tree has none of these forms (3863 annexitem, 3800 proof, no proof* and no '\\begin {'), so today's findings are unaffected.",
+    "required_fix": "Match \\\\begin\\s*\\{(annexitem|proof\\*?)\\}, and find the end with a depth-counting scan of begin/end for that environment instead of str.find of the first \\end. Add one selftest case for a nested proof."
+   }
+  ]
+ },
+ "fused": {
+  "round": 2,
+  "pass": true,
+  "defects": [
+   {
+    "severity": "minor",
+    "where": "tools/find_fused_spaces.py _read_text (line 813-814), _line_starts, _write_atomic; real file handbook/parts/p12/sources/src-027-501-marked-trees.tex",
+    "problem": "Files are read with universal-newline translation, so a lone CR byte counts as a line break. src-027-501-marked-trees.tex already contains 3 lone CRs: an earlier `\\rm` was corrupted into CR+'m' at byte offsets 2629, 2793 and 2845. The tool's view of the file therefore has 3 extra lines. It reports 'Theorem3.5' at lines 176 and 185, but git, grep and editors show those lines as 173 and 182, so every hit after the first CR is 3 lines off. `--fix --apply` on this file would also rewrite those 3 CR bytes as LF, a byte change beyond the 'insert a single space at the split point' contract. Whole-file CRLF→LF conversion and BOM removal (p09.tex–p14.tex, the huber-* annexes and others) fall under the spec's LF/no-BOM write rule.",
+    "required_fix": "Read with newline='' (or decode the bytes) so CR bytes are kept. Count lines on '\\n' only, or refuse to scan or --apply a file that contains a lone CR and report it as a corruption finding. Never turn a lone CR into LF silently during --apply."
+   },
+   {
+    "severity": "minor",
+    "where": "tools/find_fused_spaces.py LABEL_ARG_COUNTS (lines 193-207) vs TOOLING-SPEC.md section 1, Masking bullet 5",
+    "problem": "The spec says to mask the first and second mandatory arguments of hbdefinition, hbconvention, hbmethod, hbexample, hbwarning, proofboundary and systementry. The code masks only the first. Its comment cites the handbook.sty signatures {label}{Title}, which handbook.sty lines 513-518 and 1224 confirm. The spec's stated reason ('labels and status tokens') supports the code, but the spec's literal requirement does not, and nothing in the spec records this departure. Titles are left visible to the scan and to --fix.",
+    "required_fix": "Get a user or spec-owner decision. Either amend TOOLING-SPEC.md section 1 to say that {label}{Title} environments mask only the label, or mask the second argument as the spec literally says. Do not leave code and spec disagreeing."
+   },
+   {
+    "severity": "minor",
+    "where": "tools/find_fused_spaces.py _is_cite_command / _mask_multicite_groups (lines 434-457)",
+    "problem": "Three cite forms are not masked and are wrongly reported. biblatex multicite global notes, `\\cites(see)(){kleene1952intro}`, leave the keys unmasked and report A 'kleene1952'. `\\footcitetext{kleene1952intro}` reports A 'kleene1952' because the name ends in 'citetext'. `\\cite *{kleene1952intro}`, with a space before the star, also reports A 'kleene1952'. Under --fix these would insert a space into a bibliography key. Today the handbook uses only \\cite, \\parencite, \\textcite and \\nocite, so this cannot happen yet.",
+    "required_fix": "Accept optional (..)(..) global-note groups before the multicite units. Treat any control word containing 'cite' as a cite command, or list footcitetext and its relatives explicitly. Allow whitespace before '*'. Add selftest negatives for each."
+   }
+  ]
+ },
+ "held": {
+  "round": 4,
+  "pass": false,
+  "defects": [
+   {
+    "severity": "major",
+    "where": "tools/held_sources.py check_record_pins (line ~1002 `if not named: return`), sha_view (line ~549, folds only dicts whose key contains hash/checksum/digest), collect_json_pin_mismatches (line ~1187), collect_queue nested_pins (line ~1453)",
+    "problem": "Hash-refusal slip: a mismatched sha256 pin is ignored without any diagnostic when it sits in a sub-dict that names no file, or in a list-form or algorithm/value-form container. In these cases it shows up neither in recorded_sha_mismatches nor in unpaired_pins, and the record's identity (source_key, version) attaches to the mismatched bytes. Fixtures under tmp/tooling-scratch/verify-held-4/adv.py that slipped: {path:e.pdf, integrity:{sha256:BAD}}, {path:v.pdf, sha256:null, verification:{sha256:BAD}} (the citations manifest already uses `verification` dicts), {path:g.pdf, fingerprint:{algorithm:'sha256', value:BAD}}; queue {local_artifacts:[...], hashes:[{sha256:BAD}]}, {artifacts:[{path, integrity:{sha256:BAD}}]}, {local_capture, bibliographic_identity:{checksum:BAD}}. All got source_ids, version and a source_index entry. The current real data has 0 instances (scan in tmp/tooling-scratch/verify-held-4/realscan.py), but the receipt schemas here are ad hoc, so this is a live bypass.",
+    "required_fix": "Every 64-hex value under a sha256/hash/checksum/digest key, or a {algorithm:'sha256', value:...} pair, found anywhere inside a record subtree must end up verified, mismatched or reported. Attribute pins from a sub-dict or list that names no file to the nearest enclosing record that names files, and apply the same bar rules as plain pins: bar identity when it matches none of that record's files and the record names one held file, otherwise list it as unpaired. Fold list-valued hash containers and algorithm/value pairs in sha_view. Add these fixtures to --selftest."
+   },
+   {
+    "severity": "minor",
+    "where": "tools/held_sources.py HASH_WORDS / pin_qualifier / check_record_pins unmatched-pin branch (lines ~646-670, ~1028-1051)",
+    "problem": "A record that names exactly one file and carries one pin whose key has an unrecognised qualifier keeps its identity when the pin mismatches: sha256sum, expected_sha256, content_sha256, body_sha256. The mismatch is reported only as an unpaired pin. Fixtures A, B, J, O and queue QA, QE in adv.py all received identity. sha256sum and expected_sha256 name the file's own hash, so this is a hash-refusal slip.",
+    "required_fix": "Treat qualifier words that describe the hash rather than a different file (expected, actual, computed, observed, sum, sha256sum) as HASH_WORDS so these keys bar identity. Alternatively, bar identity whenever a record names exactly one held file and any pin in it matches no named file."
+   },
+   {
+    "severity": "minor",
+    "where": "tools/held_sources.py unique_or_null / output_entry / summary_lines",
+    "problem": "Conflicting recorded values for version, body_state or access_basis collapse silently to null, and the summary does not count or list them. On the real tree, 83 entries have identity but a null version. Example: tmp/acquisition/src028/Gunter94.pdf has queue version 'Gunter author presentation...' and manifest version_label 'author chapter manuscript', so the output is null. Null is safe, but the conflict is never surfaced.",
+    "required_fix": "Count the conflicts in the summary (version_conflicts: N) and list their details, as is done for sha mismatches. Optionally record the conflicting values in evidence."
+   },
+   {
+    "severity": "minor",
+    "where": "tools/held_sources.py collect_queue (json.JSONDecodeError -> continue) and collect_readme (UnicodeDecodeError -> return)",
+    "problem": "An undecodable queue line or README is skipped without any stat. Its held-file evidence and identity disappear without notice, unlike source/references JSON, which is counted in unreadable_json_records.",
+    "required_fix": "Append these cases to stats.unreadable_json (or a separate counter) and print them in the summary."
+   },
+   {
+    "severity": "minor",
+    "where": "tools/held_sources.py metadata_from_context",
+    "problem": "Titles held in a plain `identity` block are not read. Example: source/references/p09-gelfond1988/manifest.json identity.title 'The Stable Model Semantics for Logic Programming' gives titles [] for all three held files. The data is lost, not invented.",
+    "required_fix": "Read identity.title, and the key/source_key in that block, the same way bibliographic_identity is read."
+   },
+   {
+    "severity": "minor",
+    "where": "spec/coverage/edition-2026/completion-work-queue.jsonl lines 2289, 2290, 2292, 2301, 2302, 2303 (data defect, not a tool defect)",
+    "problem": "The recorded sha256 values are corrupted by inserted spaces, for example 'f 4 e 3550269680 bc 6 d 1 d 4 fbfe ...', and the titles on those lines are mojibake. This looks like an earlier fused-space or number-word 'repair' run over hex. held_sources correctly refuses these pins (7 recorded_sha_mismatches), so the dry-run build exits 1 (findings) on the real tree.",
+    "required_fix": "The data owner restores the hex digests (from git history or by rehashing the named tmp/acquisition/src033 and src034 files after checking identity) and the UTF-8 titles. The fused-space fixer must mask hex digests and JSON hash fields."
+   }
+  ]
+ },
+ "integrate": {
+  "round": "final-verify",
+  "pass": false,
+  "defects_file": "tmp/integrate-defects.md"
+ },
+ "ledger": {
+  "round": 2,
+  "pass": true,
+  "defects": [
+   {
+    "severity": "minor",
+    "where": "tools/ledger_patch.py _rewrite_shards (lines 1224-1250)",
+    "problem": "The write-time pin re-check runs one shard at a time, and each shard is written and its receipt refreshed before the next shard is checked. In a fixture (tmp/tooling-scratch/verify-ledger-2/attack2.py), a concurrent edit to a pinned line in shard p02 after validation made the run refuse with exit 1. By then shard p01 and its receipt had already been rewritten. The run is partly applied, the refusal message does not say so, and re-running the same proposals now fails on the p01 pins.",
+    "required_fix": "Re-read every affected shard and verify every pinned line hash before writing any shard or receipt. Then do the writes. Alternatively, report exactly which shards were already written when a later shard refuses."
+   },
+   {
+    "severity": "minor",
+    "where": "tools/ledger_patch.py _anchor_found / _tex_search_text (lines 615-645)",
+    "problem": "The anchor search strips only %-comments and lstlisting/verbatim bodies, through check.strip_comments and check.strip_verbatims. A \\label inside \\verb|...|, inside \\iffalse...\\fi, or inside a comment environment is accepted as a found anchor; fixture attack.py confirmed all three. No non-restoration handbook file currently uses \\iffalse or a comment environment, so this is theoretical today.",
+    "required_fix": "Also blank \\verb delimited spans, \\iffalse...\\fi blocks and comment-environment bodies before the label and environment-argument search. Add a selftest case for each."
+   },
+   {
+    "severity": "minor",
+    "where": "tools/ledger_patch.py _validate_missing_pieces / MISSING_TAG_RE (lines 503-525, 1451)",
+    "problem": "The bracket-tag refusal covers [blocked_math] (no REF) and unknown underscore kinds. Near-miss tags still get through: '[blocked-source:ACQ-9] x' (hyphen) and '[blocked_source: ACQ-9] x' (space after the colon) are both accepted as unclassified legacy prose. The intended blocked classification and the blocker-ref resolution check are silently skipped.",
+    "required_fix": "Refuse any leading bracket whose text after normalisation (hyphen to underscore, spaces stripped) names a known kind but is not in exact [kind:REF] form. Add selftest cases."
+   },
+   {
+    "severity": "minor",
+    "where": "tools/ledger_patch.py _prepare_evidence_entries (lines 712-751)",
+    "problem": "Appended evidence entries may carry any extra keys, and they are persisted verbatim into the ledger row. Fixture attack.py appended an entry with 'status':'authored_unreviewed' and 'verdict':'accepted', and it was accepted. Such keys could be read later as admissions or verdicts that no assessment supports.",
+    "required_fix": "Restrict appended entry keys to the documented set (path, anchor, line_start, line_end, read_extent, components, assessment_ids; the tool fills sha256 and route_state). Refuse any other key."
+   },
+   {
+    "severity": "minor",
+    "where": "tools/ledger_patch.py _receipt_hash_warnings_and_failures (I9), real tree",
+    "problem": "`check` on the real tree exits 1. All nine receipts fail I9 with 'has no current object', because the existing receipts record the shard hash only under the legacy key reader_adoption_current_qualification.ledger_sha256 (it matches for p19). This follows the spec wording (current.ledger_sha256), but `check` cannot pass on any shard until apply has refreshed that shard's receipt. A wave gate that keys on check's exit code will always fail until then.",
+    "required_fix": "Surface to the lead for a decision. One option is a documented one-time receipt initialisation that writes `current`. The other is to accept the legacy key as a warning until first apply. Do not silently relax I9."
+   },
+   {
+    "severity": "minor",
+    "where": "tools/ledger_patch.py _handbook_reached_files / _route_state (lines 648-696)",
+    "problem": "The static \\input closure (check._hb_static_input_reachability) does not follow \\showcalculus. About 100 handbook/registry/calculi/*.tex evidence paths (123 entries) that existing rows record as on_current_recursive_input_route are now computed as off_route. Upgrades whose only on-route evidence is a calculus sheet will be refused, and refreshed entries will flip to off_route. This matches the spec's literal '\\input closure' wording.",
+    "required_fix": "Surface to the lead whether \\showcalculus-rendered registry files count as on route. If they do, extend the closure to \\showcalculus targets, sharing one implementation with check.py."
+   }
+  ]
+ },
+ "migrate": {
+  "round": 2,
+  "pass": true,
+  "defects": [
+   {
+    "severity": "minor",
+    "where": "tmp/edition-2026-coverage-map/migrate_numeric_scopes.py regions_for() lines 325-335 (compression step appends {'file': p} without deduplicating against file selectors already present in `body`)",
+    "problem": "When a ghost unit's ghost-map evidence already contains {'file': ...} selectors, the compression step appends the same {'file': ...} again. In the real dry run, 4 new bindings carry duplicate region entries: 'P10 legacy unit 7 lawvere-theories', 'P10 legacy unit 8 cartesian-lambda', 'P10 legacy unit 9 doctrine-quantifiers' and 'P10 legacy units 7–9 lawvere-theories to doctrine-quantifiers'. For example, annex/p10/lawvere-theories.tex appears twice. Coverage is unaffected, but the duplicates would be written into canonical symbol-scopes.json.",
+    "required_fix": "Deduplicate `regions` (json.dumps sort_keys key) after the compression step, or skip appending a {'file': p} that is already present. Add a selftest assertion that no binding has duplicate regions."
+   },
+   {
+    "severity": "minor",
+    "where": "migrate_numeric_scopes.py numbered_sections()/READINGS default 'own-file' (module doc lines 25-31; run() line 761)",
+    "problem": "The spec section 8 says P9.k is the k-th \\section unit 'in route order'. The dry run defaults to an invented 'own-file' reading that skips sections in input fragment files. On the real tree the two readings differ for P9.5–P9.8 and P10.7–P10.9 (own-file agrees with ghost-map evidence 8/8, route-order 4/11), and the decision_needed count changes (1 vs 0). The tool surfaces this as 'DECISION PENDING' and gates --apply on a recorded ghost_reading, so nothing is silently applied. Still, the default dry-run report reflects a reading that is not the spec's literal text.",
+    "required_fix": "Have the lead or user record the reading decision and amend spec section 8 to match. Until then, either default the dry run to the spec's literal route-order reading or emit both full results (bindings and decision_needed for each reading) in dry-run.json, so the report does not present the non-spec reading as the default."
+   },
+   {
+    "severity": "minor",
+    "where": "migrate_numeric_scopes.py bind() lines 452-458 (rename 'P<n> ...' to 'Part <n> ...')",
+    "problem": "The rename meant for annex items hosted in another part's annex fires whenever any region lies outside part n. That also covers body or ghost-evidence regions, and the rename skips symbol_registry's part-consistency check, because the registry's ^P\\d regex no longer matches. Fixture slip: a P9 ghost ordinal beyond the own-file sections, whose ghost-map evidence points into P10, bound wholly to P10 content as 'Part 9 legacy unit 9 two' -> [sec:p10-two, annex:p10.two.1], and --apply returned 0. This is not triggered on the real tree, where no renames occurred.",
+    "required_fix": "Rename only when every out-of-part region is an annex item or annex file whose owners root in part n. Otherwise refuse, and also refuse ghost-unit evidence whose body regions lie outside the ordinal's part."
+   },
+   {
+    "severity": "minor",
+    "where": "migrate_numeric_scopes.py Binder.post_capture / regions_for whole-part meaning (loc != -1) and run() apply gate",
+    "problem": "Two chapters were routed after the capture: parts/p17/savage-acts-and-representation.tex and parts/p13/presentations/medieval-latin-inference.tex. The tool excludes both from every whole-part binding (P4.4-P19, P5.2-P19 and the other strings covering P13 or P17), splitting parts/p13.tex and parts/p17.tex into child files and anchors. That departs from the spec rule 'whole parts as their driver files'. It is faithful to the capture, but it is a spec conflict the tool resolves on its own. It is printed only as an informational 'post_capture_chapters' list: it is not listed as decision_needed, and --apply does not require it to be recorded.",
+    "required_fix": "Report the exclusion as a decision_needed item, or require an explicit 'post_capture_chapters' decision in --decisions (exclude them as captured, or include them via driver files) before --apply, and note the choice in the binding presentation."
+   }
+  ]
+ },
+ "waves": {
+  "round": 4,
+  "pass": false,
+  "defects": [
+   {
+    "severity": "major",
+    "where": "tools/waves.py verify() G1 loop (lines ~4328-4341) with _scan_tree_state() over handbook/, spec/research/, spec/coverage/",
+    "problem": "G1 marks as hard every change since the snapshot outside this packet's owned files and editable hosts. That includes files owned by other packets of the same wave and the assessment files that work/waves/workflows/tmor-authoring-wave.js writes to spec/coverage/edition-2026/assessments/<wave>/. Lanes run concurrently (maxConcurrent 12) from a single wave snapshot. Even within one lane, block k+1's verify sees block k's assessment file. A fixture reproduced it (tmp/tooling-scratch/verify-waves-4/probe_verify.py, T1): packet B wrote its own owned body file and the workflow wrote CA-x.json, and verify of packet A returned rc 1 with hard ['G1 changed outside owned/editable set: handbook/parts/p01/y-w09-p01-002.tex', 'G1 changed outside owned/editable set: spec/coverage/edition-2026/assessments/w09/CA-x.json']. In a real wave, every verify verdict after the first write anywhere becomes a false hard failure, so G1 cannot tell a real ownership breach from normal concurrent work.",
+    "required_fix": "In G1, treat a changed path as attributed (a finding, not hard) when it is an owned file or editable host of another packet in the same wave family (work/waves/<wave>{,a,b}/packets/*.json), or lies under the wave's own assessment output directory. Keep hard for every other path, including other packets' read-only hosts, drivers and the ledger. Add a selftest case with two snapshotted packets where B edits its own file and A's verify has no hard G1."
+   },
+   {
+    "severity": "major",
+    "where": "tools/waves.py verify(), the branch with no expected_digest (lines ~4281-4290); caller work/waves/workflows/tmor-authoring-wave.js line 74",
+    "problem": "Without --snapshot-sha256, verify trusts work/waves/<wave>/snapshots/digests.json. That file sits outside the G1 scan and any agent can rewrite it. A fixture (probe_verify.py T2) edited a non-owned host, then rewrote the snapshot's tree entry and digests.json to match. verify returned rc 0 with hard [] and only a non-hard finding. The in-repo workflow always calls `waves.py verify <packet>` without the digest, so the snapshot pin is never enforced in practice. With the pin passed, the same tamper is caught (T2b, rc 1).",
+    "required_fix": "Fail closed when the digest is not pinned. Either make a missing --snapshot-sha256 a hard G1 item (rc 1), or keep the lead-held digest somewhere an author cannot write and read it from there. Also update tmor-authoring-wave.js to pass the digest; that file belongs to the workflow owner. Add a selftest for snapshot plus digests.json tampering without a pin."
+   },
+   {
+    "severity": "major",
+    "where": "tools/waves.py STUB_MARKER_RE (lines ~3548-3552) used by G9 _stub_markers",
+    "problem": "The multi-word stub phrases are matched with literal single spaces ('left to the reader', 'omitted for brevity', 'standard argument', 'routine verification', 'similarly for the remaining cases', 'the remaining cases are similar', 'details omitted'). Comment stripping keeps line breaks, so a phrase wrapped across a source line ('is left to the\\nreader') is not detected. probe_guards.py showed left-reader 1 hit but left-reader-split 0 hits. In ordinarily wrapped LaTeX a sizeable share of these phrases cross a line break, so the hard G9 guard misses them silently. WORKFLOW_PATTERNS already uses \\s+ for 'this record', so the omission is inconsistent.",
+    "required_fix": "Match the phrases with \\s+ between words, for example by building the alternation from the phrase list with ' ' replaced by \\s+. Add a selftest with a phrase split across lines."
+   },
+   {
+    "severity": "minor",
+    "where": "tools/waves.py HOOK_PRIMITIVES, token regex in _hook_events_in, MACRO_DEF_RE, _anchor_from_chain",
+    "problem": "The bracket refusal fails open on hook forms it does not know (probe_hooks.py). With \\AddToHookWithArguments ... \\RemoveFromHook, the anchor is placed after line 2, inside the bracket. The same happens for \\hook_gput_code_with_args:nnn, for a hook key containing braces (\\AddToHook{env/{theorem}/begin}), and for hook macros defined with delimited parameters (\\def\\hbOn#1.{...}). A bracket in main.tex around \\input{parts/p07} is ignored too, because only edges in the part's zone are checked; the anchor came out as p07.tex line 1. None of these forms occurs in the current tree, so the gap is latent.",
+    "required_fix": "Add the *WithArguments and *_with_args primitives to HOOK_PRIMITIVES. Treat a hook key with nested braces, a definition the parser cannot read, or a delimited-parameter \\def body containing a hook command as unresolvable and refuse (fail closed). Check every edge in the chain up to main.tex for protected ranges, not only edges in the part's zone."
+   },
+   {
+    "severity": "minor",
+    "where": "tools/waves.py _strip_for_copy / COPY_STRIP_ARGUMENTS (G13)",
+    "problem": "Copied prose can slip past G13 in printed places. A 30-word run inside a \\cite postnote (\\cite[<30 copied words>]{k}) gives 0 findings. So do runs inside $\\mathrm{...}$ or $\\operatorname{...}$, and source words joined by hyphens, which tokenize as a single token. The postnote prints in the PDF. The spec says to strip \\cite, so the postnote case is a gap in the spec's wording rather than a coding error.",
+    "required_fix": "Keep cite pre- and postnote text (strip only the key groups). Keep \\mathrm, \\operatorname and \\textnormal arguments as prose in _math_prose. Split hyphenated tokens for matching. Alternatively, take these cases to the spec owner as a decision."
+   },
+   {
+    "severity": "minor",
+    "where": "tools/waves.py NEW_DEFINITION_RE (G11)",
+    "problem": "\\newcommandx (xargs), expl3 \\cs_new:Npn / \\cs_set:Npn and \\futurelet are not flagged as new content definitions (probe_guards.py hits=0). MACRO_DEF_RE already recognises cs_new for the hook scan.",
+    "required_fix": "Add newcommandx/renewcommandx/providecommandx, cs_(new|set|gset)(_protected)?(_nopar)?:N... and futurelet to NEW_DEFINITION_RE."
+   },
+   {
+    "severity": "minor",
+    "where": "tools/waves.py verify() G5 numeric-scope regex `\\bP\\d{1,2}\\.\\d+\\b`",
+    "problem": "Numeric part-range scopes such as 'P5-P19', which section 8 treats as numeric scopes to migrate away, are not flagged in the intake symbol CSV. Only PNN.k is caught.",
+    "required_fix": "Also flag PNN-PMM and bare PNN ranges in the scope and first_use columns, or confirm with the spec owner that G5 is limited to PNN.k."
+   },
+   {
+    "severity": "minor",
+    "where": "tools/waves.py _locator_page_numbers (G6)",
+    "problem": "'pages 3 and 999' yields [3] only, so an out-of-range page after 'and' or after a second comma list behind a page marker is not checked.",
+    "required_fix": "After a page marker, collect every number or range in the remaining list (comma, 'and', '&')."
+   },
+   {
+    "severity": "minor",
+    "where": "tools/waves.py _presentation_available / _verified_recorded_files (source gate, step 5)",
+    "problem": "A presentation counts as held when it records a local file whose current hash matches, even if the file is absent from held-sources.json. Examples are source/formal-logic-reference.tex and handbook presentation files. The spec's gate is 'absent from held-sources.json and census not full/partial'. The in-memory held index (2703 entries) contains neither the FLR file nor any handbook file, so the gate passes these units on a criterion the spec does not name.",
+    "required_fix": "Either have tools/held_sources.py index these hash-verified artifacts, so the gate rests on held-sources.json as specified, or get the spec owner to approve the extra criterion and record it in TOOLING-SPEC.md."
+   }
+  ]
+ }
+}

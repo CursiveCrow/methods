@@ -1,0 +1,223 @@
+%% Original-source obligations and explicit repairs; not binary verification.
+\begin{annexitem}{annex:p12-grasp-causes-sound}{thm:p12-grasp-causes-sound}{Termination and semantic sufficiency of GRASP causes}
+\begin{proof}
+Order the finite graph by the time at which assignments were recorded.
+Every selected unit reason uses earlier assignments, and a conflict uses
+already present assignments.  Recursion through same-level antecedents
+therefore strictly decreases this order.  Lower-level antecedents are
+retained as leaves, so the recursion terminates even for a same-frame FDA.
+
+Induct on this order.  A vertex returned as its own assignment has that
+value in every valuation satisfying the cause.  Otherwise the causes contain
+the lower-level antecedents and all causes of same-level antecedents.
+By induction a model satisfying them makes every selected reason antecedent
+true.  The reason is an input consequence and forces the recorded value.
+At the conflict vertex this argument makes every literal of its conflict
+clause false, contradicting that input consequence.  Hence no input model
+extends the conflict causes; their negation is an input implicate.  An empty
+cause set excludes every model and gives the empty implicate.
+
+This reasoning does not assume FDA reasons sound without justification.
+Induct also on learned-clause creation.  The first diagnosis uses original
+reasons and yields an input implicate by the graph argument.  Its FDA is
+then a unit consequence of that proved implicate.  Each later diagnosis
+uses originals and earlier proved implicates, so its new clause is again
+an input implicate.  This covers any finite sequence of FDA explanations;
+they are expanded as implications rather than treated as fresh decisions.
+Fixed external query assumptions may remain as cause leaves: the resulting
+clause is conditional on them and does not assert that the assumptions are
+themselves consequences of the input.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12-grasp-standard-search}{thm:p12-grasp-standard-search}{The standard GRASP search with a declared root convention}
+\begin{proof}
+Recorded clauses preserve all input models by the cause lemma.  A unit step
+preserves every model extending the current prefix: its sole free literal
+must be true.  A root conflict excludes all models extending \(A_0\).
+Fixed root facts and assumptions are never erased.  A nonconflicting total
+return satisfies every original clause, since a false clause would have
+been reported by completed Deduce.  If a partial prefix already satisfies
+the database, arbitrary completion also gives a model.
+
+At a positive frame \(d\), the new decision is its only elective assignment.
+Standard causes expand current-level implications, stopping at that decision
+or earlier assignments.  If the decision remains in the causes, their largest
+level is \(d\).  Erasing this attempt frees its literal and leaves all
+earlier cause literals false in the recorded clause.  That clause is unit
+and forces the opposite value: the FDA.  Every model of the earlier prefix
+must obey it; this is not a second freely chosen decision.
+
+The original elective decision has now been removed.  Assignments of the
+second current-frame attempt are FDAs or their consequences, whose backward
+explanations end in earlier frames.  A new local conflict therefore has
+cause maximum below \(d\).  If a deeper call returns a conflict targeted
+at \(d\), the present diagnosis expands its current-frame FDA causes in
+the same manner and again obtains a smaller target.  A frame has at most
+its initial decision attempt and its forced opposite attempt.  This progress
+fact uses standard diagnosis and retained reasons; arbitrary substitute
+engines do not acquire it merely by using the name FDA.
+
+When the maximum cause level is \(\beta<d\), the whole cause assignment
+is already in the prefix through \(\beta\).  Every extension falsifies
+its recorded implicate.  Passing the conflict over deeper frames therefore
+discards only prefixes having no model.  At the target frame diagnosis
+produces its FDA or passes a smaller target upward.  Strict decreases among
+nonnegative levels cannot continue indefinitely without reaching such a
+frame or the checked root.
+
+For termination, induct on the number of unassigned original variables at
+frame entry.  Each deduction phase is finite; each decision assigns a new
+variable.  Every deeper call consequently has fewer unassigned variables.
+There are at most two attempts at a frame, so induction gives finite return
+of its children and of the frame itself.  With no variables left the checked
+terminal state returns a model or an already detected conflict.  Learned
+clauses introduce no variables and are input implicates, so database growth
+does not invalidate this decreasing measure.
+
+For completeness suppose a model extends the entry prefix.  If it has the
+initial decision value, sound propagation preserves it and the smaller-
+variable induction gives success in that branch.  If the first attempt
+fails while some entry-prefix model still exists, its target cannot be below
+this frame, since such a target would exclude every entry-prefix extension.
+Its local FDA forces the opposite value and preserves all remaining models.
+The second attempt then succeeds by the same induction.  Thus failure
+excludes every entry-prefix model.  At the root these are precisely the
+models extending \(A_0\).  This proves both return specifications and
+termination without importing restarts, selective deletion or an unexplained
+zero-based wrapper erasure convention.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12-grasp-uip-links}{thm:p12-grasp-uip-links}{Soundness of the corrected native UIP links}
+\begin{proof}
+In forward UIP order, an earlier UIP dominates a later one: a decision-to-
+later-UIP path bypassing the earlier one could be extended to the conflict,
+contradicting domination.  Acyclic assignment order prevents that extension
+from returning through the earlier node.
+
+For adjacent \(u_i,u_{i+1}\), expand reasons backward from the downstream
+\(u_{i+1}\), stopping at \(u_i\) and retaining older-level assignments.
+No other current decision leaf can be reached while bypassing \(u_i\),
+by domination.  Finite graph order proves termination.  Induction on the
+expanded reasons shows that every input model satisfying the returned
+antecedent assignments gives \(u_{i+1}\) its recorded value.  Their
+negation, disjoined with the literal asserting that downstream value, is
+therefore an input implicate.  Expanding from \(\kappa\) with stop \(u_k\)
+similarly makes conflict inevitable under its returned assignments; negating
+them gives the terminal conflict implicate.
+
+The stopping assignment remains in the antecedent part with its false
+literal.  The appended true literal must concern the downstream output,
+not the stopping assignment.  Appending that stopping assignment's own
+true literal would make a tautology.  Reversing the cause arguments would
+attempt to explain an upstream vertex by a downstream one and would not
+prove the required implication.  This establishes the corrected endpoint
+order rather than merely renaming the printed Eq.~(9).
+
+In the native example, the support of \(x_4=1\) relative to \(x_1=1\)
+is \(\{x_1=1,x_9=0\}\), giving \(\neg x_1+x_9+x_4\).
+The conflict support relative to \(x_4=1\) is
+\(\{x_4=1,x_{10}=0,x_{11}=0\}\), giving
+\(\neg x_4+x_{10}+x_{11}\).  These are obtained from the actual
+\(\omega_1\)--\(\omega_6\) reasons and justify the stated two-clause
+example without treating the faulty index formula as a proof.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12-grasp-complete-product}{thm:p12-grasp-complete-product}{Conflict-free decisions with all prime implicates}
+\begin{proof}
+For a consistent partial assignment \(B\), its blocking clause consists of
+the literals opposite to its assigned values.  If \(B\) has no model
+extension, that clause is an implicate: a model falsifying it would extend
+\(B\).  Choose an inclusion-minimal entailed subset among its finitely many
+subsets.  It is a prime implicate, and all its literals are false under
+\(B\).  Hence a nonconflicting prefix on \(P(\varphi)\) has a model
+extension.
+
+Let such a prefix \(A\) also be unit-saturated, and choose a value \(v\)
+for an unassigned \(x\).  If \(A\cup\{x=v\}\) had no model extension,
+the preceding argument would give a prime implicate contained in its
+blocking clause.  It cannot be contained in the blocking clause of \(A\),
+or it would already be false there.  It therefore contains the literal
+opposite to \(x=v\), with all others already false under \(A\).
+Before the decision it was unit and would have forced the opposite value,
+contrary to \(x\) still being unassigned at saturation.  Thus either
+decision value retains a model; sound propagation preserves it and cannot
+conflict.  Repeat at every decision.
+
+For unsatisfiable \(\varphi\), the empty clause is entailed and prime.
+Every nonempty implicate has it as a proper entailed subset and is not prime,
+so the complete product is exactly the empty clause.  For the identically
+true function, every non-tautological clause has a falsifying valuation and
+is not entailed; the prime product is empty.  These cases include an empty
+variable set.  The needed direction is that a prime subclause
+\(\omega\subseteq\psi\) entails \(\psi\), not conversely.
+No small-size bound is used, and externally contradictory initial assumptions
+are not a compatible prefix of the satisfiable case.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12-minisat-original-reason-bridge}{thm:p12-minisat-original-reason-bridge}{The nonclausal reason-to-clause bridge}
+\begin{proof}
+Let \(F\) conjoin the permanent constraints.  Each constraint \(K\) is
+a conjunct, so \(F\models K\).  Its propagation-reason contract gives
+\(F\models(\bigwedge R\to p)\), exactly the clause made from the
+complements of \(R\) and \(p\).  Its conflict contract similarly entails
+the clause of those complements alone.  This works for any Boolean
+predicate constraint, not just a syntactic clause.  The contract is an
+explicit premise, not a property conferred by a class name.
+
+The support literals are true in the relevant saved state and precede their
+propagation.  Correct undo restores that state, making the explanation graph
+well founded.  Ordinary pivot resolution preserves entailment, as proved in
+Annex~\ref{annex:p12-cdcl-uip-local-sound}.  Induction over callback expansion
+and learned-clause creation proves that every learned clause is a permanent-
+constraint consequence.  The general first-UIP graph proof applies only
+with its actual chronological/current-level/propagation premises; the original
+constraint need not itself be a clause.  Omitting level-zero support is sound
+because the permanent base entails those root facts: resolution with their
+unit consequences removes their false complements.  Temporary assumptions
+are not such permanent facts and may not be omitted merely because their
+level is called a query root.
+
+Event coverage guarantees that every violated permanent constraint at a
+total assignment would have exposed a conflict.  A total conflict-free return
+therefore satisfies all of them.  Without coverage, a sound callback never
+invoked on its necessary event could not justify SAT.  At a query-root
+conflict, its supporting assignments follow from permanent constraints and
+fixed query assumptions.  The conflict clause is an input consequence, but
+all its literals are false under those query consequences, excluding every
+input model obeying the assumptions.  This is a relative refutation, not
+verification of missing callbacks, watch registrations, undo or ignored
+stronger-simplifier results.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12-minisat-original-query}{thm:p12-minisat-original-query}{Root simplification and assumption-relative conclusions}
+\begin{proof}
+Every \(F\)-model satisfies \(G\).  Under \(G\), retained replacements
+are equivalent to their original constraints and deleted constraints are
+already true.  Thus every \(F\)-model satisfies \(G\land F'\).
+Conversely a \(G\land F'\)-model satisfies every old constraint, the
+retained ones by equivalence under \(G\), the deleted ones because \(G\)
+makes them true.  Hence it satisfies \(F\).  This proves model equality
+for the represented conjunction including root facts, not for \(F'\) alone.
+
+Temporary assumptions \(H\) intersect that same model set with valuations
+satisfying \(H\).  Sound propagation and the reason bridge preserve all
+those models.  A total returned model satisfies \(F\land H\); a sound
+query-root conflict excludes all such models.  Cancelling the temporary
+assumptions leaves the permanent representation unchanged.  Learned clauses
+remain globally reusable only if their derivation kept temporary assumption
+literals in its reason clauses rather than treating them as permanent facts.
+
+The example \(F=x+y\), \(H=\neg x\land\neg y\) proves that query
+UNSAT need not be base UNSAT.  A budget exit interrupts search and supplies
+neither a contradiction nor a total model, so its undefined result licenses
+neither conclusion.  The pre-solve simplification check is also needed to
+distinguish a permanent conflict from a temporary one in the source object
+having no persistent inconsistency flag.  Ignoring a false constructor or
+simplification return violates the usable-base premise.
+\end{proof}
+\end{annexitem}

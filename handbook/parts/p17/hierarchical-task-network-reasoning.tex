@@ -1,0 +1,393 @@
+% ED26-P17-PRACT-003. Erol--Hendler--Nau 1996, pp. 69--93.
+\chapter{Hierarchical Task Networks and Plan Existence}
+\label{sec:p17-hierarchical-task-network-reasoning}
+
+An executable sequence can reach the desired state and still fail to carry out
+the requested task. Buying an object does not carry out a task of making it;
+remaining at home does not carry out a round trip. Hierarchical task-network
+planning specifies admissible ways of accomplishing tasks as well as the
+actions that change the world. This chapter develops the function-free model
+and restriction results of Erol, Hendler and Nau
+\cite{ErolHendlerNau1996HTNComplexity}. Their 1994 conference presentation is
+separate and delegates its proofs to a report
+\cite{ErolHendlerNau1994HTN}. Probabilistic policies and utility optimization
+belong to Chapter~\ref{sec:p17-sequential-decisions}; the present question is
+whether a permitted, executable task decomposition exists.
+
+\section{Actions, goals and compound tasks}
+\label{sec:p17-htn-language}
+
+\begin{hbdefinition}{def:p17-htn-vocabulary}{The finite function-free planning vocabulary}
+Use mutually disjoint sets of variables \(V\), constants \(C\), predicate
+symbols \(P\), primitive-task symbols \(F\), compound-task symbols \(T\), and
+task labels \(\mathcal N\). The sets \(C,P,F,T\) are finite and are part of
+the problem description; variables and fresh labels are available indefinitely.
+Every predicate and task symbol has a fixed finite arity in that description.
+Terms are variables or constants: there are no function symbols.
+
+A state \(s\) is a set of ground atoms. An atom is true exactly when it belongs
+to \(s\); a negative literal is true when its underlying atom does not.
+The three task forms are
+\[
+ \operatorname{do}[f(\vec x)],\qquad
+ \operatorname{achieve}[\ell],\qquad
+ \operatorname{perform}[t(\vec x)].
+\]
+The first is primitive, the second is a goal task, and the third is compound.
+Goal and compound tasks are nonprimitive. Distinct labels distinguish repeated
+occurrences of the same task.
+\index{hierarchical task network}\index{planning!primitive task}
+\index{planning!compound task}\index{planning!goal task}
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p17-htn-operator}{Operators and executable traces}
+Each primitive symbol has one operator schema with parameter variables,
+a conjunction of precondition literals, and positive and negative effects.
+For a ground action \(a\), let \(\operatorname{add}(a)\) and
+\(\operatorname{del}(a)\) be sets of ground \emph{atoms}; the latter are the
+atoms underlying its negative effects. Define
+\[
+ \operatorname{apply}(s,a)=
+ (s\setminus\operatorname{del}(a))\cup\operatorname{add}(a)
+\]
+when all preconditions hold, and leave it undefined otherwise. The displayed
+set update specifies the result even if an atom occurs in both effect sets.
+
+A plan is a finite sequence of ground primitive actions
+\(\sigma=a_1\cdots a_m\). Its execution from \(s_0\) has states
+\(s_i=\operatorname{apply}(s_{i-1},a_i)\). It is executable if every step is
+defined. An effect-free dummy action has empty preconditions and both effect
+sets empty; it still occupies a position in a literal action sequence.
+\end{hbdefinition}
+
+\section{Networks and conditions on intermediate states}
+\label{sec:p17-htn-networks}
+
+\begin{hbdefinition}{def:p17-htn-network}{Task networks and Boolean constraints}
+A task network is \(d=[(n_1:\alpha_1),\ldots,(n_m:\alpha_m);\phi]\), with
+distinct labels and a Boolean formula \(\phi\) over these atomic constraints:
+\begin{enumerate}
+\item equalities between variables or constants;
+\item ordering constraints \(n_i\prec n_j\);
+\item before-state constraints \((\ell,n_i)\) and after-state constraints
+      \((n_i,\ell)\);
+\item protection constraints \((n_i,\ell,n_j)\).
+\end{enumerate}
+Negation and disjunction apply to constraints as well as conjunction. Label
+expressions \(\operatorname{first}[A]\) and \(\operatorname{last}[A]\), for a
+nonempty finite label set \(A\), denote its earliest and latest occurrences.
+A primitive network contains only primitive tasks.
+\index{planning!protection interval}\index{task network!constraints}
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p17-htn-completion}{A ground primitive completion}
+Choose a grounding of the network variables and a permutation placing its
+labelled occurrences in an action sequence. Let \(\pi(n)\) be the position
+of label \(n\), starting at 1, and require an executable trace
+\(s_0,\ldots,s_m\). Equality compares constant symbols, ordering compares
+positions, and first/last expressions evaluate by minimum/maximum. The state
+constraints mean
+\[
+ \begin{array}{c|l}
+ (\ell,n)&s_{\pi(n)-1}\models\ell\\
+ (n,\ell)&s_{\pi(n)}\models\ell\\
+ (n,\ell,n')&s_e\models\ell\text{ for every }\pi(n)\leq e<\pi(n').
+ \end{array}
+\]
+The interval includes the state after the left action and excludes the state
+after the right action. An empty interval satisfies its universal condition.
+The remaining Boolean structure is evaluated in the usual way. The set
+\(\operatorname{comp}(d,I,\mathcal D)\) contains exactly the executable
+ground orderings satisfying \(\phi\). For a nonprimitive network this set is
+empty. For an empty primitive network, the empty sequence is a completion
+exactly when its well-formed remaining constraints hold.
+\end{hbdefinition}
+
+Negating a protection constraint asserts that some state in the indicated
+interval violates the literal. It does not assert that the opposite literal
+holds throughout the interval. A correct algorithm must retain this difference.
+Similarly, checking an atom immediately before a task differs from inserting
+a goal task whose accomplishment may change the state.
+
+\begin{hbdefinition}{def:p17-htn-method}{Methods and the preservation of enclosing constraints}
+A method \((\alpha,d')\) gives one permitted decomposition of a nonprimitive
+task. Rename all its variables and labels fresh, unify its head with the
+selected occurrence, and apply the resulting most general substitution to
+both networks. Replace the occurrence \(n\) by the method's labelled tasks,
+whose label set is \(A\), and conjoin the method constraint with the transformed
+enclosing constraint. Transform each occurrence referring to \(n\) as follows:
+\[
+ \begin{array}{c|c}
+ n\prec u&\operatorname{last}[A]\prec u\\
+ u\prec n&u\prec\operatorname{first}[A]\\
+ (\ell,n)&(\ell,\operatorname{first}[A])\\
+ (n,\ell)&(\operatorname{last}[A],\ell)\\
+ (n,\ell,u)&(\operatorname{last}[A],\ell,u)\\
+ (u,\ell,n)&(u,\ell,\operatorname{first}[A]).
+ \end{array}
+\]
+Inside an existing first/last expression, replace the label by its new labels,
+and continue this rule under later decompositions. These replacements occur
+inside arbitrary Boolean formulas without changing their connectives.
+
+Method bodies use nonempty labelled networks so these endpoints are defined.
+A zero-effect accomplishment is represented by an explicit dummy task, as in
+the source's treatment of an already true goal. Every method for
+\(\operatorname{achieve}[\ell]\) includes the requirement that \(\ell\)
+hold after its final subtask. Its already-true method uses one dummy task with
+the before-condition \(\ell\).
+\index{task network!decomposition}\index{planning!method}
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p17-htn-solutions}{Domains and finite derivability}
+A domain \(\mathcal D=(\operatorname{Op},\operatorname{Me})\) consists of
+finite operator and method sets. A problem is \((d,I,\mathcal D)\).
+Write \(\operatorname{red}(d,\mathcal D)\) for its possible one-step
+decompositions, including the required substitutions. Define
+\[
+ \begin{split}
+ \operatorname{sol}_0(d,I,\mathcal D)&=\operatorname{comp}(d,I,\mathcal D),\\
+ \operatorname{sol}_{r+1}(d,I,\mathcal D)&=
+ \operatorname{sol}_r(d,I,\mathcal D)\cup
+ \bigcup_{d'\in\operatorname{red}(d,\mathcal D)}
+       \operatorname{sol}_r(d',I,\mathcal D),\\
+ \operatorname{sol}(d,I,\mathcal D)&=\bigcup_{r\geq0}
+       \operatorname{sol}_r(d,I,\mathcal D).
+ \end{split}
+\]
+\emph{Plan existence} asks whether this last set is nonempty.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p17-htn-finite-derivation}{proved=annex:p17.htn-finite-derivation}{A solution is a finite permitted derivation followed by execution}
+A sequence belongs to \(\operatorname{sol}_r(d,I,\mathcal D)\) exactly when
+some sequence of at most \(r\) method decompositions reaches a primitive
+network of which it is a completion. In particular, membership in
+\(\operatorname{sol}\) requires a finite derivation. An infinite sequence
+of task expansions is not itself a plan.
+\end{hbtheorem}
+
+\section{A complete task derivation and two failures}
+\label{sec:p17-htn-example}
+
+\begin{hbexample}{def:p17-htn-preparation}{Preparing and running a protected task}
+Use a constant \(w\), unary predicates for an intact guard, readiness and
+completion, and corresponding one-variable task/operator schemas. In this
+example abbreviate \(g(w),r(w),c(w)\) by \(g,r,c\), and
+\(\mathit{setup}(w),\mathit{run}(w),\mathit{disturb}(w),\mathit{shortcut}(w)\)
+by their displayed action names. The initial state is \(I=\{g\}\).
+The four ground operator instances are:
+\[
+ \begin{array}{c|c|c|c}
+ \text{action}&\text{precondition}&\operatorname{add}&\operatorname{del}\\\hline
+ \mathit{setup}&g&\{r\}&\varnothing\\
+ \mathit{run}&r&\{c\}&\varnothing\\
+ \mathit{disturb}&\top&\varnothing&\{g\}\\
+ \mathit{shortcut}&g&\{c\}&\varnothing
+ \end{array}
+\]
+The compound task \(\mathit{job}(w)\) has the following ground instance of
+its sole method schema:
+\[
+ [a:\operatorname{do}[\mathit{setup}],\ b:\operatorname{do}[\mathit{run}];
+ a\prec b\ \land\ (a,g,b)\ \land\ (b,c)].
+\]
+The schema is obtained by replacing \(w\) consistently by its parameter
+variable. In the initial network, place
+\(j:\operatorname{perform}[\mathit{job}(w)]\)
+beside \(z:\operatorname{do}[\mathit{disturb}]\), with no ordering between
+the two. The method supplies the permitted order of its own children, not an
+order excluding all possible interleavings with \(z\).
+\end{hbexample}
+
+\begin{hbtheorem}{thm:p17-htn-example}{proved=annex:p17.htn-example}{Execution, protection and method-relative success}
+For the example, \(\mathit{setup},\mathit{run},\mathit{disturb}\) is a
+solution. The sequence \(\mathit{setup},\mathit{disturb},\mathit{run}\)
+is executable and ends with \(c\) true, but violates the protected interval
+and is not a solution. For the job-only initial network, the one-action
+sequence \(\mathit{shortcut}\) also reaches \(c\), but cannot be derived
+from its permitted method.
+
+A recursive method \(\mathit{loop}\) decomposing only into itself has no
+finite solution. Adding a method from \(\mathit{loop}\) to a dummy primitive
+gives a solution, although a search that always chooses the recursive method
+can continue indefinitely.
+\end{hbtheorem}
+
+Failure under a method library is a failure to obtain an authorized derivation
+under that library and its constraints. It need not be physical impossibility.
+Likewise, the absence of a result from unbounded search is not a certificate
+that no plan exists.
+
+\section{Restriction classes and input size}
+\label{sec:p17-htn-restrictions}
+
+\begin{hbdefinition}{def:p17-htn-restrictions}{Primitive, propositional, regular and totally ordered problems}
+A problem is \emph{primitive} when its initial network is primitive, and
+\emph{propositional} when variables are absent. It is \emph{regular} when
+each initial or method network has at most one nonprimitive task and that task
+is ordered relative to every other task in its network. Primitive tasks may
+precede or follow it. A right-linear method, with the sole nonprimitive task
+last, is a special case.
+
+A problem is \emph{totally ordered} when every initial and method network
+specifies a total order of its tasks. Having totally ordered methods alone leaves the initial
+network free to have unordered roots whose descendants interleave.
+Bounds on the number of tasks in a network refer to the initial network and
+method bodies in the input description, not to the sizes of all expanded
+networks. A \emph{fixed-domain} problem varies the initial state, constants
+and initial network while keeping the finite operator and method schemas fixed.
+\index{HTN planning!regular}\index{HTN planning!totally ordered}
+\end{hbdefinition}
+
+Let \(L\) be the input length in the source's explicit syntax encoding:
+argument positions, operator lists and constraint formulas are written out.
+Let \(b\) be the number of relevant ground atoms: those appearing in the
+initial state or in a ground instance of an operator or network constraint.
+Other atom coordinates cannot affect execution or any required constraint
+and are omitted from the state descriptions in the complexity arguments.
+The function-free vocabulary gives \(b\leq2^{\operatorname{poly}(L)}\), and
+there are \(2^b\) world states. In propositional problems \(b\) is polynomial
+in \(L\). For a fixed domain, the arities in its schemas are fixed and their
+ground predicate and task instances are polynomially numerous in the varying
+input. An exponential state space and
+an unbounded decomposition space are different sources of difficulty.
+
+\begin{hbtheorem}{thm:p17-htn-semidecision}{proved=annex:p17.htn-semidecision}{General plan existence is semidecidable}
+There is a procedure that eventually finds a plan for every solvable finite,
+function-free HTN problem. The procedure is not required to terminate on
+unsolvable problems.
+\end{hbtheorem}
+
+\begin{hblemma}{thm:p17-htn-cfl-intersection}{proved=annex:p17.htn-cfl-intersection}{The exact language-theoretic undecidability premise}
+Given two context-free grammars, it is undecidable whether their generated
+languages have a common word. The result persists for grammars over a common
+binary alphabet, in Chomsky normal form, whose languages exclude the empty
+word. Here a context-free grammar has finitely many terminals, nonterminals
+and productions, each production replacing one nonterminal by a finite word.
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p17-htn-undecidable}{proved=annex:p17.htn-undecidable}{Undecidability despite binary ordered methods}
+Plan existence is undecidable even for propositional problems with at most
+two tasks in the initial network and in every method body, and with every
+method body totally ordered. Thus, together with the preceding theorem, the
+problem is strictly semidecidable. The initial two compound tasks need not be
+ordered relative to each other.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p17-htn-fixed-undecidable}{proved=annex:p17.htn-fixed-undecidable}{A fixed domain can still encode undecidable instances}
+There is a fixed function-free domain, with variables and only totally ordered
+methods of at most two tasks, for which plan existence is strictly
+semidecidable. Its varying initial facts can encode two context-free grammars.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p17-htn-levels}{A decreasing task level}
+A \(k\)-level mapping assigns every ground task a number in
+\(\{0,\ldots,k\}\), gives every primitive task level zero, and strictly
+decreases from a ground method head to each task in its ground body.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p17-htn-levels}{proved=annex:p17.htn-levels}{A finite expansion bound from acyclicity}
+Plan existence is decidable for a problem possessing such a level mapping.
+Every decomposition branch has depth at most \(k\); finite branching then
+bounds the entire decomposition tree. A repeated task with no decreasing
+level receives no termination guarantee from this result.
+\end{hbtheorem}
+
+\section{The source complexity bounds}
+\label{sec:p17-htn-complexity}
+
+The following are the 1996 restriction bounds, keeping gaps between upper and
+lower bounds where the source keeps them
+\cite[Theorems~4--8]{ErolHendlerNau1996HTNComplexity}. Double exponential time
+means a bound \(2^{2^{\operatorname{poly}(L)}}\).
+
+\begin{hbdefinition}{def:p17-htn-trace-summary}{A finite summary retaining interval truth}
+For a nonempty execution trace \(\rho=s_0a_1s_1\cdots a_ms_m\), let
+\(\Lambda(s)\) be the set of relevant ground literals true in \(s\), and define
+\[
+ \begin{array}{ll}
+ A(\rho)=\displaystyle\bigcap_{j=0}^{m}\Lambda(s_j),&
+ B(\rho)=\displaystyle\bigcap_{j=1}^{m}\Lambda(s_j),\\
+ C(\rho)=\displaystyle\bigcap_{j=0}^{m-1}\Lambda(s_j),&
+ D(\rho)=\displaystyle\bigcap_{j=1}^{m-1}\Lambda(s_j).
+ \end{array}
+\]
+An intersection over no states is the set of all relevant ground literals. The summary
+\(\tau(\rho)\) consists of the four boundary states
+\(s_0,s_1,s_{m-1},s_m\), these four literal sets, and the Boolean flag
+\(m=1\). It records whether a literal holds throughout an interval, not only
+whether a chosen protected set was requested.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p17-htn-summary}{proved=annex:p17.htn-summary}{Composition and exact checking from finite summaries}
+The summary of a concatenation of compatible nonempty traces is computable
+from their summaries. Given summaries for a totally ordered list of task
+blocks, every source constraint involving their first/last endpoints can be
+evaluated exactly, including negated protection constraints. With \(b\)
+ground atoms, there are at most \(2^{12b+1}\) candidate summaries.
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p17-htn-total-order}{proved=annex:p17.htn-total-order}{Totally ordered HTN bounds}
+For totally ordered problems, plan existence is EXPSPACE-hard and belongs to
+double exponential time. In the propositional case it is PSPACE-hard and
+belongs to EXPTIME. These pairs of bounds are not assertions of matching
+completeness at either endpoint.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p17-htn-regular}{proved=annex:p17.htn-regular}{Regular problems and fixed domains}
+Regular plan existence is EXPSPACE-complete, and regular propositional plan
+existence is PSPACE-complete. The respective lower bounds hold even for
+totally ordered problems with one compound-task symbol and input networks
+and method bodies of at most two tasks.
+
+With a fixed regular domain and variables, plan existence belongs to PSPACE;
+some fixed regular domains make it PSPACE-complete.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p17-htn-primitive}{proved=annex:p17.htn-primitive}{Scheduling and binding without decomposition}
+Primitive plan existence is NP-complete, remains NP-complete with total
+ordering alone or with the propositional restriction alone, and is decidable
+in polynomial time when both restrictions are imposed.
+\end{hbtheorem}
+
+\section{Comparison with state-goal planning}
+\label{sec:p17-htn-strips}
+
+\begin{hbdefinition}{def:p17-htn-strips}{The comparison representation}
+A function-free STRIPS-style instance has a finite constant/predicate
+vocabulary, finite operator schemas, an initial state and a conjunction of
+goal literals. Its solutions are all executable action sequences whose final
+state satisfies the goal. No additional task-decomposition requirement applies.
+
+When a translation introduces a bookkeeping action \(\mathit{done}\), define
+the observation map \(h\) to erase that action and retain every original
+ground action. Erasure is stated explicitly and is not called symbol renaming.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p17-htn-strips-embedding}{proved=annex:p17.htn-strips-embedding}{A polynomial regular HTN encoding of state-goal planning}
+A STRIPS-style instance has a polynomial-size regular, totally ordered HTN
+encoding with one compound-task symbol. Its solutions are exactly the original
+solutions followed by one effect-free \(\mathit{done}\) action. Under \(h\),
+the two sets of observable solutions agree, including an originally empty plan.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p17-htn-expressivity}{proved=annex:p17.htn-expressivity}{Existence and solution-language separation}
+There is no computable translation of all function-free HTN instances into
+finite function-free STRIPS-style instances preserving plan existence in both
+directions.
+
+Moreover, some fixed propositional HTN instances have the nonregular solution
+language \(\{a^m b^m:m\geq1\}\). Every finite function-free STRIPS-style
+instance has a regular solution language. Thus even a noncomputable choice
+of STRIPS instance cannot represent every HTN solution language by symbol
+renaming; allowing the erasure of designated bookkeeping actions does not
+remove this obstruction. Regular HTN \emph{problems} in the source's sense
+need not have regular \emph{solution languages}.
+\end{hbtheorem}
+
+These claims distinguish an existence-preserving translation from a weaker
+condition checking only the images of source plans. The latter does not by
+itself rule out extra target plans. They also distinguish the observed action
+sequence from bookkeeping used by an encoding. The practical contribution of
+an HTN is its admissible decomposition structure, not a promise that every
+hierarchical search will be faster or terminate.

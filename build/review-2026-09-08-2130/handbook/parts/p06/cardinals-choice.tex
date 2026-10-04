@@ -1,0 +1,470 @@
+%% parts/p06/cardinals-choice.tex --- Phase-4 P6 cardinality and choice visit
+%% Migrated source: v1.1 lines 10559--10654.  New depth:
+%% D-P1-001/002/003/004/006.
+%% Apparatus: A-059, A-062, A-063, and A-133.
+%% Body = statements and reference apparatus only; proofs are in the annex.
+
+\chapter{Cardinals and Choice}
+\label{sec:p06-cardinals-choice}
+\chaptermark{Cardinals and Choice}
+
+This chapter separates results available in \(\mathsf{ZF}\) from results
+that use a stated choice principle.  It migrates the cardinal-and-choice
+entries of the verified source and supplies the additional reference entries
+required by the depth register.  The Axiom of Choice itself, the Well-ordering
+Theorem, cardinal assignment under Choice, and the Ultrafilter Lemma are first
+stated in Part~1; in particular, the Ultrafilter Lemma is referenced through
+Definition~\ref{def:ultrafilter-lemma}, not restated as another principle.
+Standard references for this chapter are
+\cite{Jech2003,Jech1973Choice,HowardRubin1998,Kunen2011}.
+
+\section{Set-theory systems at a glance}
+
+Table~\ref{tab:p06-set-theory-variants} fixes the conventions used when the
+handbook compares neighboring set theories.  Here \(\mathsf Z\) means the
+modern theory obtained from \(\mathsf{ZF}\) by omitting Replacement while
+retaining Foundation; historical uses of ``Zermelo set theory'' vary.
+Likewise, this table reserves \(\mathsf{NBG}\) for the presentation with
+Global Choice and uses \(\mathsf{GB}\) for its choice-free counterpart.
+Global Choice for \(\mathsf{MK}\) is convention-dependent and is therefore
+stated separately rather than hidden in the name.  Sources are
+\cite{Jech2003,Barwise1975,Mendelson1997,Kelley1975,Quine1937,Specker1953,
+Wilshaw2025ConNF}.
+\index{Zermelo--Fraenkel set theory}
+\index{Zermelo set theory}
+\index{Kripke--Platek set theory}
+\index{von Neumann--Bernays--Godel set theory@von Neumann--Bernays--G\"odel set theory}
+\index{Morse--Kelley set theory}
+\index{New Foundations}
+
+\begin{landscape}
+\begingroup\scriptsize
+\setlength{\tabcolsep}{2.5pt}
+\begin{longtable}{@{}p{.48in}p{.95in}p{1.15in}p{1.05in}p{.70in}
+  p{.85in}p{1.65in}@{}}
+\caption{Set-theory system variants (apparatus A-059), under the declared
+  \(\mathsf Z\), \(\mathsf{NBG}\), and \(\mathsf{MK}\) conventions above.}
+\label{tab:p06-set-theory-variants}\\
+\toprule
+System & Ontology / class sort & Schema strength & Power Set / Replacement &
+Foundation & Choice & Comparison \\
+\midrule
+\endfirsthead
+\toprule
+System & Ontology / class sort & Schema strength & Power Set / Replacement &
+Foundation & Choice & Comparison \\
+\midrule
+\endhead
+\(\mathsf{ZF}\) & One set sort; classes are metalinguistic abbreviations &
+Full Separation and Replacement schemata & Power Set: yes; Replacement: yes &
+Axiom & Absent; \(\mathsf{ZFC}=\mathsf{ZF}+\mathsf{AC}\) & Baseline
+first-order set theory used by the choice calibrations here. \\
+\(\mathsf Z\) & One set sort & Full Separation; no Replacement schema &
+Power Set: yes; Replacement: no & Retained & Absent;
+\(\mathsf{ZC}=\mathsf Z+\mathsf{AC}\) & Declared subtheory of \(\mathsf{ZF}\);
+Replacement-dependent constructions are unavailable. \\
+\(\mathsf{KP}\) & One set sort & Bounded-formula Separation and
+bounded-formula Collection & No Power Set and no full Replacement;
+\(\mathsf{KP}^{\mathcal P}\) is separate & Set Induction & Absent in standard
+KP & Transitive KP models are admissible; KP is much weaker than
+\(\mathsf{ZF}\). \\
+\(\mathsf{NBG}\) & Set and class sorts & Predicative elementary class
+comprehension & Sets satisfy Power Set and Replacement & For sets & Global
+Choice & Conservative over \(\mathsf{ZFC}\) for set-language sentences;
+\(\mathsf{GB}\) names the choice-free version. \\
+\(\mathsf{MK}\) / \(\mathsf{KM}\) & Set and class sorts & Impredicative class
+comprehension permits class quantifiers & Sets satisfy Power Set and
+Replacement; stronger class comprehension/collection & For sets & Separate,
+convention-dependent addition & Stronger and nonconservative over
+\(\mathsf{NBG}\)/\(\mathsf{ZFC}\); no identity with ``ZFC plus one
+inaccessible'' is asserted. \\
+\(\mathsf{NF}\) & One set sort; no primitive class sort & Stratified
+Comprehension & Power sets exist; no unrestricted Replacement & Fails &
+Refutable & Neither extension nor subtheory of \(\mathsf{ZF}\); the current
+Lean/TTT and paper-level bridge are separated below. \\
+\bottomrule
+\end{longtable}
+\endgroup
+\end{landscape}
+
+The 2025 NF project formally verifies in Lean a model construction for
+\emph{Tangled Type Theory} (\(\mathsf{TTT}\)); the conclusion
+\(\mathsf{Con}(\mathsf{NF})\) then uses the established paper-level
+\(\mathsf{NF}\)--\(\mathsf{TTT}\) reduction.  This distinguishes the
+machine-checked model construction from the paper-level bridge and from
+external peer review
+\cite{Wilshaw2025ConNF}.  NF's failure of Choice is the theorem of
+\cite{Specker1953}, not a convention of the table.
+\index{Tangled Type Theory}
+
+\section{Equipotence and Hartogs numbers}
+
+\begin{hbdefinition}{def:p06-equipotence-comparison}{Equipotence and comparison by injection}
+Sets \(A\) and \(B\) are \emph{equipotent}, written \(A\approx B\), iff
+there is a bijection \(A\to B\).  Say that the size of \(A\) is at most the
+size of \(B\) iff there is an injection \(A\to B\), and that it is strictly
+smaller iff such an injection exists but no injection \(B\to A\) exists.
+These are relations between sets; they do not presuppose that either set is
+well-orderable or has been assigned an ordinal cardinal.  They are needed
+below to formulate cardinal comparison without importing Choice through the
+notation \(\abs A\).
+\index{equipotence}
+\index{cardinality!comparison by injection}
+\end{hbdefinition}
+
+In \(\mathsf{ZF}\), a set \(A\) is equipotent with an ordinal cardinal iff it
+is well-orderable.  Only after that fact has been established do we write
+\(\abs A\) for the unique ordinal cardinal equipotent with \(A\).  Under the
+Axiom of Choice every set satisfies this condition by
+Corollary~\ref{cor:cardinal-assignment}.
+
+\begin{hbdefinition}{def:p06-hartogs-number}{Hartogs number}
+For a set \(A\), the \emph{Hartogs number} \(h(A)\), when it exists, is the
+least ordinal for which no injection \(h(A)\to A\) exists.  It is an ordinal
+assigned to \(A\), not a claim that \(A\) itself has an ordinal cardinal; this
+distinction is required in \(\mathsf{ZF}\), where \(A\) need not be
+well-orderable.
+\index{Hartogs number}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p06-hartogs}{sketched=annex:p6.card.1}{Hartogs's theorem}
+For every set \(A\), the Hartogs number \(h(A)\) exists.  This is provable in
+\(\mathsf{ZF}\), without the Axiom of Choice.
+\end{hbtheorem}
+\begin{hbwarning}{def:p06-cardinal-notation-choice}{Choice in cardinal notation}
+Ordinal trichotomy is a theorem of \(\mathsf{ZF}\), but comparability of
+arbitrary sets by injection is not.  Unrestricted use of \(\abs A\), of a
+total order on all set sizes, or of the usual collapse laws for infinite
+cardinal arithmetic therefore imports a consequence of Choice unless
+well-orderability has already been supplied.
+\end{hbwarning}
+
+\section[Partial orders and Choice]{Partial orders and equivalent forms of Choice}
+
+\begin{hbdefinition}{def:p06-order-vocabulary}{Partial-order vocabulary}
+A \emph{partial order} on a set \(P\) is a reflexive, transitive, and
+antisymmetric binary relation \(\leq_P\).  A \emph{chain} is a subset of
+\(P\) on which \(\leq_P\) is total.  An \emph{upper bound} of
+\(C\subseteq P\) is an element \(u\in P\) with \(c\leq_Pu\) for every
+\(c\in C\); it is a \emph{strict upper bound} iff \(c<_Pu\) for every
+\(c\in C\).  An element is \emph{maximal} iff no strictly larger element
+exists, whereas it is \emph{greatest} iff it is above every member of
+\(P\).  A well-order \((D,<_{D})\) \emph{end-extends} a well-order
+\((C,<_{C})\) iff \(C\subseteq D\), the order on \(C\) is preserved, and
+every member of \(D\setminus C\) lies above every member of \(C\).
+These terms describe order relations and their elements; maximal and greatest
+are kept distinct because Zorn's lemma supplies only the former.
+\index{partial order}
+\index{chain!in a partial order}
+\index{upper bound}
+\index{strict upper bound}
+\index{maximal element}
+\index{greatest element}
+\index{end-extension!of well-orders}
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p06-finite-character}{Finite-character family}
+Let \(X\) be a set.  A nonempty family
+\(\mathcal A\subseteq\mathcal P(X)\) has
+\emph{finite character} iff, for every \(Y\subseteq X\),
+\[
+  Y\in\mathcal A
+  \quad\Leftrightarrow\quad
+  \text{every finite subset of \(Y\) belongs to \(\mathcal A\)}.
+\]
+This is a property of a family of subsets, not a finiteness condition on its
+members.  It is used in Tukey's formulation of Choice below.
+\index{finite character}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p06-zorn}{sketched=annex:p6.choice.1}{Choice equivalents and Zorn's lemma}
+Over \(\mathsf{ZF}\), the following principles are equivalent.
+\begin{enumerate}
+  \item The Axiom of Choice as stated in
+        Section~\ref{sec:set-prerequisites-06}.
+  \item Every set can be well-ordered.
+  \item \emph{Zorn's lemma}: if every chain in a poset \(P\), including the
+        empty chain, has an upper bound in \(P\), then \(P\) has a maximal
+        element.
+  \item \emph{Hausdorff's maximal principle}: every chain in a poset is
+        contained in a maximal chain.
+  \item \emph{Tukey's lemma}: every family of finite character has a maximal
+        member under inclusion.
+  \item The Cartesian product of every set-indexed family of nonempty sets is
+        nonempty.
+  \item Tychonoff's theorem for arbitrary compact topological spaces.
+\end{enumerate}
+The compact-Hausdorff restriction of Tychonoff's theorem is deliberately not
+on this list: over \(\mathsf{ZF}\) it is equivalent to the Boolean Prime Ideal
+Theorem, hence to the Ultrafilter Lemma, and is strictly weaker than Choice in
+the relative-consistency sense recorded in
+Definition~\ref{def:ultrafilter-lemma}.
+\index{Zorn's lemma}
+\index{Hausdorff maximal principle}
+\index{Tukey's lemma}
+\index{Tychonoff theorem}
+\index{Boolean Prime Ideal Theorem}
+\end{hbtheorem}
+
+\begingroup\small
+\begin{longtable}{@{}p{.20\textwidth}p{.35\textwidth}p{.36\textwidth}@{}}
+\caption{Choice principles and their exact calibration over \(\mathsf{ZF}\)
+  (apparatus A-062).}
+\label{tab:p06-ac-equivalents}\\
+\toprule
+Principle & Form used here & Status over \(\mathsf{ZF}\) \\
+\midrule
+\endfirsthead
+\toprule
+Principle & Form used here & Status over \(\mathsf{ZF}\) \\
+\midrule
+\endhead
+\multicolumn{3}{@{}l}{\textit{Full-Choice equivalences over \(\mathsf{ZF}\)}}\\*
+\addlinespace[2pt]
+Axiom of Choice & Choice function for every set of nonempty sets & Reference
+form; equivalent to each of the next six rows. \\
+Well-ordering theorem & Every set admits a well-order & Equivalent to Choice;
+Choice implies the well-ordering statement in
+Section~\ref{sec:set-prerequisites-06}, and the converse selects the least
+member of each nonempty set. \\
+Zorn's lemma & Every chain-upper-bounded poset has a maximal element &
+Equivalent to Choice; the Choice-to-Zorn direction is the migrated sketch in
+Annex~\ref{annex:p6.choice.1}. \\
+Hausdorff maximal principle & Every chain extends to a maximal chain &
+Equivalent to Choice; applying Zorn to the poset of chains gives the forward
+implication. \\
+Tukey's lemma & Every finite-character family has an inclusion-maximal member
+& Equivalent to Choice; it specializes to maximal partial choices and follows
+from Zorn. \\
+Product principle & Every set-indexed product of nonempty sets is nonempty &
+Equivalent to Choice: a point of the product is exactly a simultaneous choice
+function. \\
+Tychonoff, arbitrary compact spaces & Every product of compact spaces is
+compact & Equivalent to Choice. \\
+\addlinespace[4pt]
+\multicolumn{3}{@{}l}{\textit{BPI-equivalent and restricted compactness forms}}\\*
+\addlinespace[2pt]
+Unrestricted propositional compactness & Every finitely satisfiable set of
+formulas over an arbitrary propositional variable set is satisfiable &
+Equivalent over \(\mathsf{ZF}\) to \(\mathsf{BPI}\); see
+Theorem~\ref{thm:p02-arbitrary-prop-compactness-bpi}. \\
+Tychonoff, compact Hausdorff spaces & Every product of compact Hausdorff spaces
+is compact & Equivalent to the Boolean Prime Ideal Theorem, not to full
+Choice. \\
+Boolean Prime Ideal Theorem / Ultrafilter Lemma & Every proper Boolean filter
+extends to an ultrafilter & Choice implies it; the converse is not provable
+over \(\mathsf{ZF}\) if \(\mathsf{ZF}\) is consistent
+\cite{HalpernLevy1971,HowardRubin1998}. \\
+\bottomrule
+\end{longtable}
+\endgroup
+
+\begin{hbtheorem}{thm:p06-cardinal-trichotomy}{cited=Jech1973Choice}{Cardinal trichotomy and Choice}
+Over \(\mathsf{ZF}\), the following are equivalent: the Axiom of Choice; and,
+for every two sets \(A,B\), exactly one of these alternatives holds:
+\(A\) has strictly smaller size than \(B\), \(A\approx B\), or \(B\) has
+strictly smaller size than \(A\), with comparison understood as in
+Definition~\ref{def:p06-equipotence-comparison}.  This is a theorem about
+arbitrary sets.  The trichotomy theorem for ordinals requires no Choice.
+\end{hbtheorem}
+
+\section[Weaker choice principles]{Weaker choice principles and handbook dependencies}
+
+\begin{hbdefinition}{def:p06-countable-dependent-choice}{Countable Choice and Dependent Choice}
+The \emph{Axiom of Countable Choice}, \(\mathsf{AC}_{\omega}\), says that
+for every sequence \(\langle X_n:n\in\N\rangle\) of nonempty sets there is
+a function \(f:\N\to\bigcup_{n\in\N}X_n\) with \(f(n)\in X_n\) for every
+\(n\).  Its restriction to sequences of nonempty finite sets is the
+\emph{Axiom of Countable Choice for finite sets},
+\(\mathsf{AC}_{\omega}^{\mathrm{fin}}\).  The \emph{Axiom of Dependent
+Choice}, \(\mathsf{DC}\), says that whenever \(X\) is nonempty,
+\(R\subseteq X\times X\) is serial, and \(x_0\in X\), there is a sequence
+\(\langle x_n:n\in\N\rangle\) beginning with \(x_0\) and satisfying
+\(x_nRx_{n+1}\) for every \(n\).
+These are metatheoretic principles about constructing sequences, not rules of
+any object-language calculus.  Dependent Choice is stronger because its next
+choice may depend on the preceding value; this distinction is needed in the
+dependency table.
+\index{Axiom of Countable Choice}
+\index{Axiom of Countable Choice!for finite sets}
+\index{Dependent Choice}
+\end{hbdefinition}
+
+Write \(\mathsf{BPI}\) for the \emph{Boolean Prime Ideal Theorem}, equivalently
+the Ultrafilter Lemma of Definition~\ref{def:ultrafilter-lemma}.  This is a
+metalinguistic abbreviation for the weaker choice principle already stated in
+Part~1; it is used below to keep the implication diagram and dependency table
+legible.
+\index{Boolean Prime Ideal Theorem}
+
+\begin{hbtheorem}{thm:p06-choice-implications}{cited=HowardRubin1998}{Implications among weaker choice principles}
+Over \(\mathsf{ZF}\),
+\[
+  \begin{aligned}
+    \mathsf{AC}&\ \text{ implies }\mathsf{DC},\text{ which implies }
+      \mathsf{AC}_{\omega},\text{ which implies }
+      \mathsf{AC}_{\omega}^{\mathrm{fin}};\\
+    \mathsf{AC}&\ \text{ implies }\mathsf{BPI},\text{ which implies }
+      \mathsf{AC}_{\omega}^{\mathrm{fin}}.
+  \end{aligned}
+\]
+The converses along the first chain and the converse from \(\mathsf{BPI}\) to
+\(\mathsf{AC}\) fail in suitable models of \(\mathsf{ZF}\).  No comparison
+between \(\mathsf{BPI}\) and either \(\mathsf{DC}\) or
+\(\mathsf{AC}_{\omega}\) is asserted, and the reverse implication from
+\(\mathsf{AC}_{\omega}^{\mathrm{fin}}\) to \(\mathsf{BPI}\) is not asserted.
+\end{hbtheorem}
+The failure of the \(\mathsf{BPI}\)-to-Choice converse is due to Halpern and
+L\'evy; the remaining calibrations and models are catalogued in
+\cite{Jech1973Choice,HowardRubin1998,HalpernLevy1971}.
+
+\begingroup\small
+\begin{longtable}{@{}p{.27\textwidth}p{.18\textwidth}p{.46\textwidth}@{}}
+\caption{Choice-principle dependencies of handbook results (apparatus A-063).}
+\label{tab:p06-choice-dependencies}\\
+\toprule
+Handbook result or construction & Principle stated & Exact role \\
+\midrule
+\endfirsthead
+\toprule
+Handbook result or construction & Principle stated & Exact role \\
+\midrule
+\endhead
+Countable propositional compactness,
+Theorem~\ref{thm:prop-compactness} & None & The binary-tree route below is a
+\(\mathsf{ZF}\) proof; no family of arbitrary finite choice sets is selected. \\
+Unrestricted propositional compactness,
+Theorem~\ref{thm:p02-arbitrary-prop-compactness-bpi} & \(\mathsf{BPI}\) &
+Equivalent over \(\mathsf{ZF}\) to the Boolean Prime Ideal Theorem. \\
+Countable-signature first-order completeness,
+Corollary~\ref{cor:fol-completeness-countable} & None & The construction
+uses one supplied enumeration and least available witnesses. \\
+Arbitrary-signature first-order completeness,
+Theorem~\ref{thm:fol-completeness} & \(\mathsf{AC}\) & Well-ordering
+supports the transfinite Lindenbaum--Henkin construction. \\
+Downward L\"owenheim--Skolem,
+Theorem~\ref{thm:downward-ls} & \(\mathsf{AC}\) & The theorem states the
+ambient Choice hypothesis used for cardinal bounds and witness selection. \\
+Nonprincipal-ultrafilter existence,
+Lemma~\ref{lem:nonprincipal-ultrafilter} & \(\mathsf{BPI}\) & The
+cofinite filter is extended by the Part-1 Ultrafilter Lemma. \\
+Zorn's lemma and unrestricted well-ordering,
+Theorem~\ref{thm:p06-zorn} & \(\mathsf{AC}\) & Each is equivalent over
+\(\mathsf{ZF}\) to full Choice, not merely to a countable fragment. \\
+Arbitrary cardinal comparison,
+Theorem~\ref{thm:p06-cardinal-trichotomy} & \(\mathsf{AC}\) & Trichotomy for
+all sets is equivalent to Choice; ordinal comparison remains a theorem of
+\(\mathsf{ZF}\). \\
+\L o\'s's theorem, Theorem~\ref{thm:los} & \(\mathsf{AC}\) & The
+existential induction step selects witnesses in the satisfying factors; the
+ultrafilter itself is already supplied. \\
+Part-1 countable-union bound,
+Theorem~\ref{thm:infinite-cardinal-finite-coding}, clause 4 &
+\(\mathsf{AC}\) is stated;
+\(\mathsf{AC}_{\omega}\) supplies the selection step & From bare existence
+of injections \(A_n\to\kappa\), a simultaneous sequence of injections is
+needed.  The exact restriction consumed there is Countable Choice for such
+sets of injections.  Fixed-countable completeness instead begins with one
+specified enumeration and does not use this inference. \\
+Arbitrary finite successor choices &
+\(\mathsf{AC}_{\omega}^{\mathrm{fin}}\) & This principle supplies a selector
+for an arbitrary sequence of nonempty finite successor sets.  The canonical
+binary recursion below instead uses the fixed order \(0<1\) and requires no
+such selector. \\
+Generic filter over an externally countable model & Supplied external
+enumeration & Once the dense sets and candidate conditions are enumerated,
+least compatible choices are made by ordinary recursion in the declared
+metatheory; this is not an internal axiom of the model. \\
+Dependent Choice & \(\mathsf{DC}\) & No migrated Phase-4 core theorem is
+silently assigned this principle; a later theorem must state it if a
+dependent recursion not reducible to ordinary recursion is used. \\
+\bottomrule
+\end{longtable}
+\endgroup
+
+\begin{figure}[!htbp]
+\centering
+\begin{tikzpicture}[
+  node distance=18mm and 15mm,
+  principle/.style={draw,rounded corners,minimum width=17mm,minimum height=8mm,
+                    inner sep=3pt,font=\small},
+  implication/.style={-{Latex[length=2.2mm]},thick},
+  note/.style={font=\scriptsize,align=center}
+]
+  \node[principle] (ac) {\(\mathsf{AC}\)};
+  \node[principle,right=of ac] (dc) {\(\mathsf{DC}\)};
+  \node[principle,right=of dc] (acw) {\(\mathsf{AC}_{\omega}\)};
+  \node[principle,right=of acw] (acwf) {\(\mathsf{AC}_{\omega}^{\mathrm{fin}}\)};
+  \node[principle,below=of dc] (bpi) {\(\mathsf{BPI}\)};
+  \draw[implication] (ac) -- (dc);
+  \draw[implication] (dc) -- (acw);
+  \draw[implication] (acw) -- (acwf);
+  \draw[implication] (ac) |- (bpi);
+  \draw[implication] (bpi) -| (acwf);
+  \node[note,above=1mm of dc] {converse fails};
+  \node[note,above=1mm of acw] {converse fails};
+  \node[note,above=1mm of acwf] {converse fails};
+  \node[note,left=2mm of bpi] {converse\\fails};
+  \node[note,below=3mm of bpi,anchor=north west] {No comparison with
+    \(\mathsf{DC}\) or \(\mathsf{AC}_{\omega}\);\\
+    the reverse diagonal is not asserted.};
+\end{tikzpicture}
+\caption{Implications among the choice principles used in the handbook
+  (apparatus A-133).  Every arrow is provable in \(\mathsf{ZF}\); the marked
+  converses fail in suitable models, while the reverse diagonal is left
+  unasserted.}
+\label{fig:p06-choice-implications}
+\end{figure}
+\clearpage
+
+\section[Binary-tree compactness]{Binary trees, the fan theorem, and compactness}
+
+\begin{hbdefinition}{def:p06-binary-tree-bar}{Binary trees, branches, and bars}
+Write \(2^{<\omega}\) for the finite binary sequences and \(2^\omega\) for
+the infinite binary sequences.  A \emph{binary tree} is a prefix-closed set
+\(\mathcal T\subseteq2^{<\omega}\).  It has nodes at every level iff for every
+\(n\in\N\) some \(\mathbf s\in\mathcal T\) has length \(n\).  A \emph{branch} through
+\(\mathcal T\) is an \(f\in2^\omega\) with every finite initial segment
+\(f\mathord{\upharpoonright}n\in\mathcal T\).  A \emph{bar} is a set
+\(B\subseteq2^{<\omega}\) such that every \(f\in2^\omega\) has an initial
+segment in \(B\).  These notions concern the canonical binary tree; replacing
+it by an arbitrary sequence of nonempty finite successor sets can introduce a
+use of \(\mathsf{AC}_{\omega}^{\mathrm{fin}}\).
+\index{binary tree}
+\index{branch!through a binary tree}
+\index{bar!on the binary tree}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p06-konig-infinity}{proved=annex:p6.choice.2}{K\"onig's infinity lemma for the binary tree}
+In \(\mathsf{ZF}\), if a binary tree \(\mathcal T\subseteq2^{<\omega}\) has a
+node at every level, then \(\mathcal T\) has an infinite branch.  No choice
+principle is used.
+\end{hbtheorem}
+The canonical binary formulation is essential to the choice-free claim; see
+\cite{Jech2003} for the surrounding set-theoretic compactness methods.
+
+\begin{hbcorollary}{thm:p06-classical-fan}{proved=annex:p6.choice.3}{Classical fan theorem}
+In \(\mathsf{ZF}\), if \(B\subseteq2^{<\omega}\) is a bar, then there is an
+\(N\in\N\) such that every \(\mathbf s\in2^N\) has an initial segment in \(B\).
+This is the classical contrapositive form supplied by K\"onig's infinity
+lemma, not a claim about constructive fan principles.
+\end{hbcorollary}
+
+\begin{hbmethod}{def:p06-countable-compactness-route}{Choice-free route to countable propositional compactness}
+\begin{description}
+  \item[Input.] A finitely satisfiable set \(\Gamma\) of formulas over a fixed
+        countable propositional alphabet, together with enumerations of its
+        variables and formulas.
+  \item[Tree.] At level \(n\), retain exactly the binary assignments to the
+        first \(n\) variables that extend to a valuation satisfying the first
+        \(n\) formulas.
+  \item[Dependency.] Apply Theorem~\ref{thm:p06-konig-infinity} to this
+        canonical binary tree; read the resulting branch as one valuation of
+        the whole alphabet.
+  \item[Result.] The correctness statement is the already proved
+        Theorem~\ref{thm:prop-compactness}.  For an unrestricted variable set,
+        Theorem~\ref{thm:p02-arbitrary-prop-compactness-bpi} records the exact
+        \(\mathsf{BPI}\) calibration.
+\end{description}
+\index{propositional compactness!choice-free route}
+\end{hbmethod}

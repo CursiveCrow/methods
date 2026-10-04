@@ -1,0 +1,815 @@
+% Struss 2008 Chapter 10; source-specific construction, not Chapter 9 ATMS formulation.
+\chapter{Compositional Models and Model-Based Problem Solving}
+\label{sec:p16-qualitative-compositional-model-formulation}
+
+Peter Struss's account starts from a separation between reusable domain
+knowledge and the reasoning which uses it for a task
+\cite[secs.~10.1--10.3]{Struss2008ModelBasedProblemSolving}.
+A library describes how constituents behave; a system description says how
+they are connected; diagnosis, testing, design and remedy engines exploit
+the resulting models differently. This is not a requirement to express every
+physical model in first-order logic. Consistency and entailment are semantic
+requirements which a constraint solver, numerical predictor or other modeling
+formalism must implement at the needed scope.
+
+\section{The architecture and the task determine what a model must do}
+\label{sec:p16-cm-tasks}
+
+In the source's vehicle example, a rule excluding a flat battery whenever
+either set of lights is on works only because starter and lights share a
+supply. Figure~10.1 changes the circuit to two batteries: illuminated lights
+can then coexist with a flat starter battery. The defect is the compiled-in
+structure, not the rule syntax. A model library for batteries, wires, lights
+and starters can instead be instantiated against either connection structure.
+The same library can support prediction of failure effects or test generation,
+not only diagnosis \cite[pp.~395--397]{Struss2008ModelBasedProblemSolving}.
+
+Let \(M\) denote a behavior model, \(O\) observations and \(G\) goals.
+The following task distinctions are consequential:
+\begin{itemize}
+\item Diagnosis searches for a revised model consistent with \(O\), or,
+      under a stronger explanatory requirement, entailing selected symptoms.
+      Reducing a goal-violation assessment to checking only the all-correct
+      model presumes that all-correct behavior guarantees the goals.
+\item Design seeks \(M\entails G\). Consistency of \(M\cup G\) is
+      useful for refuting alternatives, but only says a desired behavior is
+      possible. Configuration fixes much of the structure and selects types
+      or parameters; unrestricted innovative design can change the structure.
+\item Failure analysis asks whether a fault model entails an unwanted effect
+      or merely permits it in a specified scenario. Possible is not inevitable.
+\item A test chooses a stimulus and observations which separate remaining
+      hypotheses. A measurement proposal holds the stimulus fixed.
+\item A remedy chooses actions or a target configuration consistent with,
+      or guaranteed to achieve, goals. It may need to work for several
+      still-possible diagnoses and respect intermediate safety goals.
+\end{itemize}
+Figure~10.2's shared architecture is a predictor/consistency checker coupled
+to a model-revision generator. Disturbances, design alternatives and remedial
+interventions supply different revision spaces, not interchangeable hypotheses
+\cite[sec.~10.2]{Struss2008ModelBasedProblemSolving}.
+
+\section{Reusable fragments and actual model composition}
+\label{sec:p16-cm-composition}
+
+Struss distinguishes six modeling requirements: prediction/consistency
+checking, behavioral validity, explicit conceptual structure, automated
+composition, genericity, and appropriate granularity. A global equation
+without its component/process provenance cannot say which physical hypothesis
+caused an inconsistency. A predictor fixed to one input-to-output direction
+can miss contradictions requiring reasoning from measured outputs.
+An overly restrictive model can falsely reject real behavior; a conservative
+model may keep additional possibilities but should not exclude the actual one
+\cite[secs.~10.3.1--10.3.6]{Struss2008ModelBasedProblemSolving}.
+
+\begin{hbdefinition}{def:p16-cm-library}{Component modes, guarded fragments and connections}
+Let \(C\) be a finite component set. Each component \(c\) has a finite,
+nonempty mode set \(B_c\), containing \(ok_c\). Exactly one mode holds
+for each component. A complete mode assignment \(a\in\prod_{c\in C}B_c\)
+selects one mode per component; a partial assignment selects modes on a subset.
+Assignments also denote the conjunctions of their selected mode atoms.
+The library \(L\) contains variable-domain axioms, mode exclusivity and
+coverage, and guarded fragments \(b_c\to F_{c,b}\). The system structure
+\(S\) supplies connections, typically equality of identified port variables.
+The composition for \(a\) is \(L\cup S\cup\{a\}\).
+
+In a relational realization, mode \(b\) supplies a relation \(R_{c,b}\)
+on local variables. Embed it in the global variable domain \(D\), enforcing
+the connections, and take their natural join/intersection \(R_a\).
+Retaining a port equality is different from independently choosing two
+values which happen to be in the same qualitative category.
+\end{hbdefinition}
+
+The library is domain-specific; the connections are system-specific.
+Struss's \(SD=LIB\cup STRUCTURE\) abbreviates them but does not erase
+the distinction. Mode exclusivity does not prove that every composed model
+is consistent. That additionally needs compatible domains, connections and
+valid fragments. The formal \(a\) above is an assignment of conceptual
+behavior modes, not an arbitrary fit of numerical parameters.
+
+\begin{hbtheorem}{thm:p16-cm-composition}{proved=annex:p16.cm-composition}{Conservative composition and exact observable compilation}
+Suppose each actual global behavior in an application class satisfies the
+connections and projects into the selected local mode relations. Then it
+belongs to \(R_a\); a genuine actual observation cannot be refuted by this
+composition. For observable variables \(V\), the exact compiled model
+\(P_a=\pi_V(R_a)\) preserves consistency with every restriction on \(V\)
+and every universal prediction expressed only on \(V\), in both directions.
+Independent projection of each fragment before joining need not do so.
+\end{hbtheorem}
+
+For example, with binary hidden \(z\), one fragment requires \(z=x\)
+and another \(z=y\). Their join entails \(x=y\). Separately deleting
+\(z\) leaves both observable domains unrestricted and admits \(x=0,y=1\).
+Eliminating hidden variables from the composite model is thus a compilation
+operation, not permission to discard inter-fragment coupling.
+
+\begin{hbexample}{def:p16-cm-genericity}{A pipe, a motor and query-relative granularity}
+A pipe beside a check valve must still represent reverse flow: a broken
+check valve can expose the pipe to that environment. A tram motor can work
+as a generator during braking. Encoding the intended global direction in
+the local fragment defeats reuse. Relevant exogenous values must be covered
+over their declared domains, not only those seen during normal operation.
+
+Fine structural resolution is needed to distinguish the faults which matter
+to repair; fine numerical resolution is needed only when it changes the
+task's distinctions. For fixed on-board sensors, compilation can eliminate
+many internal variables. For workshop diagnosis with movable probes, that
+same compilation may discard variables later needed. Struss's pipe-library
+challenge separates oxygen transport in an intake, emissions in an exhaust,
+and pressure supply to a valve: one overloaded fragment is not automatically
+an adequate tailored model \cite[pp.~406--407,459]{Struss2008ModelBasedProblemSolving}.
+\end{hbexample}
+
+\section{Mode search, conflicts, fault models and relevance}
+\label{sec:p16-cm-mode-search}
+
+A complete \(a\) is a consistency diagnosis when \(L\cup S\cup\{a\}
+\cup O\) has a model. The faulty-component set is
+\(\{c:a(c)\ne ok_c\}\). Fault localization abstracts from the particular
+fault modes; fault identification retains them. Inclusion-minimal faulty sets,
+minimum cardinality and most probable assignments are different criteria.
+The normality-only conflict/hitting-set construction and its corrected
+shared-node implementation are developed in
+\cref{sec:p16-consistency-based-diagnosis}. Here the important additional
+case is a library with actual fault modes
+\cite[secs.~10.4.1--10.4.2]{Struss2008ModelBasedProblemSolving}.
+
+\begin{hbdefinition}{def:p16-cm-conflict}{A mode conflict and its use}
+An inconsistent partial assignment \(p\) satisfies
+\(L\cup S\cup O\cup\{p\}\entails\bot\). Its conflict is the
+clause \(\neg p\): at least one of its selected modes must change.
+A smaller inconsistent assignment gives a stronger pruning clause. Minimal
+conflicts are useful, but a sound nonminimal one is sufficient for safe pruning.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p16-cm-mode-conflicts}{proved=annex:p16.cm-mode-conflicts}{Conflict characterization and the fault-model boundary}
+Let \(\mathcal K\) consist of the negations of all inclusion-minimal
+inconsistent partial mode assignments, including the empty one if the
+background is inconsistent. A complete assignment is a diagnosis exactly
+when it satisfies every clause in \(\mathcal K\). A partial assignment
+is a kernel exactly when it is inclusion-minimal among terms whose every
+complete mode extension satisfies \(\mathcal K\). This is implication
+relative to the mode-domain axioms, not arbitrary unconstrained Boolean
+valuations.
+
+In the two-mode specialization \(ok_c,fault_c\), the family of feasible
+faulty-component sets is upward closed exactly when every minimal
+inconsistent partial assignment contains only \(ok\) assumptions.
+Nonminimal redundant conflicts need not have that restricted syntax.
+With actual fault-mode constraints, neither upward closure nor generation
+of all diagnoses by minimal faulty sets is automatic.
+\end{hbtheorem}
+
+This states the content behind the source's basic-conflict and kernel
+characterizations at a precise finite mode scope. Its positive-conflict
+hitting-set account applies when the relevant minimal conflicts contain
+only normality assumptions; the complete normality-only proof is in
+\cref{thm:p16-diag-conflicts}. Fault-mode constraints must not be silently
+removed to reuse that simpler search. Struss credits de Kleer, Mackworth
+and Reiter for these general characterizations, and Reiter for the
+normality-based hitting-set account
+\cite[Theorems~10.1--10.3 and references~19,62]{Struss2008ModelBasedProblemSolving}.
+
+\begin{hbmethod}{def:p16-cm-candidate-search}{Constructing and checking candidates}
+Generate complete mode assignments in an order appropriate to the task.
+Before instantiating a candidate, test cached conflict clauses. If it extends
+an inconsistent partial assignment, discard it. Otherwise compose its mode
+fragments with the structure and observations and call the consistency checker.
+Record a consistent candidate, or extract/cache a supporting inconsistent
+partial assignment. Revise modes rather than changing unrelated mathematical
+constraints without conceptual provenance. After new observations, recheck
+survivors and also check every newly generated candidate against all old data.
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p16-cm-search}{proved=annex:p16.cm-search}{The finite candidate construction with explicit oracle duties}
+For \(N=\prod_{c\in C}|B_c|\) candidates, a fair enumeration without
+repetition and a total exact consistency oracle terminates after at most
+\(N\) oracle calls, returns exactly the consistency diagnoses, and remains
+so when candidates extending sound cached conflicts are skipped.
+Filtering the returned set by any partial order on this finite family yields exactly
+its maximal candidates. A linear order extending the strict preference lets
+one skip candidates already dominated by a recorded diagnosis when only
+maximal diagnoses are wanted. This last skipping requires that order.
+These are finite-space guarantees, not an efficiency theorem for DDE,
+SHERLOCK, arbitrary first-order consistency or unbounded process creation.
+\end{hbtheorem}
+
+Propagation plus dependency recording, such as an ATMS, can find conflicts
+from incompatible predicted values. In resistive or hydraulic models,
+propagation may be incomplete. Missing a conflict keeps extra candidates;
+soundness of discovered conflicts alone does not certify consistency of a
+survivor. Compilation can improve runtime, but may shift prohibitive work
+offline. Hierarchical diagnosis needs valid aggregate normal and fault models;
+hand-building them forfeits much of the intended reuse
+\cite[pp.~420--422]{Struss2008ModelBasedProblemSolving}.
+
+\begin{hbexample}{def:p16-cm-lights}{The source's multiple-fault circuit and a fault-model revision}
+Figure~10.3 has a dark rear light \(R\), inactive starter \(T\), and
+lit head light \(H\), with battery \(B\) and wires \(w_1,\ldots,w_6\).
+The four reported normality conflicts have component supports
+\[
+\begin{split}
+K_1&=\{B,w_1,w_2,T\},\\
+K_2&=\{B,w_1,w_2,w_3,w_4,R\},\\
+K_3&=\{H,w_5,w_6,R\},\\
+K_4&=\{H,w_5,w_6,w_3,w_4,T\}.
+\end{split}
+\]
+The pair \(\{R,T\}\) hits all four; neither singleton does.
+Deriving \(K_3,K_4\) uses the lit head light to infer supply information,
+not only forward causal propagation. Normality-only models also permit
+implausible explanations involving a defective lit head light.
+
+If the library exhaustively says every nonnormal head-light mode is dark,
+its observed illumination refutes them and exonerates that component.
+But an unrestricted unknown fault cannot be refuted this way. The source's
+exotic open/short-to-source wire fault demonstrates why an incomplete catalog
+must not be treated as physical exhaustiveness. With explicit fault models,
+adding \(H\) to \(\{R,T\}\) can make the candidate inconsistent:
+upward closure of faulty sets is no longer available
+\cite[pp.~412--415]{Struss2008ModelBasedProblemSolving}.
+\end{hbexample}
+
+\begin{hbdefinition}{def:p16-cm-circuit-realization}{An explicit voltage-presence realization of the source circuit}
+To make that calculation reproducible, give the battery and three branches
+binary left/right potentials \((x_j,y_j)\), \(j=B,T,R,H\).
+Normal wires identify potentials on the two rails: \(w_1,w_2\) connect
+\(B\) to \(T\), \(w_3,w_4\) connect \(T\) to \(R\), and
+\(w_5,w_6\) connect \(R\) to \(H\), with the odd wire on the left.
+Normal battery behavior requires \(x_B\ne y_B\). A normal starter/light
+is active/lit exactly when its two potentials differ. Observations are
+starter inactive, rear light dark and head light lit. A faulty component
+adds no constraint; the port domains and observations still hold.
+This is an explicit ideal voltage-presence model for the source topology,
+not a quantitative circuit or a catalog of physically exhaustive fault modes.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p16-cm-circuit}{proved=annex:p16.cm-circuit}{The four source conflicts and every minimal localization}
+For that model, the minimal normality conflicts are exactly \(K_1\)
+through \(K_4\). Put \(A_0=\{B,w_1,w_2\}\),
+\(C_0=\{H,w_5,w_6\}\), and \(D_0=\{w_3,w_4\}\).
+All minimal fault localizations are
+\[
+ \{R,T\},\qquad
+ \{a,c\}\ (a\in A_0,c\in C_0),\qquad
+ \{a,R,d\}\ (a\in A_0,d\in D_0),\qquad
+ \{c,T,d\}\ (c\in C_0,d\in D_0).
+\]
+There are \(1+9+6+6=22\): the displayed \(\{R,T\}\) and
+twenty-one alternatives. The count is of inclusion-minimal localizations
+under unrestricted faulty behavior, not of physically plausible failures
+or probability-ranked mode assignments.
+\end{hbtheorem}
+
+An exhaustive physical-negation axiom says
+\(\neg ok_c\to\bigvee_b fault_{c,b}\). Its exoneration inference
+requires all those alternatives to be refuted in the same context. It is
+not justified by refuting only the likely ones. A kernel diagnosis is a
+minimal partial mode assignment all of whose complete extensions are
+diagnoses; it is not an ordinary minimal faulty-component set.
+
+\begin{hbtheorem}{thm:p16-cm-equal-chain}{proved=annex:p16.cm-equal-chain}{The source's chain and the size of its generator}
+In a chain of \(n=17\) components with increments \(0,-1,+1\),
+input zero and final output one, a faulty-component set is feasible exactly
+when its cardinality \(k\) is odd. For that set the complete diagnoses have
+\((k+1)/2\) positive and \((k-1)/2\) negative increments. There are
+\(17\) singleton diagnoses but \(2^{16}\) feasible faulty sets overall.
+Every kernel assignment must specify all components. Thus all complete
+diagnoses are needed as kernels, with multiplicity of mode assignments for
+larger faulty sets; fault localizations and kernels are not identical objects.
+\end{hbtheorem}
+
+\section{Preferences rather than an arbitrary consistent model}
+\label{sec:p16-cm-preferences}
+
+The source's mode preference is a partial order for each component, with
+\(ok\) highest and an unrestricted unknown mode, if present, lowest.
+The product order compares complete assignments coordinatewise. It does
+not rank incomparable faults in different components. DDE explores successors
+only after preferred alternatives have been refuted; SHERLOCK adds a global
+probability scale and assumes independence when forming mode-assignment
+priors. A stopping threshold tied to posterior mass can return only selected
+candidates, not the exhaustive answer \cite[pp.~415--420]{Struss2008ModelBasedProblemSolving}.
+
+\begin{hbtheorem}{thm:p16-cm-default-sound}{proved=annex:p16.cm-default-sound}{The source preference-default implication at finite mode scope}
+Let \(W=L\cup S\cup O\) be consistent, with the finite exclusive
+mode families above. For every mode \(b\) form the normal default with
+prerequisite \(\bigwedge_{d>b}\neg d\), justification \(b\), and
+conclusion \(b\). Empty prerequisite means truth. Use Reiter's extension
+semantics, including least prerequisite-driven generation, not arbitrary
+self-support. If \(\operatorname{Th}(W\cup\{a\})\) is an extension,
+then the complete assignment \(a\) is a product-preferred diagnosis.
+This is the implication in Struss's Theorem~10.4; no converse or claim that
+local defaults rank all globally probable diagnoses is asserted.
+\end{hbtheorem}
+
+The preference-default construction is credited to Dressler and Struss's
+1992 work in the chapter; DDE's later control strategies and the probability
+search in SHERLOCK are separate implementation referrals. This proof is
+not a claim to have read or reproduced those entire original publications.
+
+The source's conflict-directed search is more specific than calling a SAT
+solver once: the task usually needs a relevant set of explanations, support
+for new observations, and sometimes explicit exclusion of safety-critical
+faults. Relevance is governed by the downstream action and risk, not by a
+universal numerical confidence attached to logical consistency.
+
+\section{Diagnosis across time and transition composition}
+\label{sec:p16-cm-temporal}
+
+A temporal hypothesis is a history of complete mode assignments on an
+observation interval, not one assignment independently chosen at each sample.
+The observation history \(O_H\) records values and their times. The model
+also constrains possible state sequences and mode changes; boundaries of
+the history intervals require an explicit transition convention. A temporal
+diagnosis has a full history satisfying the model and \(O_H\).
+A state-based diagnosis instead checks the relevant mode assignment against
+each observed snapshot \cite[pp.~423--427]{Struss2008ModelBasedProblemSolving}.
+
+\begin{hbtheorem}{thm:p16-cm-temporal}{proved=annex:p16.cm-temporal}{Snapshot necessity and the missing inter-snapshot condition}
+A temporal diagnosis restricts to consistent observed snapshots. The converse
+does not follow just from a persistent mode and homogeneous decomposition
+into state constraints and a common set of sequence constraints. For example,
+the persistent model \(x'=0\) admits each snapshot \(x(0)=0\),
+\(x(1)=1\) separately, with instantaneous derivative zero, but no
+differentiable trajectory satisfying both. Sequence constraints or their
+observation consequences must still be enforced across the samples.
+\end{hbtheorem}
+
+In the source's parked-car case, both stationary endpoint observations can
+fit an intact parking brake, but different positions imply an intermediate
+nonzero speed. For continuously differentiable position, the mean value
+theorem supplies that intermediate speed. This indirect observation refutes
+the intact-brake model without separately simulating every fault candidate.
+It does not identify the departure time or trajectory.
+
+Struss distinguishes persistence of a mode from a time-independent input/output
+function. A persistent fault remains after occurrence unless repaired; it
+may generate changing output. Homogeneity means all mode models share the
+same sequence constraints. Discrete OPEN/CLOSED transitions allowed in a
+normal valve but disallowed by STUCK violate that commonality. The source's
+state-based sufficiency discussion refers to additional observation coverage
+and sequence-derived information; it must not be read as a universal claim
+that homogeneity alone glues arbitrary snapshot witnesses.
+
+For persistent mode candidates, extend observations by sound consequences
+of shared sequence constraints when possible, then check candidate state
+constraints against that extended data. New conflicts can be accumulated.
+Newly generated candidates must also face previous observations, not just
+the newest sample. Equality between this construction and full temporal
+diagnosis requires the appropriate observation/model conditions; merely
+adding finitely many estimated derivatives is not a general proof of it.
+
+\begin{hbdefinition}{def:p16-cm-transition-model}{Component transition models and a finite trace specialization}
+The source gives a component model with finite states \(S_c\), initial
+state \(s_{c,0}\), events \(E_c\), observable events, transitions
+\(T_c\subseteq S_c\times E_c\times S_c\times E_c\), and fault
+transitions. Trigger and emitted event are distinct fields. System states
+are products of local states; aggregate events can be sets of local events.
+Synchronous versus asynchronous composition is a modeling decision.
+
+For the finite trace construction below, fix that decision and its resulting
+finite graph \(Q\), initial state \(q_0\), and finite fault-label set
+\(F\). Label every edge by one observable symbol or \(\epsilon\),
+and by the subset of fault labels occurring on that edge. This is a
+specialization after the event convention is fixed, not a hidden assumption
+that every source transducer emits exactly one observation per transition.
+An observed word must be the complete observable projection of a path rooted
+at \(q_0\), with no unexplained additional observed symbols.
+\end{hbdefinition}
+
+\begin{hbmethod}{def:p16-cm-trace-construction}{The finite hidden-closure observer}
+Keep pairs \((q,J)\), where \(q\) is a graph state and \(J\subseteq F\)
+the faults seen so far. Start from \((q_0,\varnothing)\) and close under
+\(\epsilon\)-edges, unioning their fault labels. For each next observed
+symbol, take all matching labeled edges, update the fault sets, and again
+close under hidden edges. A closure adds a pair only if it is new.
+The resulting set describes both possible current states and possible
+fault sets. It intentionally forgets multiplicity and order of repeated
+fault events; a task requiring those needs a richer history representation.
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p16-cm-trace}{proved=annex:p16.cm-trace}{Exact finite-path coverage of the stated observer}
+After any finite observed word, the observer contains exactly the end-state
+and accumulated-fault-set pairs of finite paths with that observable
+projection. Hidden closure terminates after at most \(|Q|2^{|F|}\)
+pair insertions. Fault detection is justified when the resulting set is
+nonempty and every pair has nonempty fault set. An empty set refutes the
+model/observation combination; it is not positive evidence for a fault.
+\end{hbtheorem}
+
+Figure~10.4 illustrates why hidden faults must remain represented. After
+\(\alpha\), the diagnoser contains states \(3\) and \(7\) labeled
+faulty together with state \(11\) labeled normal. A second \(\alpha\)
+leaves state \(6\), labeled faulty. The first observation is ambiguous;
+the second detects the fault. Storing only the most likely path would not
+have this exhaustive trace interpretation. Struss attributes this diagnoser
+figure to Sampath, Lafortune and Teneketzis; the transition formalism is not
+the probability-tracking policy of Livingstone.
+
+The discrete-event diagnoser compiles observation-language behavior.
+Livingstone instead composes shared physical/control variables and synchronizes
+component transitions, then incrementally tracks selected likely paths.
+Its qualitative state constraints turn continuous distinctions into finite
+ones, but probabilities, transition semantics and abstraction validity remain
+additional ingredients. Local finite component sets do not prevent the
+Cartesian-product explosion \cite[pp.~428--431]{Struss2008ModelBasedProblemSolving}.
+
+\section{Abduction and process-oriented situation assessment}
+\label{sec:p16-cm-process-assessment}
+
+Struss's abductive diagnosis separates conditioning observations \(O_C\)
+from observations to be explained \(O_A\). It requires
+\(M\cup O_C\) to be consistent and to entail \(O_A\).
+Commands are not automatically symptoms which a fault should explain.
+Logical entailment by itself is not a causal relation
+\cite[sec.~10.4.5]{Struss2008ModelBasedProblemSolving}.
+
+\begin{hbexample}{def:p16-cm-parallel-bulbs}{The missing supply premise in Figure 10.5}
+Condition on a CLOSE command for a switch feeding two parallel bulbs.
+With bulb one broken and bulb two normal, the model makes the first dark
+but leaves the second's state dependent on the unknown supply. In a binary
+idealization with supply \(u\), outputs are \((0,u)\): both \(u=0\)
+and \(u=1\) satisfy the fault and command. Thus the observations
+\((OFF,ON)\) are consistent, witnessed by \(u=1\), but not entailed,
+as \(u=0\) is a countermodel. Adding/abducing the supply state \(u=1\)
+produces the explanatory entailment. Merely relabeling the same fault
+assignment abductive does not supply that premise.
+
+The source also shows representation sensitivity: a model predicting
+zero-or-positive flow does not entail strictly positive flow. Coarsening both
+observation and model to nonnegative makes the entailment available, but
+loses the zero/positive distinction needed by other tasks. That is a change
+in the explained claim, not proof of the stronger original symptom.
+\end{hbexample}
+
+\begin{hbdefinition}{def:p16-cm-process-fragment}{Processes, influence closure and introducible boundaries}
+A process fragment specifies typed participating objects, structural conditions,
+quantity conditions, structural effects and quantity effects. Matching types
+and relations creates candidate instances; satisfying both condition sets
+activates an instance. Structural effects can create objects and relations.
+Quantity effects are contributions, not necessarily the final net direction.
+In Struss's notation \(I^+(x,y)\) means \(x\) positively influences
+\(y'\): \(y'=f(\ldots,x,\ldots)\) with positive partial derivative.
+This orders the arguments differently from the affected-quantity/rate notation
+used in the native QPT heat-flow example. Combining all contributions requires
+an explicit closed-world assumption about the influence set.
+
+An introducible object type can occur at the explanatory boundary without
+being generated by another modeled process. Other new objects need a
+generating process and its conditions. The library and task determine that
+boundary; an arbitrary unexplained object at an internal point is not allowed.
+\end{hbdefinition}
+
+\begin{hbmethod}{def:p16-cm-process-revision}{The source's structural and assumption revision workflow}
+Start from observed objects/values and defeasible scenario assumptions.
+Instantiate matching process fragments and resolve influences using recorded
+closure assumptions. If the model contradicts observations, extract a
+conflict among user assumptions and/or influence closures. Retract a relevant
+assumption. Retracting an influence closure requires searching the library
+for a process capable of contributing to that typed quantity. Satisfy its
+quantity conditions and structural conditions. Missing structural participants
+must be permitted introducibles or generated by further process instances.
+Recompose and check the new model; a new inconsistency starts another revision.
+
+Prefer assessments which retract no unnecessary assumptions and introduce
+no unnecessary boundary objects. These are two dimensions of inclusion
+minimality, not a guaranteed one-step heuristic based on the number of
+newly instantiated processes. Relations are not counted in the source's
+particular minimality criterion. A finite process-type library does not bound
+the number of object instances or prove termination of this revision search.
+\end{hbmethod}
+
+\begin{hbexample}{def:p16-cm-iron}{The source-native iron explanation and its explanatory boundary}
+Figure~10.6 follows reservoir water through a pump, tank and treatment plant
+to the tap. The observation is an unwanted high dissolved-iron concentration.
+The assessment introduces solid iron in the sediment, retracts the usual
+neutral-pH assumption for the lower layer, and activates iron redissolving
+under acidic conditions. Dissolved iron is generated by that process, then
+transported to upper layers, intake, tank and tap. Solid sediment iron is a
+boundary object; dissolved iron in the tank needs the process/transport account.
+The source suggests algal bloom as a possible earlier source of acidification,
+not as an independently established observation in every assessment.
+
+Redissolving contributes positively to dissolved iron, but oxidation could
+counteract it. Its presence alone does not prove a positive net derivative.
+Nor can the high concentration be explained merely by assigning a pump a
+generic broken mode. The environmental part is not a well-designed artifact:
+the drinking-water goal is external, and natural processes can violate it
+without being faulty components. Figure~10.7 makes assumptions and influence
+closures, not just component modes, explicit revision targets
+\cite[pp.~434--437]{Struss2008ModelBasedProblemSolving}.
+\end{hbexample}
+
+The situation-assessment triple consists of structure, quantity assignments
+and retracted assumptions. It must be consistent with observations and retained
+assumptions, retain observed objects, explain nonboundary objects by process
+effects, and satisfy the stated minimality criterion. This is a generative
+structural search, not the fixed Cartesian product of component modes.
+The chapter's PDE and G+DE descriptions are snapshot methods: an earlier
+algal bloom can cease while its iron consequences persist. A present-time
+absence must not be used to rule out that historical mechanism without a
+temporal model \cite[pp.~436--438]{Struss2008ModelBasedProblemSolving}.
+
+Control-engineering fault isolation is another distinct regime. The source
+describes numerical residual/model revisions, often parameter changes in a
+fixed black-box structure, without the same explicit conceptual component/
+process layer. Such models can be appropriate to their applications, but
+their parameter search is not a replacement for structural fault hypotheses
+or newly introduced substances \cite[sec.~10.4.7]{Struss2008ModelBasedProblemSolving}.
+
+\section{Constructing discriminating tests from the composed relations}
+\label{sec:p16-cm-tests}
+
+For testing, a candidate hypothesis is a relation \(R_i\) on system
+variables. With component hypotheses it is the join of the selected local
+mode relations. Observable projection removes variables which cannot be
+measured. The stimulus variables are included among the observables because
+the applied stimulus is known. Figure~10.8 depicts intersections of observable
+behavior relations, not geometric overlap of physical components
+\cite[pp.~439--443]{Struss2008ModelBasedProblemSolving}.
+
+\begin{hbdefinition}{def:p16-cm-test-relations}{Admissible stimuli and observable response sets}
+Let \(U\) be the stimulus domain and \(Z\) the remaining observable
+response domain. Write \(P_i=\pi_{U,Z}(R_i)\) and
+\(P_i(u)=\{z:(u,z)\in P_i\}\). Restrict to admissible stimuli
+\(A\subseteq U\), and require \(P_i(u)\ne\varnothing\) for every
+\(u\in A\) and each relevant hypothesis. This is stimulus applicability,
+not a consequence of a set-complement formula.
+
+A stimulus definitely distinguishes a pair if every response permitted by
+either hypothesis refutes the other. In Struss's stronger ``possibly''
+definition, \emph{each} hypothesis has some permitted response refuting
+the other. There may also be one-sided informative stimuli, where only one
+hypothesis has such a response. They must not be confused with that
+each-hypothesis quantifier.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p16-cm-discrimination}{proved=annex:p16.cm-discrimination}{Exact relational discrimination, including the asymmetric case}
+At the preceding scope, all definitely distinguishing stimuli are
+\[
+ D_{ij}=A\setminus\pi_U(P_i\cap P_j).
+\]
+The each-hypothesis possibly distinguishing stimuli, including definite ones,
+are
+\[
+ B_{ij}=A\cap\pi_U(P_i\setminus P_j)
+                \cap\pi_U(P_j\setminus P_i).
+\]
+The strictly partial two-sided ones are \(B_{ij}\setminus D_{ij}\).
+Stimuli with some informative response for at least one hypothesis are
+\[
+ E_{ij}=A\cap\pi_U((P_i\setminus P_j)\cup(P_j\setminus P_i));
+\]
+those with no informative response are \(A\setminus E_{ij}\).
+One-sided informative stimuli are \(E_{ij}\setminus B_{ij}\).
+For \(P_1(u)=\{a\},P_2(u)=\{a,b\}\), the stimulus is one-sided:
+\(b\) refutes hypothesis one, but no response can identify hypothesis one.
+\end{hbtheorem}
+
+This preserves the quantifier in Definition~10.16. The printed Lemma~10.3
+complement expression classifies all nondefinite stimuli with at least one
+exclusive response, including the one-sided case. It therefore does not
+characterize the stronger each-hypothesis definition without another symmetry
+condition. The distinction above resolves that mismatch rather than changing
+the definition silently. For example, overlapping response sets
+\(\{a,c\},\{b,c\}\) are two-sided partial; \(\{a\},\{b\}\)
+are definite; identical nonempty sets provide no discrimination.
+
+\begin{hbtheorem}{thm:p16-cm-test-sets}{proved=annex:p16.cm-test-sets}{Pair coverage and its actual hitting-set obligation}
+For finitely many fixed hypotheses with the stated response semantics,
+a stimulus set \(T\subseteq A\) guarantees pairwise discrimination
+exactly when it hits every \(D_{ij}\), \(i<j\). Its inclusion-minimal
+members are exactly the minimal hitting sets of that family. If a pair has
+empty \(D_{ij}\), no such static guaranteed test set exists. If the family
+is empty, the empty set is the unique inclusion-minimal answer. With
+nonnegative additive test costs, a cheapest finite solution, if one exists,
+has an inclusion-minimal solution of no greater cost.
+\end{hbtheorem}
+
+The construction is: compose each hypothesis, project to the declared
+observables, compute pair intersections/differences, project to the stimuli,
+apply admissibility restrictions, then choose a set meeting the pair
+requirements. It does not need an exhaustive diagnosis model beforehand.
+But explicit relations can be huge; a compact decision-diagram implementation
+or search can be useful, and compilation itself may be intractable.
+Selecting one witness from each nonempty pair set gives a covering set;
+it does not compute a minimum-cardinality or minimum-cost set.
+
+Static response relations also suppress hidden state and order. If several
+tests can discriminate only through a persistent internal state, include
+explicit state hypotheses in the product \(Hyp\times Hyp_{state}\).
+Persistence through the tests is then a premise. Intrusive probing can modify
+connections or components; attaching a meter can create a new circuit, so
+the original \(R_i\) must not be reused without that structural revision.
+Safety may exclude otherwise informative stimuli.
+
+\section{Information-based selection and diagnosability}
+\label{sec:p16-cm-information}
+
+Relational possibility alone gives no probabilities. For the source's
+information-based selection, supply finite hypothesis probabilities \(p_i\)
+and a calibrated conditional response distribution \(q_i(z\mid u)\)
+on a finite response alphabet.
+It must agree with the permitted responses, but agreement alone does not
+determine its positive weights. A test stimulus here is selected independently
+of the unknown hypothesis; new observations update the probabilities.
+Use \(0\log 0=0\) and omit zero-probability observations in conditional
+expressions \cite[secs.~10.5.2--10.5.3]{Struss2008ModelBasedProblemSolving}.
+
+\begin{hbtheorem}{thm:p16-cm-information}{proved=annex:p16.cm-information}{The full finite expected-information calculation}
+Let \(r(z\mid u)=\sum_i p_iq_i(z\mid u)\), and for positive \(r\)
+let \(p_i(z,u)=p_iq_i(z\mid u)/r(z\mid u)\). The expected reduction
+in hypothesis entropy equals
+\[
+ H(p)-\sum_z r(z\mid u)H(p(\cdot\mid z,u))
+   =H(r(\cdot\mid u))-\sum_i p_iH(q_i(\cdot\mid u)).
+\]
+For GDE's special approximation, each hypothesis predicts one value or
+assigns a uniform distribution on \(m\ge1\) values. If the total mass of the
+uniform group is \(p_{unk}\), maximizing information is equivalent to
+minimizing \(\sum_z r(z)\log r(z)+p_{unk}\log m\).
+The equality does not make uniformity or independence follow from an unknown
+fault model, and maximizing one-step information is not a proof of optimal
+total test cost.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p16-cm-information-case}{Distinct predictions versus an unpredictable observation}
+Take two equiprobable hypotheses. Test one deterministically returns
+different binary values for them. Its observation entropy is one bit and
+conditional entropy is zero, giving one bit of information. Test two
+returns a fair binary outcome under \emph{both} hypotheses. Its observation
+entropy is also one bit, but its conditional entropy is one bit, so the
+information is zero and the posterior stays equiprobable. Thus maximizing
+response variability alone is wrong. Different execution costs or risks
+also require a decision criterion beyond this one-step entropy calculation.
+\end{hbexample}
+
+Probe selection fixes the stimulus and varies observable variables.
+Sensor-placement and diagnosability analysis apply the same pair relation
+construction to possible operating conditions: a sensor fault may show only
+in a temperature range, a gear-box fault only in second gear. Fault detection
+compares fault and normal models; fault discrimination compares two fault
+models. In discrete-event systems, the question concerns distinguishable
+observable traces within a specified delay, not a single snapshot relation.
+The observables and allowed conditions are essential parts of each claim
+\cite[sec.~10.5.4]{Struss2008ModelBasedProblemSolving}.
+
+\section{Remedies, reconfiguration and process-oriented therapy}
+\label{sec:p16-cm-remedies}
+
+Diagnosis serves an action: discriminating further is unnecessary if the
+same safe remedy works for all remaining cases. In a workshop, disassembly,
+instrumentation and replacement can dominate the cost of reasoning.
+On-board recovery may instead need only distinctions between safety classes.
+The source separates replacement, switching-based reconfiguration, altered
+operating regions, modified control, and structural interventions
+\cite[pp.~446--449]{Struss2008ModelBasedProblemSolving}.
+
+An integrated description includes observation, mode, action and goal
+histories. Struss's simplified remedy definition assumes instantaneous,
+successful actions. A consistency remedy permits the goals; an explanatory
+remedy entails them. An action proposal for several mode histories must
+meet its criterion for each history. In the entailment version one must
+also require a consistent, applicable action model: an impossible action
+must not ``achieve'' every goal by classical explosion.
+
+\begin{hbdefinition}{def:p16-cm-reconfiguration}{State choices and what persists}
+Fix a diagnostic mode assignment \(a\), a set of reconfigurable
+components with exhaustive finite state domains, and persistent observations
+\(O_P\subseteq O\). A target state assignment \(s_G\) is a consistency
+reconfiguration when \(L\cup S\cup\{a,s_G\}\cup O_P\cup G\)
+is consistent. Relative to a known actual state assignment \(s_A\), its
+inclusion change set records the components given different target states.
+If actual states are uncertain, common entailed states and admissible changes
+must be specified rather than treating every unknown state as cost-free.
+Determining \(O_P\) is itself a frame/persistence problem.
+\end{hbdefinition}
+
+Opening a breaker changes voltages/currents but need not change generator
+availability. Retaining old voltages can prevent a genuine reconfiguration;
+forgetting generator availability can connect consumers to an inactive source.
+For a fixed hypothesis, the corresponding state-conflict clause requires at
+least one currently inconsistent switch state to change. Every proposed
+change must be recomposed and checked, since connecting one customer can
+disconnect another. Ranking is based on change cost, not a universal
+normal-versus-faulty distinction among operating states
+\cite[pp.~450--453]{Struss2008ModelBasedProblemSolving}.
+
+\begin{hbtheorem}{thm:p16-cm-remedies}{proved=annex:p16.cm-remedies}{Existence, robust outcomes and the planning boundary}
+With the exhaustive state domains just stated, some complete consistency
+target assignment exists for \(a\) exactly when
+\(L\cup S\cup\{a\}\cup O_P\cup G\) is consistent.
+The persistent observations cannot in general be omitted from this test.
+
+For a candidate target/intervention \(d\), let \(R_i(d)\) be the
+permitted outcome set under remaining hypothesis \(i\), including the
+action semantics and persistent data, and let \(G_i\) be the goal-satisfying
+outcome set. A consistency remedy for all hypotheses
+requires \(R_i(d)\cap G_i\ne\varnothing\) for every \(i\).
+A model-guaranteed remedy requires \(R_i(d)\ne\varnothing\) and
+\(R_i(d)\subseteq G_i\) for every \(i\). The latter implies the
+former, not conversely. For finite intervention/change sets and a cost
+nondecreasing under inclusion, a cheapest feasible remedy has an
+inclusion-minimal feasible remedy of no greater cost. These are goal/outcome
+conditions; a valid target configuration need not be reachable by a plan
+which satisfies intermediate restrictions.
+\end{hbtheorem}
+
+For example, an open-line relation which leaves the consumer voltage
+unrestricted can be consistent with voltage present without guaranteeing
+it. A source-connected supply condition is additional physical structure,
+not something an entailment test can invent. Incomplete observation and
+weak causal/behavioral models can therefore compromise remedy conclusions.
+A network topology avoiding every still-suspect line may restore supply
+without deciding which line is shorted, but the action sequence must also
+avoid overload and maintain critical customers throughout. Activating a
+generator before closing a route may be essential; target-state analysis
+does not supply that ordering automatically.
+
+\begin{hbexample}{def:p16-cm-iron-therapy}{The intervention extends the process model}
+For the iron assessment, an action trigger introduces ozone or chlorine
+at a specified location and enables oxidation, generating iron oxide.
+The library must model this intervention and the triggered process.
+The revised model must resolve the competing influences to obtain the desired
+negative dissolved-iron derivative; simply having an oxidizer object is
+not that inference. Under the source's continuous-quantity intervention
+assumption, existing concentration does not instantly jump below its limit;
+the derivative can change while the amount at the action time persists.
+
+Therapy searches for a minimal set of permitted action triggers, not minimal
+unexplained disturbance objects. A proposal to stop the pumps may reduce
+iron delivery but violate the continuing water-supply goal. Several goals
+may require trade-offs or several steps. Dosing in the reservoir and dosing
+in the treatment tank are distinct located interventions. The chapter's
+snapshot therapy formulation does not plan that multi-step history
+\cite[pp.~453--454]{Struss2008ModelBasedProblemSolving}.
+\end{hbexample}
+
+\section{Design, failure analysis and software are different revision spaces}
+\label{sec:p16-cm-design}
+
+General design can change structure and is unbounded in principle.
+Configuration and parametric design constrain the alternatives; a predecessor
+product supplies a useful initial candidate. A configuration is a structure
+and parameter specification consistent with domain constraints and configuration
+goals. Such constraints often encode permissible type/parameter combinations,
+not explicit models of every physical behavior. Conflict extraction can
+identify design decisions requiring revision, but it does not create an
+adequate initial structural hypothesis
+\cite[secs.~10.2.3,10.7.1]{Struss2008ModelBasedProblemSolving}.
+
+FMEA fixes a design and a fault/scenario set, commonly single faults with
+selected multiple-fault cases. Under a consistent fault/scenario model,
+if \(M_F\) is the relevant fault model and
+\(C_{scen}\) the scenario, an effect \(E\) is predicted when
+\(M_F\cup C_{scen}\entails E\), and possible when
+\(M_F\cup C_{scen}\cup E\) is consistent. Detectability, severity and
+fault probability are separate inputs to criticality assessment. Comparing
+fault behavior with the normal model can produce functionally relevant
+deviations, but an arbitrary numerical difference is not automatically a
+safety effect \cite[sec.~10.7.2]{Struss2008ModelBasedProblemSolving}.
+
+Software debugging violates the common artifact-diagnosis premises: a needed
+computation may be missing, connections may be wrong, and all existing code
+units can execute their definitions while the program fails its specification.
+Goals therefore must be represented by specifications or test expectations.
+The language semantics determines connections between code units. Structural
+bugs cannot generally be fixed by declaring one existing line an unrestricted
+faulty component. Fault catalogs cannot exhaust programmers' possible design
+mistakes. Knowledge-base debugging similarly uses positive and negative
+examples as goals \cite[secs.~10.7.3]{Struss2008ModelBasedProblemSolving}.
+
+\section{Model construction is not solved by the reasoning engine}
+\label{sec:p16-cm-challenges}
+
+The chapter's concluding assessment is its 2008 historical assessment,
+not a present-day claim about deployed products. It emphasizes reusable
+library construction, structural/non-component faults, distributed diagnosis
+and scale. Generality, adequate task resolution and compact runtime models
+can pull in different directions. Automatically selecting distinctions and
+compiling tailored system models from maintained fragments is substantive
+work, not a consequence of giving a library a uniform syntax.
+
+The work process matters as much as the isolated inference: required inputs
+must be obtainable, output concepts must match engineers' decisions, and
+testing/repair plans must reduce the costly activities and downtime.
+Neither a full consistency decision nor a most-probable diagnosis by itself
+supplies a reusable library, a safe test apparatus, or an executable repair
+workflow \cite[sec.~10.8]{Struss2008ModelBasedProblemSolving}.
+
+\begin{hbmethod}{def:p16-cm-consultation}{A model-based problem-solving specification}
+Separate the domain library, actual structure, task and observation/goal
+criterion. State the conceptual alternatives and their finite or generative
+revision space. Require valid coverage of relevant environments and typed
+connections before composing a candidate. Distinguish predictor soundness,
+consistency completeness and conflict extraction. Record mode preferences,
+unknown faults, temporal assumptions and current observation scope.
+Construct tests from actual observable behavior differences, keeping
+applicability, risk and hidden state explicit. For remedies, specify what
+persists and whether goals are possible or guaranteed for every remaining
+case; finally check reachability and intermediate restrictions with a planner.
+\end{hbmethod}
+
+\index{model-based problem solving}\index{model composition}
+\index{diagnosis!process oriented}\index{diagnosis!temporal}
+\index{test generation}\index{reconfiguration}\index{therapy proposal}

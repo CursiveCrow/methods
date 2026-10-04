@@ -1,0 +1,703 @@
+\chapter{Stochastic satisfiability and inference under random choices}
+\label{sec:p15-stochastic-satisfiability-and-inference}
+
+\section{A probability of success under an ordered decision process}
+\label{sec:p15-ssat-purpose}
+
+Stochastic Boolean satisfiability is not SAT with randomly chosen
+heuristics, and not merely a probability attached to a propositional
+formula. Its prefix specifies which Boolean choices are controlled,
+which are randomized, and what information is available before each
+choice. The task is to calculate the greatest probability of satisfying
+the matrix using a legal contingent policy, or to decide whether that
+value meets a specified threshold.
+
+This presentation uses the directly read Littman--Majercik--Pitassi
+January 2000 author manuscript, including its algorithms and appendices
+\cite{LittmanMajercikPitassi2000SSATAuthor}. The final journal article,
+Majercik's 2009 handbook chapter, and the 2021
+handbook chapter are distinct source presentations. The 2002 erratum corrects author
+affiliations, not the mathematics
+\cite{LittmanMajercikPitassi2002SSATErratum}. The definitions below distinguish
+the native fair-coin presentation from the declared independent biased extension.
+
+\begin{hbdefinition}{def:p15-ssat-native}{The native ordered map and random-quantifier glyph}
+The original input is \((\phi,\theta,Q)\), with ordered Boolean
+variables \(x_1,\ldots,x_n\) and
+\(Q(x_i)\in\{\exists,\forall,\ssatrandom\}\).
+The native symbol \(\ssatrandom\) is a Roman R rotated by 180 degrees;
+it is neither an ordinary upright R nor an ordinary first-order quantifier.
+Its source interpretation is a fair independent Boolean draw.
+The original restriction is \(\phi\upharpoonright_{x=b}\), including
+order-preserving renumbering of remaining variables and their quantifier map.
+Its value is written \(\operatorname{val}(\phi,Q)\). At a nonterminal
+whose outermost variable is \(x_1\), it combines the two restricted
+values by maximum for \(\exists\), minimum for \(\forall\), and
+their arithmetic mean for \(\ssatrandom\); an empty clause has value
+zero and an empty matrix has value one. These are the five native clauses;
+the positive native instance satisfies \(\operatorname{val}(\phi,Q)\geq\theta\)
+\cite[Table~I and pp.~3--4]{LittmanMajercikPitassi2000SSATAuthor}.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p15-ssat-input}{Formula, ordered quantifiers and threshold}
+A closed finite stochastic input is \((\phi,\theta,\Pi)\), where
+\(\phi\) is a Boolean CNF, every matrix variable occurs once in the
+finite scalar prefix \(\Pi=Q_1x_1\cdots Q_nx_n\), and
+\(\theta\in[0,1]\). The \(x_i\) are distinct; unused prefix
+variables and an empty prefix are allowed. Quantifiers are existential
+\(\exists\) or randomized \(\ssatrandom^{p_i}\); the source's
+\emph{Extended SSAT} additionally allows universal \(\forall\).
+The superscript \(p\) annotates the native random glyph in the declared
+biased extension; dropping it denotes the source's fair case.
+
+The original's main random quantifier is fair, \(p=1/2\). In the
+declared biased extension, each \(p_i\in[0,1]\) is fixed in advance,
+and the random variables are independent Bernoulli draws with
+\(P(x_i=1)=p_i\). Exact computational inputs encode these probabilities
+and \(\theta\) as binary rationals. A mathematical recurrence may
+also use specified real probabilities, without thereby claiming a finite
+exact real-arithmetic implementation.
+
+Literals are \(x\) and \(\bar x\); the bar is Boolean negation.
+Clauses are finite sets of literals. An empty clause is false and an
+empty set of clauses is true. Restriction \(\phi|_{x=b}\) deletes
+clauses containing a true literal, removes false literals from remaining
+clauses, and retains any resulting empty clause. The corresponding
+quantifier is removed and the relative order of all others retained.
+There are no free variables, identity predicates or unspecified random
+dependencies in this input language.
+\end{hbdefinition}
+
+The source writes its quantifier map as \(Q(x_i)\), with indices
+ordered from outermost to innermost. We retain that order through the
+prefix rather than renumbering away the dependency information
+\cite[sec.~1.2.1, pp.~3--5]{LittmanMajercikPitassi2000SSATAuthor}.
+
+The prefix representation below is comparison data, not a replacement for
+the native map notation: \(\Pi_Q=Q(x_1)x_1\cdots Q(x_n)x_n\).
+In the fair case a native random occurrence receives parameter \(1/2\).
+The restriction notation \(\phi|_{x=b}\) used in the algorithms denotes
+the simplified Boolean cofactor with old names retained; the native
+renumbering is an order-preserving renaming of that object.
+
+\begin{hbdefinition}{def:p15-ssat-value}{Value and the decision question}
+The value \(V(\Pi,\phi)\) is recursively determined. Empty-clause
+and empty-matrix terminals have values zero and one. Otherwise, for
+the outermost variable \(x\), let \(v_b\) be the value after its
+restriction to \(b\). Existential quantification combines the children
+by \(\max(v_0,v_1)\); universal quantification combines them by
+\(\min(v_0,v_1)\); random quantification combines them by
+\((1-p)v_0+pv_1\). A positive decision instance satisfies
+\(V(\Pi,\phi)\geq\theta\). At \(\theta=0\), every well-formed
+input is positive, even a contradictory matrix. This is not the SAT
+question of whether there exists one satisfying valuation.
+\end{hbdefinition}
+
+\section{The evaluation calculus and what its strategies may read}
+\label{sec:p15-ssat-evaluation}
+
+\begin{hblemma}{thm:p15-ssat-native-correspondence}{proved=annex:p15.ssat-native-correspondence}{Exact fair-source and prefix-value correspondence}
+For the native fair input and its order-preserving prefix encoding,
+\(\operatorname{val}(\phi,Q)=V(\Pi_Q,\phi)\).
+Order-preserving variable renaming together with its transported
+quantifier map preserves either value, and hence the decision at the same
+threshold. This does not cross quantifier positions or identify a biased
+draw with a fair one.
+\end{hblemma}
+
+\begin{hbdefinition}{def:p15-ssat-evaluation-judgment}{The numerical evaluation judgment}
+For a well-formed prefix and matrix, \((\Pi,\phi)\Downarrow v\)
+is the value-evaluation judgment. Its semantic interpretation is
+\(V(\Pi,\phi)=v\); a derivation uses the five rules on the following
+sheet. Thus \(v\) is a real continuation value, not a Boolean valuation
+of every variable. The sheet computes the fair source case and the explicitly
+specified independent weighted extension under their respective parameters.
+\end{hbdefinition}
+
+\input{registry/calculi/p15-stochastic-satisfiability.tex}
+
+\begin{hbdefinition}{def:p15-ssat-strategy}{Legal contingent strategies}
+A deterministic existential strategy assigns each controlled variable
+from the already revealed prefix history, never from a later random
+or universal value. In an existential/random prefix this can be written
+as one Boolean table for each existential variable, whose arguments are
+the preceding random values; its own earlier choices are recovered from
+its earlier tables. In Extended SSAT the opposing universal player may
+likewise read preceding revealed history but not later choices or draws.
+The complete strategies specify values even on zero-probability histories.
+
+For a fixed pair of strategies, a full assignment to the random variables
+induces one complete play. Its weight is the product of their specified
+Bernoulli outcome weights. Success is the indicator that the final matrix
+is true. The expected success is the finite weighted sum of those
+indicators. Without universal variables, the objective maximizes that
+expectation. With universal variables it is a finite perfect-information
+zero-sum game against a minimizing player and independent chance.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p15-ssat-strategy-semantics}{proved=annex:p15.ssat-strategy-semantics}{Complete evaluation and legal optimal strategies}
+The displayed finite calculus is sound and complete for the recursive
+value. Its value lies in \([0,1]\), terminates after finitely many
+prefix restrictions, and equals the optimal expected success under the
+declared strategy information. In the extended game, deterministic
+backward strategies achieve matching maximizing/minimizing guarantees.
+Randomizing a controlled choice cannot improve these guarantees.
+The result includes empty prefixes, unused variables, deterministic
+random probabilities zero/one, and histories of zero probability.
+\end{hbtheorem}
+
+Values at a zero-probability history are defined continuation-game values,
+not conditional probabilities obtained by dividing by that history's
+probability. A zero-weight child contributes nothing to its random parent,
+although its continuation game remains syntactically well defined.
+Strategy tables may differ arbitrarily there without changing the root
+value. This distinction uses the null-event boundary already established
+in Chapter~\ref{sec:p15-finite-probability}.
+
+\begin{hbtheorem}{thm:p15-ssat-prefix-order}{proved=annex:p15.ssat-prefix-order}{Commuting like operators and crossing an information boundary}
+Adjacent existential quantifiers commute, adjacent universal quantifiers
+commute, and adjacent independent random quantifiers commute with their
+own fixed biases retained. In contrast,
+\[
+ V(\exists x\,\ssatrandom^p y,\ x\leftrightarrow y)=\max(p,1-p),
+ \qquad
+ V(\ssatrandom^p y\,\exists x,\ x\leftrightarrow y)=1.
+\]
+For every two-variable continuation payoff \(f(a,b)\in[0,1]\),
+\[
+ \max_a\sum_b\mu_bf(a,b)
+       \leq\sum_b\mu_b\max_af(a,b).
+\]
+Thus moving a choice after an independent random observation relaxes
+the information restriction and can increase value. It is not generally
+a value-preserving variable-order heuristic.
+\end{hbtheorem}
+
+At \(p=1/4\), the crossed-prefix values are \(3/4\) and one;
+threshold \(4/5\) distinguishes them. The policy \(x=y\) is legal
+only in the second prefix. In the first, the controlled value must be
+constant. This is a counterexample about order, not uncertainty in the
+matrix's propositional truth table.
+
+\begin{hbexample}{def:p15-ssat-source-three-variable}{The source's ordered three-variable calculation}
+The original's matrix is
+\[
+ \phi=(x\lor y)\land(y\lor\bar z)\land(\bar x\lor\bar y).
+\]
+For fair prefix \(\ssatrandom^{1/2}x\,\exists y\,\ssatrandom^{1/2}z\),
+the \(x=0\) branch chooses \(y=1\) and has value one;
+the \(x=1\) branch must choose \(y=0\) and succeeds precisely
+when \(z=0\), so has value \(1/2\). The root is \(3/4\).
+Moving \(z\) before \(y\) retains \(3/4\): only the pair
+\(x=z=1\) cannot be satisfied by any \(y\). Moving \(y\)
+before both draws instead gives value \(1/2\): constant \(y=1\)
+succeeds for \(x=0\), while constant \(y=0\) succeeds only for
+\(x=1,z=0\). Thus splitting on the later choice as though it were
+an outermost variable computes a different problem
+\cite[pp.~4,37]{LittmanMajercikPitassi2000SSATAuthor}.
+\end{hbexample}
+
+\section{Source DPLL simplifications and their exact scope}
+\label{sec:p15-ssat-dpll}
+
+\begin{hbtheorem}{thm:p15-ssat-unit-pure}{proved=annex:p15.ssat-unit-pure}{Unit and pure-literal transformations at arbitrary prefix positions}
+Let \(\Pi\setminus x\) remove a variable while retaining every
+other quantifier and its order. If the matrix contains the unit clause
+forcing \(x=b\), then
+\[
+ V(\Pi,\phi)=
+ \begin{cases}
+ V(\Pi\setminus x,\phi|_{x=b}),&Q(x)=\exists,\\
+ 0,&Q(x)=\forall,\\
+ p_bV(\Pi\setminus x,\phi|_{x=b}),&Q(x)=\ssatrandom^p,
+ \end{cases}
+ \qquad p_1=p,\quad p_0=1-p.
+\]
+This holds even when \(x\) is not outermost, because the opposite
+branch has success value zero and all preceding operators are positively
+homogeneous. If \(p_b=0\), the value is zero without evaluating a
+division by \(p_b\).
+
+If a variable occurs only with sign \(b\), an existential variable
+may be fixed to \(b\) and a universal variable to \(1-b\), at
+any prefix position. A pure random variable cannot generally be fixed
+to either sign without changing the value. Tautological clauses can
+be removed and unused variables omitted without changing value.
+\end{hbtheorem}
+
+The original calls these operations unit resolution and purification.
+They are exceptional simplifications justified by matrix structure, not
+permission to cross an arbitrary quantifier boundary. For example the
+pure random one-clause input \(\ssatrandom^{1/4}x\;(x)\) has
+value \(1/4\), not one. A later random unit with a history-dependent
+probability would not have the constant factor used in the theorem;
+that is outside the independent-input hypothesis
+\cite[sec.~2.1, pp.~14--16]{LittmanMajercikPitassi2000SSATAuthor}.
+
+\begin{hbdefinition}{def:p15-ssat-window-contract}{The exactness contract for a threshold window}
+For real thresholds \(L\leq H\), an evaluator's return \(u\)
+represents true value \(v\) by the following contract:
+\[
+ L\leq v\leq H\ \Longrightarrow\ u=v,\qquad
+ v<L\ \Longrightarrow\ u<L,\qquad
+ v>H\ \Longrightarrow\ u>H.
+\]
+The contract says that the returned number outside the window need not
+be the exact value; it must remain on the correct side. It is not a
+probability interval around an approximate numerical estimate.
+\end{hbdefinition}
+
+\begin{hbmethod}{def:p15-ssat-window-evaluator}{A corrected source-style thresholded evaluator}
+Define \(\operatorname{Eval}(\Pi,\phi,L,H)\) as follows, using
+exact arithmetic and restrictions. Return the exact terminal zero or
+one when an empty clause or empty matrix is detected. Apply any unit
+or pure-literal transformation from the preceding theorem. A random
+unit of weight \(s>0\) returns
+\(s\operatorname{Eval}(\Pi\setminus x,\phi|_{x=b},L/s,H/s)\);
+weight zero returns zero. Other such transformations leave thresholds
+unchanged.
+
+If none applies, split on an outermost variable. Write
+\(\operatorname{Eval}_b(L',H')\) for the recursive call on its
+cofactor and remaining prefix.
+\begin{enumerate}
+\item Existential: obtain \(u_0=\operatorname{Eval}_0(L,H)\).
+      If \(u_0>H\), return \(u_0\). Otherwise obtain
+      \(u_1=\operatorname{Eval}_1(\max(L,u_0),H)\), and return
+      \(\max(u_0,u_1)\).
+\item Universal: obtain \(u_0=\operatorname{Eval}_0(L,H)\).
+      If \(u_0<L\), return \(u_0\). Otherwise obtain
+      \(u_1=\operatorname{Eval}_1(L,\min(H,u_0))\), and return
+      \(\min(u_0,u_1)\).
+\item Random with \(p=0\) or \(p=1\): evaluate only the
+      positive-weight cofactor with the unchanged window.
+\item Random with \(0<p<1\): let \(q=1-p\) and obtain
+      \(u_0=\operatorname{Eval}_0((L-p)/q,H/q)\).
+      If \(qu_0+p<L\), return \(qu_0\). If \(qu_0>H\),
+      return \(qu_0\). Otherwise obtain
+      \(u_1=\operatorname{Eval}_1((L-qu_0)/p,(H-qu_0)/p)\)
+      and return \(qu_0+pu_1\).
+\end{enumerate}
+Recursive windows may extend beyond \([0,1]\); that is legitimate.
+Every recursive call removes a variable. Ties are handled by the
+strict early-return inequalities, not by silently changing the decision
+threshold from \(\geq\) to \(>\).
+\end{hbmethod}
+
+At \(p=1/2\), the transformed random windows are
+\((2L-1,2H)\) and \((2L-u_0,2H-u_0)\), precisely the
+source's scaling structure. The explicit corrections are strict high
+early-return tests and zero/one-biased endpoint handling. The proof
+does not certify a literal transcription of the original Figure 2.
+
+\begin{hbtheorem}{thm:p15-ssat-window-correctness}{proved=annex:p15.ssat-window-correctness}{Every window, every quantifier and every probability endpoint}
+The corrected evaluator terminates and satisfies the declared window
+contract for every finite valid input and real \(L\leq H\).
+Calling it with \((L,H)=(0,1)\) gives the exact value; calling it
+with \((\theta,\theta)\) decides the inclusive threshold by comparing
+its return with \(\theta\). The result includes arbitrary-position
+unit/pure transformations and all biased random endpoint cases.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p15-ssat-source-endpoint-failure}{Why the printed closed-window claim needs correction}
+The source returns immediately when an existential first child meets
+\(u_0\geq H\), while Appendix A claims exactness throughout the
+closed window \([L,H]\). In the three-variable source example
+\(\exists y\,\ssatrandom^{1/2}x\,\ssatrandom^{1/2}z\;\phi\)
+above, the \(y=0\) child has value \(1/4\), the \(y=1\) child
+has value \(1/2\). With \(L=0,H=1/4\), returning \(1/4\)
+immediately need not report the true value \(1/2\); it also fails
+the requirement to return strictly above \(H\) for values above it.
+The matrix has no unit or pure variable, so these simplifications do
+not eliminate the countercase. The corrected strict test evaluates the
+second child. The original Appendix A random argument also prints a
+division by four where the defining mean divides by two; the proof here
+uses the actual weighted recurrence
+\cite[Fig.~2, p.~15; Appendix~A, pp.~48--49]{LittmanMajercikPitassi2000SSATAuthor}.
+\end{hbexample}
+
+\section{Exact certificates and computational guarantees}
+\label{sec:p15-ssat-certificates}
+
+\begin{hbmethod}{def:p15-ssat-value-certificate}{A full finite value certificate}
+A certificate is a canonical prefix-respecting assignment tree.
+Each node records its remaining prefix, restricted matrix and rational
+value. A terminal supplies the actual empty-clause or empty-matrix
+condition; a split supplies both child restrictions and the indicated
+max, min or weighted combination. Check the original prefix, all
+restrictions, terminal conditions and rational equations, then compare
+the root value to the threshold. A zero-weight child may still be
+supplied; no undefined null-event conditional is checked. Arbitrary
+matrix-SAT models or trees that cross prefix boundaries are not these
+certificates.
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p15-ssat-certificate-complexity}{proved=annex:p15.ssat-certificate-complexity}{Certificate correctness and polynomial-space decision}
+The stated checker terminates and accepts precisely correct canonical
+value trees. Every valid input has such a finite tree, so exact threshold
+decisions have complete certificates. Checking is polynomial in the
+explicit input and certificate length with binary rational arithmetic;
+the certificate itself may be exponential.
+
+For binary rational independent weights, exact depth-first evaluation
+uses polynomial space. The existential/random-only threshold problem
+is \(\mathsf{PSPACE}\)-complete: replacing each universal QBF
+quantifier by a fair random quantifier and using threshold one is a
+polynomial reduction. This completeness is for unbounded alternation
+and inclusive threshold; it does not classify every fixed-prefix subtype.
+\end{hbtheorem}
+
+The QBF prerequisite is the actual finite Boolean language and TQBF
+completeness result in Chapter~\ref{sec:p04-complexity-complete-problems};
+the prefix-relative certificate discipline is also developed in
+Chapter~\ref{sec:p12-q-resolution-and-quantified-certificates}.
+An SSAT value certificate is not a Q-resolution refutation: it certifies
+a numerical optimization/expectation, rather than a false QBF.
+
+The source separately discusses DPLL-tree search. Its allowed search
+order preserves blocks, with justified unit/pure exceptions, and its
+universal search dovetails calls for literals in the current block.
+When the fastest cofactor finishes, it retains that cofactor tree and
+constructs the opposite cofactor tree, then joins them at the selected
+variable. Its reported \(m n^{O(\log s)}\) bound uses the smallest
+\emph{allowed DPLL tree} size \(s\), not an arbitrary matrix decision
+tree that ignores the prefix. That proof/size-analysis and the cited
+decision-tree lower bounds remain separately attributed source results;
+neither is implied by the finite evaluator's termination theorem
+\cite[sec.~2.2, pp.~18--20]{LittmanMajercikPitassi2000SSATAuthor}.
+
+\section{Weighted model counting is a special prefix, not the entire calculus}
+\label{sec:p15-ssat-counting}
+
+\begin{hbtheorem}{thm:p15-ssat-projections}{proved=annex:p15.ssat-projections}{The exact random-only, exist-random and random-exist cases}
+Let \(R\) be independent random variables with product mass \(\mu\)
+and let \(X\) be controlled variables.
+\begin{enumerate}
+\item A random-only prefix has value
+      \(\sum_r\mu(r)\mathbf1_{\phi(r)}\). For \(n\) fair
+      variables this is \(\#\mathrm{models}(\phi)/2^n\).
+\item An exist-random prefix has value
+      \(\max_x\sum_r\mu(r)\mathbf1_{\phi(x,r)}\), with one
+      fixed \(x\) selected before any observation.
+\item A random-exist prefix has value
+      \(\sum_r\mu(r)\mathbf1_{\exists x\phi(x,r)}\), allowing
+      a separately chosen satisfying extension for each observed \(r\).
+\end{enumerate}
+The last case is a weighted projected count, not a count of every
+\((x,r)\) satisfying extension. Existential auxiliary variables placed
+after all random variables preserve this value exactly when their
+projection defines the same event on the random assignments.
+Randomly quantifying the same auxiliaries can introduce multiplicity
+weights and change it.
+\end{hbtheorem}
+
+For a fresh unconstrained Boolean auxiliary, adding it existentially
+after a random-only formula preserves its value. Randomly adding it
+also preserves value when truly unconstrained, since its weights sum to
+one; but forcing that auxiliary to equal a deterministic gate output
+and then assigning it a fair random quantifier introduces a factor
+\(1/2\). With \(g\) such uniquely constrained gate outputs, the
+factor is \(2^{-g}\). SAT equisatisfiability alone therefore is not a
+proof of probability preservation.
+
+\section{An explicit Bayesian-network inference translation}
+\label{sec:p15-ssat-bayesian-inference}
+
+\begin{hbdefinition}{def:p15-ssat-row-coin-encoding}{Boolean DAG, row coins and deterministic constraints}
+Take a finite acyclic Boolean Bayesian network in topological order
+\(A_1,\ldots,A_m\), with explicit rational conditional tables
+\(t_{i,u}=P(A_i=1\mid\operatorname{pa}(A_i)=u)\).
+Each table row has a total probability convention, including rows whose
+parent event may be null. Introduce one independent Bernoulli coin
+\(C_{i,u}\) of probability \(t_{i,u}\) per row. Put all those
+coins first in a random prefix. Then existentially quantify all \(A_i\)
+and any Boolean gate auxiliaries, constrained by full gate equivalences
+and
+\[
+ A_i\leftrightarrow
+       \bigvee_u[\operatorname{Pattern}_{i,u}(\operatorname{pa}(A_i))
+                         \land C_{i,u}].
+\]
+The parent patterns are disjoint and exhaustive, including the unique
+empty pattern for a root node. Let \(\Psi\) be the conjunction of
+these constraints. Attach any Boolean evidence/query event in the
+\(A_i\)'s to that matrix. Gate equivalences are converted to CNF
+with their auxiliaries in the final existential block.
+Write \(\boldsymbol C\) for the row coins in the chosen prefix order,
+and \(\boldsymbol t\) for their probabilities in that same order.
+Thus \(\ssatrandom^{\boldsymbol t}\boldsymbol C\) is the corresponding
+weighted block, not a fair block inferred from omission of individual indices.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p15-ssat-bn-translation}{proved=annex:p15.ssat-bn-translation}{Exact joint probability and qualified conditional inference}
+Every coin assignment has exactly one \(A\)-assignment satisfying
+\(\Psi\), and every gate auxiliary is uniquely determined. The
+induced law of \(A\) is exactly the Bayesian-network joint law.
+Therefore, for any event \(B(A)\),
+\[
+ V(\ssatrandom^{\boldsymbol t}\boldsymbol C\,\exists\boldsymbol A,\Psi\land B)
+      =P_{\mathrm{BN}}(B).
+\]
+In particular evidence \(E\) and query \(H\) give
+\[
+ P_{\mathrm{BN}}(H\mid E)
+    =\frac{V(\ssatrandom^{\boldsymbol t}\boldsymbol C\,\exists\boldsymbol A,
+                    \Psi\land H\land E)}
+            {V(\ssatrandom^{\boldsymbol t}\boldsymbol C\,\exists\boldsymbol A,
+                    \Psi\land E)}
+\]
+only when the denominator is positive. At zero evidence probability,
+the ratio is undefined. The encoding is polynomial in the explicit
+table and event-circuit size, not necessarily in a succinct description
+of exponentially many CPT rows.
+\end{hbtheorem}
+
+The constrained existential variables are logical auxiliaries, not free
+actions. Their full equivalences leave no freedom to change the network
+realization. For planning, an ordinary SSAT choice may read every earlier
+random bit: placing a hidden state draw before an action can leak
+information unless an encoding proves observation-only correspondence
+or supplies a separately justified dependency restriction. Conditioning
+on evidence also is not intervention on a network mechanism.
+
+The earlier original connects belief-network inference with randomized
+satisfiability on pp.~5--8. This explicit row-coin construction states
+and proves the encoding conditions rather than treating that connection
+as a general equivalence for every mixed prefix. It is an independent
+construction; it is not attributed as a literal source encoding with
+these auxiliary variables.
+
+\begin{hbexample}{def:p15-ssat-bn-worked}{Evidence requires a denominator and dependence requires an encoding}
+Let \(P(X=1)=1/5\), \(P(Y=1\mid X=1)=4/5\), and
+\(P(Y=1\mid X=0)=1/10\). Use three independent row coins and
+constraints \(X\leftrightarrow C_X\),
+\(Y\leftrightarrow[(X\land C_{Y,1})\lor(\bar X\land C_{Y,0})]\).
+The evidence matrix with \(Y\) has value
+\[
+ \frac15\frac45+\frac45\frac1{10}=\frac6{25},
+\]
+and the query/evidence matrix with \(X\land Y\) has value
+\(4/25\). Their ratio is \(2/3\). Using the marginal probabilities
+of \(X,Y\) as independent random quantifiers would instead give
+\(P(X\land Y)=(1/5)(6/25)=6/125\), hence conditional \(1/5\):
+it destroys the dependency, despite using both correct marginals.
+\end{hbexample}
+
+\section{Policy trees, empirical optimization and incomplete local search}
+\label{sec:p15-ssat-policy-sampling}
+
+The original's sampling method concerns existential/random prefixes,
+not the adversarial universal extension. Its policy tree gives one copy
+of an existential variable for each preceding random history. A policy
+assigns those copies, and its value is the weighted proportion of
+random leaves whose path formula is satisfied. Sampled histories must
+share an earlier controlled decision whenever their earlier random
+histories agree; giving a separate early decision to every full sample
+would introduce clairvoyance.
+
+\begin{hbdefinition}{def:p15-ssat-sample-policy}{A complete policy and a sampled policy-tree value}
+If existential variable \(x_i\) has \(r_i\) preceding random
+variables, its full table has \(2^{r_i}\) entries. Put
+\(D=\sum_{i:Q_i=\exists}2^{r_i}\); there are \(P=2^D\)
+labelled deterministic table policies, including values on null histories.
+Draw \(w\geq1\) independent full random assignments from the declared
+product mass, independently of a policy under evaluation. For a policy
+\(s\), its empirical value \(\widehat v_s\) is the fraction of
+the \(w\) induced plays satisfying the matrix. The empirical optimum
+is \(\widehat v_* = \max_s\widehat v_s\).
+
+The source's \texttt{sampleevalssat} splits the current sample multiset
+according to an outer random variable and weights the children by
+their multiplicities. An empty child contributes zero and is not
+evaluated through a ratio \(0/0\). At an outer existential node,
+maximize the two restricted subproblems using the \emph{same} sample
+histories. Recurse to the empty-matrix/empty-clause terminals. This
+computes the exact optimum on the sampled tree, not the exact optimum
+under the original distribution. Any unvisited policy-table entries
+must be completed arbitrarily to obtain a total legal policy.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p15-ssat-sampling-bound}{proved=annex:p15.ssat-sampling-bound}{Sampling correctness and the cost of choosing a policy on the sample}
+For any fixed complete policy, \(\widehat v_s\) is unbiased and
+\[
+ P(|\widehat v_s-v_s|>\varepsilon)
+       \leq2e^{-2w\varepsilon^2},\qquad\varepsilon>0.
+\]
+Uniformly over the finite policy collection,
+\[
+ P(\exists s:|\widehat v_s-v_s|>\varepsilon)
+       \leq2P e^{-2w\varepsilon^2}.
+\]
+On the complementary event,
+\(|\widehat v_*-V|\leq\varepsilon\), and a sample-optimal complete
+policy has true value at least \(V-2\varepsilon\).
+Thus \(w\geq\log(2P/\delta)/(2\varepsilon^2)\) suffices for
+these simultaneous guarantees with probability at least \(1-\delta\).
+The recursive sampled-tree procedure terminates and computes
+\(\widehat v_*\) exactly with the stated empty-child convention.
+\end{hbtheorem}
+
+This is the source's fixed-policy versus all-policies distinction
+\cite[sec.~2.3, Lemma~4 and Theorem~5, pp.~21--30]{LittmanMajercikPitassi2000SSATAuthor}.
+For random-only inputs \(P=1\); for an outer block of \(c\) choices,
+\(P=2^c\). With alternating choices, \(D\), and therefore
+\(\log P\), can be exponential. A fixed-policy bound independent
+of input size is not a polynomial guarantee for optimizing all policies.
+
+\begin{hbtheorem}{thm:p15-ssat-sampling-overfit}{proved=annex:p15.ssat-sampling-overfit}{The source's exponential sampling failure case}
+Use fair prefix
+\[
+ \ssatrandom^{1/2}y_1\cdots\ssatrandom^{1/2}y_r\;
+ \exists x\;\ssatrandom^{1/2}z\;(x\leftrightarrow z).
+\]
+Its true value is \(1/2\), but it has \(2^{2^r}\) contingent
+policies. If \(N_{h,b}\) counts samples with initial history
+\(h\in\{0,1\}^r\) and final bit \(b\), its empirical optimum
+is
+\[
+ \widehat v_* =\frac1w\sum_h\max(N_{h,0},N_{h,1}).
+\]
+It satisfies
+\(E[\widehat v_*]\geq1-(w-1)/2^{r+1}\).
+For \(0<\varepsilon<1/2\), a guarantee
+\(P(|\widehat v_*-1/2|\leq\varepsilon)\geq1-\delta\)
+therefore requires
+\[
+ w\geq1+2^r(1-2\varepsilon)(1-\delta).
+\]
+For example \(r=10,\varepsilon=1/10,\delta=1/20\) requires
+at least 780 samples. This is a necessary bound, not a sufficient one.
+\end{hbtheorem}
+
+The original Appendix B uses \(r=n-2\). The normalized majority-count
+formula here states exactly what the empirical optimizer computes;
+the source's match-sum display is not copied as a probability without
+its normalization and majority selection. The failure is optimization
+over many scarcely observed histories, not inaccurate evaluation of
+one policy fixed independently of the sample
+\cite[Appendix~B, pp.~49--50]{LittmanMajercikPitassi2000SSATAuthor}.
+
+The source's \texttt{randevalssat} additionally replaces exact sampled
+optimization by hillclimbing. Each sampled path yields a Boolean path
+formula over the legally shared decision copies. Its two-level objective
+counts satisfied clauses and satisfied entire path formulas, weighting
+a whole path by the number of clauses of the original matrix. It starts
+from random assignments, chooses an unsatisfied clause, flips a variable
+when the objective improves, otherwise considers a least-damaging flip
+with probability one half, and restarts after stipulated failure,
+iteration and restart limits. More satisfied scattered clauses need not
+mean more satisfied complete paths.
+
+If a returned policy is empirically \(g\) below the sampled optimum,
+the uniform sampling event only guarantees true value at least
+\(V-g-2\varepsilon\). Without a proved \(g\), the sampling theorem
+does not certify this local search as globally optimal. The source
+explicitly reports local optima, missing policy branches and memory
+cost as limitations. It does not supply a finite-error decision proof
+for every returned approximate number or an extension of this sampling
+routine to all universal/minimizing prefixes.
+
+\section{The random-instance distribution is not random quantification}
+\label{sec:p15-ssat-random-instances}
+
+The original's fixed-clause model \(F^ {k,n}_m\) first draws a CNF
+instance: each of \(m\) independently generated clauses chooses \(k\)
+distinct variables uniformly, then independently chooses each sign with
+probability one half. This outer distribution over formulas is different
+from the inner random quantifiers of one SSAT instance. Any claimed
+average solver improvement must identify which distribution and which
+prefix/threshold settings were used.
+
+\begin{hbtheorem}{thm:p15-ssat-random-formula-bound}{proved=annex:p15.ssat-random-formula-bound}{The first-moment bound with its actual asymptotic margin}
+For \(n\geq k\geq1\), \(m\geq0\), and integer \(0\leq t\leq n\),
+let \(Z\) count satisfying assignments of a fixed-clause random formula.
+Then
+\[
+ E[Z]=2^n(1-2^{-k})^m,\qquad
+ P(Z\geq2^t)\leq2^{n-t}(1-2^{-k})^m.
+\]
+For \(k=3\), the latter tends to zero whenever
+\[
+ m\log(8/7)-(n-t)\log2\longrightarrow+\infty.
+\]
+Equality at \(m=(n-t)\log2/\log(8/7)\) alone gives bound one,
+not an almost-sure negative classification. Under the stated distinct-
+variable clause model, the expected number of unused variables is
+\(n(1-k/n)^m\).
+\end{hbtheorem}
+
+The original discusses first-moment thresholds on pp.~9--12. Its
+unused-variable expression \(n(1-1/n)^{km}\) instead corresponds
+to independent variable choices with replacement; it is not the exact
+value for clauses whose variables are distinct. Both approximate
+\(ne^{-km/n}\) in appropriate sparse regimes, but the exact sampling
+convention and the necessary asymptotic margin remain visible here.
+No sharp-threshold theorem or empirical hardness claim follows from
+this first-moment calculation alone.
+
+\section{What the original experiments do and do not establish}
+\label{sec:p15-ssat-experiments}
+
+The primary paper tests its algorithms on small random instances, not
+on a distribution of all possible probabilistic inference problems.
+Its first comparisons use 1000 formulas with 20 variables, 3 literals per
+clause and 141 generated clauses, taking prefixes of that clause list.
+Thresholds use \(\theta=2^{t-n}\). Exist-random experiments vary
+the number of initial choices, clause count and threshold; the observed
+peak work does not follow the ordering of worst-case complexity classes.
+These work measurements count recursive calls, not a theorem that one
+prefix class is universally faster than another.
+
+The heuristic experiment uses eight sets of 100 formulas: 24 variables
+with 24, 48, 72, 96 clauses and 32 variables with 32, 64, 96, 128 clauses, all
+3-CNF. Its modified generator rejects formulas until all variables
+occur, changing the unconditioned fixed-clause distribution. Prefixes
+alternate equal-size blocks and begin either existentially or randomly.
+The source compares RAND, SATS MOST, 2S JW, POS 2S JW, MOMS and MAX UNIT,
+always selecting within the current outer block. The 10,400 instances
+were solved by a C implementation on a Sun Ultra-1, SunOS-5.7,
+128 MB RAM; the metric is change in recursive-call count relative to
+strict prefix-order splitting. The author qualifies transfer to larger
+or structured planning instances
+\cite[sec.~3.3, pp.~36--41]{LittmanMajercikPitassi2000SSATAuthor}.
+
+The sampling/local-search experiment uses 27 sets of 100 formulas from
+the cross product \(n\in\{8,12,16\}\),
+\(m\in\{n,2n,3n\}\), \(k\in\{3,4,5\}\), again conditioned
+on all variables appearing. It constructs 25,200 prefix instances and
+ten sampled trees per instance, with sample sizes ranging from 5 to 4086
+on an approximately logarithmic scale. Performance is measured by
+squared error against exact full-tree values; local-search iteration
+and restart budgets grow with the constructed problem. More samples
+remove sampling error for exact empirical optimization, but do not
+remove local-search error. The reported anomalous 12-variable, 24-clause,
+3-CNF experiment with block size 4 and an initial existential block
+has unequal random/choice counts; its squared-error behavior is not
+pooled silently with the balanced-prefix experiments
+\cite[sec.~3.4, pp.~42--45]{LittmanMajercikPitassi2000SSATAuthor}.
+
+\begin{systementry}{entry:p15-stochastic-satisfiability}{Finite stochastic Boolean satisfiability}
+\entrylanguage{Closed finite ordered Boolean CNF with existential and fixed independent rational random quantifiers; universal min belongs to the explicitly declared Extended SSAT. Literal complement is Boolean negation; no identity predicate.}
+\entrysemantics{Optimal expected matrix satisfaction under nonanticipating prefix strategies; maximizing/minimizing perfect-information continuation games in the extended case.}
+\entrycalculus{sheet:p15-stochastic-satisfiability}
+\entryadequacy{proved=annex:p15.ssat-strategy-semantics}{The finite value rules exactly compute the declared sequential-strategy value, including null histories.}
+\entrydecidability{proved=annex:p15.ssat-certificate-complexity}{Exact rational threshold decision terminates, has complete value certificates and is PSPACE-complete for unbounded existential/random alternation.}
+\entrycharacteristic{Crossing random/choice boundaries changes information and can change value; random-only counting, contingent projected counting and conditional Bayesian inference require their distinct stated conditions. Sampling optimization and bounded local search are not exact decision certificates.}
+\entrysources{LittmanMajercikPitassi2000SSATAuthor,LittmanMajercikPitassi2002SSATErratum}
+\end{systementry}
+
+\begin{proofboundary}{def:p15-ssat-source-boundary}{Exact value, information and algorithmic scope}
+The annex proves the declared value/strategy calculus, prefix boundaries,
+source-style simplifications and corrected threshold evaluator,
+certificate/space guarantees, special-prefix projections, row-coin
+inference construction and sampling/first-moment bounds. It does not
+identify the source's fair presentation with every weighted or dependency-
+restricted stochastic constraint language.
+The source's universal-search optimal-tree size analysis, full cited
+random-formula lower bounds and subtype approximation-complexity
+results retain their separately cited standing above. The 2001 final journal body,
+2009 handbook chapter and 2021 chapter remain distinct source presentations;
+stochastic constraint programming and all later chapter-specific
+constructions and experiments require their own defined inputs, information
+constraints, algorithms and correctness statements.
+\end{proofboundary}

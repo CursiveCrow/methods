@@ -1,0 +1,507 @@
+%% toc: P2 15 15.1,15.2,15.3,15.8
+\section{Proofs for decision bounds, reductions and checked certificates}
+\label{sec:annex-p02-w02-p02-018-decision-certificates}
+
+Notation is that of \cref{sec:p02-w02-p02-018-decision-certificates}.  For a
+valuation \(v\) and a finite formula set \(X\), \(v\entails X\) means
+\(v\entails\chi\) for every \(\chi\in X\).  The coincidence lemma
+\cref{lem:prop-coincidence} is used in the form: if two valuations agree on
+\(\operatorname{Var}(\chi)\), they give \(\chi\) the same value.  A
+\emph{step} is one transition of a deterministic multitape machine; a constant
+is a number that depends only on the fixed machine being described.
+
+\begin{annexitem}{annex:p02-w02-p02-018-evaluator}{thm:p02-w02-p02-018-evaluator}{Correctness and cost of stack evaluation}
+\begin{proof}
+Write \(v=v_\tau\).  A variable string \(\texttt{p}\,\nu\,\texttt{;}\) is the
+string of a variable exactly when \(\nu\) is a nonempty binary numeral with no
+leading \texttt{0} unless it is the single digit \texttt{0}; this is exactly
+what item~1 of the method tests.  Let \(\operatorname{red}(\sigma)\) be the
+stack obtained by reducing \(\sigma\); reduction only changes entries at the
+top, and \(\operatorname{red}(\sigma\cdot\neg\cdot b)=
+\operatorname{red}(\sigma\cdot b')\) for a truth value \(b\) with
+opposite value \(b'\), because the first reduction step performs
+exactly this replacement.
+
+\emph{Formulas are evaluated.}  We prove by structural induction on a formula
+\(\chi\): for every stack \(\sigma\) whose top entry is not a truth value,
+processing the tokens of \(\chi\) from \(\sigma\) never stops with
+\emph{malformed} and ends with \(\operatorname{red}(\sigma\cdot
+\widehat v(\chi))\).  If \(\chi\) is a variable or \(\bottom\), the method
+pushes \(\widehat v(\chi)\) and reduces.  If \(\chi=\neg\chi'\), it pushes
+\(\neg\); the stack \(\sigma\cdot\neg\) has no truth value on top, so by the
+induction hypothesis processing \(\chi'\) gives
+\(\operatorname{red}(\sigma\cdot\neg\cdot\widehat v(\chi'))=
+\operatorname{red}(\sigma\cdot\widehat v(\neg\chi'))\).  If
+\(\chi=(\chi_1\circ\chi_2)\), it pushes \((\); by the induction hypothesis
+processing \(\chi_1\) gives \(\operatorname{red}(\sigma\cdot(\cdot a)\) with
+\(a=\widehat v(\chi_1)\), which equals \(\sigma\cdot(\cdot a\) because the
+entry below \(a\) is not \(\neg\).  It then pushes \(\circ\) and, by the
+induction hypothesis again, reaches \(\sigma\cdot(\cdot a\cdot\circ\cdot b\)
+with \(b=\widehat v(\chi_2)\).  On the final \()\) the four top entries have
+the required shape, and the method replaces them by the value of \(a\circ b\),
+which is \(\widehat v(\chi)\), and reduces.  Applied to the empty stack, a
+formula string ends with the single entry \(\widehat v(\chi)\), so the answer
+is \emph{well formed with value \(\widehat v(\chi)\)}.
+
+\emph{Only formulas are accepted.}  Suppose the run on \(w\) does not stop.
+We show that after each completed action on a prefix \(u\) of \(w\), with
+stack \(e_1\cdots e_h\) from bottom to top, \(u\) splits as
+\(u_1\cdots u_h\) where a marker \(e_i\) corresponds to the one-token segment
+\(u_i\) equal to it, and a truth value \(e_i\) corresponds to a segment
+\(u_i\) that is the string of a formula with \(\widehat v(u_i)=e_i\).  The
+empty prefix and empty stack satisfy this.  Pushing a marker adds a
+one-token segment.  Item~1 adds the segment \(\texttt{p}\,\nu\,\texttt{;}\),
+which is a variable by the first paragraph, with its value under \(v\); item~2
+adds \(\bottom\) with value \(\mathbf F\).  A reduction merges the segment
+\(\neg\) with the following formula segment \(\chi\) into the formula
+\(\neg\chi\), and the new entry is its value.  Item~4 merges the segments
+\((\), \(\chi_1\), \(\circ\), \(\chi_2\) and the token \()\) into the formula
+\((\chi_1\circ\chi_2)\), and the new entry is its value by the truth clause of
+\(\circ\).  If the run ends with one truth value \(b\), the invariant for
+\(u=w\) says that \(w\) is a formula string with value \(b\).
+
+Hence \emph{well formed} is answered exactly on formula strings, and then
+with the value \(\widehat{v_\tau}(\chi)\).  This proves item~1.
+
+\emph{Cost.}  Use a machine whose read-only input tape holds \(w\) (each token
+a fixed group of four cells), whose first work tape holds \(\tau\) as the
+string \((n_1,b_1)\cdots(n_r,b_r)\) of \(s\) symbols, and whose second work
+tape holds the stack, one cell per entry, with its head on the top entry.
+Pushing, popping, and inspecting the top four entries each take a constant
+number of steps.  Every reduction or item~4 replacement removes at least one
+entry, so their number is at most the number of pushes, which is at most
+\(t\).  A lookup for a numeral \(\nu\) scans the table from the left; at an
+entry \((n_i,b_i)\) it compares \(n_i\) with \(\nu\) symbol by symbol, moving
+both heads forward until a mismatch or the end of one of them, and then
+moves the input head back to the start of \(\nu\).  This costs at most
+\(2(\operatorname{len}(n_i)+2)\) steps at that entry, where \(\operatorname{len}(n_i)\) is the length of
+the numeral, hence at most \(4s\) steps over the whole table, plus \(s\)
+steps to return the table head.  There are at most \(t\) lookups.  The total
+is at most \(c\,t+t\cdot5s+c\,t\leq c'\,t\,(t+s)\) for constants \(c,c'\),
+which proves item~2.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p02-w02-p02-018-decision}{thm:p02-w02-p02-018-decision}{Decidability with a running-time bound}
+\begin{proof}
+\emph{Recognition.}  Decoding fails exactly on bit strings that are not
+decodable.  The separator check is a scan of the token string for the shape of
+\cref{def:p02-w02-p02-018-input}.  By
+\cref{thm:p02-w02-p02-018-evaluator}(1), each segment passes exactly when it
+is a formula string.  So Step~1 rejects exactly the malformed inputs, which
+belong to none of the four problems.
+
+\emph{Rows.}  Let \(X=\{x_1,\ldots,x_k\}\) be the variables of a well-formed
+instance.  Reading \(\mathbf F\) as \(0\) and \(\mathbf T\) as \(1\), the
+successor operation of Step~3 is addition of \(1\) to the binary numeral
+\(u(x_1)\cdots u(x_k)\) with \(x_k\) least significant, so starting from the
+all-\(\mathbf F\) row it visits each of the \(2^k\) assignments
+\(X\to\{\mathbf T,\mathbf F\}\) exactly once, in lexicographic order, and
+stops after the all-\(\mathbf T\) row.  For \(k=0\) there is one row, the
+empty assignment.  Hence Step~3 performs at most \(2^k\) iterations, and the
+procedure halts.
+
+\emph{Correctness.}  For a row \(u\) write \(v_u\) for the valuation equal to
+\(u\) on \(X\) and \(\mathbf F\) elsewhere; it is the valuation of the table
+holding \(u\), so by \cref{thm:p02-w02-p02-018-evaluator}(1) the values
+computed in Step~3 are the values \(\widehat{v_u}(\chi)\) of the segments
+\(\chi\).  Every valuation \(v\) agrees on \(X\) with \(v_u\) for the row
+\(u=v\mathbin{\upharpoonright}X\), and every segment \(\chi\) has
+\(\operatorname{Var}(\chi)\subseteq X\), so
+\(\widehat v(\chi)=\widehat{v_u}(\chi)\) by the coincidence lemma.  So a
+statement of the form ``some valuation gives the segments values with a
+property'' holds iff some row does.  Applied to the four problems:
+\(\varphi\) is satisfiable iff some row makes it true; \(\varphi\) is valid
+iff no row makes it false; \(\{\gamma_1,\ldots,\gamma_r\}\entails\varphi\)
+iff no valuation satisfies every \(\gamma_i\) and falsifies \(\varphi\), iff
+no row does; and \(\varphi\) and \(\psi\) are equivalent iff no valuation, and
+so no row, gives them different values.  Step~3 stops exactly at the first
+row with the property, and Step~4 answers when there is none, so the answer is
+correct in each case.  The output row \(u\), extended by \(\mathbf F\), is
+\(v_u\), which has the property that stopped the search, as claimed.
+
+\emph{Cost.}  Let \(t=m/4\) be the number of tokens.  Decoding and the
+separator scan take at most \(c\,m\) steps.  Recognition runs the evaluator on
+segments of total length at most \(t\) with the empty table, within
+\(c\,t^2\) steps by \cref{thm:p02-w02-p02-018-evaluator}(2).  Step~2 visits at
+most \(t\) variable occurrences; for each it compares the numeral with the
+list built so far, by the comparison of that proof, within \(c\,t\) steps,
+and appends it if it is new; this takes at most \(c\,t^2\) steps.  The table
+has at most \(s\leq2t\) symbols, since its numerals have total length at most
+\(t\) and each of the \(k\leq t\) entries adds a constant number of symbols.
+One row evaluates segments of total length at most \(t\), within
+\(c\,t(t+2t)\) steps, keeps a constant amount of information about the values
+already seen (for \(\mathsf{CONS}\), whether every premise so far is true; for
+\(\mathsf{EQV}\), the first value), and computes the next row within
+\(c\,s\) steps.  Summing, the procedure halts within
+\(c\,m^2+2^k\,c\,m^2\leq c\,(2^k+1)\,m^2\) steps, for a suitable constant
+\(c\).  For a malformed input it halts after recognition, within \(c\,m^2\)
+steps, which is the case \(k=0\) of the bound.
+
+\emph{Attainment.}  If \(\varphi\) is valid, no row makes it false, so the
+\(\mathsf{TAUT}\) search never stops in Step~3 and visits all \(2^k\) rows.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p02-w02-p02-018-limits}{thm:p02-w02-p02-018-limits}{Infinite theories and uncountable alphabets}
+\begin{proof}
+(1) If \(n\in A\), then \(p_n\in\Gamma_A\), so every valuation satisfying
+\(\Gamma_A\) satisfies \(p_n\).  If \(n\notin A\), the valuation \(v\) with
+\(v(p_j)=\mathbf T\) iff \(j\in A\) satisfies \(\Gamma_A\) and falsifies
+\(p_n\).  Hence \(A=\{n:\Gamma_A\entails p_n\}\), so \(A\) is recovered from
+the set \(E_A\) of encodings of consequences of \(\Gamma_A\), and
+\(A\mapsto E_A\) is injective.
+
+The family \(\mathcal D\) of languages decided by deterministic multitape
+machines is countable.  A machine is given by finitely many tapes, a finite
+state set, a finite tape alphabet containing the input symbols and the blank,
+and a finite transition table.  Renaming the states and the remaining tape
+symbols bijectively by initial segments of \(\N\) does not change the language
+decided, and the renamed machine is determined by a finite list of natural
+numbers.  The map sending a list \((a_1,\ldots,a_r)\) to the bit string
+\(1^{a_1}0\,1^{a_2}0\cdots1^{a_r}0\) is injective, and \(\{0,1\}^*\) is
+countable by the enumeration in the proof of (2).  So the machines up to
+renaming form a countable set, and \(\mathcal D\) is countable.
+
+Since \(A\mapsto E_A\) is injective, the set \(\{A\subseteq\N:E_A\in
+\mathcal D\}\) injects into \(\mathcal D\) and is countable.  By
+\cref{thm:p01-cantor} there is no surjection \(\N\to\mathcal P(\N)\), so
+\(\mathcal P(\N)\) is uncountable.  Therefore all but countably many
+\(A\subseteq\N\) have \(E_A\notin\mathcal D\).
+
+(2) List \(\{0,1\}^*\) by increasing length, and within each length in
+lexicographic order; each length class \(\{0,1\}^n\) is finite (it has
+\(2^n\) members), so this list assigns every string a unique position in
+\(\N\), and the position map is injective.  An injection \(P\to\{0,1\}^*\)
+composed with the position map would be an injection \(P\to\N\), making \(P\)
+countable.  Hence an uncountable \(P\) has no such injection.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p02-w02-p02-018-membership}{thm:p02-w02-p02-018-membership}{\(\mathsf{SAT}\) is in \(\mathsf{NP}\) and \(\mathsf{TAUT}\) is in \(\mathsf{coNP}\)}
+\begin{proof}
+Let \(n\) be the bit length of \(x\), and take \(q(n)=n\).  For a
+well-formed formula instance \(x\) with variables \(x_1,\ldots,x_k\) in order
+of first occurrence and a bit string \(y\) of length \(k\), let \(u_y\) be the
+row with \(u_y(x_i)=\mathbf T\) iff the \(i\)th bit of \(y\) is \(1\).
+
+Define \(R(x,y)\) to hold iff \(x\) encodes a formula \(\varphi\),
+\(\operatorname{len}(y)=k\), and \(\widehat{v_{u_y}}(\varphi)=\mathbf T\).  A machine
+deciding \(R\) on \(\langle x,y\rangle\) separates the two parts in one scan
+(\cref{def:p02-w02-p02-018-verifier}), runs Steps~1 and~2 of
+Method~\ref{def:p02-w02-p02-018-truth-table} on \(x\), compares \(\operatorname{len}(y)\)
+with \(k\), copies the bits of \(y\) into the table, and evaluates once.  By
+the cost part of the proof of \cref{thm:p02-w02-p02-018-decision} this takes
+at most \(c\,(n^2+\operatorname{len}(y)+1)\) steps, a polynomial in the length of
+\(\langle x,y\rangle\).  If \(x\in\mathsf{SAT}\), some valuation \(v\)
+satisfies \(\varphi\); let \(y\) list \(v(x_1),\ldots,v(x_k)\) as bits.  Then
+\(\operatorname{len}(y)=k\leq n\), \(v\) and \(v_{u_y}\) agree on
+\(\operatorname{Var}(\varphi)\), so \(R(x,y)\) holds by the coincidence
+lemma and \cref{thm:p02-w02-p02-018-evaluator}(1).  Conversely, if
+\(R(x,y)\), then \(v_{u_y}\) satisfies \(\varphi\), so \(x\in\mathsf{SAT}\).
+Hence \(\mathsf{SAT}\in\mathsf{NP}\) in the sense of
+\cref{def:p02-complexity-standing}.
+
+Define \(R'(x,y)\) to hold iff \(x\) is malformed, or \(x\) encodes a formula
+\(\varphi\), \(\operatorname{len}(y)=k\) and \(\widehat{v_{u_y}}(\varphi)=\mathbf F\).  It is
+decided in the same time, since Step~1 detects malformed inputs.  If
+\(x\in\mathsf{TAUT}^{\mathsf c}\), either \(x\) is malformed and
+\(R'(x,\varepsilon)\) holds for the empty string \(\varepsilon\), or \(x\)
+encodes a formula falsified by some \(v\), and the bits of \(v\) on
+\(x_1,\ldots,x_k\) form a \(y\) of length at most \(n\) with \(R'(x,y)\).
+Conversely \(R'(x,y)\) implies that \(x\) is malformed or encodes a formula
+falsified by \(v_{u_y}\); in both cases \(x\notin\mathsf{TAUT}\).  So
+\(\mathsf{TAUT}^{\mathsf c}\in\mathsf{NP}\), and \(\mathsf{TAUT}\), the
+complement of an \(\mathsf{NP}\) problem, is in \(\mathsf{coNP}\).
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p02-w02-p02-018-negation}{thm:p02-w02-p02-018-negation}{The negation reduction}
+\begin{proof}
+\emph{Computing \(h\).}  Run Step~1 of
+Method~\ref{def:p02-w02-p02-018-truth-table} for a single formula, within
+\(c\,m^2\) steps.  If \(x\) is well formed, output the four-bit code of
+\(\neg\) followed by \(x\); otherwise output the codes of \(\neg\) and
+\(\bottom\).  Since \(\neg\varphi\) is a formula whenever \(\varphi\) is, the
+output always encodes a formula.
+
+\emph{The equivalences.}  If \(x\) encodes \(\varphi\), then for every
+valuation \(v\), \(\widehat v(\neg\varphi)=\mathbf F\) iff
+\(\widehat v(\varphi)=\mathbf T\).  So \(\varphi\) is satisfiable iff some
+valuation falsifies \(\neg\varphi\), that is iff \(h(x)\notin\mathsf{TAUT}\);
+as \(h(x)\) is well formed, this means \(h(x)\in\mathsf{TAUT}^{\mathsf c}\).
+Likewise \(\varphi\) is not valid iff some valuation satisfies
+\(\neg\varphi\), that is iff \(h(x)\in\mathsf{SAT}\).  If \(x\) is malformed,
+then \(x\notin\mathsf{SAT}\) and \(x\in\mathsf{TAUT}^{\mathsf c}\), while
+\(h(x)\) encodes \(\neg\bottom\), which every valuation satisfies; so
+\(h(x)\in\mathsf{TAUT}\), hence \(h(x)\notin\mathsf{TAUT}^{\mathsf c}\), and
+\(h(x)\in\mathsf{SAT}\).  Both displayed equivalences hold in every case.
+
+\emph{Transfer of reductions.}  A machine running within \(p_1(n)\) steps
+writes an output of length at most \(p_1(n)\), so composing it with a machine
+running within \(p_2(\ell)\) steps on inputs of length \(\ell\) gives a
+machine running within \(p_1(n)+p_2(p_1(n))\) steps; polynomial-time maps
+are closed under composition.  If \(f\) reduces \(L\) to \(\mathsf{SAT}\),
+then \(x\in L\) iff \(f(x)\in\mathsf{SAT}\) iff
+\(h(f(x))\in\mathsf{TAUT}^{\mathsf c}\), so \(x\in L^{\mathsf c}\) iff
+\(h(f(x))\in\mathsf{TAUT}\), and \(h\circ f\) reduces \(L^{\mathsf c}\) to
+\(\mathsf{TAUT}\).  If \(g\) reduces \(L^{\mathsf c}\) to \(\mathsf{TAUT}\),
+then \(x\in L\) iff \(g(x)\in\mathsf{TAUT}^{\mathsf c}\) iff
+\(h(g(x))\in\mathsf{SAT}\), so \(h\circ g\) reduces \(L\) to
+\(\mathsf{SAT}\).
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p02-w02-p02-018-cook-levin}{thm:p02-w02-p02-018-cook-levin}{Every \(\mathsf{NP}\) problem reduces to \(\mathsf{SAT}\)}
+\begin{proof}
+\emph{Machine conventions.}  A deterministic machine \(M\) has tapes
+\(1,\ldots,\kappa\), each with cells \(0,1,2,\ldots\); a finite state set
+\(Q\) with start state \(q_{\mathrm s}\), accepting state \(q_{\mathrm a}\)
+and rejecting state \(q_{\mathrm r}\); a finite tape alphabet \(\Sigma_M\)
+containing \(0\), \(1\) and the blank \(\sqcup\); and a transition function
+assigning to each nonhalting state \(s\) and each tuple
+\(\vec a=(a_1,\ldots,a_\kappa)\) of scanned symbols a triple
+\(\delta(s,\vec a)=(s',\vec b,\vec d)\) of a next state, symbols to write and
+head moves \(d_j\in\{-1,0,1\}\); a move \(-1\) at cell \(0\) leaves the head
+at \(0\).  A read-only input tape is the case in which the written symbol on
+that tape always equals the scanned one.  Put
+\(\delta(s,\vec a)=(s,\vec a,\vec 0)\) for \(s\in\{q_{\mathrm a},
+q_{\mathrm r}\}\), so a halted machine stays in its configuration.  On input
+\(w\) the run \(c_0,c_1,\ldots\) starts in \(q_{\mathrm s}\) with every head
+on cell \(0\), \(w\) in cells \(0,\ldots,\operatorname{len}(w)-1\) of tape \(1\) and blanks
+elsewhere, and \(c_{t+1}\) is the successor of \(c_t\) under \(\delta\).  If
+\(M\) halts within \(T\) steps, the state of \(c_T\) is the halting state
+reached.
+
+\emph{Data.}  Let \(L\in\mathsf{NP}\), witnessed by a polynomial \(q\) and a
+predicate \(R\) decided by such a machine \(M\) within \(p(\ell)\) steps on
+inputs \(\langle x,y\rangle\) of length \(\ell\)
+(\cref{def:p02-w02-p02-018-verifier}).  Replacing \(p\) by a larger
+polynomial, assume \(p(\ell)=e\,(\ell+1)^{d}\) with \(e,d\geq1\), so \(p\) is
+nondecreasing.  Fix \(x\) of length \(n\), and put
+\[
+ \ell_0=2n+2,\quad W=q(n),\quad \ell_1=\ell_0+W,\quad T=p(\ell_1),\quad
+ N=\ell_1+T.
+\]
+For every \(y\) with \(\operatorname{len}(y)\leq W\), \(\operatorname{len}(\langle x,y\rangle)\leq\ell_1\),
+so \(M\) halts on \(\langle x,y\rangle\) within \(T\) steps.  A head moves at
+most one cell per step, so at every time \(t\leq T\) every head is on a cell
+at most \(t\leq T<N\).
+
+\emph{Variables.}  For \(0\leq t\leq T\), \(s\in Q\),
+\(1\leq j\leq\kappa\), \(0\leq i\leq N\) and \(a\in\Sigma_M\) take distinct
+variables \(S_{t,s}\) (state \(s\) at time \(t\)), \(H_{t,j,i}\) (head \(j\) on
+cell \(i\) at time \(t\)) and \(C_{t,j,i,a}\) (cell \(i\) of tape \(j\) holds
+\(a\) at time \(t\)).  Number \(Q\) and \(\Sigma_M\) from \(0\), let
+\(Z=N+\abs Q+\abs{\Sigma_M}+\kappa+3\), and give these variables the indices
+\(3(t+Zs)\), \(3(t+Zj+Z^2i)+1\) and \(3(t+Zj+Z^2i+Z^3a)+2\).  Every component
+is below \(Z\), so mixed-radix notation and the residue modulo \(3\) make the
+indices distinct, and each index has \(O(\log Z)\) binary digits.
+
+\emph{The formula.}  For formulas \(\chi_1,\ldots,\chi_r\) with \(r\geq1\) let
+\(\operatorname{One}(\chi_1,\ldots,\chi_r)\) be the right-associated
+conjunction of \(\chi_1\lor\cdots\lor\chi_r\) and of the formulas
+\(\neg(\chi_a\land\chi_b)\) for \(a<b\); a valuation satisfies it iff it
+satisfies exactly one \(\chi_a\).  Let \(\varphi_x\) be the right-associated
+conjunction, in a fixed order, of the following formulas, where
+\(w=x_1x_1\cdots x_nx_n01\) has length \(\ell_0\).
+\begin{enumerate}
+\item[(E)] \(\operatorname{One}(S_{t,s}:s\in Q)\) for each \(t\);
+      \(\operatorname{One}(H_{t,j,i}:0\leq i\leq N)\) for each \(t,j\); and
+      \(\operatorname{One}(C_{t,j,i,a}:a\in\Sigma_M)\) for each \(t,j,i\).
+\item[(I)] \(S_{0,q_{\mathrm s}}\); \(H_{0,j,0}\) for each \(j\);
+      \(C_{0,1,i,w_{i+1}}\) for \(0\leq i<\ell_0\);
+      \(C_{0,1,i,0}\lor C_{0,1,i,1}\lor C_{0,1,i,\sqcup}\) for
+      \(\ell_0\leq i<\ell_1\);
+      \(C_{0,1,i,\sqcup}\to C_{0,1,i+1,\sqcup}\) for
+      \(\ell_0\leq i<\ell_1-1\); \(C_{0,1,i,\sqcup}\) for
+      \(\ell_1\leq i\leq N\); and \(C_{0,j,i,\sqcup}\) for \(j\geq2\) and all
+      \(i\).
+\item[(D)] For each \(t<T\), \(s\in Q\), \(\vec a\in\Sigma_M^\kappa\) and
+      \(\vec\imath\in\{0,\ldots,N\}^\kappa\), with
+      \(\delta(s,\vec a)=(s',\vec b,\vec d)\) and
+      \(i'_j=\max(0,i_j+d_j)\):
+      \[
+       \Bigl(S_{t,s}\land\textstyle\bigwedge_{j}
+         (H_{t,j,i_j}\land C_{t,j,i_j,a_j})\Bigr)\to\Psi,
+      \]
+      where \(\Psi\) is \(\bottom\) if some \(i'_j>N\), and otherwise
+      \(\Psi=S_{t+1,s'}\land\bigwedge_j(H_{t+1,j,i'_j}\land
+      C_{t+1,j,i_j,b_j})\).
+\item[(F)] \((C_{t,j,i,a}\land\neg H_{t,j,i})\to C_{t+1,j,i,a}\) for each
+      \(t<T\), \(j\), \(i\) and \(a\).
+\item[(A)] \(S_{T,q_{\mathrm a}}\).
+\end{enumerate}
+
+\emph{If \(x\in L\), then \(\varphi_x\) is satisfiable.}  Choose \(y\) with
+\(\operatorname{len}(y)\leq W\) and \(R(x,y)\), and let \(c_0,\ldots,c_T\) be the run of
+\(M\) on \(\langle x,y\rangle\).  Let \(v\) make \(S_{t,s}\), \(H_{t,j,i}\)
+and \(C_{t,j,i,a}\) true exactly when \(c_t\) has state \(s\), head \(j\) on
+cell \(i\), and \(a\) in cell \(i\) of tape \(j\).  (E) holds because a
+configuration has one state, one position per head and one symbol per cell.
+(I) holds because \(\langle x,y\rangle=w\,y\): cells \(\ell_0\) to
+\(\ell_1-1\) of tape~\(1\) hold \(y\) followed by blanks, and all later cells
+and all other tapes are blank.  In (D), an instance with a true antecedent
+lists the state, head positions and scanned symbols of \(c_t\); since the heads
+of \(c_{t+1}\) lie on cells at most \(t+1\leq T<N\), every \(i'_j\leq N\), and
+\(\Psi\) describes the state, heads and written cells of \(c_{t+1}\), so it
+is true.  Instances with a false antecedent are true.  (F) holds because a
+cell not under its tape's head is unchanged by a step.  (A) holds because
+\(M\) accepts within \(T\) steps and then stays in \(q_{\mathrm a}\).
+
+\emph{If \(\varphi_x\) is satisfiable, then \(x\in L\).}  Let \(v\) satisfy
+\(\varphi_x\).  By (E), for each \(t\) there are a unique state
+\(\sigma_t\), unique head positions \(\eta_t(j)\leq N\) and unique symbols
+\(\gamma_t(j,i)\) made true.  By (I), \(\sigma_0=q_{\mathrm s}\),
+\(\eta_0(j)=0\), tape~\(1\) holds \(w\) in cells \(0\) to \(\ell_0-1\), the
+cells \(\ell_0\) to \(\ell_1-1\) hold symbols from \(\{0,1,\sqcup\}\) such
+that every cell after a blank one is blank, and all other cells are blank.
+So these cells hold \(y\,\sqcup^{W-\operatorname{len}(y)}\) for a unique \(y\in\{0,1\}^*\)
+with \(\operatorname{len}(y)\leq W\), and \((\sigma_0,\eta_0,\gamma_0)\) is \(c_0\) for the
+run on \(\langle x,y\rangle\), restricted to cells \(0,\ldots,N\).
+Suppose \((\sigma_t,\eta_t,\gamma_t)\) is \(c_t\) restricted to these cells,
+with \(t<T\).  The instance of (D) with \(s=\sigma_t\),
+\(i_j=\eta_t(j)\) and \(a_j=\gamma_t(j,\eta_t(j))\) has a true antecedent,
+so its \(\Psi\) is true; hence \(\Psi\) is not \(\bottom\), and by the
+uniqueness in (E), \(\sigma_{t+1}=s'\), \(\eta_{t+1}(j)=i'_j\) and
+\(\gamma_{t+1}(j,i_j)=b_j\).  By (F) and (E), every other cell keeps its
+symbol.  Since the scanned symbols of \(c_t\) are the \(a_j\), this is the
+successor \(c_{t+1}\) restricted to cells \(0,\ldots,N\).  By induction the
+claim holds up to \(T\), and by (A) the state of \(c_T\) is \(q_{\mathrm a}\).
+So \(M\) accepts \(\langle x,y\rangle\), \(R(x,y)\) holds with
+\(\operatorname{len}(y)\leq q(n)\), and \(x\in L\).
+
+\emph{Polynomial time.}  \(\kappa\), \(\abs Q\) and \(\abs{\Sigma_M}\) are
+constants of \(M\), and \(T\), \(N\) and \(Z\) are bounded by a polynomial in
+\(n\).  Counting variable occurrences: (D) has
+\(T\abs Q\abs{\Sigma_M}^{\kappa}(N+1)^{\kappa}\) formulas with at most
+\(3\kappa+1+2\kappa\) occurrences each; the head formulas of (E) have
+\(T\kappa\) members with at most \((N+1)^2+(N+1)\) occurrences each; the
+remaining formulas of (E), (I), (F) and (A) contribute at most a constant
+times \(T(N+1)\).  So \(\varphi_x\) has at most a constant times
+\(T(N+1)^{\kappa}+T(N+1)^{2}\) variable occurrences, each written with
+\(O(\log Z)\) tokens, and a constant number of other tokens per occurrence;
+its length is bounded by a polynomial in \(n\).  A machine writes
+\(\varphi_x\) by computing \(n\), \(T\), \(N\) and \(Z\) in binary, and then
+running nested loops over the index ranges of (E), (I), (D), (F) and (A),
+reading \(\delta\) from its finite table and computing each index by
+arithmetic on numerals of \(O(\log Z)\) bits.  Each token written costs a
+number of steps polynomial in \(\log Z\), and the four-bit token encoding is
+written token by token.  So \(x\mapsto\varphi_x\) is computable in
+polynomial time, and it is a polynomial-time many-one reduction of \(L\) to
+\(\mathsf{SAT}\).  With \(\mathsf{SAT}\in\mathsf{NP}\)
+(\cref{thm:p02-w02-p02-018-membership}), \(\mathsf{SAT}\) is
+\(\mathsf{NP}\)-complete.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p02-w02-p02-018-taut-conp}{thm:p02-w02-p02-018-taut-conp}{\(\mathsf{TAUT}\) is \(\mathsf{coNP}\)-complete}
+\begin{proof}
+\(\mathsf{TAUT}\in\mathsf{coNP}\) by \cref{thm:p02-w02-p02-018-membership}.
+Let \(L\in\mathsf{coNP}\), so \(L=L'^{\mathsf c}\) for some
+\(L'\in\mathsf{NP}\), and \(L^{\mathsf c}=L'\).  By
+\cref{thm:p02-w02-p02-018-cook-levin}, \(L^{\mathsf c}\) reduces to
+\(\mathsf{SAT}\).  By \cref{thm:p02-w02-p02-018-negation}, applied to the
+language \(L^{\mathsf c}\), whose complement is \(L\), the language \(L\)
+reduces to \(\mathsf{TAUT}\).
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p02-w02-p02-018-checks}{thm:p02-w02-p02-018-checks}{Soundness and completeness of the three checks}
+\begin{proof}
+(1) By \cref{lem:prop-clause-satisfaction}(1), a valuation satisfies a clause
+\(C\) iff it makes some literal of \(C\) true, and the value of a literal of
+\(C\) depends only on its variable, which lies in \(\operatorname{Var}(F)\).
+So every valuation extending the assignment satisfies \(F\) iff every clause
+contains a literal true under the assignment, which is what the clause check
+tests.  If \(F\) is satisfied by \(v\), the restriction of \(v\) to
+\(\operatorname{Var}(F)\) is accepted; if an assignment is accepted, its
+extensions satisfy \(F\).
+
+(2) If the log check accepts, the clauses \(C_1,\ldots,C_N\) form a resolution
+derivation from \(S\) in the sense of \cref{sec:prop-metatheory-04}: each
+\(C_i\) is a member of \(S\) or the resolvent on \(L\) of the earlier
+\(C_j\) and \(C_k\).  It contains the empty clause \(C_N\), so \(S\) is not
+satisfiable by the soundness theorem of that section.  Conversely, if \(S\)
+is finite and not satisfiable, \cref{thm:prop-resolution-complete} gives a
+resolution derivation \(D_1,\ldots,D_M\) from \(S\) containing the empty
+clause.  Cut it after the first occurrence of the empty clause; a prefix of a
+derivation is a derivation.  Justify each member in \(S\) as an input, and
+each other member by earlier members and a literal of which it is the
+resolvent, which exist by the definition of a derivation.  The resulting log
+is accepted.
+
+(3) For \(\chi\in\Gamma\cup\{\varphi\}\), every valuation extending the
+assignment agrees with the extension by \(\mathbf F\) on
+\(\operatorname{Var}(\chi)\), so gives \(\chi\) the value that the check
+computes, by the coincidence lemma.  So the check accepts iff every extension
+satisfies \(\Gamma\) and falsifies \(\varphi\).  If such an extension exists,
+\(\Gamma\not\entails\varphi\).  If \(\Gamma\not\entails\varphi\), some
+valuation \(v\) satisfies \(\Gamma\) and falsifies \(\varphi\), and its
+restriction to \(\operatorname{Var}(\Gamma\cup\{\varphi\})\) is accepted.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p02-w02-p02-018-extraction}{thm:p02-w02-p02-018-extraction}{Countervaluations from failed searches}
+\begin{proof}
+(1) The variables listed in Step~2 are exactly those of
+\(\Gamma\cup\{\varphi\}\).  By \cref{thm:p02-w02-p02-018-decision} the output
+row \(u\), extended by \(\mathbf F\), satisfies every premise and falsifies
+\(\varphi\).  Every valuation extending \(u\) agrees with it on
+\(\operatorname{Var}(\Gamma\cup\{\varphi\})\), so by
+\cref{thm:p02-w02-p02-018-checks}(3) the check accepts \(u\).
+
+(2) By \cref{thm:p12-dpll-correctness}, a returned valuation \(v\) is a total
+assignment to \(\operatorname{Var}(F_\Gamma\cup F_\neg)\) satisfying every
+clause of \(F_\Gamma\cup F_\neg\).  Let \(v'\) extend it by \(\mathbf F\).
+Since satisfaction of a clause depends only on its variables, \(v'\) satisfies
+\(F_\Gamma\) and \(F_\neg\), so by hypothesis \(v'\entails\Gamma\) and
+\(v'\not\entails\varphi\).  The restriction \(u\) of \(v\) to
+\(\operatorname{Var}(\Gamma\cup\{\varphi\})\), which is contained in the
+domain of \(v\), agrees with \(v'\) there; every extension of \(u\) therefore
+satisfies \(\Gamma\) and falsifies \(\varphi\) by the coincidence lemma, and
+the check accepts \(u\) by \cref{thm:p02-w02-p02-018-checks}(3).
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p02-w02-p02-018-fol-dag}{thm:p02-w02-p02-018-fol-dag}{The annotated refutation is correct}
+\begin{proof}
+The unification procedure pairs the arguments of \(A\) and \(B\) into
+equations \(r\doteq t\), with \(r\) from \(A\) and \(t\) from \(B\).
+
+\emph{First step.}  \(E=C_1\), \(F=C_2\), with
+\(\operatorname{Var}(C_1)=\{x\}\) and \(\operatorname{Var}(C_2)=\{y\}\)
+disjoint, so the identity renamings rename them apart.  For \(A=Q(x)\) and
+\(B=Q(y)\) the equation set is \(\{x\doteq y\}\).  Deletion, decomposition and
+orientation do not apply, and elimination applies because
+\(x\notin\operatorname{Var}(y)\): it sets \(\delta=\{x\mapsto y\}\), and the
+accumulator becomes \(\mathrm{id}\,\delta=\{x\mapsto y\}=\theta_1\) with no
+equation left.  Directly, \(Q(x)\theta_1=Q(y)=Q(y)\theta_1\).  If \(\rho\)
+unifies \(Q(x)\) and \(Q(y)\), then \(x\rho=y\rho\); so
+\((\theta_1\rho)(x)=y\rho=x\rho\) and \((\theta_1\rho)(z)=z\rho\) for
+\(z\ne x\), whence \(\rho=\theta_1\rho\) and \(\theta_1\) is a most general
+unifier.  The resolvent is
+\(\bigl(\{P(x)\}\cup\{R(y)\}\bigr)\theta_1=\{P(y),R(y)\}=C_5\).
+
+\emph{Second step.}  \(E=C_5\), \(F=C_3\); \(C_3\) is ground, so the clauses
+are renamed apart.  For \(A=P(y)\) and \(B=P(a)\) the equation set is
+\(\{y\doteq a\}\); elimination applies because \(y\notin\operatorname{Var}(a)
+=\varnothing\), giving \(\theta_2=\{y\mapsto a\}\).  It unifies, since
+\(P(y)\theta_2=P(a)=P(a)\theta_2\).  If \(\rho\) unifies them, then
+\(y\rho=a\), so \((\theta_2\rho)(y)=a\rho=a=y\rho\) and \(\theta_2\rho\)
+agrees with \(\rho\) elsewhere; thus \(\rho=\theta_2\rho\).  The resolvent is
+\(\bigl(\{R(y)\}\cup\varnothing\bigr)\theta_2=\{R(a)\}=C_6\).
+
+\emph{Third step.}  \(E=C_6\) and \(F=C_4\) are ground.  For \(A=B=R(a)\) the
+equation set is \(\{a\doteq a\}\); deletion empties it, and the procedure
+returns \(\mathrm{id}=\theta_3\).  The identity unifies equal atoms, and every
+substitution \(\rho\) equals \(\mathrm{id}\,\rho\).  The resolvent is
+\((\varnothing\cup\varnothing)\mathrm{id}=\varnothing=C_7\).
+
+So \(C_1,\ldots,C_7\) is a first-order resolution derivation from
+\(\{C_1,C_2,C_3,C_4\}\), whose renamed-apart copies are the clauses
+themselves, and it contains the empty clause.  By the soundness theorem for
+first-order resolution and factoring in
+\cref{sec:fol-cardinality-normalforms-04}, the clause set is not satisfiable.
+\end{proof}
+\end{annexitem}

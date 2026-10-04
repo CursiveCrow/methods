@@ -1,0 +1,503 @@
+% ED26-SCI-GoldbergOracle-001. Source: Sun Studio 11, 819-3693-10, Appendix D.
+\chapter{Numerical Error and Computed Conclusions}
+\label{sec:p12-numerical-error-and-inference}
+
+A computed number supports a sign, an ordering or an accuracy claim only
+when the accompanying error bound supports that claim. This chapter follows
+the rounding-error presentation in the November 2005 \emph{Numerical
+Computation Guide}, Appendix D: an edited reprint of Goldberg's article,
+with its source-specific arithmetic assumptions retained
+\cite[Sections D.3, D.6.1 and D.10.1--D.10.2]{GoldbergOracle8193693}.
+It does not assert that a particular processor, compiler or library satisfies
+those assumptions. The SMT interface in \cref{def:p12-smt-problem} concerns
+satisfaction in a declared theory. Numerical stability additionally compares
+a computed result with a specified real-valued target.
+
+\section{Values, representation and error}
+
+\begin{hbdefinition}{def:p12-numerical-format}{A finite radix format and its idealized interior}
+Fix an even integer base \(\beta\geq2\), an integer precision \(p\geq2\),
+and integer exponent limits \(e_{\min}\leq e_{\max}\). The nonzero normal values are
+\[
+ \pm\left(\sum_{j=0}^{p-1}d_j\beta^{-j}\right)\beta^e,
+ \quad 1\leq d_0<\beta,\quad 0\leq d_j<\beta,
+ \quad e_{\min}\leq e\leq e_{\max},
+\]
+where the digits and exponent are integers. Include zero separately.
+The coefficient is the \emph{significand}; multiplication by \(\beta^e\)
+in this notation is an exact real scaling, not a computed multiplication.
+The proofs below use the same significands with unrestricted integer
+exponents. For transfer to a finite implementation, assume its executed
+operations follow the declared rounding procedure, that their nonzero
+stored inputs and outputs are normal, and that the magnitude of each
+nonzero exact real operation result stays between its smallest and largest positive normal
+magnitudes. The exact real result need not itself be a format value:
+rounding is precisely what handles that discrepancy. Rescalings used
+only inside a proof are not executed operations. These sufficient range
+conditions exclude overflow, underflow, exceptional values and
+flush-to-zero behavior from the relative-error analysis.
+\index{floating-point format}\index{significand}\index{rounding error}
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p12-numerical-rounding}{Nearest rounding, ulps and relative error}
+Write \(R(z)\) for rounding a real value to a nearest value of the
+unrestricted-exponent format, with \(R(0)=0\). At a midpoint choose the
+candidate whose least significant retained digit is even. This is a
+deterministic tie rule, not a statement about the frequency of ties.
+For a nonzero real \(z\) with \(\beta^e\leq |z|<\beta^{e+1}\), set
+\[
+ \operatorname{ulp}(z)=\beta^{e-p+1},\qquad
+ u=\tfrac12\beta^{1-p}.
+\]
+For an approximation \(\widehat z\), the absolute error is
+\(|\widehat z-z|\), and its relative error, when \(z\ne0\), is
+\(|\widehat z-z|/|z|\). The interval
+\([\beta^e,\beta^{e+1})\) is a \emph{radix interval}, called a
+binade when \(\beta=2\). An error in ulps must state which value's radix interval
+sets the unit. Goldberg calls \(u\) machine epsilon; the distance from
+\(1\) to the next larger normal value is \(2u\), a different quantity.
+At a zero target relative error is undefined, so use an absolute bound.
+\index{unit in the last place}\index{relative error}\index{round to even}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-numerical-nearest}{proved=annex:p12.numerical.nearest}{Spacing and the nearest-rounding bound}
+For \(z\ne0\),
+\[
+ |R(z)-z|\leq\tfrac12\operatorname{ulp}(z),\qquad
+ R(z)=z(1+\delta),\quad |\delta|\leq u.
+\]
+In a radix interval, a fixed half-ulp absolute error corresponds to relative
+errors between \(u/\beta\) and \(u\); this factor-\(\beta\) variation
+is the source's \emph{wobble}. A finite normal-only format has no such
+uniform relative guarantee arbitrarily close to zero.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p12-numerical-format-examples}{Finite precision does not form a real field}
+For \(\beta=2,p=3,e_{\min}=-1,e_{\max}=2\), the positive normal
+values have significands \(1,1.25,1.5,1.75\), each multiplied by one of
+\(2^{-1},1,2,4\). These are sixteen values; their negatives and zero
+give thirty-three real values. The real number \(1/10\) has no finite
+binary expansion: a finite binary fraction has a power-of-two denominator
+after reduction, whereas \(1/10\) has a factor of five.
+In decimal precision three, \(R(3.14159)=3.14\); the absolute error
+\(0.00159\) is \(0.159\) ulp in that radix interval.
+With sufficiently wide decimal exponent limits,
+\[
+ R(R(1000+1)-1000)=0,\qquad R(1000+R(1-1000))=1.
+\]
+The first sum rounds to \(1000\); the second inner difference is
+\(-999\). Parentheses therefore affect the computed answer.
+\end{hbexample}
+
+\section{Guard digits and exact subtraction}
+
+\begin{hbdefinition}{def:p12-numerical-guard}{The arithmetic procedures being compared}
+To add or subtract two nonnegative format values, align their radix
+points at the exponent of the larger operand. Retain the leading \(p+g\)
+positions, counting the leading position before the radix point; discard
+the smaller operand's digits beyond them. Perform that aligned operation
+exactly, then round its result to \(p\) significant digits. Here \(g=0\)
+means no guard digit and \(g=1\) means one guard digit. Signed operations
+reduce to a same-sign sum or a difference of magnitudes.
+Write \(x\oplus y\) and \(x\ominus y\) for the declared computed
+sum and difference. In this chapter these use at least one guard digit
+unless a no-guard example is explicitly named. Write
+\(x\otimes y=R(xy)\) and \(x\oslash y=R(x/y)\), with \(y\ne0\)
+for division. An \emph{exactly rounded} addition or subtraction instead
+means \(R(x+y)\) or \(R(x-y)\) directly. One guard digit does not
+in general implement that stronger procedure.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-numerical-no-guard}{proved=annex:p12.numerical.no-guard}{The source's no-guard failure}
+In every such base and precision there are positive format values for
+which subtraction with no guard digit has relative error \(\beta-1\).
+In decimal precision three, the no-guard computation of \(10.1-9.93\)
+returns \(0.2\), while its real value is \(0.17\).
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p12-numerical-guard-bound}{proved=annex:p12.numerical.guard-bound}{One guard digit and same-sign addition}
+For positive format values \(x\ne y\), one-guard subtraction satisfies
+\[
+ \frac{|(x\ominus y)-(x-y)|}{|x-y|}
+ <(1+2/\beta)u\leq2u.
+\]
+For nonnegative \(x,y\) with \(x+y>0\), same-sign addition has relative
+error at most \(2u\), even with no guard digit. Consequently the signed
+one-guard addition/subtraction model has relative error at most \(2u\)
+at every nonzero exact result. A zero exact result is computed as zero.
+These are the source's Theorems 2, 9 and 10 with the zero case explicit.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p12-numerical-close-subtraction}{proved=annex:p12.numerical.close-subtraction}{Exact difference of nearby format values}
+If \(x,y>0\) are format values and \(y/2\leq x\leq2y\), then
+\(x-y\) is a format value and one-guard or exactly rounded subtraction
+returns it exactly. The finite-range version requires representability
+of this difference; the factor-two condition alone does not authorize
+discarding a subnormal result.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p12-numerical-guard-not-nearest}{A guard digit can differ from nearest rounding}
+In decimal precision three, aligning \(110-8.59\) with one guard digit
+gives \((1.100-0.085)10^2=101.5\), which rounds to \(102\).
+The exact difference is \(101.41\), whose nearest value is \(101\).
+The guard result's relative error is \(0.59/101.41>u=0.005\),
+while remaining below \(2u\).
+\end{hbexample}
+
+\section{Cancellation and algebraically equivalent expressions}
+
+\begin{hbtheorem}{thm:p12-numerical-product-errors}{proved=annex:p12.numerical.product-errors}{Combining multiplicative errors}
+If \(|\delta_i|\leq a_i<1\), then
+\[
+ \left|\prod_{i=1}^n(1+\delta_i)-1\right|
+ \leq\prod_{i=1}^n(1+a_i)-1.
+\]
+In particular, for exactly specified format inputs \(x,y\) with
+\(x^2\ne y^2\), evaluation as
+\((x\ominus y)\otimes(x\oplus y)\) has relative error at most
+\[
+ (1+2u)^2(1+u)-1=5u+8u^2+4u^3.
+\]
+This bound retains all terms. It concerns error relative to \(x^2-y^2\),
+not to an unspecified pair of real quantities approximated by \(x,y\).
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p12-numerical-cancellation}{proved=annex:p12.numerical.cancellation}{Exact subtraction cannot repair inaccurate operands}
+Suppose \(\widehat A=A+e_A\) and \(\widehat B=B+e_B\), with
+\(|e_A|\leq E_A\), \(|e_B|\leq E_B\). If their subtraction is exact,
+its absolute error relative to \(A-B\) is at most \(E_A+E_B\).
+When \(A\ne B\), the corresponding relative bound is
+\((E_A+E_B)/|A-B|\), which need not be small. If subtraction itself
+has absolute error at most \(E_S\), add \(E_S\) to that budget.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p12-numerical-discriminant}{An exact difference with contaminated input products}
+Use decimal precision three and exact inputs
+\(a=1.22,b=3.34,c=2.28\). Their real discriminant is
+\[
+ b^2-4ac=11.1556-11.1264=0.0292.
+\]
+The nearest-rounded products are \(11.2\) and \(11.1\).
+Subtracting them gives \(0.1\) exactly, but its absolute error is
+\(0.0708\), or \(70.8\) ulps measured at \(0.100\).
+Its relative error is \(177/73\). The subtraction is accurate for
+the stored operands; the computed discriminant is inaccurate for the
+stated real expression.
+\end{hbexample}
+
+\begin{hbtheorem}{thm:p12-numerical-quadratic}{proved=annex:p12.numerical.quadratic}{Conjugate evaluation of a quadratic root}
+Let \(a\ne0\), \(b>0\), and \(d=b^2-4ac\geq0\). Then
+\[
+ \frac{-b+\sqrt d}{2a}=-\frac{2c}{b+\sqrt d}.
+\]
+For \(b<0\), the corresponding conjugate form avoids cancellation in
+the other numerator. The identity removes that numerator's cancellation;
+it neither proves that the computed discriminant is accurate nor bounds
+uncertainty in the input coefficients.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p12-numerical-quadratic-trace}{A root lost by direct evaluation}
+For \(a=c=1,b=100\) in decimal precision three, exactly rounded
+evaluation gives \(R(10000-4)=10000\), then \(R(\sqrt{10000})=100\).
+The direct small-root numerator becomes zero. The conjugate evaluation
+returns \(-2/200=-0.0100\). The actual root is
+\(-2/(100+\sqrt{9996})\), approximately \(-0.0100010002\).
+The conjugate computation retains the small root in this example;
+its reliability follows from the arithmetic and bounds, not merely from
+printing additional decimal places.
+\end{hbexample}
+
+\section{A stable triangle-area evaluation}
+
+\begin{hbdefinition}{def:p12-numerical-triangle}{The ordered-side expression}
+Let \(a\geq b\geq c>0\) and \(a\leq b+c\). Put
+\[
+ q=(a+(b+c))(c-(a-b))(c+(a-b))(a+(b-c)).
+\]
+Its computed version forms exactly these four parenthesized factors,
+then multiplies them with three nearest-rounded multiplications to
+obtain \(Q\). The computed area is
+\(\operatorname{SQRT}(Q)\oslash4\). Assume
+\(\operatorname{SQRT}(0)=0\), and for \(t>0\) assume that
+\(\operatorname{SQRT}(t)\) is a format value within
+\(\tfrac12\operatorname{ulp}(\sqrt t)\) of \(\sqrt t\).
+No particular tie direction for this library result is needed.
+Keep the parentheses; algebraic reassociation changes the computation.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-numerical-triangle-radicand}{proved=annex:p12.numerical.triangle-radicand}{The complete radicand error bound}
+If the sides are format values, the triangle is nondegenerate, and
+\(0<u\leq0.005\), then \(|Q/q-1|<16u\).
+For a degenerate triangle \(a=b+c\), the same procedure returns
+\(Q=0\) exactly under the stated range assumptions.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p12-numerical-triangle-area}{proved=annex:p12.numerical.triangle-area}{The source's eleven-unit area guarantee}
+The real area is \(\sqrt q/4\). In the nondegenerate case,
+\[
+ \left|\frac{\operatorname{SQRT}(Q)\oslash4}{\sqrt q/4}-1\right|
+ <11u
+\]
+under the preceding assumptions. In binary, division by four is exact
+when the scaled value stays in range; the displayed bound also allows
+the extra nearest rounding required in another even base.
+The degenerate case returns area zero exactly.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p12-numerical-flat-triangle}{A complete flat-triangle trace}
+For \(a=9.00,b=c=4.53\), the real semiperimeter is \(9.03\),
+and the area is \(\sqrt{5.485725}\), approximately \(2.34216\).
+In decimal precision three, the order
+\(R(R(b+c)+a)/2\) gives \(R(9.06+9.00)/2=18.1/2=9.05\).
+Heron's four factors are then \(9.05,0.05,4.52,4.52\).
+Multiplying left to right with nearest-even rounding gives
+\(0.452,2.04,9.22\), and the rounded square root is \(3.04\).
+For the ordered-side expression, the four computed factors are
+\(18.1,0.0600,9.00,9.00\). The three products are
+\(1.09,9.81,88.3\); the rounded square root is \(9.40\), and
+division by four returns \(2.35\). The evaluation order is part
+of each calculation, not an unmentioned implementation detail.
+\end{hbexample}
+
+\section{Recovering a small logarithmic increment}
+
+\begin{hbdefinition}{def:p12-numerical-log-increment}{The compensated logarithm expression}
+For a format value \(0\leq x<3/4\), compute \(z=1\oplus x\).
+If \(z=1\), return \(x\). Otherwise compute
+\[
+ t=z\ominus1,\qquad
+ L=x\otimes\bigl(\operatorname{LN}(z)\oslash t\bigr),
+\]
+Here \(\operatorname{LN}(z)\), when \(z>1\), is assumed to be a
+format value within \(\tfrac12\operatorname{ulp}(\ln z)\) of
+\(\ln z\). No particular tie direction for this library result is
+needed. No rounding guarantee for logarithms follows
+just from an assumption about addition or multiplication.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p12-numerical-mu}{proved=annex:p12.numerical.mu}{The slowly varying logarithmic ratio}
+Define \(\mu(0)=1\) and \(\mu(x)=\ln(1+x)/x\) for \(x>0\).
+For \(x\geq0\),
+\[
+ \mu(x)=\int_0^1\frac{dt}{1+xt},\qquad
+ 0<\mu(x)\leq1,\qquad
+ -\tfrac12\leq(\ln\mu)'(x)\leq0.
+\]
+Also \(|\mu'(x)|\leq1/2\), and \(\mu(x)\geq1/2\) on
+\([0,1]\). These statements supply the bounds needed even if rounding
+moves \(x\) slightly above \(3/4\).
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p12-numerical-log-increment}{proved=annex:p12.numerical.log-increment}{The source's five-unit logarithm guarantee}
+If \(0<x<3/4\), \(u<0.1\), addition and subtraction use at least one
+guard digit, multiplication and division are nearest-rounded, and the
+stated half-ulp logarithm assumption holds, the procedure's relative
+error with respect to \(\ln(1+x)\)
+is at most \(5u\). For \(x=0\) the returned value is zero exactly.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p12-numerical-small-increment}{A lost increment and its downstream use}
+In binary precision ten, let \(x=2^{-12}\). Then
+\(1\oplus x=1\), so evaluating a logarithm after that addition
+returns \(\ln1=0\). The compensated branch returns \(x\), with
+the nonzero-target relative guarantee just proved.
+For \(x>0\) and an integer \(n\geq1\), the exact geometric sum is
+\[
+ \sum_{j=0}^{n-1}(1+x)^j=\frac{(1+x)^n-1}{x}
+ \quad(x\ne0),
+\]
+and \((1+x)^n=\exp(n\ln(1+x))\). Thus an error in the stored
+increment can be amplified by exponentiation. The source's example
+uses \(n=365,x=0.06/365\) and multiplies this sum by one hundred;
+its real value is approximately \(37614.0473\)
+\cite[Section D.3.4, pp.~D-11--D-12]{GoldbergOracle8193693}.
+These identities justify using an accurate logarithmic increment;
+they do not remove the separate rounding of the exponential,
+subtraction or division in a complete implementation.
+\end{hbexample}
+
+\section{Exact rounding and retained information}
+
+\begin{hbtheorem}{thm:p12-numerical-no-drift}{proved=annex:p12.numerical.no-drift}{The source's round-to-even no-drift result}
+For format values \(x,y\), let \(x_0=x\) and
+\[
+ x_{j+1}=R\bigl(R(x_j-y)+y\bigr).
+\]
+In the source's exactly rounded, round-to-even model, with no range
+loss, either every \(x_j=x\), or every \(x_j=x_1\) for \(j\geq1\).
+This is the source's Theorem 5, attributed there to Reiser and Knuth.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p12-numerical-drift-example}{Changing only the midpoint rule}
+In decimal precision three take \(x=1.00,y=-0.555\).
+Rounding positive midpoints upward gives
+\(1.00+0.555\mapsto1.56\), then
+\(1.56-0.555\mapsto1.01\). Repeating gives \(1.02\) next.
+Round to even instead gives \(1.56\), followed by \(1.00\),
+and the same pair repeats. The example concerns a deterministic
+midpoint convention; it provides no model of rounding errors as
+independent random variables.
+\end{hbexample}
+
+\begin{hbdefinition}{def:p12-numerical-coarse-rounding}{Rounding away a block of low digits}
+For a positive format value, scale exactly to an integer
+\(X\in[\beta^{p-1},\beta^p)\). To discard \(k\) low digits,
+where \(0<k<p\), set \(B=\beta^k\), round \(X/B\) to a nearest
+integer with ties to the even integer, multiply by \(B\), and undo
+the scaling. Denote this value by \(H_k(x)\), extend by sign symmetry,
+and set \(H_k(0)=0\). The definition also covers a carry into a new
+leading digit; it specifies the tie convention even when only one
+significant digit remains. Write \(\operatorname{nint}\) for the
+nearest-integer operation used here.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-numerical-split-rounding}{proved=annex:p12.numerical.split-rounding}{The exact split-rounding identity, including a carry}
+With all three operations exactly rounded, set
+\[
+ m=\beta^k+1,\quad T=R(mx),\quad S=R(T-x),\quad h=R(T-S).
+\]
+Then \(h=H_k(x)\). The statement assumes no range loss at any step;
+in particular \(mx\) must not overflow a finite implementation.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p12-numerical-split}{proved=annex:p12.numerical.split}{Two short components and exact partial products}
+Let \(k=\lceil p/2\rceil\), and require \(p\) even when
+\(\beta>2\). Compute \(h\) by the preceding identity and put
+\(l=R(x-h)\). Then
+\[
+ x=h+l
+\]
+exactly, and each nonzero component has at most \(\lfloor p/2\rfloor\)
+significant radix digits. If \(y=h_y+l_y\) is split in the same way,
+each of the four products in
+\[
+ xy=h h_y+h l_y+l h_y+l l_y
+\]
+is exactly representable at precision \(p\), under the range assumptions.
+Their real sum is the product; an arbitrary rounded summation order
+need not preserve that sum exactly.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p12-numerical-split-example}{A product difference recovered from short components}
+In decimal precision four, \(b=3.476,a=3.463,c=3.479\) split as
+\[
+ b=3.5-0.024,\quad a=3.5-0.037,\quad c=3.5-0.021.
+\]
+The exact expansions are
+\(b^2=12.25-0.168+0.000576\) and
+\(ac=12.25-0.2030+0.000777\). Subtracting corresponding terms and
+then rounding gives \(0.0350-0.000201\), rounded to \(0.03480\).
+Directly rounding the products gives \(12.08-12.05=0.03\).
+The exact difference is \(0.034799\).
+In binary precision three, \(x=7,k=2,m=5\) instead illustrates the
+rounding assumption: \(R(35)=32\). One-guard subtraction of seven
+from thirty-two returns twenty-eight, giving components four and three;
+three is not a one-bit component. Exactly rounded subtraction returns
+twenty-four, giving the correct components eight and minus one.
+\end{hbexample}
+
+\begin{hbtheorem}{thm:p12-numerical-round-trip}{proved=annex:p12.numerical.round-trip}{An even-radix divide-and-multiply identity}
+Let \(m,n\) be exactly representable integers in the declared even base,
+\(|m|<\beta^{p-1}\), and \(n=\beta^i+\beta^j>0\) for nonnegative integers
+\(i,j\). If division and multiplication are exactly rounded and
+all needed values remain in range, then
+\[
+ R\bigl(n R(m/n)\bigr)=m.
+\]
+The binary case is the source's Theorem 7; the proof also establishes
+the even-radix extension mentioned immediately after it.
+This is an exact identity for the declared operands; it is not an error
+bound for unknown real quantities those integers might encode.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p12-numerical-root-sensitivity}{proved=annex:p12.numerical.root-sensitivity}{A precise discriminant-to-root error bound}
+For \(d,\widehat d\geq0\) with \(|d-\widehat d|\leq E\),
+\[
+ |\sqrt{\widehat d}-\sqrt d|\leq\sqrt E.
+\]
+If both are at least \(d_0>0\), the sharper bound
+\(E/(2\sqrt{d_0})\) holds. With \(a\ne0,b\) fixed, either exact
+quadratic-root expression consequently changes by at most
+\(\sqrt E/(2|a|)\) when only its discriminant changes.
+Additional rounding of the square root or root arithmetic needs its
+own error terms. A negative computed discriminant is not covered by
+these real-square-root bounds.
+\end{hbtheorem}
+
+\section{From error bounds to a warranted conclusion}
+
+\begin{hbtheorem}{thm:p12-numerical-certification}{proved=annex:p12.numerical.certification}{Sign, ordering and accuracy certificates}
+Suppose a real target \(v\) and computed value \(\widehat v\) satisfy
+\(|v-\widehat v|\leq E\), where \(E\geq0\) is a proved bound.
+Then \(\widehat v-E>0\) certifies \(v>0\), and
+\(\widehat v+E<0\) certifies \(v<0\). If the interval contains zero,
+these bounds alone certify neither strict sign. Two targets satisfy
+\(v<w\) whenever
+\(\widehat v+E_v<\widehat w-E_w\).
+If \(|\widehat v|>E\), relative error is bounded by
+\[
+ \frac{|\widehat v-v|}{|v|}\leq
+ \frac{E}{|\widehat v|-E}.
+\]
+An interval whose endpoint is exactly zero does not certify a strict sign.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p12-numerical-data-budget}{proved=annex:p12.numerical.data-budget}{Separate input uncertainty from arithmetic error}
+For exact stored coefficients \(a,b,c\), suppose the target coefficients
+obey \(|a_*-a|\leq\eta_a\), \(|b_*-b|\leq\eta_b\),
+\(|c_*-c|\leq\eta_c\). Then
+\[
+ |(b_*^2-4a_*c_*)-(b^2-4ac)|
+ \leq 2|b|\eta_b+\eta_b^2
+ +4\bigl(|a|\eta_c+|c|\eta_a+\eta_a\eta_c\bigr).
+\]
+Add this quantity to any proved arithmetic-error bound for the stored
+coefficient calculation. More accurate arithmetic reduces the latter
+term; it does not reduce the stated uncertainty in the inputs.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p12-numerical-certification-cases}{A certified sign and two limits of certification}
+In the conjugate-root example let \(s=\sqrt{9996}\), so
+\(99<s<100\). The exact error of the returned value \(-0.0100\) is
+\[
+ \frac{2}{100+s}-\frac1{100}
+ =\frac{4}{100(100+s)^2}
+ <E=\frac{4}{3960100}.
+\]
+The resulting interval lies strictly below zero, certifying a negative
+root. The general relative-error certificate is
+\(E/(0.01-E)=4/39597\), approximately \(0.000101018\).
+
+In the earlier discriminant trace, nearest rounding alone gives
+\(|A-\widehat A|\leq u|\widehat A|/(1-u)\) for each product:
+rearrange \(|\widehat A-A|\leq u|A|\) and use
+\(|A|\leq|\widehat A|/(1-u)\). Thus the exactly subtracted
+\(\widehat d=0.1\) has the generic absolute budget
+\[
+ E_d=\frac{0.005}{0.995}(11.2+11.1)=\frac{223}{1990}>0.1.
+\]
+That interval contains zero and cannot certify the sign, despite the
+positive displayed number. Exact input arithmetic happens to establish
+the positive value \(0.0292\); it is stronger information than this
+generic budget.
+
+For an ordering example, certificates \(v\in[0.008,0.012]\) and
+\(w\in[0.009,0.013]\) do not determine \(v<w\), even if the
+reported centers are \(0.010\) and \(0.011\). Both
+\((v,w)=(0.008,0.013)\) and \((0.012,0.009)\) satisfy them.
+Input uncertainty enlarging a numerical enclosure must be included
+before any of these decisions.
+\end{hbexample}
+
+\begin{hbmethod}{def:p12-numerical-inference-procedure}{Using a numerical value as evidence}
+State the real target and the stored inputs separately. Declare the format,
+rounding of each operation, evaluation order and exceptional-case policy.
+Check the range assumptions. Obtain an arithmetic-error bound for that
+specific procedure; propagate input uncertainty separately. Apply the
+sign, ordering or relative-accuracy certificate to the combined interval.
+When intervals overlap, obtain sharper bounds or better input information,
+or retain the unresolved conclusion. A solver certificate for a floating-point
+formula establishes a result in its specified arithmetic semantics; the
+real-target comparison still requires this error argument.
+\index{numerical stability}\index{sign certification}\index{input uncertainty}
+\end{hbmethod}

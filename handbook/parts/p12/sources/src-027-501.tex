@@ -1,0 +1,1012 @@
+% Source-specific reconstruction. ED26-SRC-027-501; not the 1992 chapter.
+% Partial authoring block: cited results retain full-proof obligations.
+\section{Klop's 1987 reduction-system tutorial}
+\label{sec:p12-src-027-501}
+
+This presentation follows J. W. Klop's CWI Note CS-N8701,
+\emph{Term Rewriting Systems: a tutorial}, May 1987
+\parencite{Klop1987CWITutorial}. Its objects are finite first-order terms
+and abstract reduction relations. The report deliberately does not develop
+conditional term rewriting or rewriting modulo equations. Its uses of
+equations in completion do not change that boundary: completion seeks an
+ordinary, directed rewriting presentation of an equational theory.
+The six source sections have a definite dependency order: abstract reduction
+properties; the term structure; a marked-tree termination order; completion;
+regular systems; and normalizing or cofinal strategies for regular systems.
+The 1987 report is a distinct presentation, not an earlier page layout of the
+1992 \emph{Handbook of Logic in Computer Science} chapter.
+
+\subsection{Abstract reduction: properties and their distinctions}
+
+\begin{hbdefinition}{def:p12-klop1987-ars}{The report's abstract reduction vocabulary}
+An abstract reduction system is
+\(\mathcal A=\langle A,(\to_\alpha)_{\alpha\in I}\rangle\), a set with
+an indexed family of binary relations. The report writes
+\(\twoheadrightarrow_\alpha\) for the reflexive transitive closure,
+\(\to_\alpha^+\) for the transitive closure, \(\to_\alpha^=\) for the
+reflexive closure, and \(=_\alpha\) for the equivalence relation generated
+by reduction. Thus \(=_\alpha\) is conversion, whereas an unadorned equality
+between elements, outside a declared conversion formula, is identity.
+Converse arrows reverse direction. Composition is read in traversal order:
+\(a\to_\alpha\circ\to_\beta b\) means
+\(a\to_\alpha c\to_\beta b\) for some \(c\).
+The union of two relations is \(\to_{\alpha\beta}\).
+
+Relations \(\alpha,\beta\) commute weakly when each peak
+\(c\leftarrow_\beta a\to_\alpha b\) has a join
+\(c\twoheadrightarrow_\alpha d\leftarrow\!\!\leftarrow_\beta b\).
+They commute when their reflexive transitive closures commute weakly.
+For a single relation, weak confluence or weak Church--Rosser (WCR)
+means joinability of every one-step peak; confluence or Church--Rosser
+(CR) means joinability of every finite-reduction peak.
+Subcommutativity, \(\mathrm{WCR}^{\leq1}\), requires joins by at most
+one step on each arm.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p12-klop1987-properties}{Normal forms, bounds, and branching}
+For a single-relation ARS, a normal form has no outgoing step, including
+no self-loop. WN means that every element has a normal-form descendant;
+SN means that no infinite reduction starts at any element. The converse
+relation's termination is denoted \(\mathrm{SN}^{-1}\).
+UN means that two normal forms reachable from the same element are identical.
+NF means that a normal form convertible with an element is reachable from
+that element. Ind means that every finite or infinite reduction sequence has
+one element reachable from every member of the sequence.
+Inc means that there is a map \(a\mapsto |a|\) into the natural numbers
+strictly increasing at each reduction step; here the report's bars are a
+natural-number ranking, not cardinality. FB means that every element has
+finitely many one-step successors; \(\mathrm{FB}^{-1}\) applies this to
+predecessors. A complete system is CR and SN. The report calls a system
+with UN and WN semi-complete, while noting that this terminology was not
+standard in its setting.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p12-klop1987-subars}{Closed subsystems and reduction graphs}
+A sub-ARS has an underlying subset, the restricted reduction relation, and
+closure under successors in the larger system. An arbitrary induced
+subgraph without successor closure is not a sub-ARS in this sense.
+The reduction graph \(\mathcal G(a)\) consists of all descendants of
+\(a\), including \(a\), with the restricted relation. A subset \(B\)
+is cofinal in an ARS if every element reduces to some member of \(B\).
+The cofinality property CP requires a finite or infinite reduction from
+each \(a\) whose members are cofinal in \(\mathcal G(a)\).
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-klop1987-ars-core}{proved=annex:p12-klop1987-ars-core}{Core implications in the original abstract route}
+CR implies NF, which implies UN. UN together with WN implies CR and Ind.
+Ind together with Inc implies SN. For a countable ARS, CR is equivalent
+to CP. CR is also equivalent to joinability of every pair of convertible
+elements, and to the mixed peak condition
+\(c\leftarrow a\twoheadrightarrow b\Rightarrow
+c\twoheadrightarrow d\leftarrow\!\!\leftarrow b\).
+The report states these in Proposition 1.2, Theorem 1.6(i), (iii)--(v),
+(vii), and Exercise 1.7(13), pp.3--8.
+\end{hbtheorem}
+
+Newman's implication SN and WCR imply CR is Theorem 1.6(ii); its
+well-founded joining argument is supplied in
+Theorem~\ref{thm:p12-newman} and its reciprocal annex. The additional
+Theorem 1.6(vi), WCR and WN and Inc imply SN, is attributed in the report
+to Klop's 1980 work. Unlike Newman's lemma, it cannot be obtained simply
+by assuming SN: termination is its conclusion. Figure 2 also records
+\(\mathrm{WCR}^{\leq1}\Rightarrow\mathrm{CR}\),
+\(\mathrm{Inc}\Rightarrow\mathrm{SN}^{-1}\), and
+\(\mathrm{FB}^{-1}\mathbin{\&}\mathrm{SN}^{-1}\Rightarrow\mathrm{Inc}\).
+Its arrows have conjunctive endpoints; CR alone does not imply WN.
+CR together with two distinct normal forms implies consistency, as
+Exercise 1.7(14) explains.
+
+\begin{hbdefinition}{def:p12-klop1987-ars-exercises}{The complete additional ARS problem surface}
+Exercise 1.7, pp.6--8, uses ``exercise'' also for extensions of the theory.
+The following preserves its seventeen separate claims and requests, not
+only the ones used later in the report. Write \(\to_i^*\) in the
+formulas below as a typographic expansion of the source's double arrow.
+\begin{enumerate}
+\item Rosen's first transfer: if \(\to_1^*=\to_2^*\) and
+\(\to_1\) is subcommutative, then \(\to_2\) is confluent.
+\item Hindley's union theorem: if each pair of indexed relations
+commutes, their union is confluent. The case of a relation paired with
+itself is included in the hypothesis.
+\item Hindley's one-step condition: if
+\(a\to_1 b,a\to_2 c\) can be joined by
+\(b\to_2^*d,c\to_1^=d\), then the relations commute.
+\item Staples' condition: if the same peak joins by
+\(b\to_2d,c\to_1^*d\), then the relations commute.
+\item Rosen's request relation: \(\to_1\) requests \(\to_2\) if
+each peak \(a\to_1^*b,a\to_2^*c\) has
+\(b\to_2^*d,c\to_1^*e\to_2^*d\). If each relation is confluent
+and the first requests the second, their union is confluent.
+\item The local mixed-peak condition
+\(a\to_1b,a\to_2c\Rightarrow
+\exists d,e\ b\to_2^*d,c\to_1^*e\to_2^*d\)
+does not by itself imply full requesting, even when \(\to_2\)
+is terminating and confluent. The counterexample is specified in
+Theorem~\ref{thm:p12-klop1987-ars-countercases}.
+\item Under confluence of \(\to_2\) and requesting, define
+\(\to_3=\to_1^*\circ\to_2^*\). If every \(\to_1^*\)-peak
+has both arms joining by \(\to_3\), the union is confluent
+(Staples).
+\item A refinement has \(\to_1\subseteq\to_2^*\). It is compatible
+if each \(a\to_2^*b\) has a common \(\to_1^*\)-descendant of
+\(a,b\). Prove that compatibility is equivalent to the property:
+\(a\to_2b\to_1^*c\) implies some common \(\to_1^*\)-descendant
+of \(a,c\).
+\item Compatible refinement preserves and reflects confluence (Staples).
+\item Strong confluence means that each one-step peak joins by
+\(b\to^*d,c\to^=d\). Prove that it implies confluence (Huet).
+\item Assume all indexed relations commute weakly. A relation is
+relatively terminating if no infinite union reduction contains infinitely
+many of its steps. It has splitting effect if a peak with that step on
+one arm has no weak-commutation join using at most one step on the other
+arm. Prove union confluence if every relation with splitting effect is
+relatively terminating.
+\item Le Chenadec's decreasing-conversion criterion: suppose a strict
+well-founded order \(>\) contains every reduction step. CR is equivalent
+to the requirement that every peak \(a\to b,a\to c\) admit a
+conversion \(b=d_1\leftrightarrow\cdots\leftrightarrow d_n=c\)
+with \(a>d_i\) for every \(i\), including both endpoints.
+\item Cofinality and CP are as in
+Definition~\ref{def:p12-klop1987-subars}; prove CR equivalent to CP
+for countable ARSs (Klop). This proof is supplied in
+Annex~\ref{annex:p12-klop1987-ars-core}.
+\item Consistency means that not every pair is convertible. Show that
+CR and two distinct normal forms imply consistency. A conservative
+extension \(\mathcal A\subseteq\mathcal B\) preserves exactly the
+conversion relation on \(A\). Show that a conservative extension of
+a consistent ARS is consistent, and that a confluent closed extension is
+conservative.
+\item Newman's strict nontrivial diamond \(\mathrm{WCR}^{1}\) joins
+each one-step peak with distinct endpoints by one genuine step on each
+arm; equal endpoints already coincide. Prove
+\(\mathrm{WCR}^{1}\mathbin{\&}\mathrm{WN}\Rightarrow\mathrm{SN}\),
+and refute the version using only \(\mathrm{WCR}^{\leq1}\).
+\item The quasi-commutation assumption is
+\(a\to_\alpha b\to_\beta c\Rightarrow
+\exists d\ a\to_\beta d\to_{\alpha\beta}^*c\), attributed to
+Bachmair--Dershowitz. This assumption alone does not equate
+termination of the two relations: on one
+element take an \(\alpha\)-self-loop and empty \(\beta\).
+The premise is vacuous, \(\beta\) is SN, and \(\alpha\) is not.
+\item Let \(\iota:A\to B\), \(\kappa:B\to A\), with
+\(\kappa\iota(a)=a\). Suppose every \(a\to_\alpha a'\)
+lifts from every \(b\) with \(\kappa(b)=a\) to a genuine
+\(b\to_\beta b'\) with \(\kappa(b')=a'\). Prove that SN
+of \(\mathcal B\) implies SN of \(\mathcal A\) (Klop).
+\end{enumerate}
+Figures 4--5 distinguish genuine steps, reflexive steps, finite
+reductions, conversions, and lifting maps; these distinctions are part
+of the stated hypotheses. The following results supply the separate
+proofs and countercases of these abstract assertions.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-klop1987-ars-commutation}{proved=annex:p12-klop1987-ars-commutation}{Finite strips, strong confluence, and commuting unions}
+The conclusions of Exercises 1.7(1)--(4) and (10) hold with their
+displayed arrow bounds. In particular subcommutativity implies CR,
+equal reflexive transitive closures transport CR, and a family of
+pairwise commuting relations has a confluent union, including when
+the index set is infinite. The self-pairs in that family hypothesis
+are essential: each individual relation must commute with itself.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p12-klop1987-ars-request}{proved=annex:p12-klop1987-ars-request}{The two full requesting criteria}
+Under the full requesting condition of Exercise 1.7(5), the union is
+CR if both relations are CR. More generally, under requesting and
+CR of \(\to_2\), it suffices that every \(\to_1^*\)-peak
+join by \(\to_3=\to_1^*\circ\to_2^*\) on both arms, as
+in Exercise 1.7(7). This does not replace full requesting by the
+insufficient one-step premise of Exercise 1.7(6).
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p12-klop1987-ars-refinement}{proved=annex:p12-klop1987-ars-refinement}{Compatible refinement at the finite-reduction scope}
+For a refinement, compatibility for \emph{every finite}
+\(a\to_2^*b\) is equivalent to the mixed condition in Exercise
+1.7(8), and it preserves and reflects confluence as in (9).
+Compatibility only for single steps is insufficient for that equivalence.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p12-klop1987-ars-splitting}{proved=annex:p12-klop1987-ars-splitting}{Relatively terminating splitting colours}
+Suppose every indexed relation commutes weakly with every other one,
+and each relation with splitting effect is relatively terminating in
+the whole union. Then the union is CR, as in Exercise 1.7(11).
+An arbitrary finite peak uses only finitely many colours; relative
+termination is used on that finite colour set, not silently converted
+into termination of an infinite union of terminating relations.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p12-klop1987-ars-decreasing}{proved=annex:p12-klop1987-ars-decreasing}{Decreasing conversions give confluence}
+The equivalence in Exercise 1.7(12) holds: for a strict well-founded
+order containing all steps, CR is equivalent to a conversion joining
+each one-step peak entirely below its source. The order must be
+transitive, and the bound applies to every listed conversion element,
+including its endpoints. An arbitrary conversion without that bound
+does not supply this criterion.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p12-klop1987-ars-boundaries}{proved=annex:p12-klop1987-ars-boundaries}{Closed extensions, consistency, and genuine-step lifting}
+CR, WCR, subcommutativity, WN, SN, UN, NF, Ind, Inc and FB all pass
+to successor-closed sub-ARSs as defined above.
+A confluent successor-closed extension is conservative; a conservative
+extension of a consistent ARS is consistent; CR with two distinct normal
+forms implies consistency, as in Exercise 1.7(14). The retraction and
+genuine-step lifting hypotheses in (17) transport SN from the larger
+system to the smaller. A zero-step lift would not prove that assertion.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p12-klop1987-ars-normalization}{proved=annex:p12-klop1987-ars-normalization}{The strict-diamond and increasing-rank termination arguments}
+The strict nontrivial diamond together with WN implies SN, as in
+Exercise 1.7(15). Also WCR, WN and Inc together imply SN (Theorem
+1.6(vi)); Inc implies \(\mathrm{SN}^{-1}\); and
+\(\mathrm{FB}^{-1}\) with \(\mathrm{SN}^{-1}\) implies Inc.
+The strict-diamond result does not hold when each joining arm may
+independently take zero steps.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p12-klop1987-ars-countercases}{proved=annex:p12-klop1987-ars-countercases}{The actual local-requesting and termination countercases}
+The local premise of Exercise 1.7(6) does not establish full requesting;
+the quasi-commutation premise in (16) does not equate SN of its two
+relations; and \(\mathrm{WCR}^{\leq1}\) with WN does not imply
+SN. Their explicit finite countermodels appear in the reciprocal annex.
+These are nonimplication results, not assumptions of the positive theorems.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p12-klop1987-abstract-failures}{Hindley's peak and van Glabbeek's puzzle}
+Figure 3, p.6, has four elements \(a,b,c,d\) and exactly the steps
+\(b\to a,b\to c,c\to b,c\to d\). It is WCR: the peak at
+\(b\) joins at \(a\), and that at \(c\) joins at \(d\).
+It is not CR, since \(b\twoheadrightarrow a\) and
+\(b\twoheadrightarrow d\), with \(a,d\) distinct normal forms.
+This is the counterexample attributed to R. Hindley.
+
+The answer to Puzzle 1.6.1 on p.35, attributed to R. van Glabbeek,
+can be specified without losing its infinite diagram. For each
+\(n\in\mathbb N\), take \(u_n,v_n,z_n\), with steps
+\(u_n\to u_{n+1},u_n\to v_n,v_n\to u_n,v_n\to z_n\)
+and no others. Every element reaches a normal form. Peaks at \(u_n\)
+join at \(u_{n+1}\); peaks at \(v_n\) join at \(z_n\).
+But \(u_0\to u_1\to\cdots\) has no common descendant for all its
+members: a fixed element belongs to a fixed index, and steps never decrease
+that index. Thus WCR and WN do not imply Ind.
+\end{hbexample}
+
+\subsection{Finite terms, application, and disjoint signatures}
+
+\begin{hbdefinition}{def:p12-klop1987-terms}{The source's ordinary first-order regime}
+A signature \(\Sigma\) has a countably infinite variable set and a nonempty
+set of operators, each of a fixed finite arity; arity zero gives constants.
+\(\operatorname{Ter}(\Sigma)\) is the set of finite terms.
+\(\operatorname{Ter}_0(\Sigma)\) contains the ground terms. A term is
+linear when no variable occurs more than once. A one-hole context
+\(C[\ ]\) gives the subterm relation \(t\subseteq C[t]\).
+Subterm occurrences, rather than only subterm values, are distinguished
+by positions: the root has position \(\epsilon\), and child indices
+are concatenated along a path.
+
+A substitution \(\sigma\) preserves operators and is determined by its
+values on variables. The report uses \(t^\sigma\) for its action.
+A rule \(l\to r\) has nonvariable \(l\) and
+\(\operatorname{Var}(r)\subseteq\operatorname{Var}(l)\).
+Its instances act in any context:
+\(C[l^\sigma]\to C[r^\sigma]\).
+The associated ARS has all terms as its universe. The notation
+\((\Sigma,R)_0\) instead restricts that ARS to ground terms.
+This differs from a ground TRS, in which every rule itself is ground.
+The report keeps the single-sorted regime, noting the usual sorted
+extension but not developing a new many-sorted calculus.
+\end{hbdefinition}
+
+\begin{hbexample}{def:p12-klop1987-arithmetic}{Source Table 1 and the ground/open distinction}
+The signature has binary \(A,M\), unary \(S\), and constant \(0\).
+Its four rules are
+\[
+ A(x,0)\to x,\qquad A(x,S(y))\to S(A(x,y)),\qquad
+ M(x,0)\to0,\qquad M(x,S(y))\to A(M(x,y),x).
+\]
+For example, \(A(M(x,y),y)\) is nonlinear,
+\(A(M(x,y),z)\) is linear, and
+\(A(M(S(0),0),S(0))\) has two occurrences of the subterm \(S(0)\).
+The p.10 calculation, writing \(2=S(S(0))\) only in this display, is
+\begin{align*}
+ M(2,2)&\to A(M(2,S(0)),2)
+ \to S(A(M(2,S(0)),S(0)))\\
+ &\to S(S(A(M(2,S(0)),0)))\to S(S(M(2,S(0))))\\
+ &\to S(S(A(M(2,0),2)))\to S(S(A(0,2)))\\
+ &\to S(S(S(A(0,S(0)))))\to S(S(S(S(A(0,0)))))
+ \to S(S(S(S(0)))).
+\end{align*}
+Adding \(A(x,y)\to A(y,x)\) makes the open term \(A(x,y)\)
+non-normalizing. Ground terms still have normal forms, but may now have
+infinite reductions, including repeated swaps. Figure 6 records this
+difference, rather than equating open and ground termination.
+\end{hbexample}
+
+\begin{hbexample}{def:p12-klop1987-sts}{The two string-to-term correspondences}
+The string rule \(aba\to bab\) becomes
+\(a(b(a(x)))\to b(a(b(x)))\), with unary \(a,b\) and constant \(o\).
+The word \(bbabaaa\) encodes as
+\(b(b(a(b(a(a(a(o)))))))\) and its reduct \(bbbabaa\) as
+\(b(b(b(a(b(a(a(o)))))))\). Contexts encode prefixes and substitution
+for \(x\) encodes suffixes, giving the source's isomorphism with the
+ground-term reduction graph. Treating letters instead as constants and
+using a binary associative concatenation operator would require rewriting
+modulo associativity; the report explicitly does not take that second
+route. Both sides of the unary rule retain \(x\), so these string-derived
+TRSs are non-erasing.
+\end{hbexample}
+
+\begin{hbdefinition}{def:p12-klop1987-applicative}{The three displays of Combinatory Logic}
+Application is the binary operator \(\operatorname{Ap}\); \(S,K,I\)
+are constants. Source Tables 2--4 display the same three rules, respectively
+in full binary, dotted, and left-associated notation:
+\begin{align*}
+ \operatorname{Ap}(\operatorname{Ap}(\operatorname{Ap}(S,x),y),z)
+ &\to\operatorname{Ap}(\operatorname{Ap}(x,z),\operatorname{Ap}(y,z)),\\
+ \operatorname{Ap}(\operatorname{Ap}(K,x),y)&\to x,\qquad
+ \operatorname{Ap}(I,x)\to x;\\
+ ((S.x).y).z&\to(x.z).(y.z),\quad(K.x).y\to x,\quad I.x\to x;\\
+ Sxyz&\to xz(yz),\qquad Kxy\to x,\qquad Ix\to x.
+\end{align*}
+Juxtaposition associates to the left; parentheses on the right preserve
+the indicated subterm. In particular \(xz(yz)=(xz)(yz)\), not
+\(x(z(yz))\), and \(SIx\) contains no \(Ix\)-redex.
+The variable-arity reading of combinators is only a convenient notation:
+\(S\) still needs three arguments before its binary-tree rule applies.
+\end{hbdefinition}
+
+\begin{hbexample}{def:p12-klop1987-combinators}{Cycles, compiled combinators, and equality tests}
+The source's cycle is
+\(SII(SII)\to I(SII)(I(SII))\to SII(I(SII))\to SII(SII)\).
+Figure 7 depicts its additional reductions; the displayed cycle alone
+already refutes SN. With \(B=S(KS)K\), the source gives
+\[
+ Bxyz=S(KS)Kxyz\to KSx(Kx)yz\to S(Kx)yz
+ \to Kxz(yz)\to x(yz).
+\]
+It assigns \(C=S(BBS)(KK)\), with \(Cxyz\twoheadrightarrow xzy\).
+The other SKIM definitions are referred to Barendregt and Hindley--Seldin.
+Table 5 adds \(Cxyz\to xzy\), \(Bxyz\to x(yz)\),
+\(Yx\to x(Yx)\), \(Uz(Pxy)\to zxy\),
+\(\mathsf{cond}\ \mathsf{true}\ xy\to x\),
+\(\mathsf{cond}\ \mathsf{false}\ xy\to y\), and rules for addition,
+multiplication, and equality of numeral constants. The equality instances
+\(\mathsf{eq}\ \underline n\ \underline n\to\mathsf{true}\) and
+\(\mathsf{eq}\ \underline n\ \underline m\to\mathsf{false}\)
+for \(n\ne m\) are ground rule schemata, not a repeated-variable
+pattern or a conditional-TRS extension.
+
+Table 6 adjoins a genuine binary operator with \(D(x,x)\to E\).
+Table 7 instead adjoins a constant with \(Dxx\to E\), namely
+\(\operatorname{Ap}(\operatorname{Ap}(D,x),x)\to E\).
+They are not the same signature extension: the latter shares the existing
+application operator, whereas the former does not.
+\end{hbexample}
+
+\begin{hbdefinition}{def:p12-klop1987-weak-categorical}{The source's Weak Categorical Combinatory Logic}
+Table 8, p.15, prints its computational equations with equality signs.
+Their left-to-right computational orientation is
+\begin{align*}
+ \mathsf{Id}\,x&\to x,&(x\circ y)z&\to x(yz),\\
+ \mathsf{Fst}(x,y)&\to x,&\mathsf{Snd}(x,y)&\to y,\\
+ \langle x,y\rangle z&\to(xz,yz),&\mathsf{App}(x,y)&\to xy,\\
+ \Lambda(x)yz&\to x(y,z).
+\end{align*}
+Here \(\mathsf{Id},\mathsf{Fst},\mathsf{Snd},\mathsf{App}\)
+are constants; \(\circ\), the constructor \(\langle\ ,\ \rangle\),
+and the constructor \((\ ,\ )\) are binary operators, and
+\(\Lambda\) is unary. All the displayed application is still binary
+\(\operatorname{Ap}\) in full notation. In particular
+\(\mathsf{App}\) is not that underlying application operator, and
+\(\mathsf{Fst},\mathsf{Snd}\) are not binary operators despite
+their use on an ordered-pair argument. The source attributes its
+implementation context to Curien (1986).
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-klop1987-one-rule-puzzle}{proved=annex:p12-klop1987-one-rule-puzzle}{Akkerman's one-rule WN but non-SN answer}
+With distinct constants \(a,b\) and binary \(F\), let
+\[
+ R=\{F(a,F(x,y))\to F(x,F(x,F(b,b)))\}.
+\]
+Every finite term over this signature has a normal form, but
+\(F(a,F(a,F(b,b)))\) has an infinite reduction.
+This is the answer to Puzzle 2.1.6, attributed to G. J. Akkerman on p.35.
+The normal-form existence claim here has a separate full argument; the
+single displayed successful reduction does not by itself establish WN.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p12-klop1987-direct-sum}{Direct sum, rather than arbitrary union}
+For TRSs with disjoint function and constant signatures, \(R_1\oplus R_2\)
+is their ordinary union; otherwise rename their nonvariable alphabets
+apart before taking the union. Variables can be common.
+The report attributes to Toyama (1987) the equivalence
+\(\mathrm{CR}(R_1\oplus R_2)\Longleftrightarrow
+\mathrm{CR}(R_1)\mathbin{\&}\mathrm{CR}(R_2)\).
+This is a modularity theorem, not a claim that arbitrary sharing of symbols
+preserves confluence.
+The full mixed-term argument is supplied in
+Theorem~\ref{thm:p12-klop1987-ds-confluence}, with nonlinear patterns,
+duplication and collapse retained and without a termination hypothesis.
+\end{hbdefinition}
+
+\begin{hbexample}{def:p12-klop1987-modularity-failures}{The report's two failures of termination modularity}
+Let \(R_1=\{f(0,1,x)\to f(x,x,x)\}\) and
+\(R_2=\{\mathsf{or}(x,y)\to x,\mathsf{or}(x,y)\to y\}\).
+Both terminate separately, but, with \(q=\mathsf{or}(0,1)\),
+\(f(q,q,q)\to f(0,q,q)\to f(0,1,q)\to f(q,q,q)\).
+The separate factor-termination proofs and this exact cycle are given in
+Theorem~\ref{thm:p12-klop1987-ds-first-counter}.
+
+The stronger example has two \(F\)-rules
+\(F(4,5,6,x)\to F(x,x,x,x)\), \(F(x,y,z,w)\to7\), and
+the nine constant rules
+\(1\to4,1\to5,2\to4,2\to6,3\to5,3\to6,4\to7,5\to7,6\to7\).
+Its disjoint second system is
+\(G(x,x,y)\to x,G(x,y,x)\to x,G(y,x,x)\to x\).
+Both are complete, as proved for these exact rules in
+Theorem~\ref{thm:p12-klop1987-ds-complete-counter}. For
+\(q=G(1,2,3)\), their sum cycles:
+\begin{align*}
+ F(q,q,q,q)&\twoheadrightarrow
+ F(G(4,4,3),G(5,2,5),G(1,6,6),q)\\
+ &\twoheadrightarrow F(4,5,6,q)\to F(q,q,q,q).
+\end{align*}
+The source additionally corrects Ganzinger--Giegerich's p.23 diagram:
+the arrow \(b\to k(0)\) must be deleted there, since otherwise
+\(f(b,b,b,g(0,b))\) reduces to itself. This is a source-reported
+correction to another presentation, not an extra rule in the present example.
+\end{hbexample}
+
+The disjoint binary equality-test extension of CL is confluent by
+Theorem~\ref{thm:p12-klop1987-ds-applications}, applying the full
+direct-sum theorem rather than the regular-confluence theorem.
+The applicative equality-test union is reported nonconfluent,
+with its argument referred to Klop (1980). The further conditional-selector
+\emph{signature} example has the three ordinary rules
+\(\mathsf{if}(\mathsf{true},x,y)\to x\),
+\(\mathsf{if}(\mathsf{false},x,y)\to y\),
+\(\mathsf{if}(z,x,x)\to x\). The report's use of the word ``if''
+here denotes a ternary function symbol, not side conditions on rewriting.
+
+\input{parts/p12/sources/src-027-501-direct-sum}
+
+\subsection{Semantics and the source's finite decision questions}
+
+\begin{hbtheorem}{thm:p12-klop1987-semantic-un}{proved=annex:p12-klop1987-semantic-un}{The source's semantic test for UN}
+Suppose an algebra of the same signature satisfies every rule equation
+under every variable assignment, and distinct syntactic normal forms are
+not equal in that algebra. Then the TRS has UN. This is Theorem 2.4.1,
+p.17, and applies to open terms as well as ground terms.
+\end{hbtheorem}
+
+Section 2.5 fixes finite signatures and finite rule sets for its decision
+questions. It reports undecidability of confluence and termination in
+general, but decidability of each for ground TRSs; the all-terms/ground-terms
+restriction is kept separate from ground rules. It attributes two-rule
+termination undecidability to Dershowitz and calls the one-rule question
+open \emph{at the date of the report}. It also reports undecidability,
+within CL, of conversion and existence of finite normal forms or infinite
+reductions. Its last report is equality of the ground-normal-form sets of
+two left-linear TRSs, attributed to Wiedijk (1987), with removal of
+left-linearity described only as work in progress. None of these dated
+sentences asserts the corresponding state of research in 2026.
+
+\subsection{The marked-tree termination route}
+
+\begin{hbdefinition}{def:p12-klop1987-star-order}{Commutative trees and the five marker operations}
+The report's \(\mathcal T\) consists of finite unordered rooted trees
+labelled in \(\mathbb N\); \(\mathcal T^*\) permits one marker on a
+node. Write \(n(\vec t)\) for the children and \(t^*\) for a root
+marker. Its reduction permits:
+placing a root marker \(n(\vec t)\to n^*(\vec t)\);
+copying under a smaller label
+\(n^*(\vec t)\to m(n^*(\vec t),\ldots,n^*(\vec t))\) when \(m<n\),
+with any finite number of copies, including zero;
+pushing a marker into a chosen child,
+\(n^*(s,\vec t)\to n(s^*,\ldots,s^*,\vec t)\), again with zero
+or more copies, with the chosen child's root initially unmarked; selecting a child
+\(n^*(t_1,\ldots,t_k)\to t_i\) for \(k>0\); and performing
+any such operation within a tree context.
+Commutativity concerns sibling order, not associativity of operators.
+\end{hbdefinition}
+
+The full marked relation is not terminating: copying may leave a copy of
+the marked input available for repetition. The source's Theorem 3.5 instead
+concerns positive reductions \emph{between unmarked trees}. Its dependency
+is Kruskal's theorem for natural-number-labelled finite trees: every
+infinite sequence has an earlier tree embedded in a later one by the
+report's ancestry-order convention, with labels nondecreasing. This is
+the convention specified at \cref{def:p12-klop1987-mt-embedding}, not an
+unstated least-common-ancestor preservation requirement. The argument combines
+this with acyclicity of the marker order and its compatibility with proper
+embedding. Embedding includes the identical tree: its reduction comparison
+is reflexive in that case and positive for \emph{proper} embedding.
+The positive relation on unmarked trees has no self-cycle.
+
+In Table 9 the five formula-rewriting rules are double-negation removal,
+the two De Morgan rules, and the two distributive rules sending conjunction
+over disjunction. The assignment \(\lor\mapsto1,\land\mapsto2,
+\neg\mapsto3\) sends them to decreasing marker reductions. For instance,
+\[
+3(1(t,s))\to3^*(1(t,s))
+\to2(3^*(1(t,s)),3^*(1(t,s)))
+\to^*2(3(t),3(s)).
+\]
+The last segment pushes each marker onto the \(1\)-child and selects
+the appropriate argument. The other four comparisons are
+\(3(3(t))\to^+t\), \(3(2(t,s))\to^+1(3(t),3(s))\),
+\(2(t,1(s,r))\to^+1(2(t,s),2(t,r))\), and its symmetric variant.
+The mathematical content is termination of these syntactic transformations,
+not completeness of a logical calculus.
+
+Remark 3.11 gives three boundaries. An embedded left side in a right side,
+as in \(f(s(x))\to g(s(x),f(p(s(x))))\), obstructs this method.
+Taken as an isolated one-rule system, with no rules for \(p\) or \(s\),
+that example has the different active-origin termination proof of
+Theorem~\ref{thm:p12-klop1987-pa-puel-example}. The companion-rule
+failure in Lemma~\ref{thm:p12-klop1987-pa-puel-extension-failure}
+shows why this does not establish arbitrary extensions or Puel's
+general unavoidable-set theorem.
+The process-algebra rules can reintroduce a heavier operator. The source
+proposes norm-indexed copies using symbol lengths, but automatic fresh
+reannotation after PA duplication need not respect an enclosing context:
+parallel expansion can raise an outer left-merge index from 4 to 8, as
+Lemma~\ref{thm:p12-klop1987-pa-reannotation-failure} proves.
+The actual three source PA rules have complete contextual certificates
+using the distinct max/sum annotation and retained initial-tag budgets
+of Theorems~\ref{thm:p12-klop1987-pa-termination} and
+\ref{thm:p12-klop1987-pa-budget-lift}. Their exact ordinary
+three-rule and seven-rule scopes do not include the larger ACP system
+or implicit rewriting modulo choice equations.
+The simplified example is \(g(x,y)\to h(x,y)\),
+\(h(f(x),y)\to f(g(x,y))\), with
+\(g_n>h_n>f\) and \(h_{n+1}>g_n\).
+Associativity and the Ackermann rules require a lexicographic, ordered-tree
+extension, attributed to Kamin--Levy through Dershowitz (1985).
+The Ackermann comparison uses
+\[
+ A(S(x),S(y))\to A^*(S(x),S(y))
+ \to A(S^*(x),A^*(S(x),S(y)))
+ \to^* A(x,A(S(x),y)).
+\]
+This extension preserves fixed arities and left-to-right order; it is not
+the commutative-tree order of Definition~\ref{def:p12-klop1987-star-order}.
+Its global plain-endpoint well-foundedness is established separately in
+Theorem~\ref{thm:p12-klop1987-om-well-founded};
+Theorem~\ref{thm:p12-klop1987-om-applications} supplies the positive
+paths for all three Ackermann rules and for ordered associativity.
+
+\input{parts/p12/sources/src-027-501-marked-trees}
+\input{parts/p12/sources/src-027-501-pa}
+\input{parts/p12/sources/src-027-501-ordered-markers}
+
+\subsection{Completion: the particular group calculation and algorithm boundary}
+
+\begin{hbconvention}{def:p12-klop1987-group-signature}{The group signature has its own typed roles}
+Here \(e\) is a nullary identity symbol, \(I\) is unary inverse,
+and \(.\) is binary noncommutative product. This \(I\) is not the
+nullary combinator \(I\) of CL. Products retain their parentheses;
+associativity is an equation being oriented, not an implicit equation
+in first-order matching. The finite signature is the one used in the
+source's group tables.
+\end{hbconvention}
+
+The source begins with the group equations
+\(e.x=x\), \(I(x).x=e\), \((x.y).z=x.(y.z)\).
+Its ground word problem asks whether two ground terms are equated by the
+equational theory. A sound, equivalent complete ordinary TRS decides it
+by comparison of normal forms. CL's equations show why such a terminating
+presentation need not exist. The report also distinguishes a decidable word
+problem from a finite complete presentation over the \emph{same signature}.
+Its string example retains the postfix restriction introduced by the
+constant \(o\); its two-sorted multiset example has a single commutation
+equation \(\mathsf{ins}(x,\mathsf{ins}(y,X))=
+\mathsf{ins}(y,\mathsf{ins}(x,X))\). The natural-number and multiset
+zeros there have different sorts, although the printed glyph is shared.
+
+The hand completion first orients the three group equations. The peak
+\((I(x).x).z\) gives \(e.z\) and \(I(x).(x.z)\), hence adds
+rule 4, \(I(x).(x.z)\to z\). Subsequent source rule numbers are:
+\begin{align*}
+5:&\ I(I(y)).e\to y,&6:&\ I(e).z\to z,&7:&\ I(I(y)).x\to y.x,\\
+8:&\ y.e\to y,&9:&\ I(I(y))\to y,&10:&\ I(e)\to e,\\
+11:&\ y.I(y)\to e,&12:&\ y.(I(y).x)\to x,\\
+13:&\ x.(y.I(x.y))\to e,&14:&\ y.I(x.y)\to I(x),\\
+15:&\ I(x.y)\to I(y).I(x).
+\end{align*}
+The redundant rules 5 and 7 are removed after 8 and 9; 10 removes 6;
+14 removes 13; 15 removes 14. Source Table 12 retains exactly
+1, 2, 3, 4, 8, 9, 10, 11, 12, 15. The print of temporary rule 13
+has mismatched parentheses; its preceding critical pair determines the
+well-formed term displayed above. The report's joining example reduces
+\(I(y.I(y))\) to \(I(e)\to e\), or to
+\(I(I(y)).I(y)\to y.I(y)\to e\).
+Choosing the other direction of rule 15 is not endorsed merely because
+it shortens the written expression.
+
+\begin{hbtheorem}{thm:p12-klop1987-group-completion}{proved=annex:p12-klop1987-group-completion}{The actual ten-rule group completion}
+The ten rules retained in source Table 12 terminate and are confluent.
+Their equational congruence is exactly that generated by source Table
+10's three equations. Consequently two finite terms are equal in that
+congruence if and only if their final-rule normal forms are identical;
+in particular normalization decides the source's ground word problem.
+The proof verifies each rule under LPO with precedence
+\(I>_\Sigma .>_\Sigma e\) and left-to-right product status,
+derives all successive source rule equations from their actual peaks,
+and supplies all \(50\) nontrivial critical-pair joining paths together
+with the \(15\) literal trivial pairs. These are the \(65\)
+unifiable cases among the \(220\) nonvariable overlap candidates.
+This concrete use of the existing LPO interface is not substituted for
+the source's separate marked-order/Kruskal proof obligation.
+\end{hbtheorem}
+
+Theorem 4.2 is the ordinary critical-pair criterion for WCR; Theorem 4.1
+adds SN and Newman's lemma for CR. Figure 11 separates disjoint redexes,
+redexes inside substituted variables, and overlaps in nonvariable pattern
+positions. The variable case must update every repeated occurrence in a
+nonlinear left side and every duplicated occurrence on the right; it cannot
+be replaced by an unqualified assertion that nested steps commute.
+The full proof at Theorem~\ref{thm:p12-critical-pair} treats those exact
+ordinary unconditional cases. The concrete group application is verified
+in Theorem~\ref{thm:p12-klop1987-group-completion}, including its
+nonlinear left sides and every actual nonvariable overlap.
+
+Table 13's six stages are: select an orientable equation or fail; insert its
+decreasing rule; normalize existing right sides; add new critical-pair
+equations; remove old rules whose left sides contain a new redex;
+normalize equations and delete identities. The order of these stages
+matters: adding new critical pairs precedes deleting the old reducible
+left sides. For an old rule \(l\to r\) with an occurrence of the
+new rule's left side, its old/new overlap adds the equation between
+\(r\) and the reduct \(l'\) obtained at that occurrence.
+Together with the new-rule reduction \(l\to l'\), that equation
+preserves the removed rule's equality. Thus an implementation must not
+delete before generating the required overlap equation, or discard
+that equation with its old rule. The current host's explicit Collapse
+transformation packages this dependency by returning a simplified
+equation using \emph{retained} rules;
+Lemma~\ref{thm:p12-completion-invariant} proves that invariant at its
+own stated scope. It is not necessary to invent an omitted equation
+step in the original table when its critical-pair stage already supplies it.
+An order used on rules with variables must be stable under
+substitution as well as contexts, or must orient every rule instance;
+context monotonicity alone does not justify termination of all instances.
+That additional order standing is explicit, rather than silently
+attributed to the table's shorter formulation.
+
+\subsection{Regular systems and parallel redexes}
+
+\begin{hbdefinition}{def:p12-klop1987-regular}{Regularity is linearity plus absence of pattern overlaps}
+A rule is left-linear when every variable occurs at most once in its left
+side. A TRS is regular in the report's sense when it is left-linear and
+non-ambiguous: no two left-hand-side patterns overlap at nonvariable
+positions, apart from comparing an occurrence with itself.
+This is the ordinary orthogonal regime; the report's term ``regular'' does
+not mean a regular language or simply a confluent relation.
+The pattern retains the operator occurrences and replaces variable leaves
+by distinct holes. Redexes may be nested, but, in a regular system, any
+properly nested redex lies wholly within a variable instance of the outer
+rule, not within its operator pattern.
+
+Parallel reduction \(t\to_{\parallel}s\) contracts a finite set of
+pairwise disjoint redex occurrences. Here the empty set is allowed, giving
+reflexivity; this convention explicitly supplies the zero-step arms needed
+in joining diagrams. Any such parallel contraction can be sequentialized
+in any order, since replacements in disjoint subtrees do not interfere.
+\end{hbdefinition}
+
+\begin{hbexample}{def:p12-klop1987-patterns}{The source's overlap and nonlinear failures}
+Source Table 14 has
+\(F(G(x,S(0)),y,H(z))\to x\),
+\(G(x,S(S(0)))\to0\), \(P(G(x,S(0)))\to S(0)\).
+The first pattern contains a \(G\)-node, but cannot overlap the second
+rule there: \(S(0)\) and \(S(S(0))\) do not unify. The other heads
+are distinct. Figures 12--13 identify those non-overlapping operator
+patterns, including variable-instance boundaries. Figure 14 contrasts
+the self-overlap of \(L(L(x))\to0\), the root overlap of
+\(F(0,x,y)\to0\) with \(F(x,1,y)\to1\), and the two root
+rules \(\mathsf{or}(x,y)\to x,\mathsf{or}(x,y)\to y\).
+
+Theorem~\ref{thm:p12-critical-pair} gives WCR, but not CR, for the
+nonlinear source example
+\(D(x,x)\to E,C(x)\to D(x,C(x)),A\to C(A)\).
+Indeed,
+\(C(A)\to D(A,C(A))\to D(C(A),C(A))\to E\), whereas
+\(C(A)\twoheadrightarrow C(E)\). From \(C(E)\), every term has
+one remaining \(C(E)\) under zero or more \(D(E,\ )\)-contexts;
+the repeated-variable test never succeeds. Thus it cannot reach \(E\).
+Absence of critical pairs does not remove this nonlinear obstruction.
+\end{hbexample}
+
+\begin{hbtheorem}{thm:p12-klop1987-regular-confluence}{proved=annex:p12-klop1987-regular-confluence}{The report's regular confluence theorem}
+For a regular TRS, disjoint parallel reduction has the diamond property:
+if \(t\to_{\parallel}u\) and \(t\to_{\parallel}v\), then some
+\(w\) satisfies \(u\to_{\parallel}w\) and
+\(v\to_{\parallel}w\). Consequently the ordinary rewrite relation
+is CR, without an SN hypothesis. This proves the regular case of
+Theorem 5.3 by the residual argument underlying Figures 12--15.
+The report attributes the general regular confluence route to Rosen (1973).
+\end{hbtheorem}
+
+Theorem 5.5 states Huet's broader condition: in a left-linear TRS, when
+each oriented critical pair is connected by a disjoint parallel reduction
+in the stated direction, parallel reduction is strongly confluent and
+ordinary reduction is CR. This condition is stronger than mere joinability
+of critical pairs; it is not Theorem 4.2 with SN silently removed.
+
+\begin{hbexample}{def:p12-klop1987-regular-examples}{CL, recursive program schemes, and nonregular extensions}
+CL's three left sides are left-linear and have non-overlapping operator
+patterns. Its confluence follows from
+Theorem~\ref{thm:p12-klop1987-regular-confluence} despite its infinite
+reductions. A recursive program scheme has disjoint finite operator sets
+\(\mathcal F=\{F_1,\ldots,F_n\}\) and
+\(\mathcal G=\{G_1,\ldots,G_k\}\), each with fixed arities, and
+exactly one rule \(F_i(x_1,\ldots,x_{m_i})\to t_i\) for each
+\(F_i\), with distinct displayed variables. Its right side uses only
+those variables and operators of \(\mathcal F\cup\mathcal G\).
+These root patterns cannot overlap, so every such scheme is regular.
+The source example is
+\[
+ F_1(x)\to G_1(x,F_1(x),F_2(x,x)),\qquad
+ F_2(x,y)\to G_2(F_2(x,x),F_1(G_3)).
+\]
+This remains regular despite duplication and erasure on the right.
+
+Both equality-test extensions of Tables 6--7 are nonregular: both
+\(D(x,x)\) and \(Dxx\) repeat \(x\). The binary extension's
+confluence uses disjoint-sum modularity, not regular confluence;
+the exact factor and sum proofs are
+Theorem~\ref{thm:p12-klop1987-ds-applications}.
+The applicative extension is reported nonconfluent on p.16.
+SKIM's numeral instances are left-linear ground rules, rather than
+repeated-variable patterns.
+\end{hbexample}
+
+\begin{hbdefinition}{def:p12-klop1987-ne-win}{Non-erasure and innermost normalization}
+NE means \(\operatorname{Var}(l)=\operatorname{Var}(r)\) in every rule.
+It does not forbid duplication. An innermost redex has no proper redex
+inside it. A term is WIN when it has a normal form reachable by a finite
+innermost reduction; a system is WIN when every term is.
+The report states both system-wide and term-local forms of its results.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-klop1987-ne-normalization}{proved=annex:p12-klop1987-ne-normalization}{The report's non-erasing normalization equivalence}
+In a regular NE system, a term is WN if and only if it is SN
+(Theorem 5.8, p.32). The equivalence also holds system-wide.
+It does not say that arbitrary reductions of a WN term terminate
+in an erasing regular system.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p12-klop1987-win-normalization}{proved=annex:p12-klop1987-win-normalization}{O'Donnell's innermost equivalence as reported by Klop}
+In a regular system, a term is WIN if and only if it is SN; the
+equivalence also holds system-wide. This is Theorem 5.9, p.32,
+attributed to O'Donnell (1977). Its innermost premise is different from
+non-erasure and from mere existence of a normal form.
+\end{hbtheorem}
+
+For the unary encodings of a non-overlapping semi-Thue system, NE is
+automatic. The report also gives a direct explanation: their strict
+one-step diamond property \(\mathrm{WCR}^{1}\), unlike
+\(\mathrm{WCR}^{\leq1}\), joins both arms by genuine steps;
+together with WN it forces SN. This is Exercise 1.7(15), not a claim that
+all subcommutative WN systems terminate. The self-loop rule \(a\to a\)
+adjoined to \(a\to b\), with \(b\) normal, is a counterexample
+to that weaker assertion.
+
+\subsection{Strategies: normalization does not imply cofinality}
+
+\begin{hbdefinition}{def:p12-klop1987-strategy}{Computable choices and their two success properties}
+A one-step strategy is a computable map
+\(\mathbb F:\operatorname{Ter}(R)\to\operatorname{Ter}(R)\)
+fixing normal forms and satisfying \(t\to\mathbb F(t)\) otherwise.
+A many-step strategy instead requires \(t\to^+\mathbb F(t)\).
+The iteration is \(t,\mathbb F(t),\mathbb F^2(t),\ldots\).
+It is normalizing if every term with a normal form reaches one in this
+iteration. It is cofinal if, for every descendant \(s\) of \(t\),
+some iterate is reachable from \(s\).
+The latter property addresses divergent terms as well: it does not assert
+that an infinite sequence has a finite normal form.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-klop1987-cofinal-normalizing}{proved=annex:p12-klop1987-cofinal-normalizing}{Cofinality forces the right finite result}
+A cofinal strategy is normalizing. In a confluent system, whenever a
+strategy reaches a normal form it is the unique normal form of its input.
+Cofinality is strictly more demanding than normalizing behavior on inputs
+which happen to normalize.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p12-klop1987-five-strategies}{The five strategies of Definition 6.3}
+Leftmost-innermost chooses the leftmost minimal redex in the term tree;
+parallel-innermost contracts every minimal redex. Leftmost-outermost
+chooses the leftmost maximal redex; parallel-outermost contracts every
+maximal redex. Minimal and maximal here refer to containment of redex
+occurrences, not the lexicographic position order alone. A leftmost
+choice uses the tree's left-to-right argument order.
+
+Full substitution, also called Kleene or Gross--Knuth reduction in the
+report, develops all redexes present in the input, including nested ones.
+It does not indefinitely contract every newly created redex. In the
+regular regime a selected inner redex lies in an outer variable instance;
+after outer contraction it has one residual at each occurrence of that
+variable on the right, or none if erased. All these residuals must be
+developed. This specifies ``simultaneously'' without requiring that
+the original nested occurrences be disjoint.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p12-klop1987-developments}{proved=annex:p12-klop1987-developments}{Finite developments specify full substitution}
+In a regular TRS, every development of a fixed finite set of redex
+occurrences terminates, and every complete development has the same result.
+Taking that set to be all redexes of the finite input gives a well-defined
+many-step operation fixing normal forms. A computable presentation of the
+rules and matching supplies the effective strategy; computability is not
+automatic for an arbitrary set-theoretic rule family.
+\end{hblemma}
+
+\begin{hbdefinition}{def:p12-klop1987-fair-traces}{Residual fairness, not merely an infinite choice sequence}
+A residual trace through a reduction chooses one surviving residual
+occurrence at every successive term, starting at any finite stage.
+A fair reduction has no infinite redex-residual trace. Erasure or actual
+contraction ends a trace; duplication permits finitely many choices for
+its next member. A newly created redex begins a new trace and is not
+identified with the contracted redex merely because the printed terms
+are equal. Full substitution is sequentialized by completing one finite
+development round before starting the next.
+A complete fair run is either an infinite fair reduction or a finite
+reduction ending at a normal form; finiteness alone does not complete a run.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-klop1987-fair-cofinal}{proved=annex:p12-klop1987-fair-cofinal}{Fair reductions and full-substitution cofinality}
+In a regular finite-term TRS, a complete fair run is cofinal in its input's
+reduction graph. In particular the full-substitution strategy is cofinal
+and hence normalizing, without NE or SN assumptions. The assertion for
+a finite reduction includes the requirement that its endpoint be normal;
+an arbitrarily truncated finite prefix is not a cofinal strategy run.
+This supplies the double-plus row of the source's strategy table.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p12-klop1987-outermost-fair}{Outermost traces and finite projections}
+A reduction is outermost-fair if it has no infinite residual trace whose
+members remain outermost at every stage. It can have infinite traces
+that repeatedly cease to be outermost; those are not excluded by this
+definition. Projection through a chosen step tracks that step's disjoint
+residual set along the other reduction, develops that set at each finite
+stage, and connects the endpoints by the regular commuting position cases.
+Empty projected segments are recorded as empty, not as extra rewrite steps.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p12-klop1987-outermost-projection}{proved=annex:p12-klop1987-outermost-projection}{The two ordinary outermost projection properties}
+In a regular finite-term TRS, projection through a fixed step preserves
+outermost fairness. If the original reduction has infinitely many
+outermost contractions, its projection is infinite. Every infinite
+outermost-fair reduction has infinitely many outermost contractions.
+These are the ordinary-TRS mechanisms in the tutorial-cited
+Bergstra--Klop appendix, specialized without conditions or bound variables
+\parencite[pp.352--360]{BergstraKlop1986StrategyAppendix}.
+\end{hblemma}
+
+\begin{hbdefinition}{def:p12-klop1987-left-normal}{The additional left-normal restriction}
+A regular TRS is left-normal when every constant or function-symbol
+occurrence in each left side precedes every variable occurrence in its
+linear prefix notation. CL, when restored to binary application notation,
+and the recursive program schemes above have this property.
+The pattern \(F(x,B)\) does not: the constant \(B\) follows \(x\).
+Left-normality is an additional restriction, not another name for regularity.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-klop1987-strategy-results}{proved=annex:p12-klop1987-strategy-results}{The source's strategy table, pp.34--35}
+On regular TRSs, parallel-outermost reduction is normalizing. On left-normal regular TRSs,
+leftmost-outermost reduction is also normalizing. Innermost strategies
+are not in general normalizing even in the left-normal regular regime.
+Neither outermost strategy is in general cofinal, including in that
+restricted regime. The report refers the two outermost normalization
+proofs to O'Donnell (1977), and the parallel-outermost proof also to the
+appendix of Bergstra--Klop (1986).
+\end{hbtheorem}
+
+The source uses minus for a failure of normalization in general, plus
+for normalizing but not necessarily cofinal, and double-plus for cofinal.
+Thus its table records, in order, two minus rows for the innermost
+strategies, minus/plus for leftmost-outermost, plus/plus for
+parallel-outermost, and double-plus/double-plus for full substitution.
+It is not a termination table for all terms.
+
+\begin{hblemma}{thm:p12-klop1987-leftmost-needed}{proved=annex:p12-klop1987-leftmost-needed}{A needed-redex dependency in the effective left-normal regime}
+In a regular left-normal TRS, the leftmost redex of a normalizable
+non-normal term is needed: every reduction to a normal form contracts
+its residual. The occurrence can be found by finite position search
+under the same effective-matching assumption as the strategies above.
+This is a special regime, not a general computable selector for all
+regular systems or a decision test for normalizability.
+\end{hblemma}
+
+\begin{hbexample}{def:p12-klop1987-strategy-failures}{The source's leftmost obstruction and the erasure obstruction}
+Huet--L\'evy's example on p.35 is the regular system
+\(F(x,B)\to D,A\to B,C\to C\).
+The term \(F(C,A)\to F(C,B)\to D\) has a normal form.
+But leftmost-outermost repeatedly contracts its \(C\)-occurrence,
+leaving \(F(C,A)\) unchanged. Parallel-outermost instead contracts
+both \(C\) and \(A\), then the root, and reaches \(D\).
+There is no contradiction with the left-normal theorem because the
+\(F\)-pattern is not left-normal.
+
+An explicit erasure example, separate from the source's displayed
+counterexample, is \(Kxy\to x,a\to a\) and \(Kba\), where
+\(b\) is normal. This regular left-normal term reaches \(b\)
+by an outermost step, but either innermost strategy loops at \(a\).
+It illustrates why Theorem~\ref{thm:p12-klop1987-ne-normalization}
+retains NE and Theorem~\ref{thm:p12-klop1987-win-normalization}
+requires WIN rather than assuming WN alone.
+\end{hbexample}
+
+\begin{hbtheorem}{thm:p12-klop1987-omega}{proved=annex:p12-klop1987-omega}{The source's CL failure of outermost cofinality}
+Put \(I_t=SKt\) and \(\Omega_t=SI_tI_t(SI_tI_t)\) in CL.
+Then \(\Omega_{II}\twoheadrightarrow\Omega_I\), but
+\(\Omega_I\not\twoheadrightarrow\Omega_{II}\).
+The parallel-outermost orbit of \(\Omega_{II}\) is periodic and is
+not cofinal. This is the source's p.35 example; normalizing and cofinal
+are therefore genuinely different strategy requirements even for CL,
+which is regular and left-normal.
+\end{hbtheorem}
+
+The source's stronger outermost failure uses CL. Put
+\(I_t=SKt\), so \(I_t x\twoheadrightarrow x\), and
+\(\Omega_t=SI_tI_t(SI_tI_t)\).
+Writing \(W_t=SI_tI_t\), its parallel-outermost cycle is
+\[
+ W_tW_t\to I_tW_t(I_tW_t)
+ \to_{\parallel}KW_t(tW_t)(KW_t(tW_t))
+ \to_{\parallel}W_tW_t.
+\]
+With \(t=II\), the source notes
+\(\Omega_{II}\twoheadrightarrow\Omega_I\), while
+\(\Omega_I\not\twoheadrightarrow\Omega_{II}\); consequently the
+cyclic parallel-outermost orbit is not cofinal. The nonreachability claim
+has a separate invariant proof in Annex~\ref{annex:p12-klop1987-omega};
+it is not proved merely by displaying the cycle. It supplies the cofinality distinction rather than another
+finite-normal-form failure.
+
+The final source paragraph attributes to Huet--L\'evy the theory of
+needed redexes and strongly sequential regular TRSs. A needed occurrence
+has a residual contracted in every reduction to a normal form. For a
+normalizable non-normal term the report asserts existence; its wording
+must not be applied to a normal form, which has no redex at all, or made
+informative by vacuity on a term with no normal form. It states that a
+general computable needed-redex selector is unavailable, whereas strong
+sequentiality is decidable and supplies an efficient selector and hence
+a normalizing strategy. The tutorial stops before developing that theory;
+no decision procedure for strong sequentiality is specified here.
+
+\subsection{The exact source/version boundary}
+
+The title leaf of this report announces intended publication in
+\emph{Bulletin of the European Association for Theoretical Computer
+Science}, no.32, 1987. That statement is not an announcement of the
+Oxford handbook chapter published in 1992. The report's own abstract
+excludes conditional and equational TRSs. The publisher chapter's
+separately retained abstract includes E-unification, strongly sequential
+orthogonal TRSs, and conditional TRSs. Shared author, subject, and theorem
+names therefore justify a relationship for comparison, not replacement
+of one presentation by the other. A full page-by-page substantive
+variant crosswalk with the publisher chapter is not supplied by this
+report or by this reconstruction. In particular, the historical one-rule
+termination question retains its report date; later chapter statements
+have their own source/version attribution.
+
+\begin{proofboundary}{def:p12-klop1987-proof-boundary}{The mathematical boundaries of the residual arguments}
+The regular diamond and strategy arguments concern ordinary first-order
+regular systems on finite terms. They do not prove Huet's broader
+left-linear parallel-critical-pair criterion merely from ordinary
+joinability, and they do not extend to conditional rules, rewriting
+modulo equations, infinite terms, or bound-variable systems without
+their separate residual hypotheses. Non-erasure and innermostness are
+different sufficient premises for local WN/SN and WIN/SN equivalences;
+neither may be omitted in favor of WN alone.
+The needed-redex selector proved here uses left-normality. The source's
+general needed-redex and strongly sequential assertions retain their
+separate cited standing, not that selector's proof or effective method.
+The unranked commutative marked-tree well-foundedness route instead
+depends on its embedding and Kruskal arguments; a finite-development
+proof is not a substitute for them. The ordered fixed-arity LEX extension
+has its separate nonempty-LPO-lower-set proof and proves descent only
+between plain endpoints, not termination of its marked auxiliary universe.
+Similarly, the group completion requires its actual decreasing
+order and every critical pair, rather than only the abstract completion
+criterion or a differently presented host example.
+\end{proofboundary}

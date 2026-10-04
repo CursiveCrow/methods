@@ -1,0 +1,478 @@
+% ED26-SRC-036-010 continuation, Struss 2008 sections 10.6--10.7.
+\chapter{Model-Based Remedies, Configuration and Failure Analysis}
+\label{sec:p16-model-based-remedy-and-configuration}
+
+A diagnosis describes what may be wrong; it is not yet an action choice.
+Struss's remedy development asks what should be restored, what still persists
+after intervention, which remaining diagnoses must be accommodated, and
+whether a proposed target can be reached safely
+\cite[secs.~10.6--10.7, pp.~446--458]{Struss2008ModelBasedProblemSolving}.
+The component/process/model construction is in
+\cref{sec:p16-qualitative-compositional-model-formulation}.
+Here we construct the additional target and execution reasoning, rather
+than renaming the static diagnosis or a statistical intervention.
+
+The chapter's simplified action-history definition assumes instantaneous
+successful actions. Its cited general repair formalization allows action
+failure, but those are distinct versions. The finite constructions below
+state their transition, observation and coverage conditions; they are not
+claims that the chapter supplied a complete planner for every physical system.
+
+\section{From a diagnostic hypothesis to a reconfiguration target}
+\label{sec:p16-rem-targets}
+
+Replacement usually changes a component mode; switching-based reconfiguration
+changes operating states while faults remain. Changing a set point changes
+an operating region. Switching control software can avoid a suspect sensor.
+Introducing a cable, heater or oxidizer changes structural/model content.
+Even an intrusive test can change the system. Struss's action and goal
+histories therefore augment, rather than merely re-run, diagnosis histories.
+Intermediate goals include avoiding line overload and preserving power to
+critical consumers \cite[pp.~447--450]{Struss2008ModelBasedProblemSolving}.
+
+\begin{hbdefinition}{def:p16-rem-target-input}{Native state assignments and persistent data}
+Let \(SD=LIB\cup STRUCTURE\) be the source's system description,
+and \(M_1,\ldots,M_k\), \(k\ge1\), remaining complete diagnostic
+mode assignments. A finite set \(C_R\) of reconfigurable components has
+nonempty finite state domains \(S_c\). A complete target assignment
+\(s\in\prod_{c\in C_R}S_c\) also denotes the conjunction of its
+chosen state atoms. Keep fault modes fixed for this target-selection task.
+For each hypothesis let \(O_{P,i}\) be the correctly determined observations
+which persist after the proposed type of intervention. Put
+\(W_i=SD\cup\{M_i\}\cup O_{P,i}\); goals \(G_i\) are finite
+conjunctions, or finite theories identified with their conjunctions.
+
+A common consistency target has \(W_i\cup\{s\}\cup G_i\) consistent
+for every \(i\). A common guaranteed target has \(W_i\cup\{s\}\)
+consistent and entailing \(G_i\) for every \(i\). ``For every model''
+does not mean that each model may choose a different target state.
+\end{hbdefinition}
+
+Opening a breaker changes consumer voltages, but not necessarily generator
+availability. Carrying old consumer voltage into the target can falsely
+reject restoration; discarding the inactive-generator observation can falsely
+accept it. Persistent data is a supplied/established frame condition, not
+whatever facts make the target consistent. A weak open-line model which
+leaves voltage free also permits a desired voltage without producing it.
+Source-connected supply must be modeled, not inferred from the goal sentence
+\cite[pp.~450--452]{Struss2008ModelBasedProblemSolving}.
+
+\begin{hbdefinition}{def:p16-rem-change}{Actual changes, common entailed states and cost}
+With known actual assignment \(s_A\), the change set is
+\(\Delta(s)=\{c:s(c)\ne s_A(c)\}\).
+With incomplete information, let \(s_{M,i}\) contain all component-state
+atoms entailed by \(SD\cup\{M_i\}\cup O\), and let
+\(s_{common}=\bigcap_i s_{M,i}\). Struss's generalized change measure
+is the set of target atoms \(s\setminus s_{common}\).
+It counts a specified target whose old state is unknown, even if one
+possible actual state already equals it. It is not the same as the actual
+number of physical changes. Inclusion minimality is different from weighted
+cost, irreversible-actuation risk or downtime.
+\end{hbdefinition}
+
+For example, if a valve's actual state may be OPEN or CLOSED but no state
+is entailed, an OPEN target appears in the generalized change set. In the
+OPEN possible world it needs no state change, while in the CLOSED world
+it does. A command which sets OPEN idempotently may handle both; an action
+whose precondition is CLOSED does not. Broken components are not controllable
+merely because their state names appear in \(C_R\).
+
+\begin{hbmethod}{def:p16-rem-target-search}{Context-tagged state-conflict search}
+Generate complete targets without repetition, using the stated cost/order
+criterion. Before composing a target, reject it if it extends a cached
+inconsistent partial state assignment from one of the current contexts
+\(W_i,G_i\). Otherwise check each composed target model for consistency.
+For guaranteed targets, also check whether a model satisfying the negation
+of the conjunctive goal exists. Cache supporting state conflicts when
+available. At least one assigned state in such a conflict must change
+in an acceptable target.
+Return feasible common targets, then remove those dominated under the chosen
+change criterion. Conflicts from old persistent data or a revised structure
+cannot be reused without re-establishing their meaning.
+Failure to entail a goal alone is not an inconsistent partial assignment:
+changing another state may remove its countermodel.
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p16-rem-target-search}{proved=annex:p16.rem-target-search}{Full finite target coverage and its oracle premise}
+Let \(N=\prod_c|S_c|\) and supply total exact consistency/consequence
+checks. The target construction terminates after at most \(kN\)
+consistency checks for common possibility, or \(2kN\) for the stated
+guarantee tests, and returns exactly its common targets before minimization.
+Sound context-matched partial-state conflicts remove no acceptable target.
+The minimal-change filter returns exactly its inclusion-minimal change sets.
+With finite nondecreasing cost on such sets, a cheapest feasible target has
+a minimal-change feasible target of no greater cost. This does not prove
+a plan exists, nor prove termination of unrestricted first-order inference.
+\end{hbtheorem}
+
+The source compares state-conflict search to fault identification, not to
+constraint suspension with unconstrained faults. Closing one switch can
+disconnect another load or cause an overload; every revised target must
+be recomposed. There is no universal OK-versus-faulty preference among
+operating states. Generator start-up and switch operations can have very
+different costs \cite[pp.~452--453]{Struss2008ModelBasedProblemSolving}.
+
+\section{Action histories require guards, effects and frames}
+\label{sec:p16-rem-execution}
+
+Struss's source criterion joins \(SD\), a mode history \(MH\), an
+action history \(AH\), observations \(OBSH\) and goals \(GOALSH\).
+Consistency permits a goal-satisfying history; explanatory achievement
+requires the action/history model to entail the goals. Applicability and
+consistency must also hold, so an impossible action cannot achieve every
+goal by vacuous entailment. The goal history may constrain intermediate
+intervals as well as the final one
+\cite[Definition~10.18, p.~449]{Struss2008ModelBasedProblemSolving}.
+
+\begin{hbdefinition}{def:p16-rem-execution-model}{A bounded component-execution realization}
+For each remaining physical/model hypothesis \(i\), construct a finite
+state set \(X_i\) from admissible component modes, operating states,
+persistent parameters and any bounded structural choices. Include all
+memory relevant to future behavior. A repair may change a current mode;
+the hypothesis tag does not freeze that mode after replacement.
+Let \(\mathcal X=\coprod_i\{i\}\times X_i\), with nonempty initial
+possibility set \(B_0\subseteq\mathcal X\) selected by the actual data.
+The distinct tags are retained even when two states have equal observables.
+
+For each allowed action \(a\), its relation \(T_a\subseteq\mathcal X^2\)
+must be generated from the library, preconditions, declared effects,
+frame conditions and the post-action structural/behavior constraints.
+It preserves the model tag. On every state where its guard holds it has
+at least one successor; otherwise it has none. Safety and terminal goals
+are subsets \(\mathcal S,\mathcal G\subseteq\mathcal X\).
+Between-action requirements must be encoded or proved separately: this
+finite realization does not silently establish continuous physical safety.
+\end{hbdefinition}
+
+For a healthy controllable switch, an idempotent SetSwitch action sets its
+operating state, preserves its mode and other unaffected switches, and
+recomputes voltages from the post-state network. Derived voltage is not
+framed as unchanged. Replacing a component can set its mode to normal but
+must use the appropriate replacement type/parameters; if structure changes,
+the post-state model is recomposed. Reset success or continued control of
+a faulty actuator is not inferred from the action's name.
+
+\begin{hbdefinition}{def:p16-rem-strong-plan}{All modeled executions, not one optimistic witness}
+For \(B\subseteq\mathcal X\), define
+\(Post(B,a)=\{y:\exists x\in B,(x,y)\in T_a\}\).
+Action \(a\) is strongly applicable when every \(x\in B\) has a
+successor. A strong plan uses strongly applicable actions, has
+\(B_0\subseteq\mathcal S\) and every successive \(Post\) set inside
+\(\mathcal S\), and ends with a nonempty set inside \(\mathcal G\).
+A weak history needs only one admissible goal-reaching execution.
+An action cannot silently discard inconvenient initial worlds by having
+no successor for them.
+\end{hbdefinition}
+
+\begin{hbmethod}{def:p16-rem-plan-search}{Complete finite strong open-loop planning}
+If \(B_0\not\subseteq\mathcal S\), there is no plan satisfying the
+stated safety requirement from its initial state. Otherwise start from
+\(B_0\). For each reached nonempty safe possibility set, generate
+each strongly applicable action whose complete successor set is safe.
+Store the successor set and an incoming action path, reusing a previously
+stored set. Breadth-first expansion returns the first set contained in
+the terminal goal, or exhausts the finite graph. When future rules or
+goal phases depend on past events, include that information in the state
+before sharing nodes; belief equality alone then means a sufficient state.
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p16-rem-plan-search}{proved=annex:p16.rem-plan-search}{Prefix coverage, soundness and finite strong-plan completeness}
+For the declared finite execution model, iterated \(Post\) gives exactly
+all states reachable after each action prefix from any initial hypothesis,
+with all modeled alternatives retained. If \(|\mathcal X|=n\) and
+there are \(m\) actions, the search has at most \(2^n-1\) nonempty
+nodes and \(m(2^n-1)\) candidate action expansions. It terminates,
+returns a strong plan exactly when one exists, and breadth-first search
+returns one with minimum action count. This is not minimum monetary cost
+or a completeness theorem for an unbounded structure-changing domain.
+If the initial actual world is represented, model applicability guarantees
+physical applicability, all actual action outcomes are represented by the
+relations, and decoded safety/goals imply physical safety/goals, the returned
+strong plan also gives that physical guarantee. These coverage and guard
+conditions are additional, not consequences of graph search.
+\end{hbtheorem}
+
+\section{The power-network cases: restoration, ordering and incomplete diagnosis}
+\label{sec:p16-rem-power}
+
+\begin{hbdefinition}{def:p16-rem-power-transfer}{A bounded realization of the source's intermediate-goal case}
+Two Boolean route switches \(x,y\) connect a critical consumer; exactly
+one may be closed without overload. They are healthy controllable switches
+fed by a known active source. In this idealized switching model,
+critical supply is \(x\lor y\). Each action sets exactly one switch,
+is instantaneous and successful, and frames the other. The initial state
+is \((1,0)\); the required target is \((0,1)\). Safety requires
+\(x\lor y\) and \(\neg(x\land y)\) at every execution state.
+
+For a second case add an isolated, adequately rated temporary backup switch
+\(b\). Supply becomes \(x\lor y\lor b\), while the main-route
+overload condition remains \(\neg(x\land y)\). Backup actuation requires
+known healthy available backup power. Initially and finally \(b=0\).
+These isolation/availability assumptions are part of the model, not consequences
+of calling a device a backup.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p16-rem-power-transfer}{proved=annex:p16.rem-power-transfer}{A feasible target with no safe plan, and the required temporary actions}
+Both two-switch endpoints are feasible and safe, but no
+sequence of the stated single-switch actions connects them safely.
+With the stated backup available, the sequence
+\[
+ b:=1,\quad x:=0,\quad y:=1,\quad b:=0
+\]
+is safe and reaches the target. Four actions are necessary in this model.
+The target changes only the two main states; the temporary backup actions
+are not visible in that target difference. Simultaneous double-switch
+actuation or relaxed continuity of supply would change the first conclusion.
+\end{hbtheorem}
+
+This spells out Struss's distinction between computing a goal state and
+planning its realization. Its assumptions are an explicit small instance,
+not an undocumented numerical model of an actual power grid
+\cite[p.~453]{Struss2008ModelBasedProblemSolving}.
+If backup availability is unknown, the EnableBackup guard fails in the
+unavailable possible world. It cannot be treated as a strong action by
+discarding that world. A measurement may reveal availability, but an
+unavailable branch still needs a different remedy, a relaxed goal, or a
+structural extension; it is not cured by diagnosis alone.
+
+The source also permits restoration before exact fault localization.
+For three isolated routes, suppose two diagnostic hypotheses respectively
+identify route A or route C as unavailable, while route B and its controllable
+isolators are healthy in both. With a known active generator, disconnecting
+A and C and connecting B supplies the consumer under either hypothesis.
+This conclusion follows by recomposing both models: neither target relies
+on a suspect route. It fails if the generator is inactive, B is also suspect,
+or an unmodeled bridge defeats the assumed isolation. The common remedy
+is not evidence that one of the initial diagnoses was uniquely true
+\cite[p.~452]{Struss2008ModelBasedProblemSolving}.
+
+\section{Tests and remedies in one observation-guided process}
+\label{sec:p16-rem-policy}
+
+When the next action depends on a test result, a single open-loop sequence
+is insufficient. Choose a finite observation map \(h:\mathcal X\to Z\).
+After action \(a\), its observable result \(z\) gives the nonempty
+branch \(B_{a,z}=Post(B,a)\cap h^{-1}(z)\).
+Only observed results license branching, not the hidden model tag.
+An intrusive test must use its actual transition/model revision before
+this filtering, rather than pretending it observes the unchanged device.
+
+\begin{hbmethod}{def:p16-rem-policy-search}{A finite strong observation-policy construction}
+Let \(Win_0\) be the nonempty safe belief sets contained in the goal.
+Repeatedly add a nonempty safe belief set \(B\) if an action is strongly applicable,
+has a safe complete successor set, and every nonempty observation branch
+belongs to the previous winning set. Store that action and its branches.
+Stop when no set is added. The insertion round gives a decreasing execution
+rank; at \(Win_0\), stop acting. Goal-phase or history information belongs
+in the state before this construction is used.
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p16-rem-policy-search}{proved=annex:p16.rem-policy-search}{Exactly the finite-depth strong policies at this scope}
+The construction terminates after at most \(2^{|\mathcal X|}-1\)
+strict addition rounds. Membership in \(Win_j\) is equivalent to having
+an observation-guided strong policy of depth at most \(j\). The final
+set therefore contains exactly the beliefs with finite-depth strong policies.
+All possible observation branches must succeed. Almost-sure termination,
+fairness-dependent cycles and arbitrary unbounded histories are not identified
+with this criterion.
+\end{hbtheorem}
+
+If an action may fail without changing state, that branch has to remain
+represented. Repeating the action can be plausible under a probabilistic
+or fairness premise, but a sequence of endlessly failing outcomes is still
+possible without it. The source's simplified instantaneous-successful-action
+definition and its referral to failure-aware repair plans must not be merged
+without those new premises \cite[pp.~447--449]{Struss2008ModelBasedProblemSolving}.
+
+\section{Located process therapy preserves amounts, not old derivatives}
+\label{sec:p16-rem-therapy}
+
+Struss's iron-water case adds an oxidizer object at a stated location,
+activating oxidation and producing iron oxide. The therapy introducibles
+are action triggers, not unexplained disturbance objects. Its consistency
+criterion joins DEC, the persistent situation, LIB and therapy goals.
+It does not supply a multistep intervention planner by itself
+\cite[Definition~10.21, pp.~453--454]{Struss2008ModelBasedProblemSolving}.
+
+\begin{hbdefinition}{def:p16-rem-therapy-model}{A complete-influence tank instance with separate before/after times}
+In this bounded constant-volume tank model, dissolved-iron concentration
+is \(q\), with positive current deviation above threshold \(H\).
+At an instantaneous intervention, \(q_1=q_0>H\). A retained introduction
+process contributes \(p\ge0\) to its derivative. A TankOxidizer trigger
+adds a correctly located oxidizer and an oxidation process contributing
+\(-k\), so \(q'_1=p-k\); these are all derivative influences.
+Supply \(Q=Q_0>0\) is retained. Rates independently range over nonempty
+closed intervals \([p_{min},p_{max}]\), \([k_{min},k_{max}]\).
+Both lower bounds are nonnegative and both upper bounds finite.
+The immediate therapy goals are \(q'_1<0\) and continued supply.
+The old positive derivative is indexed at time zero, not framed as
+\(q'_1=q'_0\). This is an idealized process-library instance, not a
+chemical dosing prescription.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p16-rem-therapy}{proved=annex:p16.rem-therapy}{The net effect, instantaneous limit and service-goal rejection}
+Negative post-intervention derivative is guaranteed exactly when
+\(k_{min}>p_{max}\), and possible exactly when \(k_{max}>p_{min}\).
+The concentration cannot already satisfy \(q_1\le H\) at that instant.
+A StopPump trigger setting \(Q_1=0\) violates continued supply even if
+it reduces iron delivery. An unmodeled additional positive influence can
+invalidate the derivative guarantee; a ReservoirOxidizer trigger does not
+inherit the tank's immediate removal term without its transport model.
+\end{hbtheorem}
+
+Retaining amounts but recomputing derivatives is the native persistence
+distinction. Keeping an old derivative observation as an unindexed post-state
+fact would contradict the proposed therapy artificially. Goals not currently
+violated still matter: stopping city supply is not a satisfactory way to
+remove an unwanted delivered substance. Minimal DEC is a static inclusion
+criterion; timing, duration, side effects, dose constraints and transport
+can require more model content and a sequence of interventions.
+
+\section{Configuration is a bounded design search, not fault localization}
+\label{sec:p16-rem-configuration}
+
+Struss's configuration object is \(CONF=STRUCTURE\cup PARS\),
+with \(DD\cup CONF\cup CONFGOALS\) consistent. DD can leave
+structure unspecified: the chosen components, connections or parameters
+are the result, not a fixed observed device whose modes must be diagnosed.
+Variant design starts from a predecessor with a bounded modification set;
+unrestricted innovative design can have an infinite structural search space
+\cite[Definition~10.22, pp.~455--456]{Struss2008ModelBasedProblemSolving}.
+
+The source's telephone-switching referral uses dependencies among types,
+parameters and viable structures, not necessarily full physical behavior
+models. The following finite capacity/power instance makes that distinction
+executable without pretending to reconstruct the entire cited industrial
+system or inventing its published parameters.
+
+\begin{hbdefinition}{def:p16-rem-card-configuration}{An explicit finite configuration catalog}
+Two identical slots each choose Empty, type A or type B. Type A supplies
+four capacity units and uses three power units; B supplies six and uses
+five. Let \(n_A,n_B\) count the cards. DD imposes the type/count semantics
+and \(n_A+n_B\le2\); goals require capacity at least ten and power
+at most eight:
+\[
+ 4n_A+6n_B\ge10,\qquad3n_A+5n_B\le8.
+\]
+There are no additional ordering or compatibility restrictions in this
+declared small catalog. These units are stipulated model data, not empirical
+specifications for a telephone product.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p16-rem-configuration}{proved=annex:p16.rem-configuration}{Every catalog configuration and its actual boundary}
+The only feasible count pair is \((n_A,n_B)=(1,1)\), and the two slot
+assignments AB and BA are the entire solution set. Removing either card
+violates the capacity goal. More generally, finite catalogs and bounded
+slot/connection/parameter domains give a finite candidate space; exhaustive
+candidate composition with a total exact DD/goal check returns exactly
+its configurations, and sound partial design-decision conflicts prune none.
+This conclusion does not extend to unbounded numbers of generated components
+or prove that consistent catalog constraints guarantee unmodeled functionality.
+\end{hbtheorem}
+
+If the predecessor uses two A cards, one type substitution suffices for
+the stated configuration goals. Implementing that substitution is a separate
+replacement/action task with its own compatibility, data-persistence and
+execution conditions. Design conflicts tell which prior choices cannot
+remain together; they do not invent a viable initial structural design.
+The chapter's VHDL hardware-debugging referral compares specified goals to
+a simulated hierarchy, making intended behavior explicit rather than
+assuming all implemented components imply it.
+
+\section{FMEA: fault/scenario effects, masking and detectability}
+\label{sec:p16-rem-fmea}
+
+For a fixed design, fault assignment \(M_F\) and scenario SCEN, use
+\(\Gamma_{F,SCEN}=SD\cup\{M_F\}\cup SCEN\). Require it to
+be consistent before classifying effects. A named unwanted effect E is
+guaranteed when \(\Gamma\entails E\), and possible when
+\(\Gamma\cup\{E\}\) is consistent. The functions/effects and
+scenarios are inputs to the analysis. Severity, probability and detectability
+are distinct further inputs to criticality; logical possibility supplies
+none of their numerical values \cite[p.~456]{Struss2008ModelBasedProblemSolving}.
+
+\begin{hbdefinition}{def:p16-rem-redundancy}{The source's masking issue in a fully specified two-route case}
+Two independent isolated supply routes are both commanded on and fed by
+a known active source. A normal route supplies \(q_i=1\), an open-fault
+route supplies \(q_i=0\), and total service is
+\(s=q_1\lor q_2\). Fault sets are subsets of the two routes.
+The sole coarse observable is \(s\); the unwanted effect is \(s=0\).
+No bridge fault, shared-source failure or cross-route interaction is in
+this small library. Adding them would require different models.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p16-rem-fmea}{proved=annex:p16.rem-fmea}{All effect cases and the masked fault distinction}
+For nonempty models, two exact consistency checks of \(\Gamma\cup\{E\}\)
+and \(\Gamma\cup\{\neg E\}\) distinguish guaranteed E, excluded E,
+and possible-but-not-guaranteed E. In the two-route case, no faults or
+either single open fault exclude loss of service; the double open fault
+guarantees it. Neither single fault is detectable from \(s\) alone under
+the given scenario because its sole value equals the normal model's value.
+Observing \((q_1,q_2)\) distinguishes all four assignments. Thus restricting
+FMEA to singles misses the masked double-fault effect.
+\end{hbtheorem}
+
+The single/double-fault restriction is a chosen analysis scope, not evidence
+that other disturbances are impossible. If the scenario does not activate
+a route, that route's open fault can also be unobservable. Conversely an
+additional bridge fault can defeat the isolation/OR model even though all
+its enumerated cases were analyzed exactly. A library's coverage of relevant
+faults is separate from complete enumeration of its selected cases.
+
+\section{Software debugging changes a design, not an old component mode}
+\label{sec:p16-rem-debugging}
+
+The source distinguishes a physical device assumed to have worked before
+failure from a program whose design may omit a needed computation or contain
+wrong structure. Existing code units can execute their specified semantics
+while violating the intended function. A well-designed-system assumption
+therefore cannot be used to hide the specification. Positive/negative tests
+or an abstract specification supply GOALS; language semantics supplies the
+connections between program fragments
+\cite[pp.~456--458]{Struss2008ModelBasedProblemSolving}.
+
+\begin{hbdefinition}{def:p16-rem-debug-model}{A missing computation and a bounded design revision}
+Over integer inputs, the initial program returns \(y=x\). Its intended
+specification is \(y=x+1\); the input-zero test expects one but the
+actual original output is zero. A finite repair catalog chooses
+\(\delta\in\{0,1\}\) and changes the program model to
+\(y=x+\delta\). This is a design choice, not an assertion that the
+original return instruction has an unforeseen physical failure.
+Old measured output belongs to the old version; it is not a persistent
+post-revision expected output.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p16-rem-debugging}{proved=annex:p16.rem-debugging}{Catalog adequacy, all inputs, and an overfitting counterexample}
+The original execution relation and intended output relation are inconsistent
+for every shared integer input. In the stated repair catalog, exactly
+\(\delta=1\) satisfies the input-zero expectation, and it entails the
+intended relation for every integer input. But the program
+\(f(0)=1\), \(f(x)=x\) for \(x\ne0\), also passes that one
+expectation and fails the specification at input one. Finite-test consistency
+is therefore not general design correctness, even when the chosen small
+catalog happens to have one adequate surviving revision.
+\end{hbtheorem}
+
+An unrestricted faulty-return hypothesis could permit the expected output
+without supplying the missing increment, its placement or correct behavior
+on other inputs. Code-component blame is not a complete repair construction.
+Structural bugs, omitted operations and arbitrary software fault models
+remain outside that finite catalog. The source's knowledge-base-debugging
+case similarly treats positive and negative examples as goals for a
+configuration theory, not observations which prove the theory well-designed.
+
+\begin{hbmethod}{def:p16-rem-consultation}{Completing the source's diagnosis-to-action workflow}
+State what functionality must be restored and which diagnoses matter to
+the action choice. Identify persistent data, controllable components and
+the actual revision type. Construct common target models, then separately
+compose guards/effects/frames and plan safe histories. Branch only on
+actual observations and retain unknown/failure outcomes. For process therapy,
+type the intervention location, new objects/processes, net influences and
+post-state goals. For configuration/FMEA/debugging, declare the catalog,
+scenario/fault set and intended-function specification rather than relying
+on physical-diagnosis normality. Keep model coverage, algorithm completeness,
+physical applicability and observed execution success distinct.
+\end{hbmethod}
+
+\index{remedy proposal}\index{reconfiguration!planning}\index{configuration}
+\index{failure-modes-and-effects analysis}\index{debugging!model based}

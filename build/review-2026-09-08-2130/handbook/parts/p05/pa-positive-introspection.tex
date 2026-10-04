@@ -1,0 +1,562 @@
+\section{Evidence constructors and positive introspection in \(\PA\)}
+\label{sec:p05-pa-positive-introspection}
+
+We now construct the proof of the original evidence-bearing sentence. The
+construction uses the selected formula
+\(\mathsf{Prf}^{19}_{\PA}(p,x)\), namely the literal
+\(\Gamma_{d_{19}}(p,x,\bar1)\), throughout.
+The bounded universal constructor of
+\cref{thm:p05-bounded-case-elimination} accepts an arbitrary formula as
+its matrix. This permits a bounded range of existentially witnessed trace
+steps to become one derivation of the original quantified trace condition.
+The complete verifications are in
+\cref{sec:annex-p05-pa-positive-introspection}.
+
+\begin{hbdefinition}{def:p05-positive-evidence-formation}{Literal positive formation and its evidence}
+A \emph{positive formation} here is a fixed marked arithmetic formula
+obtained from bounded formulas by conjunction, disjunction, unbounded
+existential quantification, and either marked bounded quantifier. The
+bounded leaves may themselves contain any of the bounded-formula
+connectives. At every node take the bounded-leaf clause first whenever
+that entire subformula is bounded. This is an external parsing convention
+for a fixed formula, with no numerical input ranging over formulas.
+
+For such a formula \(\theta\), define its bounded evidence formula
+\(\mathcal E_\theta(\bar x,z)\) by the following clauses. The tuple
+\(\bar x\) lists the free parameters apart from a displayed binder.
+The evidence variable and all auxiliary bound variables are chosen by
+the fresh-variable convention of \cref{thm:p05-pa-sigma-evidence}.
+Original formula binders and comparison binders are retained.
+\[
+\begin{aligned}
+ \mathcal E_\theta(\bar x,z)
+   &\defeq z=0\land\theta(\bar x)
+                         &&\text{if \(\theta\) is bounded},\\
+ \mathcal E_{\psi\land\chi}(\bar x,z)
+   &\defeq\exists u\leq z\,\exists v\leq z\,
+       (\mathsf P(u,v,z)\land\mathcal E_\psi(\bar x,u)
+                              \land\mathcal E_\chi(\bar x,v)),\\
+ \mathcal E_{\psi\lor\chi}(\bar x,z)
+   &\defeq\exists a<\bar2\,\exists v\leq z\,
+       [\mathsf P(a,v,z)\land
+        ((a=0\land\mathcal E_\psi(\bar x,v))
+          \lor(a=\bar1\land\mathcal E_\chi(\bar x,v)))],\\
+ \mathcal E_{\exists x_i\psi}(\bar x,z)
+   &\defeq\exists x_i\leq z\,\exists v\leq z\,
+        (\mathsf P(x_i,v,z)\land\mathcal E_\psi(\bar x,x_i,v)).
+\end{aligned}
+\]
+For \(\diamond\in\{<,\leq\}\), the two marked clauses are
+\[
+\begin{aligned}
+ \mathcal E_{\exists x_i\mathrel\diamond t\,\psi}(\bar x,z)
+  &\defeq\exists x_i\mathrel\diamond t(\bar x)\,
+       \exists v\leq z\,
+       (\mathsf P(x_i,v,z)\land\mathcal E_\psi(\bar x,x_i,v)),\\
+ \mathcal E_{\forall x_i\mathrel\diamond t\,\psi}(\bar x,z)
+  &\defeq\forall x_i\mathrel\diamond t(\bar x)\,
+       \exists v\leq z\,
+       (\mathsf B(z,x_i,v)\land\mathcal E_\psi(\bar x,x_i,v)).
+\end{aligned}
+\]
+The bounding term has no occurrence of its bound variable. The displayed
+\(\mathsf P\) and \(\mathsf B\) are the original formulas of
+\cref{lem:pairing-graph,lem:goedel-beta}. These clauses do not convert
+the original formula to another syntax tree. When it is already in the
+fixed marked negation normal form, \(\mathcal E_\theta\) is exactly
+the \(\mathsf{Ev}_\theta\) of
+\cref{thm:p05-pa-sigma-evidence}, with the same auxiliary choices.
+
+List each fixed formula's distinct free indices in increasing order.
+Numerical inputs \(\bar m\) replace them by \(\nu(m_j)\), in that
+order, using the selected substitution description. Denote the resulting
+code by \(\theta^\nu(\bar m)\). A child receives its parent tuple
+by the fixed free-index projections; a quantified child additionally
+receives the current numerical witness at index \(i\). An inner binder
+of the same name overrides that entry only within its own scope.
+Write
+\[
+       e_\theta(\bar m,z)\defeq
+                  b_{\mathcal E_\theta}(\bar m,z)
+\]
+for the zero-one description already specified for this fixed bounded
+evidence formula by \cref{def:p05-fixed-bounded-builders}. In this
+application, fixed tuple projections place the original parameter values
+and the final evidence value in the increasing free-index order of
+\(\mathcal E_\theta\); the fresh evidence index need not be last in
+that order. The displayed argument order of \(e_\theta\) itself is
+the original parameter tuple followed by its evidence value. Function
+applications always expand through their specified \(\Gamma\) graphs.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p05-evidence-projections}{Pair and beta evidence projections}
+Using the already fixed head and tail descriptions, put
+\[
+       \pi_0(z)\defeq h(Sz),\qquad \pi_1(z)\defeq t(Sz).
+\]
+These invert \(\mathsf P\), whose numerical pairing is one less than
+the positive cons code. They are not head and tail of \(z\) itself.
+Let \(b_{\mathsf B}(z,k,v)\) be the bounded Boolean description of the
+literal fixed beta formula, with its free inputs in the displayed order
+by the appropriate tuple projections. Define
+\[
+ \beta_*(z,k)\defeq
+       \text{the least }v<Sz\text{ with }b_{\mathsf B}(z,k,v)=1,
+       \quad\text{with failure value }0.
+\]
+This is exactly the bounded least-search fold of
+\cref{def:p05-checker-description-language}: start at \([0,0]\),
+record the first successful counter, and return its second field after
+\(Sz\) updates. The bound is fixed before the fold.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p05-evidence-projections}{proved=annex:p5.evidence-projections}{Internal evidence decoding and existence}
+\(\PA\) proves, with universal numerical closure,
+\[
+\begin{aligned}
+ &\mathsf P(\pi_0(z),\pi_1(z),z),\qquad
+                  \pi_0(z),\pi_1(z)\leq z,\\
+ &\mathsf P(u,v,z)\to(u=\pi_0(z)\land v=\pi_1(z)),\\
+ &\mathsf B(z,k,\beta_*(z,k)),\qquad \beta_*(z,k)\leq z,\\
+ &\mathsf B(z,k,v)\to v=\beta_*(z,k).
+\end{aligned}
+\]
+For every fixed positive formation \(\theta\), its evidence formula
+is bounded and \(\PA\) proves
+\[
+ \forall\bar x\,
+       (\theta(\bar x)\leftrightarrow
+                         \exists z\,\mathcal E_\theta(\bar x,z)),
+ \qquad
+ \forall\bar x\forall z\,
+       (e_\theta(\bar x,z)=1\leftrightarrow
+                              \mathcal E_\theta(\bar x,z)).
+\]
+These assertions include zero evidence, an empty parameter tuple, empty
+strict ranges, weak ranges with endpoint zero, and dependent inner witnesses.
+\end{hblemma}
+
+\begin{hbdefinition}{def:p05-positive-evidence-builders}{The exact proof description at each evidence clause}
+Use the raw templates of
+\cref{def:p05-builder-row-templates,def:p05-bounded-builder-conventions}
+and the safe-tree invariant of
+\cref{def:p05-bounded-builder-conventions}. We specify one raw description
+\(V_\theta(\bar m,z)\) for each fixed positive formation. Every clause
+below has the outer guard \(e_\theta(\bar m,z)=1\); its value is zero
+when the guard fails. On success it has the following value. The letters
+\(c,d\) in a connective clause denote the respective child numeral codes.
+
+For a bounded leaf use
+\[
+                  V_\theta(\bar m,z)=R_\theta^+(\bar m).
+\]
+For conjunction and disjunction put \(a=\pi_0(z),v=\pi_1(z)\), and use
+\[
+\begin{aligned}
+ V_{\psi\land\chi}(\bar m,z)
+   &=\mathsf{And}(V_\psi(\bar m,a),V_\chi(\bar m,v)),\\
+ V_{\psi\lor\chi}(\bar m,z)
+   &=\begin{cases}
+       \mathsf{OL}(V_\psi(\bar m,v),d),&a=0,\\
+       \mathsf{OR}(c,V_\chi(\bar m,v)),&a\ne0.
+     \end{cases}
+\end{aligned}
+\]
+Child tuple projections are the fixed projections declared above; the
+notation \(\bar m\) in each child suppresses only those projections.
+The second disjunction branch is used under the outer success guard,
+which will imply \(a=1\).
+
+For \(\theta=\exists x_i\psi\), put \(a=\pi_0(z),v=\pi_1(z)\).
+Let \(c\) be the literal matrix code after numeral substitution for its
+other free indices, leaving index \(i\) available. Use
+\[
+ V_\theta(\bar m,z)=
+          \mathsf{EI}(V_\psi(\bar m,a,v),i,c,\nu(a)).
+\]
+In \(V_\psi(\bar m,a,v)\), the tuple consists of the original
+parameters together with the witness \(a\); its final argument is the
+evidence value \(v\). An unused index receives no tuple position.
+
+For a marked existential or universal, put
+\[
+ u=t^\nu(\bar m),\quad b=t^\#(\bar m),\quad
+ N=N_\diamond(b),\quad G=G_\diamond(i,h,u),
+\]
+where \(h\) is the comparison binder of that original marked occurrence.
+The literal matrix code \(c\) again leaves only the possible free index
+\(i\). The safe bound-equality tree is \(R_t(\bar m)\).
+For each numerical \(a\) in the range, let \(L(\bar m,a)\) denote
+the raw positive literal tree for
+\(\mathsf{sub}(G,i,\nu(a))\). It is the raw record of the already
+specified fixed literal builder, decoded by the exact outer tags 19 and
+15, with failure value zero. Its supplied comparison binder is \(h\).
+
+For \(\theta=\exists x_i\mathrel\diamond t\,\psi\), set
+\(a=\pi_0(z),v=\pi_1(z)\), and return
+\[
+ \mathsf{EI}\bigl(
+   \mathsf{And}(L(\bar m,a),V_\psi(\bar m,a,v)),
+                                    i,G\mathbin{\&}c,\nu(a)\bigr).
+\]
+For \(\theta=\forall x_i\mathrel\diamond t\,\psi\), define the
+list description, with counter last,
+\[
+\begin{aligned}
+ Q_\theta(\bar m,z,0)&=0,\\
+ Q_\theta(\bar m,z,Sk)&=
+    \mathsf{cat}(Q_\theta(\bar m,z,k),
+                  [V_\psi(\bar m,k,\beta_*(z,k))]).
+\end{aligned}
+\]
+Return the actual quantified tree
+\[
+ V_\theta(\bar m,z)=
+       \mathsf U_\diamond
+          (c,i,h,u,b,R_t(\bar m),Q_\theta(\bar m,z,N)).
+\]
+This is the \(\mathsf U_\diamond\) of
+\cref{def:p05-bounded-case-elimination}; the matrix \(c\) need not
+be bounded. Its finite-case equality transports, range-exhaustion proof,
+original-guard discharge and universal introduction are part of this
+expression. The list alone is not its output proof.
+
+Finally let \(d_\theta\) be the finite description
+\[
+ d_\theta(\bar m,z)\defeq
+  I(e_\theta(\bar m,z),\mathsf{pack}(V_\theta(\bar m,z)),0).
+\]
+The same symbol denotes this specified formation tree when used as the
+subscript of \(\Gamma\). The extra outer guard preserves the zero
+failure value after packing. Clauses are expanded through the previous
+library in their displayed order; each numerical recursion calls only
+already fixed child descriptions and its preceding state. Parentheses
+and the original formula tree fix every conjunction association.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p05-positive-evidence-builders}{proved=annex:p5.positive-evidence-builders}{Evidence produces the literal sentence proof inside PA}
+For every fixed positive formation \(\theta\), \(\PA\) proves
+\[
+ \forall\bar m\forall z\,
+  (\mathcal E_\theta(\bar m,z)\to
+           \mathsf{Safe}(V_\theta(\bar m,z),\theta^\nu(\bar m))).
+\]
+It proves the sentence test for every such numeral-instance root, and hence
+\[
+ \forall\bar m\forall z\,
+ \bigl(\mathcal E_\theta(\bar m,z)\to
+   \exists p\,(\Gamma_{d_\theta}(\bar m,z,p)\land
+                   \mathsf{Prf}^{19}_{\PA}(p,\theta^\nu(\bar m)))\bigr).
+\]
+For a fixed closed positive formation \(\sigma\), the parameter tuple
+is empty and its root is the fixed original code \(\ulcorner\sigma\urcorner\).
+Consequently
+\[
+ \PA\derives\sigma\to
+             \mathsf{Prv}^{19}_{\PA}
+                         (\overline{\ulcorner\sigma\urcorner}).
+\]
+All these statements concern the same literal selected checker graph.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p05-signed-evidence-builders}{Original syntax from signed normal-form evidence}
+For a fixed formula \(\theta\), write \(\mathcal N^+\theta\)
+for its fixed marked negation normal form and \(\mathcal N^-\theta\)
+for the corresponding conversion of \(\neg\theta\). They have the
+following literal formation. At an equality or bottom use \(\theta\)
+and \(\neg\theta\); at a negation exchange the two child forms.
+At the three binary connectives use
+\[
+\begin{array}{c|c|c}
+ \theta&\mathcal N^+\theta&\mathcal N^-\theta\\\hline
+ \psi\land\chi&\mathcal N^+\psi\land\mathcal N^+\chi
+                         &\mathcal N^-\psi\lor\mathcal N^-\chi\\
+ \psi\lor\chi&\mathcal N^+\psi\lor\mathcal N^+\chi
+                         &\mathcal N^-\psi\land\mathcal N^-\chi\\
+ \psi\to\chi&\mathcal N^-\psi\lor\mathcal N^+\chi
+                         &\mathcal N^+\psi\land\mathcal N^-\chi.
+\end{array}
+\]
+At a quantifier the plus form retains the quantifier and uses the plus
+child; the minus form uses its dual and the minus child. A marked
+quantifier retains its original bound, binder and comparison binder
+in both forms. These rewrites move no formula across a binder, so
+they create no capture requiring a new bound name.
+
+Consider only a separately fixed pair \((\theta,\epsilon)\),
+\(\epsilon\in\{+,-\}\), for which
+\(\mathcal N^\epsilon\theta\) is a \(\Sigma^0_1\) positive
+formation. The sign is a metalinguistic choice, not a numerical input.
+Set
+\[
+ \mathcal E_\theta^\epsilon\defeq
+       \mathcal E_{\mathcal N^\epsilon\theta},\qquad
+ e_\theta^\epsilon\defeq b_{\mathcal E_\theta^\epsilon}.
+\]
+Use exactly the evidence occurrence and auxiliary choices produced by
+the original fixed normal-form evidence construction. Equal-looking
+subformulas at different occurrences retain their respective choices.
+Inputs are the original free-parameter tuple followed by evidence;
+the Boolean call uses its fixed free-index projections as before.
+
+Define \(\widehat V_\theta^\epsilon(\bar m,z)\) as follows.
+Every clause has outer success guard \(e_\theta^\epsilon(\bar m,z)=1\)
+and value zero when it fails. Take the bounded-original-formula clause
+first. On that clause use \(R_\theta^+\) for sign plus and
+\(R_\theta^-\) for sign minus. In all remaining clauses put
+\(a=\pi_0(z),v=\pi_1(z)\), and let \(c,d\) be the original
+child numeral codes. A child call below always uses its own required
+sign and its fixed parameter projections.
+
+At \(\theta=\neg\psi\), the plus tree is
+\(\widehat V_\psi^-(\bar m,z)\), and the minus tree is
+\[
+ \mathsf{NI}\bigl(
+   \mathsf B(\widehat V_\psi^+(\bar m,z),
+                         \mathsf L(\mathsf{Neg}(c),1)),
+                                      \mathsf{Neg}(c),0\bigr).
+\]
+For positive conjunction use
+\(\mathsf{And}(\widehat V_\psi^+(\bar m,a),
+\widehat V_\chi^+(\bar m,v))\). For negative conjunction put
+\(H=\mathsf L(c\mathbin{\&}d,1)\), and use
+\[
+ \begin{cases}
+  \mathsf{NI}(\mathsf B(\mathsf P_0(H),
+        \widehat V_\psi^-(\bar m,v)),c\mathbin{\&}d,0),&a=0,\\
+  \mathsf{NI}(\mathsf B(\mathsf P_1(H),
+        \widehat V_\chi^-(\bar m,v)),c\mathbin{\&}d,0),&a\ne0.
+ \end{cases}
+\]
+Here the evidence pair is a disjunction tag and payload. For positive
+disjunction use
+\(\mathsf{OL}(\widehat V_\psi^+(\bar m,v),d)\) if \(a=0\),
+and \(\mathsf{OR}(c,\widehat V_\chi^+(\bar m,v))\) otherwise.
+For negative disjunction its evidence pair instead contains the two
+child evidence values. Put
+\[
+ K_\psi=\mathsf B(\mathsf L(c,1),\widehat V_\psi^-(\bar m,a)),\qquad
+ K_\chi=\mathsf B(\mathsf L(d,1),\widehat V_\chi^-(\bar m,v)),
+\]
+and return
+\[
+ \mathsf{NI}(\mathsf{OE}(\mathsf L(c\mathbin{|}d,1),
+                            K_\psi,K_\chi,0,0),c\mathbin{|}d,0).
+\]
+For positive implication put \(H=\mathsf L(c,1)\), and use
+\[
+ \begin{cases}
+  \mathsf{II}(\mathsf{EF}(\mathsf B(H,
+                  \widehat V_\psi^-(\bar m,v)),d),c,0),&a=0,\\
+  \mathsf{II}(\mathsf{Keep}(H,
+                  \widehat V_\chi^+(\bar m,v)),c,0),&a\ne0.
+ \end{cases}
+\]
+For negative implication return
+\[
+ \mathsf{NI}\bigl(
+   \mathsf B(\mathsf{MP}^{\rm row}(\widehat V_\psi^+(\bar m,a),
+                       \mathsf L(c\Rightarrow d,1)),
+                  \widehat V_\chi^-(\bar m,v)),c\Rightarrow d,0\bigr).
+\]
+Thus the positive implication consumes evidence for the disjunction
+\(\mathcal N^-\psi\lor\mathcal N^+\chi\), while its output
+still has the original implication constructor.
+
+For an unbounded existential with sign plus, let \(c\) be its original
+matrix after substituting its other free parameters. Return
+\[
+     \mathsf{EI}(\widehat V_\psi^+(\bar m,a,v),i,c,\nu(a)).
+\]
+For an unbounded universal with sign minus, put
+\(A=\mathsf{All}(i,c)\) and return
+\[
+ \mathsf{NI}\bigl(
+  \mathsf B(\mathsf{FE}(\mathsf L(A,1),\nu(a)),
+                     \widehat V_\psi^-(\bar m,a,v)),A,0\bigr).
+\]
+These are the only unbounded-quantifier cases on the stated domain:
+the other two signs have an unbounded universal in their normal forms.
+
+For the marked cases retain \(u,b,N,G,c,i,h,R_t,L\) from
+\cref{def:p05-positive-evidence-builders}. Positive marked existential
+uses
+\[
+ \mathsf{EI}\bigl(\mathsf{And}(L(\bar m,a),
+                 \widehat V_\psi^+(\bar m,a,v)),
+                                      i,G\mathbin{\&}c,\nu(a)\bigr).
+\]
+Negative marked universal, with \(A=\mathsf{All}(i,G\Rightarrow c)\),
+uses
+\[
+ \mathsf{NI}\bigl(\mathsf B(
+  \mathsf{MP}^{\rm row}(L(\bar m,a),
+                    \mathsf{FE}(\mathsf L(A,1),\nu(a))),
+                    \widehat V_\psi^-(\bar m,a,v)),A,0\bigr).
+\]
+For each of the other two cases form a separate list recursion
+\[
+\begin{aligned}
+ \widehat Q_\theta^\epsilon(\bar m,z,0)&=0,\\
+ \widehat Q_\theta^\epsilon(\bar m,z,Sk)&=
+  \mathsf{cat}(\widehat Q_\theta^\epsilon(\bar m,z,k),
+               [\widehat V_\psi^\epsilon(\bar m,k,\beta_*(z,k))]).
+\end{aligned}
+\]
+Positive marked universal returns
+\[
+ \mathsf U_\diamond(c,i,h,u,b,R_t(\bar m),
+                               \widehat Q_\theta^+(\bar m,z,N)).
+\]
+For negative marked existential put
+\[
+\begin{aligned}
+ U&=\mathsf U_\diamond(\mathsf{Neg}(c),i,h,u,b,R_t(\bar m),
+                               \widehat Q_\theta^-(\bar m,z,N)),\\
+ E&=\mathsf{Ex}(i,G\mathbin{\&}c),\qquad
+ y=1+\max(2,m(E)),\qquad
+ K=\mathsf L(\mathsf{sub}(G\mathbin{\&}c,i,v_y),2).
+\end{aligned}
+\]
+Return
+\[
+ \mathsf{NI}\left(\mathsf{EE}\left(\mathsf L(E,1),
+  \mathsf B\left(\mathsf P_1(K),
+      \mathsf{MP}^{\rm row}(\mathsf P_0(K),\mathsf{FE}(U,v_y))\right),
+                                     i,G\mathbin{\&}c,y,1\right),E,0\right).
+\]
+The two displayed copies of \(K\) are separate leaves. Finally define
+\[
+ \widehat d_\theta^\epsilon(\bar m,z)\defeq
+  I(e_\theta^\epsilon(\bar m,z),
+                         \mathsf{pack}(\widehat V_\theta^\epsilon(\bar m,z)),0).
+\]
+All clauses insert only previously fixed signed-child descriptions.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p05-original-sigma-evidence}{proved=annex:p5.original-sigma-evidence}{Proof construction for every original fixed Sigma-one sentence}
+For each fixed qualifying pair \((\theta,\epsilon)\), \(\PA\)
+proves, with universal closure in \(\bar m,z\),
+\[
+\begin{aligned}
+ \mathcal E_\theta^+(\bar m,z)&\to
+  \mathsf{Safe}(\widehat V_\theta^+(\bar m,z),\theta^\nu(\bar m)),\\
+ \mathcal E_\theta^-(\bar m,z)&\to
+  \mathsf{Safe}(\widehat V_\theta^-(\bar m,z),
+                                      \mathsf{Neg}(\theta^\nu(\bar m))),
+\end{aligned}
+\]
+where only the line for that pair's sign is asserted. Each root is a
+sentence. In particular, for every fixed closed \(\Sigma^0_1\) sentence
+\(\sigma\) in its original syntax, \(\widehat d_\sigma^+\) is a
+specified unary description and \(\PA\) proves
+\[
+ \forall z\,\bigl(\mathsf{Ev}_\sigma(z)\to
+    \exists p\,(\Gamma_{\widehat d_\sigma^+}(z,p)\land
+       \mathsf{Prf}^{19}_{\PA}(p,\overline{\ulcorner\sigma\urcorner}))\bigr).
+\]
+Consequently \(\PA\derives\sigma\to
+\mathsf{Prv}^{19}_{\PA}(\overline{\ulcorner\sigma\urcorner})\).
+The signed construction converts the evidence for the fixed normal form
+to the original formula code at every formation step; its proof record
+does not end at the normal-form code.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p05-literal-introspection-instance}{The fixed original provability sentence and its builder}
+Let \(P_{19}\) be the literal formula code of
+\(\mathsf{Prv}^{19}_{\PA}(x)\) in
+\cref{def:p05-selected-direct-pa-graph}, with its chosen free variable
+index \(j\). Write its outer existential binder as \(i\); thus
+\[
+ P_{19}=\mathsf{Ex}(i,g_{19}),\qquad
+ g_{19}=\ulcorner\Gamma_{d_{19}}(x_i,x_j,\bar1)\urcorner.
+\]
+These codes refer to the already chosen expanded graph, with its existing
+bound indices. They do not call a fresh graph expansion after a numerical
+input has been supplied.
+
+For each fixed arithmetic sentence \(\varphi\), put
+\[
+\begin{aligned}
+ n_\varphi&\defeq\ulcorner\varphi\urcorner,\\
+ g_\varphi&\defeq\mathsf{sub}(g_{19},j,\nu(n_\varphi)),\\
+ c_\varphi&\defeq\mathsf{sub}(P_{19},j,\nu(n_\varphi))
+                         =\mathsf{Ex}(i,g_\varphi),\\
+ \sigma_\varphi&\defeq
+           \mathsf{Prv}^{19}_{\PA}(\overline{n_\varphi}).
+\end{aligned}
+\]
+Thus \(c_\varphi=\ulcorner\sigma_\varphi\urcorner\). Let
+\(\gamma_\varphi(x_i)\) be the formula with literal code
+\(g_\varphi\). Its evidence and proof descriptions are the instances
+of the preceding definitions for that fixed formula.
+
+Define \(d^3_\varphi\) by the outer existential clause, explicitly
+\[
+ d^3_\varphi(z)\defeq
+ I\left(e_{\sigma_\varphi}(z),
+   \mathsf{pack}\left(
+    \mathsf{EI}\bigl(
+      V_{\gamma_\varphi}(\pi_0(z),\pi_1(z)),
+                              i,g_\varphi,\nu(\pi_0(z))\bigr)\right),0\right).
+\]
+This is one separately fixed unary description for each
+\(\varphi\). In particular its output root is \(c_\varphi\),
+not \(n_\varphi\), a normalized substitute for \(c_\varphi\),
+or a formula with newly chosen graph binders.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p05-literal-graph-evidence}{proved=annex:p5.literal-graph-evidence}{Every original graph and trace clause is covered}
+Every \(\Gamma_d\) in the specified graph construction, and every
+numeral instance of it, has a positive formation already in the fixed
+marked negation normal form. This holds for the actual fully expanded
+\(\Gamma_{d_{19}}\). Its evidence \(\mathcal E\) is therefore
+the existing \(\mathsf{Ev}\), with the original fresh choices.
+
+For each fixed arithmetic sentence \(\varphi\), \(\PA\) proves
+\[
+ \forall z\,\bigl(\mathsf{Ev}_{\sigma_\varphi}(z)\to
+      \exists p\,(\Gamma_{d^3_\varphi}(z,p)\land
+          \mathsf{Prf}^{19}_{\PA}(p,\overline{c_\varphi}))\bigr).
+\]
+The proof constructs the initial trace entry, every bounded step with its
+two existential entry witnesses, the final entry and the outer trace
+existential, using their original codes. A recursion counter zero and a
+composition through a nullary function are included.
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p05-direct-pa-d3}{proved=annex:p5.direct-pa-d3}{D3 for the literal selected PA predicate}
+For every fixed arithmetic sentence \(\varphi\),
+\[
+ \PA\derives
+  \mathsf{Prv}^{19}_{\PA}(\overline{\ulcorner\varphi\urcorner})
+   \ \to\
+  \mathsf{Prv}^{19}_{\PA}
+       \left(\overline{\ulcorner
+          \mathsf{Prv}^{19}_{\PA}
+                    (\overline{\ulcorner\varphi\urcorner})
+                         \urcorner}\right).
+\]
+Together with \cref{thm:p05-direct-pa-internal-mp}, this gives D1,
+D2 and D3 for the same selected formula
+\(\exists p\,\Gamma_{d_{19}}(p,x,\bar1)\).
+No consistency assumption on \(\PA\) is needed for these derivability
+conditions. The theorem is a scheme indexed by fixed sentences; it asserts
+no total evaluation function for varying primitive recursive descriptions.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p05-positive-evidence-zero}{A zero trace range with an original existential root}
+Take a fixed formula
+\(\tau=\forall x_i<0\,\exists x_k(x_k=x_k)\), with distinct
+indices and with its original comparison binder retained. Evidence zero
+satisfies its universal evidence clause, because the strict range is empty.
+The constructor nevertheless builds the range-exhaustion implication to
+bottom, the zero-stage case tree with target
+\(\exists x_k(x_k=x_k)\), and the actual original-guard implication
+and universal introductions. Its root is literally
+\(\ulcorner\tau\urcorner\). No existential witness for that matrix
+is selected in the empty fold. Replacing the bound by a weak zero bound
+instead creates the one case at zero and requires its actual matrix
+evidence. This distinguishes the two zero-bound constructions within the
+same selected checker.
+\end{hbexample}

@@ -1,0 +1,1402 @@
+%% toc: P2 21 21.4,21.5,21.6,21.7
+\section{Proofs for the decision procedures of the decidable fragments}
+\label{sec:annex-p02-w02-p02-035-decision-procedures}
+
+Throughout, structures have nonempty domains, a formula is evaluated under an
+assignment of elements to its free variables, and a quantifier-free formula is
+true under an assignment exactly when the propositional valuation of its
+atoms induced by the assignment makes it true.  Two counting facts are used
+repeatedly.  First, a code of length \(s\) over a fixed alphabet with \(b\geq2\)
+letters contains \(O(s/\log s)\) distinct symbol names: at most \(b^{l+1}\)
+names have length at most \(l\), so among \(r\) distinct names at least \(r/2\)
+have length at least \(\log_b(r/2)-1\), whence
+\(s\geq(r/2)(\log_b(r/2)-1)\).  Second, a nondeterministic machine that guesses
+a string of length \(L\) and then checks it in time \(T\) runs in time
+\(O(L+T)\).
+
+\begin{annexitem}{annex:p02-w02-p02-035-domino-hard}{thm:p02-w02-p02-035-domino-hard}{The bounded torus domino problem is NEXPTIME-hard}
+\begin{proof}
+Let \(L\in\mathsf{NEXPTIME}\), say \(L\in\mathsf{NTIME}(2^{n^k})\) via a
+multitape machine.  By premise (i) of
+\cref{def:p02-w02-p02-035-domino-import}, \(L\) is accepted by a one-tape
+machine within time \(C2^{2n^k}\) for some constant \(C\).  Choose \(j\) with
+\(\log_2C+2n^k\leq(n+2)^j\) for all \(n\geq0\), and put
+\(T(n)\defeq2^{(n+2)^j}\).  Then \(L\) is accepted by a one-tape machine in
+time \(T(n)\), hence in space \(T(n)+1\), and \(T(n)\geq2n\).  By premise
+(ii) there is a simple machine \(M\) accepting \(L\) within these bounds.
+
+\emph{Padding.}  Let \(\natural\) be a symbol not in the input alphabet
+\(\Sigma\) of \(M\).  For a constant \(d\geq1\), fixed below, put
+\(N(n)\defeq(n+2)^j+d\) and
+\[
+ L^\natural\defeq\{x\natural^{N(\lvert x\rvert)-\lvert x\rvert}:x\in L\}.
+\]
+A one-tape machine \(M^\natural\) accepts \(L^\natural\) as follows: it checks
+deterministically that its input \(u\) has the form
+\(x\natural^{N(\lvert x\rvert)-\lvert x\rvert}\), erases the padding, returns
+the head to cell \(0\) and runs \(M\) on \(x\).  There is a nondecreasing
+polynomial \(q\) with \(q(l)\geq2l\) such that the first three phases take
+time and space at most \(q(\lvert u\rvert)\).  So \(M^\natural\) accepts each
+\(u\in L^\natural\), \(\lvert u\rvert=N\), \(\lvert x\rvert=n\), within time
+\(t_0\leq q(N)+T(n)\) and space \(s_0\leq t_0+1\); and it accepts no
+\(u\notin L^\natural\).  By premise (ii) we may take \(M^\natural\) simple
+with the same bounds.
+
+Choose \(d\geq1\) such that \(2^{d-1}\geq q(2d)+3\) and \(2^{l}\geq q(2l)+3\)
+for every \(l\geq d\); such \(d\) exists because \(2^l\) eventually exceeds
+every polynomial in \(l\).  Write \(t=(n+2)^j\geq1\), so \(N=t+d\).  If
+\(t\leq d\), then \((2^d-1)2^t\geq2^{d-1}\geq q(2d)+3\geq q(t+d)+3\).  If
+\(t\geq d\), then \((2^d-1)2^t\geq2^t\geq q(2t)+3\geq q(t+d)+3\).  In both
+cases
+\[
+ 2^N=2^t+(2^d-1)2^t\geq T(n)+q(N)+3\geq t_0+3\geq s_0+2 .
+\]
+
+\emph{Tiling.}  Premise (iii) applied to \(M^\natural\) gives a domino system
+\(\mathcal D\) and a linear-time map \(u\mapsto w\) with
+\(\lvert w\rvert=\lvert u\rvert\).  Let
+\(g(x)\) be the word \(w\) obtained from
+\(u=x\natural^{N(\lvert x\rvert)-\lvert x\rvert}\); \(g\) is computable in
+polynomial time and \(\lvert g(x)\rvert=N\).  If \(x\in L\), then
+\(M^\natural\) accepts \(u\) within time \(t_0\) and space \(s_0\), and
+\(2^N\geq t_0+2\), \(2^N\geq s_0+2\); so \(\mathcal D\) tiles
+\(U(2^N,2^N)=Z(2^N)\) with initial condition \(w\), that is,
+\(w\in\mathrm{DOMINO}(\mathcal D,2^n)\).  If \(x\notin L\), then \(u\notin
+L^\natural\), \(M^\natural\) does not accept \(u\), and \(\mathcal D\) tiles no
+\(U(s,t)\) with \(s,t\geq2\) with initial condition \(w\); in particular
+\(w\notin\mathrm{DOMINO}(\mathcal D,2^n)\), since \(2^N\geq2\).
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p02-w02-p02-035-monadic-small-model}{thm:p02-w02-p02-035-monadic-small-model}{Colour collapse and the \(2^m\) bound}
+\begin{proof}
+The map \(c:A\to A_{\mathrm{col}}\) is surjective by the definition of
+\(A_{\mathrm{col}}\), and \(\mathfrak A\entails P_ia\) iff \(c(a)_i=1\) iff
+\(\mathfrak A_{\mathrm{col}}\entails P_i\,c(a)\).  For an assignment \(\sigma\)
+into \(A\) write \(c\circ\sigma\) for the assignment into
+\(A_{\mathrm{col}}\).  We prove by induction on \(\varphi\) that
+\(\mathfrak A\entails\varphi[\sigma]\) iff
+\(\mathfrak A_{\mathrm{col}}\entails\varphi[c\circ\sigma]\) for every
+\(\sigma\).
+
+Atomic formulas are \(P_ix\), since there is no equality and no symbol of
+other arity; the claim is the displayed equivalence with \(a=\sigma(x)\).
+Negation and conjunction preserve the claim because both sides use the same
+truth tables.  Let \(\varphi=\exists y\chi\).  If
+\(\mathfrak A\entails\chi[\sigma[y\mapsto a]]\), then by induction
+\(\mathfrak A_{\mathrm{col}}\entails\chi[(c\circ\sigma)[y\mapsto c(a)]]\),
+because \(c\circ(\sigma[y\mapsto a])=(c\circ\sigma)[y\mapsto c(a)]\).
+Conversely, if \(\mathfrak A_{\mathrm{col}}\entails
+\chi[(c\circ\sigma)[y\mapsto e]]\) for some colour \(e\), surjectivity gives
+\(a\) with \(c(a)=e\), and the same identity with induction gives
+\(\mathfrak A\entails\chi[\sigma[y\mapsto a]]\).  The universal quantifier is
+\(\neg\exists\neg\).
+
+For a sentence \(\psi\) the claim gives \(\mathfrak A\entails\psi\) iff
+\(\mathfrak A_{\mathrm{col}}\entails\psi\).  The universe of
+\(\mathfrak A_{\mathrm{col}}\) is a nonempty subset of \(\{0,1\}^m\), so it has
+at most \(2^m\) elements.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p02-w02-p02-035-monadic-procedure}{thm:p02-w02-p02-035-monadic-procedure}{Correctness and an exponential-time bound}
+\begin{proof}
+\emph{Correctness.}  If Step 3 succeeds for some \(S\), then
+\(\mathfrak B_S\) is a model and \(\psi\) is satisfiable.  If
+\(\mathfrak A\entails\psi\), let \(S\) be the set of colours realized in
+\(\mathfrak A\).  Then \(\mathfrak B_S=\mathfrak A_{\mathrm{col}}\), and
+\cref{thm:p02-w02-p02-035-monadic-small-model} gives
+\(\mathfrak B_S\entails\psi\).
+
+\emph{Time.}  Each predicate letter occurs in \(\psi\), so \(m\leq n\).  The
+guessed set \(S\) is written as at most \(2^m\) words of length \(m\), at most
+\(n2^n\) symbols.  Evaluate by the recursive truth definition, with an
+assignment stored as a list of colours.  Let \(N=\lvert S\rvert\leq2^n\).  For
+a subformula \(\chi\) of length \(l\) and quantifier depth \(e\), the number
+of recursive calls made in evaluating \(\chi\) under one assignment is at most
+\(lN^{e}\): this holds for atoms; for a Boolean combination it follows by
+adding the bounds for the parts; and for \(\exists y\chi'\) there are \(N\)
+evaluations of \(\chi'\), giving at most \(1+N(l-1)N^{e-1}\leq lN^e\).  Since
+\(l,e\leq n\), there are at most \(n2^{n^2}\) calls.  Each call reads an
+assignment of at most \(n\) colours and looks up colours in \(S\), which takes
+time polynomial in \(n2^n\).  The total time is \(2^{O(n^2)}\), which lies in
+\(\mathsf{NTIME}(2^{n^3})\subseteq\mathsf{NEXPTIME}\) for large \(n\).
+Validity of \(\psi\) is non-satisfiability of \(\neg\psi\), so it is in
+\(\mathsf{coNEXPTIME}\).
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p02-w02-p02-035-monadic-hard}{thm:p02-w02-p02-035-monadic-hard}{Monadic satisfiability is NEXPTIME-complete}
+\begin{proof}
+Write \(\sigma\) for the successor on \(Z(2^n)\) in row-major order:
+\(\sigma(x,y)=(x+1,y)\) if \(x<2^n-1\) and \(\sigma(2^n-1,y)=(0,y+1)\), with
+\(y+1\) taken modulo \(2^n\).  It adds \(1\) modulo \(2^{2n}\) to the number
+\(x+2^ny\), so it is a cyclic permutation of all \(2^{2n}\) points.  Binary
+increment modulo \(2^n\) flips bit \(i\) exactly when all lower bits are \(1\):
+if \(x'=x+1\bmod2^n\), then \(x'_i=x_i\oplus\bigwedge_{j<i}x_j\).
+
+\emph{From a tiling to a model.}  Let \(\tau\) witness
+\(w\in\mathrm{DOMINO}(\mathcal D,2^n)\).  Interpret the predicates on
+\(Z(2^n)\) as intended, with \(N_i=\{(i,0)\}\) for \(i\leq n\) (these points
+exist and are distinct since \(n<2^n\)), and \(P_d=\tau^{-1}(d)\).  For each
+\(z\) take \(v=\sigma(z)\).  The \(X^{*}\) and \(Y^{*}\) clauses of \(\alpha\)
+hold by the definition of \(X_i^{*},Y_i^{*}\).  The \(X\)-clause is the
+increment rule for \(x\).  The \(Y\)-clause says that \(y\) is incremented
+exactly when \(X_{n-1}z\land X_{n-1}^{*}z\), that is, when all bits of \(x\)
+are \(1\), which is the definition of \(\sigma\).  \(N_0z\) holds iff all bits
+are \(0\).  For \(i<n\), \(z=(i,0)\) iff \(\sigma(z)=(i+1,0)\), because
+\(\sigma\) is injective and \(\sigma(i,0)=(i+1,0)\) as \(i<2^n-1\).  So
+\(\forall z\exists v\alpha\) holds.  For \(\beta\): exactly one \(P_dz\) holds
+since \(\tau\) is a function.  By the increment rule, \(H(z,z')\) holds iff
+\(z'=(x+1\bmod2^n,y)\) and \(V(z,z')\) iff \(z'=(x,y+1\bmod2^n)\); the tiling
+conditions give the two implications.  \(N_iz\) means \(z=(i,0)\), where
+\(\tau(i,0)=w_i\).
+
+\emph{From a model to a tiling.}  Let \(\mathfrak A\entails\psi_w\).  For
+\(a\in A\) let \(f(a)=(x(a),y(a))\) be the point whose bits are the truth
+values of \(X_0a,\ldots,X_{n-1}a\) and \(Y_0a,\ldots,Y_{n-1}a\).  By the first
+three clauses of \(\alpha\), instantiated at \(z=a\), induction on \(i\) shows
+that \(X_i^{*}a\) holds iff \(X_ja\) for all \(j<i\), and likewise for
+\(Y^{*}\).  Then the next two clauses show that every witness \(v\) for
+\(z=a\) satisfies \(f(v)=\sigma(f(a))\), and the definitions of \(H\) and
+\(V\) show that \(H(a,b)\) holds iff \(f(b)\) is the right neighbour of
+\(f(a)\), and \(V(a,b)\) iff \(f(b)\) is the upper neighbour.
+
+Starting from any element and repeatedly taking witnesses, \(f\) runs
+through the whole \(\sigma\)-orbit, which is \(Z(2^n)\); so \(f\) is
+surjective.  Choose \(b_0\) with \(f(b_0)=(0,0)\); then \(N_0b_0\) holds.
+Given \(b_i\) with \(i<n\), \(f(b_i)=(i,0)\) and \(N_ib_i\), let \(b_{i+1}\) be
+a witness for \(z=b_i\); then \(f(b_{i+1})=(i+1,0)\), and the last clause of
+\(\alpha\) gives \(N_{i+1}b_{i+1}\).  For each point \(z\) choose
+\(a_z\in f^{-1}(z)\), taking \(a_{(i,0)}=b_i\) for \(i<n\), and let \(\tau(z)\)
+be the unique \(d\) with \(P_da_z\).  For each \(z\), instantiating
+\(\forall z\forall z'\beta\) at \((a_z,a_{z'})\) with \(z'\) the right
+neighbour gives \(H(a_z,a_{z'})\) and so \((\tau(z),\tau(z'))\in H\); the
+vertical case is the same.  Finally \(N_ib_i\) and the last clause of
+\(\beta\) give \(\tau(i,0)=w_i\).  So \(\mathcal D\) tiles \(Z(2^n)\) with
+initial condition \(w\).
+
+\emph{Size.}  \(\psi_w\) has \(O(n)\) clauses of bounded shape in
+\(\alpha\), \(H\) and \(V\), \(O(\lvert D\rvert^2)\) literals in the
+exactly-one clause, and \(n\) initial clauses; each literal carries an index
+of \(O(\log n)\) symbols.  So \(\lvert\psi_w\rvert=O(n\log n)\), and \(\psi_w\)
+is produced from \(w\) by a polynomial-time loop.
+
+\emph{Completeness.}  Membership is
+\cref{thm:p02-w02-p02-035-monadic-procedure}.  For \(L\in\mathsf{NEXPTIME}\),
+\cref{thm:p02-w02-p02-035-domino-hard} gives \(\mathcal D\) and \(g\); then
+\(x\mapsto\psi_{g(x)}\) reduces \(L\) to monadic satisfiability in polynomial
+time.  If \(L\in\mathsf{coNEXPTIME}\), the same construction for the
+complement gives \(x\mapsto\psi_{g(x)}\) with \(x\in L\) iff \(\psi_{g(x)}\) is
+unsatisfiable, iff \(\neg\psi_{g(x)}\) is valid.  Renaming \(z\) to \(x\) and
+both \(v\) and \(z'\) to \(y\) puts \(\psi_w\) in the stated form; the renaming
+does not change truth, because \(v\) and \(z'\) occur in different conjuncts.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p02-w02-p02-035-scott}{thm:p02-w02-p02-035-scott}{Scott reduction}
+\begin{proof}
+\emph{Stage 1: arity at most two.}  Let \(\varphi\) have size \(s\) and
+variables \(x,y\).  For each atomic subformula \(R(v_1,\ldots,v_k)\) with
+\(k>2\), each \(v_l\in\{x,y\}\), introduce a symbol \(R_{(v_1\ldots v_k)}\),
+named by the atom's own string with a marker so that its name is no longer
+than a constant times the atom.  It is binary if both variables occur among
+the \(v_l\), and unary otherwise; replace \(R(\bar v)\) by
+\(R_{(\bar v)}(x,y)\), \(R_{(\bar v)}(x)\) or \(R_{(\bar v)}(y)\) accordingly.
+Call the result \(\varphi^\dagger\).  Append: (a) for each such atom
+\(R(\bar v)\) containing both variables, if the atom \(R(\bar w)\) obtained by
+exchanging \(x\) and \(y\) also occurs in \(\varphi\), the sentence
+\(\forall x\forall y(R_{(\bar v)}(x,y)\leftrightarrow R_{(\bar w)}(y,x))\); and
+(b) for each such \(R\), the one-variable sentence stating, as a cycle of
+implications, that all diagonal forms \(R_{(\bar v)}(x,x)\) and
+\(R_{(\bar v)}(x)\) of its atoms are equivalent.  Let \(\varphi'\) be the
+conjunction.  Every new conjunct has length linear in the atoms it mentions,
+so \(\varphi'\) has size \(O(s)\), and it has at most \(s\) relation symbols.
+This stage follows the source \cite[pp.~4--5]{GradelKolaitisVardi1997}.
+
+If \(\mathfrak A\entails\varphi\), interpret \(R_{(\bar v)}\) at \((a,b)\) as
+\(R^{\mathfrak A}(\bar v[x\mapsto a,y\mapsto b])\).  Atoms keep their truth
+values, so \(\varphi^\dagger\) holds, and (a), (b) hold because both sides name
+the same tuple.  Conversely let \(\mathfrak B\entails\varphi'\), and define
+\(R^{\mathfrak A}\) on the universe of \(\mathfrak B\): if a tuple \(\bar c\)
+equals \(\bar v[x\mapsto a,y\mapsto b]\) for an atom \(R(\bar v)\) of
+\(\varphi\), let \(R^{\mathfrak A}(\bar c)\) be the value of the corresponding
+new atom at \((a,b)\); otherwise let it be false.  This is well defined.  If
+\(\bar c\) is constant, every representation is a diagonal form, and (b) makes
+them agree.  If \(\bar c\) has two distinct entries \(a\neq b\), then any atom
+representing it contains both variables, the positions holding \(a\) are
+exactly the positions of one variable, and so the only representations are
+\(\bar v\) at \((a,b)\) and its exchange \(\bar w\) at \((b,a)\), which (a)
+makes agree.  Other symbols keep their interpretation.  Now every atom of
+\(\varphi\) and its replacement have the same truth value under every
+assignment, so induction on formulas gives \(\mathfrak A\entails\varphi\).
+The universe is unchanged in both directions.
+
+\emph{Stage 2: defining symbols.}  Write \(\varphi'\) with \(\land,\neg,\forall\)
+only; this changes its size by a constant factor.  For each subformula
+occurrence \(\chi\) with free variables \(\bar v\subseteq\{x,y\}\) introduce
+\(Q_\chi\) of arity \(\lvert\bar v\rvert\in\{0,1,2\}\), with a binary index as
+its name, and let \(\delta_\chi\) be
+\(\forall\bar v(Q_\chi(\bar v)\leftrightarrow\chi^{\circ}(\bar v))\), where
+\(\chi^{\circ}\) is \(\chi\) if \(\chi\) is atomic, \(Q_{\chi_1}\land
+Q_{\chi_2}\) if \(\chi=\chi_1\land\chi_2\), \(\neg Q_{\chi_1}\) if
+\(\chi=\neg\chi_1\), and \(\forall u\,Q_{\chi_1}\) if \(\chi=\forall u\chi_1\)
+\cite[pp.~5--6]{GradelKolaitisVardi1997}.  Put
+\(\varphi^{*}\defeq Q_{\varphi'}\land\bigwedge_\chi\delta_\chi\).
+
+Each \(\delta_\chi\) is equivalent to a conjunction of sentences with prefix
+\(\forall\forall\) or \(\forall\exists\); dummy quantifiers fill short
+prefixes.  For atomic, conjunctive and negated \(\chi\) the matrix is
+quantifier-free.  For \(\chi=\forall u\chi_1\) with \(t\) the other variable,
+\(\delta_\chi\) is equivalent to
+\[
+ \forall t\forall u\bigl(Q_\chi(t)\to Q_{\chi_1}\bigr)\land
+ \forall t\exists u\bigl(\neg Q_{\chi_1}\lor Q_\chi(t)\bigr),
+\]
+because \(u\) is not free in \(Q_\chi(t)\); when \(\chi\) is a sentence the
+same holds with \(Q_\chi\) zero-ary.  Joining the \(\forall\forall\) conjuncts
+gives the Scott form.
+
+If \(\mathfrak A\entails\varphi'\), interpret each \(Q_\chi\) as the set of
+tuples satisfying \(\chi\); every \(\delta_\chi\) holds and so does
+\(Q_{\varphi'}\).  If \(\mathfrak B\entails\varphi^{*}\), induction on \(\chi\)
+using \(\delta_\chi\) shows that \(Q_\chi\) and \(\chi\) agree on all tuples;
+in particular \(Q_{\varphi'}\) gives \(\mathfrak B\entails\varphi'\).  Again
+the universe is unchanged.  There are at most \(O(s)\) subformula occurrences,
+each \(\delta_\chi\) has a bounded number of symbols besides at most three
+names of length \(O(\log s)\) and, for atomic \(\chi\), a copy of the atom.  So
+\(\varphi^{*}\) has size \(O(s\log s)\) and \(O(s)\) relation symbols, all of
+arity at most \(2\).  Both stages are polynomial-time.
+
+\emph{The \(x\neq y\) form.}  Let \(\mathfrak A\) have at least two elements
+and \(\beta\) be quantifier-free.  If \(\mathfrak A\entails\beta(a,b)\) with
+\(b\neq a\), then \(b\) witnesses \(x\neq y\land(\beta(x,x)\lor\beta(x,y))\)
+at \(a\).  If \(b=a\), then \(\beta(a,a)\) holds and any \(b'\neq a\) is a
+witness.  Conversely, a witness \(b\) for the new formula gives
+\(\beta(a,a)\) or \(\beta(a,b)\), so \(\exists y\beta(a,y)\) holds.  The new
+matrix entails \(x\neq y\).
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p02-w02-p02-035-scott-model}{thm:p02-w02-p02-035-scott-model}{Small models for the Scott class}
+\begin{proof}
+If \(m=0\), then \(\theta=\forall x\forall y\alpha\) is universal, and the
+substructure of any model induced on one element is a model.  Let \(m\geq1\)
+and \(\mathfrak A\entails\theta\).  Truth of a quantifier-free formula in two
+elements depends only on their \(2\)-type, and in one element only on its
+\(1\)-type; zero-ary symbols have the same value in every type of
+\(\mathfrak A\), and all types below are copied from \(\mathfrak A\).  For a
+\(2\)-type of \((a,b)\), the \(2\)-type of \((b,a)\) is obtained by exchanging
+the variables; assigning a type to an ordered pair therefore fixes it for the
+reversed pair.
+
+Choose \(g_i:A\to A\) with \(\mathfrak A\entails\beta_i(a,g_i(a))\) for all
+\(a\) and \(i\leq m\); then \(g_i(a)\neq a\).  Let \(K\) be the kings, \(P\)
+the realized \(1\)-types, \(Q\) the types of kings, so \(\lvert Q\rvert=
+\lvert K\rvert\), and
+\(C\defeq K\cup\{g_i(k):k\in K,\ i\leq m\}\), the royal court.  Let
+\(t_1,\ldots,t_n\) list \(P\setminus Q\), and take new elements
+\(d_{ij},e_{ij},f_{ij}\) for \(i\leq m\), \(j\leq n\), forming the sets
+\(D,E,F\).  The universe of \(\mathfrak B\) is \(C\cup D\cup E\cup F\); it is
+nonempty, because \(P\neq\emptyset\), and if \(n=0\) every realized type
+belongs to a king.
+
+\emph{One-types.}  Each \(c\in C\) keeps its type \(t_c\) in \(\mathfrak A\),
+and \(d_{ij},e_{ij},f_{ij}\) receive \(t_j\).  Distinct pairs inside \(C\)
+keep their \(2\)-types in \(\mathfrak A\).  The kings of \(\mathfrak A\) are
+kings of \(\mathfrak B\): an element of \(C\setminus K\) is not a king of
+\(\mathfrak A\), so its type is in \(P\setminus Q\), and the new elements have
+types in \(P\setminus Q\).
+
+\emph{Witnesses and two-types.}  (1) For \(b\in K\), each \(g_i(b)\in C\) and
+the pair already carries the type of \((b,g_i(b))\), so
+\(\beta_i(b,g_i(b))\) holds in \(\mathfrak B\).  (2) For \(b\in C\setminus
+K\) and \(i\leq m\): if \(g_i(b)\in C\), argue as in (1).  Otherwise
+\(g_i(b)\) is not a king, its type is some \(t_j\), and we give the pair
+\((b,d_{ij})\) the type of \((b,g_i(b))\); \(d_{ij}\) is the witness.  (3) For
+\(b=d_{ij}\), fix \(a\in A\) of type \(t_j\).  For \(i'\leq m\): if
+\(g_{i'}(a)\) is a king \(k\), give \((b,k)\) the type of \((a,k)\) and let
+\(k\) be the witness; otherwise \(g_{i'}(a)\) has some type \(t_l\), give
+\((b,e_{i'l})\) the type of \((a,g_{i'}(a))\) and let \(e_{i'l}\) be the
+witness.  (4) Repeat (3) for \(b\in E\) with witnesses in \(K\cup F\), and for
+\(b\in F\) with witnesses in \(K\cup D\).  In every case the assigned
+\(2\)-type restricts to the \(1\)-types already given to its two members, and
+contains \(x\neq y\).
+
+No pair receives two different types.  Step (2) types only pairs in
+\((C\setminus K)\times D\), with distinct \(i\) giving distinct second
+members.  Step (3) types only pairs in \(D\times K\) and \(D\times E\); two
+indices \(i'\) giving the same king use the same \((a,k)\) and so the same
+type, and distinct \(i'\) give distinct elements of \(E\).  The \(E\)-step
+types only \(E\times K\) and \(E\times F\), and the \(F\)-step only \(F\times
+K\) and \(F\times D\).  These sets of unordered pairs are pairwise disjoint,
+and no step types a pair inside \(C\).  This is where three banks are needed:
+with two banks the pairs between \(D\) and \(E\) would be typed from both
+sides.
+
+(5) Every remaining pair \(\{b,b'\}\) of distinct elements receives the type
+of a pair \((a,a')\) of distinct elements of \(\mathfrak A\) with
+\(t_a=t_b\), \(t_{a'}=t_{b'}\).  Such a pair exists: if \(t_b\neq t_{b'}\) any
+realizers are distinct; if \(t_b=t_{b'}\), this type is not a king type,
+since a king type has only one element in \(\mathfrak B\), so it has two
+realizers in \(\mathfrak A\).
+
+\emph{Verification.}  Every element of \(\mathfrak B\) has a \(1\)-type, and
+every pair of distinct elements a \(2\)-type, realized in \(\mathfrak A\).
+Since \(\mathfrak A\entails\alpha(a,a')\) for all \(a,a'\), including
+\(a=a'\), we get \(\mathfrak B\entails\forall x\forall y\alpha\).  Steps
+(1)--(4) give each element a witness for each \(\beta_i\), carrying a
+\(2\)-type in which \(\beta_i\) holds; so \(\mathfrak B\entails\forall
+x\exists y\beta_i\) for every \(i\).
+
+\emph{Counting.}  \(\lvert C\rvert\leq(m+1)\lvert K\rvert\) and
+\(\lvert D\cup E\cup F\rvert=3m(\lvert P\rvert-\lvert K\rvert)\).  Since
+\(m+1\leq3m\), \(\lvert B\rvert\leq3m\lvert P\rvert\).  Each conjunct uses a
+symbol, so \(m\leq s\).  A \(1\)-type is fixed by one truth value per relation
+symbol, namely \(Rx\), \(Rxx\) or the zero-ary \(R\), so
+\(\lvert P\rvert\leq2^r\).  Hence \(\lvert B\rvert\leq3s2^r\)
+\cite[proof of thm.~4.3]{GradelKolaitisVardi1997}.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p02-w02-p02-035-fo2-emp}{thm:p02-w02-p02-035-fo2-emp}{Exponential model property for \(\mathrm{FO}^2\)}
+\begin{proof}
+Let \(\varphi\) be satisfiable of size \(s\), and let \(\varphi^{*}\) be its
+Scott form from \cref{thm:p02-w02-p02-035-scott}, of size \(s^{*}=O(s\log s)\)
+with \(r^{*}=O(s)\) relation symbols.  If \(\varphi^{*}\) has a one-element
+model, so does \(\varphi\).  Otherwise \(\varphi^{*}\) has a model with at
+least two elements, and \(m\geq1\), since a sentence of the form
+\(\forall x\forall y\alpha\) with a model has a one-element model.  Let
+\(\theta\) be \(\varphi^{*}\) with each \(\beta_i\) in the \(x\neq y\) form;
+its size is \(O(s^{*})\), and it is true in that model.  By
+\cref{thm:p02-w02-p02-035-scott-model}, \(\theta\) has a model \(\mathfrak B\)
+with at most \(3\cdot O(s\log s)\cdot2^{O(s)}\) elements.  Since \(m\geq1\)
+and each new \(\beta_i\) entails \(x\neq y\), \(\mathfrak B\) has at least two
+elements, so \(\mathfrak B\entails\varphi^{*}\), and
+\cref{thm:p02-w02-p02-035-scott} gives a model of \(\varphi\) on the same
+universe.  The bound is at most \(2^{cs}\) for a suitable \(c\) and all
+\(s\geq1\).  This is the source's Theorem~5.1
+\cite[thm.~5.1]{GradelKolaitisVardi1997}.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p02-w02-p02-035-fo2-complexity}{thm:p02-w02-p02-035-fo2-complexity}{\(\mathrm{FO}^2\) satisfiability is NEXPTIME-complete}
+\begin{proof}
+\emph{Scott-class input.}  Let \(\theta\) have size \(s\) and \(r\) relation
+symbols, so \(r=O(s/\log s)\) by the counting fact.  Step 2 inspects
+\(2^r\) one-element structures, each in time \(O(s)\).  If \(m=0\), a model
+exists iff a one-element model exists, as in the previous proof.  Otherwise,
+the modified sentence \(\theta'\) of Step 3 has size \(s'=O(s)\), and if it is
+satisfiable it has a model with at most \(N=3s'2^r=2^{O(s/\log s)}\) elements.
+Such a structure is a string of \(O(rN^2)\) truth values.  Step 4 evaluates
+\(\alpha\) at \(N^2\) pairs and, for each of \(N\) elements and \(m\leq s\)
+indices, tries at most \(N\) witnesses; each evaluation reads \(O(s)\) table
+entries.  The total is \(2^{O(s/\log s)}\).
+
+The procedure is correct: an accepted structure in Step 2 is a model of
+\(\theta\); one accepted in Step 4 is a model of \(\theta'\) with at least two
+elements, hence of \(\theta\).  If \(\theta\) has a model, either it has a
+one-element model, found in Step 2, or a model with at least two elements, in
+which \(\theta'\) holds, so
+\cref{thm:p02-w02-p02-035-scott-model} provides a model of \(\theta'\) within
+the guessed size.
+
+\emph{\(\mathrm{FO}^2\) input.}  Step 1 is polynomial, and its output has size
+\(s^{*}=O(s\log s)\) with \(r=O(s)\) symbols; satisfiability is preserved by
+\cref{thm:p02-w02-p02-035-scott}.  The same analysis with
+\(N=3s^{*}2^r=2^{O(s)}\) gives time \(2^{O(s)}\)
+\cite[thm.~5.3]{GradelKolaitisVardi1997}.
+
+\emph{Hardness.}  The sentence \(\psi_w\) of
+\cref{def:p02-w02-p02-035-monadic-tiling-sentence}, renamed as in the proof of
+\cref{thm:p02-w02-p02-035-monadic-hard}, is an equality-free
+\(\mathrm{FO}^2\)-sentence of the form \(\forall x\exists y\alpha\land\forall
+x\forall y\beta\) with only unary predicates.  So for
+\(L\in\mathsf{NEXPTIME}\) the map \(x\mapsto\psi_{g(x)}\) of that proof
+reduces \(L\) in polynomial time to satisfiability for this subclass.  The
+subclass lies in \(\mathrm{FO}^2\) with and without equality, and the upper
+bound covers \(\mathrm{FO}^2\) with equality, so both versions are
+\(\mathsf{NEXPTIME}\)-complete.  By \cref{thm:p02-w02-p02-035-fo2-emp},
+finite satisfiability is the same problem.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p02-w02-p02-035-bsr-grounding}{thm:p02-w02-p02-035-bsr-grounding}{Correctness of grounding}
+\begin{proof}
+\emph{Model to valuation.}  Let \(\mathfrak A\entails\varphi\).  As in the
+small-model argument of \cref{sec:p09-presentation-n-c-005}
+\cite[prop.~6.2.17]{BorgerGradelGurevich1997}, choose
+\(a_1,\ldots,a_p\) with \(\mathfrak A\entails\forall\bar y\theta[a_1,\ldots,
+a_p]\); if \(p=0\) choose any \(a_1\).  Send \(c_i\) to \(a_i\) for \(i\leq q\).
+Let \(c_i\equiv c_j\) iff \(a_i=a_j\); this is an equality pattern.  Give each
+ground relation atom of \(G_\equiv\) the truth value of the corresponding
+atom in \(\mathfrak A\); this is consistent because the least-indexed
+representative of a class denotes the same element as every member.  Each
+instance \(\theta(c_1,\ldots,c_p,c_{j_1},\ldots,c_{j_m})\) is true in
+\(\mathfrak A\) under \(y_l\mapsto a_{j_l}\).  Replacing constants by
+representatives and equality atoms by their truth values in \(\mathfrak A\),
+which are those prescribed by \(\equiv\), does not change truth, so the
+valuation satisfies \(G_\equiv\).  The induced substructure on
+\(\{a_1,\ldots,a_q\}\) is itself a model with at most \(\max(1,p)\) elements.
+
+\emph{Valuation to model.}  Let \(\equiv\) and a valuation \(v\) satisfy
+\(G_\equiv\).  Let the universe \(B\) be the set of representatives, the
+least-indexed member of each class.  For a relation symbol \(R\) put
+\(R^{\mathfrak B}(\bar e)\) iff \(v(R\bar e)=1\) for representatives
+\(\bar e\).  Interpret \(c_i\) as its representative \([c_i]\).  Then every
+ground atom over \(c_1,\ldots,c_q\) has in \(\mathfrak B\) the value that
+\(G_\equiv\) assigns to its replacement: relation atoms by the definition of
+\(R^{\mathfrak B}\), and \(c_i=c_j\) because \([c_i]=[c_j]\) iff
+\(c_i\equiv c_j\).  Every element of \(B\) is some \([c_j]\) with \(j\leq q\),
+so every assignment of the \(y_l\) is \(y_l\mapsto[c_{j_l}]\) for some
+instance in \(G(\varphi)\), which is true.  Hence
+\(\mathfrak B\entails\forall\bar y\theta[[c_1],\ldots,[c_p]]\), and
+\(\mathfrak B\entails\varphi\), with \(\lvert B\rvert\leq q=\max(1,p)\).
+Without equality the identity pattern makes \(B=\{c_1,\ldots,c_q\}\).
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p02-w02-p02-035-bsr-complexity}{thm:p02-w02-p02-035-bsr-complexity}{Bernays--Sch\"onfinkel satisfiability is NEXPTIME-complete}
+\begin{proof}
+\emph{Upper bound.}  Let \(\varphi\) have length \(n\).  Then \(q\leq n\), and
+the \(m\) universal variables have distinct names, so \(m=O(n/\log n)\) by the
+counting fact.  The grounding has \(q^m\leq2^{m\log_2 n}=2^{O(n)}\) instances,
+each of length \(O(n\log n)\) once constants are named in binary.  A pattern
+is \(q^2\leq n^2\) bits.  Guessing a pattern and a valuation of the at most
+\(2^{O(n)}\) ground atoms, and evaluating every instance, takes time
+\(2^{O(n)}\).  Correctness is \cref{thm:p02-w02-p02-035-bsr-grounding}.
+
+\emph{Lower bound.}  Fix \(\mathcal D=(D,H,V)\) and \(w\in D^n\), \(n\geq1\).
+Use a unary symbol \(O\) and, for \(d\in D\), a \(2n\)-ary symbol \(P_d\).
+Let \(\bar x,\bar y,\bar x',\bar y'\) be \(n\)-tuples of distinct variables.
+For \(i<2^n\) write \(\bar u^{(i)}\) for the \(n\)-tuple whose \(l\)th entry is
+\(u_1\) if bit \(l\) of \(i\) is \(1\) and \(u_0\) otherwise.  Let
+\[
+ \mathrm{Hor}\defeq\textstyle\bigwedge_{l<n}(Oy'_l\leftrightarrow Oy_l)\land
+  \bigwedge_{l<n}\bigl(Ox'_l\leftrightarrow
+   (Ox_l\oplus\bigwedge_{k<l}Ox_k)\bigr),
+\]
+and let \(\mathrm{Ver}\) be the same with the roles of the \(x\)- and
+\(y\)-tuples exchanged.  Put
+\[
+ \chi_w\defeq\exists u_0\exists u_1\forall\bar x\forall\bar y\forall\bar x'
+ \forall\bar y'\bigl(Ou_1\land\neg Ou_0\land\Gamma\bigr),
+\]
+where \(\Gamma\) states: exactly one \(P_d\bar x\bar y\) holds;
+\(\mathrm{Hor}\to\bigvee_{(d,d')\in H}(P_d\bar x\bar y\land P_{d'}\bar x'\bar
+y')\); \(\mathrm{Ver}\to\bigvee_{(d,d')\in V}(P_d\bar x\bar y\land
+P_{d'}\bar x'\bar y')\); and \(P_{w_i}\bar u^{(i)}\bar u^{(0)}\) for \(i<n\).
+This is a relational \(\exists\exists\forall^{*}\) sentence without equality
+of length \(O(n^2\log n)\), computable from \(w\) in polynomial time.
+
+If \(\tau\) witnesses \(w\in\mathrm{DOMINO}(\mathcal D,2^n)\), take universe
+\(\{0,1\}\), \(O=\{1\}\), \(u_0\mapsto0\), \(u_1\mapsto1\), and let
+\(P_d\) hold of \((\bar a,\bar b)\in\{0,1\}^{2n}\) iff \(\tau\) maps the point
+with bit strings \(\bar a,\bar b\) to \(d\).  Every \(2n\)-tuple codes one
+point, so exactly one \(P_d\) holds.  By the increment rule,
+\(\mathrm{Hor}\) holds iff the second point is the right neighbour of the
+first, and \(\mathrm{Ver}\) iff it is the upper neighbour; the tiling
+conditions then give the implications, and \(\tau(i,0)=w_i\) gives the last
+clauses.
+
+Conversely, let \(\mathfrak A\entails\chi_w\) with witnesses \(e_0,e_1\) for
+\(u_0,u_1\), so \(Oe_1\) and \(\neg Oe_0\).  For a point \(z\) let
+\(\mathrm{tup}(z)\in\{e_0,e_1\}^{2n}\) spell its bits, and let \(\tau(z)\) be the
+unique \(d\) with \(P_d\,\mathrm{tup}(z)\).  The truth values of \(O\) on
+\(\mathrm{tup}(z)\) are the bits of \(z\), so instantiating the universal block
+at \(\mathrm{tup}(z),\mathrm{tup}(z')\), with \(z'\) the right neighbour of
+\(z\), makes \(\mathrm{Hor}\) true and yields \((\tau(z),\tau(z'))\in H\); the
+vertical case is the same, and the last clauses give \(\tau(i,0)=w_i\).  So
+\(\chi_w\) is satisfiable iff \(w\in\mathrm{DOMINO}(\mathcal D,2^n)\).
+Composing with \cref{thm:p02-w02-p02-035-domino-hard} reduces every
+\(L\in\mathsf{NEXPTIME}\) to this subclass in polynomial time.  The subclass
+lies in the class with and without equality, so both are
+\(\mathsf{NEXPTIME}\)-complete.  The negation of a \(\exists^{*}\forall^{*}\)
+sentence is equivalent, by dualizing each quantifier in place, to a
+\(\forall^{*}\exists^{*}\) sentence, so validity of the latter is
+\(\mathsf{coNEXPTIME}\)-complete.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p02-w02-p02-035-gf-constants}{thm:p02-w02-p02-035-gf-constants}{Constants can be removed}
+\begin{proof}
+If \(k=0\) put \(\psi'\defeq\psi\).  Otherwise read \(c_1,\ldots,c_k\) as
+fresh distinct variables that occur nowhere in \(\psi\).  For every
+subformula \(\theta\) of \(\psi\) let \(\theta^{*}\) replace each relation
+atom \(R(t_1,\ldots,t_m)\), whose terms are variables or constants, by
+\(R^{*}(c_1,\ldots,c_k,t_1,\ldots,t_m)\), and leave equalities unchanged
+apart from reading constants as variables.
+
+\emph{Guardedness.}  By induction on \(\theta\),
+\(\theta^{*}\in\mathrm{GF}\) and
+\(\mathrm{free}(\theta^{*})\subseteq\mathrm{free}(\theta)\cup\{\bar c\}\).
+Atoms and Boolean steps are immediate.  For \(\theta=(\exists\bar y\,.\,\alpha)\chi\)
+the guard \(\alpha^{*}=R^{*}(\bar c,\ldots)\) is a relation atom with
+\(\mathrm{free}(\alpha^{*})=\mathrm{free}(\alpha)\cup\{\bar c\}\supseteq
+\mathrm{free}(\chi)\cup\{\bar c\}\supseteq\mathrm{free}(\chi^{*})\); as
+\(\bar y\) contains no \(c_j\), \((\exists\bar y\,.\,\alpha^{*})\chi^{*}\) is
+built by rule (3).  The universal case is the same.  Since \(\psi\) is a
+sentence, \(\mathrm{free}(\psi^{*})\subseteq\{\bar c\}=\mathrm{free}(Z\bar c)\),
+so \(\psi'=(\exists\bar c\,.\,Z\bar c)\psi^{*}\) is a guarded sentence.  Each
+atom grows by \(k\leq n\) symbols, so \(\lvert\psi'\rvert=O(n^2)\) and the
+translation runs in polynomial time.
+
+\emph{Satisfiability.}  Say that a structure \(\mathfrak A\) for \(\psi\) and
+a structure \(\mathfrak B\) for \(\psi'\) with the same universe \emph{match
+at} \(\bar e\in A^k\) if \(c_j^{\mathfrak A}=e_j\) for all \(j\) and
+\(R^{\mathfrak A}=\{\bar u:(\bar e,\bar u)\in R^{*\mathfrak B}\}\) for every
+\(R\).  If they match at \(\bar e\), then for every subformula \(\theta\) and
+every assignment \(s\) of the variables of \(\psi\),
+\(\mathfrak A\entails\theta[s]\) iff
+\(\mathfrak B\entails\theta^{*}[s,\bar c\mapsto\bar e]\): for an atom both
+sides say that the values of the terms lie in \(R^{\mathfrak A}\), Boolean
+steps are immediate, and quantifiers range over the same universe while the
+\(c_j\) are never bound.  Given \(\mathfrak A\entails\psi\), let
+\(\mathfrak B\) have \(Z^{\mathfrak B}=\{\bar c^{\mathfrak A}\}\) and
+\(R^{*\mathfrak B}=A^k\times R^{\mathfrak A}\); they match at
+\(\bar c^{\mathfrak A}\), so \(\mathfrak B\entails\psi'\).  Given
+\(\mathfrak B\entails\psi'\), choose \(\bar e\) with \(Z\bar e\) and
+\(\mathfrak B\entails\psi^{*}[\bar c\mapsto\bar e]\), and let \(\mathfrak A\)
+be the structure that matches \(\mathfrak B\) at \(\bar e\); then
+\(\mathfrak A\entails\psi\).  Both structures have the same universe.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p02-w02-p02-035-gf-normal-form}{thm:p02-w02-p02-035-gf-normal-form}{Normal form}
+\begin{proof}
+First rewrite every \((\forall\bar y\,.\,\alpha)\theta\) as
+\(\neg(\exists\bar y\,.\,\alpha)\neg\theta\); this is guarded and equivalent.
+Every formula contains an atom, and a constant-free sentence without
+quantifiers can contain only \(0\)-ary relation atoms; since a guard
+contains a variable, \(\varphi\) contains at least one relation atom.
+
+\emph{Step 1: a common free variable.}  Choose a variable \(z\) not in
+\(\varphi\), and replace every relation atom \(R(\bar u)\) by
+\(R'(\bar u,z)\), where \(R'\) is fresh of arity \(\mathrm{ar}(R)+1\).  Call
+the result \(\varphi'(z)\).  Guards stay relation atoms, and
+\(\mathrm{free}(\theta')\subseteq\mathrm{free}(\theta)\cup\{z\}\subseteq
+\mathrm{free}(\alpha)\cup\{z\}=\mathrm{free}(\alpha')\), so \(\varphi'\) is
+guarded.  Every quantified subformula \((\exists\bar y\,.\,\alpha')\theta'\)
+of \(\varphi'\) has \(z\) free, because its guard contains \(z\) and \(z\) is
+never bound.  For a structure \(\mathfrak A\) and \(e\in A\), let
+\(\mathfrak A'\) interpret \(R'\) as \(R^{\mathfrak A}\times A\).  Since
+\(z\) is never bound, induction on formulas gives
+\(\mathfrak A\entails\theta[s]\) iff \(\mathfrak A'\entails\theta'[s,z\mapsto e]\).
+Conversely, if \(\mathfrak B\entails\varphi'[e]\), the structure with
+\(R^{\mathfrak A}=\{\bar u:(\bar u,e)\in R'^{\mathfrak B}\}\) satisfies the
+same equivalence, hence \(\varphi\).  So \(\varphi\) has a model with
+universe \(A\) iff \(\varphi'\) is satisfied in a structure with universe
+\(A\) at some \(e\).
+
+\emph{Step 2: naming quantified subformulas.}  Maintain a guarded formula
+\(\varphi_{\mathrm{cur}}(z)\) and a conjunction \(\eta\) of sentences of the
+normal-form shape, starting with \(\varphi'\) and the empty conjunction.
+While \(\varphi_{\mathrm{cur}}\) contains a quantifier, choose an occurrence
+of a subformula \(\chi=(\exists\bar y\,.\,\alpha)\theta\) with \(\theta\)
+quantifier-free, list \(\mathrm{free}(\chi)=\mathrm{free}(\alpha)\setminus\bar y\)
+as \(\bar z\) (so \(z\in\bar z\)), take a fresh \(R_\chi\) of arity
+\(\lvert\bar z\rvert\), replace the occurrence by \(R_\chi\bar z\), and add to
+\(\eta\) the two sentences
+\[
+ \eta_\chi\defeq(\forall\bar z\,.\,R_\chi\bar z)\exists\bar y\,(\alpha\land\theta),
+ \qquad
+ \eta'_\chi\defeq(\forall\bar z\bar y\,.\,\alpha)(\theta\to R_\chi\bar z).
+\]
+Both have the normal-form shape: in \(\eta_\chi\) the guard has exactly the
+variables \(\bar z\); in \(\eta'_\chi\) the guard \(\alpha\) has exactly the
+variables \(\bar z\bar y\) and the existential tuple is empty.  The guard of
+every remaining quantified subformula is an original guard of
+\(\varphi'\), so it contains \(z\); and the replacement does not change free
+variables, so \(\varphi_{\mathrm{cur}}\) stays guarded.  Each step removes
+one quantifier, so the loop ends with a quantifier-free \(\varphi''(z)\).
+
+Each step preserves satisfiability over a fixed universe.  If
+\(\mathfrak B\entails\varphi_{\mathrm{cur}}[e]\land\eta\), expand
+\(\mathfrak B\) by \(R_\chi^{\mathfrak B}\defeq\{\bar c:\mathfrak B\entails\chi[\bar c]\}\);
+then \(\eta_\chi\) and \(\eta'_\chi\) hold and the new formula has the same
+truth value as the old one at every assignment.  Conversely, in any
+structure satisfying \(\eta_\chi\land\eta'_\chi\), \(R_\chi\bar c\) implies
+\(\chi[\bar c]\) by \(\eta_\chi\), and \(\chi[\bar c]\) with a witness
+\(\bar d\) gives \(\alpha[\bar c,\bar d]\) and \(\theta[\bar c,\bar d]\),
+hence \(R_\chi\bar c\) by \(\eta'_\chi\).  So \(R_\chi\) defines \(\chi\),
+and the new formula agrees with the old one.
+
+\emph{Step 3.}  Put \(\psi\defeq\exists z\,Cz\land(\forall z\,.\,Cz)\varphi''(z)\land\eta\)
+with a fresh unary \(C\); the middle conjunct has the normal-form shape with
+empty existential tuple.  If \(\varphi''\land\eta\) holds at \(e\), interpret
+\(C\) as \(\{e\}\); conversely pick \(e\in C\).  Renaming bound variables
+puts every conjunct into the indexing of
+\cref{def:p02-w02-p02-035-gf-normal}.
+
+\emph{Bounds.}  The variables of \(\psi\) are those of \(\varphi\) and \(z\).
+The symbols \(R'\) have arity at most \(a+1\); \(R_\chi\) has arity
+\(\lvert\bar z\rvert\), at most the number of distinct variables of a guard
+\(R'(\ldots)\), hence at most \(a+1\); \(C\) is unary.  There are at most
+\(n\) steps.  Replacing \(\chi\) by \(R_\chi\bar z\) does not lengthen
+\(\varphi_{\mathrm{cur}}\) when symbol names are counted as single symbols,
+because \(\bar z\) is a subtuple of the variables of \(\alpha\).  Each step
+therefore adds \(O(n)\) symbols, and \(\psi\) has \(O(n^2)\) symbols, each
+written with \(O(\log n)\) bits.  All steps are polynomial-time.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p02-w02-p02-035-gf-tree}{thm:p02-w02-p02-035-gf-tree}{Witness criterion and tree-model property}
+\begin{proof}
+Write \(\mathrm{At}_k\) for \(\mathrm{At}_k(\psi)\) and \(\tau\) for the
+vocabulary of \(\psi\).  For a map \(\rho\) between index sets write
+\(\rho\lambda\) for the atom obtained by replacing each \(x_p\) by
+\(x_{\rho(p)}\).  Five facts are used.
+
+(F1) If \(\lambda\in\mathrm{At}_k\) and \(\rho:\{1,\ldots,k\}\to\{1,\ldots,k'\}\)
+with \(k'\leq m\), then \(\rho\lambda\in\mathrm{At}_{k'}\); and an atom of
+\(\mathrm{At}_{k'}\) whose indices are all at most \(k\) lies in
+\(\mathrm{At}_k\).  Both follow by composing or restricting the map \(h\) in
+\cref{def:p02-w02-p02-035-gf-types}.
+
+(F2) If \(\bar a\) realizes a \(k'\)-type \(t\), then
+\(\bar a\circ\rho=(a_{\rho(1)},\ldots,a_{\rho(k)})\) realizes
+\(t^\rho\defeq\{\pm\lambda:\lambda\in\mathrm{At}_k,\ \pm\rho\lambda\in t\}\),
+where \(\pm\) is the same sign on both sides.  So the reduction along
+\(\rho\) exists and is unique.  If \(k\leq k'\) and \(\rho\) is the inclusion,
+\(t^\rho=t\cap(\mathrm{At}_k\cup\neg\mathrm{At}_k)\); hence \(t\) extends
+\(s\) iff \(s\) is this restriction of \(t\).
+
+(F3) For a type \(t\), let \(p\approx_t q\) iff \((x_p=x_q)\in t\).  If
+\(\bar a\) realizes \(t\), then \(p\approx_t q\) iff \(a_p=a_q\).  Hence, if
+\(\rho(p)\approx_t p\) for all \(p\) and both \(\lambda\) and \(\rho\lambda\)
+lie in \(\mathrm{At}_k\), then \(\lambda\in t\) iff \(\rho\lambda\in t\).
+
+(F4) A quantifier-free formula all of whose atoms lie in \(\mathrm{At}_k\) is
+true of \(\bar a\) iff it is true under the valuation that
+\(\mathrm{atp}^{\psi}(\bar a)\) gives its atoms.  The atoms of
+\(C\bar x\), \(\alpha_i\) and \(\psi_i\), indexed as in
+\cref{def:p02-w02-p02-035-gf-normal}, lie in \(\mathrm{At}_r\) and
+\(\mathrm{At}_{k_i+\ell_i}\) by definition.
+
+(F5) Call \(R(b_1,\ldots,b_r)\) \emph{relevant} if some atom
+\(R(z_1,\ldots,z_r)\) of \(\psi\) satisfies \(b_p=b_q\) whenever
+\(z_p=z_q\).  If \(\bar e\) lists a set containing \(b_1,\ldots,b_r\) and
+\(\bar b=\bar e\circ\bar p\), then \(R(x_{p_1},\ldots,x_{p_r})\in\mathrm{At}_k\)
+implies that \(R(\bar b)\) is relevant.  Conversely, if \(R(\bar b)\) is
+relevant, choosing one index for each element gives \(\bar p\) with
+\(p_c=p_d\) iff \(b_c=b_d\), and then \(R(x_{\bar p})\in\mathrm{At}_k\).
+
+\emph{(a)\(\Rightarrow\)(b).}  Let \(\mathfrak A\entails\psi\).  Let \(P\) be
+the set of \(k\)-types, \(1\leq k\leq m\), realized in \(\mathfrak A\); it
+is finite and, by (F2), closed under reductions.  Choose \(\bar b\) with
+\(\mathfrak A\entails C\bar b\) and put
+\(t_0\defeq\mathrm{atp}^{\psi}(\bar b)\).  For each \(s\in P^{(k_i)}\) fix a
+realization \(\bar a_s\).  If \(\alpha_i\in s\), then
+\(\mathfrak A\entails\alpha_i(\bar a_s)\) by (F4), so some \(\bar d\) has
+\(\mathfrak A\entails\psi_i(\bar a_s,\bar d)\); otherwise let \(\bar d\) repeat
+the first entry of \(\bar a_s\).  Put
+\(\mathrm{ext}_i(s)\defeq\mathrm{atp}^{\psi}(\bar a_s\bar d)\).  It lies in
+\(P\) because \(k_i+\ell_i\leq m\), extends \(s\) by (F2), and makes
+\(\alpha_i\to\psi_i\) true by (F4).
+
+\emph{(b)\(\Rightarrow\)(c): the unravelling.}  Fix a witness
+\((P,t_0,(\mathrm{ext}_i))\).  We build a rooted tree \(T\) and, for each node
+\(v\), a type \(t_v\in P^{(k_v)}\) and a surjection \(e_v\) from
+\(\{1,\ldots,k_v\}\) onto a set \(F(v)\) with
+\(e_v(p)=e_v(q)\) iff \(p\approx_{t_v}q\).  Each element is \emph{new} at
+exactly one node.  At the root \(\lambda\), \(t_\lambda\defeq t_0\), and
+\(F(\lambda)\) has one fresh element for each \(\approx_{t_0}\)-class, all new
+at \(\lambda\).  Given \(v\), for each \(i\in I\) and each
+\(\sigma:\{1,\ldots,k_i\}\to\{1,\ldots,k_v\}\) such that (1) some
+\(e_v(\sigma(p))\) is new at \(v\), (2) \(\alpha_i\in s\defeq t_v^\sigma\),
+and (3) \(t\defeq\mathrm{ext}_i(s)\) extends \(s\) by \(j\geq1\) new
+elements, create a child \(w\) with \(t_w\defeq t\).  For \(p\leq k_i\) put
+\(e_w(p)\defeq e_v(\sigma(p))\).  For \(q>k_i\) put \(e_w(q)\defeq e_v(\sigma(p))\)
+if \(q\approx_t p\) for some \(p\leq k_i\), and otherwise let \(e_w(q)\) be a
+fresh element for the class of \(q\); the fresh elements are new at \(w\).
+This is well defined and satisfies \(e_w(p)=e_w(q)\) iff \(p\approx_t q\):
+for \(p,p'\leq k_i\), \(p\approx_t p'\) iff \((x_p=x_{p'})\in s\) by (F2)
+iff \((x_{\sigma p}=x_{\sigma p'})\in t_v\) iff
+\(e_v(\sigma p)=e_v(\sigma p')\); the remaining cases follow by transitivity
+of \(\approx_t\) and the choice of one fresh element per class.  Every node
+has at most \(\lvert I\rvert m^m\) children, and \(\lvert F(v)\rvert\leq m\).
+
+\emph{Connectivity.}  An element of \(F(w)\) that is not new at \(w\) lies in
+\(F(v)\) for the parent \(v\).  So the nodes containing an element \(b\) are
+the node where \(b\) is new together with descendants of it, each of whose
+parents also contains \(b\); this set is connected.  This is condition (ii)
+of a \(k\)-tree.
+
+\emph{The structure.}  Let \(B\defeq\bigcup_vF(v)\), and for \(R\in\tau\) let
+\(R^{\mathfrak B}\) be the set of relevant tuples \(\bar b\) such that, for
+some node \(v\) and some \(\bar p\), \(\bar b=e_v\circ\bar p\) and
+\(R(x_{\bar p})\in t_v\cap\mathrm{At}_{k_v}\).
+
+\emph{Claim 1.}  If \(\bar b=e_v\circ\bar p\) and
+\(R(x_{\bar p})\in\mathrm{At}_{k_v}\), then \(\mathfrak B\entails R(\bar b)\)
+iff \(R(x_{\bar p})\in t_v\).  Within one node, two index tuples
+\(\bar p,\bar p'\) with \(e_v\circ\bar p=e_v\circ\bar p'\) satisfy
+\(p_c\approx_{t_v}p'_c\), so by (F3) \(R(x_{\bar p})\in t_v\) iff
+\(R(x_{\bar p'})\in t_v\).  For a node \(v\) and its child \(w\) built from
+\(\sigma\), \(F(v)\cap F(w)=\{e_v(\sigma p):p\leq k_i\}\).  For a relevant
+\(\bar b\) in this set, (F5) gives \(\bar q\) with entries at most \(k_i\),
+\(e_w\circ\bar q=\bar b\) and \(R(x_{\bar q})\in\mathrm{At}_{k_i}\).  Then
+\(R(x_{\bar q})\in t_w\) iff \(R(x_{\bar q})\in s\) by (F2), iff
+\(R(x_{\sigma\bar q})\in t_v\) by definition of \(s=t_v^\sigma\), and
+\(e_v\circ\sigma\circ\bar q=\bar b\) with \(R(x_{\sigma\bar q})\in\mathrm{At}_{k_v}\)
+by (F1).  So adjacent nodes agree.  If \(\bar b\) lies in \(F(u)\) and in
+\(F(v)\), then by connectivity every entry of \(\bar b\) lies in every set
+\(F(v')\) on the path from \(u\) to \(v\), and agreement passes along the
+path.  This proves Claim~1.
+
+\emph{Claim 2.}  For every node \(v\), \(e_v\) realizes \(t_v\) in
+\(\mathfrak B\).  Equalities hold by construction.  For
+\(R(x_{\bar p})\in\mathrm{At}_{k_v}\) the tuple \(e_v\circ\bar p\) is relevant
+by (F5), and Claim~1 applies.  By (F2), every \(k\)-tuple over \(F(v)\), with
+\(k\leq m\), realizes a reduction of \(t_v\), which lies in \(P\).
+
+By definition every tuple in some \(R^{\mathfrak B}\) lies in one set
+\(F(v)\), which is condition (i).  So \(\mathfrak B\) is an \(m\)-tree of
+bounded degree.
+
+\emph{\(\mathfrak B\entails\psi\).}  Since \(C\bar x\in t_0=t_\lambda\),
+Claim~2 gives \(\mathfrak B\entails C(e_\lambda)\).  Fix \(i\) and
+\(\bar a\in B^{k_i}\) with \(\mathfrak B\entails\alpha_i(\bar a)\).  The
+argument tuple of \(\alpha_i\) at \(\bar a\) lies in \(R^{\mathfrak B}\) for
+the symbol \(R\) of \(\alpha_i\), so it lies in one set \(F(v)\); it lists
+every entry of \(\bar a\).  The set of nodes containing all entries of
+\(\bar a\) is an intersection of connected sets of a tree, hence connected
+and nonempty, so it has a unique node \(v_0\) nearest the root.  Some entry
+of \(\bar a\) is new at \(v_0\): otherwise all entries lie in the parent of
+\(v_0\), and at the root every element is new.  Write
+\(\bar a=e_{v_0}\circ\sigma\) and \(s\defeq t_{v_0}^\sigma\), the type of
+\(\bar a\) by Claim~2 and (F2); then \(\alpha_i\in s\) by (F4).  Let
+\(t\defeq\mathrm{ext}_i(s)\), so \(\psi_i\) is true in \(t\).  If \(t\)
+extends \(s\) by \(j\geq1\) new elements, the child \(w\) built from
+\(v_0,i,\sigma\) exists; \(e_w\) realizes \(t\) and agrees with \(\bar a\) on
+\(1,\ldots,k_i\), so \(\bar d\defeq(e_w(k_i+1),\ldots,e_w(k_i+\ell_i))\)
+satisfies \(\mathfrak B\entails\psi_i(\bar a,\bar d)\) by (F4).  If \(j=0\),
+every \(\approx_t\)-class meets \(\{1,\ldots,k_i\}\); let \(\rho\) fix
+\(1,\ldots,k_i\) and send each \(q>k_i\) to some \(p\leq k_i\) with
+\(p\approx_tq\).  Then \(\bar a\circ\rho\) realizes \(s^\rho\), and
+\(s^\rho=t\): for \(\lambda\in\mathrm{At}_{k_i+\ell_i}\), \(\lambda\in s^\rho\)
+iff \(\rho\lambda\in s\) iff \(\rho\lambda\in t\) (as \(s\subseteq t\) and
+\(\rho\lambda\in\mathrm{At}_{k_i}\)) iff \(\lambda\in t\) by (F3).  So
+\(\bar d\defeq(a_{\rho(k_i+1)},\ldots,a_{\rho(k_i+\ell_i)})\) satisfies
+\(\psi_i(\bar a,\bar d)\).  This covers \(\ell_i=0\) as well.  Hence
+\(\mathfrak B\entails\psi\).
+
+\emph{(c)\(\Rightarrow\)(a)} is immediate.  The last sentence of the theorem
+follows from \cref{thm:p02-w02-p02-035-gf-normal-form}, which gives the
+normal form at most one more variable.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p02-w02-p02-035-gf-fmp}{thm:p02-w02-p02-035-gf-fmp}{Finite-model property}
+\begin{proof}
+Let \(\varphi\) be a satisfiable guarded sentence.  By
+\cref{thm:p02-w02-p02-035-gf-constants,thm:p02-w02-p02-035-gf-normal-form}
+there is a sentence \(\psi\) in normal form, over a finite relational
+vocabulary \(\tau\), such that \(\varphi\) and \(\psi\) have models with the
+same universes; it suffices to give \(\psi\) a finite model.  By
+\cref{thm:p02-w02-p02-035-gf-tree}, \(\psi\) has a witness; let
+\(\mathfrak B,T,F,t_v,e_v\) be the unravelling built from it in that proof,
+and let \(\mathfrak F(v)\) be the substructure of \(\mathfrak B\) induced on
+\(F(v)\).
+
+Since \(\lvert F(v)\rvert\leq m\) and \(\tau\) is finite, the structures
+\(\mathfrak F(v)\) fall into finitely many isomorphism types.  Choose one
+node of each type and add all their predecessors; the result is a finite set
+\(S\) of nodes, closed under taking parents, such that every \(\mathfrak F(w)\)
+is isomorphic to some \(\mathfrak F(u)\) with \(u\in S\).  Let \(\mathfrak A\)
+be the substructure of \(\mathfrak B\) induced on
+\(A\defeq\bigcup_{v\in S}F(v)\), and let \(\mathfrak A^{+}\) be as in
+\cref{def:p02-w02-p02-035-herwig-import}.  We show
+\(\mathfrak A^{+}\entails\psi\).
+
+The root lies in \(S\) and \(\mathfrak B\entails C(e_\lambda)\); as
+\(\mathfrak A\) is induced in \(\mathfrak B\) and in \(\mathfrak A^{+}\),
+\(\mathfrak A^{+}\entails\exists\bar x\,C\bar x\).
+
+Fix \(i\) and \(\bar a\) with \(\mathfrak A^{+}\entails\alpha_i(\bar a)\).
+The argument tuple of \(\alpha_i\) at \(\bar a\) satisfies a relation atom in
+which all its positions are distinct variables, so it is live and lists every
+entry of \(\bar a\).  By premise (ii) an automorphism \(g\) moves it into
+\(A\); then \(\bar b\defeq g(\bar a)\) lies in \(A\), and
+\(\mathfrak A^{+}\entails\alpha_i(\bar b)\), hence
+\(\mathfrak A\entails\alpha_i(\bar b)\) and \(\mathfrak B\entails\alpha_i(\bar b)\).
+
+Let \(v_0\) be the node nearest the root among the nodes containing all
+entries of \(\bar b\), as in the tree proof.  We show \(v_0\in S\).  Each entry
+lies in \(A\), so in some \(F(u)\) with \(u\in S\); the node where it is new
+is a predecessor of \(u\) or \(u\) itself, so lies in \(S\).  These nodes,
+one per entry, are all predecessors of any node containing \(\bar b\), so
+they lie on one path from the root.  Let \(\beta\) be the deepest of them.
+Every entry is new at a predecessor of \(\beta\) and present below \(\beta\),
+so by connectivity it is present at \(\beta\); no proper predecessor of
+\(\beta\) contains the entry that is new at \(\beta\).  So \(v_0=\beta\in S\).
+
+As in the tree proof, \(\bar b=e_{v_0}\circ\sigma\), \(s=t_{v_0}^\sigma\)
+contains \(\alpha_i\), and \(t=\mathrm{ext}_i(s)\) makes \(\psi_i\) true.
+
+If \(t\) adds no new elements, the tree proof found
+\(\bar d\subseteq F(v_0)\subseteq A\) with \(\mathfrak B\entails\psi_i(\bar b,\bar d)\).
+Since \(\psi_i\) is quantifier-free and the substructures are induced,
+\(\mathfrak A^{+}\entails\psi_i(\bar b,\bar d)\), and applying \(g^{-1}\) gives
+\(\mathfrak A^{+}\entails\psi_i(\bar a,g^{-1}\bar d)\).
+
+Otherwise the child \(w\) of \(v_0\) built from \(i,\sigma\) carries
+\(\bar d\subseteq F(w)\) with \(\mathfrak F(w)\entails\psi_i(\bar b,\bar d)\).
+Choose \(u\in S\) and an isomorphism \(\pi:\mathfrak F(w)\to\mathfrak F(u)\).
+Let \(p\) be the restriction of \(\pi\) to the entries of \(\bar b\), which
+lie in \(F(v_0)\cap F(w)\subseteq A\).  Then \(p\) is a partial isomorphism of
+\(\mathfrak A\): it is injective, and for every relation symbol \(R\) and
+tuple \(\bar c\) over its domain, \(\mathfrak A\entails R(\bar c)\) iff
+\(\mathfrak F(w)\entails R(\bar c)\) iff \(\mathfrak F(u)\entails R(\pi\bar c)\)
+iff \(\mathfrak A\entails R(\pi\bar c)\), all substructures being induced.
+By premise (i) some automorphism \(f\) of \(\mathfrak A^{+}\) extends \(p\).
+Now \(\mathfrak F(u)\entails\psi_i(\pi\bar b,\pi\bar d)\), so
+\(\mathfrak A^{+}\entails\psi_i(f g\bar a,\pi\bar d)\), and applying
+\((fg)^{-1}\) gives \(\mathfrak A^{+}\entails\psi_i(\bar a,(fg)^{-1}\pi\bar d)\).
+
+In both cases \(\mathfrak A^{+}\entails\exists\bar y\,\psi_i(\bar a,\bar y)\).
+So the finite structure \(\mathfrak A^{+}\) is a model of \(\psi\), and
+\(\varphi\) has a model with the same finite universe.  Since every finite
+model is a model, finite and unrestricted satisfiability coincide.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p02-w02-p02-035-gf-upper}{thm:p02-w02-p02-035-gf-upper}{Correctness and running time of type elimination}
+\begin{proof}
+\emph{Step 2 lists exactly the types.}  A type satisfies both conditions by
+(F3) of the tree proof.  Conversely, let \(t\) satisfy them, with
+equivalence \(\approx\).  Let \(\mathfrak M\) have universe
+\(\{1,\ldots,k\}/{\approx}\) and
+\(R^{\mathfrak M}\defeq\{([p_1],\ldots,[p_r]):R(x_{\bar p})\in t\}\).  The
+tuple \(([1],\ldots,[k])\) satisfies the equalities of \(t\) and its
+positive atoms.  If \(\neg R(x_{\bar p})\in t\) but
+\(([p_1],\ldots,[p_r])\in R^{\mathfrak M}\), then some \(R(x_{\bar q})\in t\)
+has \(q_c\approx p_c\) for all \(c\), against the second condition.  So
+\(t\) is realized.
+
+\emph{Correctness.}  The sets \(P_j\) decrease and are finite, so the loop
+stops.  Suppose the output is positive.  At the fixed point, every
+reduction of a member of \(P^{*}\) lies in \(P^{*}\).  For \(s\in P^{*}\) a
+\(k_i\)-type with \(\alpha_i\in s\), let \(\mathrm{ext}_i(s)\) be a type
+\(t'\) found in Step~3.  For \(s\) without \(\alpha_i\), let
+\(\mathrm{ext}_i(s)\defeq s^\rho\) with \(\rho\) fixing \(1,\ldots,k_i\) and
+sending every \(q>k_i\) to \(1\); it is a reduction of \(s\), hence in
+\(P^{*}\), extends \(s\) by (F2), and makes \(\alpha_i\to\psi_i\) true
+because \(\neg\alpha_i\in s\).  With \(t_0\) from the output this is a
+witness, so \(\psi\) is satisfiable by \cref{thm:p02-w02-p02-035-gf-tree},
+and \(\varphi\) is satisfiable by
+\cref{thm:p02-w02-p02-035-gf-constants,thm:p02-w02-p02-035-gf-normal-form}.
+Conversely, let \(\mathfrak A\entails\psi\) and let \(Q\) be the set of types,
+with at most \(m\) variables, realized in \(\mathfrak A\).  Then
+\(Q\subseteq P_0\).  If \(Q\subseteq P_j\) and \(t\in Q\) is realized by
+\(\bar a\), every reduction of \(t\) is realized and so lies in \(Q\); and
+if \(\alpha_i\in t\), some \(\bar d\) has \(\mathfrak A\entails\psi_i(\bar a,\bar d)\),
+so \(\mathrm{atp}^{\psi}(\bar a\bar d)\in Q\) extends \(t\) and makes
+\(\psi_i\) true.  Hence \(Q\subseteq P_{j+1}\), so \(Q\subseteq P^{*}\), and
+the type of a tuple in \(C^{\mathfrak A}\) lies in \(P^{*}\).
+
+\emph{Running time.}  Let \(m\) be the number of variables of \(\psi\), \(q\)
+the largest number of distinct variables in an atom of \(\psi\), and
+\(K\defeq\lvert\psi\rvert m^{q}+m^2\).  Each atom of \(\psi\) yields at most
+\(m^{q}\) members of \(\mathrm{At}_k\), so \(\lvert\mathrm{At}_k\rvert\leq K\)
+and there are at most \(N\defeq m2^{K}\) types; each is written with a
+number of bits polynomial in \(K\) and \(\lvert\psi\rvert\).  Step~2 takes
+time \(N\) times a polynomial in \(K\).  Step~3 has at most \(N+1\) rounds.
+In one round, for each of at most \(N\) types it computes at most
+\(m^{m+1}\) reductions and tests each for membership among at most \(N\)
+types, and for each of at most \(\lvert\psi\rvert\) indices \(i\) it tests at
+most \(N\) candidates \(t'\).  Each test is polynomial in \(K\) and
+\(\lvert\psi\rvert\).  The total time is therefore
+\(N^{3}m^{m+1}\) times a polynomial in \(K\) and \(\lvert\psi\rvert\), that is
+\(2^{O(K+m\log m)}\).
+
+In general, removing \(k\leq n\) constants gives at most \(2n\) variables, and
+the normal form adds one, so \(m\leq2n+1\), \(q\leq m\), and
+\(\lvert\psi\rvert\) is polynomial in \(n\) by
+\cref{thm:p02-w02-p02-035-gf-constants,thm:p02-w02-p02-035-gf-normal-form}.
+Then \(K\leq\lvert\psi\rvert(2n+1)^{2n+1}+(2n+1)^2=2^{O(n\log n)}\), and the
+running time is \(2^{2^{O(n\log n)}}\).  Since \(cn\log n\leq n^2\) for large
+\(n\), this lies in \(\mathsf{DTIME}(2^{2^{n^2}})\) up to finitely many
+inputs, so the problem is in \(2\mathsf{EXPTIME}\).
+
+For constant-free input with at most \(k\) variables, no constants are
+removed, \(m\leq k+1\) and \(q\leq k+1\), so \(K\leq\lvert\psi\rvert(k+1)^{k+1}+(k+1)^2\)
+is polynomial in \(n\) and \(m\log m\) is constant.  For constant-free input
+whose relation symbols have arity at most \(k\), the normal form has
+arities at most \(k+1\), so \(q\leq k+1\), \(m\leq n+1\), \(K\) is polynomial
+in \(n\), and \(m\log m=O(n\log n)\).  In both cases the time is
+\(2^{n^{O(1)}}\), so the problems are in \(\mathsf{EXPTIME}\).
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p02-w02-p02-035-gf-bounded-constants}{thm:p02-w02-p02-035-gf-bounded-constants}{Bounded guarded sentences with constants}
+\begin{proof}
+Fix \(k\geq1\) and put \(q\defeq k+1\).  Let \(\varphi\) be a guarded sentence
+of length \(n\) whose constants are among \(c_1,\ldots,c_p\), \(p\leq n\), and
+which either has at most \(k\) variables or has only relation symbols of
+arity at most \(k\).
+
+\emph{Step 1: an unnamed element.}  Let \(\mathfrak A\) be a structure for
+\(\varphi\), and let \(\mathfrak A'\) add to it one new element \(e\) that lies
+in no relation, with the constants and relations of \(\mathfrak A\)
+unchanged.  We show by induction that for every guarded formula \(\theta\)
+and every assignment \(s\) into \(A\), \(\mathfrak A\entails\theta[s]\) iff
+\(\mathfrak A'\entails\theta[s]\).  Atoms have the same value tuples and the
+same relations in both structures, and Boolean steps are immediate.  Let
+\(\theta=(\exists\bar y\,.\,\alpha)\chi\).  If \(\bar b\) is a tuple over
+\(A'\) with \(\mathfrak A'\entails(\alpha\land\chi)[s,\bar y\mapsto\bar b]\),
+then every variable of \(\bar y\) occurs in the relation atom \(\alpha\), so
+every entry of \(\bar b\) is an entry of a tuple of
+\(R^{\mathfrak A'}=R^{\mathfrak A}\subseteq A^{r}\), where \(R\) is the symbol of
+\(\alpha\); hence \(\bar b\) lies over \(A\), and the induction hypothesis gives
+\(\mathfrak A\entails(\alpha\land\chi)[s,\bar y\mapsto\bar b]\).  The
+converse uses the same \(\bar b\).  For
+\(\theta=(\forall\bar y\,.\,\alpha)\chi\), a tuple \(\bar b\) over \(A'\) with
+\(\mathfrak A'\entails\alpha[s,\bar y\mapsto\bar b]\) lies over \(A\) by the
+same argument, so both structures test \(\chi\) on the same tuples, and the
+induction hypothesis applies to each.  Hence \(\varphi\) has a model iff it
+has a model in which some element is the value of no constant.
+
+\emph{Step 2: an equality pattern.}  For an equivalence relation \(\equiv\)
+on \(\{1,\ldots,p\}\) let \(\varphi_\equiv\) replace every \(c_j\) by
+\(c_{j'}\), where \(j'\) is the least member of the class of \(j\).  This is
+a guarded sentence with the same variables and relation symbols.  If
+\(\mathfrak A\entails\varphi\) and \(\equiv\) relates \(i\) and \(j\) exactly
+when \(c_i^{\mathfrak A}=c_j^{\mathfrak A}\), then
+\(\mathfrak A\entails\varphi_\equiv\), since each replaced constant has the
+same value as its replacement, and the remaining constants have pairwise
+distinct values.  Conversely, if \(\mathfrak B\entails\varphi_\equiv\),
+interpreting each \(c_j\) as \(c_{j'}^{\mathfrak B}\) gives a model of
+\(\varphi\) with the same universe.  Adding an element as in Step 1 keeps the
+values of the constants distinct.  So \(\varphi\) is satisfiable iff for some
+\(\equiv\) the sentence \(\varphi_\equiv\) has a model in which its constants
+have pairwise distinct values and some element is the value of no constant.
+Below, the constants of \(\varphi_\equiv\) are renamed \(c_1,\ldots,c_p\).
+
+\emph{Step 3: flattening.}  Apply to \(\varphi_\equiv\) the rewriting of
+universal guarded quantifiers and Steps 1 and 2 of the proof of
+\cref{thm:p02-w02-p02-035-gf-normal-form}.  Those steps remain valid when
+atoms contain constants.  In Step 1, \(R(\bar u)\) becomes \(R'(\bar u,z)\)
+whatever terms \(\bar u\) contains; the guardedness check concerns free
+variables, to which constants contribute nothing; and in the semantic
+induction the value tuple of \(R(\bar u)\) in \(\mathfrak A\) followed by
+\(e\) is the value tuple of \(R'(\bar u,z)\) in \(\mathfrak A'\) when both
+structures interpret the constants alike.  In Step 2, \(\bar z\) lists the
+free variables of \(\chi\), which are variables, and the constants of
+\(\alpha\) and \(\theta\) stay in \(\eta_\chi\) and \(\eta'_\chi\); the argument
+that \(R_\chi\) defines \(\chi\) evaluates formulas in one structure and does
+not depend on which terms occur.  The expansions and reducts in that proof
+leave the constants unchanged.  Put
+\[
+ \varphi^{\flat}\defeq(\exists z\,.\,Cz)Cz\land(\forall z\,.\,Cz)\varphi''(z)\land\eta
+\]
+with a fresh unary \(C\).  Then \(\varphi_\equiv\) has a model with universe
+\(A\) and given values of the constants iff \(\varphi^{\flat}\) does: if
+\(\varphi''\land\eta\) holds at \(e\), interpret \(C\) as \(\{e\}\); conversely
+pick \(e\in C\).  Every conjunct of \(\varphi^{\flat}\) has one of three
+shapes: \((\exists z\,.\,Cz)Cz\); \((\forall\bar x\,.\,\alpha)\theta\) with
+\(\theta\) quantifier-free and \(\mathrm{free}(\alpha)=\{\bar x\}\), which covers
+\((\forall z\,.\,Cz)\varphi''\) and every \(\eta'_\chi\); and
+\((\forall\bar x\,.\,\alpha)(\exists\bar y\,.\,\beta)\theta\) with \(\theta\)
+quantifier-free, \(\bar y\) nonempty, \(\mathrm{free}(\alpha)=\{\bar x\}\) and
+\(\mathrm{free}(\beta)=\{\bar x,\bar y\}\), which covers every \(\eta_\chi\).
+The variables of \(\varphi^{\flat}\) are those of \(\varphi\) and \(z\); the
+symbols \(R'\) and \(R_\chi\) have arity at most one more than the largest
+arity of \(\varphi\), as in that proof, and \(C\) is unary.  So in both
+bounded cases every atom of \(\varphi^{\flat}\) has at most \(q\) distinct
+variables, and \(\varphi^{\flat}\) has length polynomial in \(n\).
+
+\emph{Step 4: the split.}  Let \(\ast\) be a new symbol.  For a relation symbol
+\(R\) of arity \(r\) and a map \(\kappa:\{1,\ldots,r\}\to\{\ast,1,\ldots,p\}\)
+with \(\kappa^{-1}(\ast)=\{p_1<\cdots<p_l\}\) nonempty, let \(R_\kappa\) be a
+fresh relation symbol of arity \(l\).  If \(\kappa^{-1}(\ast)\) is empty, call
+\((R,\kappa)\) a \emph{ground pattern}.  Fix a map \(\mathit{val}\) from
+ground patterns to \(\{\top,\bot\}\).  For a formula \(\theta\) built from the
+symbols of \(\varphi^{\flat}\) and a map \(\sigma\) from a finite set of
+variables containing \(\mathrm{free}(\theta)\) to \(\{\ast,1,\ldots,p\}\), put
+\([c_j]_\sigma\defeq j\) and \([x]_\sigma\defeq\sigma(x)\), and define
+\(\mathrm{sp}_\sigma(\theta)\) by recursion.
+\begin{itemize}
+\item \(\mathrm{sp}_\sigma R(t_1,\ldots,t_r)\) is
+  \(R_\kappa(t_{p_1},\ldots,t_{p_l})\) for \(\kappa(i)\defeq[t_i]_\sigma\) when
+  \(\kappa^{-1}(\ast)\) is nonempty, and \(\mathit{val}(R,\kappa)\) otherwise.
+\item \(\mathrm{sp}_\sigma(t=t')\) is \(t=t'\) if \([t]_\sigma=[t']_\sigma=\ast\);
+  \(\top\) if \([t]_\sigma=[t']_\sigma\neq\ast\); and \(\bot\) otherwise.
+\item \(\mathrm{sp}_\sigma\) commutes with \(\neg,\land,\lor,\to,\leftrightarrow\).
+\item For \(\theta=(\exists\bar y\,.\,\alpha)\chi\), let \(\sigma'\) range over
+  the maps that are defined on \(\mathrm{dom}(\sigma)\cup\bar y\) and agree
+  with \(\sigma\) outside \(\bar y\), and let \(\bar y_{\ast}\) be the subtuple of
+  the \(y\in\bar y\) with \(\sigma'(y)=\ast\).  Then
+  \(\mathrm{sp}_\sigma(\theta)\) is the disjunction over all \(\sigma'\) of
+  \((\exists\bar y_{\ast}\,.\,\mathrm{sp}_{\sigma'}\alpha)\mathrm{sp}_{\sigma'}\chi\)
+  if \(\bar y_{\ast}\) is nonempty, and of
+  \(\mathrm{sp}_{\sigma'}\alpha\land\mathrm{sp}_{\sigma'}\chi\) otherwise.
+\item For \(\theta=(\forall\bar y\,.\,\alpha)\chi\) it is the conjunction over
+  the same \(\sigma'\) of
+  \((\forall\bar y_{\ast}\,.\,\mathrm{sp}_{\sigma'}\alpha)\mathrm{sp}_{\sigma'}\chi\)
+  if \(\bar y_{\ast}\) is nonempty, and of
+  \(\mathrm{sp}_{\sigma'}\alpha\to\mathrm{sp}_{\sigma'}\chi\) otherwise.
+\end{itemize}
+By induction, \(\mathrm{free}(\mathrm{sp}_\sigma\theta)\) consists of variables
+\(x\in\mathrm{free}(\theta)\) with \(\sigma(x)=\ast\): an atom keeps exactly its
+variables with value \(\ast\), and a variable of \(\bar y\) outside
+\(\bar y_{\ast}\) is replaced by a constant index and does not occur.  In the
+quantifier clauses with \(\bar y_{\ast}\) nonempty, \(\mathrm{sp}_{\sigma'}\alpha\)
+is a relation atom \(R_\kappa(\bar w)\), because the variables of
+\(\bar y_{\ast}\) occur in \(\alpha\) with value \(\ast\); its variables are the
+variables of \(\alpha\) with value \(\ast\), which include \(\bar y_{\ast}\)
+and every free variable of \(\mathrm{sp}_{\sigma'}\chi\), since
+\(\mathrm{free}(\chi)\subseteq\mathrm{free}(\alpha)\).  So, reading \(\top\)
+and \(\bot\) as additional atoms that never serve as guards, rule~(3) of
+\cref{def:p02-w02-p02-035-gf} applies and \(\mathrm{sp}_\sigma\theta\) is
+guarded and contains no constants.
+
+The truth values are then removed bottom-up by replacements that preserve
+equivalence and free variables: the Boolean rules such as
+\(\top\land\chi\rightsquigarrow\chi\), \(\bot\land\chi\rightsquigarrow\bot\) and
+\(\neg\top\rightsquigarrow\bot\), together with
+\((\exists\bar y\,.\,\alpha)\bot\rightsquigarrow\bot\),
+\((\exists\bar y\,.\,\alpha)\top\rightsquigarrow(\exists\bar y\,.\,\alpha)\alpha\),
+\((\forall\bar y\,.\,\alpha)\top\rightsquigarrow\top\) and
+\((\forall\bar y\,.\,\alpha)\bot\rightsquigarrow(\forall\bar y\,.\,\alpha)\neg\alpha\).
+The result for \(\mathrm{sp}_\emptyset(\varphi^{\flat})\) is \(\top\), \(\bot\), or a
+guarded sentence without truth values.  Let \(\varphi^{\mathit{val}}\) be that
+sentence, or \((\exists x\,.\,Ux)Ux\) for a fresh unary \(U\) in the case
+\(\top\), or \((\exists x\,.\,Ux)\neg Ux\) in the case \(\bot\).
+
+\emph{Step 5: correctness of the split.}  Let \(\mathfrak A\) be a structure
+for \(\varphi^{\flat}\) in which \(c_1,\ldots,c_p\) have pairwise distinct
+values and \(A_0\defeq A\setminus\{c_1^{\mathfrak A},\ldots,c_p^{\mathfrak A}\}\)
+is nonempty, and let \(\mathfrak B\) be a structure with universe \(A_0\) for
+all symbols \(R_\kappa\).  For \(\kappa\) as above and \(\bar u\in A_0^{l}\),
+let \(\langle\kappa,\bar u\rangle\) be the \(r\)-tuple whose \(i\)-th entry is
+\(c_{\kappa(i)}^{\mathfrak A}\) if \(\kappa(i)\neq\ast\) and \(u_h\) if
+\(i=p_h\).  Say that \(\mathfrak A\), \(\mathfrak B\) and \(\mathit{val}\)
+\emph{correspond} if \(\langle\kappa,\bar u\rangle\in R^{\mathfrak A}\) iff
+\(\bar u\in R_\kappa^{\mathfrak B}\) for all \(R\), all \(\kappa\) with a place
+\(\ast\) and all \(\bar u\), and
+\((c_{\kappa(1)}^{\mathfrak A},\ldots,c_{\kappa(r)}^{\mathfrak A})\in R^{\mathfrak A}\)
+iff \(\mathit{val}(R,\kappa)=\top\) for every ground pattern.
+
+\emph{Truth lemma.}  Suppose they correspond.  For \(\theta\) and \(\sigma\) as
+in Step 4 and an assignment \(s\) of the variables \(x\) with
+\(\sigma(x)=\ast\) into \(A_0\), let \(\hat s(x)\defeq s(x)\) if
+\(\sigma(x)=\ast\) and \(\hat s(x)\defeq c_{\sigma(x)}^{\mathfrak A}\)
+otherwise.  Then \(\mathfrak A\entails\theta[\hat s]\) iff
+\(\mathfrak B\entails\mathrm{sp}_\sigma\theta[s]\), with \(\top\) and \(\bot\)
+read as true and false.  For an atom \(R(t_1,\ldots,t_r)\), the value of
+\(t_i\) under \(\hat s\) is \(c_{\kappa(i)}^{\mathfrak A}\) if
+\(\kappa(i)\neq\ast\) and \(s(t_i)\) if \(\kappa(i)=\ast\), so the value tuple
+is \(\langle\kappa,(s(t_{p_1}),\ldots,s(t_{p_l}))\rangle\), or the tuple of
+constants for a ground pattern, and correspondence gives the claim.  For an
+equality, two terms with value \(\ast\) take values \(s(t),s(t')\); two terms
+with indices \(j,j'\) take values \(c_j^{\mathfrak A},c_{j'}^{\mathfrak A}\),
+equal iff \(j=j'\) by distinctness; and a term with value \(\ast\) takes a
+value in \(A_0\), which differs from every \(c_j^{\mathfrak A}\).  Boolean
+steps are immediate.  For \(\theta=(\exists\bar y\,.\,\alpha)\chi\),
+\(\mathfrak A\entails\theta[\hat s]\) iff some \(\bar b\) over \(A\) gives
+\(\mathfrak A\entails(\alpha\land\chi)[\hat s,\bar y\mapsto\bar b]\).  A tuple
+\(\bar b\) determines \(\sigma'\), with \(\sigma'(y)\defeq\ast\) if
+\(b_y\in A_0\) and \(\sigma'(y)\defeq j\) for the unique \(j\) with
+\(b_y=c_j^{\mathfrak A}\) otherwise, and the assignment \(s'\) that agrees with
+\(s\) on the variables outside \(\bar y\) with value \(\ast\) and sends each
+\(y\in\bar y_{\ast}\) to \(b_y\); then \(\hat s'\) is \(\hat s\) with
+\(\bar y\mapsto\bar b\).  Every pair \((\sigma',s')\) of this form arises from
+exactly one \(\bar b\).  By the induction hypothesis,
+\(\mathfrak A\entails\theta[\hat s]\) iff for some \(\sigma'\) and some values
+of \(\bar y_{\ast}\) in \(A_0\),
+\(\mathfrak B\entails(\mathrm{sp}_{\sigma'}\alpha\land\mathrm{sp}_{\sigma'}\chi)[s']\),
+which is the truth of the disjunct for \(\sigma'\), as \(A_0\) is the universe
+of \(\mathfrak B\).  For \(\theta=(\forall\bar y\,.\,\alpha)\chi\) the same
+correspondence between tuples \(\bar b\) and pairs \((\sigma',s')\) shows that
+\(\alpha\to\chi\) holds for all \(\bar b\) iff
+\(\mathrm{sp}_{\sigma'}\alpha\to\mathrm{sp}_{\sigma'}\chi\) holds for all
+\(\sigma'\) and all values of \(\bar y_{\ast}\) in \(A_0\), which is the truth
+of the conjunction.
+
+\emph{Claim.}  \(\varphi_\equiv\) has a model in which its constants have
+pairwise distinct values and some element is the value of no constant iff
+\(\varphi^{\mathit{val}}\) is satisfiable for some \(\mathit{val}\).  Suppose
+\(\varphi_\equiv\) has such a model; by Step 3, so does \(\varphi^{\flat}\),
+call it \(\mathfrak A\).  Let \(\mathfrak B\) have universe \(A_0\) and
+\(R_\kappa^{\mathfrak B}\defeq\{\bar u:\langle\kappa,\bar u\rangle\in R^{\mathfrak A}\}\),
+and let \(\mathit{val}\) record which ground tuples lie in the relations of
+\(\mathfrak A\).  They correspond, so
+\(\mathfrak B\entails\mathrm{sp}_\emptyset(\varphi^{\flat})\); the
+simplification is therefore not \(\bot\), and \(\mathfrak B\), with \(U\)
+interpreted as \(A_0\) in the case \(\top\), satisfies
+\(\varphi^{\mathit{val}}\).  Conversely let
+\(\mathfrak B\entails\varphi^{\mathit{val}}\).  The case \(\bot\) is
+impossible, since \((\exists x\,.\,Ux)\neg Ux\) has no model, so
+\(\mathfrak B\entails\mathrm{sp}_\emptyset(\varphi^{\flat})\).  Interpret
+every symbol \(R_\kappa\) absent from \(\varphi^{\mathit{val}}\) as empty.  Let
+\(A\defeq B\cup\{d_1,\ldots,d_p\}\) with new distinct \(d_j\), and
+\(c_j^{\mathfrak A}\defeq d_j\).  For \(\bar a\in A^{r}\) let
+\(\kappa_{\bar a}(i)\defeq j\) if \(a_i=d_j\) and \(\ast\) otherwise, and put
+\(\bar a\in R^{\mathfrak A}\) iff either \(\kappa_{\bar a}\) has places
+\(p_1<\cdots<p_l\) with value \(\ast\) and
+\((a_{p_1},\ldots,a_{p_l})\in R_{\kappa_{\bar a}}^{\mathfrak B}\), or it has none
+and \(\mathit{val}(R,\kappa_{\bar a})=\top\).  For \(\bar u\) over \(B\),
+\(\kappa_{\langle\kappa,\bar u\rangle}=\kappa\), so the three correspond, with
+\(A_0=B\) nonempty.  By the truth lemma \(\mathfrak A\entails\varphi^{\flat}\),
+and by Step 3 \(\varphi_\equiv\) has a model with distinct constant values on
+the same universe, in which each \(b\in B\) is the value of no constant.
+
+\emph{Step 6: the bounds.}  The sentence \(\varphi^{\mathit{val}}\) is
+constant-free.  Its variables are among those of \(\varphi^{\flat}\) or are
+the single variable \(x\), and each \(R_\kappa\) has arity at most that of
+\(R\).  So if \(\varphi\) has at most \(k\) variables, \(\varphi^{\mathit{val}}\)
+has at most \(q\); and if \(\varphi\) has arities at most \(k\),
+\(\varphi^{\mathit{val}}\) has arities at most \(q\).  For a conjunct
+\((\forall\bar x\,.\,\alpha)(\exists\bar y\,.\,\beta)\theta\), the tuples
+\(\bar x\) and \(\bar y\) list distinct variables of the atom \(\beta\), so
+\(\lvert\bar x\rvert+\lvert\bar y\rvert\leq q\); for the other two shapes the
+bound tuple lists the variables of one atom.  Hence
+\(\mathrm{sp}_\emptyset\) of a conjunct consists of at most \((p+1)^{q}\)
+translated copies of its parts.  A translated part has the same number of
+symbols as the part, or fewer, and each new symbol \(R_\kappa\) is written with
+\(O(r\log(p+2))\) bits, so \(\lvert\varphi^{\mathit{val}}\rvert\) is at most
+\((n+1)^{q}\) times a polynomial in \(n\), and the simplification does not
+lengthen it.  It is computed in time polynomial in that length.  By
+\cref{thm:p02-w02-p02-035-gf-upper} for constant-free input with at most
+\(q\) variables or with arities at most \(q\), satisfiability of
+\(\varphi^{\mathit{val}}\) is decided in time \(2^{n^{O(1)}}\).
+
+The procedure tries every equivalence relation \(\equiv\), of which there are
+at most \(p^{p}\leq2^{n\log n}\), and every restriction of \(\mathit{val}\) to
+the ground patterns that occur in \(\mathrm{sp}_\emptyset(\varphi^{\flat})\).
+An atom of \(\varphi^{\flat}\) has at most \(q\) distinct variables, so it
+yields at most \((p+1)^{q}\) patterns, and there are at most
+\(g\defeq\lvert\varphi^{\flat}\rvert(p+1)^{q}\) ground patterns, a polynomial
+in \(n\); only these affect \(\varphi^{\mathit{val}}\).  It accepts iff some
+\(\varphi^{\mathit{val}}\) is satisfiable.  By Steps 1 and 2 and the claim,
+this happens iff \(\varphi\) is satisfiable.  The total time is at most
+\(2^{n\log n}\cdot2^{g}\cdot2^{n^{O(1)}}=2^{n^{O(1)}}\).
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p02-w02-p02-035-gf-hard}{thm:p02-w02-p02-035-gf-hard}{Guarded satisfiability is 2EXPTIME-complete}
+\begin{proof}
+\emph{Acceptance.}  A configuration \(C=(q,r,y)\) of \(M\) consists of a
+state, a head cell \(r<2^{s}\) and an inscription \(y\in\Gamma^{2^{s}}\); for
+non-final \(q\), its \(i\)-th successor \(C_i\) applies
+\(\delta_i(q,y_r)=(q',\sigma',\mu)\), giving \((q',r+\mu,y')\) with
+\(y'_r=\sigma'\) and \(y'\) otherwise equal to \(y\).  Player \(\exists\)
+wins from \(C\) if \(C\) is accepting, or existential with a winning
+successor, or universal with both successors winning, and \(M\) accepts
+\(w\) iff \(\exists\) wins from the initial configuration
+\(C_{\mathrm{in}}=(q_0,0,w\square^{2^{s}-n})\) \cite[sect.~4.1]{Gradel1999}.
+Since every computation halts and each configuration has at most two
+successors, the configurations reachable from a reachable \(C\) form a
+finite tree by K\"onig's lemma; let \(h(C)\) be its height.  Successors have
+smaller height, so the recursion above is well founded.  By the machine
+model, every reachable configuration with \(\mu=1\) has \(r+1<2^{s}\), and
+with \(\mu=-1\) has \(r\geq1\).  We take \(p(n)\geq n\), so the input fits.
+
+\emph{Form and size.}  Every quantifier of \(\mathrm{ACCEPT}_{M,w}\) carries
+a relation-atom guard that contains all variables free in its scope: \(Rab\),
+\(Tab\), \(U\bar xab\), \(S_iabcd\) and \(E\bar uab\bar vcd\) list the
+relevant variables.  No equality and no constant occurs.  With \(s=p(n)\)
+and \(M\) fixed, the sentence has \(O(s^2+ns)\) symbols and is produced in
+polynomial time.
+
+\emph{Facts at nodes.}  Let \(\mathfrak A\entails\mathrm{ACCEPT}_{M,w}\) and
+\(\mathfrak A\entails Tab\).  Then \(Na\) and \(\neg Nb\), so \(a\neq b\), and
+each \(r<2^{s}\) has its code \(\hat r(a,b)\).  For
+\(\bar x,\bar x'\in\{a,b\}^{s}\), \(\mathit{succ}(\bar x,\bar x')\) holds iff
+the number coded by \(\bar x'\) is one more than that coded by \(\bar x\):
+the disjunct for \(i\) says that bits below \(i-1\) go from \(1\) to \(0\), bit
+\(i-1\) goes from \(0\) to \(1\), and higher bits agree.  Likewise
+\(\mathit{diff}(\bar x,\bar x')\) holds iff the coded numbers differ.  The
+second and third conjuncts give \(U\bar xab\) for every
+\(\bar x\in\{a,b\}^{s}\), by induction on the number of entries equal to
+\(b\).  If also \(S_iabcd\) and \(Tcd\), call \(\bar v\in\{c,d\}^{2s}\)
+\emph{matched} to \(\bar u\in\{a,b\}^{2s}\) if \(v_j=c\) iff \(u_j=a\); the
+fifth conjunct gives \(E\bar uab\bar vcd\) for all matched pairs, again by
+induction on the number of entries equal to \(b\).
+
+Say that \(\mathfrak A\) \emph{imposes} \(C=(q,r,y)\) at \((a,b)\) if
+\(Tab\), \(Q_qab\), \(Z\hat r(a,b)ab\), and \(P_{y_j}\hat j(a,b)ab\) for every
+\(j<2^{s}\).
+
+\emph{Step lemma.}  Let \(C\) be reachable and non-final, imposed at
+\((a,b)\), and let \(S_iabcd\), \(Tcd\) and
+\(\mathfrak A\entails\mathrm{NEXT}_i(a,b,c,d)\).  Then \(C_i\) is imposed at
+\((c,d)\).  Write \(C=(q,r,y)\) and \(\delta_i(q,y_r)=(q',\sigma',\mu)\).  For
+\(j\neq r\), instantiate the first conjunct of \(\mathrm{NEXT}_i\) at
+\(\bar x=\hat j(a,b)\), \(\bar x'=\hat r(a,b)\), \(\bar y=\hat j(c,d)\),
+\(\bar y'=\hat r(c,d)\); the guard holds because the pair is matched,
+\(Z\bar x'ab\) and \(\mathit{diff}(\bar x,\bar x')\) hold, so
+\(P_{y_j}\hat j(c,d)cd\).  For the head cell, instantiate the conjunct for
+\((q,y_r)\) at \(\bar x=\hat r(a,b)\), \(\bar x'=\widehat{r+\mu}(a,b)\) and the
+matched \(\bar y,\bar y'\); here \(r+\mu\) is a cell because \(C\) is
+reachable, and \(\gamma_\mu\) holds.  This gives \(Q_{q'}cd\),
+\(P_{\sigma'}\hat r(c,d)cd\) and \(Z\widehat{r+\mu}(c,d)cd\).  So \(C_i\) is
+imposed at \((c,d)\).
+
+\emph{Satisfiable implies acceptance.}  We show by induction on \(h(C)\)
+that \(\exists\) wins from every reachable \(C\) imposed at some node.  If
+\(C\) is final, it is not rejecting, by the last conjunct, so it is
+accepting.  If \(C\) is existential, \(\mathrm{EXIST}(a,b)\) holds; the fourth
+conjunct gives \(c,d\) with \(S_1abcd\) and \(Tcd\), and the seventh gives
+\(\mathrm{NEXT}_1\) or \(\mathrm{NEXT}_2\) at \((a,b,c,d)\).  So by the step
+lemma some \(C_i\) is imposed at \((c,d)\), and \(\exists\) wins from it by
+induction.  If \(C\) is universal, the fourth conjunct gives
+\((c_i,d_i)\) with \(S_iabc_id_i\) and \(Tc_id_i\) for \(i=1,2\), and the
+eighth gives \(\mathrm{NEXT}_i\); so both successors are imposed and win.
+Finally, the first conjunct gives \((a,b)\) with \(Rab\land Tab\), and the
+sixth imposes \(C_{\mathrm{in}}\) there: cells \(j\geq n\) are covered by
+\(U\hat j(a,b)ab\) and \(\mathit{diff}(\hat r,\hat j)\) for \(r<n\).  So
+\(M\) accepts \(w\).
+
+\emph{Acceptance implies satisfiable.}  Let \(\mathcal S\) be the tree of a
+winning strategy of \(\exists\) from \(C_{\mathrm{in}}\): each node \(\nu\)
+carries a configuration \(C(\nu)\), an existential node has one child
+carrying a chosen successor \(C_{k(\nu)}\), a universal node has two
+children carrying \(C_1\) and \(C_2\), and every leaf is accepting.  It is
+finite.  Take distinct elements \(a_\nu,b_\nu\) for the nodes and interpret:
+\(T=\{(a_\nu,b_\nu)\}\); \(R\) the root pair; \(N=\{a_\nu\}\);
+\(U=\{(\bar x,a_\nu,b_\nu):\bar x\in\{a_\nu,b_\nu\}^{s}\}\);
+\(S_i\) contains \((a_\nu,b_\nu,a_\mu,b_\mu)\) when \(\mu\) is the child of a
+universal \(\nu\) carrying \(C_i\), or the only child of an existential
+\(\nu\); \(E\) contains \((\bar u,a_\nu,b_\nu,\bar v,a_\mu,b_\mu)\) for such
+quadruples and matched \(\bar u,\bar v\); \(Q_q\) contains
+\((a_\nu,b_\nu)\) iff \(C(\nu)\) has state \(q\); \(Z\) contains
+\((\hat r(a_\nu,b_\nu),a_\nu,b_\nu)\) for the head cell \(r\) of \(C(\nu)\);
+and \(P_\sigma\) contains \((\hat j(a_\nu,b_\nu),a_\nu,b_\nu)\) iff cell \(j\)
+of \(C(\nu)\) holds \(\sigma\).  Every node pair imposes exactly its own
+configuration, and only through code tuples.
+
+The first three conjuncts hold by construction.  The fourth holds because a
+node whose state is existential or universal is not a leaf.  The fifth holds
+because \(E\) contains exactly the matched tuples for each successor
+quadruple, and the set of matched pairs contains \((\bar a,\bar c)\) and is
+closed under the substitutions.  The sixth holds at the root because
+\(C_{\mathrm{in}}\) is imposed there and the \(U\)-tuples are exactly the
+codes.  For the seventh and eighth, let \(\mu\) be an \(S_i\)-child of
+\(\nu\) with \(C(\mu)\) the \(k\)-th successor of \(C(\nu)\); then
+\(\mathrm{NEXT}_k\) holds at the quadruple.  The \(E\)-tuples there are
+exactly matched codes; if \(Z\bar x'ab\) and \(\mathit{diff}(\bar x,\bar x')\),
+then \(\bar x\) codes a cell other than the head, whose symbol is unchanged
+in \(C(\mu)\).  In a transition conjunct the antecedent forces \(q\), the
+head cell and its symbol to be those of \(C(\nu)\), and \(\gamma_\mu\)
+forces \(\bar x'\), and so \(\bar y'\), to code the new head cell; the
+consequent then describes \(C(\mu)\).  For an existential \(\nu\) the
+seventh conjunct is met by \(\mathrm{NEXT}_{k(\nu)}\), and the eighth is
+vacuous; for a universal \(\nu\) the \(S_i\)-child carries \(C_i\), so
+\(\mathrm{NEXT}_i\) holds, and the seventh is vacuous.  The ninth holds since
+no node of \(\mathcal S\) is rejecting.  So
+\(\mathrm{ACCEPT}_{M,w}\) has a model.
+
+\emph{\(2\mathsf{EXPTIME}\)-completeness.}  Let
+\(L\in\mathsf{DTIME}(2^{2^{n^k}})\).  By premise (i) with
+\(s(n)=2^{n^k}\geq\log n\), \(L\) is decided by an alternating machine in
+space \(2^{n^k}\), so by premise (ii) by a machine \(M\) as above with
+\(p(n)\defeq n^k+n\).  The map \(w\mapsto\mathrm{ACCEPT}_{M,w}\) is a
+polynomial-time reduction of \(L\) to satisfiability of equality-free
+guarded sentences.  Membership in \(2\mathsf{EXPTIME}\) for the class with
+equality and constants is \cref{thm:p02-w02-p02-035-gf-upper}.
+
+\emph{\(\mathsf{EXPTIME}\)-hardness in \(\mathrm{GF}_2\).}  Let
+\(L\in\mathsf{DTIME}(2^{n^k})\).  By premises (i) and (ii), \(L\) is decided
+by a machine \(M\) as above within space \(S\defeq n^k+n\).  Use unary \(T\),
+\(R\), \(Q_q\), \(Z_r\) and \(P_{\sigma,r}\) for \(r<S\), and binary
+\(S_1,S_2\).  Let \(\mathrm{EXIST}(x)\), \(\mathrm{UNIV}(x)\) and
+\(\mathrm{REJECT}(x)\) be the disjunctions of \(Q_qx\) over the respective
+states, and let \(\mathrm{NX}_i(x,y)\) be the conjunction of
+\((Z_{r'}x\land P_{\sigma,r}x)\to P_{\sigma,r}y\) for all \(\sigma\) and all
+\(r\neq r'\) below \(S\), and of
+\((Q_qx\land Z_rx\land P_{\sigma,r}x)\to(Q_{q'}y\land P_{\sigma',r}y\land Z_{r+\mu}y)\)
+for all non-final \(q\), all \(\sigma\), and all \(r\) with \(0\leq r+\mu<S\),
+where \(\delta_i(q,\sigma)=(q',\sigma',\mu)\).  The sentence is the conjunction
+of
+\[
+\begin{gathered}
+ (\exists x\,.\,Rx)Tx,\qquad
+ (\forall x\,.\,Tx)\neg\mathrm{REJECT}(x),\\
+ (\forall x\,.\,Tx)\bigl((\mathrm{EXIST}(x)\lor\mathrm{UNIV}(x))\to
+  (\exists y\,.\,S_1xy)Ty\land(\exists y\,.\,S_2xy)Ty\bigr),\\
+ (\forall x\,.\,Rx)\bigl(Q_{q_0}x\land Z_0x\land
+  \textstyle\bigwedge_{r<n}P_{w_r,r}x\land\bigwedge_{n\leq r<S}P_{\square,r}x\bigr),\\
+ (\forall xy\,.\,S_1xy)\bigl(\mathrm{EXIST}(x)\to\mathrm{NX}_1\lor\mathrm{NX}_2\bigr),\qquad
+ \textstyle\bigwedge_{i=1,2}(\forall xy\,.\,S_ixy)\bigl(\mathrm{UNIV}(x)\to\mathrm{NX}_i\bigr).
+\end{gathered}
+\]
+It uses only \(x\) and \(y\), relation symbols of arity at most \(2\), no
+equality and no constants.  For fixed \(M\) it has \(O(S^2)\) conjuncts of
+bounded size, each symbol name written with \(O(\log S)\) bits, so it is
+computed in polynomial time.
+
+Configurations, successors, the winning condition and the height \(h(C)\)
+are as in the acceptance paragraph, with \(S\) cells in place of \(2^{s}\).
+Say that an element \(e\) \emph{imposes} \(C=(q,r,y)\), \(y\in\Gamma^{S}\), if
+\(Te\), \(Q_qe\), \(Z_re\) and \(P_{y_j,j}e\) for all \(j<S\).
+
+\emph{Step lemma.}  Let \(C=(q,r,y)\) be reachable and non-final, imposed at
+\(e\), and let \(S_iee'\), \(Te'\) and \(\mathfrak A\entails\mathrm{NX}_i(e,e')\).
+Write \(\delta_i(q,y_r)=(q',\sigma',\mu)\).  For \(j\neq r\), the conjunct
+\((Z_rx\land P_{y_j,j}x)\to P_{y_j,j}y\) of \(\mathrm{NX}_i\) applies, because
+\(Z_re\) and \(P_{y_j,j}e\) hold, and gives \(P_{y_j,j}e'\).  Since \(C\) is
+reachable, \(0\leq r+\mu<S\), so the transition conjunct for \(q\),
+\(\sigma=y_r\) and \(r\) is present; its antecedent holds at \(e\), and it
+gives \(Q_{q'}e'\), \(P_{\sigma',r}e'\) and \(Z_{r+\mu}e'\).  With \(Te'\), this
+says that \(e'\) imposes \(C_i\).
+
+\emph{Satisfiable implies acceptance.}  Let \(\mathfrak A\) be a model.  We show
+by induction on \(h(C)\) that \(\exists\) wins from every reachable \(C\)
+imposed at some element \(e\).  If \(C\) is final, it is not rejecting, by
+the conjunct \((\forall x\,.\,Tx)\neg\mathrm{REJECT}(x)\), so it is accepting.
+If \(C\) is existential, \(\mathrm{EXIST}(e)\) holds; the third displayed
+conjunct gives \(e'\) with \(S_1ee'\) and \(Te'\), and the conjunct for
+\(S_1\) and \(\mathrm{EXIST}\) gives \(\mathrm{NX}_1(e,e')\) or
+\(\mathrm{NX}_2(e,e')\).  By the step lemma some successor \(C_i\) is imposed
+at \(e'\), it has smaller height, and \(\exists\) wins from it by induction.
+If \(C\) is universal, the third conjunct gives \(e_1,e_2\) with \(S_iee_i\)
+and \(Te_i\), and the conjuncts for \(\mathrm{UNIV}\) give
+\(\mathrm{NX}_i(e,e_i)\) for \(i=1,2\); so both successors are imposed and
+\(\exists\) wins from both.  Finally, the first conjunct gives \(e\) with
+\(Re\) and \(Te\), and the fourth gives \(Q_{q_0}e\), \(Z_0e\),
+\(P_{w_r,r}e\) for \(r<n\) and \(P_{\square,r}e\) for \(n\leq r<S\), so \(e\)
+imposes \(C_{\mathrm{in}}=(q_0,0,w\square^{S-n})\).  Hence \(M\) accepts
+\(w\).
+
+\emph{Acceptance implies satisfiable.}  Let \(\mathcal S\) be the finite tree of
+a winning strategy of \(\exists\) from \(C_{\mathrm{in}}\), as in the
+corresponding paragraph above, and take one element \(e_\nu\) for each node
+\(\nu\).  Interpret \(T\) as the set of all \(e_\nu\); \(R\) as \(\{e_\nu\}\)
+for the root \(\nu\); \(Q_q\) as the \(e_\nu\) whose \(C(\nu)\) has state
+\(q\); \(Z_r\) as the \(e_\nu\) whose \(C(\nu)\) has head cell \(r\);
+\(P_{\sigma,r}\) as the \(e_\nu\) whose \(C(\nu)\) has \(\sigma\) in cell
+\(r\); and \(S_i\) as the pairs \((e_\nu,e_{\nu'})\) such that \(\nu'\) is the child
+of a universal \(\nu\) carrying \(C_i\), or the only child of an existential
+\(\nu\).  Each \(e_\nu\) then satisfies exactly one \(Q_q\), exactly one
+\(Z_r\), and for each \(r\) exactly one \(P_{\sigma,r}\), namely those of
+\(C(\nu)\).  The first and fourth conjuncts hold at the root, which carries
+\(C_{\mathrm{in}}\).  The second holds because no node of \(\mathcal S\) is
+rejecting.  The third holds because a node whose state is existential or
+universal is not a leaf: an existential node has a child, which is an
+\(S_1\)- and an \(S_2\)-successor, and a universal node has one child for each
+\(i\).  For the last two conjuncts, let \(S_ie_\nu e_{\nu'}\), where
+\(C(\nu')\) is the \(i'\)-th successor of \(C(\nu)=(q,r,y)\), and let
+\(\delta_{i'}(q,y_r)=(q',\sigma',\mu)\).  Then \(\mathrm{NX}_{i'}(e_\nu,e_{\nu'})\)
+holds.  In a conjunct \((Z_{r''}x\land P_{\sigma,j}x)\to P_{\sigma,j}y\) with
+\(j\neq r''\), the antecedent forces \(r''=r\) and \(\sigma=y_j\); cell
+\(j\neq r\) is unchanged in \(C(\nu')\), so the consequent holds.  In a
+transition conjunct the antecedent forces the state \(q\), the head cell
+\(r\) and the symbol \(y_r\) of \(C(\nu)\); the consequent then states the
+new state \(q'\), the new symbol \(\sigma'\) in cell \(r\) and the new head
+cell \(r+\mu\), which are those of \(C(\nu')\).  For an existential \(\nu\)
+the conjunct for \(S_1\) is met by \(\mathrm{NX}_{i'}\) with \(i'=k(\nu)\), and
+the conjuncts for \(\mathrm{UNIV}\) are vacuous; for a universal \(\nu\) the
+\(S_i\)-child carries \(C_i\), so \(i'=i\) and \(\mathrm{NX}_i\) holds, and
+the conjunct for \(\mathrm{EXIST}\) is vacuous.  So the sentence has a
+model, and it is satisfiable iff \(M\) accepts \(w\).
+This sentence lies in \(\mathrm{GF}_{k'}\) and has arities at most \(k'\) for
+every \(k'\geq2\), which gives the stated hardness.  Together with
+\cref{thm:p02-w02-p02-035-gf-upper} for constant-free input and
+\cref{thm:p02-w02-p02-035-gf-bounded-constants} for input with constants,
+bounded-variable and bounded-arity guarded satisfiability are
+\(\mathsf{EXPTIME}\)-complete; the hard sentences contain no constants, so
+hardness holds for both input languages.
+\end{proof}
+\end{annexitem}

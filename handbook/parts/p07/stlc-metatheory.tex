@@ -1,0 +1,143 @@
+\section{Substitution and strong normalization for simple types}
+\label{sec:p07-stlc-metatheory}
+
+The arrow-only calculus on Sheet~\ref{sheet:stlc} has a termination guarantee
+for every choice of beta redex. Its proof uses a family of predicates indexed
+by types, rather than a count of term symbols: substitution can duplicate an
+argument. The following treatment supplies the substitution and reducibility
+arguments for the calculus in Section~\ref{sec:normalization-curry-howard-02}.
+The reducibility construction follows the arrow fragment of
+\cite[Chapter~6]{GirardLafontTaylor2003Web}.
+
+\begin{hbdefinition}{def:p07-stlc-meta-setting}{Terms, contexts, and substitutions}
+Types are generated from a set of base types by
+\(\alpha\mathbin{\to_{\mathrm{ty}}}\beta\). Terms are finite variables,
+applications \(MN\), and abstractions \(\lambda x{:}\alpha.M\), taken
+modulo consistent renaming of bound variables. A typing context \(\Theta\)
+is a finite list assigning one type to each of its distinct variables.
+Write \(\Theta\vdash_{\mathsf{STLC}}M:\alpha\) for exactly the three
+typing rules on Sheet~\ref{sheet:stlc}. There are arbitrarily many fresh
+variable names. A context may be enlarged by assignments to fresh variables
+or reordered without changing a derivable judgment.
+
+A simultaneous substitution \(\rho\) assigns a term to each variable of
+a finite domain and acts as the identity on other free variables. Its action
+\(M\rho\) traverses the original term once; it does not recursively
+substitute into the inserted images. Before crossing an abstraction, rename
+its binder fresh for the domain and the free variables of all substitution
+images, and retain its type annotation. In particular, \(M[N/x]\) replaces
+the free occurrences of \(x\), avoiding capture.
+
+Write \(\to_\beta\) for a beta contraction at any term position, including
+inside an abstraction, and \(\to_\beta^*\) for its finite reflexive
+transitive closure. A term is \emph{strongly normalizing} if no infinite
+\(\to_\beta\)-sequence starts from it. A beta-normal term has no beta
+redex. A \emph{maximal} reduction sequence is either infinite or ends at a
+term with no successor. This last qualification excludes stopping a finite
+sequence early at a reducible term.
+\index{simply typed lambda calculus!substitution}
+\index{strong normalization!simple types}
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p07-stlc-substitution}
+ {proved=annex:p7.stlc.substitution}{Simultaneous typing substitution}
+Suppose \(\Theta\vdash_{\mathsf{STLC}}M:\alpha\), and for every
+\(x:\beta\) in \(\Theta\) a common target context \(\Delta\) derives
+\(\Delta\vdash_{\mathsf{STLC}}\rho(x):\beta\). Then
+\(\Delta\vdash_{\mathsf{STLC}}M\rho:\alpha\).
+In particular, if \(\Theta,x:\beta\vdash_{\mathsf{STLC}}M:\alpha\)
+and \(\Theta\vdash_{\mathsf{STLC}}N:\beta\), then
+\(\Theta\vdash_{\mathsf{STLC}}M[N/x]:\alpha\).
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p07-stlc-subject-reduction}
+ {proved=annex:p7.stlc.subject-reduction}{Subject reduction for simple types}
+If \(\Theta\vdash_{\mathsf{STLC}}M:\alpha\) and
+\(M\to_\beta N\), then \(\Theta\vdash_{\mathsf{STLC}}N:\alpha\).
+Consequently, every finite beta reduct has the same type in the same context.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p07-stlc-strong-normalization}
+ {proved=annex:p7.stlc.strong-normalization}{Strong normalization for simple types}
+Every term typable on Sheet~\ref{sheet:stlc}, including an open term in a
+finite typing context, is strongly normalizing for compatible beta reduction.
+Every maximal beta-reduction sequence from it is therefore finite and ends
+at a beta-normal term of the same type.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p07-stlc-reducibility}{Reducibility predicates}
+For the proof, consider all raw finite terms with the same annotated syntax,
+without requiring them to have a typing derivation. Let
+\(\mathsf{SN}_\beta\) be the set of strongly normalizing raw terms.
+Define sets \(\mathcal R_\alpha\) by recursion on the type:
+\[
+ \mathcal R_{\mathsf b}=\mathsf{SN}_\beta,\qquad
+ \mathcal R_{\alpha\mathbin{\to_{\mathrm{ty}}}\beta}
+ =\{M:\text{ for every }N\in\mathcal R_\alpha,
+                       \ MN\in\mathcal R_\beta\}.
+\]
+These auxiliary sets may contain untypable terms. The fundamental lemma in
+the annex places a term in the predicate indexed by its actual derived type.
+A raw term is \emph{neutral} here when it is not an abstraction. In particular,
+an application with an abstraction at its head is neutral, even though it
+has a beta redex. Neutrality and normality are different properties.
+\index{reducibility predicate}\index{neutral term!normalization proof}
+\end{hbdefinition}
+
+\begin{hbcorollary}{thm:p07-stlc-inert-constants}
+ {proved=annex:p7.stlc.inert-constants}{Adding typed inert constants}
+Extend the arrow-only term syntax by constants, each with one specified simple
+type, and a typing rule admitting a constant of that type in every context.
+If constants have no reduction rules, every well-typed term of the extension
+is strongly normalizing for compatible beta reduction. No finiteness of the
+whole constant signature is required.
+\end{hbcorollary}
+
+\begin{hbmethod}{def:p07-stlc-normalizer}{Computing a normal form}
+For a term with a typing derivation, repeatedly traverse its finite syntax
+tree in a fixed order and contract the first beta redex found. Capture-avoiding
+substitution is the operation in Definition~\ref{def:p07-stlc-meta-setting}.
+Stop when the traversal finds none. Theorem~\ref{thm:p07-stlc-strong-normalization}
+proves that the procedure stops; Theorem~\ref{thm:p07-stlc-subject-reduction}
+preserves its type. The same termination conclusion holds for any strategy
+that contracts a beta redex whenever one exists.
+
+Termination alone does not establish independence of the chosen strategy.
+For that conclusion use the Church--Rosser theorem
+\ref{thm:p07-church-rosser}: two reached normal forms must be
+alpha-equivalent. Normalizing both sides therefore decides beta equivalence
+of well-typed inputs, because beta-convertible terms have a common reduct,
+and normal terms admit only the reflexive reduction. This algorithmic
+conclusion assumes finite input terms and effective syntax operations; it
+does not assert a small running-time bound.
+\end{hbmethod}
+
+\begin{hbexample}{def:p07-stlc-normalization-example}{Argument duplication and a type boundary}
+Let \(x:\alpha\), \(f:\alpha\mathbin{\to_{\mathrm{ty}}}\alpha\), and
+\(I=\lambda z{:}\alpha.z\). The term
+\[
+ (\lambda g{:}\alpha\mathbin{\to_{\mathrm{ty}}}\alpha.\,g(gx))
+       (\lambda y{:}\alpha.\,f(Iy))
+\]
+has type \(\alpha\). Contracting the outer redex duplicates its argument
+and gives
+\[
+ (\lambda y{:}\alpha.\,f(Iy))
+       ((\lambda y{:}\alpha.\,f(Iy))x)
+ \to_\beta^* f(fx).
+\]
+Alternatively, first reducing the occurrence of \(Iy\) inside the argument
+gives \((\lambda g.\,g(gx))(\lambda y.\,fy)\), with the same annotations
+as above, and then \(f(fx)\). This example explains why the proof permits
+reductions under binders and does not use term size as a decreasing measure.
+
+For comparison, the raw untyped term
+\(\Omega=(\lambda x.xx)(\lambda x.xx)\) reduces to itself.
+Self-application would require one variable type both to be \(\delta\)
+and \(\delta\mathbin{\to_{\mathrm{ty}}}\gamma\). No finite simple type
+satisfies that equation: counting type constructors makes the right side
+strictly larger. Thus this divergence supplies no well-typed counterexample
+to the theorem. Adding an operator with a new unfolding rule requires a new
+normalization argument; the inert-constant corollary concerns constants with
+no such rule.
+\end{hbexample}

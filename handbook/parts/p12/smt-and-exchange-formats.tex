@@ -1,0 +1,299 @@
+%% parts/p12/smt-and-exchange-formats.tex --- Part 12.2
+\chapter{SMT and Exchange Formats}
+\label{sec:p12-smt-and-exchange-formats}
+
+\section{Satisfiability modulo a declared theory}
+
+\begin{hbdefinition}{def:p12-smt-problem}{SMT instance}
+Fix a many-sorted first-order signature, a background theory \(T\), and a
+declared input fragment.  A \emph{satisfiability modulo theories problem}
+asks whether \(T\) together with the existential closure of the input formula
+has a model.  The identifier \(\mathsf{SMT}\) is necessary because the
+background theory, sorts, and fragment make this different from propositional
+SAT; it stands for a parameterized decision problem, not for one logic or one
+solver.  Its nonredundancy is witnessed by theory atoms whose consistency is
+not determined propositionally.  Relative to the declared signature and
+background theory \(T\), a \emph{theory atom} is an atomic object-language
+formula over that signature, and a \emph{theory literal} is such an atom or
+its negation.  These are interpreted formula components, unlike the fresh
+propositional proxy variables used below; the distinction is needed by the
+later separation of propositional search from theory checking and by the
+later preprocessing that separates nested terms headed by different
+component signatures.  A \emph{Boolean
+abstraction} is the metalinguistic map that replaces each distinct theory atom
+by a propositional proxy, uses the same proxy for repeated occurrences, and
+commutes with the Boolean connectives.  It forgets theory interpretation while
+preserving propositional structure, so it is neither the original SMT input
+nor that later component-signature preprocessing step.  The SMT problem and its Boolean
+abstraction are used by the architecture and theory catalog below.
+\index{satisfiability modulo theories}\index{SMT}
+\index{theory atom}\index{theory literal}\index{Boolean abstraction}
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p12-euf}{EUF}
+The quantifier-free theory of \emph{equality with uninterpreted functions}
+(\(\mathsf{EUF}\)) has equality and otherwise uninterpreted function symbols;
+models may interpret those functions arbitrarily subject to equality
+congruence.  On a finite ground input, \emph{congruence closure} is the least
+equivalence relation on occurring ground terms that contains the asserted
+equalities and is closed under applying the same function symbol to equivalent
+argument tuples.  This metalinguistic closure operation is needed to separate
+EUF consistency from arithmetic reasoning, is not a synonym for arbitrary
+first-order deduction, and is used in Table~\ref{tab:p12-smt-theories}.
+\index{equality with uninterpreted functions}\index{congruence closure}
+\end{hbdefinition}
+
+\begin{hbmethod}{def:p12-dpllt-architecture}{DPLL(T) architecture}
+\index{DPLL(T)}
+The name DPLL(\(T\)) is used here only for the following cooperation
+architecture, because propositional search and theory consistency have
+different responsibilities.  Boolean abstraction replaces theory atoms by
+propositional proxies; a SAT engine proposes a Boolean assignment; a
+decision procedure for \(T\) checks the selected theory literals; and a theory
+conflict returns a \(T\)-valid conflict clause, while theory propagation may
+return further entailed literals.  The Boolean engine then learns or branches
+until it finds a theory-consistent assignment or refutes the abstraction.
+This is a metalinguistic architecture, not a displayed calculus or a
+correctness proof; Definition~\ref{def:p12-dpllt-state} and
+Theorem~\ref{thm:p12-dpllt-correctness} state the exact transition invariant
+and correctness boundary
+\cite{NieuwenhuisOliverasTinelli2006}; see also
+\cite{BarrettSebastianiSeshiaTinelli2009}.
+\end{hbmethod}
+
+\begin{hbdefinition}{def:p12-stably-infinite-convex}{Combination conditions}
+A \emph{purification} of a quantifier-free input for disjoint component
+signatures repeatedly replaces each maximal subterm headed by a symbol from
+the other component signature with a fresh shared variable of the same
+declared shared sort and adds the defining equality between that variable and
+the replaced subterm to the component whose signature heads that subterm.
+Iteration stops when every resulting
+literal belongs to one component signature.  The fresh variables make this a
+satisfiability-preserving metalinguistic preprocessing step, not Boolean
+abstraction: it separates alien term structure rather than replacing whole
+theory atoms by propositional proxies.  The Nelson--Oppen statement below uses
+the resulting component inputs and their shared variables.
+
+A theory is \emph{stably infinite over its shared sorts} when every satisfiable
+quantifier-free input has a model in which each shared sort is infinite.  It is
+\emph{convex for shared equalities} when, whenever a conjunction of theory
+literals entails a finite disjunction of equalities between shared variables,
+it entails one of those equalities.  These properties are needed because
+signature disjointness alone does not give the standard Nelson--Oppen
+completeness theorem.  For the finite shared variables of each shared sort, an
+\emph{equality arrangement} is the complete equality/disequality description
+induced by a partition: variables in one block are equated and variables in
+different blocks are disequated.  It is compatible with a purified component
+input exactly when that input together with the arrangement is satisfiable in
+the component theory.  An arrangement is a metalinguistic communication
+object, not merely one individually implied equality; that difference is why
+nonconvex components require case splitting.  Stable infiniteness and
+convexity are semantic properties of component theories, not solver
+heuristics: stable infiniteness supports compatible model amalgamation, while
+convexity determines whether single equalities suffice or arrangements must
+be split.  The theorem and Table~\ref{tab:p12-smt-theories} use all three
+distinctions.
+\index{purification}\index{stable infiniteness}\index{convex theory}%
+\index{equality arrangement}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-nelson-oppen}{cited=NelsonOppen1979}{Nelson--Oppen combination boundary}
+Let quantifier-free inputs be purified into component signatures that are
+disjoint apart from equality and explicitly shared sorts.  Suppose each
+component theory has a decision procedure for its quantifier-free fragment and
+is stably infinite on the shared sorts.  Then satisfiability in their union is
+decidable by exchanging compatible equality arrangements on the shared
+variables.  For convex components, communication of individually implied
+equalities suffices; nonconvex components require disjunctive case splitting.
+Disjointness supplies sound separation, but without the stated
+stable-infiniteness hypothesis this completeness conclusion does not follow.
+\end{hbtheorem}
+
+\begin{landscape}
+\thispagestyle{plain}
+\begingroup\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{longtable}{@{}p{.95in}p{1.90in}p{2.15in}p{2.15in}@{}}
+\caption{Named SMT theories and combination boundaries.}
+\label{tab:p12-smt-theories}\\
+\toprule
+Theory/fragment & Exact source-defined problem & Decidability and complexity boundary
+& Nelson--Oppen field \\ \midrule
+\endfirsthead
+\caption[]{Named SMT theories and combination boundaries (continued)}\\
+\toprule
+Theory/fragment & Exact source-defined problem & Decidability and complexity boundary
+& Nelson--Oppen field \\ \midrule
+\endhead
+\midrule\multicolumn{4}{r}{\emph{continued on next page}}\\
+\endfoot
+\endlastfoot
+\(\mathsf{EUF}\) & Quantifier-free equality with uninterpreted functions &
+Decidable by congruence closure for conjunctions; arbitrary Boolean structure
+contains propositional SAT and is NP-complete under the usual finite-term
+encoding & Stably infinite and convex; a standard component
+\cite{BarrettSebastianiSeshiaTinelli2009} \\ \addlinespace
+\texttt{ArraysEx} / \texttt{QF\_AX} & Closed quantifier-free formulas over
+an arbitrary expansion of the SMT-LIB 2.7 \texttt{ArraysEx} theory with free
+sort and constant symbols; \texttt{ArraysEx} supplies \texttt{Array X Y},
+\texttt{select}, \texttt{store}, both read-over-write laws, and extensionality &
+Decidable; arbitrary Boolean
+structure is NP-complete in the standard term encoding.  Adding further array
+operations changes the claim & The displayed extensional functional-array
+theory, without a constant-array extension, is stably infinite and nonconvex.
+Under the theorem's disjoint-signature/shared-sort hypotheses and
+stable-infiniteness of the other component, complete cooperation therefore
+uses compatible equality arrangements and case splits rather than only
+individually implied equalities.  No blanket combination claim is made for
+further expansions
+\cite{SMTLIB2025,BarrettSebastianiSeshiaTinelli2009} \\
+\addlinespace
+\texttt{FixedSizeBitVectors} / \texttt{QF\_BV} & Closed quantifier-free
+formulas over arbitrary expansions of the SMT-LIB 2.7
+\texttt{FixedSizeBitVectors} signature, with the additional operators and
+abbreviations declared by \texttt{QF\_BV} and free constants of sorts
+\texttt{(\_ BitVec m)} for numerals \(m>0\) &
+Finite and decidable.  Replacing each bit-vector operation by its explicit
+propositional circuit reduces declared fixed widths to SAT;
+compact binary-coded widths can cause exponential expansion, so a complexity
+class must state its width encoding & Not stably infinite at fixed width;
+ordinary Nelson--Oppen is not directly applicable \cite{SMTLIB2025} \\
+\addlinespace
+Linear rational/real arithmetic & Quantifier-free linear constraints over
+\(\mathbb Q\) or \(\mathbb R\) & Conjunctive feasibility is polynomial-time;
+arbitrary Boolean combinations are NP-complete because SAT embeds &
+Stably infinite and convex in the standard signatures
+\cite{DutertreDeMoura2006} \\ \addlinespace
+Linear integer arithmetic & Quantifier-free Presburger constraints with
+binary-coded coefficients & Decidable and NP-complete for the displayed
+quantifier-free input form & Stably infinite but nonconvex; complete
+combination requires equality arrangements or case splitting \\ \bottomrule
+\end{longtable}
+\endgroup
+\end{landscape}
+
+\section{SMT-LIB and TPTP are interfaces}
+
+\begin{hbdefinition}{def:p12-smtlib-interface}{SMT-LIB interface boundary}
+SMT-LIB 2.7 is a versioned command language and family of theory/logic
+declarations for communicating SMT problems and responses.  It is not itself
+a calculus or one semantic theory.  A reproducible SMT-LIB record therefore
+fixes the logic declaration, sort and symbol declarations, assertion stack,
+options, resource limits, solver/version, and the exact response token
+\texttt{sat}, \texttt{unsat}, or \texttt{unknown}; a model or proof artifact
+must be requested and checked separately.  This interface name is necessary
+to distinguish transport syntax from Definition~\ref{def:p12-smt-problem},
+and that distinction is used by the automated-result audit
+\cite{SMTLIB2025}.
+\index{SMT-LIB}
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p12-tptp-interface}{TPTP interface boundary}
+TPTP's BNF revision 9.3.0.3 supplies concrete languages and annotated-formula
+roles for exchanging theorem-proving problems.  It is not a single logic or a
+proof of any submitted conjecture.  A reproducible record fixes the grammar
+revision, declared TPTP language, include files, formula roles, conjecture polarity,
+tool/version, resource limits, returned status, and any independently checked
+proof or model.  The name is needed because roles such as axiom and conjecture
+affect problem meaning rather than merely typography, and the distinction is
+used in the release audit \cite{TPTP}.
+\index{TPTP}
+\end{hbdefinition}
+
+\begin{longtable}{@{}p{.18\textwidth}p{.34\textwidth}p{.38\textwidth}@{}}
+\caption{Exchange-format audit.}
+\label{tab:p12-exchange-format-audit}\\
+\toprule
+Layer & Record & Failure prevented \\ \midrule
+\endfirsthead
+\caption[]{Exchange-format audit (continued)}\\
+\toprule
+Layer & Record & Failure prevented \\ \midrule
+\endhead
+\midrule\multicolumn{3}{r}{\emph{continued on next page}}\\
+\endfoot
+\endlastfoot
+Language & SMT-LIB logic/theory declarations or TPTP language and roles &
+Treating a parser choice as a semantic theorem \\ \addlinespace
+Environment & Sorts, symbols, imported assertions, include files, and scopes &
+Running a stronger or different problem than the reported one \\ \addlinespace
+Execution & Tool build, options, limits, random seed where relevant, and exact
+response & Reading timeout or \texttt{unknown} as a negative answer \\ \addlinespace
+Evidence & Model, proof log, checker/version, and checker result & Treating an
+unverified solver response as an independently checked certificate \\
+\bottomrule
+\end{longtable}
+
+\section{DPLL(\(T\)) transitions and invariants}
+
+\begin{hbdefinition}{def:p12-dpllt-state}{DPLL(\(T\)) state}
+For a fixed Boolean abstraction \(B(F)\), a state is
+\((D,\tau,\mathcal A)\): \(D\) is the propositional clause database, initially
+the clausified abstraction; \(\tau\) is a decision-level trail of signed proxy
+literals with Boolean antecedents; and \(\mathcal A\) is polarity respecting:
+if \(p\) represents theory atom \(L\), then
+\(\mathcal A(p)=L\) and \(\mathcal A(\neg p)=\neg L\). The theory checker
+receives \(\mathcal A[\tau]\). The transitions are Boolean decide/propagate,
+theory check, theory propagate, conflict-clause learning, Boolean backjump,
+and success when the total trail is propositionally and \(T\)-consistent.
+The state name is needed because Boolean implication and theory implication
+have distinct evidence. It stands as an operational state, differs from plain
+CDCL by \(\mathcal A\) and the theory transitions, and is used in the
+correctness invariant \cite{NieuwenhuisOliverasTinelli2006}.
+\index{DPLL(T)!transition state}
+\end{hbdefinition}
+
+A theory propagation \(\mathcal A[\tau]\models_T L\) returns the valid clause
+\(\neg\bigwedge\mathcal A[\tau]\lor L\); a theory conflict
+\(\mathcal A[\tau]\models_T\bot\) returns a clause consisting of the
+complements of a finite inconsistent core. After Boolean abstraction these are
+ordinary learned clauses. Their invariant is not that the SAT engine derived
+them propositionally from the old database, but that their concretizations are
+valid in every \(T\)-model.
+
+\begin{hbtheorem}{thm:p12-dpllt-correctness}{cited=NieuwenhuisOliverasTinelli2006}{DPLL(\(T\)) correctness boundary}
+Assume clausification is a definitional extension: every original model
+extends to a model of the clauses and every clause model projects, by
+forgetting fresh symbols, to a model of the original formula. Assume every theory propagation and
+conflict clause is \(T\)-valid, and the theory checker is sound and complete for
+the declared finite literal fragment. Then an accepted total state yields a
+model of the original SMT instance, and a derivation of the empty clause proves
+it \(T\)-unsatisfiable. If the Boolean search is fair over finitely many proxies
+and the theory procedure terminates on every finite trail, the transition
+system decides the fragment.
+\end{hbtheorem}
+
+\noindent\emph{Proof.}
+Inductively, every clause in \(D\) is valid under \(T\) whenever the original
+input is: initial clauses come from the stated definitional clausification,
+Boolean learned clauses are resolution consequences, and theory clauses are
+valid by hypothesis. Thus the empty clause is a sound refutation. At success,
+the Boolean assignment satisfies the abstraction and \(\mathcal A[\tau]\) is
+jointly \(T\)-satisfiable; a witnessing extended \(T\)-model projects by the
+stated invariant to a model of the original Boolean combination. Finiteness and fairness exhaust the Boolean
+assignments unless one succeeds, while terminating complete theory checks
+classify each selected conjunction. Dropping any hypothesis invalidates the
+corresponding conclusion.
+
+For ground EUF, congruence closure maintains equivalence classes with a
+signature table keyed by function symbol and argument classes; a disequality
+whose endpoints merge is a conflict. Explanation edges recover a finite subset
+of asserted equalities justifying each merge. Linear rational arithmetic may
+use exact simplex pivots and return a Farkas-style infeasibility combination;
+linear integer arithmetic additionally needs integrality reasoning such as
+branching or cutting planes. Floating-point arithmetic, nonlinear arithmetic,
+arrays, bit-vectors, and strings require their own declared procedures and
+proof objects; none inherits the rational-linear proof automatically
+\cite{DutertreDeMoura2006,BarrettSebastianiSeshiaTinelli2009}.
+
+\noindent\emph{Nelson--Oppen proof boundary.}
+Soundness follows because purification is definitional and each component sees
+only equalities shared by both. For completeness, choose a compatible complete
+arrangement of the finitely many shared variables. Each component has a model
+of its purified literals plus the arrangement; stable infiniteness permits the
+shared equivalence classes to be embedded into equally large shared-sort
+domains, after which the disjoint nonshared signatures are amalgamated. Convex
+theories can discover the arrangement by communicating single implied
+equalities; nonconvex theories must split arrangements. This establishes the
+theorem under its exact disjointness and stable-infiniteness hypotheses
+\cite{NelsonOppen1979}.

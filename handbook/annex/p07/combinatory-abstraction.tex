@@ -1,0 +1,338 @@
+% Complete proofs for the fixed algorithms; historical source obligations remain separate.
+\begin{annexitem}{annex:p07.combinatory.bracket-abstraction}{thm:p07-bracket-abstraction}{The original host bracket-abstraction property}
+\begin{proof}
+The host algorithm of Definition~\ref{def:p07-sk-combinators} is exactly
+\(\mathcal B\) in Definition~\ref{def:p07-combinatory-abstraction-algorithms}.
+Theorem~\ref{thm:p07-combinatory-substitution}, with \(Q=x\), proves that
+\(\mathcal B_x(P)\) contains no \(x\) and
+\(\mathcal B_x(P)x\longrightarrow_{\mathsf{SK}}^*P[x/x]=P\).
+Recursive binder elimination is the finite map \(T_{\mathcal B}\) of
+Definition~\ref{def:p07-combinatory-translations}.
+Theorem~\ref{thm:p07-combinatory-translation} proves its precise correspondence:
+beta-correct lambda expansion and weak simulation of root beta contractions
+in application contexts.  Theorem~\ref{thm:p07-combinatory-extensional} gives
+the full conversion correspondence when extensional equality is specified.
+These facts establish the bracket-abstraction property and the stated
+translation on the fixed S--K basis.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p07.combinatory.substitution}{thm:p07-combinatory-substitution}{All abstraction cases and substitution side conditions}
+\begin{proof}
+Every recursive call uses a proper subtree, so induction proves termination.
+At input \(x\), the output I has no variables and
+\(\mathsf I Q=\mathsf S\mathsf K\mathsf KQ\) contracts to
+\(\mathsf KQ(\mathsf KQ)\), then to \(Q\).
+For \(\mathcal B\), an input \(P\) without \(x\) gives \(\mathsf KP\),
+with exactly the variables of \(P\), and \(\mathsf KPQ\) contracts to
+\(P=P[Q/x]\).  For \(\mathcal A\), the other-variable and constant cases
+give \(\mathsf KyQ\longrightarrow_{\mathsf{SK}}y\) and
+\(\mathsf KcQ\longrightarrow_{\mathsf{SK}}c\), respectively.
+For an application \(UV\), the induction hypotheses give
+\[
+ \mathsf S\mathcal D_x(U)\mathcal D_x(V)Q
+ \longrightarrow_{\mathsf{SK}}
+ (\mathcal D_x(U)Q)(\mathcal D_x(V)Q)
+ \longrightarrow_{\mathsf{SK}}^*U[Q/x]V[Q/x].
+\]
+The variable set is the union of the recursive variable sets, namely
+\(\FV(UV)\setminus\{x\}\).  This proves both assertions in every case.
+
+Assume \(y\ne x\) and \(x\notin\FV(Q)\).  For host commutation with
+\([Q/y]\), input \(x\) gives I on both sides.  Substitution preserves absence
+of \(x\), so the absent case gives \(\mathsf K(P[Q/y])\) on both sides.
+If an application contains \(x\), substitution for \(y\) neither removes nor
+introduces \(x\); both sides use the application clause, and induction on its
+children proves literal equality.
+For \(\mathcal A\), input \(x\) again gives I on both sides.
+Constants and variables different from \(x,y\) are
+unchanged.  At \(y\), substitution gives \(\mathsf KQ\), whereas recomputation
+gives \(\mathcal A_x(Q)\).  For an atom \(Q\) these are the same tree.
+For arbitrary \(Q\) independent of \(x\), both terms applied to a fresh variable
+reduce to \(Q\), so they are extensionally equal.  Application congruence and
+induction prove the stated extensional commutation.  This argument uses only
+the application theorem and the defining fresh-variable equality rule.
+
+For fresh renaming \([z/x]\), the identity case remains the identity case,
+each \(x\)-free subtree stays unchanged, constants and other atoms stay unchanged,
+and induction applies to the children of an application.  Hence both algorithms
+satisfy the literal renaming identity.
+Every S--K contraction is stable under arbitrary tree substitution: verify
+this directly in \(\mathsf KUV\longrightarrow U\) and
+\(\mathsf SUVW\longrightarrow UW(VW)\), then pass through application contexts.
+Apply the one-variable theorem to the outermost abstractor in the iterated
+construction.  Apply it next to the following abstractor, substituting the
+arguments already supplied into that next reduction sequence.  This is a
+reduction of the constructed tree even when recomputing an abstractor would
+give a different tree.  The freshness of the \(Q_i\) makes each successive
+replacement leave every previously inserted argument unchanged.  Induction on
+\(n\) gives exactly the displayed simultaneous substitution; \(n=0\) is identity.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p07.combinatory.translation}{thm:p07-combinatory-translation}{Capture avoidance, expansion, and application simulation}
+\begin{proof}
+Expansion preserves free variables and commutes with substitution by induction,
+choosing the bound variables in its closed constant expansions fresh.
+For \(E(\mathcal D_x(P))=_\beta\lambda x.E(P)\), induct on \(P\).
+The expansion of I reduces to \(\lambda x.x\).  Each constant-output case
+\(E(\mathsf KP)\) reduces to \(\lambda x.E(P)\), with \(x\) fresh for
+\(E(P)\).  This includes the other-variable and constant cases of \(\mathcal A\).
+For an application put \(U'=E(\mathcal D_x(U))\) and
+\(V'=E(\mathcal D_x(V))\).  Its expansion reduces to
+\(\lambda z.U'z(V'z)\), for fresh \(z\).  The induction hypotheses make this
+beta-equal to \(\lambda z.E(U)[z/x]E(V)[z/x]\), which is alpha-equal to
+\(\lambda x.E(UV)\).
+
+The compilers preserve free variables by induction using the abstraction
+variable equality.  Compilation commutes with substitution of a variable:
+variables and application are immediate, and at a lambda binder first choose
+its name fresh and use atomic abstraction commutation.  A fresh renaming of a
+binder therefore renames the compiled body correspondingly; the abstraction
+renaming identity makes the output literally the same.  Induction through
+outer constructors and finite sequences of renamings proves alpha invariance.
+
+For arbitrary substitution under \(T_{\mathcal B}\), induct on \(M\).
+Variables and application are immediate.  At \(\lambda y.R\), choose
+\(y\ne x\), \(y\notin\FV(N)\).  Then
+\[
+\begin{aligned}
+ T_{\mathcal B}((\lambda y.R)[N/x])
+ &=\mathcal B_y(T_{\mathcal B}(R[N/x]))\\
+ &=\mathcal B_y(T_{\mathcal B}(R)[T_{\mathcal B}(N)/x])\\
+ &=T_{\mathcal B}(\lambda y.R)[T_{\mathcal B}(N)/x],
+\end{aligned}
+\]
+using the induction hypothesis, variable preservation, and host commutation.
+The extensional version for \(T_{\mathcal A}\) uses the same induction with
+extensional commutation and abstraction congruence.  The extensional proof
+below establishes that congruence directly from the application property before
+using any claim about compilation or substitution of lambda terms.
+
+Induction on \(M\) gives \(E(T_{\mathcal D}(M))=_\beta M\): use the expansion
+formula in the abstraction case and beta congruence in the application case.
+This round trip does not require compiler substitution commutation.
+Expansion of a K contraction performs two beta contractions; expansion of an
+S contraction performs three.  An application context expands to an application
+context, proving the assertion for each weak step.
+The root beta simulation is the application property with
+\(P=T_{\mathcal D}(M)\), \(Q=T_{\mathcal D}(N)\).  The substitution results
+identify its target exactly as stated for each compiler.  Induction on the
+application-context grammar propagates the reduction.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p07.combinatory.confluence}{thm:p07-combinatory-confluence}{Parallel development of the two contractions}
+\begin{proof}
+Use the four parallel clauses on the auxiliary sheet.  Induction proves
+\(P\Rightarrow_{\mathsf{SK}}P\).  Each weak step is parallel, by identity
+premises at its redex and parallel application through its context.  Each
+parallel step is a finite weak reduction: reduce its premises by induction,
+then perform its root K or S contraction, or retain the application in the
+application clause.  Their reflexive transitive closures are thus equal.
+Define complete development by
+\[
+\begin{aligned}
+ d(a)&=a\quad(a\text{ an atom}),\\
+ d(\mathsf KUV)&=d(U),\\
+ d(\mathsf SUVW)&=d(U)d(W)(d(V)d(W)),\\
+ d(UV)&=d(U)d(V)\quad\text{if neither preceding root pattern applies}.
+\end{aligned}
+\]
+We prove \(P\Rightarrow_{\mathsf{SK}}Q\) implies
+\(Q\Rightarrow_{\mathsf{SK}}d(P)\), by induction on \(P\).
+At an atom only identity is possible.  If the root has neither full-arity
+pattern, a parallel derivation must use application.  Induction on both children
+and parallel application give \(d(P)\), even if the intermediate term has
+acquired a new root redex.
+For \(P=\mathsf KUV\), a root contraction gives a parallel reduct of \(U\),
+which reaches \(d(U)\) by induction.  An application derivation instead gives
+\(\mathsf KU'V'\), with parallel reducts of \(U,V\), since the partial
+application \(\mathsf KU\) has no root contraction.  Induction and parallel
+K reach \(d(U)\).
+For \(P=\mathsf SUVW\), a root contraction gives \(U'W'(V'W')\).
+Induction and parallel application send both copies of \(W'\) to \(d(W)\),
+giving \(d(P)\).  An application derivation gives \(\mathsf SU'V'W'\), because
+the partial S applications have no root contraction; induction and parallel S
+again give \(d(P)\).  This exhausts all parallel derivations.
+
+Any two parallel reducts have the common parallel reduct \(d(P)\).
+Place two finite parallel paths on adjacent sides of a rectangle and fill its
+cells using this diamond property.  Induction on rows and columns constructs
+the common endpoint; zero-length sides use identity.  The equality of closures
+therefore proves weak confluence.  Induction on a conversion zigzag proves its
+endpoints joinable: extending forward uses confluence with the existing join;
+extending backward gives a path from the new endpoint through the previous one
+to that join.  Normal forms have no proper reducts, so two convertible normal
+forms are identical.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p07.combinatory.weak-boundary}{thm:p07-combinatory-weak-boundary}{A normal-form obstruction beneath a lambda binder}
+\begin{proof}
+The inner application \((\lambda y.y)x\) contracts to \(x\) beneath the outer
+binder.  The host compiler sends \(\lambda y.y\) to I and abstracts
+\(\mathsf I x\) as \(\mathsf S(\mathsf K\mathsf I)\mathsf I\).
+The term \(\mathsf I=\mathsf S\mathsf K\mathsf K\) is normal: S has only
+two arguments and K has none.  In the second output, outer S has two arguments,
+K has one, and both I subtrees are normal.  These distinct normal forms are
+not weakly convertible by confluence.  Applied to \(Q\), I takes two
+contractions to \(Q\).  The second output contracts first to
+\((\mathsf K\mathsf I Q)(\mathsf I Q)\).  Contracting K and the right I gives
+\(\mathsf I Q\), then \(Q\), proving the application assertion.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p07.combinatory.extensional}{thm:p07-combinatory-extensional}{Fresh-variable extensionality and inverse translations}
+\begin{proof}
+Extensional equality is stable under substitution, by induction on its
+generation.  S--K equations, equivalence steps, and application congruence are
+directly stable.  At an extensionality step, rename its fresh auxiliary variable
+throughout its premise derivation away from the finitely many variables of the
+substituting terms.  Renaming a derivation is valid by induction on rule instances:
+all side conditions are variable-absence conditions.  This renaming fixes the
+conclusion because the auxiliary variable is absent there.  Substitution into
+the premise now preserves its freshness, so the rule gives the substituted
+conclusion.
+
+If \(P=_{\mathrm e}Q\), choose \(z\) fresh for \(P,Q,x\).
+Substitution stability and the application theorem give
+\[
+ \mathcal D_x(P)z=_{\mathrm e}P[z/x]
+   =_{\mathrm e}Q[z/x]=_{\mathrm e}\mathcal D_x(Q)z.
+\]
+Neither abstractor contains \(z\), so extensionality proves abstraction
+congruence, independently of every compilation claim.
+The structural substitution induction for \(T_{\mathcal A}\) can therefore
+use that congruence at outer abstractors and the preceding theorem's
+extensional commutation at a substituted body.  It proves the general
+extensional substitution assertion used below.
+
+Check preservation of the generators of beta-eta equality.  A root beta
+equation follows from the application theorem and compiler substitution
+(literal for the host, extensional for the atom-by-atom algorithm).
+Application congruence is part of the equality theory; lambda congruence uses
+the abstraction congruence just proved.  For eta, with \(x\notin\FV(M)\),
+apply \(\mathcal D_x(T_{\mathcal D}(M)x)\) and \(T_{\mathcal D}(M)\) to a
+fresh \(z\).  Both equal \(T_{\mathcal D}(M)z\) by the application theorem;
+extensionality proves their equality.  Alpha invariance follows from atomic
+renaming.  Equivalence rules now propagate the generator checks to every
+conversion derivation.
+
+Expansion sends the S--K equations to beta equality and preserves application
+and equivalence rules.  At extensionality, an expanded premise is
+\(E(P)z=_{\beta\eta}E(Q)z\) with fresh \(z\).  Abstraction congruence in
+lambda calculus gives equality of \(\lambda z.E(P)z\) and
+\(\lambda z.E(Q)z\); eta contracts them to \(E(P)\) and \(E(Q)\).
+Thus expansion sends extensional equality to beta-eta equality.
+
+For the combinatory round trip, variables are unchanged and application uses
+induction.  Apply \(T_{\mathcal D}(E(\mathsf K))\) to fresh \(u,v\).
+Successive applications give \(u\), just as \(\mathsf Kuv\) does.
+Extensionality first for \(v\), then \(u\), proves equality with K.
+On fresh \(u,v,w\), the analogous calculation for S gives \(uw(vw)\);
+three extensionality steps prove equality with S.
+Now \(E(P)=_{\beta\eta}E(Q)\) implies equality of their compilations and,
+by these round trips, \(P=_{\mathrm e}Q\).  Conversely expansion is sound.
+Likewise equality of compiled lambda terms implies beta-eta equality of their
+expansions and then of the original terms by the beta-correct round trip.
+Finally both abstractors applied to a fresh variable reduce to the same
+substituted body, so one extensionality step equates them.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p07.combinatory.eta-boundary}{thm:p07-combinatory-eta-boundary}{The extra optimization case and its exact limit}
+\begin{proof}
+Induct on the input tree.  Identity, absent-variable, and application cases
+repeat the host proofs.  In the extra case \(P=Ux\), with
+\(x\notin\FV(U)\), the output \(U\) has precisely the required free variables
+and \(UQ=(Ux)[Q/x]\), with zero reduction steps.  Also
+\(E(U)=_{\beta\eta}\lambda x.E(U)x\) by freshness.  In the recursive
+application case the expansion proof uses the induction hypotheses as
+beta-eta equations, retaining valid beta contraction and congruence.  Structural
+induction on lambda terms gives the stated compiled round trip.
+The distinct terms \(f\) and \(\lambda x.fx\) are beta-normal when \(x\ne f\).
+Beta confluence rules out beta conversion between them.  They are eta-equal,
+which identifies the additional equality used by the optimization.
+Without freshness, \(xx\) would be sent to \(x\), retaining the eliminated
+variable.  On a distinct variable argument \(q\), this gives \(xq\) instead
+of the required \(qq\).  These are distinct weak normal forms, so even weak
+conversion cannot equate the failed application results.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p07.combinatory.completeness}{thm:p07-combinatory-completeness}{Coefficients and all assignment cases}
+\begin{proof}
+If the structure is combinatorially complete, represent the polynomial
+\((xz)(yz)\) in three variables by \(s\), and the polynomial \(x\) in two
+indicated variables \(x,y\) by \(k\).  Their representing equations are
+exactly the required S and K equations for every assignment.
+Conversely assume those equations.  Extend either algorithm to coefficient
+atoms by using \(ka\) and use \(i=skk\) in the identity case.
+For the assignment identity, induct on the polynomial.  At \(x\), \(ib=b\).
+At another variable \(y\), \((k\rho(y))b=\rho(y)\).  At a coefficient \(a\),
+\((ka)b=a\).  In the host's whole-subtree absent case, the value is
+\((k\llbracket p\rrbracket_\rho)b=\llbracket p\rrbracket_\rho\);
+an \(x\)-free tree is unaffected by updating \(\rho(x)\), by induction on
+that tree.  For \(uv\), the S equation gives
+\[
+ (s\llbracket\mathcal D_x(u)\rrbracket_\rho
+    \llbracket\mathcal D_x(v)\rrbracket_\rho)b
+ = (\llbracket\mathcal D_x(u)\rrbracket_\rho b)
+   (\llbracket\mathcal D_x(v)\rrbracket_\rho b)
+ =\llbracket uv\rrbracket_{\rho[x\mapsto b]},
+\]
+the last step being the two induction hypotheses.
+For variables \(x_1,\ldots,x_n\), evaluate the closed polynomial formed by
+abstracting them in reverse order.  Successive applications of the assignment
+identity give its representing equation for every tuple of elements.
+For \(n=0\), direct evaluation suffices.  This argument permits all coefficients
+throughout and does not require an element argument to have a variable name.
+
+In an extensional combinatory algebra, the S--K equations, their equivalence
+consequences, and application congruence hold under every assignment.  For a
+fresh-variable extensionality instance, fix every variable other than its
+fresh \(z\) and vary \(\rho(z)\) over all elements of the algebra.
+The premise says that two fixed elements agree on every argument.
+Extensionality gives their equality.  Induction on the equality derivation
+proves soundness for all assignments; the syntactic correspondence supplies
+the beta-eta consequence for compiled terms.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p07.combinatory.size}{thm:p07-combinatory-size}{Tree recurrences and effective compilation}
+\begin{proof}
+Identity has five nodes; an absent-variable output has \(s(P)+2\leq4s(P)+1\)
+nodes; other-atom outputs have three.  In an application case the output size is
+\[
+ 3+s(\mathcal D_x(U))+s(\mathcal D_x(V))
+ \leq3+(4s(U)+1)+(4s(V)+1)=4s(UV)+1.
+\]
+The eta case has size \(s(U)<s(Ux)\).  Since \(s(P)\geq1\), the second
+single-abstraction inequality follows.  If every leaf is \(x\), neither
+\(\mathcal A\) nor \(\mathcal B\) uses an absent case: equality holds at
+each leaf and is preserved by the displayed application recurrence.
+For compilation induct on the lambda term.  Variables have size one and no
+binders.  For \(UV\), with \(r=b(U)\), \(t=b(V)\),
+\[
+ 1+s(T_{\mathcal D}(U))+s(T_{\mathcal D}(V))
+ \leq1+5^r s(U)+5^t s(V)
+ \leq5^{r+t}(1+s(U)+s(V)).
+\]
+For \(\lambda x.U\), the single-abstraction estimate gives
+\(s(T_{\mathcal D}(\lambda x.U))\leq5s(T_{\mathcal D}(U))
+\leq5^{b(U)+1}s(U)\leq5^{b(\lambda x.U)}s(\lambda x.U)\).
+Expanded K has three nodes and expanded S has ten; expansion fixes variable
+leaves and application nodes.  Induction proves \(s(E(P))\leq10s(P)\).
+
+For one abstraction, mark occurrence of \(x\) in every subtree in one
+bottom-up pass.  The output pass uses these Boolean marks for constant-time
+branch decisions; the eta case additionally checks whether the right child is
+\(x\).  Each visited node causes bounded constructor work beyond recursive
+calls.  An absent subtree copied into the output is copied once and the
+recursion stops there; such subtrees are disjoint.  Charging to input visits
+and constructed output nodes proves linear time with unit-cost node operations
+and variable comparisons.  Repeated binders operate on enlarged intermediate
+trees; this calculation asserts no polynomial bound for the entire compilation.
+\end{proof}
+\end{annexitem}

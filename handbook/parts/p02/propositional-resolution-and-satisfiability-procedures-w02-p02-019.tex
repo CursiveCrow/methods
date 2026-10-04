@@ -1,0 +1,748 @@
+%% toc: P2 15 15.5,15.6,15.7
+\section{Horn-SAT, 2-SAT and propositional decision complexity}
+\label{sec:p02-w02-p02-019-sat-procedures}
+
+Section~\ref{sec:p02-prop-decision-complexity} states which propositional
+decision problems are decidable, which are \(\mathsf{NP}\)- or
+\(\mathsf{coNP}\)-complete, and which restricted clause classes are decided in
+linear time.  Several of those statements carry only a citation.  This section
+supplies the procedures and the proofs behind them.  It writes out the forward
+closure of a Horn clause list with its counter-and-queue implementation, the
+implication graph of a 2-CNF list with a linear-time computation of its
+strongly connected components and of a satisfying valuation, elimination for
+parity systems over the two-element field, the truth-table
+decision procedure, the certificate check that places \(\mathsf{SAT}\) in
+\(\mathsf{NP}\), and the derivation of the \(\mathsf{coNP}\)-completeness of
+\(\mathsf{TAUT}\) from the \(\mathsf{NP}\)-completeness of \(\mathsf{SAT}\).
+
+\emph{Inputs.} Finite clause lists in the sense of
+Convention~\ref{def:p02-w02-p02-019-clause-input}; finite lists of formulas of
+\(\mathsf{Fm}_{\mathsf{CPL}}\); and bit strings under the encoding of
+Definition~\ref{def:p02-sat-taut}.
+\emph{Conclusions.} For Horn lists: the least forward closure, the exact
+contradiction condition, and a decision procedure that returns either
+``unsatisfiable'' or the least model, in \(O(N)\) steps
+(Theorems~\ref{thm:p02-w02-p02-019-horn-closure}
+and~\ref{thm:p02-w02-p02-019-horn-procedure}).  For 2-CNF lists: the
+strongly connected components in linear time
+(Theorem~\ref{thm:p02-w02-p02-019-scc}), the opposite-pair test and the
+extraction of a satisfying valuation, again in \(O(N)\) steps
+(Theorem~\ref{thm:p02-w02-p02-019-two-sat}).  For parity systems: the
+correctness of Gauss--Jordan elimination over the two-element field and its
+bound in field operations (Theorem~\ref{thm:p02-w02-p02-019-xor}).  For arbitrary formulas: a
+truth-table bound for satisfiability, validity, equivalence and finite
+consequence (Theorem~\ref{thm:p02-w02-p02-019-truth-table}),
+\(\mathsf{SAT}\in\mathsf{NP}\)
+(Theorem~\ref{thm:p02-w02-p02-019-sat-in-np}), and the
+\(\mathsf{coNP}\)-completeness of \(\mathsf{TAUT}\)
+(Theorem~\ref{thm:p02-w02-p02-019-taut-conp}).  For first-order clause sets:
+refutational completeness of resolution, stated with its cited standing
+(Theorem~\ref{thm:p02-w02-p02-019-fol-resolution}), and the contrast between
+its one-sided refutation search and the propositional decision procedures.
+The proofs of the proved results are in the annex.  They are derived from the inherited definitions
+of \cref{sec:prop-syntax-semantics-01,sec:prop-syntax-semantics-02,sec:prop-syntax-semantics-04}
+and from Convention~\ref{def:p02-complexity-standing}.  They are not presented
+as reconstructions of the algorithms in the works cited at
+Theorems~\ref{thm:p02-horn-sat} and~\ref{thm:p02-two-sat}.
+
+\subsection{Clause inputs and the cost measure}
+\label{sec:p02-w02-p02-019-inputs}
+
+\begin{hbconvention}{def:p02-w02-p02-019-clause-input}{Clause lists, their size, and the machine model}
+A \emph{clause list} is a finite sequence \(S=(C_1,\ldots,C_m)\), with
+\(m\geq 0\), of clauses in the sense of
+\cref{sec:prop-syntax-semantics-04}: each \(C_j\) is a finite set of literals,
+presented as a list of its members without repetition.  A valuation \(v\)
+satisfies \(S\) iff it satisfies every \(C_j\); by
+Lemma~\ref{lem:prop-clause-satisfaction} this holds iff every \(C_j\) contains
+a literal true under \(v\).  The empty list (\(m=0\)) is satisfied by every
+valuation, and the empty clause by none.
+\begin{enumerate}
+  \item \(A_S\) is the set of variables occurring in \(S\), and \(n=|A_S|\).
+        The variables of \(A_S\) are assumed renamed, in order of first
+        occurrence, as \(p_1,\ldots,p_n\).  Renaming is a bijection between
+        variables, so it carries satisfying valuations to satisfying
+        valuations in both directions and preserves satisfiability.
+  \item \(N=|C_1|+\cdots+|C_m|\) is the number of literal occurrences.  The
+        size of \(S\) is \(m+N\).  If no clause is empty, then \(m\leq N\);
+        and always \(n\leq N\), because every variable of \(A_S\) occurs.
+        Hence, after an empty clause has been excluded, \(O(m+n+N)=O(N)\).
+  \item The literal \(p_q\) is stored as the number \(2q\) and \(\neg p_q\) as
+        \(2q+1\), the code of \cref{sec:prop-syntax-semantics-04}.  The
+        complement \(\overline L\) of a literal is then obtained by changing
+        the last binary digit.
+  \item Running times are counted on a random-access machine: reading or
+        writing an array cell, comparing or adding numbers of size at most
+        \(2(m+n+N)+2\), and appending to or removing from the end or front of
+        a list each cost one step.  An array of length \(\ell\) is created and
+        initialized in \(O(\ell)\) steps.  This is the machine on which
+        \textcite[121]{AspvallPlassTarjan1979} state their linear bound.
+\end{enumerate}
+The measure \(N\) is the one of Definition~\ref{def:p02-tractable-classes}.
+The convention is needed because a linear bound is a claim about a particular
+input presentation and machine, and the proofs below count steps on exactly
+this one.
+\index{clause list}\index{literal occurrence}
+\end{hbconvention}
+
+\subsection{Horn clauses and forward closure}
+\label{sec:p02-w02-p02-019-horn}
+
+\begin{hbdefinition}{def:p02-w02-p02-019-horn-parts}{Parts of a Horn clause}
+Let \(C\) be a Horn clause (Definition~\ref{def:p02-tractable-classes}).  Its
+\emph{body} is \(B(C)=\{q: \neg q\in C\}\).  If \(C\) contains a positive
+literal, that literal is unique and is the \emph{head} \(\operatorname{hd}(C)\),
+and \(C\) is \emph{definite}; otherwise \(C\) is \emph{negative}.  Thus
+\begin{enumerate}
+  \item a definite clause with \(B(C)=\{q_1,\ldots,q_k\}\) and head \(r\)
+        is satisfied by \(v\) iff \(v(r)=\mathbf{T}\) or some \(v(q_i)=\mathbf{F}\),
+        that is, iff it reads as the implication from all \(q_i\) to \(r\);
+  \item a \emph{positive unit clause} \(\{r\}\) is the definite clause with
+        empty body; it is the only kind of clause that makes an atom true
+        without any premise, and it is the seed of forward chaining;
+  \item a negative clause with body \(\{q_1,\ldots,q_k\}\) is satisfied by
+        \(v\) iff some \(v(q_i)=\mathbf{F}\); a \emph{negative unit clause}
+        \(\{\neg q\}\) has body \(\{q\}\); and the empty clause is the
+        negative clause with empty body.
+\end{enumerate}
+A set \(X\subseteq A_S\) is \emph{closed under} a Horn list \(S\) iff, for
+every definite clause \(C\) of \(S\) with \(B(C)\subseteq X\),
+\(\operatorname{hd}(C)\in X\).  For any set \(X\) of variables, \(v_X\) is the
+valuation with \(v_X(p)=\mathbf{T}\) iff \(p\in X\).
+\index{Horn clause!definite}\index{Horn clause!negative}
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p02-w02-p02-019-forward-closure}{Least forward closure}
+For a Horn list \(S\), \(\operatorname{Fwd}(S)\) is the intersection of all
+subsets of \(A_S\) that are closed under \(S\).  The family is nonempty because
+\(A_S\) itself is closed: every head of a clause of \(S\) occurs in \(S\).  The
+intersection of closed sets is closed, so \(\operatorname{Fwd}(S)\) is the
+least closed subset of \(A_S\)
+(Theorem~\ref{thm:p02-w02-p02-019-horn-closure}, clause 1).  Equivalently,
+it is the set of atoms obtained by starting from the heads of the positive
+unit clauses and repeatedly adding the head of any definite clause whose whole
+body has already been obtained; Theorem~\ref{thm:p02-w02-p02-019-horn-procedure}
+proves that the procedure below computes exactly this set.
+\index{forward closure}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p02-w02-p02-019-horn-closure}{proved=annex:p02-w02-p02-019-hc}{Forward closure and contradiction}
+Let \(S\) be a Horn list and \(F=\operatorname{Fwd}(S)\).
+\begin{enumerate}
+  \item \(F\) is closed under \(S\) and is contained in every subset of
+        \(A_S\) closed under \(S\).
+  \item Every valuation satisfying \(S\) makes every atom of \(F\) true.
+  \item \(v_F\) satisfies every definite clause of \(S\), and it satisfies a
+        negative clause \(C\) of \(S\) iff \(B(C)\not\subseteq F\).
+  \item \emph{Contradiction condition.}  \(S\) is unsatisfiable iff \(S\)
+        contains a negative clause \(C\) with \(B(C)\subseteq F\), that is,
+        either the empty clause or a purely negative clause all of whose
+        atoms lie in \(F\).  If \(S\) is satisfiable, \(v_F\) satisfies \(S\)
+        and every valuation satisfying \(S\) makes true every atom that
+        \(v_F\) makes true; \(v_F\) is the least model.
+  \item If \(S\) contains no positive unit clause, then \(F=\varnothing\);
+        if it then also contains no empty clause, the valuation making every
+        variable false satisfies \(S\).  The empty list is satisfied by every
+        valuation, and \(\operatorname{Fwd}\) of it is \(\varnothing\).
+\end{enumerate}
+\end{hbtheorem}
+
+\begin{hbmethod}{def:p02-w02-p02-019-horn-method}{Forward chaining with clause counters}
+Input: a Horn list \(S=(C_1,\ldots,C_m)\) over \(p_1,\ldots,p_n\).
+\begin{enumerate}
+  \item[(0)] \emph{Empty-clause pre-check.}  For \(j=1,\ldots,m\): if
+        \(|C_j|=0\), output ``unsatisfiable'' and halt.
+  \item[(1)] \emph{Tables.}  Create arrays \(\mathit{mark}[1..n]\) (all
+        \(0\)), \(\mathit{occ}[1..n]\) (all empty lists),
+        \(\mathit{cnt}[1..m]\) (all \(0\)) and \(\mathit{hd}[1..m]\) (all
+        \(0\)).  For each \(j\) and each literal of \(C_j\): if it is
+        \(\neg p_q\), append \(j\) to \(\mathit{occ}[q]\) and add \(1\) to
+        \(\mathit{cnt}[j]\); if it is \(p_q\), set \(\mathit{hd}[j]:=q\).
+  \item[(2)] \emph{Seeds.}  Start with an empty queue \(Q\).  For each \(j\)
+        with \(\mathit{cnt}[j]=0\): put \(q:=\mathit{hd}[j]\); if
+        \(\mathit{mark}[q]=0\), set \(\mathit{mark}[q]:=1\) and append \(q\)
+        to \(Q\).
+  \item[(3)] \emph{Propagation.}  While \(Q\) is nonempty: remove the front
+        atom \(q\) of \(Q\); for each \(j\) in \(\mathit{occ}[q]\), subtract
+        \(1\) from \(\mathit{cnt}[j]\), and if now \(\mathit{cnt}[j]=0\),
+        \(r:=\mathit{hd}[j]\neq 0\) and \(\mathit{mark}[r]=0\), set
+        \(\mathit{mark}[r]:=1\) and append \(r\) to \(Q\).
+  \item[(4)] \emph{Goal check.}  For each \(j\) with \(\mathit{hd}[j]=0\): if
+        \(\mathit{cnt}[j]=0\), output ``unsatisfiable'' and halt.  Otherwise
+        output ``satisfiable'' and the valuation that makes \(p_q\) true iff
+        \(\mathit{mark}[q]=1\) and every other variable false.
+\end{enumerate}
+In step~(2), a clause with \(\mathit{cnt}[j]=0\) has empty body; since step~(0)
+excluded the empty clause, it is a positive unit clause and
+\(\mathit{hd}[j]\neq 0\).  The counter \(\mathit{cnt}[j]\) records how many
+body atoms of \(C_j\) have not yet been taken from the queue.  This is forward
+chaining from the positive unit clauses; read as unit propagation, removing a
+true atom \(q\) shortens every clause containing \(\neg q\), and a definite
+clause whose negative literals are all removed has become the unit clause of
+its head.
+\index{forward chaining}\index{Horn-SAT}
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p02-w02-p02-019-horn-procedure}{proved=annex:p02-w02-p02-019-hp}{Forward chaining is correct and linear}
+Method~\ref{def:p02-w02-p02-019-horn-method} halts on every Horn list \(S\).  If
+\(S\) contains the empty clause it outputs ``unsatisfiable'' in step~(0).
+Otherwise, when step~(3) ends, the set of marked atoms is exactly
+\(\operatorname{Fwd}(S)\); the method outputs ``unsatisfiable'' iff \(S\) is
+unsatisfiable; and when it outputs ``satisfiable'' the valuation it returns is
+\(v_{\operatorname{Fwd}(S)}\), which satisfies \(S\).  Each atom enters the
+queue at most once, each occurrence of a negative literal \(\neg p_q\) in
+\(C_j\) causes at most one decrement of \(\mathit{cnt}[j]\), and each positive
+literal occurrence is read once.  The method runs in \(O(m+n+N)\) steps; on
+lists without an empty clause this is \(O(N)\), and when an empty clause is
+present step~(0) halts after at most \(N+1\) clause inspections.
+\end{hbtheorem}
+
+Theorem~\ref{thm:p02-w02-p02-019-horn-procedure} is a complete proof of the
+statement of Theorem~\ref{thm:p02-horn-sat}, whose status there is a
+citation.  The dual-Horn reduction of Corollary~\ref{thm:p02-dual-horn-sat}
+complements every variable and then applies a linear-time Horn algorithm; that
+algorithm is Method~\ref{def:p02-w02-p02-019-horn-method}, and its bound is the
+one proved here.  Complementation rewrites each literal occurrence once, so the
+dual-Horn bound is also \(O(N)\).  The least closure proved for the circuit
+instance in Annex~\ref{annex:p14.dc.horn} is the special case of clauses~1, 2
+and~3 of Theorem~\ref{thm:p02-w02-p02-019-horn-closure} for that instance; the
+\(\mathsf P\)-completeness of Horn satisfiability is
+Theorem~\ref{thm:p14-dc-horn}.  Read as a propositional definite program, with
+negative clauses as goals, a Horn list has
+\(\operatorname{Fwd}(S)=M_{P_S}\), the least fixed point of the
+immediate-consequence operator \(T_{P_S}\) of Part~9
+(\cref{sec:p09-logic-programming}, Definition~\ref{def:p09-definite-program});
+this is Theorem~\ref{thm:p02-w02b-p02-015-horn-lfp}, which also proves the
+variable-free case of the least-model Theorem~\ref{thm:p09-definite-fixpoint}.
+
+\begin{hbexample}{def:p02-w02-p02-019-horn-example}{A satisfiable Horn list and a contradictory extension}
+Let \(S\) be the list
+\[
+ C_1=\{p_1\},\quad
+ C_2=\{\neg p_1,p_2\},\quad
+ C_3=\{\neg p_2,\neg p_4,p_3\},\quad
+ C_4=\{\neg p_1,\neg p_3\}.
+\]
+Here \(m=4\), \(n=4\) and \(N=1+2+3+2=8\).  Step~(1) gives
+\(\mathit{cnt}=(0,1,2,2)\), \(\mathit{hd}=(1,2,3,0)\),
+\(\mathit{occ}[1]=(2,4)\), \(\mathit{occ}[2]=(3)\), \(\mathit{occ}[3]=(4)\)
+and \(\mathit{occ}[4]=(3)\).  Step~(2) marks \(p_1\), the head of the
+positive unit clause \(C_1\).  Removing \(p_1\) lowers \(\mathit{cnt}[2]\) to
+\(0\), which marks \(p_2\), and lowers \(\mathit{cnt}[4]\) to \(1\).
+Removing \(p_2\) lowers \(\mathit{cnt}[3]\) to \(1\); the queue is then empty.
+So \(\operatorname{Fwd}(S)=\{p_1,p_2\}\).  The only negative clause is
+\(C_4\), and \(\mathit{cnt}[4]=1\), because its body atom \(p_3\) is not in
+the closure.  The output is ``satisfiable'' with
+\(p_1,p_2\) true and \(p_3,p_4\) false; this valuation satisfies all four
+clauses.
+
+Append the positive unit clause \(C_5=\{p_4\}\).  The seeds are now \(p_1\)
+and \(p_4\).  Removing \(p_1\) marks \(p_2\) and sets \(\mathit{cnt}[4]=1\);
+removing \(p_4\) sets \(\mathit{cnt}[3]=1\); removing \(p_2\) sets
+\(\mathit{cnt}[3]=0\) and marks \(p_3\); removing \(p_3\) sets
+\(\mathit{cnt}[4]=0\).  Now \(\operatorname{Fwd}=\{p_1,p_2,p_3,p_4\}\)
+contains the whole body \(\{p_1,p_3\}\) of the negative clause \(C_4\), and
+step~(4) outputs ``unsatisfiable''.  By clause~2 of
+Theorem~\ref{thm:p02-w02-p02-019-horn-closure} every model would make \(p_1\)
+and \(p_3\) true and so falsify \(C_4\).
+\end{hbexample}
+
+\begin{hbwarning}{def:p02-w02-p02-019-horn-limit}{Where forward closure stops working}
+The list consisting of the single clause \(\{p_1,p_2\}\) is not Horn.  It is
+satisfiable, but its models \(v_{\{p_1\}}\) and \(v_{\{p_2\}}\) have no
+common part that is again a model: the valuation making both atoms false
+falsifies it.  So the list has no least model, and no procedure that computes
+a least closed set and tests it can be correct beyond the Horn class.  Forward
+chaining applied to it would start from no seed and return the all-false
+valuation, which is not a model.
+The linear bound also depends on the input convention: renaming arbitrary
+variable names or indices to \(p_1,\ldots,p_n\) is not counted in
+Theorem~\ref{thm:p02-w02-p02-019-horn-procedure}.  For names compared as
+strings it needs a sort or a search structure, and that cost has to be added.
+\end{hbwarning}
+
+\subsection{Implication graphs and 2-SAT}
+\label{sec:p02-w02-p02-019-two-sat}
+
+\begin{hbdefinition}{def:p02-w02-p02-019-implication-graph}{Implication graph, strong components and condensation}
+Let \(S=(C_1,\ldots,C_m)\) be a 2-CNF list over \(p_1,\ldots,p_n\) with no empty
+clause.  Its \emph{implication graph} \(G_S\) has the \(2n\) literals over
+\(p_1,\ldots,p_n\) as vertices and the following edge list: a two-literal
+clause \(\{L,K\}\) contributes the edges \(\overline L\to K\) and
+\(\overline K\to L\); a unit clause \(\{L\}\) is read as \(L\lor L\) and
+contributes the edge \(\overline L\to L\) twice.  Thus \(G_S\) has exactly
+\(2m\) edges, counted with repetition.  The \emph{reverse graph}
+\(G_S^{\mathrm R}\) has the same vertices and an edge \(K\to L\) for each edge
+\(L\to K\) of \(G_S\).
+
+For vertices \(X,Y\), write \(X\leadsto Y\) iff there is a directed path, of
+length \(0\) or more, from \(X\) to \(Y\).  The relation \(X\leadsto Y\) and
+\(Y\leadsto X\) is an equivalence relation; its classes are the \emph{strong
+components}, and \(C(X)\) is the strong component of \(X\).  The
+\emph{condensation} has the strong components as vertices and an edge from
+\(C(X)\) to \(C(Y)\) whenever \(G_S\) has an edge \(X\to Y\) with
+\(C(X)\neq C(Y)\).  A numbering of the components is \emph{topological} iff
+every condensation edge goes from a smaller to a larger number.
+\index{implication graph}\index{strongly connected component}
+\end{hbdefinition}
+
+This is the graph of Theorem~\ref{thm:p02-two-sat}; the construction with
+\(2n\) vertices and \(2|C|\) edges, and the reading of a unit clause \(u\) as
+\(u\lor u\), are those of \textcite[121]{AspvallPlassTarjan1979}.
+
+\begin{hbmethod}{def:p02-w02-p02-019-scc-method}{Strong components by two depth-first passes}
+Input: a finite directed graph \(G\) given by adjacency lists, and its reverse
+\(G^{\mathrm R}\).
+\begin{enumerate}
+  \item \emph{First pass.}  Colour every vertex white and set \(t:=0\).  For
+        each vertex \(u\) in a fixed order, if \(u\) is white, call
+        \(\mathrm{Visit}(u)\).  Here \(\mathrm{Visit}(u)\) colours \(u\) grey;
+        for each out-neighbour \(w\) of \(u\) in \(G\), in adjacency order,
+        calls \(\mathrm{Visit}(w)\) if \(w\) is white; then colours \(u\)
+        black, sets \(t:=t+1\) and \(f(u):=t\), and appends \(u\) to a list
+        \(\mathit{fin}\).  The number \(f(u)\) is the \emph{finishing
+        number} of \(u\).
+  \item \emph{Second pass.}  Mark every vertex unvisited and set \(k:=0\).
+        Run through \(\mathit{fin}\) from its last entry to its first, that
+        is, in decreasing finishing number.  When the current vertex \(r\) is
+        unvisited, set \(k:=k+1\) and call \(\mathrm{Visit}^{\mathrm R}(r)\),
+        which marks a vertex visited, gives it the number
+        \(\operatorname{idx}:=k\), and calls itself on every unvisited
+        out-neighbour in \(G^{\mathrm R}\).  The set of vertices visited by
+        one such call from \(r\) is the \emph{tree} of \(r\).
+\end{enumerate}
+The recursion is implemented with an explicit stack of pairs (vertex, position
+in its adjacency list), so each step of a call costs \(O(1)\) on the machine of
+Convention~\ref{def:p02-w02-p02-019-clause-input}.
+\index{depth-first search}
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p02-w02-p02-019-scc}{proved=annex:p02-w02-p02-019-scc}{Two-pass strong components}
+Let \(G\) have \(V\) vertices and \(E\) edges.  Each tree of the second pass of
+Method~\ref{def:p02-w02-p02-019-scc-method} is exactly one strong component of
+\(G\), and every strong component is one tree.  The number
+\(\operatorname{idx}\) of the trees is a topological numbering of the
+condensation: if \(G\) has an edge \(X\to Y\) and \(C(X)\neq C(Y)\), then
+\(\operatorname{idx}(X)<\operatorname{idx}(Y)\).  The method runs in
+\(O(V+E)\) steps.
+\end{hbtheorem}
+
+\begin{hbmethod}{def:p02-w02-p02-019-two-sat-method}{The 2-SAT test with assignment extraction}
+Input: a 2-CNF list \(S\) over \(p_1,\ldots,p_n\).
+\begin{enumerate}
+  \item[(0)] If some clause is empty, output ``unsatisfiable'' and halt.
+  \item[(1)] Build the adjacency lists of \(G_S\) and \(G_S^{\mathrm R}\) by
+        one pass over the clauses, two edges per clause.
+  \item[(2)] Run Method~\ref{def:p02-w02-p02-019-scc-method} on \(G_S\) to
+        obtain \(\operatorname{idx}\).
+  \item[(3)] \emph{Opposite-pair check.}  For \(q=1,\ldots,n\): if
+        \(\operatorname{idx}(p_q)=\operatorname{idx}(\neg p_q)\), output
+        ``unsatisfiable'' and halt.
+  \item[(4)] \emph{Extraction.}  Output ``satisfiable'' and the valuation
+        \(v_S\) with \(v_S(p_q)=\mathbf{T}\) iff
+        \(\operatorname{idx}(p_q)>\operatorname{idx}(\neg p_q)\), for
+        \(q=1,\ldots,n\), and every other variable false.
+\end{enumerate}
+A literal is thus made true when its component comes later than the
+component of its complement in the topological numbering.  This is the
+marking of \textcite[122]{AspvallPlassTarjan1979}, who process the components
+in reverse topological order and make the first unmarked component of each
+complementary pair true.
+\index{2-SAT}
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p02-w02-p02-019-two-sat}{proved=annex:p02-w02-p02-019-2sat}{The 2-SAT test}
+Let \(S\) be a 2-CNF list over \(p_1,\ldots,p_n\) with no empty clause.
+\begin{enumerate}
+  \item A valuation satisfies \(S\) iff, for every edge \(X\to Y\) of
+        \(G_S\), \(v\entails X\) implies \(v\entails Y\).
+  \item For every edge \(X\to Y\) of \(G_S\), \(\overline Y\to\overline X\) is
+        an edge of \(G_S\).  Consequently \(C(\overline X)=\{\overline Z:
+        Z\in C(X)\}\) for every vertex \(X\).
+  \item If \(C(p_q)=C(\neg p_q)\) for some \(q\), then \(S\) is
+        unsatisfiable.
+  \item If \(C(p_q)\neq C(\neg p_q)\) for every \(q\), then the valuation
+        \(v_S\) of Method~\ref{def:p02-w02-p02-019-two-sat-method}, step~(4),
+        satisfies \(S\).
+  \item Method~\ref{def:p02-w02-p02-019-two-sat-method} outputs
+        ``unsatisfiable'' iff \(S\) is unsatisfiable, and otherwise outputs a
+        satisfying valuation.  It runs in \(O(m+n)\) steps, hence in \(O(N)\)
+        steps.  The empty list (\(m=n=0\)) yields ``satisfiable'' with the
+        empty assignment to the empty variable set.
+\end{enumerate}
+\end{hbtheorem}
+
+Clauses~3 and~4 are the criterion stated in Theorem~\ref{thm:p02-two-sat} and
+proved, with an arbitrary topological rank, in Annex~\ref{annex:p04.dh.two-sat};
+the proof here uses the particular rank \(\operatorname{idx}\) produced by
+Method~\ref{def:p02-w02-p02-019-scc-method}, so that the satisfying valuation is
+computed, not only shown to exist.  Clause~5 is a complete proof of the
+\(O(N)\) bound of Theorem~\ref{thm:p02-two-sat}, which there carries the
+citation \cite[thm.~1, p.~122]{AspvallPlassTarjan1979}; that note bounds its
+algorithm by \(O(n+m)\) with \(m\) the number of graph edges
+\cite[123]{AspvallPlassTarjan1979}.  The \(\mathsf{NL}\)-completeness of
+2-CNF satisfiability is Theorem~\ref{thm:p04-dh-two-sat}.  A 2-CNF clause
+with two positive literals is not a definite clause of
+Definition~\ref{def:p09-definite-program}, so the least-model reading of
+Part~9 (\cref{sec:p09-logic-programming}), which covers the Horn lists through
+Theorem~\ref{thm:p02-w02b-p02-015-horn-lfp}, does not extend to 2-CNF lists
+in general (Warning~\ref{def:p02-w02b-p02-015-two-sat-programs}).
+
+\begin{hbexample}{def:p02-w02-p02-019-two-sat-example}{A 2-SAT run and a contradictory list}
+Let \(S\) consist of \(\{p_1,p_2\}\), \(\{\neg p_1,p_2\}\) and
+\(\{\neg p_2,p_3\}\).  The edges of \(G_S\) are
+\[
+ \neg p_1\to p_2,\quad \neg p_2\to p_1,\quad
+ p_1\to p_2,\quad \neg p_2\to\neg p_1,\quad
+ p_2\to p_3,\quad \neg p_3\to\neg p_2.
+\]
+Take the vertex order \(p_1,\neg p_1,p_2,\neg p_2,p_3,\neg p_3\) and the
+adjacency order above.  The first pass visits \(p_1,p_2,p_3\) in one call and
+finishes \(p_3,p_2,p_1\); then it finishes \(\neg p_1\), \(\neg p_2\) and
+\(\neg p_3\).  In the second pass the decreasing finishing order is
+\(\neg p_3,\neg p_2,\neg p_1,p_1,p_2,p_3\).  Each in-neighbour in \(G_S\) of
+each of these vertices is already visited when the vertex is reached, so every
+tree is a single vertex, and
+\[
+ \begin{array}{lll}
+ \operatorname{idx}(\neg p_3)=1, & \operatorname{idx}(\neg p_2)=2, &
+ \operatorname{idx}(\neg p_1)=3,\\
+ \operatorname{idx}(p_1)=4, & \operatorname{idx}(p_2)=5, &
+ \operatorname{idx}(p_3)=6.
+ \end{array}
+\]
+Every edge listed goes from a smaller to a larger number.  No opposite pair
+shares a component, and step~(4) makes \(p_1\), \(p_2\) and \(p_3\) true
+(\(4>3\), \(5>2\), \(6>1\)).  This valuation satisfies the three clauses.
+
+Add the clause \(\{\neg p_2,\neg p_3\}\), with edges \(p_2\to\neg p_3\) and
+\(p_3\to\neg p_2\).  Now
+\(p_2\to p_3\to\neg p_2\to p_1\to p_2\) is a cycle, so \(p_2\) and
+\(\neg p_2\) lie in one strong component and step~(3) outputs
+``unsatisfiable''.  Directly: the first two clauses force \(p_2\), and then
+\(\{\neg p_2,p_3\}\) and \(\{\neg p_2,\neg p_3\}\) force \(p_3\) and
+\(\neg p_3\).
+\end{hbexample}
+
+\begin{hbwarning}{def:p02-w02-p02-019-three-literals}{Three literals per clause}
+A clause \(\{L,K,M\}\) says that the falsity of two literals forces the
+third.  An edge of an implication graph has one literal as antecedent, and no
+set of such implications has exactly the models of the clause
+\(\{p_1,p_2,p_3\}\).  Indeed, let \(X\to Y\) be an implication between
+literals over \(p_1,p_2,p_3\) with \(X\neq Y\), and let \(c\) be an atom
+different from the atoms of \(X\) and \(Y\).  Making \(X\) true, \(Y\) false
+when \(Y\) is over another atom, and \(c\) true gives a model of the clause in
+which \(X\to Y\) fails; when \(Y=\overline X\), making \(X\) and \(c\) true
+does the same.  So every implication valid in all models of the clause has
+the form \(X\to X\), and such implications are also true under the all-false
+valuation, which falsifies the clause.  The SCC method therefore does not
+extend to 3-CNF.
+Satisfiability of 3-CNF formulas is \(\mathsf{NP}\)-complete
+\cite[thm.~2.10]{AroraBarak2009}, so a polynomial-time test for it would give
+\(\mathsf P=\mathsf{NP}\).
+\end{hbwarning}
+
+\subsection{Parity systems and Gaussian elimination}
+\label{sec:p02-w02-p02-019-xor}
+
+\begin{hbconvention}{def:p02-w02-p02-019-parity-input}{Parity systems and their dense presentation}
+An XOR instance in the sense of Definition~\ref{def:p02-tractable-classes}
+is presented as \(m\geq 0\) equations in the variables \(p_1,\ldots,p_n\)
+(\(n\geq 0\)) over the two-element field \(\{0,1\}\), whose addition is
+addition modulo \(2\):
+\[
+  a_{j1}x_1+\cdots+a_{jn}x_n=b_j\qquad(1\leq j\leq m),
+\]
+with all \(a_{ji},b_j\in\{0,1\}\).  It is stored densely as the \(m\) rows
+\((a_{j1},\ldots,a_{jn}\mid b_j)\) of an \(m\times(n+1)\) array, each row
+reached through a row pointer.  A valuation \(v\) \emph{satisfies} equation
+\(j\) iff, writing \(x_i=1\) when \(v(p_i)=\mathbf{T}\) and \(x_i=0\)
+otherwise, the number of \(i\) with \(a_{ji}=1\) and \(x_i=1\) has the parity
+of \(b_j\).  A \emph{field operation} is one addition of two entries.  Other
+steps are counted on the machine of
+Convention~\ref{def:p02-w02-p02-019-clause-input}.
+\index{XOR-SAT!dense presentation}
+\end{hbconvention}
+
+\begin{hbmethod}{def:p02-w02-p02-019-gauss-method}{Elimination over the two-element field}
+Set \(r:=1\) and the pivot list empty.  For \(c=1,\ldots,n\) in turn:
+\begin{enumerate}
+  \item Search rows \(r,\ldots,m\) for a row \(i\) with \(a_{ic}=1\).  If
+        there is none, go to the next \(c\).
+  \item Exchange the row pointers of rows \(i\) and \(r\).
+  \item For every row \(i'\neq r\) with \(a_{i'c}=1\), replace row \(i'\)
+        by its entrywise sum with row \(r\) (all \(n+1\) entries).
+  \item Append \((r,c)\) to the pivot list and set \(r:=r+1\).
+\end{enumerate}
+When the loop ends, let \(t=r-1\) and let \((1,c_1),\ldots,(t,c_t)\) be the
+pivot list.  If some row \(j>t\) has \(b_j=1\), answer ``unsatisfiable''.
+Otherwise answer ``satisfiable'' and return the valuation \(v^{*}\) with
+\(v^{*}(p_{c_s})=\mathbf{T}\) iff \(b_s=1\) for \(s\leq t\), and every other
+variable false.  The entries named in the final test and in \(v^{*}\) are
+those of the array after the loop.
+\index{Gaussian elimination!over the two-element field}
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p02-w02-p02-019-xor}{proved=annex:p02-w02-p02-019-xor}{Elimination decides XOR-SAT}
+Run Method~\ref{def:p02-w02-p02-019-gauss-method} on a parity system with
+\(m\) equations and \(n\) variables.
+\begin{enumerate}
+  \item The system is satisfiable iff the method answers ``satisfiable'', and
+        then \(v^{*}\) satisfies every equation.
+  \item The number \(t\) of pivots satisfies \(t\leq\min\{m,n\}\), and the
+        method performs at most \(t(m-1)(n+1)\) field operations, hence
+        \(O(mn\min\{m,n\})\) field operations when \(m,n\geq 1\).
+  \item All other work takes \(O(mn+m+n)\) steps, so the total running time,
+        excluding the reading of the input array, is
+        \(O(mn\min\{m,n\}+m+n)\).
+  \item If \(m=0\), the method answers ``satisfiable''; if \(n=0\), it
+        answers ``unsatisfiable'' iff some \(b_j=1\).
+\end{enumerate}
+\end{hbtheorem}
+
+This is a complete proof of the bound stated in
+Theorem~\ref{thm:p02-xor-sat} and in the XOR row of
+Table~\ref{tab:p02-tractable-sat}, whose status there is a citation.  The
+count is in field operations on the dense array, which has \(m(n+1)\) cells,
+so it is not comparable with the \(O(N)\) bounds for Horn and 2-CNF lists:
+those count literal occurrences of a clause list, while a parity equation on
+many variables is one row here.
+
+\begin{hbexample}{def:p02-w02-p02-019-xor-example}{An inconsistent parity system and a consistent variant}
+Take \(n=3\) and the rows \((1,1,0\mid 1)\), \((0,1,1\mid 1)\),
+\((1,0,1\mid 1)\), that is, \(x_1+x_2=1\), \(x_2+x_3=1\), \(x_1+x_3=1\).
+For \(c=1\) the pivot is row \(1\); row \(3\) becomes \((0,1,1\mid 0)\).
+For \(c=2\) the search starts at row \(2\), which is the pivot; row \(1\)
+becomes \((1,0,1\mid 0)\) and row \(3\) becomes \((0,0,0\mid 1)\).  For
+\(c=3\) no row from row \(3\) on has a \(1\) in column \(3\).  Now \(t=2\)
+and row \(3\) has \(b_3=1\): the answer is ``unsatisfiable''.  Indeed the sum
+of the three equations is \(0=1\).
+
+Change the third right-hand side to \(0\).  For \(c=1\) row \(3\) becomes
+\((0,1,1\mid 1)\); for \(c=2\) rows \(1\) and \(3\) become
+\((1,0,1\mid 0)\) and \((0,0,0\mid 0)\); column \(3\) has no pivot.  The
+pivots are \((1,1)\) and \((2,2)\), and no row below row \(2\) has right-hand
+side \(1\).
+The answer is ``satisfiable'' and \(v^{*}\) makes \(p_1\) false, \(p_2\)
+true and \(p_3\) false.  Check: \(0+1=1\), \(1+0=1\), \(0+0=0\).
+\end{hbexample}
+
+\subsection{Decision procedures, SAT, TAUT and equivalence}
+\label{sec:p02-w02-p02-019-complexity}
+
+\begin{hbmethod}{def:p02-w02-p02-019-truth-table-method}{Truth-table decision procedure}
+The input is a list of formulas \(\varphi_1,\ldots,\varphi_r\) of
+\(\mathsf{Fm}_{\mathsf{CPL}}\), with \(r\geq 1\), whose jointly occurring variables are renamed as
+\(p_1,\ldots,p_k\) (\(k\geq 0\)); \(\ell=|\varphi_1|+\cdots+|\varphi_r|\) is
+their total number of symbol occurrences.  For each of the \(2^k\)
+assignments \(u:\{p_1,\ldots,p_k\}\to\{\mathbf{F},\mathbf{T}\}\), enumerated by a
+binary counter, compute \(\widehat{u^{\circ}}(\varphi_i)\) for every \(i\),
+where \(u^{\circ}\) extends \(u\) by making every other variable false.  Each
+value is computed by one left-to-right scan of \(\varphi_i\) with a value
+stack and an operator stack: a variable or \(\bottom\) pushes its value, which
+then absorbs every \(\neg\) waiting on top of the operator stack; a closing
+parenthesis combines the top two values by the binary connective between them
+and again absorbs waiting negations.  Then answer:
+\begin{enumerate}
+  \item \(\varphi_1\) is satisfiable iff some \(u\) gives it \(\mathbf{T}\);
+  \item \(\varphi_1\) is valid iff every \(u\) gives it \(\mathbf{T}\);
+  \item \(\varphi_1\equiv\varphi_2\) iff every \(u\) gives them the same value;
+  \item \(\{\varphi_1,\ldots,\varphi_{r-1}\}\entails\varphi_r\) iff no \(u\)
+        gives \(\mathbf{T}\) to \(\varphi_1,\ldots,\varphi_{r-1}\) and \(\mathbf{F}\)
+        to \(\varphi_r\).
+\end{enumerate}
+\index{truth table!decision procedure}
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p02-w02-p02-019-truth-table}{proved=annex:p02-w02-p02-019-tt}{Truth tables decide}
+The four answers of Method~\ref{def:p02-w02-p02-019-truth-table-method} are
+correct for satisfiability, validity, logical equivalence and semantic
+consequence from a finite set.  The method runs in \(O(2^k\ell)\) steps on the
+machine of Convention~\ref{def:p02-w02-p02-019-clause-input}.  In particular
+each of the four questions is decided by a terminating algorithm, in
+\(O(2^k|\varphi|)\) steps for a single formula \(\varphi\) with \(k\)
+variables.
+\end{hbtheorem}
+
+Theorem~\ref{thm:p02-w02-p02-019-truth-table} is a complete proof of
+Theorem~\ref{thm:p02-decidability}, whose status there is a citation.  The
+exponent is the number of distinct variables, not the length; a formula of any
+length with few variables is decided quickly.
+
+\begin{hbtheorem}{thm:p02-w02-p02-019-sat-in-np}{proved=annex:p02-w02-p02-019-np}{SAT is in NP under the fixed encoding}
+Let \(x\in\{0,1\}^*\) have length \(n\).  Let \(R(x,y)\) hold iff \(x\) is the
+encoding, in the sense of Definition~\ref{def:p02-sat-taut}, of a formula
+\(\varphi\) whose distinct variables in order of first occurrence are
+\(p_{a_1},\ldots,p_{a_k}\), \(y\) has length exactly \(k\), and \(\varphi\) is
+true under the valuation \(v_y\) with \(v_y(p_{a_i})=\mathbf{T}\) iff the \(i\)-th
+bit of \(y\) is \(1\), and every other variable false.  Then \(R\) is decided
+by a deterministic multitape Turing machine in time polynomial in \(n\), every
+\(y\) with \(R(x,y)\) has length at most \(n\), and \(x\in\mathsf{SAT}\) iff some
+\(y\) of length at most \(n\) satisfies \(R(x,y)\).  Hence
+\(\mathsf{SAT}\in\mathsf{NP}\) in the sense of
+Convention~\ref{def:p02-complexity-standing}.  Malformed strings satisfy
+\(R\) with no \(y\).
+\end{hbtheorem}
+
+\paragraph{Where the hardness half is proved.}
+Theorem~\ref{thm:p02-sat-np-complete} has two halves.  Membership is
+Theorem~\ref{thm:p02-w02-p02-019-sat-in-np}.  Hardness, that every language in
+\(\mathsf{NP}\) reduces to \(\mathsf{SAT}\) by a polynomial-time many-one
+reduction, is the Cook--Levin Theorem~\ref{thm:p04-cook-levin} of Part~4.
+Its written proof under the Part~4 conventions, where \(\mathsf{NP}\) is
+defined by nondeterministic machines with read-only input, is
+Annex~\ref{annex:p02-w02b-p02-015-cook-levin}.  That proof transfers a
+Part~4 language to the certificate form of
+Convention~\ref{def:p02-complexity-standing}
+(Lemma~\ref{thm:p02-w02b-p02-015-bridge}) and then applies the tableau
+formula of Theorem~\ref{thm:p02-w02-p02-018-cook-levin}, which for every
+\(x\) yields in polynomial time an encoded formula \(\varphi_x\) with
+\(x\in L\) iff \(\varphi_x\) is satisfiable.  The cited formulation
+\cite[thm.~2.10]{AroraBarak2009} takes \(\mathsf{SAT}\) to be the
+satisfiable CNF formulas; the language here contains all satisfiable encoded
+formulas, and membership for all formulas is the theorem above.  Part~9
+presents the same tableau method in the form of Cook's paper
+(\cref{sec:p09-presentation-n-c-026}).
+
+\begin{hblemma}{thm:p02-w02-p02-019-reductions}{proved=annex:p02-w02-p02-019-red}{Complements and composites of reductions}
+Let \(A,B,D\subseteq\{0,1\}^*\), and write \(\overline A=\{0,1\}^*\setminus A\).
+\begin{enumerate}
+  \item If \(f\) is a polynomial-time many-one reduction from \(A\) to \(B\),
+        then the same \(f\) is one from \(\overline A\) to \(\overline B\).
+  \item If \(f\) reduces \(A\) to \(B\) and \(g\) reduces \(B\) to \(D\), both
+        in polynomial time, then \(g\circ f\) reduces \(A\) to \(D\) in
+        polynomial time.
+  \item If \(A\) reduces to \(B\) in polynomial time and
+        \(B\in\mathsf{NP}\), then \(A\in\mathsf{NP}\).
+\end{enumerate}
+\end{hblemma}
+
+\begin{hblemma}{thm:p02-w02-p02-019-negation-maps}{proved=annex:p02-w02-p02-019-neg}{Negation maps}
+Let \(\nu\) map the encoding of a formula \(\varphi\) to the encoding of
+\(\neg\varphi\), obtained by writing the block of \(\neg\) in front.  Define
+\(g_1(x)=\nu(x)\) and \(g_2(x)=\nu(x)\) when \(x\) encodes a formula; for a
+malformed \(x\), let \(g_1(x)\) be the encoding of \(p_0\) and \(g_2(x)\) the
+encoding of \(\neg\bottom\).  Then \(\varphi\) is valid iff \(\neg\varphi\) is
+unsatisfiable; \(g_1\) reduces \(\mathsf{TAUT}\) to
+\(\overline{\mathsf{SAT}}\); \(g_2\) reduces \(\overline{\mathsf{SAT}}\) to
+\(\mathsf{TAUT}\); and both maps are computable in polynomial time.
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p02-w02-p02-019-taut-conp}{proved=annex:p02-w02-p02-019-taut}{TAUT is coNP-complete}
+Assume Theorem~\ref{thm:p02-sat-np-complete}.  Then \(\mathsf{TAUT}\in\mathsf{coNP}\),
+and every language in \(\mathsf{coNP}\) has a polynomial-time many-one
+reduction to \(\mathsf{TAUT}\).  Thus \(\mathsf{TAUT}\) is
+\(\mathsf{coNP}\)-complete, which is
+Corollary~\ref{thm:p02-taut-conp-complete}.
+\end{hbtheorem}
+
+The membership half uses only
+Theorem~\ref{thm:p02-w02-p02-019-sat-in-np}.  The hardness half uses the
+hardness of \(\mathsf{SAT}\), proved at the place named above.  The same
+negation step is \cite[ex.~2.23]{AroraBarak2009}, with \(\mathsf{coNP}\) as in
+\cite[def.~2.21, def.~2.22]{AroraBarak2009}.
+
+\begin{hbwarning}{def:p02-w02-p02-019-sat-vs-equivalence}{Satisfiability, validity and equivalence are different questions}
+\(\mathsf{SAT}\) asks whether \emph{some} valuation makes one formula true.
+Validity asks whether \emph{every} valuation does.  Logical equivalence of two
+arbitrary formulas, \(\varphi\equiv\psi\) in the sense of
+\cref{sec:prop-syntax-semantics-02}, asks whether \emph{every} valuation gives
+them the same value; it holds iff
+\((\varphi\to\psi)\land(\psi\to\varphi)\), the expansion of
+\(\varphi\leftrightarrow\psi\), is valid.  So equivalence is a validity
+question about a derived formula: its certificates are certificates of
+\emph{non}-equivalence, namely one valuation on which the formulas differ, and
+\(\varphi\not\equiv\psi\) iff \(\neg(\varphi\leftrightarrow\psi)\) is
+satisfiable.  Equivalence is \(\mathsf{coNP}\)-complete
+(Theorem~\ref{thm:p14-dc-finite-cpl}), and
+Corollary~\ref{thm:p02-w02-p02-019-np-conp} shows that it lies in
+\(\mathsf{NP}\) only if \(\mathsf{NP}=\mathsf{coNP}\).
+Two satisfiable formulas need not be equivalent: \(p_0\) and \(p_1\) are both
+satisfiable, and the valuation making \(p_0\) true and \(p_1\) false
+separates them.  Transformations that preserve satisfiability, such as the
+definitional CNF of Theorem~\ref{thm:p02-tseitin}, are therefore not
+equivalence transformations, and a SAT answer about a transformed formula is
+not an answer about equivalence with the original.
+\end{hbwarning}
+
+\begin{hbcorollary}{thm:p02-w02-p02-019-np-conp}{proved=annex:p02-w02-p02-019-npco}{Validity, equivalence and NP}
+Assume Theorem~\ref{thm:p02-sat-np-complete}.  If \(\mathsf{TAUT}\in\mathsf{NP}\),
+then \(\mathsf{NP}=\mathsf{coNP}\); and if the equivalence language of
+Theorem~\ref{thm:p14-dc-finite-cpl} is in \(\mathsf{NP}\), then
+\(\mathsf{NP}=\mathsf{coNP}\).  Conversely, if \(\mathsf{NP}=\mathsf{coNP}\),
+both languages are in \(\mathsf{NP}\).
+\end{hbcorollary}
+
+The classification leaves open whether \(\mathsf P=\mathsf{NP}\) and whether
+\(\mathsf{NP}=\mathsf{coNP}\).  Part~4 places these questions in its class
+ladder (\cref{def:p04-complexity-convention,thm:p04-cook-levin}).  Part~12
+treats satisfiability procedures as algorithms with certificates: the DPLL
+core and its unit propagation are in \cref{sec:p12-sat-and-certificates}
+(Definition~\ref{def:p12-dpll-state}, Method~\ref{def:p12-dpll},
+Theorem~\ref{thm:p12-dpll-correctness}), and the standing of SAT and UNSAT
+evidence is Definition~\ref{def:p12-sat-certificate-boundary}.  Part~9's
+complexity presentation (\cref{sec:p09-presentation-n-c-026}) also
+distinguishes Cook's original query reduction from the many-one reduction used
+here.
+
+\subsection{Refutational completeness and the first-order boundary}
+\label{sec:p02-w02-p02-019-first-order-boundary}
+
+Propositional resolution is refutationally complete for finite clause sets
+(Theorem~\ref{thm:prop-resolution-complete}, proved in
+\cref{sec:prop-metatheory-04}).  For a finite set \(S\) of clauses over
+\(k\) variables, every clause that resolution can derive from \(S\) is a set
+of literals over those same \(k\) variables, so at most \(2^{2k}\) clauses can
+ever be derived and saturation by resolution halts.  Resolution is therefore a
+decision procedure for propositional unsatisfiability, but the count of
+candidate clauses is exponential in \(k\), and nothing proved here shows that
+any procedure decides the question in polynomial time; that is the question
+\(\mathsf P=\mathsf{NP}\) left open above.  The first-order counterpart keeps
+completeness and loses the finite search space.
+
+\begin{hbtheorem}{thm:p02-w02-p02-019-fol-resolution}{cited=Robinson1965}{Refutational completeness of first-order resolution}
+Let \(S\) be a finite equality-free set of first-order clauses.  After adding
+a constant if the signature has no ground term, \(S\) is not satisfiable iff
+resolution with factoring derives the empty clause.
+\end{hbtheorem}
+
+This is Theorem~\ref{thm:fol-resolution} of
+\cref{sec:fol-cardinality-normalforms-04}, with the same hypotheses and the
+same rules (first-order Resolution and Factoring on renamed-apart parents,
+with most general unifiers), stated here with its standing.  The standing is
+a citation \cite{Robinson1965,BachmairGanzinger2001}.  The argument written
+after Theorem~\ref{thm:fol-resolution} is a proof sketch: the soundness
+theorem for first-order resolution and factoring stated just before it gives
+the right-to-left direction; for the left-to-right direction it combines the
+Herbrand theorem for clauses (Theorem~\ref{thm:herbrand-clauses}), the
+propositional Theorem~\ref{thm:prop-resolution-complete} and the lifting
+lemma (Theorem~\ref{thm:resolution-lifting}).  The Herbrand theorem and the
+lifting lemma are themselves cited there, so the first-order result is not
+proved in this book from proved parts alone.  The exclusion of equality is a
+hypothesis, not a simplification: bare resolution is incomplete once logical
+equality occurs, as the paragraph following Theorem~\ref{thm:fol-resolution}
+records.
+
+The theorem gives a one-sided test.  Together with soundness, it says that a
+finite equality-free clause set is unsatisfiable exactly when some finite
+derivation reaches the empty clause; it gives no bound on the length of that
+derivation, and the clauses derivable from \(S\) need not form a finite set.
+For example, from the satisfiable set consisting of \(\{P(a)\}\) and
+\(\{\neg P(x),P(f(x))\}\), resolution derives \(\{P(f(a))\}\), then
+\(\{P(f(f(a)))\}\), and so on without end, so saturation does not halt.
+For first-order sentences
+the decision problem itself has a negative solution: validity is not
+decidable (Theorem~\ref{thm:fol-validity-undecidable}, cited to Church and
+Turing), and the set of valid sentences is computably enumerable but not
+decidable (Corollary~\ref{thm:fol-validity-enumerable}, with its proof from
+completeness of the first-order calculus).  So the three boundaries of this
+section are of different kinds: Horn and 2-CNF satisfiability are decided in
+linear time
+(Theorems~\ref{thm:p02-w02-p02-019-horn-procedure}
+and~\ref{thm:p02-w02-p02-019-two-sat}), and parity systems in polynomial time
+(Theorem~\ref{thm:p02-w02-p02-019-xor}); unrestricted propositional
+satisfiability is decided, and is \(\mathsf{NP}\)-complete
+(Theorem~\ref{thm:p02-sat-np-complete}); first-order unsatisfiability of
+equality-free clause sets has a complete refutation search
+(Theorem~\ref{thm:p02-w02-p02-019-fol-resolution}) while first-order validity
+has no decision procedure at all.

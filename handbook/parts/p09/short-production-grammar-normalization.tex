@@ -1,0 +1,165 @@
+% New host construction. Earlier source presentations and shared routes unchanged.
+\subsection{A Finite Compiler to Short Grammar Productions}
+\label{sec:p09-short-grammar-normalization}
+
+The consuming-splicing simulation in
+Theorem~\ref{thm:p09-recombination-consuming-simulation} requires grammar
+productions \(u\to v\) with \(1\leq|u|\leq2\) and \(0\leq|v|\leq2\).
+Head, P\u{a}un, and Pixton use a type-0 normal form to obtain these bounds
+\cite[Theorem~3.6, p.~320]{HeadPaunPixton1997RecombinationIntake}.
+Here is a separate handbook construction that supplies the required
+transformation explicitly. It is not attributed as the chapter's original
+normal-form proof and is not claimed to preserve each intermediate
+sentential form literally. It preserves exactly the terminal language,
+including the empty word, while keeping every simulation and cleanup step
+under a unique control symbol.
+
+\begin{hbdefinition}{def:p09-short-grammar-source}{Input grammar and coded data symbols}
+An input type-0 grammar is \(G=(N,T,S,P)\), where \(N,T\) are disjoint
+finite alphabets, \(S\in N\), and \(P\) is a finite set of productions
+\(u\to v\). Each \(u\in(N\cup T)^+\) contains a nonterminal and
+\(v\in(N\cup T)^*\); erasing productions are allowed.
+Its language is
+\(L(G)=\{w\in T^*:S\Longrightarrow_P^*w\}\), with the ordinary
+replacement relation in arbitrary left and right contexts.
+The symbol \(\lambda\) denotes the empty word and \(|w|\) word length.
+
+For each \(a\in N\cup T\), create one fresh nonterminal \(A_a\).
+The printed subscript is part of the symbol's name: \(A_a\) is one
+letter, not a word of an \(A\) followed by \(a\).
+For \(w=a_1\cdots a_k\), define
+\(\widehat w=A_{a_1}\cdots A_{a_k}\), and
+\(\widehat\lambda=\lambda\). Both original nonterminals and original
+terminals are encoded as nonterminals. Original terminal letters are
+emitted only during final cleanup.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p09-short-grammar-compiler}{All productions of the short-production compiler}
+Enumerate \(P\) by distinct finite labels \(r\). Write
+\[
+ r:u_r=a_{r,1}\cdots a_{r,m_r}\ \to
+ v_r=b_{r,1}\cdots b_{r,n_r},
+ \qquad m_r\geq1,\quad n_r\geq0.
+\]
+In addition to the coded data symbols, create fresh, pairwise distinct
+nonterminals
+\[
+ S^\dagger,L,R,I,J,Q,D,
+ \quad Q_{r,i}\ (0\leq i\leq m_r),
+ \quad E_{r,j}\ (0\leq j\leq n_r).
+\]
+All are distinct from \(N\cup T\). Each displayed indexed control is
+one symbol. \(L,R\) delimit the coded word; \(Q\) is its ready cursor;
+\(Q_{r,i}\) records consumption of the first \(i\) left-side letters;
+\(E_{r,j}\) records emission of the first \(j\) right-side letters;
+\(I,J\) are initialization controls and \(D\) is the cleanup control.
+The output grammar is \(G^\dagger=(N^\dagger,T,S^\dagger,P^\dagger)\),
+where \(N^\dagger\) consists of all coded data symbols and all the
+control and boundary symbols just declared.
+The complete finite production set \(P^\dagger\) consists of:
+\begin{enumerate}
+\item Initialization:
+ \(S^\dagger\to LI\), \(I\to A_SJ\), \(J\to QR\).
+\item Cursor motion, for each \(a\in N\cup T\):
+ \(QA_a\to A_aQ\) and \(A_aQ\to QA_a\).
+\item Commit to a selected production, for each \(r\):
+ \(Q\to Q_{r,0}\).
+\item Match and consume its left side, for each \(r\) and \(0\leq i<m_r\):
+ \(Q_{r,i}A_{a_{r,i+1}}\to Q_{r,i+1}\).
+\item Change to emission mode, for each \(r\):
+ \(Q_{r,m_r}\to E_{r,0}\).
+\item Emit its right side, for each \(r\) and \(0\leq j<n_r\):
+ \(E_{r,j}\to A_{b_{r,j+1}}E_{r,j+1}\).
+\item Restore the ready cursor, for each \(r\):
+ \(E_{r,n_r}\to Q\).
+\item Start cleanup at the left boundary only: \(LQ\to D\).
+\item Emit an original terminal, for each \(t\in T\):
+ \(DA_t\to tD\).
+\item Finish cleanup at the right boundary: \(DR\to\lambda\).
+\end{enumerate}
+There are no other productions. In particular there are no standalone
+productions for data symbols, no cursor motion for \(Q_{r,i},E_{r,j},D\),
+and no cleanup production \(DA_a\) for \(a\in N\).
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p09-short-grammar-normalization}{proved=annex:p09.short-grammar-normalization}{Effective short-production normalization with exact terminal language}
+The compiler constructs a finite type-0 grammar \(G^\dagger\) effectively
+from \(G\). Every production in \(P^\dagger\) has a nonempty left side
+of length at most two and a right side of length at most two, with at least
+one nonterminal on its left side. No production is an identity.
+Moreover,
+\[
+ L(G^\dagger)=L(G)
+\]
+as literal languages over the unchanged terminal alphabet \(T\).
+This includes \(\lambda\), empty languages, empty right sides, and
+grammars whose original production sides have arbitrarily large finite
+lengths.
+\end{hbtheorem}
+
+In ready mode a word has the form
+\(L\widehat pQ\widehat qR\), decoding to \(pq\).
+Cursor movement changes the gap but not that decoding.
+If \(q=u_rt\), commitment consumes the successive coded letters of
+\(u_r\), emits the successive coded letters of \(v_r\), and returns
+\(L\widehat{pv_r}Q\widehat tR\).
+An incorrect match gets stuck with a nonterminal control and cannot
+produce a terminal word. There is no rollback that could promote a partly
+matched prefix to a successful grammar step.
+
+Cleanup can start only from \(LQ\widehat wR\), at the actual beginning
+of the coded word. It proceeds left to right, emitting only letters of
+\(T\). Encountering a coded nonterminal blocks cleanup permanently.
+Deleting \(DR\) completes cleanup only after the entire coded word has
+been consumed. Thus a fresh control or data symbol cannot disappear by
+being ignored in an observation map.
+
+\begin{hbexample}{def:p09-short-grammar-erasing-example}{A long left side and erasing simulation}
+Take a production \(r:ABC\to\lambda\), with \(A,B,C\in N\), and
+a ready word \(L\widehat pQA_AA_BA_C\widehat qR\).
+The commitment \(Q\to Q_{r,0}\) is followed successively by the three
+two-to-one consumption productions. The resulting word is
+\(L\widehat pQ_{r,3}\widehat qR\), then
+\(L\widehat pE_{r,0}\widehat qR\), and finally
+\(L\widehat pQ\widehat qR\).
+The decoded change is exactly \(pABCq\to pq\).
+If only \(AB\) occur before the right boundary, the word reaches
+\(Q_{r,2}R\), where there is no applicable continuation; it is not a
+terminal derivation. If the complete decoded word becomes empty, the ready
+word is \(LQR\), and cleanup \(LQ\to D\), \(DR\to\lambda\)
+produces exactly the empty word.
+\end{hbexample}
+
+\paragraph{Closing the consuming-universality dependency.}
+
+The representation uses infinitely many copies of finitely many reservoir
+words. Finite support is not a finite total population. In a genuinely finite
+population the conserved total word length bounds every reachable word's
+length, so only finitely many words can ever appear, as in
+Theorem~\ref{thm:p09-recombination-finite-population}. Such a population
+cannot represent every recursively enumerable language. The terminal filter
+also remains part of the representation; normalization removes neither
+the supply condition nor the observation condition.
+
+\begin{hbtheorem}{thm:p09-consuming-universality-short-compiler}{proved=annex:p09.consuming-universality-short-compiler}{Consuming finite-rule universality through the explicit compiler}
+For every finite type-0 grammar \(G\) over terminal alphabet \(T\),
+one can effectively construct a finite-rule consuming H scheme \(\sigma\)
+and a multiset \(M\) with finite support such that
+\[
+ \sigma^*(M)\cap T^*=L(G).
+\]
+Its scheme has radius at most five; the reservoir multiplicities may be
+infinite, while its active computation has multiplicity one.
+Consequently every recursively enumerable language has this terminal-filtered
+representation under the grammar characterization of recursively enumerable
+languages.
+\end{hbtheorem}
+
+The construction first applies
+Theorem~\ref{thm:p09-short-grammar-normalization}, then the explicitly
+repaired bounded-production consuming scheme of
+Definition~\ref{def:p09-recombination-consuming-simulation}.
+The exact right-boundary rule and the two-output, consumed-input convention
+of that definition remain in force. The theorem does not identify the
+construction with the unchanged published rule groups, nor replace the
+terminal filter by an equality over the full auxiliary alphabet.

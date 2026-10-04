@@ -1,0 +1,253 @@
+\section{Unification States, Extraction, and Most General Answers}
+\label{sec:p12-unification-extraction-adequacy}
+
+The retained-equation transformation sheet and the inherited accumulating
+procedure solve the same finite syntactic problems, but have different
+states and different success conditions. The following constructions prove
+both literally. They complete the extraction and scheduling interface of
+\hyperref[sheet:unification-first-order]{the registered sheet} without
+adding an accumulator to it or deleting its retained bindings. The existing
+source attribution remains \cite{MartelliMontanari1982,BaaderSnyder2001};
+these proofs concern the actual displayed rule surface and the separately
+identified inherited procedure, not every variant in those works.
+
+\begin{hbdefinition}{def:p12-ue-substitutions}{Finite-term solutions and the composition direction}
+Terms are finite trees over a ranked signature and the existing variable
+alphabet. A substitution is the finite-support total variable map of
+\cref{sec:fol-cardinality-normalforms-04}, acting homomorphically and
+simultaneously. An inserted image is not substituted again during the
+same application. Write concatenation for the source composition:
+\[
+                    (\theta\eta)(x)=(x\theta)\eta.
+\]
+Thus \(\theta\) acts first. This agrees with the function notation
+\(\eta\circ\theta\) only when that notation is explicitly given its
+ordinary right-to-left functional meaning.
+
+For a finite equation multiset \(E\), let \(\operatorname{Var}(E)\)
+be the union of variables in both sides and let \(\operatorname{Sol}(E)\)
+be all finite-support substitutions \(\rho\) for which
+\(s\rho=t\rho\) literally for every \(s\doteq t\) in \(E\).
+Repeated equations impose the same constraint. A most general solution
+\(\mu\) is a solution such that every solution is \(\mu\eta\)
+for some finite-support substitution \(\eta\), on the entire variable
+alphabet. This is the inherited instance preorder, not an assertion
+that the factor substitution is unique. Idempotence means
+\(\mu\mu=\mu\).
+\index{unification!substitution composition}\index{most general unifier}
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p12-ue-sheet-run}{The exact retained-equation run and its extraction}
+A sheet run uses exactly Delete, Decompose, Clash, Orient, Occurs and
+Eliminate on \texttt{sheet:unification-first-order}. In Eliminate the
+selected equation \(x\doteq t\) is \emph{retained}; the substitution
+\(\{x\mapsto t\}\) is applied simultaneously to every other equation.
+The condition that \(x\) occur in the remaining multiset is essential
+to applicability. Orient swaps only a nonvariable left term with a
+variable right term; it does not swap two variables.
+
+A complete run continues while a rule is enabled, records failure on
+Clash or Occurs, and succeeds only at an irreducible multiset. It does
+not stop merely because an arbitrary selected equation has no enabled
+rule. For a deterministic implementation on explicitly encoded ranked
+terms, present the finite multiset
+as an occurrence list, scan its occurrences in that order and the six
+rules in sheet order, and apply the first enabled rule. Keep occurrence
+positions through substitution, and insert Decompose's children at the
+selected position in argument order. This is an explicit scheduling
+refinement, not a priority claimed to be present on the sheet. The
+theorems below apply to every legal choice of enabled transition.
+
+At success the equations will have distinct left variables
+\(x_i\doteq t_i\) with no left variable in any right side. Extract the
+one simultaneous substitution \(\mu(x_i)=t_i\), identity elsewhere.
+This is a direct read of the final equations, not a sequential application
+of a triangular list. The empty state extracts \(\mathrm{id}\).
+\index{unification!solved-form extraction}
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p12-ue-forcing}{proved=annex:p12.ue.forcing}{One binding and its exact factorization}
+Let \(x\notin\operatorname{Var}(t)\),
+\(\delta=\{x\mapsto t\}\), and \(F\) be a finite equation multiset.
+Then
+\[
+ \operatorname{Sol}(F\uplus\{x\doteq t\})
+  =\{\delta\eta:\eta\in\operatorname{Sol}(F\delta)\}.
+\]
+Moreover any substitution solving \(x\doteq t\) satisfies
+\(\delta\rho=\rho\) on every variable. No idempotence of \(\rho\)
+is assumed. If \(x\ne t\) and \(x\in\operatorname{Var}(t)\),
+there is instead no finite-term solution.
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p12-ue-sheet-invariant}{proved=annex:p12.ue.sheet-invariant}{The literal sheet preserves the entire solution set}
+Every nonfailure transition of the retained-equation sheet preserves
+\(\operatorname{Sol}(E)\) exactly, not merely up to an unstated
+accumulator. Either failure rule applies only to an empty solution set.
+Eliminate's retained binding is part of this equality of solution sets.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p12-ue-measure}{Permanent isolated bindings and the actual decreasing measure}
+Let \(\operatorname{iso}(E)\) contain precisely the variables \(x\)
+whose only occurrence in the entire multiset is as the left side of
+one equation \(x\doteq t\), with \(x\notin\operatorname{Var}(t)\).
+Thus the equation is nontrivial and \(x\) occurs in no other equation.
+Define
+\[
+ \begin{aligned}
+ \operatorname{uv}(E)&=\#(\operatorname{Var}(E)\setminus\operatorname{iso}(E)),\\
+ \operatorname{sz}(E)&=\sum_{s\doteq t\in E}
+       (\operatorname{nodes}(s)+\operatorname{nodes}(t)),\\
+ \operatorname{bad}(E)&=\#\{s\doteq x\in E:s\text{ is not a variable}\},
+ \end{aligned}
+\]
+counting equation multiplicities; \(\operatorname{nodes}(t)\) counts every variable, constant
+and function node in the finite term tree. These are metalinguistic
+counters, not additional state fields or inference rules.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p12-ue-sheet-termination}{proved=annex:p12.ue.sheet-termination}{Termination for every enabled-rule selection}
+An isolated left variable stays isolated under every subsequent
+nonfailure sheet transition. No transition introduces a variable absent
+from the preceding state. Each nonfailure transition strictly decreases
+the lexicographic triple
+\[
+ (\operatorname{uv}(E),\operatorname{sz}(E),\operatorname{bad}(E)).
+\]
+Consequently no legal transition sequence is infinite. No fairness,
+special elimination order or undocumented rule priority is required.
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p12-ue-extraction}{proved=annex:p12.ue.extraction}{Irreducibility, correct extraction, and failure equivalence}
+Every nonfailure terminal sheet state has exactly the solved form specified
+in \cref{def:p12-ue-sheet-run}. Its extracted \(\mu\) is idempotent,
+uses only input variables, is the identity on every variable outside the
+input, and unifies the original equations. Every original solution
+\(\rho\) satisfies the global factorization
+\[
+                              \rho=\mu\rho.
+\]
+Every complete run fails exactly when the input has no finite-term solution;
+otherwise every such run returns a most general solution. An isolated
+binding is a successful retained equation, not a reason to discard it
+or to keep applying Eliminate when its occurrence proviso is false.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p12-ue-accumulator}{The separate inherited accumulating procedure}
+The inherited procedure in \cref{sec:fol-cardinality-normalforms-04}
+has a finite \emph{set} of remaining equations and an accumulator
+\(\theta\), initially \(\mathrm{id}\). It deletes identities,
+decomposes matching constructors, rejects constructor clashes, and
+orients only a nonvariable-to-variable equation. For a nontrivial
+\(x\doteq t\) it fails on an occurrence of \(x\) in \(t\);
+otherwise it removes that selected equation, substitutes
+\(\delta=\{x\mapsto t\}\) in every remaining equation, and updates
+the accumulator to \(\theta\delta\). There is no condition that
+\(x\) occur in another equation. It succeeds only when the remaining
+set is empty and returns \(\theta\). Nothing in this definition
+changes the retained-equation sheet.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-ue-accumulator}{proved=annex:p12.ue.accumulator}{The inherited accumulator's complete invariant and answer theorem}
+For an original finite equation set \(E_0\), every reachable nonfailure
+state \((E,\theta)\) satisfies
+\[
+ \operatorname{Sol}(E_0)
+       =\{\theta\eta:\eta\in\operatorname{Sol}(E)\}.
+\]
+The support of \(\theta\) consists of the variables already eliminated;
+remaining equations and every accumulator image contain none of those
+variables. Its accumulator is therefore idempotent at every state.
+All legal runs terminate, fail exactly for nonunifiable input, and
+otherwise return an idempotent most general solution. It is identity
+outside the input variables. Atom unification's preliminary symbol/arity
+check and the pairing of arguments, including the ordered pair of
+identity-atom arguments, preserve this exact syntactic solution question.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p12-ue-renaming}{proved=annex:p12.ue.renaming}{Most general solutions, rather than factors, are unique up to renaming}
+If \(\mu,\nu\) are finite-support most general solutions of the same
+problem in the global instance preorder, there is a finite-support
+variable permutation \(\pi\) such that \(\nu=\mu\pi\) on every
+variable. Conversely, composing a most general solution with such a
+permutation gives another most general solution. This compares the
+solutions, not the witnesses in a particular factorization.
+\end{hbtheorem}
+
+\begin{hbcorollary}{thm:p12-ue-comparison}{proved=annex:p12.ue.comparison}{What the two procedures agree on}
+Starting with the same finite syntactic constraints, the two literal
+procedures agree on failure versus success. Any two successful outputs,
+from either procedure and any enabled-rule choices, differ by a finite
+variable permutation in the sense of \cref{thm:p12-ue-renaming}.
+This does not identify their intermediate states, selected bindings,
+equation multiplicities or proof traces.
+\end{hbcorollary}
+
+\subsection{Worked composition and occurrence boundaries}
+
+\begin{hbexample}{def:p12-ue-composition-case}{The composition direction is observable}
+Start with \(x\doteq y,y\doteq a\), where \(a\) is a constant.
+The inherited procedure first removes \(x\doteq y\), leaving
+\(y\doteq a\) and \(\theta=\{x\mapsto y\}\). It then uses
+\(\delta=\{y\mapsto a\}\) and returns
+\(\theta\delta=\{x\mapsto a,y\mapsto a\}\).
+Reversing the composition instead gives
+\(\delta\theta=\{x\mapsto y,y\mapsto a\}\). In one simultaneous
+application it sends the original sides of \(x\doteq y\) to
+\(y\) and \(a\), so it is not a unifier and is not idempotent.
+
+On the registered sheet, Eliminate on \(x\doteq y\) is not enabled
+at this state: \(x\) occurs in no other equation. That binding is
+already isolated, so the source's first accumulating step has no
+corresponding sheet transition. Eliminate on \(y\doteq a\) instead
+updates its retained right side, giving
+\(x\doteq a,y\doteq a\), which is irreducible and extracts the
+correct simultaneous answer. A singleton \(x\doteq a\) is already
+irreducible on that sheet, while the inherited procedure removes it
+and succeeds with an empty equation set and a nonidentity accumulator.
+\end{hbexample}
+
+\begin{hbexample}{def:p12-ue-occurs-cases}{Cycles, orientation and the empty problem}
+From \(x\doteq y,y\doteq f(x)\), eliminating the first variable
+produces \(y\doteq f(y)\); Occurs rejects it. Eliminating the other
+binding first instead produces \(x\doteq f(x)\), with the same failure.
+Finite-support syntax \(\{x\mapsto f(x)\}\) is permitted as a
+substitution, but does not solve \(x\doteq f(x)\): its images are
+\(f(x)\) and \(f(f(x))\). The procedure does not use rational trees.
+
+The irreducible singleton \(x\doteq y\), for distinct variables,
+extracts \(\{x\mapsto y\}\). The sheet's Orient does not swap
+that equation. An input instead written \(y\doteq x\) extracts
+\(\{y\mapsto x\}\); these are equivalent most general answers,
+not one literal answer obtained by silently extending Orient.
+A variable-only cycle \(x\doteq y,y\doteq x\) does not fail:
+Eliminate on the first binding makes the other \(y\doteq y\),
+Delete removes it, and \(x\doteq y\) is a solved answer. The failed
+cycle above contains a proper function context, not merely aliases.
+For \(x\doteq a,f(y)\doteq f(a)\), scanning past the already
+isolated first binding finds Decompose on the second equation; the
+result \(x\doteq a,y\doteq a\) is then solved. Stopping at the
+first disabled binding would miss that required transition.
+The empty input returns \(\mathrm{id}\); matching nullary atoms
+produce this empty constraint set, while different atomic symbols
+fail before a term-equation run starts.
+For a variable \(w\) absent from \(x\doteq a\), the returned
+\(\mu=\{x\mapsto a\}\) fixes \(w\), while the further solution
+\(\rho=\{x\mapsto a,w\mapsto f(a)\}\) satisfies
+\(\rho=\mu\rho\) globally. No assignment to an unused variable is
+silently included in the returned answer.
+\end{hbexample}
+
+\begin{hbwarning}{def:p12-ue-factor-not-unique}{A factor witness need not be unique}
+For the problem \(x\doteq a\), let \(\mu=\{x\mapsto a\}\).
+Both \(\eta_1=\mathrm{id}\) and \(\eta_2=\{x\mapsto a\}\)
+satisfy \(\mu\eta_1=\mu\eta_2=\mu\). They differ at the original
+input variable \(x\), and one is not a variable renaming. What is
+unique up to renaming is the most general answer, not the factor witness.
+Idempotence is a property of the answers extracted by these procedures,
+not a requirement in the definition of a substitution or of every MGU.
+All results here use finite free terms, not associative/commutative
+equational unification or unrestricted higher-order unification.
+\end{hbwarning}
+
+\input{parts/p12/presentations/n-c-035-05}

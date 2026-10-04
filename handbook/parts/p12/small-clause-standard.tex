@@ -1,0 +1,450 @@
+\chapter{A Rule-Based Route to Clause Normal Form}
+\label{sec:p12-small-clause-standard}
+
+Clausification converts a first-order problem into the clause language
+used by many deduction procedures. This chapter gives the standard
+seven-stage procedure in Nonnengart and Weidenbach's presentation,
+including its treatment of polarity, variables and clauses
+\cite[secs.~1--3, pp.~337--347]{NonnengartWeidenbach2001SmallClauses}.
+The later formula-renaming and optimized-Skolemization methods have
+their own constructions. Clause count, literal count, term size and
+the time taken by a particular prover are different measures.
+The preservation results establish logical guarantees, not a
+universal ordering of prover runtimes.
+
+\section{Input semantics and the objects being transformed}
+
+\begin{hbdefinition}{def:p12-small-language}{Language, interpretations and clauses}
+Use single-sorted first-order logic over a signature
+\(\Sigma=(\mathcal F,\mathcal R)\) of function and predicate symbols
+with fixed finite arities and an infinite supply of variable names \(X\).
+Terms are variables, constants and applications \(f(t_1,\ldots,t_n)\).
+Atoms are \(R(t_1,\ldots,t_n)\); equality, if included, is an atom
+interpreted as identity. Formula constructors are
+\(\top,\bot,\neg,\land,\lor,\to,\leftrightarrow,\forall,\exists\).
+The source's \(\supset,\equiv\) denote our object-language
+\(\to,\leftrightarrow\).
+
+A structure \(\mathfrak A\) has a nonempty domain \(D\), an
+interpretation of every signature symbol, and valuations \(\nu:X\to D\).
+The updated valuation \(\nu[x/d]\) sends \(x\) to \(d\) and
+agrees with \(\nu\) elsewhere. Write \(t^{\mathfrak A,\nu}\)
+for term evaluation: variables take their valuation, constants their
+specified interpretation, and
+\[
+ f(t_1,\ldots,t_n)^{\mathfrak A,\nu}
+ =f^{\mathfrak A}(t_1^{\mathfrak A,\nu},\ldots,t_n^{\mathfrak A,\nu}).
+\]
+An atom \(R(\bar t)\) is true exactly when the tuple of term values
+belongs to \(R^{\mathfrak A}\). The constants \(\top,\bot\)
+are respectively true and false; negation reverses truth, conjunction
+requires both operands, disjunction requires at least one, implication
+is false exactly when its antecedent is true and its consequent false,
+and a biconditional requires equal truth values. Universal quantification
+requires the body under every \(\nu[x/d]\), existential quantification
+under at least one, for \(d\in D\).
+Write \(\Phi\equiv_\Sigma\Psi\)
+for equality of truth in every \(\Sigma\)-structure and every valuation.
+In displayed equivalence chains, \(\equiv\) abbreviates this relation
+for the current fixed signature; a Skolem step is identified separately
+as an expansion/reduct transformation.
+Satisfiability of an open formula means that some structure and
+\emph{some valuation} satisfy it.
+
+A literal is an atom or a negated atom. A clause is a finite
+\emph{multiset} of literals, read disjunctively with all its variables
+universally quantified. A clause set is read conjunctively.
+The empty clause is false; the empty clause set is true.
+The formula's free variables, bound variable names and their union
+are denoted \(\operatorname{free},\operatorname{bound},\operatorname{vars}\).
+An atom's free variables are the union of the variables in its terms,
+and it has no bound variables. Logical constants have neither.
+Negation inherits both sets from its operand.
+Free variables are obtained by union at binary connectives and deletion
+of the bound name at a quantifier; bound names are accumulated at
+quantifiers. These are sets of names, distinct from binder occurrences.
+A formula is \emph{rectified} when different binder occurrences have
+different names and no bound name is also free in the formula.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-small-sat-closure}{proved=annex:p12.small.sat.closure}{The open-input convention}
+If \(\operatorname{free}(\Phi)=\{x_1,\ldots,x_k\}\), put
+\[
+                   \Phi^\exists=\exists x_1\cdots\exists x_k\,\Phi .
+\]
+For every structure \(\mathfrak A\),
+\(\mathfrak A\models\Phi^\exists\) exactly when some valuation
+satisfies \(\Phi\). For a sentence this closure changes nothing.
+If an input instead stipulates universal closure, apply the procedure
+to that explicitly specified sentence. The two conventions cannot
+be silently interchanged: \(P(x)\land\neg P(y)\) is satisfiable
+under the open-input convention but its universal closure is not.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p12-small-positions}{Positions, polarity and substitution}
+A formula position is a finite word over child indices. The root
+is \(\epsilon\); negation and quantifiers have child \(1\), and
+binary connectives have children \(1,2\). Atoms have no formula
+children. Write \(\Phi|_\pi\) for the selected subformula and
+\(\Phi[\pi/\Psi]\) for its replacement. Concatenation defines
+the prefix ordering; the length of a position is its number of indices.
+Formula depth is the maximum position length. Term depth is defined
+separately by depth zero for variables/constants and one plus the
+maximum child depth at a positive-arity function.
+
+Set \(\operatorname{pol}(\Phi,\epsilon)=+1\).
+Conjunction, disjunction and quantifiers preserve the incoming sign.
+An implication preserves it in its consequent and reverses it in
+its antecedent; negation reverses it. Below a biconditional the
+polarity is \(0\), and subsequent operations keep it \(0\).
+
+A term substitution \(\sigma\) is a simultaneous variable-to-term
+map with finite support; its domain is the changed variables and
+its changed-image set is the set of their images. Application to
+terms is homomorphic. Application to formulas in witness substitution
+is capture-avoiding. The separate raw variable-renaming operation
+below changes binder names as well as variable occurrences.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p12-small-context}{proved=annex:p12.small.context}{Replacement at an occurrence}
+Equivalent subformulas can be replaced at any occurrence, including
+under binders. More generally, suppose \(A\) entails \(B\) under
+every valuation in the structures being considered. Replacing
+an occurrence of \(A\) by \(B\) preserves implication from the old
+whole formula to the new one at positive polarity, and reverses
+that implication at negative polarity. At polarity zero,
+equivalence of the inserted formulas is sufficient.
+These statements compare the same interpretation of all symbols
+and allow bound variables to take every domain value.
+\end{hblemma}
+
+\section{Simplification and negation normal form}
+
+\begin{hbmethod}{def:p12-small-simplification}{The complete initial simplification rules}
+Apply these rules at subformula occurrences; match
+\(\land,\lor,\leftrightarrow\) modulo commutativity.
+Matching is not itself an extra rewrite step.
+\[
+\begin{array}{lll@{\qquad}lll}
+A\land A&\longmapsto&A&A\lor A&\longmapsto&A\\
+A\land\neg A&\longmapsto&\bot&A\lor\neg A&\longmapsto&\top\\
+A\leftrightarrow A&\longmapsto&\top&A\to A&\longmapsto&\top\\
+\neg\top&\longmapsto&\bot&\neg\bot&\longmapsto&\top\\
+A\land\top&\longmapsto&A&A\lor\top&\longmapsto&\top\\
+A\land\bot&\longmapsto&\bot&A\lor\bot&\longmapsto&A\\
+A\to\top&\longmapsto&\top&\top\to A&\longmapsto&A\\
+A\to\bot&\longmapsto&\neg A&\bot\to A&\longmapsto&\top\\
+A\leftrightarrow\top&\longmapsto&A&
+A\leftrightarrow\bot&\longmapsto&\neg A .
+\end{array}
+\]
+Also replace \(Qx\,A\) by \(A\), for either quantifier \(Q\),
+when \(x\notin\operatorname{free}(A)\).
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p12-small-simplify}{proved=annex:p12.small.simplify}{Termination and the simplification invariant}
+Every simplification step preserves equivalence and strictly reduces
+the formula-tree node count. Every exhaustive sequence terminates.
+Its result is \(\top\), \(\bot\), or a formula containing neither
+logical constant, with every remaining quantifier binding a variable
+free in its body. Free variables may disappear during simplification.
+If the result is a logical constant, return the corresponding
+empty clause set or singleton empty-clause set.
+\end{hbtheorem}
+
+\begin{hbmethod}{def:p12-small-nnf-rules}{Polarity-dependent NNF rewriting}
+At a biconditional occurrence \(A\leftrightarrow B\), use
+\[
+\begin{array}{ll}
+(A\to B)\land(B\to A),&\operatorname{pol}=+1,\\
+(A\land B)\lor(\neg A\land\neg B),&\operatorname{pol}=-1.
+\end{array}
+\]
+The remaining rules are
+\[
+\begin{aligned}
+\neg(A\land B)&\longmapsto\neg A\lor\neg B,&
+\neg(A\lor B)&\longmapsto\neg A\land\neg B,\\
+\neg\forall x\,A&\longmapsto\exists x\,\neg A,&
+\neg\exists x\,A&\longmapsto\forall x\,\neg A,\\
+A\to B&\longmapsto\neg A\lor B,&
+\neg\neg A&\longmapsto A .
+\end{aligned}
+\]
+An outermost remaining biconditional always has nonzero polarity.
+No rule need operate on a biconditional below another one.
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p12-small-nnf}{proved=annex:p12.small.nnf}{Every permitted NNF rewrite sequence terminates}
+On a constant-free input, these rules terminate in an equivalent NNF:
+only \(\land,\lor,\forall,\exists\) connect literals.
+They preserve both the free-variable and all-variable sets.
+A strictly decreasing interpretation is obtained from atomic weight \(1\):
+negation has weight \(2a\); either quantifier has weight \(a+1\);
+\(\land,\lor\) have weight \(a+b+1\); implication has weight
+\(3a+2b+2\); biconditional has weight \(6a+6b+6\).
+The proof permits duplication of complex subformulas.
+
+For atomic \(A,B\), polarity-dependent treatment of
+\(\neg(A\leftrightarrow B)\) gives the two clauses
+\(A\lor B\) and \(\neg A\lor\neg B\).
+Always using the positive expansion instead also generates
+\(A\lor\neg A\) and \(B\lor\neg B\) before simplification.
+\end{hbtheorem}
+
+\section{Miniscoping and variable rectification}
+
+\begin{hbmethod}{def:p12-small-miniscoping}{The six miniscoping schemes}
+For \(Q\in\{\forall,\exists\}\) and
+\(\circ\in\{\land,\lor\}\), use
+\[
+            Qx(A\circ B)\longmapsto(Qx A)\circ B
+                \quad\text{if }x\notin\operatorname{free}(B).
+\]
+These are four rules, also matched with the operands exchanged.
+The other two are
+\[
+\begin{aligned}
+\forall x(A\land B)&\longmapsto(\forall x A)\land(\forall x B),\\
+\exists x(A\lor B)&\longmapsto(\exists x A)\lor(\exists x B),
+\end{aligned}
+\]
+when \(x\) occurs free in both operands.
+No corresponding unrestricted distribution of \(\forall\) over
+\(\lor\), or \(\exists\) over \(\land\), is allowed.
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p12-small-miniscope}{proved=annex:p12.small.miniscope}{Miniscoping preserves truth and terminates}
+On NNF formulas every displayed step preserves equivalence, and
+every rewrite sequence terminates. Let \(b(A)\) count the
+\(\land,\lor\) occurrences in \(A\). The nonnegative integer
+\[
+          \sum_{\text{quantifier occurrences }Qx A}3^{b(A)}
+\]
+strictly decreases at each step, even when a quantifier is duplicated.
+It is zero when the formula is quantifier-free.
+The objective is to expose smaller witness-dependency lists.
+This does not promise a globally minimal number of Skolem symbols
+or a faster proof search.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p12-small-raw-renaming}{Raw renaming on the occurring variables}
+For an injective map
+\(\rho:\operatorname{vars}(A)\to X\), define
+\(\operatorname{raw}_\rho(A)\) by replacing every variable
+occurrence and every binder name \(x\) by \(\rho(x)\).
+Use the same homomorphic replacement in terms and preserve
+all connectives and quantifier kinds.
+For \(y\notin\operatorname{vars}(A)\), the notation
+\(\operatorname{raw}_{x\mapsto y}(A)\) changes \(x\) and
+fixes the other occurring variables.
+Injectivity is required on the variables of the formula being
+renamed, not on an identity-extended map of the entire alphabet.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p12-small-renaming}{proved=annex:p12.small.renaming}{The valuation lemma, including both quantifiers}
+If \(\nu_1(z)=\nu_2(\rho(z))\) for every
+\(z\in\operatorname{free}(A)\), then
+\[
+       \mathfrak A,\nu_1\models A
+       \quad\Longleftrightarrow\quad
+       \mathfrak A,\nu_2\models\operatorname{raw}_\rho(A).
+\]
+For terms whose variables are in the domain of \(\rho\), term values
+obey the corresponding equality when the valuations agree modulo
+\(\rho\) on those variables. This is the semantic interface used
+by the indexed renaming algorithm below.
+\end{hblemma}
+
+\begin{hbmethod}{def:p12-small-rectification}{The indexed renaming procedure}
+Let \(nq(A)\) count quantifier occurrences. Supply distinct fresh
+variables \(y_1,\ldots,y_{nq(A)}\) outside
+\(\operatorname{vars}(A)\). Define \(\operatorname{ren}(A,n)\)
+recursively, using the appropriate unused portion of this list.
+Atoms and logical constants are unchanged; negation recurses
+with the same \(n\). At \(B\circ C\), for any binary connective,
+return
+\[
+       \operatorname{ren}(B,n)\circ
+       \operatorname{ren}(C,n+nq(B)).
+\]
+At \(Qx B\), return
+\[
+          Qy_n\,\operatorname{ren}
+                    (\operatorname{raw}_{x\mapsto y_n}(B),n+1).
+\]
+Start at \(n=1\). The finite list is the portion actually used
+of the source's infinite fresh-variable sequence.
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p12-small-rectification}{proved=annex:p12.small.rectification}{Correctness and allocation of fresh names}
+The procedure terminates, preserves equivalence and the free-variable
+set, and assigns different fresh names to all binder occurrences.
+No bound name is free in the resulting formula.
+A call starting at \(n\) uses exactly the binder-name block
+\(y_n,\ldots,y_{n+nq(A)-1}\), with the empty-block convention
+when there is no quantifier.
+\end{hbtheorem}
+
+\section{Witness functions and the clause matrix}
+
+\begin{hbmethod}{def:p12-small-skolem-rule}{Outermost local Skolemization}
+Start with a closed, rectified NNF. Choose an existential
+occurrence \(\exists x B\) of minimum position length.
+List \(\operatorname{free}(\exists x B)=\{z_1,\ldots,z_m\}\).
+Introduce a function symbol \(f\) of arity \(m\), fresh outside
+the current declared signature, and replace that occurrence by
+\[
+                         B[x:=f(z_1,\ldots,z_m)] .
+\]
+The replacement concerns the free occurrences of \(x\) in \(B\).
+Rectification prevents capture. Arity zero gives a new constant.
+Record the new symbol and its ordered dependency list, then repeat.
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p12-small-skolem}{proved=annex:p12.small.skolem}{Local expansion and reduct, on arbitrary nonempty domains}
+Every step of the displayed rule removes one existential quantifier.
+Assuming Choice, each model of the old closed formula has an
+expansion on the same domain satisfying the new formula.
+Without Choice, every model of the new formula has a reduct
+satisfying the old one. The expansion can make
+\(\exists x B\) and \(B[x:=f(\bar z)]\) agree at every valuation.
+No finite-domain restriction is imposed.
+The outermost schedule leaves only universally bound parameters
+above the selected occurrence.
+
+Freshness outside the declared signature gives this full
+expansion guarantee. A name merely absent from the input formula
+may already have a fixed interpretation in that signature.
+Reusing it can require changing that interpretation; this is
+a different model relation, even when satisfiability is preserved.
+\end{hbtheorem}
+
+\begin{hbmethod}{def:p12-small-clause-matrix}{A schedule that preserves rectification}
+First pull all remaining universal quantifiers to a prefix using
+\[
+          (\forall x A)\circ B\longmapsto\forall x(A\circ B),
+       \qquad \circ\in\{\land,\lor\},\quad
+                    x\notin\operatorname{free}(B).
+\]
+Only after the prefix has been formed, distribute in its
+quantifier-free matrix:
+\[
+                 A\lor(B\land C)
+                 \longmapsto(A\lor B)\land(A\lor C).
+\]
+Commutative matching covers either operand order.
+Flatten the final conjunction and its disjunctions into clauses.
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p12-small-cnf}{proved=annex:p12.small.cnf}{Prefix formation and distributive termination}
+The first phase terminates and produces a universal prefix:
+the sum of the numbers of Boolean ancestors of all quantifier
+occurrences decreases by one per pull.
+Global rectification makes every required side condition available.
+The second phase terminates in CNF. Give each literal weight \(2\),
+give conjunction weight \(a+b+1\), and disjunction weight \(ab\).
+Every distribution strictly decreases this positive integer.
+Both phases preserve equivalence in the expanded signature.
+Distributing before prefix formation can duplicate binder names
+and block further pulling; the proof gives a complete example.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p12-small-clause-reductions}{Subsumption, tautology and condensation}
+For literal multisets, \(C\sigma\subseteq D\) means that every
+literal occurs in \(D\) with at least its multiplicity in \(C\sigma\).
+Clause \(C\) subsumes \(D\) if some term substitution has this property.
+A syntactic tautology contains both an atom and its literal negation.
+A condensation \(C\) of \(D\) is obtained from an instance \(D\sigma\)
+by deleting duplicate literals, has fewer literal occurrences,
+and itself subsumes \(D\).
+
+Delete a tautological clause. Delete a subsumed clause \(D\) only
+while its distinct witness clause \(C\) remains in the set.
+One may also replace a clause by a condensation.
+Rename different clauses' variables apart when representing the output.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-small-clause-simplify}{proved=annex:p12.small.clause.simplify}{The exact universally quantified clause guarantees}
+Separating clause variable names, deleting tautologies, deleting a
+subsumed clause with a retained witness, and replacing a clause by
+a condensation preserve the models of the universally read clause set.
+The deletion/condensation process terminates because clause count
+plus literal-occurrence count strictly decreases.
+Subsumption uses multiplicities: \(\{R(x,x),R(y,y)\}\)
+does not subsume \(\{R(a,a)\}\), although it has the
+equivalent condensation \(\{R(x,x)\}\).
+Mutually subsuming clauses must not all be deleted simultaneously.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p12-small-pipeline}{proved=annex:p12.small.pipeline}{The complete standard transformation}
+Apply existential closure when required, then simplification, NNF,
+miniscoping, indexed rectification, outermost local Skolemization,
+prefix formation and matrix distribution, and clause simplification.
+The procedure terminates with a finite clause set \(S\) in a finite
+signature extension. For each original structure \(\mathfrak A\):
+\begin{enumerate}
+\item Assuming Choice, if some valuation satisfies the input,
+      \(\mathfrak A\) has an expansion satisfying \(S\).
+\item Without Choice, if an expansion satisfies \(S\), some
+      valuation satisfies the input in its reduct.
+\end{enumerate}
+For sentence inputs, replace \emph{some valuation satisfies} by
+ordinary sentence satisfaction. In particular the procedure
+preserves satisfiability, with the precise stronger model relation shown.
+\end{hbtheorem}
+
+\section{The complete running example and failure cases}
+
+\begin{hbtheorem}{thm:p12-small-example}{proved=annex:p12.small.example}{Miniscoping, fresh variables and the resulting two clauses}
+For the source's sentence
+\[
+ \forall x\exists y\forall z\,
+       [R(x,x)\land(P(y)\lor R(x,y)\lor Q(z))],
+\]
+miniscoping yields
+\[
+ (\forall x R(x,x))\land
+       [\exists y P(y)\lor\forall x\exists y R(x,y)\lor\forall z Q(z)].
+\]
+Indexed rectification uses five distinct binder names. Local
+Skolemization uses a new constant \(a\) and a new unary \(f\).
+The final clauses, with variables separated, are
+\[
+                     \{R(u,u)\},\qquad
+                     \{P(a),R(v,f(v)),Q(w)\}.
+\]
+The proof supplies every intermediate formula. Without miniscoping,
+one unary witness function suffices, but its argument also occurs
+in the \(P\)-literal. Thus fewer arguments in some terms need not
+mean fewer new function symbols.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p12-small-failures}{proved=annex:p12.small.failures}{Why the guards and the conjunctive structure matter}
+Complete finite countermodels establish these failures:
+dropping a miniscoping free-variable guard, distributing a universal
+over disjunction or an existential over conjunction, raw renaming
+that captures a free variable, treating a fresh-in-formula old
+constant as a freely interpreted extension, deleting every member
+of a subsumption cycle, and replacing the running example's two
+clauses by the three pairwise disjunctions
+\[
+ \{R(u,u),P(a)\},\quad
+ \{R(v,v),R(t,f(t))\},\quad
+ \{R(w,w),Q(z)\}.
+\]
+The last replacement can turn an unsatisfiable problem, after adding
+the opposite diagonal clause, into a satisfiable one.
+\end{hbtheorem}
+
+\begin{hbmethod}{def:p12-small-use}{What to supply and what to return}
+Supply the finite formula tree, its signature, the intended open-variable
+convention and an effective fresh-name supply. Return the clause set,
+the new-symbol/dependency record and the sequence of transformations.
+For validity checking, apply satisfiability-preserving clausification
+to the negation of the sentence and use an appropriate refutation
+procedure. The clause transformation does not decide arbitrary
+first-order satisfiability by itself.
+The optimized naming, witness and simplification methods preserve
+their own source-specific conditions and cost claims.
+\end{hbmethod}

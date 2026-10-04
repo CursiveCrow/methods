@@ -1,0 +1,553 @@
+%% parts/p04/complexity.tex
+%% Registered new content D-P5-007/N-a-064, with apparatus A-050/A-052/A-127.
+%% Hierarchy and completeness results are citation-only.
+
+\chapter{Computational Complexity}
+\label{sec:p04-complexity}
+
+\noindent\textit{Reader note.} This separately authored chapter extends the
+exact inherited computability sequence with standard complexity and
+descriptive-complexity results.  Its machine conventions, class definitions,
+and cited theorems do not replace any inherited source unit.
+
+Computability asks whether some machine eventually decides a language.
+Complexity also fixes a machine model, an encoding, and a resource measured as
+a function of input length.  Formal-model equivalence therefore does not imply
+equality of time or space costs.  The classes below use a standard multitape
+Turing-machine model and the exact conventions in
+\cite[chaps.~1--5]{AroraBarak2009}.
+
+\section{Resource bounds, reductions, and classes}
+\label{sec:p04-complexity-classes}
+
+\begin{hbconvention}{def:p04-complexity-convention}{Complexity and reduction convention}
+A decision problem is a language \(L\subseteq\{0,1\}^*\), and
+\(n=\operatorname{len}(x)\) is the bit length of an input.  Machines have a read-only
+input and finitely many work tapes.  For functions \(f,g:\N\to\N\), write
+\(f(n)=O(g(n))\) iff there are \(c,n_0\in\N\), with \(c\geq1\), such that
+\(f(n)\leq c g(n)\) for every \(n\geq n_0\); write \(f(n)=o(g(n))\) iff,
+for every \(c\in\N\) with \(c\geq1\), there is \(n_0\in\N\) such that
+\(c f(n)\leq g(n)\) for every \(n\geq n_0\).  Every logarithm in this
+chapter has base \(2\).  A nondeterministic machine replaces the transition
+function by a finite transition relation.  It accepts an input iff some
+computation branch accepts, rejects iff every branch rejects, and counts as a
+decider only when every branch halts; its time and work-tape space are the
+maxima over all branches.  Unless another reduction is explicitly
+named, \(A\leq_m^pB\) means that a deterministic polynomial-time computable
+map \(f\) satisfies
+\[
+ x\in A\quad\Leftrightarrow\quad f(x)\in B.
+\]
+For a class \(\mathcal C\), a language is \(\mathcal C\)-hard when every
+language in \(\mathcal C\) reduces to it by \(\leq_m^p\), and is
+\(\mathcal C\)-complete when it is also a member of \(\mathcal C\).
+Membership and hardness are both required; ``complete'' never means
+deductively or semantically complete in this chapter.
+\index{polynomial-time many-one reduction}
+\index{complexity class!completeness}
+\index{asymptotic notation}
+\end{hbconvention}
+
+\begin{hbdefinition}{def:p04-resource-classes}{Time and space classes}
+For a function \(f:\N\to\N\), \(\mathsf{DTIME}(f(n))\) and
+\(\mathsf{NTIME}(f(n))\) are the languages decided within \(O(f(n))\) steps
+by deterministic and nondeterministic machines, respectively.
+Similarly, \(\mathsf{SPACE}(f(n))\) and \(\mathsf{NSPACE}(f(n))\) measure the
+number of work-tape cells used; the read-only input is not counted.  Put
+\[
+\begin{aligned}
+ \mathsf P&=\bigcup_{k\geq1}\mathsf{DTIME}(n^k),&
+ \mathsf{NP}&=\bigcup_{k\geq1}\mathsf{NTIME}(n^k),\\
+ \mathsf{coNP}&=\{\{0,1\}^*\setminus L:L\in\mathsf{NP}\},&
+ \mathsf{PSPACE}&=\bigcup_{k\geq1}\mathsf{SPACE}(n^k),\\
+ \mathsf{NPSPACE}&=\bigcup_{k\geq1}\mathsf{NSPACE}(n^k),&
+ \mathsf{EXPTIME}&=\bigcup_{k\geq1}\mathsf{DTIME}(2^{n^k}),\\
+ &&\mathsf{EXPSPACE}&=\bigcup_{k\geq1}\mathsf{SPACE}(2^{n^k}).
+\end{aligned}
+\]
+These are classes of encoded languages.  The symbol \(\mathsf{coNP}\), for
+example, names the complement class and not a claim that
+\(\mathsf{NP}=\mathsf{coNP}\).
+\index{P@\(\mathsf P\)}
+\index{NP@\(\mathsf{NP}\)}
+\index{PSPACE@\(\mathsf{PSPACE}\)}
+\index{EXPTIME@\(\mathsf{EXPTIME}\)}
+\index{EXPSPACE@\(\mathsf{EXPSPACE}\)}
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p04-constructible-bound}{Constructible resource bound}
+A function \(f:\N\to\N\) with \(f(n)\geq n\) is \emph{time constructible} when a deterministic
+machine, on input \(1^n\), can produce the unary clock value \(1^{f(n)}\) in
+\(O(f(n))\) time.  A function with
+\(f(n)\geq\lceil\log(n+1)\rceil\) is \emph{space constructible} when a deterministic
+machine, on input \(1^n\), uses exactly \(f(n)\) work cells and halts.  These
+hypotheses prevent a hierarchy statement from hiding a resource bound that a
+machine cannot itself track.
+\index{time-constructible function}
+\index{space-constructible function}
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p04-polynomial-hierarchy}{Polynomial hierarchy}
+Put \(\Sigma^p_0=\Pi^p_0=\mathsf P\).  For \(k\geq1\), a language \(L\)
+belongs to \(\Sigma^p_k\) when there are a polynomial \(q\) and a
+polynomial-time predicate \(R\) such that
+\[
+ x\in L\quad\Leftrightarrow\quad
+ \begin{cases}
+  \exists y_1\,\forall y_2\,\exists y_3\cdots\exists y_k\;
+    R(x,y_1,\ldots,y_k),&k\text{ odd},\\
+  \exists y_1\,\forall y_2\,\exists y_3\cdots\forall y_k\;
+    R(x,y_1,\ldots,y_k),&k\text{ even},
+ \end{cases}
+ \qquad \operatorname{len}(y_i)\leq q(\operatorname{len}(x)).
+\]
+There are \(k\) alternating bounded string-quantifier blocks; the parity
+clauses make the final quantifier explicit.  The class
+\(\Pi^p_k\) is defined by the dual prefix beginning universally, and
+\[
+ \mathsf{PH}\defeq\bigcup_{k\geq0}\Sigma^p_k.
+\]
+The equivalent oracle definition is not needed as a second definition here;
+its equivalence with this bounded-quantifier presentation is part of the
+cited theory \cite{Stockmeyer1976,AroraBarak2009}.
+\index{polynomial hierarchy}
+\end{hbdefinition}
+
+\section{Hierarchy and simulation theorems}
+\label{sec:p04-complexity-hierarchies}
+
+\begin{hbtheorem}{thm:p04-time-hierarchy}{cited=HartmanisStearns1965}{Deterministic time hierarchy theorem}
+If \(f\) and \(g\) are time-constructible and
+\(f(n)\log f(n)=o(g(n))\), then
+\[
+ \mathsf{DTIME}(f(n))\subsetneq\mathsf{DTIME}(g(n)).
+\]
+In particular, \(\mathsf P\subsetneq\mathsf{EXPTIME}\).  The
+constructibility and simulation-overhead gap are hypotheses of the theorem,
+not optional regularity assumptions \cite[thm.~3.1]{AroraBarak2009}.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p04-space-hierarchy}{cited=StearnsHartmanisLewis1965}{Deterministic space hierarchy theorem}
+If \(f\) and \(g\) are space-constructible and \(f(n)=o(g(n))\), then
+\[
+ \mathsf{SPACE}(f(n))\subsetneq\mathsf{SPACE}(g(n)).
+\]
+In particular,
+\(\mathsf{PSPACE}\subsetneq\mathsf{EXPSPACE}\)
+\cite[thm.~3.2]{AroraBarak2009}.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p04-savitch}{cited=Savitch1970}{Savitch's theorem}
+If \(f(n)\geq\log n\) is space constructible, then
+\[
+ \mathsf{NSPACE}(f(n))
+ \subseteq \mathsf{SPACE}(f(n)^2).
+\]
+Consequently \(\mathsf{NPSPACE}=\mathsf{PSPACE}\).  The lower bound and
+constructibility hypothesis remain part of the general theorem even though
+the polynomial-space corollary suppresses them
+\cite[thm.~4.12]{AroraBarak2009}.
+\end{hbtheorem}
+
+\begin{hbwarning}{def:p04-hierarchy-theorems-scope}{What the hierarchy theorems do not separate}
+The preceding theorems give the global strict containments
+\(\mathsf P\subsetneq\mathsf{EXPTIME}\) and
+\(\mathsf{PSPACE}\subsetneq\mathsf{EXPSPACE}\).  They do not prove that
+any adjacent inclusion in
+\[
+ \mathsf P\subseteq\mathsf{NP}\subseteq\mathsf{PH}
+ \subseteq\mathsf{PSPACE}\subseteq\mathsf{EXPTIME}
+ \subseteq\mathsf{EXPSPACE}
+\]
+is strict.
+\end{hbwarning}
+
+\section{Logic-relevant complete problems}
+\label{sec:p04-complexity-complete-problems}
+
+The SAT and TAUT languages and their fixed binary encoding were defined in
+Definition~\ref{def:p02-sat-taut}; malformed strings remain no instances.
+
+\begin{hbdefinition}{def:p04-qbf-languages}{Quantified Boolean languages}
+A \emph{quantified Boolean formula} (QBF) has an explicitly encoded propositional
+matrix and quantifiers ranging over \(\{0,1\}\).  It is \emph{closed} when it
+has no free propositional variable.  The language of true quantified Boolean
+formulas, \(\mathsf{TQBF}\), contains
+exactly the encodings of true closed quantified Boolean formulas, with no
+bound on alternation.
+
+For fixed \(k\geq1\), \(\Sigma_k\text{-}\mathsf{SAT}\) contains true closed
+prenex formulas with \(k\) alternating quantifier blocks beginning
+existentially.  The dual language \(\Pi_k\text{-}\mathsf{SAT}\) begins
+universally.  These fixed-alternation languages are distinct from
+\(\mathsf{TQBF}\), which permits unbounded alternation.
+\index{quantified Boolean formula}
+\index{TQBF}
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p04-succinct-problems}{Circuit value and succinct encodings}
+The \emph{circuit value problem} \(\mathsf{CVP}\) takes an acyclic Boolean
+circuit with constants and \(\neg,\land,\lor\) gates in topological order and
+asks whether its designated output gate evaluates to \(1\).  Write
+\(A\leq_m^{\log}B\) when the many-one translator is computed by a deterministic
+logarithmic-work-space transducer.
+
+A succinct instance uses a fixed self-delimiting gate-list or QBF encoding
+whose decoder ignores trailing zero padding after its end marker.  Validity and
+decoding are logspace computable, and the padded convention is logspace
+intertranslatable with the ordinary encodings used above.  Thus every ordinary
+instance has valid encodings of arbitrarily large power-of-two length.
+
+A succinct instance is a Boolean circuit \(S\) with \(m\) input bits.  It
+describes the \(2^m\)-bit string \(z_S\) whose bit at position \(i\) is
+\(S(\operatorname{bin}_m(i))\), where \(\operatorname{bin}_m(i)\) is the
+unique length-\(m\) binary expansion of \(0\leq i<2^m\), padded with leading
+zeros.  This fixed-width address differs from the variable-length canonical
+numeral encoding used for machine inputs.  The \emph{succinct circuit value problem}
+\(\mathsf{SCVP}\) asks whether \(z_S\) is a valid encoded circuit with output
+value \(1\).  The \emph{succinct TQBF problem} \(\mathsf{STQBF}\) asks whether
+\(z_S\) is a valid encoded true closed quantified Boolean formula.  Invalid
+decoded strings are no instances.
+
+Succinctness is needed to present an exponentially large ordinary instance by
+a polynomial-size circuit.  It is an encoding convention, not a new machine
+resource or logical connective.  It differs from ordinary CVP/TQBF by the
+exponential decompression and is used to calibrate the two exponential classes
+in the completeness catalog.
+\index{circuit value problem}\index{succinct encoding}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p04-succinct-completeness}{cited=Papadimitriou1994}{Canonical complete problems for \(\mathsf P\), \(\mathsf{EXPTIME}\), and \(\mathsf{EXPSPACE}\)}
+The language \(\mathsf{CVP}\) is \(\mathsf P\)-complete under
+logspace many-one reductions.  The language \(\mathsf{SCVP}\) is
+\(\mathsf{EXPTIME}\)-complete and \(\mathsf{STQBF}\) is
+\(\mathsf{EXPSPACE}\)-complete under polynomial-time many-one reductions.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p04-cook-levin}{proved=annex:p02-w02b-p02-015-cook-levin}{Cook--Levin theorem}
+The language \(\mathsf{SAT}\) belongs to \(\mathsf{NP}\), and every language
+in \(\mathsf{NP}\) has a polynomial-time many-one reduction to
+\(\mathsf{SAT}\).  Hence \(\mathsf{SAT}\) is \(\mathsf{NP}\)-complete under
+the reduction in Convention~\ref{def:p04-complexity-convention}.  The
+modern many-one form is stated in \cite[thm.~2.10]{AroraBarak2009} for the
+language of satisfiable CNF formulas; here \(\mathsf{SAT}\) contains all
+satisfiable encoded formulas.
+Historically, \textcite{Cook1971} proves the corresponding tautology result
+using polynomial-time query-machine \(P\)-reducibility, rather than the
+many-one convention fixed here; \textcite{Levin1973} is the independent
+historical source.
+\end{hbtheorem}
+
+The written proof is Annex~\ref{annex:p02-w02b-p02-015-cook-levin}.
+Lemma~\ref{thm:p02-w02b-p02-015-bridge} matches the machines, reductions and
+\(\mathsf{NP}\) of this chapter with the certificate formulation of Part~2;
+membership then comes from the certificate check of
+Theorem~\ref{thm:p02-w02-p02-018-membership}, and hardness from the tableau
+formula of Theorem~\ref{thm:p02-w02-p02-018-cook-levin}.
+
+\begin{hbtheorem}{thm:p04-tqbf-pspace}{proved=annex:p9.tqbf.1}{TQBF completeness}
+The language \(\mathsf{TQBF}\) is \(\mathsf{PSPACE}\)-complete under
+polynomial-time many-one reductions.  Both membership and hardness are part
+of the statement.  The historical source role is
+\textcite{StockmeyerMeyer1973}; a complete handbook proof is
+Annex~\ref{annex:p9.tqbf.1} \cite[thm.~4.11]{AroraBarak2009}.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p04-fixed-qbf-completeness}{cited=Stockmeyer1976}{Fixed-alternation QBF completeness}
+For each fixed \(k\geq1\),
+\(\Sigma_k\text{-}\mathsf{SAT}\) is \(\Sigma^p_k\)-complete and
+\(\Pi_k\text{-}\mathsf{SAT}\) is \(\Pi^p_k\)-complete under
+polynomial-time many-one reductions.
+\end{hbtheorem}
+
+\begingroup\small
+\begin{longtable}{@{}p{0.17\textwidth}p{0.42\textwidth}p{0.32\textwidth}@{}}
+\caption{Logic-relevant completeness catalog, paired with the class ladder in
+Table~\ref{tab:p04-complexity-ladder}.}
+\label{tab:p04-completeness-catalog}\\
+\toprule
+Problem & Encoded yes instances & Exact classification and evidence \\
+\midrule
+\endfirsthead
+\toprule
+Problem & Encoded yes instances & Exact classification and evidence \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\(\mathsf{CVP}\) & Valid encoded acyclic Boolean circuits whose designated
+output evaluates to \(1\). & \(\mathsf P\)-complete under logspace many-one
+reductions; Theorem~\ref{thm:p04-succinct-completeness}. \\
+\addlinespace
+\(\mathsf{SAT}\) & Satisfiable encoded propositional formulas under
+Definition~\ref{def:p02-sat-taut}. & \(\mathsf{NP}\)-complete;
+Theorem~\ref{thm:p04-cook-levin}; \cite[thm.~2.10]{AroraBarak2009}. \\
+\addlinespace
+\(3\mathsf{SAT}\) & Satisfiable encoded 3-CNF formulas, each clause having at
+most three literals. & \(\mathsf{NP}\)-complete under the same reductions;
+\cite[thm.~2.10]{AroraBarak2009}; \cite{Karp1972}. \\
+\addlinespace
+\(\mathsf{TAUT}\) & Encoded propositional formulas true under every Boolean
+assignment. & \(\mathsf{coNP}\)-complete;
+Theorem~\ref{thm:p02-taut-conp-complete}; \cite{AroraBarak2009}. \\
+\addlinespace
+\(\Sigma_k\text{-}\mathsf{SAT}\) & True closed prenex QBFs with fixed
+\(k\geq1\), beginning existentially. & \(\Sigma^p_k\)-complete;
+Theorem~\ref{thm:p04-fixed-qbf-completeness}; \cite{Stockmeyer1976}. \\
+\addlinespace
+\(\Pi_k\text{-}\mathsf{SAT}\) & The dual fixed-\(k\) prefix beginning
+universally. & \(\Pi^p_k\)-complete;
+Theorem~\ref{thm:p04-fixed-qbf-completeness}; \cite{Stockmeyer1976}. \\
+\addlinespace
+\(\mathsf{TQBF}\) & True closed QBFs with unbounded alternation. &
+\(\mathsf{PSPACE}\)-complete; Theorem~\ref{thm:p04-tqbf-pspace};
+\cite{StockmeyerMeyer1973}. \\
+\addlinespace
+\(\mathsf{SCVP}\) & Succinct descriptions of exponentially large valid
+circuits evaluating to \(1\). & \(\mathsf{EXPTIME}\)-complete;
+Theorem~\ref{thm:p04-succinct-completeness}. \\
+\addlinespace
+\(\mathsf{STQBF}\) & Succinct descriptions of exponentially long valid true
+closed QBFs. & \(\mathsf{EXPSPACE}\)-complete;
+Theorem~\ref{thm:p04-succinct-completeness}. \\
+\addlinespace
+First-order validity & Codes of first-order sentences valid in every
+structure under the fixed signature convention. & c.e. and undecidable, not
+a finite-level completeness claim; Theorem~\ref{thm:fol-validity-undecidable}
+and Corollary~\ref{thm:fol-validity-enumerable};
+\cite{Church1936,Turing1937}. \\
+\end{longtable}
+\endgroup
+
+\section{The class ladder and its open edges}
+\label{sec:p04-complexity-ladder}
+
+\begingroup\small
+\begin{longtable}{@{}p{0.25\textwidth}p{0.25\textwidth}p{0.41\textwidth}@{}}
+\caption{Complexity-class ladder.  Every row distinguishes
+inclusion, equality, known strictness, and an unresolved equality.}
+\label{tab:p04-complexity-ladder}\\
+\toprule
+Relation & Classification & Evidence and unresolved boundary \\
+\midrule
+\endfirsthead
+\toprule
+Relation & Classification & Evidence and unresolved boundary \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\(\mathsf P\subseteq\mathsf{NP}\) & proved inclusion & Immediate from the
+machine definitions; equality is open \cite{AroraBarak2009}. \\
+\addlinespace
+\(\mathsf P\subseteq\mathsf{coNP}\) & proved inclusion & Deterministic
+polynomial time is closed under complement; equality is open
+\cite{AroraBarak2009}. \\
+\addlinespace
+\(\mathsf{NP},\mathsf{coNP}\subseteq\mathsf{PH}\) & proved inclusions &
+\(\Sigma^p_1=\mathsf{NP}\) and \(\Pi^p_1=\mathsf{coNP}\);
+\(\mathsf{NP}=\mathsf{coNP}\) and collapse of \(\mathsf{PH}\) are open
+\cite{Stockmeyer1976}. \\
+\addlinespace
+\(\mathsf{PH}\subseteq\mathsf{PSPACE}\) & proved inclusion & Polynomially
+many bounded alternations can be evaluated in polynomial space; equality and
+strictness are open \cite[ch.~5]{AroraBarak2009}. \\
+\addlinespace
+\(\mathsf{PSPACE}=\mathsf{NPSPACE}\) & proved equality & Savitch's theorem,
+Theorem~\ref{thm:p04-savitch}. \\
+\addlinespace
+\(\mathsf{PSPACE}\subseteq\mathsf{EXPTIME}\) & proved inclusion & A
+polynomial-space computation has at most exponentially many configurations;
+equality and strictness are open \cite[ch.~4]{AroraBarak2009}. \\
+\addlinespace
+\(\mathsf{P}\subsetneq\mathsf{EXPTIME}\) & proved strict containment &
+Deterministic time hierarchy, Theorem~\ref{thm:p04-time-hierarchy}. \\
+\addlinespace
+\(\mathsf{EXPTIME}\subseteq\mathsf{EXPSPACE}\) & proved inclusion & A
+machine uses no more work cells than elapsed steps; adjacent strictness is not
+asserted \cite{AroraBarak2009}. \\
+\addlinespace
+\(\mathsf{PSPACE}\subsetneq\mathsf{EXPSPACE}\) & proved strict containment &
+Deterministic space hierarchy, Theorem~\ref{thm:p04-space-hierarchy}. \\
+\end{longtable}
+\endgroup
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  node distance=12mm and 18mm,
+  cls/.style={draw,rounded corners,minimum width=24mm,minimum height=7mm,
+              align=center,font=\small},
+  inc/.style={-{Latex[length=2mm]},thick},
+  strict/.style={-{Latex[length=2.4mm]},very thick},
+  open/.style={densely dashed}
+]
+ \node[cls] (p) {\(\mathsf P\)};
+ \node[cls,above left=of p] (np) {\(\mathsf{NP}\)};
+ \node[cls,above right=of p] (conp) {\(\mathsf{coNP}\)};
+ \node[cls,above=26mm of p] (ph) {\(\mathsf{PH}\)};
+ \node[cls,above=of ph] (pspace) {\(\mathsf{PSPACE}=\mathsf{NPSPACE}\)};
+ \node[cls,above=of pspace] (exptime) {\(\mathsf{EXPTIME}\)};
+ \node[cls,above=of exptime] (expspace) {\(\mathsf{EXPSPACE}\)};
+ \draw[inc] (p) -- (np);
+ \draw[inc] (p) -- (conp);
+ \draw[inc] (np) -- (ph);
+ \draw[inc] (conp) -- (ph);
+ \draw[inc] (ph) -- (pspace);
+ \draw[inc] (pspace) -- (exptime);
+ \draw[inc] (exptime) -- (expspace);
+ \draw[open] (np) -- node[above,font=\scriptsize] {\(?=\)} (conp);
+ \draw[open,bend left=18] (p) to node[left,font=\scriptsize] {\(?=\)} (np);
+ \draw[open,bend right=18] (p) to node[right,font=\scriptsize] {\(?=\)} (conp);
+ \draw[open,bend left=14] (np) to node[left,font=\scriptsize] {\(?=\)} (ph);
+ \draw[open,bend right=14] (conp) to node[right,font=\scriptsize] {\(?=\)} (ph);
+ \draw[open,bend right=26] (ph) to node[right,font=\scriptsize] {\(?=\)} (pspace);
+ \draw[open,bend right=25] (pspace) to node[right,font=\scriptsize] {\(?=\)} (exptime);
+ \draw[open,bend right=24] (exptime) to node[right,font=\scriptsize] {\(?=\)} (expspace);
+ \draw[strict,bend left=44] (p) to node[left,font=\scriptsize,align=center]
+   {known\\proper} (exptime);
+ \draw[strict,bend left=42] (pspace) to node[left,font=\scriptsize,align=center]
+   {known\\proper} (expspace);
+\end{tikzpicture}
+\caption{Complexity inclusions and open equality questions.
+Solid arrows are proved inclusions; heavy curved arrows are the two proved
+global strict containments; dashed connectors marked \(?=\) record unresolved
+equalities.  The drawing is Hasse-style layout only: no edge is asserted to be
+a cover relation.  Evidence is in
+Table~\ref{tab:p04-complexity-ladder} and
+Theorems~\ref{thm:p04-time-hierarchy}--\ref{thm:p04-savitch}.}
+\label{fig:p04-complexity-inclusions}
+\end{figure}
+
+\section{Descriptive-complexity correspondences}
+\label{sec:p04-descriptive-complexity}
+
+\begin{hbdefinition}{def:p04-captures-complexity}{Capturing a class on finite structures}
+Fix a finite relational vocabulary \(R_1,\ldots,R_r\), including its displayed
+order and arities.  For \(n\geq1\), present an \(n\)-element structure on
+\([n]=\{0,\ldots,n-1\}\).  If the standard binary expansion of \(n\) is the
+\(k\)-bit word \(b\), its encoding begins with \(1^k0b\), followed, for
+\(i=1,\ldots,r\), by the characteristic bits of \(R_i\) on
+\([n]^{\operatorname{arity}(R_i)}\) in lexicographic tuple order.  An
+arbitrarily presented finite structure is represented by each bijective
+relabeling onto \([n]\); an isomorphism-invariant class therefore gives the
+same membership answer to every such representation.
+
+A logic formalism \(\mathfrak L\) \emph{captures} a complexity class
+\(\mathcal C\) on the stated structures when:
+\begin{enumerate}
+ \item the encoded model class of every \(\mathfrak L\)-sentence belongs to
+       \(\mathcal C\); and
+ \item every isomorphism-invariant property whose encoded membership language
+       belongs to \(\mathcal C\) is defined by a \(\mathfrak L\)-sentence.
+\end{enumerate}
+This finite-structure correspondence is neither ordinary definability over
+arbitrary structures nor a claim that formulas and machines are the same
+objects.  A built-in total order is mentioned exactly when the correspondence
+requires it.
+\index{descriptive complexity}
+\index{captures a complexity class}
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p04-fol-lfp}{First-order least fixed-point logic}
+Let \(R\) be a fresh \(r\)-ary relation variable and let
+\(\varphi(R,\bar x,\bar y)\) be first-order with every occurrence of \(R\)
+positive, meaning under an even number of negations in negation normal form.
+For parameters \(\bar b\) in a structure \(M\), it defines the monotone
+operator
+\[
+ F_{\bar b}(S)
+ =\{\bar a\in M^r:M\entails\varphi(S,\bar a,\bar b)\}
+ \quad(S\subseteq M^r).
+\]
+The formula
+\([\operatorname{lfp}_{R,\bar x}\varphi](\bar t)\) holds exactly when the
+value of \(\bar t\) belongs to the least fixed point of \(F_{\bar b}\).  On a
+finite structure that fixed point is reached by the iteration
+\(\varnothing,F(\varnothing),F^2(\varnothing),\ldots\).
+
+Positivity is needed to make the operator monotone and the least fixed point
+well defined.  This is an object-language formula constructor with the
+displayed finite-structure semantics, not an arbitrary recursion scheme or a
+second-order quantifier.  It differs from first-order logic by allowing this
+iterated relation definition and is used in the Immerman--Vardi theorem and
+the correspondence table below.
+\index{least fixed-point logic}\index{FO(LFP)}
+\end{hbdefinition}
+
+Fagin's theorem is stated once, at
+Theorem~\ref{thm:p03-fagin}: over finite relational structures,
+existential second-order logic captures \(\mathsf{NP}\), with no built-in
+order required.  The present chapter uses that same public theorem as a
+descriptive-complexity correspondence rather than creating a second identity.
+
+\begin{hbtheorem}{thm:p04-immerman-vardi}{cited=Immerman1986}{Ordered fixed-point capture}
+Over finite relational structures equipped with a built-in total order,
+first-order logic with a least fixed-point operator captures \(\mathsf P\)
+\cite{Vardi1982}.  The order hypothesis is part of the statement.
+\end{hbtheorem}
+
+In the following table, FO abbreviates first-order logic, ESO existential
+second-order logic, and FO(LFP) first-order logic with a least fixed-point
+operator.  The later warning uses BIT for the built-in binary bit predicate.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{@{}p{.14\textwidth}p{.32\textwidth}p{.20\textwidth}p{.25\textwidth}@{}}
+\toprule
+Logic & Finite-structure convention & Captured class & Evidence \\
+\midrule
+FO & finite relational structures; baseline only & no unqualified
+machine-class equality asserted & \cite{Immerman1999} \\
+ESO & finite relational structures; no built-in order required &
+\(\mathsf{NP}\) & Theorem~\ref{thm:p03-fagin}; \cite{Fagin1974} \\
+FO(LFP) & finite relational structures with a built-in total order &
+\(\mathsf P\) & Theorem~\ref{thm:p04-immerman-vardi};
+\cite{Immerman1986,Vardi1982} \\
+\bottomrule
+\end{tabular}
+\caption{Descriptive-complexity correspondences.  The
+structure and order columns are hypotheses, not expository decoration.}
+\label{tab:p04-descriptive-complexity}
+\end{table}
+
+\begin{hbwarning}{def:p04-fo-aczero}{No unqualified FO--circuit-class equation}
+No equation between plain first-order logic and a circuit class is asserted
+here.  Such a statement would have to fix ordered finite structures,
+built-in numerical predicates such as order or BIT, and a uniformity notion.
+The ESO/\(\mathsf{NP}\) and ordered FO(LFP)/\(\mathsf P\) correspondences in
+Table~\ref{tab:p04-descriptive-complexity} do not need that additional claim.
+\end{hbwarning}
+
+\section{Further reading: historical sources and modern treatments}
+\label{sec:p04-further-reading}
+\markright{25.6.\ FURTHER READING AND SOURCES}
+
+\subsection*{Historical and primary sources}
+
+For formal-model equivalence and the first undecidability results, begin with
+Church and Turing \cite{Church1936,Turing1937,Turing1937Lambda}.  The degree
+and c.e.-set landmarks are Post, Kleene--Post, Friedberg, Muchnik, and Myhill
+\cite{Post1944,KleenePost1954,Friedberg1957,Muchnik1956,Myhill1955}.
+The analytical, information, and Diophantine frontiers begin with
+\cite{Kleene1955Hierarchy,Kolmogorov1965,Chaitin1974,Chaitin1975,
+DavisPutnamRobinson1961,Matiyasevich1970}.  For word problems, Busy Beaver,
+and tilings, see \cite{Post1947,Markov1947,Novikov1955,Boone1959,
+Rado1962BusyBeaver,Berger1966}.  The complexity and descriptive-complexity
+landmarks include \cite{HartmanisStearns1965,StearnsHartmanisLewis1965,
+Cook1971,Levin1973,StockmeyerMeyer1973,Fagin1974,Immerman1986}.
+
+\subsection*{Modern systematic treatments}
+
+For computability, degrees, and the analytical boundary, see
+\cite{Rogers1967,Soare2016,Moschovakis2016Hyperarithmetical}.  Algorithmic
+information and computable structures are developed systematically in
+\cite{LiVitanyi2008,AshKnight2000}.  Complexity and descriptive complexity
+are treated in \cite{Papadimitriou1994,AroraBarak2009,Immerman1999}.
+
+The two lists have deliberately different standings.  A modern textbook can
+supply a precise contemporary formulation without becoming the historical
+source of the theorem.
+
+%% Coverage: D-P5-007, N-a-064, A-050, A-052, A-127, A-186.

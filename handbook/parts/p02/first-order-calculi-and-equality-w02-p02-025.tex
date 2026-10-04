@@ -1,0 +1,375 @@
+%% toc: P2 17 17.4,17.5,17.6
+\section{First-order Hilbert deduction, Kleene's predicate calculus and tableau equality}
+\label{sec:p02-w02-p02-025-fol-calculi}
+
+This section completes three pieces of first-order proof theory that the
+surrounding treatment uses but does not write out.  First, it gives the two
+propositional derivations on which the Hilbert-FOL deduction theorem
+(\cref{thm:p02-hilbert-fol-deduction}) rests, the identity
+\(\varphi\to\varphi\) and the permutation of antecedents, as explicit
+axiom-and-modus-ponens sequences with empty premise support, together with
+the bookkeeping lemma that lets a premise-independent line be rederived
+without the discharged premise.  With these, every step of the deduction
+theorem's proof is a written derivation.  Second, it presents Kleene's own
+predicate calculus, whose quantifier postulates 9--12 and deduction theorem
+differ in form from the registered sheet, and proves that deduction theorem
+under Kleene's condition that free variables be held constant.  Third, it
+records where the equality rules of first-order tableaux, their
+side conditions and their adequacy proofs are found, and adds those rules to
+the registered tableau sheet.
+
+\emph{Inputs.}  For the Hilbert results: a set \(\Gamma\) of formulas of the
+equality-free fragment of \texttt{sheet:\allowbreak hilbert-fol}, whose
+primitives are \(\neg\), \(\to\), \(\forall\) and \(\exists\), a formula
+\(\varphi\), and a
+dependency-annotated derivation in the sense of
+\cref{def:p02-hilbert-fol-dependencies}.  For Kleene's calculus: a list of
+assumption formulas of his predicate calculus and a deduction from it.  For
+tableaux: a finite set of first-order sentences, with or without equality.
+\emph{Conclusions.}  Explicit derivations of \(\varphi\to\psi\) from
+\(\Gamma\) with support not containing \(\varphi\); Kleene's deduction
+theorem; and the location and rule form of the equality tableau calculus with
+its soundness, countermodel and completeness results.
+
+\subsection{Identity, permutation and supports}
+\label{sec:p02-w02-p02-025-kernels}
+
+Throughout this subsection \(\mathsf H_{\mathsf{FOL}}\) is the calculus of
+\texttt{sheet:\allowbreak hilbert-fol} with the dependency annotation of
+\cref{def:p02-hilbert-fol-dependencies}: each line is a pair \((\chi,D)\),
+where the \emph{support} \(D\) is the finite set of premises on which the line
+depends.  An \emph{empty-support derivation} of \(\chi\) is a derivation from
+any premise set whose last line is \((\chi,\varnothing)\); it uses no premise
+line at all, so it is also a derivation from every premise set.  The
+derivations in the next two lemmas use only the schemas A1 and A2 and modus
+ponens.  They contain no generalization and no existential elimination, so no
+variable condition arises, and the metavariables may be replaced by any
+fragment formulas, including formulas with free variables or quantifiers.
+
+\begin{hblemma}{thm:p02-w02-p02-025-identity}{proved=annex:p02-w02-p02-025-identity}{Identity with empty support}
+For every fragment formula \(\varphi\), the following five lines form an
+empty-support derivation of \(\varphi\to\varphi\) in
+\(\mathsf H_{\mathsf{FOL}}\):
+\[
+\begin{array}{lll}
+ 1. & \varphi\to((\varphi\to\varphi)\to\varphi) & \text{A1}\\
+ 2. & (\varphi\to((\varphi\to\varphi)\to\varphi))\to
+      ((\varphi\to(\varphi\to\varphi))\to(\varphi\to\varphi)) & \text{A2}\\
+ 3. & (\varphi\to(\varphi\to\varphi))\to(\varphi\to\varphi) & \text{MP }2,1\\
+ 4. & \varphi\to(\varphi\to\varphi) & \text{A1}\\
+ 5. & \varphi\to\varphi & \text{MP }3,4
+\end{array}
+\]
+It uses the same three axiom instances as the identity derivation in
+Annex~\ref{annex:p2.calc.2} for the propositional sheet, with \(\varphi\) now
+ranging over first-order fragment formulas.
+\end{hblemma}
+
+\begin{hblemma}{thm:p02-w02-p02-025-permutation}{proved=annex:p02-w02-p02-025-permutation}{Permutation of antecedents with empty support}
+For all fragment formulas \(\varphi,\theta,\psi\) there is an empty-support
+derivation in \(\mathsf H_{\mathsf{FOL}}\), using only A1, A2 and modus
+ponens, of
+\[
+ (\varphi\to(\theta\to\psi))\to(\theta\to(\varphi\to\psi)).
+\]
+Consequently, if a derivation from \(\Gamma\) has a line
+\((\varphi\to(\theta\to\psi),E)\), appending that derivation and one modus
+ponens step gives a line \((\theta\to(\varphi\to\psi),E)\) with the same
+support; and the instance with \(\varphi\) and \(\theta\) interchanged gives
+the inverse passage from \(\theta\to(\varphi\to\psi)\) to
+\(\varphi\to(\theta\to\psi)\), again with unchanged support.
+\end{hblemma}
+
+The derivation has nineteen lines and is written out in the annex.  No
+appeal to propositional completeness is involved: the permutation is not
+obtained from the cited basis theorem
+\cref{thm:p02-calculi-derivability-equivalence} through
+\cref{thm:p02-hfa-propositional-kernels}, but from five A1 instances, five A2
+instances and nine modus ponens steps.
+
+The deduction theorem's proof also needs two facts about supports.  Given a
+derivation \(\langle(\chi_1,D_1),\ldots,(\chi_n,D_n)\rangle\), say that line
+\(i\) \emph{uses} line \(j<i\) when line \(i\) is obtained by modus ponens
+from line \(j\) and another line, or by generalization or existential
+elimination from line \(j\).
+
+\begin{hblemma}{thm:p02-w02-p02-025-support}{proved=annex:p02-w02-p02-025-support}{Concatenation and support restriction}
+Let \(\Gamma,\Delta\) be sets of fragment formulas.
+\begin{enumerate}
+  \item If \(\mathcal D_1\) and \(\mathcal D_2\) are dependency-annotated
+        derivations from \(\Gamma\), then the concatenation
+        \(\mathcal D_1\mathcal D_2\), with the line references of
+        \(\mathcal D_2\) shifted by the length of \(\mathcal D_1\), is a
+        dependency-annotated derivation from \(\Gamma\) whose lines carry
+        their original supports.
+  \item If a dependency-annotated derivation from \(\Gamma\) has a line
+        \((\chi,D)\) and \(D\subseteq\Delta\), then there is a
+        dependency-annotated derivation from \(\Delta\) ending in
+        \((\chi,D)\).  It consists of the lines on which \((\chi,D)\)
+        depends through the uses relation, in their original order and with
+        their original supports.
+\end{enumerate}
+\end{hblemma}
+
+Clause~2 is the precise form of the phrase ``its traced subderivation is
+already from \(\Gamma\)'' in the proof of the deduction theorem: if the
+discharged premise \(\varphi\) is not in the support of a line, the line can
+be rederived from the remaining premises, and its generalization or
+existential-elimination condition, which mentions only the support, is
+unchanged.  With the three lemmas, every step of the deduction theorem is an
+explicit derivation.
+
+\begin{hbtheorem}{thm:p02-w02-p02-025-discharge}{proved=annex:p02-w02-p02-025-discharge}{Hilbert-FOL deduction theorem with explicit supports}
+Let \(\Gamma\) be a set of fragment formulas and \(\varphi,\psi\) fragment
+formulas.
+\begin{enumerate}
+  \item If a dependency-annotated derivation from \(\Gamma\cup\{\varphi\}\)
+        ends in \((\psi,D)\), then a dependency-annotated derivation from
+        \(\Gamma\) ends in \((\varphi\to\psi,E)\) for some
+        \(E\subseteq D\setminus\{\varphi\}\).
+  \item If a dependency-annotated derivation from \(\Gamma\) ends in
+        \((\varphi\to\psi,E)\), then one from \(\Gamma\cup\{\varphi\}\) ends
+        in \((\psi,E\cup\{\varphi\})\).
+\end{enumerate}
+In particular
+\(\Gamma\cup\{\varphi\}\derives_{\mathsf H_{\mathsf{FOL}}}\psi\) if and only if
+\(\Gamma\derives_{\mathsf H_{\mathsf{FOL}}}\varphi\to\psi\), which is
+\cref{thm:p02-hilbert-fol-deduction}.  The construction of clause~1 applies
+generalization to a line depending on \(\varphi\) only when the original
+derivation did, and then the rule's condition already guarantees that the
+generalized variable is not free in \(\varphi\).
+\end{hbtheorem}
+
+The theorem has the same content as the discharge interface
+\cref{thm:p02-hfa-discharge-interface}; the present proof writes each case as
+a derivation, using \cref{thm:p02-w02-p02-025-identity} for the discharged
+premise, A1 for other premises and axioms, A2 for modus ponens, the
+\(\forall2\) schema for generalization, and
+\cref{thm:p02-w02-p02-025-permutation} twice for existential elimination.
+
+\begin{hbexample}{def:p02-w02-p02-025-example}{Discharging a premise through generalization}
+Let \(P,Q\) be unary relation symbols, \(\Gamma=\{\forall x(Px\to Qx)\}\) and
+\(\varphi=\forall x\,Px\).  A derivation of \(\forall x\,Qx\) from
+\(\Gamma\cup\{\varphi\}\), with supports, is:
+\[
+\begin{array}{llll}
+ 1. & \forall x(Px\to Qx) & \{\forall x(Px\to Qx)\} & \text{premise}\\
+ 2. & \forall x(Px\to Qx)\to(Px\to Qx) & \varnothing & \forall1\\
+ 3. & Px\to Qx & \{\forall x(Px\to Qx)\} & \text{MP }2,1\\
+ 4. & \forall x\,Px & \{\forall x\,Px\} & \text{premise}\\
+ 5. & \forall x\,Px\to Px & \varnothing & \forall1\\
+ 6. & Px & \{\forall x\,Px\} & \text{MP }5,4\\
+ 7. & Qx & \{\forall x(Px\to Qx),\forall x\,Px\} & \text{MP }3,6\\
+ 8. & \forall x\,Qx & \{\forall x(Px\to Qx),\forall x\,Px\} & \text{Gen }7
+\end{array}
+\]
+Gen at line~8 is permitted because \(x\) is free in neither premise of the
+support.  The construction of \cref{thm:p02-w02-p02-025-discharge} turns line
+\(i\) into a line \(\varphi\to\chi_i\).  Lines 1, 2 and 5, a premise other
+than \(\varphi\) and two axioms, become by A1 and modus ponens
+\(\varphi\to\chi_i\) with the same support.  Line~4 is \(\varphi\) and becomes
+the identity derivation of \(\forall x\,Px\to\forall x\,Px\), with empty
+support.  Line~3 comes by modus ponens, and A2 turns it into
+\(\forall x\,Px\to(Px\to Qx)\) with support \(\{\forall x(Px\to Qx)\}\).
+Lines 6 and 7 come by modus ponens as well, and A2 turns them into
+\(\forall x\,Px\to Px\) with empty support and
+\(\forall x\,Px\to Qx\) with support \(\{\forall x(Px\to Qx)\}\).  At line~8
+the support contains \(\varphi\), so the construction generalizes
+\(\forall x\,Px\to Qx\), which is permitted because \(x\) is free in no
+member of \(\{\forall x(Px\to Qx)\}\), and applies the \(\forall2\) instance
+\(\forall x(\forall x\,Px\to Qx)\to(\forall x\,Px\to\forall x\,Qx)\), whose
+side condition holds because \(x\notin\FV(\forall x\,Px)\).  The result is
+\(\Gamma\derives_{\mathsf H_{\mathsf{FOL}}}\forall x\,Px\to\forall x\,Qx\)
+with support \(\{\forall x(Px\to Qx)\}\).
+\end{hbexample}
+
+\begin{hbwarning}{def:p02-w02-p02-025-unrestricted}{The deduction theorem fails for unrestricted generalization}
+Suppose generalization were allowed on every line.  From the premise \(Px\),
+one step would give \(\forall x\,Px\), so
+\(\{Px\}\) would derive \(\forall x\,Px\).  The formula
+\(Px\to\forall x\,Px\) is not valid: in a structure with domain \(\{0,1\}\)
+and \(P\) interpreted as \(\{0\}\), the assignment sending \(x\) to \(0\)
+makes \(Px\) true and \(\forall x\,Px\) false.  By the soundness theorem
+\cref{thm:p02-hfa-soundness} it is not derivable from the empty set.  So the
+equivalence of \cref{thm:p02-w02-p02-025-discharge} would fail.  On the
+registered sheet the step is blocked: the line \((Px,\{Px\})\) has \(x\) free
+in a member of its support.  Kleene's form of the same restriction is that
+free variables be held constant for the discharged assumption
+(\cref{def:p02-w02-p02-025-kleene-dependence}).
+\end{hbwarning}
+
+\subsection{Kleene's predicate calculus and his deduction theorem}
+\label{sec:p02-w02-p02-025-kleene}
+
+The registered sheet takes Mendelson's universal base and adds an
+existential schema and rule; it is not literally Kleene's system.  Kleene's
+own postulates for the predicate calculus, Group~A of his formal system, are
+given in \cite[\S 19, pp.~81--82]{Kleene1952}, and his deduction theorem for
+the predicate calculus in \cite[\S\S 21--22, pp.~90--98]{Kleene1952}.  Page
+numbers refer to the held 1974 seventh reprint.  The presentation below keeps
+Kleene's notation: \(\supset\) for implication, \(\mathbin{\&}\) for
+conjunction, \(\lor\), \(\neg\), \(\forall\), \(\exists\), with
+\(\mathbin{\&}\) and \(\lor\) binding more tightly than \(\supset\), as in his
+displays; \(A(x)\) and \(A(t)\) denote a formula and the result of
+substituting \(t\) for the free occurrences of \(x\) in it.  In this
+subsection \(\derives\) is Kleene's deducibility relation.
+
+\begin{hbdefinition}{def:p02-w02-p02-025-kleene-postulates}{Kleene's postulates for the predicate calculus}
+In postulates 1--8, \(A\), \(B\) and \(C\) are formulas.  In postulates
+9--12, \(x\) is a variable, \(A(x)\) is a formula, \(C\) is a formula that does
+not contain \(x\) free, and \(t\) is a term that is free for \(x\) in
+\(A(x)\) \cite[\S 19, p.~81]{Kleene1952}.
+
+\emph{Group A1 (propositional calculus)} \cite[\S 19, p.~82]{Kleene1952}:
+\[
+\begin{array}{ll}
+ \text{1a.} & A\supset(B\supset A).\\
+ \text{1b.} & (A\supset B)\supset((A\supset(B\supset C))\supset(A\supset C)).\\
+ \text{2.}  & \text{Rule: from } A \text{ and } A\supset B \text{, infer } B.\\
+ \text{3.}  & A\supset(B\supset A\mathbin{\&}B).\\
+ \text{4a.} & A\mathbin{\&}B\supset A.\\
+ \text{4b.} & A\mathbin{\&}B\supset B.\\
+ \text{5a.} & A\supset A\lor B.\\
+ \text{5b.} & B\supset A\lor B.\\
+ \text{6.}  & (A\supset C)\supset((B\supset C)\supset(A\lor B\supset C)).\\
+ \text{7.}  & (A\supset B)\supset((A\supset\neg B)\supset\neg A).\\
+ \text{8}^{\circ}. & \neg\neg A\supset A.
+\end{array}
+\]
+\emph{Group A2, additional postulates for the predicate calculus,}
+\cite[\S 19, p.~82]{Kleene1952}:
+\[
+\begin{array}{ll}
+ \text{9.}  & \text{Rule: from } C\supset A(x) \text{, infer } C\supset\forall xA(x).\\
+ \text{10.} & \forall xA(x)\supset A(t).\\
+ \text{11.} & A(t)\supset\exists xA(x).\\
+ \text{12.} & \text{Rule: from } A(x)\supset C \text{, infer } \exists xA(x)\supset C.
+\end{array}
+\]
+The \emph{axioms} of the predicate calculus are the formulas of the forms 1a,
+1b, 3--8, 10 and 11; postulates 2, 9 and 12 are the \emph{rules of
+inference}, and a formula is an \emph{immediate consequence} of the premise
+or premises of one of them \cite[\S 19, p.~82]{Kleene1952}.  The mark on
+postulate~8 is Kleene's; he defers its explanation to his \S 23
+\cite[\S 19, p.~82]{Kleene1952}.  Kleene's full number-theoretic system adds postulates 13--21
+(Group~B); they are axioms, not rules, and are not used here.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p02-w02-p02-025-kleene-dependence}{Deduction, dependence, and variables held constant}
+Let \(D_1,\ldots,D_l\) be a list of formula occurrences, \(l\geq 0\).
+\begin{enumerate}
+  \item A \emph{deduction} from the assumption formulas \(D_1,\ldots,D_l\) is
+        a finite sequence of one or more formula occurrences, each of which
+        is one of \(D_1,\ldots,D_l\), an axiom, or an immediate consequence
+        of preceding formulas of the sequence; \(D_1,\ldots,D_l\derives E\)
+        means that a deduction from them ends in \(E\)
+        \cite[\S 20, p.~87]{Kleene1952}.  An \emph{analysis} records, for each
+        member, which of these justifications is used and from which earlier
+        members.
+  \item Given a deduction \(A_1,\ldots,A_k\) with an analysis,
+        \(A_i\) \emph{depends on} the assumption occurrence \(D_j\) when
+        \(A_i\) is \(D_j\) in the analysis, or \(A_i\) is an immediate
+        consequence of a member that depends on \(D_j\); and only in these
+        cases \cite[\S 22, p.~95]{Kleene1952}.
+  \item A variable \(y\) is \emph{varied} in the deduction for the assumption
+        formula \(D_j\) if \(y\) occurs free in \(D_j\) and the deduction
+        applies Rule 9 or Rule 12 with respect to \(y\) (that is, with \(y\) as
+        the \(x\) of the rule) to a premise that depends on \(D_j\).
+        Otherwise \(y\) is \emph{held constant} for \(D_j\)
+        \cite[\S 22, pp.~95--96]{Kleene1952}.
+\end{enumerate}
+Kleene writes \(\Gamma\) for a finite list of zero or more formula
+occurrences and \(\Gamma,A\) for the list with \(A\) appended last.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p02-w02-p02-025-kleene-deduction}{proved=annex:p02-w02-p02-025-kleene-deduction}{Kleene's deduction theorem for the predicate calculus}
+For the predicate calculus, if \(\Gamma,A\derives B\) with the free variables
+held constant for the last assumption formula \(A\), then
+\(\Gamma\derives A\supset B\).  Conversely, \(\Gamma\derives A\supset B\)
+implies \(\Gamma,A\derives B\).
+\end{hbtheorem}
+
+The forward implication is Kleene's Theorem~1 in its concluded form
+\cite[\S 22, p.~97]{Kleene1952}; the propositional case, with only Group~A1
+in force and no variable condition, is \cite[\S 21, p.~90]{Kleene1952}.  The
+proof in the annex follows Kleene's case division: for Rule 9 applied to a
+premise depending on \(A\), it passes through \(A\mathbin{\&}C\) and uses the
+conjunction postulates 3, 4a and 4b, as Kleene does on page 97, and for
+Rule 12 it uses the permutation of antecedents twice, as he indicates on
+page 98.  Kleene attributes the first proof of the deduction theorem as a
+derived rule to Herbrand \cite[\S 22, p.~98]{Kleene1952}.
+
+\begin{hbwarning}{def:p02-w02-p02-025-kleene-contrast}{Two different quantifier rule forms}
+Kleene's Rule 9 has the form ``from \(C\supset A(x)\) infer
+\(C\supset\forall xA(x)\)'', with \(x\) not free in \(C\), and places no
+condition on the assumption formulas.  The registered sheet's generalization
+rule has the form ``from \(\varphi\) infer \(\forall x\,\varphi\)'' and
+carries its premise condition in the rule itself, through the support of
+\cref{def:p02-hilbert-fol-dependencies}.  So in Kleene's system
+\(\derives\) may generalize a variable free in an assumption, and the
+restriction appears only as the hypothesis ``held constant'' of the
+deduction theorem; on the sheet the restriction is part of
+derivability, and the deduction theorem has no extra hypothesis.  Kleene's
+1b is \((A\supset B)\supset((A\supset(B\supset C))\supset(A\supset C))\),
+not the sheet's A2; Kleene takes \(\mathbin{\&}\), \(\lor\) and \(\exists\) as
+primitive with their own postulates, whereas the sheet's language has only
+\(\neg,\to,\forall,\exists\).  Neither presentation is a notational variant
+of the other, and results proved for one are transferred to the other only
+through explicit derivations.
+\end{hbwarning}
+
+\subsection{Equality rules for first-order tableaux}
+\label{sec:p02-w02-p02-025-tableau-equality}
+
+The first-order tableau calculus of \cref{def:p02-fol-tableau} is
+equality-free.  Its extension by the two tableau equality rules, reflexivity
+and left-to-right replacement of one occurrence of a closed term, is defined
+in \cref{def:p02-w02-p02-014-fol-equality}, with the task bookkeeping of
+\cref{def:p02-w02-p02-014-fol-branch}.  That bookkeeping states the
+side conditions exactly.  \emph{Freshness}: a delta step uses the parameter
+of least index not occurring on the branch, and
+\cref{def:p02-w02-p02-014-fol-freshness} shows that dropping this condition
+closes a tableau for a satisfiable set.  \emph{Instantiation}: gamma steps and
+reflexivity steps range over every closed term of the parameter-extended root
+language, not only the terms already on the branch.  \emph{Fairness}: an
+open branch counts as saturated only when every available task, including
+every reflexivity task and every replacement task, is done, and
+\cref{def:p02-w02-p02-014-fol-unfair} shows an unfair open branch that is
+not a countermodel.  The rules are displayed with these conditions on
+\texttt{sheet:\allowbreak tableaux-fol}.
+
+The adequacy results are proved in
+\cref{sec:p02-w02-p02-014-fol-calculus,sec:p02-w02-p02-014-fol-herbrand,sec:p02-w02-p02-014-fol-systematic}
+for roots with and without equality: soundness of closure
+(\cref{thm:p02-w02-p02-014-fol-soundness}); countermodel extraction from an
+open saturated, hence fair, branch through the quotient Herbrand structure
+(\cref{thm:p02-w02-p02-014-congruence,thm:p02-w02-p02-014-herbrand-truth,thm:p02-w02-p02-014-fol-extraction});
+completeness (\cref{thm:p02-w02-p02-014-fol-completeness}); and the infinite
+fair-branch construction by which fair systematic expansion semidecides
+unsatisfiability (\cref{thm:p02-w02-p02-014-fol-semidecision}).  The
+propositional procedure, by contrast, terminates on every input and decides
+satisfiability (\cref{thm:p02-w02-p02-014-termination,thm:p02-w02-p02-014-decision});
+\cref{thm:p02-w02-p02-014-fol-no-finite-saturation} shows that the
+termination argument fails as soon as a branch carries a universal
+occurrence, and \cref{def:p02-w02-p02-014-fol-boundary} states the
+decision-versus-semidecision boundary.  This section does not repeat those
+proofs.
+
+\subsection{Relationships and sources}
+\label{sec:p02-w02-p02-025-relations}
+
+The identity and permutation derivations are the first-order instances of
+propositional facts that the propositional Hilbert calculus proves through
+its deduction theorem, \cref{thm:p02-hilbert-deduction}; Kleene obtains the
+permutation the same way, as two applications of his propositional deduction
+theorem \cite[\S 21, p.~93]{Kleene1952}.  The explicit nineteen-line
+derivation is written here so that the first-order deduction theorem does
+not depend on a lifted kernel whose existence rests on the cited
+propositional basis theorem.  The supports of
+\cref{def:p02-hilbert-fol-dependencies} are the registered counterpart of
+Kleene's dependence relation; Kleene's analysis of which formulas depend on
+an assumption occurrence is the source of that bookkeeping.  The universal
+part of the registered sheet follows \cite{Mendelson1997}; the existential
+schema and rule follow Kleene's postulates 11 and 12
+\cite[\S 19, p.~82]{Kleene1952}.  The tableau format is that of
+\cite{Smullyan1968}, as recorded on the sheets.

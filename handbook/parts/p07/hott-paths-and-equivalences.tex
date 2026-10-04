@@ -1,0 +1,434 @@
+% HoTT foundations: fixed official2013 public-release source; no HIT/cubical substitution.
+\chapter{Paths, Equivalences and Homotopy Levels}
+\label{sec:p07-hott-paths-and-equivalences}
+
+An identity type carries identifications, not merely a yes-or-no answer to
+an equality question. Identifications themselves have identity types.
+This permits path operations and their higher laws without forcing every
+type to be a set. The presentation follows Chapters~2 and~3 of the official
+2013 \emph{HoTT Book} source at its June 19 public-release commit, with the
+specific Chapter~4 and~7 dependencies identified below. A separately pinned
+official errata companion corrects typed formulas; the rolling current
+first-edition PDF is not silently substituted for that source
+\parencite[ch.~2--3]{HoTT2013PublicReleaseFoundations}.
+
+\section{The source theory and the host interface}
+\label{sec:p07-hott-theory}
+
+\begin{hbconvention}{def:p07-hott-core}{Identity, elimination and equality standing}
+Write $x=_Ay$ for $\operatorname{Id}_A(x,y)$ and
+$\mathsf{refl}_x:x=_Ax$. The source's $\equiv$ denotes judgmental equality;
+$=$ in a type denotes an identity type. These are different typed roles.
+The host's \hyperref[sheet:mltt-intensional]{MLTT sheet} supplies Id/J and
+J-computation without equality reflection. A J-motive may depend on both
+endpoints and the path, with its specified value on reflexivity.
+
+For the following source presentation we also use the book's dependent
+$\Sigma$ elimination with computation on pairs, its $\Pi$-\(\eta\)
+uniqueness principle, and the unit, empty and two-element inductive types.
+Those principles are not inferred from the host sheet's projections and
+beta rules alone. Universes are predicative and cumulative, with levels
+chosen to contain each displayed type. No UIP, proof irrelevance, global
+set axiom, resizing, excluded middle or choice axiom is added silently.
+Function extensionality, univalence and propositional truncation will be
+declared separately where used.
+\end{hbconvention}
+
+Based path induction varies the other endpoint: for fixed $a$, a motive
+over $(y,p:a=y)$ is determined from $(a,\mathsf{refl}_a)$. It does not
+allow treating an arbitrary loop $p:a=a$ with both endpoints fixed as
+reflexivity. The contractibility of the entire based-path total space,
+proved below, is compatible with nontrivial loops in a particular fiber
+\parencite[\S1.12; \S2.1]{HoTT2013PublicReleaseFoundations}.
+
+\begin{hbdefinition}{def:p07-hott-path-operations}{Composition, inversion and loops}
+For $p:x=y$ and $q:y=z$, write $p\cdot q:x=z$, traversing $p$ first.
+Define composition by the source's double J construction, so only
+$\mathsf{refl}_x\cdot\mathsf{refl}_x\equiv\mathsf{refl}_x$ is claimed
+as its specified computation. Define $p^{-1}:y=x$ by J, with
+$(\mathsf{refl}_x)^{-1}\equiv\mathsf{refl}_x$.
+For a pointed type $(A,a)$, $\Omega(A,a)=(a=a,\mathsf{refl}_a)$;
+iterating this construction defines its higher loop types.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p07-hott-path-laws}{proved=annex:p07-hott-path-laws}{Weak groupoid laws and cancellation}
+There are paths witnessing left and right units, both inverse laws,
+$(p^{-1})^{-1}=p$, and associativity
+$p\cdot(q\cdot r)=(p\cdot q)\cdot r$.
+Composition with a fixed path, on either side, has a quasi-inverse obtained
+by composing with its inverse, so path cancellation is justified.
+These laws are identities between paths, not judgmental equalities for
+arbitrary inputs. The canonical J-built associator satisfies the pentagon
+between the five reassociations of four composable paths.
+\end{hbtheorem}
+
+\section{Action, dependent action and transported comparisons}
+\label{sec:p07-hott-transport}
+
+\begin{hbdefinition}{def:p07-hott-transport}{Transport, ap and apd}
+J defines
+\[
+ \mathsf{transport}^{P}(p,u):P(y),\quad
+ \mathsf{ap}_f(p):f(x)=f(y),\quad
+ \mathsf{apd}_s(p):\mathsf{transport}^{P}(p,s(x))=s(y),
+\]
+for $P:A\to\mathcal U$, $p:x=y$, $u:P(x)$, $f:A\to B$ and
+$s:\Pi_{x:A}P(x)$. On reflexivity these compute respectively to
+$u$, $\mathsf{refl}_{f(x)}$ and $\mathsf{refl}_{s(x)}$.
+A dependent path from $u:P(x)$ to $v:P(y)$ over $p$ means
+$\mathsf{transport}^{P}(p,u)=v$ in $P(y)$, not an ill-typed equality
+between elements of different fibers.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p07-hott-transport-laws}{proved=annex:p07-hott-transport-laws}{All functorial and transport comparisons used here}
+Ap preserves composition and inverses, commutes with composition of
+functions and sends the identity function's action to the original path.
+Transport obeys
+\[
+ \mathsf{transport}^{P}(p\cdot q,u)
+ =\mathsf{transport}^{P}(q,\mathsf{transport}^{P}(p,u)),
+\]
+has inverse transport along $p^{-1}$, and satisfies
+\[
+ \mathsf{transport}^{P\circ f}(p,u)
+ =\mathsf{transport}^{P}(\mathsf{ap}_f(p),u).
+\]
+For $k_x:P(x)\to Q(x)$ it also satisfies
+$\mathsf{transport}^{Q}(p,k_x(u))=k_y(\mathsf{transport}^{P}(p,u))$.
+Transport in a constant family is propositionally the identity; composing
+that comparison with $\mathsf{ap}_f(p)$ gives $\mathsf{apd}_f(p)$.
+In equality families the typed formulas are
+\[
+ \begin{aligned}
+ \mathsf{transport}^{z\mapsto(a=z)}(p,r)&=r\cdot p,\\
+ \mathsf{transport}^{z\mapsto(z=a)}(p,r)&=p^{-1}\cdot r,\\
+ \mathsf{transport}^{z\mapsto(f(z)=g(z))}(p,r)
+   &=\mathsf{ap}_f(p)^{-1}\cdot r\cdot\mathsf{ap}_g(p).
+ \end{aligned}
+\]
+For dependent $f,g:\Pi_x B(x)$, the last formula instead uses
+$\mathsf{apd}_f(p)^{-1}\cdot
+\mathsf{ap}_{\mathsf{transport}^{B}(p,-)}(r)\cdot\mathsf{apd}_g(p)$.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p07-hott-homotopy}{Homotopy is pointwise identification}
+For sections $f,g:\Pi_xP(x)$, define
+$f\sim g=\Pi_x(f(x)=g(x))$. Reflexivity, inversion and composition are
+pointwise path operations. A homotopy is not automatically a path $f=g$.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p07-hott-homotopy-natural}{proved=annex:p07-hott-homotopy-natural}{Naturality and the self-composite law}
+For $H:f\sim g$ between $A\to B$ and $p:x=y$,
+\[
+ H(x)\cdot\mathsf{ap}_g(p)=\mathsf{ap}_f(p)\cdot H(y).
+\]
+If $H:k\sim\mathsf{id}_A$, then
+$H(k(x))=\mathsf{ap}_k(H(x))$. Both are higher paths, obtained without
+assuming function extensionality.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p07-hott-eckmann-hilton}{proved=annex:p07-hott-eckmann-hilton}{Second-loop commutativity with typed whiskering}
+For $\alpha,\beta:\mathsf{refl}_a=\mathsf{refl}_a$ in the path type
+$a=a$, $\alpha\cdot\beta=\beta\cdot\alpha$.
+This does not assert commutativity of arbitrary first loops.
+\end{hbtheorem}
+
+\section{Equivalence data and a coherence which must be proved}
+\label{sec:p07-hott-equivalences}
+
+\begin{hbdefinition}{def:p07-hott-equivalence}{The source's distinct equivalence notions}
+For $f:A\to B$, a quasi-inverse is
+$(g,\eta,\epsilon)$ with $g:B\to A$, $\eta:g f\sim\mathsf{id}_A$ and
+$\epsilon:f g\sim\mathsf{id}_B$; its type is $\mathsf{qinv}(f)$.
+The left and right inverse types are respectively
+$\mathsf{linv}(f)=\Sigma_g(g f\sim\mathsf{id}_A)$ and
+$\mathsf{rinv}(f)=\Sigma_g(f g\sim\mathsf{id}_B)$.
+$\mathsf{biinv}(f)$ is their product, permitting different inverse functions.
+
+A half-adjoint equivalence adds
+$\tau:\Pi_{a:A}(\mathsf{ap}_f(\eta_a)=\epsilon_{f(a)})$ to the quasi-inverse
+data. Its type is $\mathsf{ishae}(f)$. Following the source's final choice
+in \S4.5, put $\mathsf{isequiv}(f)=\mathsf{ishae}(f)$ and
+$A\simeq B=\Sigma_{f:A\to B}\mathsf{isequiv}(f)$.
+This definition does not prove that raw quasi-inverse data have coherent
+triangles, unique witnesses or contractible fibers; the following results do.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p07-hott-adjointification}{proved=annex:p07-hott-adjointification}{A constructed half-adjoint triangle}
+Given $(g,\eta,\epsilon):\mathsf{qinv}(f)$, keep $g,\eta$ and replace
+the other homotopy by the well-typed composite
+\[
+ \epsilon'_b=\epsilon_{f(g(b))}^{-1}\cdot
+                     \mathsf{ap}_f(\eta_{g(b)})\cdot\epsilon_b.
+\]
+Then $\mathsf{ap}_f(\eta_a)=\epsilon'_{f(a)}$ is inhabited.
+Half-adjoint data yield quasi-inverse data by forgetting this triangle.
+Bi-invertible data also yield a quasi-inverse by explicitly joining the
+possibly different left and right inverse functions.
+\end{hbtheorem}
+
+The original 2013 displayed concatenations in this construction were
+reversed. The separately dated official errata confirms that error and
+the triangle's orientation. The displayed construction above is typed in
+the stated traversal convention, and the annex supplies its proof
+\parencite[\S2.4; \S4.2]{HoTT2013PublicReleaseFoundations}
+\parencite[entries for Theorem4.2.3]{HoTTOfficialErrata2023Foundations}.
+
+\section{Pairs and functions have different path principles}
+\label{sec:p07-hott-type-formers}
+
+\begin{hbtheorem}{thm:p07-hott-sigma-paths}{proved=annex:p07-hott-sigma-paths}{Paths in total spaces, including both round trips}
+For $u:P(x)$ and $v:P(y)$ there is a specified equivalence
+\[
+ ((x,u)=(y,v))\simeq
+ \Sigma_{p:x=y}(\mathsf{transport}^{P}(p,u)=v).
+\]
+It computes at reflexivity to the pair of reflexivities; its inverse is
+denoted $\mathsf{pairpath}$. It yields the propositional pair uniqueness
+$w=(\pi_1w,\pi_2w)$ and a lift
+$\mathsf{lift}(u,p):(x,u)=(y,\mathsf{transport}^{P}(p,u))$.
+Transport in a product is componentwise. For
+$F(x)=\Sigma_{u:P(x)}Q(x,u)$ it satisfies
+\[
+ \mathsf{transport}^{F}(p,(u,z))=
+ (\mathsf{transport}^{P}(p,u),
+       \mathsf{transport}^{Q}(\mathsf{lift}(u,p),z)).
+\]
+None of these says that equality of pairs with the same first coordinate
+must arise over the reflexivity path of that coordinate.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p07-hott-funext}{The explicitly assumed function-extensionality axiom}
+For $f,g:\Pi_xP(x)$, J gives
+$\mathsf{happly}:(f=g)\to(f\sim g)$. Where stated, assume this particular
+map is an equivalence. A chosen inverse is $\mathsf{funext}$; its
+pointwise beta comparison and path eta comparison are propositional.
+They are not supplied by J or by judgmental function eta alone.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p07-hott-function-paths}{proved=annex:p07-hott-function-paths}{Function paths and transport under funext}
+Assuming funext, $\mathsf{happly}(\mathsf{funext}(h),x)=h(x)$ and
+$\mathsf{funext}(\mathsf{happly}(r))=r$. Function path inversion and
+composition correspond to the pointwise operations.
+For families $P,Q:X\to\mathcal U$, $p:x=y$ and $f:P(x)\to Q(x)$,
+\[
+ \mathsf{transport}^{z\mapsto(P(z)\to Q(z))}(p,f)
+ =\lambda v.\mathsf{transport}^{Q}
+            (p,f(\mathsf{transport}^{P}(p^{-1},v))).
+\]
+For $Q:\Sigma_{x:X}P(x)\to\mathcal U$, dependent transport obeys
+the corresponding pointwise formula: transport the argument backwards,
+apply $f$, and transport its result along the inverse of the lift of
+$p^{-1}$. In particular the dependent-path comparison is
+\[
+ (\mathsf{transport}^{F}(p,f)=g)\simeq
+ \Pi_{u:P(x)}\bigl(
+ \mathsf{transport}^{Q}(\mathsf{lift}(u,p),f(u))
+                  =g(\mathsf{transport}^{P}(p,u))\bigr),
+\]
+where $F(x)=\Pi_{u:P(x)}Q(x,u)$. The nondependent version replaces
+$Q(x,u)$ by $Q(x)$.
+\end{hbtheorem}
+
+The distinction between mere existence of maps in both directions and a
+specified equivalence with both inverse comparisons matters at function
+types, just as it does at pair types
+\parencite[\S2.6--2.9]{HoTT2013PublicReleaseFoundations}.
+
+\section{Contractibility is coherent data, not connectedness}
+\label{sec:p07-hott-contractibility}
+
+\begin{hbdefinition}{def:p07-hott-contractibility}{The three bottom levels}
+Define
+\[
+ \begin{aligned}
+ \mathsf{isContr}(A)&=\Sigma_{a:A}\Pi_{x:A}(a=x),\\
+ \mathsf{isProp}(A)&=\Pi_{x,y:A}(x=y),\\
+ \mathsf{isSet}(A)&=\Pi_{x,y:A}\Pi_{p,q:x=y}(p=q).
+ \end{aligned}
+\]
+A contraction has a specified center and a dependent family of paths.
+It is stronger than a point together with merely inhabited path types.
+A mere proposition may be empty; a contractible type cannot be empty.
+A set is a type whose identity types are mere propositions, not a type
+which must have only one point.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p07-hott-contractibility-laws}{proved=annex:p07-hott-contractibility-laws}{Canonical paths and removal of contractible data}
+If $(a,c):\mathsf{isContr}(A)$, every $p:x=y$ satisfies
+$p=c_x^{-1}\cdot c_y$; hence every path type in $A$ is contractible.
+A type is contractible exactly when it is inhabited and a mere proposition,
+or equivalently when it is equivalent to $\mathbf1$.
+The based-path total space $\Sigma_{x:A}(a=x)$ is contractible even when
+the loop fiber $a=a$ need not be.
+
+Retracts of contractible types are contractible. If all $P(x)$ are
+contractible, $\Sigma_xP(x)\simeq A$; if $A$ is contractible with center
+$a$, $\Sigma_xP(x)\simeq P(a)$. A contractible base with contractible
+fibers has contractible total space. Assuming funext, pointwise contractible
+fibers also give a contractible dependent product, and
+$\mathsf{isContr}(A)$ is a mere proposition.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p07-hott-prop-set}{proved=annex:p07-hott-prop-set}{Propositions, sets and proof standing}
+Every mere proposition is a set, and a mere proposition's path types are
+contractible. Logical equivalence of mere propositions yields type
+equivalence by constructing inverse comparisons.
+Assuming funext, $\mathsf{isProp}(A)$ and $\mathsf{isSet}(A)$ are themselves
+mere propositions, and dependent products of mere propositions are mere
+propositions. For a proposition-valued family $P$, paths in
+$\Sigma_xP(x)$ are determined up to equivalence by their first projection.
+Products of mere propositions remain mere propositions, whereas
+$\mathbf1+\mathbf1$ does not; likewise $\Sigma_{x:\mathbf2}\mathbf1$
+is not a mere proposition despite its proposition-valued fibers.
+\end{hbtheorem}
+
+\section{The actual fiber criterion and the bridges between notions}
+\label{sec:p07-hott-fibers}
+
+\begin{hbdefinition}{def:p07-hott-fiber}{Homotopy fibers and the map-level overload}
+$\mathsf{fib}_f(b)=\Sigma_{a:A}(f(a)=b)$.
+The source also writes
+$\mathsf{isContr}(f)=\Pi_{b:B}\mathsf{isContr}(\mathsf{fib}_f(b))$.
+Here the operand is a map, unlike $\mathsf{isContr}(A)$ for a type.
+These source notations are retained with their types distinguished.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p07-hott-fiber-equivalence}{proved=annex:p07-hott-fiber-equivalence}{Centers, contractions and their coherent converse}
+Paths from $(a,p)$ to $(a',p')$ in $\mathsf{fib}_f(b)$ are equivalent to
+$\Sigma_{\gamma:a=a'}(\mathsf{ap}_f(\gamma)\cdot p'=p)$.
+Half-adjoint data $(g,\eta,\epsilon,\tau)$ make each fiber contractible,
+with center $(g(b),\epsilon_b)$ and contraction having first component
+$\mathsf{ap}_g(p)^{-1}\cdot\eta_a$.
+Conversely, specified fiber centers and contractions construct $g$,
+$\epsilon$, $\eta$ and the actual triangle $\tau$.
+Thus quasi-inverse data yield contractible fibers through the proved
+adjointification construction, not through bare inverse uniqueness.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p07-hott-equivalence-bridges}{proved=annex:p07-hott-equivalence-bridges}{The three good notions are mere propositions and equivalent}
+Assuming funext, $\mathsf{ishae}(f)$, $\mathsf{biinv}(f)$ and
+$\mathsf{isContr}(f)$ are mere propositions and are pairwise equivalent.
+For a map with a quasi-inverse, the individual types of left inverses
+and right inverses are contractible. Equivalences admit identity,
+inversion and composition, with actual composite inverse homotopies.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p07-hott-path-equivalence}{proved=annex:p07-hott-path-equivalence}{An equivalence induces equivalences on paths}
+For $f:A\simeq B$, the map
+$\mathsf{ap}_f:(a=a')\to(f(a)=f(a'))$ is an equivalence.
+For half-adjoint inverse data its quasi-inverse sends $q$ to
+$\eta_a^{-1}\cdot\mathsf{ap}_g(q)\cdot\eta_{a'}$.
+Both round trips use naturality and the triangle; the second cannot be
+justified by ignoring that coherence.
+\end{hbtheorem}
+
+These bridges follow the source's \S4.2--4.5. Its raw $\mathsf{qinv}$
+type is deliberately not identified with a mere-propositional predicate.
+The countercase below explains why its extra data cannot simply be erased
+\parencite[\S2.4, \S2.11, \S4.1--4.5]{HoTT2013PublicReleaseFoundations}.
+
+\section{Homotopy levels and their closure proofs}
+\label{sec:p07-hott-levels}
+
+\begin{hbdefinition}{def:p07-hott-levels}{The source's recursive n-type predicate}
+For integers $n\geq-2$, define
+\[
+ \begin{aligned}
+ \mathsf{is}\mbox{-}(-2)\mbox{-}\mathsf{type}(A)&=\mathsf{isContr}(A),\\
+ \mathsf{is}\mbox{-}(n+1)\mbox{-}\mathsf{type}(A)
+   &=\Pi_{x,y:A}\mathsf{is}\mbox{-}n\mbox{-}\mathsf{type}(x=y).
+ \end{aligned}
+\]
+The index is the shifted natural-number induction of source \S7.1.
+$(-1)$-types are mere propositions and $0$-types are sets.
+This is a predicate on a given type, not the construction of an
+$n$-truncation of every type.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p07-hott-level-closure}{proved=annex:p07-hott-level-closure}{Cumulativity, retracts, sums and products}
+The hierarchy is upward closed. Retracts, hence equivalent types, preserve
+each level. If the base and every fiber are $n$-types, their dependent sum
+is an $n$-type. Assuming funext, a dependent product of $n$-types is an
+$n$-type over any base, and each predicate
+$\mathsf{is}\mbox{-}n\mbox{-}\mathsf{type}(A)$ is a mere proposition.
+These claims include the contractible base case, not merely set closure.
+\end{hbtheorem}
+
+\section{The additional axioms and concrete countercases}
+\label{sec:p07-hott-axioms-and-boundaries}
+
+\begin{hbdefinition}{def:p07-hott-univalence}{A particular map, not an arbitrary identification}
+J supplies $\mathsf{idtoeqv}:(A=_{\mathcal U}B)\to(A\simeq B)$ by transport
+in the family $X\mapsto X$. For the results marked univalent, assume
+that this particular map is an equivalence in the chosen universe.
+Its chosen inverse is $\mathsf{ua}$. Univalence is not manufactured
+from Id/J, and no judgmental computation for $\mathsf{ua}$ is asserted.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p07-hott-univalence-comparison}{proved=annex:p07-hott-univalence-comparison}{Propositional computation and a universe which is not a set}
+Under univalence and the declared funext assumption,
+$\mathsf{transport}^{X\mapsto X}(\mathsf{ua}(e),a)=e(a)$,
+$\mathsf{ua}(\mathsf{id}_A)=\mathsf{refl}_A$,
+$\mathsf{ua}(e)\cdot\mathsf{ua}(d)=\mathsf{ua}(d\circ e)$, and
+$\mathsf{ua}(e)^{-1}=\mathsf{ua}(e^{-1})$.
+The universe containing $\mathbf2$ is not a set: the Boolean interchange
+equivalence gives a loop at $\mathbf2$ unequal to reflexivity.
+This is an actual countercase to UIP for every type, not a semantic slogan.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p07-hott-propositional-truncation}{The assumed propositional truncation interface}
+For the following results, assume the source's additional type former
+$\|A\|$, with $|a|:\|A\|$, specified paths between any two of its points,
+and a recursor into a mere proposition $P$ from a map $A\to P$, computing
+on $|a|$. Its existence is not derived from Id/J. Its higher-inductive
+construction belongs to the separate HIT treatment.
+The truncated disjunction is $\|P+Q\|$, and mere existential assertion is
+$\|\Sigma_xP(x)\|$. An ordinary sum or dependent pair still retains data.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p07-hott-truncation-boundary}{proved=annex:p07-hott-truncation-boundary}{Unique choice and the obstruction to uniform witness extraction}
+For a mere proposition $P$, $P\simeq\|P\|$. Consequently a family
+of mere propositions $P(x)$ with $\Pi_x\|P(x)\|$ gives $\Pi_xP(x)$.
+Under univalence and funext there is no uniform operation
+$\Pi_{A:\mathcal U}(\|A\|\to A)$.
+There is likewise no uniform double-negation elimination on all types,
+nor an inhabitant of $\Pi_{A:\mathcal U}(A+(A\to\mathbf0))$.
+This does not refute excluded middle restricted to mere propositions;
+neither that axiom nor propositional resizing is assumed here.
+\end{hbtheorem}
+
+The untruncated dependent-pair distribution used in the proofs packages
+already supplied witnesses; it is not the truncated choice axiom.
+The latter cannot be inferred merely by moving a truncation through a
+dependent product. The source distinguishes these tasks explicitly
+\parencite[\S3.4--3.10]{HoTT2013PublicReleaseFoundations}.
+
+\begin{hbtheorem}{thm:p07-hott-quasi-inverse-countercase}{proved=annex:p07-hott-quasi-inverse-countercase}{Why raw inverse data need not be a mere proposition}
+Assuming funext,
+$\mathsf{qinv}(\mathsf{id}_A)\simeq\Pi_{a:A}(a=a)$.
+With univalence and propositional truncation, let
+$X=\Sigma_{A:\mathcal U}\|\mathbf2=A\|$ in a larger universe.
+Then $\mathsf{qinv}(\mathsf{id}_X)$ is not a mere proposition.
+The proof constructs a nontrivial global loop family on this connected
+component, not just one isolated nontrivial loop.
+\end{hbtheorem}
+
+\begin{proofboundary}{def:p07-hott-foundations-boundary}{Exact supplied scope and separate dependencies}
+The constructions here give actual low-dimensional path operations,
+transport, homotopy naturality, pair/function path comparisons,
+equivalence-coherence/fiber bridges and the stated level closures.
+They do not construct a full semantic infinity-groupoid model or all its
+globular-operad coherences, prove univalence or funext from Id/J, or
+establish canonicity for the added axioms. Higher-inductive constructions
+continue in Chapter~\ref{sec:p07-higher-inductive-types}, and the distinct
+computational cubical presentation is in Section~\ref{sec:p07-cchm2016}.
+The higher homotopy-group, set-theoretic and categorical developments
+require their own constructions. In particular, the natural-number code
+family, algebraic-structure identity comparisons and remaining universal
+properties are not consequences of the path laws alone.
+\end{proofboundary}
+
+\index{homotopy type theory}\index{identity type!path structure}
+\index{transport!dependent}\index{equivalence!half adjoint}
+\index{contractible type}\index{mere proposition}\index{homotopy n-type}

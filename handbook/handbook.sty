@@ -1,0 +1,1874 @@
+%% handbook.sty --- LaTeX infrastructure for the formal-logic handbook (Phase 3)
+%%
+%% Implements handbook/CONVENTIONS.md exactly.  ALL environments and macros of
+%% the handbook tree are defined here, nowhere else.
+%%
+%% Public interface (see CONVENTIONS.md for the binding grammar):
+%%   \begin{hbtheorem}{thm:<id>}{<status-spec>}{<Title>} ... \end{hbtheorem}
+%%   \begin{hblemma}{thm:<id>}{<status-spec>}{<Title>} ... \end{hblemma}
+%%   \begin{hbcorollary}{thm:<id>}{<status-spec>}{<Title>} ... \end{hbcorollary}
+%%   \begin{hbdefinition}{def:<id>}{<Title>} ...            (indexed)
+%%   \begin{hbconvention}{def:<id>}{<Title>} ...
+%%   \begin{hbmethod}{def:<id>}{<Title>} ...
+%%   \begin{hbexample}{def:<id>}{<Title>} ...
+%%   \begin{hbwarning}{def:<id>}{<Title>} ...               (indexed)
+%%   \begin{proofboundary}{def:<id>}{<Title>} ...           (indexed)
+%%   \begin{systementry}{entry:<id>}{<System Name>} + \entry... fields
+%%   \begin{annexitem}{annex:<id>}{thm:<backref>}{<Title>} ...
+%%   \begin{inheritedrestorationscope}{<provenance-id>} ...
+%%   \hbstub{...}  \sketchnote{...}
+%%   \calculussheet{sheet:<slug>}{<Name>}{<identity>}
+%%   \hbrule{rule:<id>}{<Name>}{<premises>}{<conclusion>}{<side cond | \none>}
+%%   \showcalculus{<slug>}
+%%
+%% Status specs are single tokens of EXACTLY one of the three forms
+%%     proved=annex:<id>   sketched=annex:<id>   cited=<bibkey>
+%% and are compile-mandatory: an empty or malformed spec raises \PackageError.
+%% Each status is rendered as a tagline ("Status: proved (Annex P5.3)", with a
+%% hyperlink) and harvested to \jobname.hbstatus as
+%%     <label>|<status-form>|<target>|<part>
+%% Complete entry-card metadata is harvested to \jobname.hbentry as typed
+%% records (payload columns are last, so literal `|' characters remain safe):
+%%     CARD|<entry-label>|<part>|<system-name>
+%%     FIELD|<entry-label>|<field>|<content>
+%%     STATUS|<entry-label>|<field>|<status-form>|<target>|<content>
+%%
+%% Index hooks: hbdefinition/hbtheorem/hbwarning/proofboundary titles are
+%% written to the index.  Sort keys use the makeindex convention INSIDE the
+%% title argument: {Godel numbering@G\"odel numbering} indexes under the sort
+%% key and displays the part after the @.  A title without @ is used verbatim.
+%% (Brace the @ ({\char64}) if a literal @ must appear in a displayed title.)
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{handbook}[2026/08/11 v0.4 formal-logic handbook infrastructure (Phase 4 cards)]
+
+% --------------------------------------------------------------------------
+% Dependencies (classical LaTeX2e; hyperref is loaded LAST in this package)
+% --------------------------------------------------------------------------
+\RequirePackage[T2A,T1]{fontenc}
+\RequirePackage{lmodern}
+\DeclareTextSymbolDefault{\CYRI}{T2A}
+\DeclareTextSymbolDefault{\CYRL}{T2A}
+\RequirePackage{expl3}    % blank-token-list predicate for mandatory card fields
+\RequirePackage{amsmath}
+\RequirePackage{mathtools} % extensible implication arrows used by source notation
+\RequirePackage{amssymb}
+\RequirePackage{mathrsfs}
+\RequirePackage{csquotes}
+\RequirePackage{stmaryrd}
+\RequirePackage{cmll}
+\RequirePackage{amsthm}
+\RequirePackage{enumitem}   % exact inherited list presentation, scoped below
+\RequirePackage{booktabs}   % audit registers (generated/audit-pNN.tex) and
+\RequirePackage{longtable}  % hand-authored tab: tables use booktabs longtables
+% Row fragments must return directly to the alignment before its next rule.
+% The primitive input avoids a trailing file-hook token starting an empty row.
+\newcommand\hbinputtablerows[1]{\@@input #1 }
+\RequirePackage{tabularx}   % exact inherited binding/precedence appendix table
+\RequirePackage{needspace}  % keep generated scope headings with their first rows
+\RequirePackage{emptypage}  % inserted open-right versos carry no stale running head
+\RequirePackage{pdflscape}  % wide generated registries use rotated pages
+\RequirePackage{graphicx}   % fit exceptionally long running heads to the text width
+\RequirePackage{tikz}       % handbook diagrams and apparatus figures
+\usetikzlibrary{arrows.meta,calc,positioning}
+\RequirePackage{listings}   % exact inherited source pseudocode, guarded below
+\RequirePackage{makeidx}
+\RequirePackage{etoolbox}   % narrow, fail-closed patch for annex-only TOC width
+\makeindex
+
+% Necessity: exact source lines 14315--14326 contain literal pseudocode whose
+% whitespace and line breaks cannot be represented by an existing prose or
+% mathematical environment without changing the source tokens.
+% Definition: logiccode is exactly the frozen source's listings style: small
+% monospaced full-flexible columns, preserved spaces, a single pale-gray frame,
+% line breaking, and hidden string-space markers.
+% Standing: it is a source-rendering abbreviation, not a logical calculus,
+% algorithm definition, source-fidelity verdict, build, visual, or admission.
+% Nonredundancy: ordinary verbatim lacks the source caption/frame/breaking
+% surface, while editorial code environments are not authorized source tokens.
+% Use: the restored DPLL listing at source lines 14315--14326 uses this exact
+% style; the static source-environment scan rejects lstlisting elsewhere.
+\providecolor{LogicGray}{HTML}{F2F4F7}
+\providecolor{LogicBlue}{HTML}{17365D}
+\providecolor{LogicRed}{HTML}{7A1F1F}
+\lstdefinestyle{logiccode}{
+  basicstyle=\ttfamily\small,
+  columns=fullflexible,
+  keepspaces=true,
+  frame=single,
+  rulecolor=\color{black!25},
+  backgroundcolor=\color{LogicGray},
+  breaklines=true,
+  showstringspaces=false
+}
+\lstset{style=logiccode}
+
+% Necessity: book.cls computes the index column widths before its later 35pt
+% assignment, so the inherited 10pt value lets a long left entry enter the
+% right column.  Definition: immediately before theindex begins, establish the
+% book class's intended 35pt \columnsep before that width computation.
+% Standing: this is a
+% presentation-only use of the existing LaTeX length, not a source term or an
+% audit, admission, build, visual, register, or acceptance result.
+% Nonredundancy: ordinary one-column text and the book's later index formatting
+% do not recompute this width.  Use: the printed two-column index requires at
+% least 4pt between opposing entries while retaining its existing text tokens.
+\BeforeBeginEnvironment{theindex}{\setlength{\columnsep}{35pt}}
+
+% Necessity: the book-class section TOC row has two independent failures: its
+% 2.3em number box lets 12.10 touch a title, and its 1.55em page box lets a long
+% title touch a three-digit folio.
+% Definition: each section row locally uses a 3em number box and widens only an
+% ordinary 1.55em page-number reserve to 2.3em before running the unchanged
+% book-class dotted-line algorithm.
+% Standing: this is presentation-only TOC syntax, not a source term, section
+% identity, audit, admission, build, visual, or publication-status assertion.
+% Nonredundancy: the chapter-entry patch protects only chapter title/folio
+% spacing, and the annex switch protects annex chapter entries; neither fixes
+% both edges of an ordinary body section row.
+% Use: multi-digit section numbers and the exact long Section 64.4 TOC title
+% must each retain at least one readable gap without moving chapter or
+% subsection entries.
+\renewcommand*\l@section[2]{%
+  \begingroup
+  \ifdefstring{\@pnumwidth}{1.55em}{\def\@pnumwidth{2.3em}}{}%
+  \@dottedtocline{1}{1.5em}{3em}{#1}{#2}%
+  \endgroup}
+
+% Necessity: the book-class chapter TOC entry reserves only 1.55em at its
+% right edge, so the exact Chapter 25 title touches its three-digit folio.
+% Definition: inside each chapter entry's existing local group, replace the
+% ordinary 1.55em reserve by 2.3em before the book-class line-breaking code
+% runs; preserve the annex switch's separately established 2.5em reserve.
+% Standing: this is presentation-only TOC syntax, not a source term, chapter
+% identity, audit result, admission result, or publication-status assertion.
+% Nonredundancy: the section number-width repair protects the opposite edge of
+% section rows, while the annex switch protects P2--P12 number/title spacing;
+% neither reserves the ordinary body chapter title/folio boundary.
+% Use: the Chapter 25 TOC row must render its exact long title separately from
+% folio 245 while short body rows and every right-aligned folio stay in place.
+\patchcmd{\l@chapter}%
+  {\begingroup}%
+  {\begingroup\ifdefstring{\@pnumwidth}{1.55em}%
+     {\def\@pnumwidth{2.3em}}{}}%
+  {}%
+  {\PackageError{handbook}{cannot widen body TOC page-number reserve}%
+     {The book-class chapter-entry definition changed; update the exact
+      chapter TOC patch rather than accepting fused title/page text.}}%
+
+% Necessity: the book-class running heads allow either a long even-page chapter
+% mark or a long odd-page section mark to touch its folio.
+% Definition: the two running-head controls preserve the original mark and
+% folio positions when they fit; otherwise they reserve exactly 1em at the
+% inner boundary and scale only the exceptional mark to the remaining width.
+% Standing: the controls and their shared boxes/dimension are presentation-only
+% TeX syntax, not source terms, result families, audits, admissions, or reviews.
+% Nonredundancy: the even control protects folio/leftmark, while the odd control
+% protects rightmark/folio; neither orientation can establish the other's gap.
+% Use: ps@headings installs both controls so every printed running head retains
+% a readable boundary without changing short-header book-class coordinates.
+\newsavebox\hb@runningheadfolio
+\newsavebox\hb@runningheadmark
+\newdimen\hb@runningheadmarkwidth
+\newcommand\hb@evenrunninghead{%
+  \sbox\hb@runningheadfolio{\thepage}%
+  \sbox\hb@runningheadmark{\slshape\leftmark}%
+  \hb@runningheadmarkwidth=\textwidth
+  \advance\hb@runningheadmarkwidth by -\wd\hb@runningheadfolio
+  \advance\hb@runningheadmarkwidth by -1em
+  \usebox\hb@runningheadfolio
+  \ifdim\wd\hb@runningheadmark>\hb@runningheadmarkwidth
+    \hspace{1em}%
+    \resizebox{\hb@runningheadmarkwidth}{!}{\usebox\hb@runningheadmark}%
+  \else
+    \hfil\usebox\hb@runningheadmark
+  \fi}
+\newcommand\hb@oddrunninghead{%
+  \sbox\hb@runningheadfolio{\thepage}%
+  \sbox\hb@runningheadmark{\slshape\rightmark}%
+  \hb@runningheadmarkwidth=\textwidth
+  \advance\hb@runningheadmarkwidth by -\wd\hb@runningheadfolio
+  \advance\hb@runningheadmarkwidth by -1em
+  \ifdim\wd\hb@runningheadmark>\hb@runningheadmarkwidth
+    \resizebox{\hb@runningheadmarkwidth}{!}{\usebox\hb@runningheadmark}%
+    \hspace{1em}%
+  \else
+    \usebox\hb@runningheadmark\hfil
+  \fi
+  \usebox\hb@runningheadfolio}
+\let\hb@bookheadings\ps@headings
+\renewcommand\ps@headings{%
+  \hb@bookheadings
+  \def\@evenhead{\hb@evenrunninghead}%
+  \def\@oddhead{\hb@oddrunninghead}}
+\pagestyle{headings}
+
+% --------------------------------------------------------------------------
+% Registered symbol macros (Phase-1 glyph rulings; registry/symbols.csv is
+% the data side of the same registry)
+% --------------------------------------------------------------------------
+\newcommand\dom{\operatorname{dom}}           % structure domains: \dom\mathcal{M}
+\newcommand\forces{\Vdash}                    % the single forcing macro
+\newcommand\nforces{\nVdash}                  % its negated partner
+% Littman--Majercik--Pitassi's native random quantifier is a Roman R
+% rotated by 180 degrees. Preserve its glyph and the current math style.
+\newcommand\ssatrandom{\mathord{\mathpalette\hbSSATRandomGlyph\relax}}
+\newcommand\hbSSATRandomGlyph[2]{\rotatebox[origin=c]{180}{$#1\mathrm{R}$}}
+\newcommand\defeq{\mathrel{:\equiv}}          % the definitional sign
+
+% Registered macro names from registry/symbols.csv needed by the migrated
+% body chapters (Phase-3 pilot, Part 5).  \providecommand so that parallel
+% part migrations adding the same registered names cannot clash.
+\providecommand\Lang{\mathcal{L}}             % signatures/languages
+\providecommand\N{\mathbb{N}}                 % the natural numbers
+\providecommand\entails{\models}              % satisfaction/consequence
+\providecommand\derives{\vdash}               % derivability turnstile
+\providecommand\notderives{\not\vdash}        % its negation
+\providecommand\FV{\operatorname{FV}}         % free-variable operation
+\providecommand\PA{\mathsf{PA}}               % Peano arithmetic
+\providecommand\bottom{\bot}                  % falsum
+\providecommand\topv{\top}                    % verum
+\providecommand\abs[1]{\lvert#1\rvert}       % cardinality only
+\providecommand\sem[1]{\llbracket#1\rrbracket} % source semantic brackets
+
+% --------------------------------------------------------------------------
+% Harvest streams:  \jobname.hbstatus  and  \jobname.hbentry
+% --------------------------------------------------------------------------
+\newwrite\hb@statusout
+\newwrite\hb@entryout
+\AtBeginDocument{%
+  \immediate\openout\hb@statusout=\jobname.hbstatus\relax
+  \immediate\openout\hb@entryout=\jobname.hbentry\relax
+}
+\AtEndDocument{%
+  \immediate\closeout\hb@statusout
+  \immediate\closeout\hb@entryout
+}
+
+% --------------------------------------------------------------------------
+% Status-spec parser (compile-mandatory grammar)
+%   \hbparsestatus{<spec>} defines \hb@statusform, \hb@statustarget and, for
+%   the annex forms, \hb@annexid; empty/malformed input -> \PackageError.
+% --------------------------------------------------------------------------
+\let\hb@NIL\relax
+\def\hb@NILholder{\hb@NIL}
+\def\hb@empty{}
+\def\hb@formproved{proved}
+\def\hb@formsketched{sketched}
+\def\hb@formcited{cited}
+
+\def\hb@statuserror#1#2{%
+  \PackageError{handbook}%
+    {Malformed status spec '\detokenize{#1}'\MessageBreak(#2)}%
+    {Status specs are single tokens of exactly one of three forms:\MessageBreak
+     \space\space proved=annex:<id>\MessageBreak
+     \space\space sketched=annex:<id>\MessageBreak
+     \space\space cited=<bibkey>\MessageBreak
+     See handbook/CONVENTIONS.md, section 'Status grammar'.}}
+
+% recovery values so a nonstop run can limp on after the error
+\def\hb@statusrecover{%
+  \def\hb@statusform{cited}%
+  \def\hb@statustarget{hb-malformed}%
+  \def\hb@annexid{}}
+
+\def\hbparsestatus#1{%
+  \def\hb@rawspec{#1}%
+  \ifx\hb@rawspec\hb@empty
+    \hb@statuserror{<empty>}{the mandatory status argument is empty}%
+    \hb@statusrecover
+  \else
+    \hb@parse@a#1=\hb@NIL\hb@stop{#1}%
+  \fi}
+
+% split at the first '='
+\def\hb@parse@a#1=#2\hb@stop#3{%
+  \def\hb@statusform{#1}%
+  \def\hb@resttest{#2}%
+  \ifx\hb@resttest\hb@NILholder
+    \hb@statuserror{#3}{missing '=' separator}%
+    \hb@statusrecover
+  \else
+    \hb@parse@b#2\hb@stop{#3}%
+  \fi}
+
+% #2 of \hb@parse@a always ends with =\hb@NIL here; strip it, reject extra '='
+\def\hb@parse@b#1=#2\hb@stop#3{%
+  \def\hb@statustarget{#1}%
+  \def\hb@excess{#2}%
+  \ifx\hb@excess\hb@NILholder
+    \hb@validate{#3}%
+  \else
+    \hb@statuserror{#3}{more than one '='}%
+    \hb@statusrecover
+  \fi}
+
+\def\hb@validate#1{%
+  \ifx\hb@statusform\hb@empty
+    \hb@statuserror{#1}{empty form before the '='}%
+    \hb@statusrecover
+  \else
+    \ifx\hb@statustarget\hb@empty
+      \hb@statuserror{#1}{empty target after the '='}%
+      \hb@statusrecover
+    \else
+      \hb@validateform{#1}%
+    \fi
+  \fi}
+
+\def\hb@validateform#1{%
+  \ifx\hb@statusform\hb@formproved
+    \hb@checkannextarget{#1}%
+  \else
+    \ifx\hb@statusform\hb@formsketched
+      \hb@checkannextarget{#1}%
+    \else
+      \ifx\hb@statusform\hb@formcited
+        \relax% bibkey target; nonemptiness already enforced
+      \else
+        \hb@statuserror{#1}{unknown form; allowed: proved, sketched, cited}%
+        \hb@statusrecover
+      \fi
+    \fi
+  \fi}
+
+% proved=/sketched= targets must be annex:<id> with nonempty <id>
+\def\hb@checkannextarget#1{%
+  \expandafter\hb@checkannex@a\hb@statustarget annex:\hb@stop{#1}}
+\def\hb@checkannex@a#1annex:#2\hb@stop#3{%
+  \def\hb@pretest{#1}%
+  \ifx\hb@pretest\hb@empty
+    \hb@stripannextail#2\hb@stop
+    \ifx\hb@annexid\hb@empty
+      \hb@statuserror{#3}{empty annex id after 'annex:'}%
+      \hb@statusrecover
+    \fi
+  \else
+    \hb@statuserror{#3}{proved=/sketched= target must be annex:<id>}%
+    \hb@statusrecover
+  \fi}
+\def\hb@stripannextail#1annex:\hb@stop{\def\hb@annexid{#1}}
+
+% --------------------------------------------------------------------------
+% Status tagline: "Status: proved (Annex P5.3)" / "Status: cited ([Jec03])"
+% --------------------------------------------------------------------------
+\def\hb@taglinetext{%
+  Status: \hb@statusform\space
+  \ifx\hb@statusform\hb@formcited
+    (\expandafter\cite\expandafter{\hb@statustarget})%
+  \else
+    (\hyperref[\hb@statustarget]{Annex
+      \expandafter\MakeUppercase\expandafter{\hb@annexid}})%
+  \fi}
+
+% --------------------------------------------------------------------------
+% Title splitter with makeindex sort-key support
+%   \hb@splittitle{<title>} -> \hb@titleindex (verbatim tokens, for \index)
+%                              \hbTitleDisp   (display text, sort key removed)
+% Delimiter catcodes: the @ in document text is catcode 12, so the split
+% macros are defined in a catcode-12 group (hence the @-free public names).
+% --------------------------------------------------------------------------
+\begingroup
+\catcode`\@=12
+\long\gdef\hbTitleSplitA#1@#2\hbTitleStop{\gdef\hbTitleA{#1}\gdef\hbTitleB{#2}}
+\long\gdef\hbTitleSplitB#1@\hbTitleStop{\gdef\hbTitleDisp{#1}}
+\gdef\hbTitleSentinel{@}
+\endgroup
+
+\long\def\hb@splittitle#1{%
+  \long\gdef\hb@titleindex{#1}%
+  \expandafter\hb@splittitle@aux\expandafter{\hbTitleSentinel}{#1}}
+\long\def\hb@splittitle@aux#1#2{% #1 = catcode-12 @ sentinel, #2 = title
+  \hbTitleSplitA#2#1\hbTitleStop
+  \ifx\hbTitleB\hb@empty
+    \global\let\hbTitleDisp\hbTitleA
+  \else
+    \expandafter\hbTitleSplitB\hbTitleB\hbTitleStop
+  \fi}
+
+% --------------------------------------------------------------------------
+% Counters (shared per-chapter counter for ALL theorem-class environments)
+% --------------------------------------------------------------------------
+\newcounter{hbitem}[chapter]
+\renewcommand\thehbitem{\thechapter.\arabic{hbitem}}
+\newcounter{hbsysentry}[chapter]
+\renewcommand\thehbsysentry{\thechapter.\arabic{hbsysentry}}
+\newcounter{annexitem}[chapter]
+\renewcommand\theannexitem{\thechapter.\arabic{annexitem}}
+\newcounter{hbsheet}   % global: calculus sheets live registry-wide
+\newcounter{hbrule}    % global: unique anchors across repeat inclusions
+
+% --------------------------------------------------------------------------
+% Theorem-class environments
+% --------------------------------------------------------------------------
+% --------------------------------------------------------------------------
+% Stable part ownership and edition layout (EDITION-2026-CONTRACT.md)
+% Drivers declare their stable ID before their one public \part heading.
+% Ownership never comes from the printed counter.  Record its next ordinal
+% separately so annex headings follow the actual construction order during
+% migration; standalone annex checks fall back to the approved edition order.
+% Stable annex chapter numbers and hyperlink identities remain P1, ..., P19.
+% --------------------------------------------------------------------------
+\def\hb@declarepart#1#2#3{%
+  \expandafter\def\csname hb@partordinal@#1\endcsname{#2}%
+  \expandafter\def\csname hb@parttitle@#1\endcsname{#3}}
+\hb@declarepart{p01}{1}{Foundations of Formal Work}
+\hb@declarepart{p02}{2}{Classical Logic}
+\hb@declarepart{p03}{3}{Model Theory}
+\hb@declarepart{p04}{4}{Computability and Complexity}
+\hb@declarepart{p05}{5}{Arithmetic and Incompleteness}
+\hb@declarepart{p06}{6}{Axiomatic Set Theory}
+\hb@declarepart{p07}{7}{Proof Theory, Lambda Calculi, and Higher-Order Logic}
+\hb@declarepart{p08}{8}{Nonclassical Logics}
+\hb@declarepart{p09}{9}{Logic in Computer Science}
+\hb@declarepart{p10}{10}{Algebraic and Categorical Logic}
+\hb@declarepart{p15}{11}{Uncertainty and Statistical Inference}
+\hb@declarepart{p16}{12}{Explanation, Abduction and Causation}
+\hb@declarepart{p17}{13}{Decision and Strategic Reasoning}
+\hb@declarepart{p18}{14}{Argumentation and Informal Reasoning}
+\hb@declarepart{p19}{15}{Empirical Science of Reasoning}
+\hb@declarepart{p11}{16}{Philosophy of Logic}
+\hb@declarepart{p12}{17}{Automation, Mechanization, and Formal Practice}
+\hb@declarepart{p13}{18}{Chronology and Biography}
+\hb@declarepart{p14}{19}{Apparatus}
+\newcommand\hbcurrentpartid{}
+\def\hb@partidentityerror#1{%
+  \PackageError{handbook}{invalid or missing stable part ID '#1'}%
+    {Declare \string\hbpartidentity{p01} through {p19} at the owning
+     part-driver boundary; printed part counters are not ownership IDs.}}
+\def\hb@setstablepart#1{%
+  \ifcsname hb@partordinal@#1\endcsname
+    \xdef\hbcurrentpartid{#1}%
+  \else
+    \hb@partidentityerror{#1}%
+  \fi}
+\newcommand\hbpartidentity[1]{%
+  \hb@setstablepart{#1}%
+  \ifcsname hb@partordinal@#1\endcsname
+    \expandafter\xdef\csname hb@observedpartordinal@#1\endcsname{%
+      \number\numexpr\c@part+1\relax}%
+  \fi}
+\def\hb@requirepartidentity{%
+  \ifcsname hb@partordinal@\hbcurrentpartid\endcsname\else
+    \hb@partidentityerror{\hbcurrentpartid}%
+  \fi}
+\newcommand\hbpartordinal[1]{%
+  \ifcsname hb@partordinal@#1\endcsname
+    \csname hb@partordinal@#1\endcsname
+  \else
+    \hb@partidentityerror{#1}%
+  \fi}
+\newcommand\hbparttitle[1]{%
+  \ifcsname hb@parttitle@#1\endcsname
+    \csname hb@parttitle@#1\endcsname
+  \else
+    \hb@partidentityerror{#1}%
+  \fi}
+\def\hb@partdisplaynumber#1{%
+  \ifcsname hb@observedpartordinal@#1\endcsname
+    \csname hb@observedpartordinal@#1\endcsname
+  \else
+    \hbpartordinal{#1}%
+  \fi}
+\newcommand\hbpartdisplayordinal[1]{%
+  \@Roman{\hb@partdisplaynumber{#1}}}
+
+% \hb@beginresult{<Name>}{<label>}{<status>}{<title>}{<bodyfont>}{<index 0/1>}
+\long\def\hb@beginresult#1#2#3#4#5#6{%
+  \par\addvspace{\medskipamount}%
+  \hbparsestatus{#3}%
+  \refstepcounter{hbitem}%
+  \hb@splittitle{#4}%
+  \noindent{\bfseries #1~\thehbitem\ (\hbTitleDisp).}%
+  \label{#2}%
+  \ifnum#6=1\relax
+    \expandafter\index\expandafter{\hb@titleindex}%
+  \fi
+  \hb@requirepartidentity
+  \immediate\write\hb@statusout{#2|\hb@statusform|\hb@statustarget|\hbcurrentpartid}%
+  \enspace#5\ignorespaces}
+\def\hb@endresult{%
+  \par\nobreak
+  {\noindent\small\itshape\hb@taglinetext\par}%
+  \addvspace{\medskipamount}}
+
+% \hb@beginplain{<Name>}{<label>}{<title>}{<bodyfont>}{<index 0/1>}
+\long\def\hb@beginplain#1#2#3#4#5{%
+  \par\addvspace{\medskipamount}%
+  \refstepcounter{hbitem}%
+  \hb@splittitle{#3}%
+  \noindent{\bfseries #1~\thehbitem\ (\hbTitleDisp).}%
+  \label{#2}%
+  \ifnum#5=1\relax
+    \expandafter\index\expandafter{\hb@titleindex}%
+  \fi
+  \enspace#4\ignorespaces}
+\def\hb@endplain{\par\addvspace{\medskipamount}}
+
+% Each editorial environment shares hbitem for numbering but records its own
+% reference kind.  The local alias is set before refstepcounter and ends with
+% the environment group; it changes neither source counters nor proof status.
+\newenvironment{hbtheorem}[3]{\crefalias{hbitem}{theorem}\hb@beginresult{Theorem}{#1}{#2}{#3}{\itshape}{1}}{\hb@endresult}
+\newenvironment{hblemma}[3]{\crefalias{hbitem}{lemma}\hb@beginresult{Lemma}{#1}{#2}{#3}{\itshape}{0}}{\hb@endresult}
+\newenvironment{hbcorollary}[3]{\crefalias{hbitem}{corollary}\hb@beginresult{Corollary}{#1}{#2}{#3}{\itshape}{0}}{\hb@endresult}
+\newenvironment{hbdefinition}[2]{\crefalias{hbitem}{definition}\hb@beginplain{Definition}{#1}{#2}{\upshape}{1}}{\hb@endplain}
+\newenvironment{hbconvention}[2]{\crefalias{hbitem}{convention}\hb@beginplain{Convention}{#1}{#2}{\upshape}{0}}{\hb@endplain}
+\newenvironment{hbmethod}[2]{\crefalias{hbitem}{method}\hb@beginplain{Method}{#1}{#2}{\upshape}{0}}{\hb@endplain}
+\newenvironment{hbexample}[2]{\crefalias{hbitem}{example}\hb@beginplain{Example}{#1}{#2}{\upshape}{0}}{\hb@endplain}
+\newenvironment{hbwarning}[2]{\crefalias{hbitem}{warning}\hb@beginplain{Warning}{#1}{#2}{\upshape}{1}}{\hb@endplain}
+\newenvironment{proofboundary}[2]{\crefalias{hbitem}{proofboundary}\hb@beginplain{Proof boundary}{#1}{#2}{\upshape}{1}}{\hb@endplain}
+
+% Exact inherited artifacts retain the source environment names.  This is the
+% source's existing definition environment, not a new handbook concept or an
+% editorial substitute.  It is available only so unchanged source tokens can
+% compile inside a provenance-validated restoration wrapper.
+\newenvironment{definition}[1][]{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source definition environment outside an inherited
+      restoration scope}%
+      {Editorial definitions use hbdefinition.  The source environment is
+       reserved for unchanged, provenance-scoped inherited artifacts.}%
+  \fi
+  \par\addvspace{\medskipamount}%
+  \crefalias{hbitem}{definition}%
+  \refstepcounter{hbitem}%
+  \noindent{\bfseries Definition~\thehbitem
+    \if\relax\detokenize{#1}\relax.\else\ (#1).\fi}%
+  \if\relax\detokenize{#1}\relax\else\index{#1}\fi
+  \enspace\upshape\ignorespaces
+}{\hb@endplain}
+
+% Exact inherited artifacts also retain these source environments and
+% commands.  They are existing source syntax, not additions to the handbook
+% vocabulary, and are deliberately unavailable to editorial body files.  The
+% environments share hbitem with the source definition environment, matching
+% the source's common theorem counter.  Only forms required by governed exact
+% artifacts are supplied here.
+\theoremstyle{definition}
+\newtheorem{hbsourcemethod}[hbitem]{Method}
+\newtheorem{hbsourceexercise}[hbitem]{Exercise}
+\newtheorem{hbsourceexample}[hbitem]{Example}
+% Necessity: exact source line 6061 uses the environment name convention, and
+% neither the editorial hbconvention form nor the source definition form can
+% render that unchanged token with its source heading and no automatic index.
+% Definition: hbsourceconvention is exactly a definition-style amsthm
+% environment sharing hbitem; the guarded convention wrapper accepts the
+% source's optional title and creates no index entry.  Standing: both names are
+% source-rendering control syntax, not a mathematical statement family or an
+% audit result.  Nonredundancy: hbconvention requires an editorial label and
+% title, while definition prints Definition and indexes a supplied title.  Use:
+% the provenance scope for SRC-06049-06069 requires the exact source
+% \begin{convention}[Status of results] spelling and the non-leaking tests
+% exercise both its scoped and outside-scope behavior.
+\newtheorem{hbsourceconvention}[hbitem]{Convention}
+\theoremstyle{plain}
+\newtheorem{hbsourcetheorem}[hbitem]{Theorem}
+\newtheorem{hbsourcelemma}[hbitem]{Lemma}
+\newtheorem{hbsourcecorollary}[hbitem]{Corollary}
+\theoremstyle{remark}
+\newtheorem{hbsourcewarning}[hbitem]{Warning}
+% Necessity: exact source line 2883 uses the environment name remark, while
+% hbremark would alter the unchanged artifact.  Definition: hbsourceremark is
+% exactly an amsthm remark sharing hbitem and adding no index entry.  Standing:
+% it is source-rendering control syntax, not a new mathematical claim or
+% statement family.  Nonredundancy: hbremark is editorial syntax and the source
+% warning environment has a different printed heading.  Use: the provenance
+% scope containing source lines 2810--2914 requires this exact environment.
+\newtheorem{hbsourceremark}[hbitem]{Remark}
+
+% Necessity: exact source lines 7267 and 7472 use the existing source names
+% proofplan and \Q, and replacing either token would break byte-exact
+% restoration.  Definition: proofplan eliminates exactly to a paragraph with
+% the italic prefix ``Proof sketch.'' followed by its body and a closing
+% paragraph; \Q eliminates exactly to \mathbb{Q}.  Standing: both are guarded
+% source-rendering abbreviations, not new mathematical objects, statement
+% families, audit results, or editorial vocabulary.  Nonredundancy: the
+% editorial proof environment carries annex/proof standing and no existing
+% source-scoped command preserves the exact \Q token.  Use:
+% SRC-07150-07294, SRC-07678-07752, and SRC-07753-07843 require proofplan;
+% SRC-07469-07493 requires \Q; and the outside-scope checks below prevent
+% either source spelling from leaking.
+\newenvironment{proofplan}{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source proofplan environment outside an inherited
+      restoration scope}%
+      {Editorial proof sketches must use the handbook's attributed proof
+       apparatus.  The source environment is reserved for unchanged,
+       provenance-scoped inherited artifacts.}%
+  \fi
+  \par\noindent\textit{Proof sketch.}\ \ignorespaces
+}{\par}
+
+% Necessity: exact source lines 15506--15618 use the existing environment name
+% solution five times; rewriting those tokens or using editorial proof syntax
+% would break byte-exact restoration or alter their source presentation.
+% Definition: inside a validated inherited scope, solution eliminates exactly
+% to a paragraph headed by italic ``Solution.'', followed by its body and a
+% right-aligned square before the closing paragraph.
+% Standing: solution is guarded source-rendering control syntax, not a new
+% mathematical statement family, proof-status claim, admission, or review.
+% Nonredundancy: the editorial proof apparatus carries separately governed
+% ownership and status, while proofplan prints a different heading and no
+% closing square; neither preserves the exact source environment semantics.
+% Use: SRC-15489-15619 requires all five occurrences, and static plus TeX tests
+% reject any editorial/outside-scope use or leakage.
+\newenvironment{solution}{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source solution environment outside an inherited
+      restoration scope}%
+      {Editorial solutions require separately governed proof and assessment
+       apparatus.  The source environment is reserved for unchanged,
+       provenance-scoped inherited artifacts.}%
+  \fi
+  \par\noindent\textit{Solution.}\ %
+}{\hfill$\square$\par}
+
+\newenvironment{method}[1][]{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source method environment outside an inherited
+      restoration scope}%
+      {Editorial methods use hbmethod.  The source environment is reserved
+       for unchanged, provenance-scoped inherited artifacts.}%
+  \fi
+  \if\relax\detokenize{#1}\relax\hbsourcemethod\else\hbsourcemethod[#1]\fi
+  % amsthm steps the shared counter before its heading is committed to a page.
+  % If the heading moves across a page break, an exact source \label placed
+  % immediately after \begin{method} would otherwise retain the previous page's
+  % counter anchor.  This zero-size post-heading anchor changes only the PDF
+  % destination used by that unchanged label; numbering, text, index behavior,
+  % and page layout remain those of hbsourcemethod.
+  \phantomsection
+}{\endhbsourcemethod}
+\newenvironment{exercise}[1][]{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source exercise environment outside an inherited
+      restoration scope}%
+      {The source environment is reserved for unchanged, provenance-scoped
+       inherited artifacts.}%
+  \fi
+  \if\relax\detokenize{#1}\relax\hbsourceexercise\else\hbsourceexercise[#1]\fi
+}{\endhbsourceexercise}
+\newenvironment{example}[1][]{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source example environment outside an inherited
+      restoration scope}%
+      {Editorial examples use hbexample.  The source environment is reserved
+       for unchanged, provenance-scoped inherited artifacts.}%
+  \fi
+  \if\relax\detokenize{#1}\relax\hbsourceexample\else\hbsourceexample[#1]\fi
+}{\endhbsourceexample}
+\newenvironment{convention}[1][]{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source convention environment outside an inherited
+      restoration scope}%
+      {Editorial conventions use hbconvention.  The source environment is
+       reserved for unchanged, provenance-scoped inherited artifacts.}%
+  \fi
+  \if\relax\detokenize{#1}\relax
+    \hbsourceconvention
+  \else
+    \hbsourceconvention[#1]%
+  \fi
+}{\endhbsourceconvention}
+\newenvironment{theorem}[1][]{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source theorem environment outside an inherited
+      restoration scope}%
+      {Editorial theorems use hbtheorem.  The source environment is reserved
+       for unchanged, provenance-scoped inherited artifacts.}%
+  \fi
+  \if\relax\detokenize{#1}\relax\hbsourcetheorem\else\hbsourcetheorem[#1]\fi
+  \if\relax\detokenize{#1}\relax\else\index{#1}\fi
+}{\endhbsourcetheorem}
+\newenvironment{lemma}[1][]{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source lemma environment outside an inherited
+      restoration scope}%
+      {Editorial lemmas use hblemma.  The source environment is reserved for
+       unchanged, provenance-scoped inherited artifacts.}%
+  \fi
+  \if\relax\detokenize{#1}\relax\hbsourcelemma\else\hbsourcelemma[#1]\fi
+}{\endhbsourcelemma}
+\newenvironment{corollary}[1][]{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source corollary environment outside an inherited
+      restoration scope}%
+      {Editorial corollaries use hbcorollary.  The source environment is
+       reserved for unchanged, provenance-scoped inherited artifacts.}%
+  \fi
+  \if\relax\detokenize{#1}\relax\hbsourcecorollary\else\hbsourcecorollary[#1]\fi
+}{\endhbsourcecorollary}
+
+% Auxiliary lemmas belong to an existing annex proof, not to restoration.
+\newenvironment{annexlemma}[1][]{%
+  \ifhb@inannex\else
+    \PackageError{handbook}{auxiliary lemma outside an annex item}%
+      {Use annexlemma only inside the proof development of an annexitem.}%
+  \fi
+  \if\relax\detokenize{#1}\relax\hbsourcelemma\else\hbsourcelemma[#1]\fi
+}{\endhbsourcelemma}
+
+\newcommand\Pow{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source Pow command outside an inherited restoration
+      scope}%
+      {Editorial notation must use the registered handbook vocabulary.}%
+  \fi
+  \mathcal{P}}
+% This exact restored interval uses only the unstarred, unsized form of the
+% source's paired delimiter.  Additional source forms remain owed until an
+% exact artifact requires them; this command must not be used editorially.
+\newcommand\set[1]{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source set command outside an inherited restoration
+      scope}%
+      {Editorial notation must use the registered handbook vocabulary.}%
+  \fi
+  \lbrace#1\rbrace}
+\newcommand\tuple[1]{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source tuple command outside an inherited
+      restoration scope}%
+      {Editorial notation must use the registered handbook vocabulary.}%
+  \fi
+  \langle#1\rangle}
+\newcommand\rng{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source rng command outside an inherited restoration
+      scope}%
+      {Editorial notation must use the registered handbook vocabulary.}%
+  \fi
+  \operatorname{rng}}
+\newcommand\Mod{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source Mod command outside an inherited restoration
+      scope}%
+      {Editorial notation must use the registered handbook vocabulary.}%
+  \fi
+  \operatorname{Mod}}
+% Necessity: the frozen source intervals use these three names directly, so
+% changing them would change source content tokens.  Definition: within a
+% provenance scope they eliminate exactly to \mathsf{Fm}, \operatorname{len},
+% and \mathbin{\upharpoonright}.  Standing: they are source-typography
+% abbreviations, not motives, relations, or statement families.  Nonredundancy:
+% the editorial vocabulary does not expose these inherited names.  Use: the
+% exact string chapter at source lines 1101--1410 calls all three.
+\newcommand\Fm{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source Fm command outside an inherited restoration
+      scope}%
+      {Editorial notation must use the registered handbook vocabulary.}%
+  \fi
+  \mathsf{Fm}}
+\newcommand\length{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source length command outside an inherited
+      restoration scope}%
+      {Editorial notation must use the registered handbook vocabulary.}%
+  \fi
+  \operatorname{len}}
+\newcommand\restr{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source restr command outside an inherited
+      restoration scope}%
+      {Editorial notation must use the registered handbook vocabulary.}%
+  \fi
+  \mathbin{\upharpoonright}}
+% Necessity: exact source lines 10496--10665 use the command token \rank,
+% while the editorial hierarchy material spells the same operation with
+% \operatorname{rk}; literal substitution would destroy the governed tokens.
+% Definition: within inherited restoration scope, \rank eliminates exactly to
+% \operatorname{rk}; outside that scope it raises a hard package error.
+% Standing: this is a source-rendering abbreviation for the set-rank function,
+% not a new function, relation, statement family, audit, or review result.
+% Nonredundancy: the editorial spelling has the glyph and mathematical role but
+% not the exact source command identity that restoration must preserve.
+% Use: the cumulative-hierarchy source wrappers invoke \rank seven times, and
+% static plus TeX tests require its in-scope meaning and outside-scope rejection.
+\newcommand\rank{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source rank command outside an inherited restoration
+      scope}%
+      {Editorial notation must use the registered handbook vocabulary.}%
+  \fi
+  \operatorname{rk}}
+% Necessity: the exact source rule display uses these two inherited command
+% names and cannot be transcribed byte-exactly through the editorial hbrule
+% interface.  Definition: in a provenance scope Rule eliminates exactly to a
+% fraction followed by a thin space and small-caps optional name, while side
+% eliminates exactly to a quad followed by text.  Standing: both are source
+% typography abbreviations, not rules admitted to a calculus.  Nonredundancy:
+% unlike hbrule they create no registry identity, label, or active-rule claim.
+% Use: source lines 1585--1587 require the named optional form and side text.
+\newcommand\Rule[3][]{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source Rule command outside an inherited
+      restoration scope}%
+      {Editorial rules must use the registered calculus-sheet vocabulary.}%
+  \fi
+  \frac{#2}{#3}\;\textsc{#1}}
+\newcommand\side[1]{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source side command outside an inherited
+      restoration scope}%
+      {Editorial rule side conditions belong to registered calculus sheets.}%
+  \fi
+  \quad\text{#1}}
+\newcommand\ZF{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source ZF command outside an inherited restoration
+      scope}%
+      {Editorial notation must use the registered handbook vocabulary.}%
+  \fi
+  \mathsf{ZF}}
+% Necessity: exact source lines 10260--10270 use the distinct token \ZFC, and
+% neither \ZF nor an editorial literal can preserve that source command.
+% Definition: within inherited restoration scope, \ZFC eliminates exactly to
+% \mathsf{ZFC}; outside that scope it raises a hard package error.
+% Standing: this is a source-rendering abbreviation for a theory name, not a
+% new theory, relation, statement family, audit, admission, or review result.
+% Nonredundancy: \ZF denotes a different axiom set, while literal \mathsf{ZFC}
+% has the intended glyph but not the exact governed source token.
+% Use: the exact Part VI opening invokes \ZFC five times, and static plus TeX
+% tests require its in-scope meaning and outside-scope rejection.
+\newcommand\ZFC{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source ZFC command outside an inherited restoration
+      scope}%
+      {Editorial notation must use the registered handbook vocabulary.}%
+  \fi
+  \mathsf{ZFC}}
+\newcommand\Z{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source Z command outside an inherited restoration
+      scope}%
+      {Editorial notation must use the registered handbook vocabulary.}%
+  \fi
+  \mathbb{Z}}
+% These are the frozen source's existing propositional-logic abbreviations.
+% The guarded outer meanings make editorial use fail, while each exact
+% inherited scope below replaces them with the complete source meanings.
+\newcommand\Prop{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source Prop command outside an inherited restoration
+      scope}{Editorial notation must use the registered handbook vocabulary.}%
+  \fi
+  \mathsf{Prop}}
+\newcommand\CPL{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source CPL command outside an inherited restoration
+      scope}{Editorial notation must use the registered handbook vocabulary.}%
+  \fi
+  \mathsf{CPL}}
+\newcommand\Sub{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source Sub command outside an inherited restoration
+      scope}{Editorial notation must use the registered handbook vocabulary.}%
+  \fi
+  \operatorname{Sub}}
+\newcommand\True{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source True command outside an inherited restoration
+      scope}{Editorial notation must use the registered handbook vocabulary.}%
+  \fi
+  \mathbf{T}}
+\newcommand\False{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source False command outside an inherited restoration
+      scope}{Editorial notation must use the registered handbook vocabulary.}%
+  \fi
+  \mathbf{F}}
+% Necessity: exact source lines 14310--14545 use \SAT, \UNSAT, and \NP as
+% command tokens, which cannot be byte-preserved by editorial literals.
+% Definition: inside an inherited restoration scope the three abbreviations
+% eliminate exactly to \mathsf{SAT}, \mathsf{UNSAT}, and \mathsf{NP}; outside
+% it each command raises a hard package error.
+% Standing: they are source-rendering abbreviations for named complexity and
+% solver-status vocabulary, not new classes, results, audits, or admissions.
+% Nonredundancy: the literal glyphs agree visually but do not preserve the
+% governed source commands, and \SAT and \UNSAT have opposite result meanings.
+% Use: the exact Automated Reasoning chapter uses all three spellings, while
+% static and TeX tests require their in-scope meanings and outside rejection.
+\newcommand\SAT{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source SAT command outside an inherited restoration
+      scope}{Editorial notation must use the registered handbook vocabulary.}%
+  \fi
+  \mathsf{SAT}}
+\newcommand\UNSAT{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source UNSAT command outside an inherited restoration
+      scope}{Editorial notation must use the registered handbook vocabulary.}%
+  \fi
+  \mathsf{UNSAT}}
+\newcommand\NP{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source NP command outside an inherited restoration
+      scope}{Editorial notation must use the registered handbook vocabulary.}%
+  \fi
+  \mathsf{NP}}
+% Necessity: the exact source calculus blocks call \ND, \LK, and \LJ directly, so
+% replacing those tokens with editorial notation would break exactness.
+% Definition: inside a validated inherited scope they eliminate exactly to
+% \mathsf{ND}, \mathsf{LK}, and \mathsf{LJ}, respectively.  Standing: all are source
+% typography abbreviations, not calculi newly admitted by this style file.
+% Nonredundancy: the separately attributed registry sheets are navigation
+% apparatus and cannot supply meanings to unchanged source tokens.  Use: source
+% lines 2224--2310, 2381--2446, and 11354--11960 require the three abbreviations.
+\newcommand\ND{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source ND command outside an inherited restoration
+      scope}{Editorial notation must use the registered handbook vocabulary.}%
+  \fi
+  \mathsf{ND}}
+\newcommand\LK{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source LK command outside an inherited restoration
+      scope}{Editorial notation must use the registered handbook vocabulary.}%
+  \fi
+  \mathsf{LK}}
+\newcommand\LJ{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source LJ command outside an inherited restoration
+      scope}{Editorial notation must use the registered handbook vocabulary.}%
+  \fi
+  \mathsf{LJ}}
+% Necessity: exact source lines 12993--13189 call \IPL, and replacing that
+% token by a literal glyph would break byte-exact restoration.  Definition:
+% inside a validated inherited scope \IPL eliminates exactly to \mathsf{IPL}.
+% Standing: it is a guarded source system-name abbreviation, not a newly
+% admitted calculus, motive, relation, statement family, or audit result.
+% Nonredundancy: the LJ command names the underlying sequent calculus, while
+% IPL names the finite-support consequence system defined by the source.
+% Use: the exact Intuitionistic Logic chapter uses \IPL in its derivability,
+% semantic-consequence, completeness, and example statements; static and TeX
+% checks reject that spelling outside a validated restoration scope.
+\newcommand\IPL{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source IPL command outside an inherited restoration
+      scope}{Editorial notation must use the registered handbook vocabulary.}%
+  \fi
+  \mathsf{IPL}}
+% Necessity: exact source lines 13255--13523 use \K, \Sfour, and \Sfive, and
+% replacing those tokens inside the hash-pinned artifacts would destroy source
+% fidelity.  Definition: inside validated inherited scopes these three commands
+% eliminate exactly to \mathsf{K}, \mathsf{S4}, and \mathsf{S5}, respectively.
+% Standing: they are guarded source system-name abbreviations, not newly
+% admitted calculi, motives, relations, statement families, or audit results.
+% Nonredundancy: the registered rule sheets provide separately attributed
+% navigation but cannot supply meanings to unchanged source tokens; \topv is
+% already registered globally as verum and therefore needs no source-only alias.
+% Use: the exact Modal, Temporal, and Epistemic Logic chapter uses all three
+% abbreviations in calculus, frame-correspondence, and multi-agent statements;
+% static and TeX checks reject these spellings outside restoration scope.
+\newcommand\K{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source K command outside an inherited restoration
+      scope}{Editorial notation must use the registered handbook vocabulary.}%
+  \fi
+  \mathsf{K}}
+\newcommand\Sfour{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source Sfour command outside an inherited restoration
+      scope}{Editorial notation must use the registered handbook vocabulary.}%
+  \fi
+  \mathsf{S4}}
+\newcommand\Sfive{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source Sfive command outside an inherited restoration
+      scope}{Editorial notation must use the registered handbook vocabulary.}%
+  \fi
+  \mathsf{S5}}
+% Necessity: the exact metatheory source calls \notentails directly, and
+% replacing the token by an editorial spelling would change the artifact.
+% Definition: inside a validated inherited scope it eliminates exactly to
+% \not\models.  Standing: it is a source-typography abbreviation, not a new
+% semantic relation.  Nonredundancy: \entails supplies the positive relation
+% and does not preserve this exact negative source token.  Use: source lines
+% 2482, 2697--2698 require the abbreviation in this restoration tranche.
+\newcommand\notentails{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source notentails command outside an inherited
+      restoration scope}{Editorial notation must use the registered handbook vocabulary.}%
+  \fi
+  \not\models}
+% Necessity: the exact first-order source calls these four command names, and
+% replacing them in the artifacts would change the source content tokens.
+% Definition: inside a provenance scope Var, Term, Sent, and arity eliminate
+% exactly to \mathsf{Var}, \mathsf{Term}, \mathsf{Sent}, and
+% \operatorname{ar}, respectively.  Standing: they are source-typography
+% abbreviations, not new mathematical objects, relations, or statement
+% families.  Nonredundancy: the editorial vocabulary exposes none of these
+% four inherited command names, and operatorname{Var} in the source denotes a
+% different operation.  Use: exact source lines 3038--3428 call all four.
+\newcommand\Var{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source Var command outside an inherited restoration
+      scope}{Editorial notation must use the registered handbook vocabulary.}%
+  \fi
+  \mathsf{Var}}
+\newcommand\Term{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source Term command outside an inherited restoration
+      scope}{Editorial notation must use the registered handbook vocabulary.}%
+  \fi
+  \mathsf{Term}}
+\newcommand\Sent{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source Sent command outside an inherited restoration
+      scope}{Editorial notation must use the registered handbook vocabulary.}%
+  \fi
+  \mathsf{Sent}}
+\newcommand\arity{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source arity command outside an inherited restoration
+      scope}{Editorial notation must use the registered handbook vocabulary.}%
+  \fi
+  \operatorname{ar}}
+% Necessity: the exact semantics source calls \Meta 84 times, so replacing
+% those source tokens by literal editorial notation would break exactness.
+% Definition: inside a validated inherited scope \Meta eliminates exactly to
+% \mathcal M.  Standing: it is a source-typography abbreviation, not a new
+% structure, relation, motive, or statement family.  Nonredundancy: literal
+% \mathcal M supplies the glyph but cannot preserve the source's exact command
+% token, and no existing source-scoped command names that abbreviation.  Use:
+% exact source lines 3437--3671 require this spelling throughout the restored
+% structures and satisfaction chapter.
+\newcommand\Meta{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source Meta command outside an inherited restoration
+      scope}{Editorial notation must use the registered handbook vocabulary.}%
+  \fi
+  \mathcal M}
+% Necessity: exact source lines 3729--3907 call \Th, \Cn, and \FOL, so
+% replacing those tokens by editorial spellings would break byte-exact
+% restoration.  Definition: within a validated inherited scope they eliminate
+% exactly to \operatorname{Th}, \operatorname{Cn}, and \mathsf{FOL}.
+% Standing: they are source-typography abbreviations, not new theories,
+% consequence operations, logical systems, motives, relations, or statement
+% families.  Nonredundancy: \Mod, \Meta, \entails, and the existing calculus
+% abbreviations do not preserve any of these three exact source command tokens.
+% Use: source lines 3748--3762 and 3903--3904 require the three spellings in the
+% restored theories-and-axiomatization chapter.
+\newcommand\Th{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source Th command outside an inherited restoration
+      scope}{Editorial notation must use the registered handbook vocabulary.}%
+  \fi
+  \operatorname{Th}}
+\newcommand\Cn{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source Cn command outside an inherited restoration
+      scope}{Editorial notation must use the registered handbook vocabulary.}%
+  \fi
+  \operatorname{Cn}}
+\newcommand\FOL{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source FOL command outside an inherited restoration
+      scope}{Editorial notation must use the registered handbook vocabulary.}%
+  \fi
+  \mathsf{FOL}}
+% Necessity: exact source line 7472 uses \Q, and replacing that token with a
+% literal glyph would break byte-exact restoration.  Definition: inside a
+% validated inherited scope \Q eliminates exactly to \mathbb{Q}.  Standing:
+% it is a guarded source-typography abbreviation, not a new number system,
+% motive, relation, statement family, or audit result.  Nonredundancy: literal
+% \mathbb{Q} supplies the glyph but cannot preserve the source's exact command
+% token, and no existing source-scoped command owns that spelling.  Use:
+% SRC-07469-07493 calls \Q in the first QE exercise, while the outside-scope
+% static and compile checks prevent the source spelling from leaking.
+\newcommand\Q{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source Q command outside an inherited restoration
+      scope}{Editorial notation must use the registered handbook vocabulary.}%
+  \fi
+  \mathbb{Q}}
+% Necessity: exact source lines 12497--12514 use \R, and replacing that token
+% with a literal glyph would break byte-exact restoration.  Definition: inside
+% a validated inherited scope \R eliminates exactly to \mathbb{R}.  Standing:
+% it is guarded source typography, not a new number system, motive, relation,
+% statement family, or audit result.  Nonredundancy: the literal glyph and the
+% registered prose name do not preserve this exact inherited command token.
+% Use: the second-order categoricity and Lindstrom paragraphs call \R, while
+% static and TeX tests reject the command outside the validated source scope.
+\newcommand\R{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source R command outside an inherited restoration
+      scope}{Editorial notation must use the registered handbook vocabulary.}%
+  \fi
+  \mathbb{R}}
+\newenvironment{warning}[1][]{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source warning environment outside an inherited
+      restoration scope}%
+      {Editorial warnings use hbwarning.  The source environment is reserved
+       for unchanged, provenance-scoped inherited artifacts.}%
+  \fi
+  \if\relax\detokenize{#1}\relax
+    \hbsourcewarning
+  \else
+    \hbsourcewarning[#1]%
+  \fi
+}{\endhbsourcewarning}
+\newenvironment{remark}[1][]{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{source remark environment outside an inherited
+      restoration scope}%
+      {Editorial remarks use hbremark.  The source environment is reserved for
+       unchanged, provenance-scoped inherited artifacts.}%
+  \fi
+  \if\relax\detokenize{#1}\relax
+    \hbsourceremark
+  \else
+    \hbsourceremark[#1]%
+  \fi
+}{\endhbsourceremark}
+
+% --------------------------------------------------------------------------
+% System entry cards
+% --------------------------------------------------------------------------
+% Required-field state is reset explicitly at every card boundary.  The
+% distinct marker meanings make the test independent of whether an enclosing
+% environment happens to introduce a TeX group.
+\def\hb@fieldunseen{unseen}
+\def\hb@fieldseen{seen}
+\def\hb@resetentryfields{%
+  \let\hb@seen@language\hb@fieldunseen
+  \let\hb@seen@semantics\hb@fieldunseen
+  \let\hb@seen@calculus\hb@fieldunseen
+  \let\hb@seen@adequacy\hb@fieldunseen
+  \let\hb@seen@decidability\hb@fieldunseen
+  \let\hb@seen@characteristic\hb@fieldunseen
+  \let\hb@seen@sources\hb@fieldunseen}
+
+\ExplSyntaxOn
+\cs_new:Npn \hbIfBlankTF #1#2#3 { \tl_if_blank:nTF {#1} {#2} {#3} }
+\ExplSyntaxOff
+
+\def\hb@entryfielderror#1#2{%
+  \PackageError{handbook}{systementry \hb@curentrylabel\space #1 required
+    field \@backslashchar entry#2}%
+    {Every required system-entry field must occur exactly once and contain
+     nonblank content (CONVENTIONS.md, 'System entry cards').}}
+\long\def\hb@markrequiredfield#1#2{% <fieldkey>{<content>}
+  \expandafter\ifx\csname hb@seen@#1\endcsname\hb@fieldseen
+    \hb@entryfielderror{duplicates}{#1}%
+  \else
+    \expandafter\let\csname hb@seen@#1\endcsname\hb@fieldseen
+  \fi
+  \hbIfBlankTF{#2}{\hb@entryfielderror{has an empty}{#1}}{}}
+
+\long\def\hb@writecard#1{%
+  \hb@requirepartidentity
+  \immediate\write\hb@entryout{CARD|\hb@curentrylabel|\hbcurrentpartid|\detokenize{#1}}}
+\long\def\hb@writefield#1#2{%
+  \immediate\write\hb@entryout{FIELD|\hb@curentrylabel|#1|\detokenize{#2}}}
+\long\def\hb@writestatusfield#1#2{%
+  \immediate\write\hb@entryout{STATUS|\hb@curentrylabel|#1|\hb@statusform|\hb@statustarget|\detokenize{#2}}}
+
+\long\def\hb@fieldrow#1#2#3{% <fieldkey>{<Label>}{<content>}
+  \hb@writefield{#1}{#3}%
+  \par\noindent{\small\bfseries #2.}\enspace #3\par}
+\long\def\hb@requiredfieldrow#1#2#3{%
+  \hb@markrequiredfield{#1}{#3}%
+  \hb@fieldrow{#1}{#2}{#3}}
+\def\hb@calculusrow#1{%
+  \hb@markrequiredfield{calculus}{#1}%
+  \hb@writefield{calculus}{#1}%
+  \par\noindent{\small\bfseries Calculus.}\enspace
+  \hyperref[#1]{\texttt{#1}}\par}
+\long\def\hb@statusfieldrow#1#2#3#4{% <fieldkey>{<Label>}{<status>}{<text>}
+  \hbparsestatus{#3}%
+  \hb@markrequiredfield{#1}{#4}%
+  \par\noindent{\small\bfseries #2.}\enspace #4\enspace
+  {\small\itshape[\hb@taglinetext]}\par
+  \hb@writestatusfield{#1}{#4}}
+\def\hb@sourcesrow#1{%
+  \hb@markrequiredfield{sources}{#1}%
+  \hb@writefield{sources}{#1}%
+  \par\noindent{\small\bfseries Sources.}\enspace\cite{#1}\par}
+
+\def\hb@reqfield#1{%
+  \expandafter\ifx\csname hb@seen@#1\endcsname\hb@fieldseen\else
+    \edef\hb@missingfields{\hb@missingfields\space#1}%
+  \fi}
+\def\hb@checkentryfields{%
+  \def\hb@missingfields{}%
+  \hb@reqfield{language}\hb@reqfield{semantics}\hb@reqfield{calculus}%
+  \hb@reqfield{adequacy}\hb@reqfield{decidability}%
+  \hb@reqfield{characteristic}\hb@reqfield{sources}%
+  \ifx\hb@missingfields\hb@empty\else
+    \PackageError{handbook}{systementry \hb@curentrylabel\space is missing
+      required field(s):\hb@missingfields}%
+      {Every system entry must supply the full required field set listed in
+       CONVENTIONS.md. Add the missing \string\entry... field command(s)
+       before \string\end{systementry}.}%
+  \fi}
+
+% field commands are only live inside systementry
+\def\hb@entryoutside#1{%
+  \PackageError{handbook}{#1 used outside the systementry environment}%
+    {The \string\entry... field commands are defined only inside
+     \string\begin{systementry}...\string\end{systementry}
+     (CONVENTIONS.md, 'System entry cards').}}
+\newcommand\entryaliases[1]{\hb@entryoutside{\string\entryaliases}}
+\newcommand\entrylanguage[1]{\hb@entryoutside{\string\entrylanguage}}
+\newcommand\entrysemantics[1]{\hb@entryoutside{\string\entrysemantics}}
+\newcommand\entrycalculus[1]{\hb@entryoutside{\string\entrycalculus}}
+\newcommand\entryadequacy[2]{\hb@entryoutside{\string\entryadequacy}}
+\newcommand\entrydecidability[2]{\hb@entryoutside{\string\entrydecidability}}
+\newcommand\entrycharacteristic[1]{\hb@entryoutside{\string\entrycharacteristic}}
+\newcommand\entrytranslations[1]{\hb@entryoutside{\string\entrytranslations}}
+\newcommand\entryalgebra[1]{\hb@entryoutside{\string\entryalgebra}}
+\newcommand\entrysources[1]{\hb@entryoutside{\string\entrysources}}
+
+\newenvironment{systementry}[2]{%
+  \par\addvspace{\bigskipamount}%
+  \refstepcounter{hbsysentry}%
+  \def\hb@curentrylabel{#1}%
+  \hb@resetentryfields
+  \hb@writecard{#2}%
+  \noindent{\bfseries System entry \thehbsysentry: #2}%
+  \label{#1}%
+  \par\nobreak\addvspace{\smallskipamount}%
+  \def\entryaliases##1{\hb@fieldrow{aliases}{Aliases}{##1}}%
+  \def\entrylanguage##1{\hb@requiredfieldrow{language}{Language}{##1}}%
+  \def\entrysemantics##1{\hb@requiredfieldrow{semantics}{Semantics}{##1}}%
+  \def\entrycalculus##1{\hb@calculusrow{##1}}%
+  \def\entryadequacy##1##2{\hb@statusfieldrow{adequacy}{Adequacy}{##1}{##2}}%
+  \def\entrydecidability##1##2{\hb@statusfieldrow{decidability}{Decidability}{##1}{##2}}%
+  \def\entrycharacteristic##1{\hb@requiredfieldrow{characteristic}{Characteristic theorems and failures}{##1}}%
+  \def\entrytranslations##1{\hb@fieldrow{translations}{Translations}{##1}}%
+  \def\entryalgebra##1{\hb@fieldrow{algebra}{Algebraic counterpart}{##1}}%
+  \def\entrysources##1{\hb@sourcesrow{##1}}%
+  \ignorespaces
+}{%
+  \hb@checkentryfields
+  \par\addvspace{\bigskipamount}}
+
+% --------------------------------------------------------------------------
+% Proof annex
+% --------------------------------------------------------------------------
+\newif\ifhb@inannex
+
+% Necessity: the annex flag cannot distinguish an editorial body proof from
+% source-exact inherited material whose original bytes contain a proof.
+% Definition: inheritedrestorationscope is a TeX/metalinguistic scope, not a
+% motive, relation, or statement family; while its body is being read it sets
+% \ifhb@inheritedrestoration and it records its mandatory provenance id.
+% Standing: it is build-control syntax only.  Nonredundancy: unlike annexitem
+% it asserts no proof status, creates no number or label, and supplies no body
+% back-reference.  Use: exact artifacts are input by provenance-gated wrapper
+% files under handbook/restoration; tools/check.py validates that placement,
+% the record and artifact match, and the scope is balanced and non-nested.
+\newif\ifhb@inheritedrestoration
+\hb@inheritedrestorationfalse
+% Necessity: exact source part commands occur beneath already fixed public
+% Parts II, IV, and VII, while the exact Part V and Part VIII source titles
+% differ from their fixed public titles; ordinary part rendering cannot preserve
+% both surfaces.
+% Definition: the reader-layout controls below are a TeX/metalinguistic
+% abbreviation for exactly these eight intercepted mappings and no others:
+% SRC-01649-01660 / Classical Propositional Logic / source line 1649, and
+% SRC-03022-03037 / Classical First-Order Logic / source line 3022, and
+% SRC-07494-07505 / Computability / source line 7494, and
+% SRC-09080-09098 / Formal Arithmetic and Incompleteness / source line 9080, and
+% SRC-11354-11413 / Proof Theory / source line 11354, and
+% SRC-12249-12261 / Second-Order and Higher-Order Logic / source line 12249, and
+% SRC-12970-12988 / Nonclassical Logic / source line 12970, and
+% SRC-14095-14146 / Formal Practice, Automation, and Verification / source
+% line 14095.
+% Each intercepts exactly one unstarred exact-title part.  The first three,
+% fifth, and sixth
+% present one unnumbered chapter with a chapter TOC entry, anchor, bookmark,
+% and attribution while leaving the public counter unchanged.  The fourth
+% advances the counter once and renders the fixed title Arithmetic and
+% Incompleteness while the following exact source label remains controlling;
+% the seventh analogously advances once and renders the fixed plural title
+% Nonclassical Logics with its exact source label controlling; the eighth is a
+% label-less subordinate source heading under fixed public Part XII.
+% Standing: these controls are administrative build syntax, not a motive,
+% relation, statement family, source claim, or review result.
+% Nonredundancy: inheritedrestorationscope admits exact source syntax in every
+% governed artifact, whereas these controls alter only the eight listed IDs'
+% reader layout and reject a missing, repeated, starred, or wrong-title call.
+% Use: the Part II, Part IV, Part V, Part VII, Part VIII, and Part XII wrapper routes
+% invoke each mapping at its exact source-order boundary, and the environment-end
+% check prevents suppression or leakage.
+\newif\ifhb@readerlayout
+\hb@readerlayoutfalse
+\newif\ifhb@readerlayoutpublicpart
+\hb@readerlayoutpublicpartfalse
+\newcount\hb@sourcepartcalls
+\def\hb@readerlayoutpropositionalprovenance{SRC-01649-01660}
+\def\hb@readerlayoutfirstorderprovenance{SRC-03022-03037}
+\def\hb@readerlayoutcomputabilityprovenance{SRC-07494-07505}
+\def\hb@readerlayoutarithmeticprovenance{SRC-09080-09098}
+\def\hb@readerlayoutprooftheoryprovenance{SRC-11354-11413}
+\def\hb@readerlayouthigherorderprovenance{SRC-12249-12261}
+\def\hb@readerlayoutnonclassicalprovenance{SRC-12970-12988}
+\def\hb@readerlayoutformalpracticeprovenance{SRC-14095-14146}
+\def\hb@readerlayoutpart@star#1{%
+  \PackageError{handbook}{governed source part call must be unstarred}%
+    {\hb@readerlayoutactiveprovenance\space must contain exactly one unstarred
+     source part call.}}
+\def\hb@readerlayoutpart@plain#1{%
+  \advance\hb@sourcepartcalls\@ne
+  \ifnum\hb@sourcepartcalls>\@ne
+    \PackageError{handbook}{governed source part call occurred more than once}%
+      {\hb@readerlayoutactiveprovenance\space must contain exactly one source
+       part call.}%
+  \else
+    \def\hb@readerlayoutactual{#1}%
+    \ifx\hb@readerlayoutactual\hb@readerlayouttitle
+      \ifhb@readerlayoutpublicpart
+        \edef\hb@readerlayoutpartcall{%
+          \noexpand\hb@readerlayoutoriginalpart{\hb@readerlayoutdisplaytitle}}%
+        \hb@readerlayoutpartcall
+      \else
+        \chapter*{#1}%
+        \markboth{#1}{#1}%
+        \phantomsection
+        \addcontentsline{toc}{chapter}{#1}%
+        \def\@currentlabel{#1}%
+        \protected@edef\@currentlabelname{#1}%
+        \noindent\emph{Inherited source: Formal Logic, Version 1.0, source
+          line \hb@readerlayoutline.}\par\addvspace{\medskipamount}%
+      \fi
+    \else
+      \PackageError{handbook}{governed source part title is not exact}%
+        {Expected \hb@readerlayouttitle\space in
+         \hb@readerlayoutactiveprovenance.}%
+    \fi
+  \fi}
+\def\hb@readerlayoutpart{%
+  \@ifstar\hb@readerlayoutpart@star\hb@readerlayoutpart@plain}
+% Necessity: the exact source \appendix at line 15093 must create source
+% Appendix A, but the later public Parts XIII and XIV must resume the ordinary
+% chapter sequence rather than inherit appendix numbering.
+% Definition: the reader-appendix controls below recognize SRC-15093-15206,
+% SRC-15207-15239, SRC-15240-15488, SRC-15489-15619, SRC-15620-15637,
+% SRC-15638-16742, and SRC-16743-16801 only; they require exactly one \appendix call in
+% the first, forbid a repeated transition in the continuations, locally set
+% source Appendices A--F and the D.6 section continuation with unique hyperlink
+% identities, and
+% restore the prior public chapter and section counters at each scope end.
+% Standing: these controls are administrative build syntax, not a mathematical
+% relation, statement family, source claim, admission, or review result.
+% Nonredundancy: the part-layout controls above intercept only \part commands;
+% ordinary grouped inclusion cannot contain book.cls's global counter and
+% numbering changes while retaining the exact \appendix token.
+% Use: the Registered Notation, Binding/Precedence, Rule Sheets, Qualifying
+% Problems, Additional problems, Exercise Feedback, and the Release Checklist provenance wrappers use
+% these layouts in order;
+% restoration, route, publication, and TeX tests reject a missing, repeated,
+% leaking, globally renumbering, or wrong-provenance use.
+\newif\ifhb@readerappendixlayout
+\hb@readerappendixlayoutfalse
+\newcount\hb@sourceappendixcalls
+\newcount\hb@readerappendixsavedchapter
+\newcount\hb@readerappendixsavedsection
+\def\hb@readerappendixprovenance{SRC-15093-15206}
+\def\hb@readerappendixbindingprovenance{SRC-15207-15239}
+\def\hb@readerappendixrulesprovenance{SRC-15240-15488}
+\def\hb@readerappendixqualifyingprovenance{SRC-15489-15619}
+\def\hb@readerappendixadditionalprovenance{SRC-15620-15637}
+\def\hb@readerappendixfeedbackprovenance{SRC-15638-16742}
+\def\hb@readerappendixreleaseprovenance{SRC-16743-16801}
+\def\hb@readerappendixsetup#1{%
+  \c@chapter=#1\relax
+  \c@section\z@
+  \def\@chapapp{\appendixname}%
+  \def\thechapter{\@Alph\c@chapter}%
+  \def\theHchapter{sourceappendix.\@Alph\c@chapter}%
+}
+\def\hb@readerappendix{%
+  \advance\hb@sourceappendixcalls\@ne
+  \ifnum\hb@sourceappendixcalls>\@ne
+    \PackageError{handbook}{governed source appendix call occurred more than once}%
+      {SRC-15093-15206 must contain exactly one source appendix transition.}%
+  \else
+    \par
+    \hb@readerappendixsetup{0}%
+  \fi}
+\def\hb@readerappendixunexpected{%
+  \PackageError{handbook}{governed Appendix B repeats the source appendix transition}%
+    {SRC-15207-15239 continues Appendix A and must not contain \string\appendix.}}
+\def\hb@readerappendixrulesunexpected{%
+  \PackageError{handbook}{governed Appendix C repeats the source appendix transition}%
+    {SRC-15240-15488 continues Appendix B and must not contain \string\appendix.}}
+\def\hb@readerappendixqualifyingunexpected{%
+  \PackageError{handbook}{governed Appendix D repeats the source appendix transition}%
+    {SRC-15489-15619 continues Appendix C and must not contain \string\appendix.}}
+\def\hb@readerappendixadditionalunexpected{%
+  \PackageError{handbook}{governed Appendix D.6 repeats the source appendix transition}%
+    {SRC-15620-15637 continues Appendix D and must not contain \string\appendix.}}
+\def\hb@readerappendixfeedbackunexpected{%
+  \PackageError{handbook}{governed Appendix E repeats the source appendix transition}%
+    {SRC-15638-16742 follows Appendix D.6 and must not contain \string\appendix.}}
+\def\hb@readerappendixreleaseunexpected{%
+  \PackageError{handbook}{governed Appendix F repeats the source appendix transition}%
+    {SRC-16743-16801 follows Appendix E and must not contain \string\appendix.}}
+\newenvironment{inheritedrestorationscope}[1]{%
+  \ifhb@inheritedrestoration
+    \PackageError{handbook}{nested inherited restoration scope}%
+      {Inherited restoration scopes must be balanced and non-nested.}%
+  \else
+    \def\hb@restorationprovenance{#1}%
+    \ifx\hb@restorationprovenance\hb@empty
+      \PackageError{handbook}{inherited restoration scope has an empty
+        provenance id}%
+        {Supply the exact spec/provenance record identifier.}%
+    \fi
+    \hb@inheritedrestorationtrue
+    \hb@readerlayoutfalse
+    \hb@readerlayoutpublicpartfalse
+    \hb@readerappendixlayoutfalse
+    \ifx\hb@restorationprovenance\hb@readerlayoutpropositionalprovenance
+      \hb@readerlayouttrue
+      \def\hb@readerlayoutactiveprovenance{SRC-01649-01660}%
+      \def\hb@readerlayouttitle{Classical Propositional Logic}%
+      \def\hb@readerlayoutline{1649}%
+    \fi
+    \ifx\hb@restorationprovenance\hb@readerlayoutfirstorderprovenance
+      \hb@readerlayouttrue
+      \def\hb@readerlayoutactiveprovenance{SRC-03022-03037}%
+      \def\hb@readerlayouttitle{Classical First-Order Logic}%
+      \def\hb@readerlayoutline{3022}%
+    \fi
+    \ifx\hb@restorationprovenance\hb@readerlayoutcomputabilityprovenance
+      \hb@readerlayouttrue
+      \def\hb@readerlayoutactiveprovenance{SRC-07494-07505}%
+      \def\hb@readerlayouttitle{Computability}%
+      \def\hb@readerlayoutline{7494}%
+    \fi
+    \ifx\hb@restorationprovenance\hb@readerlayoutarithmeticprovenance
+      \hb@readerlayouttrue
+      \hb@readerlayoutpublicparttrue
+      \def\hb@readerlayoutactiveprovenance{SRC-09080-09098}%
+      \def\hb@readerlayouttitle{Formal Arithmetic and Incompleteness}%
+      \def\hb@readerlayoutdisplaytitle{Arithmetic and Incompleteness}%
+      \def\hb@readerlayoutline{9080}%
+    \fi
+    \ifx\hb@restorationprovenance\hb@readerlayoutprooftheoryprovenance
+      \hb@readerlayouttrue
+      \def\hb@readerlayoutactiveprovenance{SRC-11354-11413}%
+      \def\hb@readerlayouttitle{Proof Theory}%
+      \def\hb@readerlayoutline{11354}%
+    \fi
+    \ifx\hb@restorationprovenance\hb@readerlayouthigherorderprovenance
+      \hb@readerlayouttrue
+      \def\hb@readerlayoutactiveprovenance{SRC-12249-12261}%
+      \def\hb@readerlayouttitle{Second-Order and Higher-Order Logic}%
+      \def\hb@readerlayoutline{12249}%
+    \fi
+    \ifx\hb@restorationprovenance\hb@readerlayoutnonclassicalprovenance
+      \hb@readerlayouttrue
+      \hb@readerlayoutpublicparttrue
+      \def\hb@readerlayoutactiveprovenance{SRC-12970-12988}%
+      \def\hb@readerlayouttitle{Nonclassical Logic}%
+      \def\hb@readerlayoutdisplaytitle{Nonclassical Logics}%
+      \def\hb@readerlayoutline{12970}%
+    \fi
+    \ifx\hb@restorationprovenance\hb@readerlayoutformalpracticeprovenance
+      \hb@readerlayouttrue
+      \def\hb@readerlayoutactiveprovenance{SRC-14095-14146}%
+      \def\hb@readerlayouttitle{Formal Practice, Automation, and Verification}%
+      \def\hb@readerlayoutline{14095}%
+    \fi
+    \ifx\hb@restorationprovenance\hb@readerappendixprovenance
+      \hb@readerappendixlayouttrue
+      \hb@readerappendixsavedchapter=\c@chapter
+      \hb@readerappendixsavedsection=\c@section
+      \hb@sourceappendixcalls=\z@
+      \let\appendix\hb@readerappendix
+    \fi
+    \ifx\hb@restorationprovenance\hb@readerappendixbindingprovenance
+      \hb@readerappendixlayouttrue
+      \hb@readerappendixsavedchapter=\c@chapter
+      \hb@readerappendixsavedsection=\c@section
+      \hb@sourceappendixcalls=\z@
+      \let\appendix\hb@readerappendixunexpected
+      \hb@readerappendixsetup{1}%
+    \fi
+    \ifx\hb@restorationprovenance\hb@readerappendixrulesprovenance
+      \hb@readerappendixlayouttrue
+      \hb@readerappendixsavedchapter=\c@chapter
+      \hb@readerappendixsavedsection=\c@section
+      \hb@sourceappendixcalls=\z@
+      \let\appendix\hb@readerappendixrulesunexpected
+      \hb@readerappendixsetup{2}%
+    \fi
+    \ifx\hb@restorationprovenance\hb@readerappendixqualifyingprovenance
+      \hb@readerappendixlayouttrue
+      \hb@readerappendixsavedchapter=\c@chapter
+      \hb@readerappendixsavedsection=\c@section
+      \hb@sourceappendixcalls=\z@
+      \let\appendix\hb@readerappendixqualifyingunexpected
+      \hb@readerappendixsetup{3}%
+    \fi
+    \ifx\hb@restorationprovenance\hb@readerappendixadditionalprovenance
+      \hb@readerappendixlayouttrue
+      \hb@readerappendixsavedchapter=\c@chapter
+      \hb@readerappendixsavedsection=\c@section
+      \hb@sourceappendixcalls=\z@
+      \let\appendix\hb@readerappendixadditionalunexpected
+      \hb@readerappendixsetup{4}%
+      \c@section=5\relax
+    \fi
+    \ifx\hb@restorationprovenance\hb@readerappendixfeedbackprovenance
+      \hb@readerappendixlayouttrue
+      \hb@readerappendixsavedchapter=\c@chapter
+      \hb@readerappendixsavedsection=\c@section
+      \hb@sourceappendixcalls=\z@
+      \let\appendix\hb@readerappendixfeedbackunexpected
+      \hb@readerappendixsetup{4}%
+    \fi
+    \ifx\hb@restorationprovenance\hb@readerappendixreleaseprovenance
+      \hb@readerappendixlayouttrue
+      \hb@readerappendixsavedchapter=\c@chapter
+      \hb@readerappendixsavedsection=\c@section
+      \hb@sourceappendixcalls=\z@
+      \let\appendix\hb@readerappendixreleaseunexpected
+      \hb@readerappendixsetup{5}%
+    \fi
+    \ifhb@readerlayout
+      \hb@sourcepartcalls=\z@
+      \let\hb@readerlayoutoriginalpart\part
+      \let\part\hb@readerlayoutpart
+    \fi
+    % The frozen source defines \defeq as :=, while the editorial handbook
+    % deliberately assigns that macro a different registered role.  Restore
+    % the source meaning only within this grouped provenance scope; LaTeX's
+    % environment group restores the editorial meaning on exit.
+    \renewcommand\defeq{\mathrel{:=}}%
+    % The exact source definition is restored as the complete local meaning,
+    % rather than as a globally available editorial command with a source-like
+    % rendering.  The outer guarded definition is restored on scope exit.
+    \renewcommand\Mod{\operatorname{Mod}}%
+    \renewcommand\Fm{\mathsf{Fm}}%
+    \renewcommand\length{\operatorname{len}}%
+    \renewcommand\restr{\mathbin{\upharpoonright}}%
+    \renewcommand\rank{\operatorname{rk}}%
+    \renewcommand\Rule[3][]{\frac{##2}{##3}\;\textsc{##1}}%
+    \renewcommand\side[1]{\quad\text{##1}}%
+    \renewcommand\Prop{\mathsf{Prop}}%
+    \renewcommand\CPL{\mathsf{CPL}}%
+    \renewcommand\ND{\mathsf{ND}}%
+    \renewcommand\LK{\mathsf{LK}}%
+    \renewcommand\LJ{\mathsf{LJ}}%
+    \renewcommand\IPL{\mathsf{IPL}}%
+    \renewcommand\notentails{\not\models}%
+    \renewcommand\Var{\mathsf{Var}}%
+    \renewcommand\Term{\mathsf{Term}}%
+    \renewcommand\Sent{\mathsf{Sent}}%
+    \renewcommand\arity{\operatorname{ar}}%
+    \renewcommand\Meta{\mathcal M}%
+    \renewcommand\Th{\operatorname{Th}}%
+    \renewcommand\Cn{\operatorname{Cn}}%
+    \renewcommand\FOL{\mathsf{FOL}}%
+    \renewcommand\Q{\mathbb{Q}}%
+    \renewcommand\R{\mathbb{R}}%
+    \renewcommand\Sub{\operatorname{Sub}}%
+    \renewcommand\True{\mathbf{T}}%
+    \renewcommand\False{\mathbf{F}}%
+    \renewcommand\SAT{\mathsf{SAT}}%
+    \renewcommand\UNSAT{\mathsf{UNSAT}}%
+    \renewcommand\NP{\mathsf{NP}}%
+    % LaTeX's global \B accent is untouched.  Only this environment group
+    % receives the frozen source's exact Boolean-domain abbreviation.
+    \def\B{\mathbb{B}}%
+    % These registered/editorial names happen to have the required source
+    % renderings, but assigning their complete meanings here makes the exact
+    % scope independent of any earlier providecommand owner.  The guarded set
+    % and tuple meanings likewise shed their outside-scope checks only here.
+    \renewcommand\Lang{\mathcal{L}}%
+    \renewcommand\N{\mathbb{N}}%
+    \renewcommand\FV{\operatorname{FV}}%
+    \renewcommand\bottom{\bot}%
+    \renewcommand\set[1]{\lbrace##1\rbrace}%
+    \renewcommand\tuple[1]{\langle##1\rangle}%
+    \renewcommand\abs[1]{\lvert##1\rvert}%
+    % The source preamble makes all lists compact and assigns first-level
+    % enumerates an Arabic label with enumitem's computed left margin.  Keep
+    % those presentation settings inside this group so editorial lists retain
+    % the handbook defaults.
+    \setlist{nosep}%
+    \setlist[enumerate,1]{label=\arabic*.,leftmargin=*}%
+  \fi
+}{%
+  \ifhb@inheritedrestoration\else
+    \PackageError{handbook}{inherited restoration scope ended while inactive}%
+      {Inherited restoration scopes must be balanced and non-nested.}%
+  \fi
+  \ifhb@readerlayout
+    \ifnum\hb@sourcepartcalls=\@ne\else
+      \PackageError{handbook}{governed source part call is missing}%
+        {\hb@readerlayoutactiveprovenance\space must contain exactly one exact
+         unstarred source part.}%
+    \fi
+  \fi
+  \ifhb@readerappendixlayout
+    \ifx\hb@restorationprovenance\hb@readerappendixprovenance
+      \ifnum\hb@sourceappendixcalls=\@ne\else
+        \PackageError{handbook}{governed source appendix call is missing}%
+          {SRC-15093-15206 must contain exactly one source appendix transition.}%
+      \fi
+    \fi
+    \global\c@chapter=\hb@readerappendixsavedchapter
+    \global\c@section=\hb@readerappendixsavedsection
+  \fi
+  % Reset explicitly: proof admission must not depend on the grouping details
+  % of LaTeX's environment dispatcher, and must never leak past this end.
+  \hb@inheritedrestorationfalse
+}
+
+% tolerant id extraction from an annex:<id> label (display only)
+\def\hb@extractannexid#1{\hb@extractannexid@a#1annex:\hb@stop{#1}}
+\def\hb@extractannexid@a#1annex:#2\hb@stop#3{%
+  \def\hb@pretest{#1}%
+  \ifx\hb@pretest\hb@empty
+    \hb@stripannextail#2\hb@stop
+    \let\hb@curannexid\hb@annexid
+  \else
+    \def\hb@curannexid{#3}%
+  \fi}
+
+\newenvironment{annexitem}[3]{%
+  \par\addvspace{\bigskipamount}%
+  \hb@inannextrue
+  \refstepcounter{annexitem}%
+  \hb@extractannexid{#1}%
+  \noindent{\bfseries Annex
+    \expandafter\MakeUppercase\expandafter{\hb@curannexid}\ (#3).}%
+  \label{#1}%
+  \par\nobreak
+  \noindent{\small[proves \hyperref[#2]{\texttt{#2}}]}%
+  \par\nobreak\addvspace{\smallskipamount}\ignorespaces
+}{\par\addvspace{\bigskipamount}}
+
+% Editorial proofs live only inside annexitem (CONVENTIONS.md, 'Status
+% grammar').  A mechanically validated, source-exact inherited fragment may
+% retain its original proof only while the restoration scope above is active.
+% amsthm's proof is a \newenvironment with an optional argument, so \proof is
+% an opt-arg dispatcher that calls the INTERNAL macro (csname \string\proof)
+% by name; save the internal, or the wrapper recurses through the dispatcher.
+\expandafter\let\expandafter\hb@proofinternal\csname\string\proof\endcsname
+\let\hb@endproof\endproof
+\renewenvironment{proof}[1][\proofname]{%
+  \ifhb@inannex\else
+    \ifhb@inheritedrestoration\else
+      \PackageError{handbook}{proof environment outside the annex or an
+        inherited restoration scope}%
+        {Editorial body files contain NO proof environments; proofs live only
+         under annex/ inside annexitem.  Source-exact inherited proofs require
+         a provenance-gated wrapper validated by tools/check.py.}%
+    \fi
+  \fi
+  \hb@proofinternal[{#1}]%
+  % A leading paragraph heading must not overwrite amsthm's pending item label.
+  \ifhb@inannex\leavevmode\fi\ignorespaces}{\hb@endproof}
+
+% a sketch must open with \sketchnote{<what is omitted>}
+\newcommand\sketchnote[1]{%
+  \par\noindent{\bfseries Sketch.}\enspace
+  {\small\itshape Omissions: #1}\par
+  \nobreak\addvspace{\smallskipamount}}
+
+% Annex TOC number-width switch.
+% Necessity: book.cls reserves only 1.5em for chapter numbers and 1.55em for
+%   page numbers, which lets fixed annex identifiers P2--P12 touch ``Proof
+%   Annex'' and lets long annex titles touch three-digit folios; an explicit
+%   end delimiter is required so later TOC entries inherit neither wider box.
+% Definition: \hbannextocsetup changes the annex chapter-number and page-number
+%   boxes to 2.5em for the subsequent proof-annex entries read from the .toc
+%   file; \hbannextocrestore changes them back to 1.5em and 1.55em;
+%   \hbannexfinish writes exactly one protected restore command to the .toc
+%   file and does nothing else.
+% Standing: all three names are layout/build-control syntax, not chapters,
+%   annex identities, source names, or publication-status assertions;
+%   \hbannexfinish does not restore chapter counters or numbering.
+% Nonredundancy: the left chapter-number box and right page-number box protect
+%   different boundaries; setup performs their TOC-execution-time widening,
+%   restore performs its TOC-execution-time reversal, and finish serializes
+%   that reversal at document time after the final annex.  Ordinary body
+%   chapter entries retain the book-class widths, and the section-width repair
+%   above cannot affect chapter entries.
+% Use: \hbannexsetup writes the switch immediately before the proof-annex part
+%   and chapter entries, including the widest fixed identifier P12; main.tex
+%   calls \hbannexfinish immediately after annex/p12 so the restoration is read
+%   before the later bibliography entry.
+\newcommand\hbannextocsetup{%
+  \patchcmd{\l@chapter}%
+    {\setlength\@tempdima{1.5em}}%
+    {\setlength\@tempdima{2.5em}}%
+    {}%
+    {\PackageError{handbook}{cannot widen proof-annex TOC chapter numbers}%
+       {The book-class chapter-entry definition changed; update the exact
+        annex-only TOC patch rather than accepting fused number/title text.}}%
+  \ifdefstring{\@pnumwidth}{1.55em}%
+    {\def\@pnumwidth{2.5em}}%
+    {\PackageError{handbook}{cannot widen proof-annex TOC page numbers}%
+       {The book-class page-number width changed; update the exact annex-only
+        TOC switch rather than accepting fused title/page text.}}}
+\newcommand\hbannextocrestore{%
+  \patchcmd{\l@chapter}%
+    {\setlength\@tempdima{2.5em}}%
+    {\setlength\@tempdima{1.5em}}%
+    {}%
+    {\PackageError{handbook}{cannot restore the ordinary TOC chapter width}%
+       {The annex-only TOC switch was not active or changed unexpectedly.}}%
+  \ifdefstring{\@pnumwidth}{2.5em}%
+    {\def\@pnumwidth{1.55em}}%
+    {\PackageError{handbook}{cannot restore the ordinary TOC page-number width}%
+       {The annex-only TOC switch was not active or changed unexpectedly.}}}
+
+% Annex chapter identities stay P1..P19; heading ordinals follow body layout.
+\newcommand\hbannexsetup{%
+  \addtocontents{toc}{\protect\hbannextocsetup}%
+  \renewcommand\thechapter{P\arabic{chapter}}%
+  \renewcommand\theHchapter{annex.\arabic{chapter}}%
+  \setcounter{chapter}{0}}
+\newcommand\hbannexfinish{%
+  \addtocontents{toc}{\protect\hbannextocrestore}}
+\newcommand\hbannexchapter[2]{% {<stable part number>}{<legacy title>}
+  \edef\hb@annexpartid{p\two@digits{#1}}%
+  \hb@setstablepart{\hb@annexpartid}%
+  \setcounter{chapter}{\numexpr#1-1\relax}%
+  % Keep the two-argument driver interface; the approved map owns the title.
+  \edef\hb@annexheading{Proof Annex for Part
+    \hbpartdisplayordinal{\hb@annexpartid}: \hbparttitle{\hb@annexpartid}}%
+  \expandafter\chapter\expandafter{\hb@annexheading}%
+  \edef\hb@annexmark{Proof Annex for Part
+    \hbpartdisplayordinal{\hb@annexpartid}}%
+  \expandafter\chaptermark\expandafter{\hb@annexmark}}
+
+% --------------------------------------------------------------------------
+% Stubs
+% --------------------------------------------------------------------------
+\newcommand\hbstub[1]{%
+  \par\addvspace{\medskipamount}\noindent
+  \fbox{\parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}{%
+    {\bfseries STUB.}\enspace #1}}\par
+  \addvspace{\medskipamount}}
+
+% --------------------------------------------------------------------------
+% Calculus registry
+% --------------------------------------------------------------------------
+\newif\ifhb@sheetlabels
+\hb@sheetlabelstrue
+
+\newcommand\calculussheet[3]{%
+  \par\addvspace{\bigskipamount}%
+  \refstepcounter{hbsheet}%
+  \noindent{\bfseries Calculus sheet: #2}%
+  \ifhb@sheetlabels\label{#1}\fi
+  \par\nobreak
+  {\small\itshape #3\par}%
+  \nobreak\addvspace{\smallskipamount}}
+
+% the explicit empty-side-condition token; never typeset directly
+\newcommand\none{%
+  \PackageError{handbook}{\string\none\space typeset outside \string\hbrule}%
+    {\string\none\space is only meaningful as the fifth (side-condition)
+     argument of \string\hbrule\space (CONVENTIONS.md, 'Calculus registry').}}
+\def\hb@nonetoken{\none}
+
+\def\hb@checkrulearg#1#2#3{% <arg>{<argname>}{<rule label arg>}
+  \def\hb@ruleargtest{#1}%
+  \ifx\hb@ruleargtest\hb@empty
+    \PackageError{handbook}{\string\hbrule\space '\detokenize{#3}': empty
+      #2 argument}%
+      {All five \string\hbrule\space arguments are mandatory; an empty side
+       condition must be the explicit token \string\none\space
+       (CONVENTIONS.md, 'Calculus registry').}%
+  \fi}
+
+% \hbrule{rule:<id>}{<Name>}{<premises>}{<conclusion>}{<side conditions>}
+%   premises and conclusion are typeset in (display-style) math mode; empty
+%   premises render as an axiom line; #5 = \none suppresses the side line.
+\newcommand\hbrule[5]{%
+  \hb@checkrulearg{#1}{label}{#1}%
+  \hb@checkrulearg{#2}{name}{#1}%
+  \hb@checkrulearg{#4}{conclusion}{#1}%
+  \def\hb@sidetest{#5}%
+  \ifx\hb@sidetest\hb@empty
+    \PackageError{handbook}{\string\hbrule\space '\detokenize{#1}': empty
+      side-condition argument}%
+      {An empty side condition must be the explicit token \string\none\space
+       (CONVENTIONS.md, 'Calculus registry').}%
+  \fi
+  \par\addvspace{\smallskipamount}%
+  \refstepcounter{hbrule}%
+  \ifhb@sheetlabels\label{#1}\fi
+  \noindent\hfil
+  $\dfrac{\;#3\;}{\;#4\;}$\;{\small(#2)}%
+  \hfil\par
+  \ifx\hb@sidetest\hb@nonetoken\else
+    \nobreak\noindent\hfil
+    {\footnotesize side condition: #5}%
+    \hfil\par
+  \fi
+  \addvspace{\smallskipamount}}
+
+% \showcalculus{<slug>}: input registry/calculi/<slug>.tex; repeat inclusions
+% render but suppress \label so labels stay unique (hyperref anchors remain
+% unique because the sheet/rule counters are global and always stepped).
+\newcommand\showcalculus[1]{%
+  \IfFileExists{registry/calculi/#1.tex}{%
+    \ifcsname hb@sheet@seen@#1\endcsname
+      \begingroup\hb@sheetlabelsfalse\input{registry/calculi/#1.tex}\endgroup
+    \else
+      \global\@namedef{hb@sheet@seen@#1}{}%
+      \input{registry/calculi/#1.tex}%
+    \fi
+  }{%
+    \PackageError{handbook}{no calculus sheet registry/calculi/#1.tex}%
+      {Calculi live one per file under registry/calculi/
+       (CONVENTIONS.md, 'Calculus registry').}}}
+
+% --------------------------------------------------------------------------
+% hyperref, loaded last; unique anchor formulas for all handbook counters
+% --------------------------------------------------------------------------
+\RequirePackage[hidelinks,pdfusetitle]{hyperref}
+\RequirePackage[nameinlink,noabbrev]{cleveref}
+\crefname{hbitem}{entry}{entries}
+\Crefname{hbitem}{Entry}{Entries}
+\crefname{definition}{definition}{definitions}
+\Crefname{definition}{Definition}{Definitions}
+\crefname{theorem}{theorem}{theorems}
+\Crefname{theorem}{Theorem}{Theorems}
+\crefname{lemma}{lemma}{lemmas}
+\Crefname{lemma}{Lemma}{Lemmas}
+\crefname{corollary}{corollary}{corollaries}
+\Crefname{corollary}{Corollary}{Corollaries}
+\crefname{convention}{convention}{conventions}
+\Crefname{convention}{Convention}{Conventions}
+\crefname{method}{method}{methods}
+\Crefname{method}{Method}{Methods}
+\crefname{example}{example}{examples}
+\Crefname{example}{Example}{Examples}
+\crefname{warning}{warning}{warnings}
+\Crefname{warning}{Warning}{Warnings}
+\crefname{proofboundary}{proof boundary}{proof boundaries}
+\Crefname{proofboundary}{Proof boundary}{Proof boundaries}
+\crefname{annexitem}{proof item}{proof items}
+\Crefname{annexitem}{Proof item}{Proof items}
+\crefname{hbsourcetheorem}{theorem}{theorems}
+\Crefname{hbsourcetheorem}{Theorem}{Theorems}
+\crefname{hbsourcelemma}{lemma}{lemmas}
+\Crefname{hbsourcelemma}{Lemma}{Lemmas}
+\crefname{hbsourcecorollary}{corollary}{corollaries}
+\Crefname{hbsourcecorollary}{Corollary}{Corollaries}
+\crefname{hbsourceconvention}{convention}{conventions}
+\Crefname{hbsourceconvention}{Convention}{Conventions}
+\crefname{hbsourceremark}{remark}{remarks}
+\Crefname{hbsourceremark}{Remark}{Remarks}
+\providecommand\theHchapter{\arabic{chapter}}
+% overwrite the kernel-provided \theH* (defined by \newcounter since 2022)
+\def\theHhbitem{\theHchapter.item.\arabic{hbitem}}
+\def\theHhbsysentry{\theHchapter.entry.\arabic{hbsysentry}}
+\def\theHannexitem{\theHchapter.annexitem.\arabic{annexitem}}
+\def\theHhbsheet{sheet.\arabic{hbsheet}}
+\def\theHhbrule{rule.\arabic{hbrule}}
+
+\endinput

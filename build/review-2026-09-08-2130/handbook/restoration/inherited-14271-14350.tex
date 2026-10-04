@@ -1,0 +1,80 @@
+\chapter{Automated Reasoning}
+\label{ch:automated-reasoning}
+
+Automated reasoning separates a calculus from a search procedure.  A calculus
+determines which inferences are licensed.  A search procedure decides which
+licensed inference to try next.  Soundness is a property of the inferences;
+termination and efficiency are properties of the search procedure.  The
+handbook source for the calculi and procedures of this chapter is
+\cite{RobinsonVoronkov2001}.
+
+\section{Propositional satisfiability}
+\label{sec:automated-reasoning-01}
+
+The terms \emph{propositional literal}, \emph{clause}, and
+\emph{conjunctive normal form} retain their definitions from the classical
+propositional chapter.  In particular, a clause \(C\) is a finite set of
+propositional literals, not a formula, and
+\(\operatorname{form}_{\CPL}(C)\) is its exact formula interpretation.  Let
+\(S\) be a finite set of clauses.  A valuation satisfies \(S\) iff it
+satisfies \(\operatorname{form}_{\CPL}(C)\) for every \(C\in S\).  The empty
+set of clauses is satisfied by every valuation, whereas a set containing the
+empty clause is satisfied by none.
+
+\begin{definition}[Unit propagation]
+Let \(S\) be a finite set of clauses.  If \(S\) contains a unit clause
+\(\set L\), \emph{unit propagation} assigns \(L\) true, deletes every clause
+containing \(L\), and deletes the complementary literal from every remaining
+clause.
+\end{definition}
+
+\begin{definition}[Pure-literal elimination]
+If a propositional variable occurs in a finite clause set with only one
+polarity, \emph{pure-literal elimination} assigns the truth value that
+satisfies all of those occurrences and deletes the clauses containing them.
+\end{definition}
+
+The Davis--Putnam--Logemann--Loveland (DPLL) procedure recursively applies
+unit
+propagation, optionally applies pure-literal elimination, and otherwise branches
+on an unassigned variable \cite{DavisPutnam1960,DavisLogemannLoveland1962}.
+The following pseudocode specifies the logical core; it does not specify a
+branching heuristic.  The set \(V\) of variables occurring in the original
+input is retained unchanged by every recursive call.
+
+\begin{lstlisting}[caption={Logical core of a DPLL satisfiability procedure}]
+DPLL(S, valuation, V):
+  repeatedly unit-propagate S, extending valuation by each forced value
+  if S has no clauses:
+    extend valuation to every unassigned variable in V with value false
+    return SAT with the resulting total valuation
+  if S contains the empty clause: return UNSAT
+  choose an unassigned variable p
+  r := DPLL(S with p=true, valuation extended by p=true, V)
+  if r is SAT: return r
+  return DPLL(S with p=false, valuation extended by p=false, V)
+\end{lstlisting}
+
+\begin{theorem}[Correctness of the displayed DPLL procedure]
+For every finite set \(S\) of clauses, the displayed
+procedure terminates.  It returns \(\SAT\) with a satisfying valuation iff
+\(S\) is satisfiable, and it returns \(\UNSAT\) iff \(S\) is
+unsatisfiable.
+\end{theorem}
+\begin{proof}
+Maintain the invariant that every deleted original clause already contains a
+literal made true by the current partial valuation, and every undeleted clause
+is its residual after removing literals made false.  Unit propagation preserves
+this invariant: every satisfying extension of a unit clause makes its literal
+true.  If no residual clauses remain, every original clause is already true;
+assigning arbitrary values to the remaining input variables cannot falsify a
+clause that already contains a true literal.  Thus the displayed completion by
+\(\False\) returns a total satisfying valuation on \(V\).
+
+At a branch on \(p\), every total valuation makes either \(p\) true or false,
+so the current residual set is satisfiable iff at least one branch is
+satisfiable.  Each branch assigns a previously unassigned variable; there are
+finitely many variables, so every path terminates.  Induction on the number of
+unassigned variables now establishes both return specifications.
+\end{proof}
+

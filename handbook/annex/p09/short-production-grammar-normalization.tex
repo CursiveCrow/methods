@@ -1,0 +1,222 @@
+\subsection{Short-Production Grammar Normalization and Consuming Universality}
+\label{annex:p09-short-grammar-normalization}
+
+\begin{annexitem}{annex:p09.short-grammar-normalization}{thm:p09-short-grammar-normalization}{Finite compiler, unique control, and exact language preservation}
+\begin{proof}
+\paragraph{Effective construction and production bounds.}
+The finite input provides all letters of \(N\cup T\), finitely many
+productions, and the finite lengths of their sides. Assign distinct labels
+to those productions and choose a finite supply of new names disjoint from
+the input alphabets. The listed loops enumerate the coded letters,
+initialization and ready controls, and all matching/emission states. They
+then enumerate all ten finite production groups. This terminates and
+constructs a finite explicit grammar, not a semantic existence selection.
+
+Initialization and emission use one-to-two productions; commitment, mode
+change and ready restoration use one-to-one productions; cursor motion and
+terminal emission use two-to-two productions; matching uses two-to-one
+productions; cleanup start uses two-to-one and cleanup finish two-to-zero.
+Thus every left side has length one or two and every right side length
+zero, one or two. All left sides contain a fresh nonterminal.
+Every one-to-one production changes to a distinct control by freshness.
+For cursor motion, the cursor and coded letter are distinct, so the two
+words differ in order. Every other production either changes length or
+introduces a distinct control or an original terminal. Hence none is an
+identity. The terminal alphabet remains exactly \(T\).
+
+\paragraph{Initialization cannot interleave with simulation.}
+From \(S^\dagger\), the only derivation prefix is
+\[
+ S^\dagger\Longrightarrow LI
+ \Longrightarrow LA_SJ
+ \Longrightarrow LA_SQR.
+\]
+Before the last step no \(Q\), matching state, emission state or \(D\)
+exists, so none of their productions can apply. Coded symbols have no
+standalone productions. The only available next left side is the indicated
+initialization control. After the final step, \(I,J,S^\dagger\) are absent
+and no production can recreate them. The first ready word decodes to \(S\).
+
+\paragraph{Unique-control structure.}
+Once initialization finishes and before a completely terminal word is
+obtained, every reachable word contains exactly one control from
+\[
+ \{Q,D\}\cup\{Q_{r,i}\}\cup\{E_{r,j}\}.
+\]
+Every production in modes other than initialization has precisely one of
+these controls on its left, and replaces it by precisely one control,
+except final cleanup, which removes \(D\) and \(R\).
+No coded data symbol or original terminal can initiate a production alone.
+Induction on derivation length proves this uniqueness and also ensures that
+productions from two different modes cannot operate at separate positions.
+
+More explicitly, all reachable words after initialization lie in the
+following classes, with \(p,q\in(N\cup T)^*\) and \(z\in T^*\):
+\begin{enumerate}
+\item ready: \(L\widehat pQ\widehat qR\);
+\item matching: \(L\widehat pQ_{r,i}\widehat qR\);
+\item emitting: \(L\widehat pE_{r,j}\widehat qR\);
+\item cleanup: \(zD\widehat qR\);
+\item terminal: \(z\).
+\end{enumerate}
+The matching and emitting classes are constrained by their entry histories,
+as proved next; this list is not an assumption that an arbitrary word of
+one of those shapes is a correct simulation. The boundary \(L\) remains
+unique and leftmost in the first three classes, and \(R\) unique and
+rightmost in the first four. Cursors cannot cross either boundary: motion
+rules match only a coded data symbol, never \(L\) or \(R\).
+
+\paragraph{Ready cursor motion.}
+In a ready word, a move right replaces \(QA_a\) by \(A_aQ\), transferring
+one decoded letter from \(q\) to \(p\). A move left does the converse.
+In either case the concatenation \(pq\) is unchanged. Repeated moves
+therefore place the unique ready cursor at every gap of the finite decoded
+word, including both ends. None changes a coded letter or a boundary.
+
+The other productions available in ready mode are a commitment
+\(Q\to Q_{r,0}\), or \(LQ\to D\) when the left boundary is immediately
+adjacent. No emission or match-state production can operate while \(Q\)
+is the control. Thus the stated alternatives exhaust all ready steps.
+
+\paragraph{Matching and invalid-match behavior.}
+Suppose commitment occurs in \(L\widehat pQ\widehat qR\), selecting
+\(r:u_r=a_{r,1}\cdots a_{r,m_r}\to v_r\).
+At state \(Q_{r,0}\), the only production with that control on its left
+is \(Q_{r,0}A_{a_{r,1}}\to Q_{r,1}\).
+For each \(0\leq i<m_r\), the only left side with \(Q_{r,i}\) is the
+matching pair for \(a_{r,i+1}\). It cannot switch production label,
+move the cursor, restore \(Q\), or start cleanup.
+
+Induction on \(i\) shows that reaching \(Q_{r,i}\) is possible exactly
+when \(q\) has prefix \(a_{r,1}\cdots a_{r,i}\); the reached word is
+\[
+ L\widehat pQ_{r,i}\widehat tR,
+ \qquad q=a_{r,1}\cdots a_{r,i}t.
+\]
+At the next mismatch, \(\widehat t\) begins with a different coded letter
+or is empty so that \(R\) follows. In either case the sole matching left
+side does not occur. Every other production requires a different control,
+an absent initialization symbol, or \(D\); no coded symbol has a standalone
+production. The whole word is therefore stuck, not just locally blocked.
+It contains a nonterminal control and cannot be terminal.
+
+If all \(m_r\) letters match, the only available continuation is
+\(Q_{r,m_r}\to E_{r,0}\). It is taken at
+\(L\widehat pQ_{r,m_r}\widehat tR\), with the actual precommitment
+decoding \(pu_rt\). No shortened left side or speculative unmatched
+prefix can reach emission mode.
+
+\paragraph{Emission and the completed macrostep.}
+For \(v_r=b_{r,1}\cdots b_{r,n_r}\), emission state \(E_{r,j}\),
+\(j<n_r\), has exactly the one production
+\(E_{r,j}\to A_{b_{r,j+1}}E_{r,j+1}\).
+It appends that next coded right-side letter immediately to the left
+of the control. Induction on \(j\) gives precisely
+\[
+ L\widehat{pb_{r,1}\cdots b_{r,j}}E_{r,j}\widehat tR.
+\]
+No match or movement production can interleave: its distinct control is
+absent. At \(j=n_r\), only \(E_{r,n_r}\to Q\) is available, giving
+\(L\widehat{pv_r}Q\widehat tR\).
+Its decoding is \(pv_rt\), obtained from \(pu_rt\) by exactly the
+chosen original grammar production in its original left/right contexts.
+
+If \(v_r=\lambda\), then \(n_r=0\), emission mode has no insertion
+step, and ready restoration gives \(L\widehat pQ\widehat tR\).
+If \(u_r\) has length one, there is still one matching step.
+Thus neither erasure nor the shortest nonempty left side is hidden in a
+special unlisted rule.
+
+It follows inductively that every reachable ready word decodes to a
+sentential form of \(G\): the initial decoding is \(S\), movement
+preserves it, and every successful excursion through match/emission modes
+is one actual grammar step. Failed commitments cannot return to ready mode.
+
+\paragraph{Every input grammar derivation is simulated.}
+Given a derivation step \(pu_rt\Longrightarrow_P pv_rt\), start with
+any ready word decoding to \(pu_rt\). Move \(Q\) to the gap just after
+the prefix \(p\). Commit to \(r\), consume its actual matching letters,
+emit its actual right side, and restore \(Q\).
+The resulting ready word decodes to \(pv_rt\).
+This construction is valid even when the selected occurrence is at either
+word boundary or when \(t\) or \(v_r\) is empty.
+Induction on an arbitrary finite grammar derivation therefore gives a ready
+word for every sentential form of \(G\), and in particular for every
+\(w\in L(G)\).
+
+\paragraph{Cleanup, exact terminal language, and no symbol leakage.}
+Cleanup can start only at an occurrence of \(LQ\).
+In a ready word \(L\widehat pQ\widehat qR\) this requires
+\(\widehat p=\lambda\), hence \(p=\lambda\) because the coding is
+letter-to-letter and injective. Thus cleanup enters \(D\widehat wR\),
+where the entire \(w\) is a previously established sentential form of \(G\).
+
+If the first coded letter is \(A_t\) for \(t\in T\), the unique
+applicable production is \(DA_t\to tD\). It emits exactly that original
+terminal to the left of the unique cleanup control. Induction gives
+\(zD\widehat qR\) with \(w=zq\), \(z\in T^*\).
+If \(q\) begins with a nonterminal \(a\in N\), there is no \(DA_a\)
+production. No ready/match/emission control exists and no other production
+can apply, so cleanup is permanently stuck. It cannot skip that letter,
+erase it, or resume grammar simulation after emitting a terminal prefix.
+
+If \(q=\lambda\), the only remaining production is \(DR\to\lambda\).
+It removes exactly the cleanup control and right boundary, leaving \(z=w\).
+Consequently cleanup succeeds if and only if the whole decoded sentential
+form lies in \(T^*\), and its output is that very word.
+No initialization, ready, matching, or emitting word is terminal, because
+each contains a fresh control and boundaries. No failed matching or failed
+cleanup word is terminal, because its fresh control persists.
+Every terminal word of \(G^\dagger\) therefore belongs to \(L(G)\).
+
+Conversely, for \(w\in L(G)\), the preceding simulation produces a
+ready word decoding to \(w\). Move its cursor to the left boundary,
+start cleanup, emit each actual terminal of \(w\), and finish cleanup.
+This gives \(w\in L(G^\dagger)\).
+For \(w=\lambda\), the ready word is exactly \(LQR\); cleanup takes
+\(LQR\Longrightarrow DR\Longrightarrow\lambda\).
+No empty-word convention or erasing observation map is used. Both literal
+inclusions, the production bounds and effective construction are proved.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p09.consuming-universality-short-compiler}{thm:p09-consuming-universality-short-compiler}{Composition with the repaired bounded consuming simulation}
+\begin{proof}
+Apply Theorem~\ref{thm:p09-short-grammar-normalization} effectively to the
+given finite type-0 grammar \(G\). It supplies the finite grammar
+\(G^\dagger=(N^\dagger,T,S^\dagger,P^\dagger)\) with the same literal
+terminal language. All its productions have nonempty left side of length
+at most two and right side of length at most two; none is an identity.
+Thus it satisfies precisely the grammar hypotheses in
+Definition~\ref{def:p09-recombination-consuming-simulation}.
+
+Enumerate \(P^\dagger\) with distinct production labels, use its finite
+working alphabet \(N^\dagger\cup T\), and choose the fresh markers
+specified in that definition disjoint from this larger alphabet.
+Its bounded finite ranges enumerate a finite rule set, including the
+exact right-boundary group-5 case. Construct the finite-support multiset
+with one active start word \(X_1^2YS^\dagger X_2^2\), and infinite
+copies of the finitely many specified reservoir words.
+Every choice is a finite computation on \(G^\dagger\).
+
+Theorem~\ref{thm:p09-recombination-consuming-simulation}, including its
+actual phase invariant and terminal cleanup, now gives
+\[
+ \sigma^*(M)\cap T^*=L(G^\dagger)=L(G).
+\]
+The terminal filter is unchanged: encoded symbols and compiler controls
+belong to \(N^\dagger\), not to \(T\). They cannot count as accepted
+outputs simply because they occur in the full splicing language.
+Both constituent equalities retain \(\lambda\), so their composition does
+too. The bounded simulation's handle inspection gives radius at most five,
+its support is finite, and its multiplicity-one active computation is
+distinguished from the infinite reservoir supplies.
+
+Finally, under the type-0-grammar characterization of recursively enumerable
+languages, each such language has some finite grammar \(G\).
+The proved effective construction applies to that grammar and gives the
+asserted representation. This last use of the grammar characterization
+does not claim to decide whether an arbitrary infinite language is recursively
+enumerable or to recover a grammar without its finite presentation.
+\end{proof}
+\end{annexitem}

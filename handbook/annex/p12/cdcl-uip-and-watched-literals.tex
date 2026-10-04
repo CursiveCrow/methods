@@ -1,0 +1,312 @@
+%% Six full proofs for the separately specified general finite-CNF CDCL core.
+\begin{annexitem}{annex:p12-cdcl-uip-local-sound}{thm:p12-cdcl-uip-local-sound}{Reason and resolution invariants}
+\begin{proof}
+A consistent trail assigns each variable at most once.  If a clause is unit,
+its sole unassigned literal must be true in every model extending the trail,
+because all its other literals are false there.  Appending that literal
+therefore preserves every such model.  There are finitely many variables and
+each propagation assigns a new one, so repeated unit propagation terminates.
+A falsified clause prohibits every extending model.  An empty clause does
+so immediately; a tautological clause cannot be falsified or unit under a
+consistent assignment.  The empty database imposes no constraint.
+
+Every recorded reason was unit before its propagated literal was appended.
+All variables of its other literals were already assigned, so its incoming
+graph edges strictly follow trail order.  After cancellation of a suffix of
+levels, every remaining reason uses only retained earlier entries.  Keeping
+the reason clause itself is necessary to use this fact in later analysis.
+
+For resolution, let the parents be \(A\cup\{x\}\) and
+\(B\cup\{\neg x\}\), where the designated pivot occurrences are removed
+from \(A,B\).  Any valuation satisfying both parents satisfies \(A\cup B\):
+if it makes \(x\) false, the first parent supplies a true literal of \(A\);
+if it makes \(x\) true, the second supplies a true literal of \(B\).
+If the resolvent is tautological it is already true under every valuation;
+if it is empty these two cases show the parents have no common model.
+Applying this argument to any model of the input proves that resolving two
+input consequences produces another input consequence.  Induction on
+learning steps, and inside each step on its resolution sequence, establishes
+entailment of every learned clause.  Adding such a clause removes no input
+model, and every enlarged-database model still satisfies the retained input.
+Thus the model set is exactly preserved.  Unit propagation has the narrower
+trail-extension meaning above; decisions are not themselves entailed facts.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12-cdcl-uip-analysis}{thm:p12-cdcl-uip-analysis}{First-UIP analysis, assertion, and backjumping}
+\begin{proof}
+At a positive-level conflict, at least one conflict-clause variable has the
+current level.  Otherwise the clause was already false in the earlier retained
+prefix, contradicting the required completed propagation before the current
+decision.  The same conclusion applies after a backjumped learned assertion:
+the inserted clause is unit and then true, and any ensuing new conflict must
+depend on a newly asserted or propagated current-level assignment.
+
+Initialize \(\omega_L\) to that falsified clause.  Suppose it has more
+than one current-level literal and choose its latest true complement \(p\)
+on the trail.  It cannot be the current decision, because that is the first
+entry of the level and another current-level entry would be later.  It is
+therefore propagated and has the retained reason \(\alpha(p)\).  That
+reason contains \(p\); all its other literals were false when \(p\)
+was appended and remain false in the conflict trail.  Resolving removes
+\(\neg p\) from the temporary clause and \(p\) from the reason.
+All remaining literals are false in the same consistent trail.  They cannot
+contain both polarities of a variable.  Entailment follows from
+Annex~\ref{annex:p12-cdcl-uip-local-sound}.
+
+Each newly introduced current-level variable precedes \(p\), and every
+other current-level variable already in \(\omega_L\) also precedes it.
+Thus the greatest current-level trail position strictly decreases.  A reason
+of a propagated current-level assignment above level zero has a current-level
+predecessor.  For an old clause, if all false antecedents had lower levels,
+it would already have been unit at the preceding propagation boundary.  For
+the newly inserted asserting clause, its maximal nonasserting level equals
+the enqueueing level by construction.  Subsequent propagations inherit the
+same property.  Consequently elimination never removes the last current-
+level frontier entry.  The finite decreasing position measure proves that
+the procedure stops with exactly one such entry, rather than getting stuck
+at zero entries or requiring the reason of a decision.
+
+Here is the domination argument, including why the stopping node is the
+\emph{first} UIP.  Interpret each temporary false literal as the node of its
+true complement.  Initially these frontier nodes are exactly the predecessors
+of the conflict.  Replacing a propagated frontier node by its reason
+predecessors preserves a cut of all paths from the current decision to the
+conflict.  Current-level graph nodes are reachable from that decision, by
+the current-predecessor property just proved.  Edges cannot run from the
+current level to an older level, since levels are nondecreasing along the
+block-ordered trail.  Therefore, when only a single current-level frontier
+node remains, every decision-to-conflict path passes through it.  This node
+is a UIP.
+
+For each current-level frontier node there is also a path from it to the
+conflict whose internal current-level nodes have already been eliminated.
+This is initially immediate and is preserved when a reason predecessor is
+inserted: prepend its edge to the eliminated node's witness path.  The
+latest-position pivot rule eliminates nodes in strictly decreasing trail
+order.  If a UIP \(z\) lies downstream of the eventual stopping node,
+consider the earlier stage at which \(z\) is the latest current-level
+frontier node.  Such a stage must occur: reverse expansion cannot bypass
+\(z\) on every conflict path, and the eventual node is upstream of it.
+All previously eliminated current nodes at that stage are later than \(z\).
+Any other current frontier node would be earlier than \(z\), and its witness
+path to the conflict would use only those already eliminated later nodes.
+A path from the current decision to this earlier node cannot contain the
+later \(z\), by acyclicity and trail order.  Combining it with the witness
+path would give a decision-to-conflict path avoiding \(z\), contradicting
+its domination.  Hence that earlier stage had only \(z\) in its current
+frontier, and the algorithm would already have stopped there.  There is no
+downstream UIP beyond the actual stopping node, proving the first-UIP claim.
+
+Let \(a\) be the final clause's unique current-level literal.  Every other
+literal is false and has level at most \(b<d\).  Cancellation to \(b\)
+removes the variable of \(a\) and retains all others false.  Hence the
+clause is unit and enqueuing \(a\) is justified.  If \(b>0\), cancelling
+to any lower level also removes at least one other literal of level \(b\),
+so at least two literals are unassigned and the clause is no longer unit.
+If \(b=0\), no lower permitted level exists.  Thus this is the lowest
+retained assertion level.  A learned unit has no other literals and asserts
+at zero.  Root literals in a larger learned clause remain false at zero and
+need not be deleted from it.  A conflict at zero is handled by root
+refutation, not by a nonexistent positive-level decision or reason.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12-cdcl-uip-watch-correct}{thm:p12-cdcl-uip-watch-correct}{Watched propagation and level-prefix backtracking}
+\begin{proof}
+We prove the event invariant needed for both forward search and rollback.
+Every nonunit live clause has two distinct watches and exact list membership.
+Here a pending event includes a queued event or a still-unvisited clause
+reference in the watch list currently being processed; dequeueing its literal
+does not make those references already processed.
+Every false watched literal either has an unprocessed event in the current
+level's queue, or has the other watch true at a level no greater than its own.
+At a conflict the just-processed conflicting watches are an allowed terminal
+exception; both belong to the level that will be erased, unless the conflict
+is at zero and search terminates.  Completed propagation has no pending
+event, so each nonunit clause either has both watches nonfalse or has a true
+watch paired with a false watch at an equal or greater level.
+
+Input initialization satisfies the invariant: before assignments all watches
+are unassigned.  Root units have their separate enqueue path; an empty clause
+conflicts immediately.  At insertion of a learned nonunit clause, its asserting
+watch is made true at level \(b\), while its second watched literal was
+chosen false at the same maximal level \(b\).  The required level inequality
+therefore holds.  A learned unit is separately retained and enqueued at zero.
+These facts include insertion into a nonempty trail rather than assuming all
+attachments happen at an empty assignment.
+
+Consider processing a watched false literal \(l\).  Its assignment was made
+in the current propagation phase, so its level is the current level; no new
+decision can have occurred while its event was pending.  If its other watch
+\(q\) is true, \(\delta(q)\leq\delta(l)\), and keeping the pair
+establishes the invariant for this processed event.  If a replacement \(r\)
+is nonfalse, moving the watch preserves two distinct positions and the exact
+old/new list membership.  If \(q\) is false, its event must still be pending.
+Indeed, had it already been processed and left in place, it would have had a
+true companion whose level was no greater than its own; that companion
+cannot have become false during a consistent forward phase.  A prior
+processed event with no true companion would instead have moved that watch,
+enqueued its companion true, or reported a conflict.  The remaining false
+\(q\) is consequently protected by its pending event.  If the replacement
+is true, it also has level no greater than the current \(q\) event.  If it
+is unassigned, it is not false and imposes no new event obligation.
+
+When no replacement exists, every nonwatched literal is false.  If \(q\)
+is unassigned, the clause is genuinely unit, so enqueueing it is sound.  Its
+new level equals that of the false event, providing the needed true companion.
+If \(q\) is false, all literals of the clause are false and the reported
+conflict is genuine.  A binary clause is exactly this no-replacement case.
+A tautological clause cannot produce a false or unit condition under a
+consistent assignment, so it is harmless if retained; complementarity never
+licenses treating its two occurrences as a unit.  Repeated true enqueues
+add no events, and opposite enqueues report a real incompatible consequence.
+Restoring unprocessed list references on conflict and detaching only deleted
+clauses preserves membership for the next phase.
+
+There are at most \(\lvert X\rvert\) new assignments in one propagation
+phase, hence that many new queue entries.  Each event scans a finite watch
+list and each replacement search scans a finite clause.  The phase terminates.
+If it finishes conflict-free, take any nonunit active clause.  With no pending
+false watch, either it has a true watched literal and is satisfied, or both
+watches are unassigned, since nonfalse watches without a true one must be
+unassigned.  The latter supplies two distinct unassigned positions, so that
+clause is neither false nor unit.  Separately enqueued unit clauses are true.
+Therefore no required unit or conflict has been missed at the fixed point.
+Together with soundness of every enqueue this proves propagation correctness;
+it does not assert that every clause's complete satisfied/unresolved status
+is maintained by the lazy data structure.
+
+Finally cancel whole levels to \(b\).  A nonfalse watch can become only
+unassigned or remain at its former value, never newly false.  A false watch
+whose assignment is erased becomes unassigned.  A false watch whose assignment
+is retained had either a pending current-level event or a true companion at
+no greater level.  In ordinary conflict cancellation all pending current-level
+assignments are erased because the jump is below that level; a restart is at
+a completed-propagation boundary and has none.  Thus a retained false watch
+has a true companion at level at most its own and therefore at most \(b\);
+the companion is retained as well.  Watch moves during an erased phase do
+not change this argument, since every performed move satisfied the same
+event/level invariant.  At a nonroot conflict the terminal offending watches
+are newly false current-level entries and are erased; an older retained false
+watch cannot have lost its older true companion without that companion also
+having been erased earlier.  Hence the post-cancellation watches already
+satisfy the completed invariant.  Nothing needs restoration.  The new learned
+assertion then has the insertion treatment above.  If cancellation were within
+a level, or if the learned second watch had lower level than its assertion,
+the companion implication would fail: the body's wrong-watch example exhibits
+exactly that omitted condition.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12-cdcl-uip-search-correct}{thm:p12-cdcl-uip-search-correct}{CDCL soundness and a terminating complete policy}
+\begin{proof}
+Every retained learned clause is entailed by the immutable input, by the
+resolution invariant.  Since every input clause is retained, the active
+database and the input have exactly the same total models.  Deleting only
+entailed learned clauses cannot change this equality.  A restart or backjump
+changes the candidate trail, not the input or the entailment of surviving
+clauses.  Locking the still-used reasons ensures that the premise clauses
+needed by the analysis construction remain available.  The watched
+propagation theorem ensures the loop's conflicts and assertions are genuine.
+
+At a SAT return, the trail is total and the propagation phase has no conflict.
+Every input clause is therefore true: if one were false, it would be an active
+false clause prohibited by the watched fixed-point result.  At a root UNSAT
+return, induct on root propagations.  Their initial unit reasons and subsequent
+reasons are input consequences, and their other literals are false by root
+facts already entailed by the input.  Every root fact is consequently entailed
+by the input.  The root-conflict clause is also entailed, but all its literals
+are false under those facts, so no input model exists.  An initially empty
+clause is the zero-step instance.  These prove soundness independently of
+how many restarts or permitted deletions precede a return.
+
+For liveness with retained learning, we show that every nonroot conflict
+learns a clause not already active.  The final asserting clause is false on
+the conflict trail and has exactly one current-level variable.  If it were an
+already active unit clause, its level-zero fact would be true, a contradiction.
+If it were an already active nonunit clause, consider its two distinct
+watches under the event invariant proved in the preceding annex.  A false
+watch from an older level has no pending event: propagation was completed
+before the present level began.  Its companion must therefore still be true
+at a no-greater level, contradicting falsification of the whole clause.
+Accordingly both false watches of an already active falsified clause must
+be current-level entries.  This also covers the just-reported terminal
+conflict exception, whose offending watches are both current-level entries.
+Two distinct watch positions then give two distinct current-level variables
+in that non-tautological clause, contrary to the learned clause's assertion
+property.  Thus the learned clause cannot already be active.  This argument
+applies equally to clauses inserted after an earlier decision: their immediate
+assertion and maximal-level second watch establish the same event invariant.
+It uses actual propagation and attachment correctness, not an assumption
+that an asserting clause is new merely because it has been given a new name.
+
+There are at most \(3^{\lvert X\rvert}\) non-tautological literal-set
+clauses: each variable is absent, positive, or negative.  Every learned clause
+uses these fixed variables and is non-tautological, so retaining every learned
+clause allows only finitely many nonroot conflicts.  Between conflicts, a
+propagation phase is finite, and each decision assigns a previously unassigned
+variable.  With no voluntary restart there can be at most \(\lvert X\rvert\)
+decisions without a conflict or a total assignment.  Hence an infinite run
+would require infinitely many conflicts, contradicting the finite-clause
+bound.  The loop terminates.  Its only returns are the two sound terminal
+outcomes, so it is also complete for both satisfiable and unsatisfiable inputs.
+
+If restarts occur only after completed nonroot learning steps, each restart
+is charged to one of the finitely many conflicts.  There are finitely many
+such restarts and the same finite-phase argument applies.  The stated absence
+of an infinite administrative delay rules out stuttering forever without
+performing the next required propagation or decision.  Arbitrary voluntary
+restarts before progress, or deletion followed by relearning the same clause,
+invalidate this counting argument.  The SAT example in the body already
+gives an infinite sound run under the former policy.  The proof therefore
+does not infer termination from VSIDS, randomization, a solver name, or the
+mere existence of a finite decision space.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12-cdcl-uip-activity-scale}{thm:p12-cdcl-uip-activity-scale}{Ideal-real lazy decay preserves priority order}
+\begin{proof}
+Let \(s_t(x)\) be eager scores after \(t\) completed decays, and
+\(a_t(x)\) the stored lazy scores.  Start with equal scores and unit bump
+increment.  Maintain \(s_t(x)=\rho^t a_t(x)\) for every variable, with
+lazy increment \(\Delta_t=\rho^{-t}\).  For a bump vector \(h_t(x)\),
+the eager update is \(s_t(x)+h_t(x)\), and the lazy update is
+\(a_t(x)+\Delta_t h_t(x)\); multiplying the latter by \(\rho^t\)
+gives exactly the former.  Performing the next eager decay multiplies this
+by \(\rho\), while the lazy method leaves scores unchanged and replaces
+the increment by \(\Delta_t/\rho\).  Thus the invariant holds at
+\(t+1\).  The factor \(\rho^t\) is positive, so comparisons and ties
+are identical at all times.  Simultaneously multiplying every stored score
+and the increment by any positive constant only changes the common conversion
+factor and preserves all future comparisons by the same calculation.  The
+proof uses exact reals.  Rounding, overflow and implementation-specific tie
+handling are not premises of it and are not claimed verified.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12-cdcl-uip-lookahead-sound}{thm:p12-cdcl-uip-lookahead-sound}{Failed-literal and two-branch consequence soundness}
+\begin{proof}
+Let \(\nu\) be the retained consistent prefix and let \(v\) be any total
+model of the active database extending it.  If the temporary branch \(x\)
+has a unit conflict, propagation soundness shows that no such \(v\) can
+make \(x\) true.  Therefore every extending model makes \(\neg x\)
+true.  If both branches conflict, a Boolean valuation must choose one of
+the two polarities, so there is no extending model at all.  If both branches
+propagate \(l\), choose the branch matching \(v(x)\).  Soundness of its
+propagations shows \(v(l)=1\).  Thus \(l\) is true in every extending
+model.  These arguments remain valid when one branch already has no model;
+they do not assume propagation finds every semantically impossible branch.
+
+For a global clause, let the true prefix literals be \(p_1,\ldots,p_k\).
+The failed branch \(x\) establishes entailment of
+\(\neg p_1\lor\cdots\lor\neg p_k\lor\neg x\): a model falsifying
+this clause would extend the prefix and make \(x\) true, which was excluded.
+The analogous clause with \(l\) follows for the common consequence.  Dropping
+prefix literals without a separate discharge argument strengthens the claim
+and is not justified.  Restoring the original trail after each temporary
+test, while retaining only such justified global clauses or prefix-relative
+assignments, prevents temporary branch decisions from being mistaken for
+input consequences.
+\end{proof}
+\end{annexitem}

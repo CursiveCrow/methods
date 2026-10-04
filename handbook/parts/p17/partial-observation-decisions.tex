@@ -1,0 +1,473 @@
+\chapter{Decisions with Incomplete State Information}
+\label{sec:p17-partial-observation-decisions}
+
+The distribution of an unobserved state, conditional on the information
+actually available to the controller, can itself serve as the state
+of a decision problem. \AA str\"om develops this construction for
+finite hidden states and observations, continuous controls in a compact
+set, and a finite horizon \cite[pp.~174--205]{Astrom1965IncompleteInformation}.
+Its new state space is an entire probability simplex.
+The original five theorems, belief-process lemma and two four-stage
+examples are developed below with the observation timing and conditional
+expectations explicit.
+
+\section{The controlled process and the information available}
+
+\begin{hbdefinition}{def:p17-astrom-model}{States, controls, observations and timing}
+Let the hidden state set be \(X=\{1,\ldots,n\}\), the observation
+set \(Y=\{1,\ldots,m\}\), and let \(U\) be a nonempty compact
+subset of \(\mathbb R^d\). The horizon \(N\) is a positive integer,
+and time runs from \(1\) to \(N\).
+For \(t<N\), a control \(u\in U\) has transition matrix
+\(P_t(u)=(p_{si,t}(u))\), with nonnegative entries and row
+sums one. Every entry is continuous in \(u\).
+The observation matrix \(Q=(q_{ij})\) has nonnegative entries
+and row sums one. The cost \(g_t(i,u)\) is continuous in \(u\)
+for each \(i,t\). Finite state and time sets and compactness
+therefore give a finite bound on all these costs.
+
+At stage \(t\), the controller has observed \(Y_1,\ldots,Y_t\)
+and knows its earlier controls \(U_1,\ldots,U_{t-1}\).
+Write this history as \(H_t\) and its sigma algebra as
+\(\mathcal I_t\). It chooses \(U_t\), incurs cost
+\(g_t(X_t,U_t)\), then the hidden state moves according to
+\(P_t(U_t)\) and observation \(Y_{t+1}\) is produced.
+The precise conditional laws are
+\[
+ \begin{split}
+ P(X_{t+1}=i\mid X_t=s,H_t,U_t=u)&=p_{si,t}(u),\\
+ P(Y_{t+1}=j\mid X_{t+1}=i,X_t,H_t,U_t)&=q_{ij}.
+ \end{split}
+\]
+An action kernel depends only on \(H_t\); conditional on that
+history its private randomization supplies no further information
+about the hidden state. Costs are not an extra observation:
+if a realized cost is observed and reveals state information,
+it must be included in the observation record.
+
+An initial law \(\mu\) for \(X_1\), before \(Y_1\), is input,
+and \(P(Y_1=j\mid X_1=i)=q_{ij}\).
+If initialization is instead given at \(X_0\) by the source's
+\(p^0\), specify any preceding transition and its fixed
+initial control, then take \(\mu=p^0P_0(u_0)\).
+This makes the first observation's law definite.
+The control chosen after \(Y_t\) governs the transition
+to \(X_{t+1}\); it cannot change the state already observed.
+
+The source's admissible policies are deterministic maps
+\(u_t=c_t(Y_1,\ldots,Y_t)\). Its histories containing past
+controls are equivalent, since those controls are recovered
+recursively from the observation history and the known policy.
+We also allow Borel randomized history policies and prove
+optimality against this larger class.
+The objective is
+\[
+                     J^\pi=E^\pi\sum_{t=1}^N g_t(X_t,U_t).
+\]
+Maximization of rewards is obtained by replacing \(g\) by \(-g\).
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p17-astrom-belief}{The full continuous information state}
+Let
+\[
+ \Delta_n=\{b\in[0,1]^n:\textstyle\sum_i b_i=1\}.
+\]
+The belief at stage \(t\) is the vector
+\(B_t(i)=P(X_t=i\mid\mathcal I_t)\).
+For \(b\in\Delta_n\), define
+\[
+ a_i(b,u,t)=\sum_s b_s p_{si,t}(u),\qquad
+ z_i^j(b,u,t)=q_{ij}a_i(b,u,t),\qquad
+ \lambda_j(b,u,t)=\sum_i z_i^j(b,u,t).
+\]
+Fix a default \(b^\dagger\in\Delta_n\), and put
+\[
+ F_j(b,u,t)=
+ \begin{cases}
+ z^j(b,u,t)/\lambda_j(b,u,t),&\lambda_j(b,u,t)>0,\\
+ b^\dagger,&\lambda_j(b,u,t)=0.
+ \end{cases}
+\]
+The source writes \(w\) for the belief and
+\(\|z^j\|_1\) for \(\lambda_j\).
+For the initial observation put
+\(\lambda_j^0=\sum_i\mu_iq_{ij}\), and let
+\(F_j^0(i)=\mu_iq_{ij}/\lambda_j^0\) when \(\lambda_j^0>0\);
+use \(b^\dagger\) otherwise.
+The initial belief law is
+\(\sum_j\lambda_j^0\delta_{F_j^0}\).
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p17-astrom-filter}{proved=annex:p17.astrom.filter}{The recursive posterior, including zero-likelihood observations}
+The specified laws and any admissible policy determine a unique
+joint law. Versions of the conditional beliefs satisfy
+\[
+ B_1=F_{Y_1}^0,\qquad B_{t+1}=F_{Y_{t+1}}(B_t,U_t,t)
+                         \quad\text{almost surely}.
+\]
+Given \(H_t,U_t\), the next observation has probabilities
+\(\lambda_j(B_t,U_t,t)\).
+The maps \(F_j,\lambda_j\) are Borel, and the belief transition
+kernel is
+\[
+ {\cal R}_t(C\mid b,u)=
+              \sum_{j=1}^m\lambda_j(b,u,t)\mathbf1_C(F_j(b,u,t)).
+\]
+It is a probability kernel on \(\Delta_n\), supported on at most
+\(m\) points. Zero-likelihood branches contribute zero regardless
+of their default belief. They are not assigned a posterior by division.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p17-astrom-information-state}{proved=annex:p17.astrom.information.state}{The source's belief lemma and the policy bridge}
+Under a Borel belief policy \(U_t=f_t(B_t)\), the process \(B_t\)
+is a time-dependent Markov process with transition
+\({\cal R}_t(\cdot\mid b,f_t(b))\).
+For an arbitrary history policy it is a controlled Markov
+information state, with this transition conditional on
+\(H_t,U_t\), and expected immediate cost
+\[
+                        \ell_t(b,u)=\sum_i b_i g_t(i,u).
+\]
+Every belief-history policy can be implemented from the original
+observations by the filter, with identical belief/action laws and
+expected costs. Conversely, for any original randomized history
+policy and a fixed initial law, there is a randomized Markov
+policy on beliefs with identical stagewise \((B_t,U_t)\) laws
+and total expected cost.
+The Markov projection can depend on that initial law.
+The finite-horizon optimum below is attained by one deterministic
+belief policy for every starting belief, a separate stronger assertion.
+\end{hbtheorem}
+
+\section{Existence, the Bellman equation and verification}
+
+\begin{hbdefinition}{def:p17-astrom-recursion}{The original finite-horizon recursion}
+Set \(V_{N+1}=0\) and \(\mathcal H_N(b,u)=\ell_N(b,u)\).
+Recursively define, on the entire simplex,
+\[
+ \begin{split}
+ \mathcal H_t(b,u)&=\ell_t(b,u)+
+       \sum_{j:\lambda_j(b,u,t)>0}
+               \lambda_j(b,u,t)V_{t+1}(F_j(b,u,t)),\quad t<N,\\
+ V_t(b)&=\min_{u\in U}\mathcal H_t(b,u),\qquad 1\leq t\leq N .
+ \end{split}
+\]
+At \(t=N\) the continuation term is zero, so no terminal
+transition matrix is needed; for bookkeeping take
+\(B_{N+1}=b^\dagger\).
+Equivalently use the sum over all
+\(j\) with the explicit default, because its zero weights vanish.
+The initial minimum cost is
+\[
+                       \sum_j\lambda_j^0 V_1(F_j^0).
+\]
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p17-astrom-continuous-selection}{proved=annex:p17.astrom.continuous.selection}{Continuous weighted posteriors and an attained Borel minimum}
+If \(v\) is continuous on \(\Delta_n\), the function
+\[
+             (b,u)\longmapsto
+                 \sum_j\lambda_j(b,u,t)v(F_j(b,u,t))
+\]
+is continuous, including at vanishing observation probabilities.
+For every continuous \(H:\Delta_n\times U\to\mathbb R\),
+the function \(b\mapsto\min_uH(b,u)\) is continuous, and
+there is a Borel minimizing map \(f:\Delta_n\to U\).
+The proof gives a nested compact-cube selector and does not
+assume a continuous minimizing map exists.
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p17-astrom-finite-optimum}{proved=annex:p17.astrom.finite.optimum}{Complete finite-horizon construction: Theorems 1--3}
+The recursion has a unique sequence of bounded continuous solutions.
+Every minimum is attained by a Borel selector \(f_t(b)\).
+The filtered policy \(U_t=f_t(B_t)\) minimizes total expected
+cost against every randomized observation-history policy.
+It is optimal from every starting stage and every belief,
+including beliefs not reachable from the initially selected \(\mu\).
+The original partial-observation problem and its fully observed
+belief problem have the same minimum and both have an optimal policy.
+This establishes the source's necessary recursion, sufficient
+verification theorem and information-state equivalence with
+their existence premises supplied.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p17-astrom-verification}{proved=annex:p17.astrom.verification}{Exact verification and the scope of necessity}
+Define the nonnegative Bellman residual
+\(\delta_t(b,u)=\mathcal H_t(b,u)-V_t(b)\).
+For every admissible policy and its specified initial law,
+\[
+ J^\pi-E[V_1(B_1)]
+                  =\sum_{t=1}^N E^\pi[\delta_t(B_t,U_t)].
+\]
+Thus a policy is optimal for that initial law exactly when
+\(\delta_t(B_t,U_t)=0\) almost surely for every \(t\).
+There is no necessity condition on a history which the policy
+reaches with probability zero.
+For any policy, its future cost at a history is a conditional
+expectation of future costs, rather than the sum of random
+future posterior costs without conditioning.
+If the chosen actions have residuals at most \(\eta_t\)
+on all histories, their total loss is at most \(\sum_t\eta_t\).
+\end{hbtheorem}
+
+\section{Perfect information, no further observations and delays}
+
+\begin{hbdefinition}{def:p17-astrom-comparison-values}{The two source comparison problems}
+Let \(S_{N+1}(i)=0\), and define
+\[
+ S_t(i)=\min_{u\in U}
+          [g_t(i,u)+\sum_k p_{ik,t}(u)S_{t+1}(k)],
+ \qquad L_t(b)=\sum_i b_iS_t(i).
+\]
+This problem reveals the actual state before every control.
+Let \(O_{N+1}=0\), and define
+\[
+ O_t(b)=\min_{u\in U}
+                  [\ell_t(b,u)+O_{t+1}(bP_t(u))].
+\]
+This problem starts with belief \(b\) and then receives no
+additional observations; its optimum can be attained by a
+deterministic control schedule.
+At stage \(N\) both expressions omit continuation.
+All products \(bP_t(u_t)\cdots P_{k-1}(u_{k-1})\) are ordered
+in time; different controls or dates do not produce a power
+of one common matrix.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p17-astrom-information-bounds}{proved=annex:p17.astrom.information.bounds}{Theorems 4--5 and the value of the declared information}
+For every stage and belief,
+\[
+                          L_t(b)\leq V_t(b)\leq O_t(b).
+\]
+If all observation rows are the same distribution \((r_j)\),
+then no new state information is obtained beyond known controls,
+and the partial-observation optimum equals \(O_t\).
+The source's constant \(q_{ij}\) case is \(r_j=1/m\).
+If \(Q\) is the identity, every positive-probability posterior
+after an observation is a state point mass, and the source
+complete-information recursion is exactly \(S_t\).
+
+For the pre-observation initial law \(\mu\), one has
+\[
+ \sum_i\mu_i S_1(i)
+ \ \leq\ \sum_j\lambda_j^0V_1(F_j^0)
+ \ \leq\ \sum_j\lambda_j^0O_1(F_j^0)
+ \ \leq\ O_1(\mu).
+\]
+The third expression allows the first observation and then
+commits to a schedule; the last allows no observation at all.
+Relative to the last baseline, the value of the specified
+observation stream is
+\(O_1(\mu)-\sum_j\lambda_j^0V_1(F_j^0)\).
+The value of perfect state information is
+\(O_1(\mu)-\sum_i\mu_iS_1(i)\).
+Both are nonnegative, and the former does not exceed the latter.
+After a fixed current belief \(b\), the analogous values are
+\(O_t(b)-V_t(b)\) and \(O_t(b)-L_t(b)\).
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p17-astrom-delays}{proved=annex:p17.astrom.delays}{The source's delayed-information variation}
+Suppose the controller at date \(t\) has only observations
+through a specified integer date \(0\leq d_t\leq t\), where \(d_t\) is
+nondecreasing, and knows all its earlier controls.
+The histories with this information define a finite-horizon
+decision problem with an attained deterministic optimum.
+It can be solved on the posterior of the finite hidden path
+\((X_1,\ldots,X_t)\) by updating with newly delivered observations.
+This accounts for observations of past states whose laws cannot
+be recovered from the current-state marginal alone.
+More delivered observations cannot increase minimum cost.
+Taking \(d_t=t\) gives the original problem; taking \(d_t=0\)
+gives an open-loop schedule.
+\end{hbtheorem}
+
+\section{The two original four-stage calculations}
+
+\begin{hbdefinition}{def:p17-astrom-example-one}{A controlled two-state switch}
+For the source's Example 1, let
+\[
+ P(u)=\begin{pmatrix}1-u&u\\u&1-u\end{pmatrix},
+ \quad U=[0,1],\qquad
+ Q=\begin{pmatrix}q&1-q\\1-q&q\end{pmatrix},
+ \quad 0\leq q\leq1.
+\]
+There are four cost stages, zero cost at stages \(1,2,3\),
+and terminal cost \(\mathbf1_{\{X_4=2\}}\).
+Write \(b=(x,1-x)\), \(e=\min(q,1-q)\),
+\(\alpha=2e-e^2\), \(\zeta=e^2\), and
+\(a=(1-u)x+u(1-x)\).
+The source's symbols satisfy
+\(w=(x,1-x)\), \(q_0=e\), \(\alpha_0=\alpha\), and \(\beta_0=\zeta\).
+The next-observation probabilities and posteriors are
+\[
+ \begin{array}{c|c|c}
+ j&\lambda_j&F_j(1)\\ \hline
+ 1&qa+(1-q)(1-a)&qa/\lambda_1\\
+ 2&(1-q)a+q(1-a)&(1-q)a/\lambda_2
+ \end{array}
+\]
+with the declared default on zero denominators and
+\(F_j(2)=1-F_j(1)\).
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p17-astrom-example-one}{proved=annex:p17.astrom.example.one}{The complete four-stage switch solution}
+On the entire interval \(0\leq x\leq1\),
+\[
+ \begin{split}
+ V_4(x)&=1-x,\\
+ V_3(x)&=\min(x,1-x),\\
+ V_2(x)&=\min(x,1-x,e),\\
+ V_1(x)&=\min\{x,1-x,\alpha x+\zeta(1-x),
+                              \alpha(1-x)+\zeta x\}.
+ \end{split}
+\]
+At stage \(3\), choose \(u=1\) if \(x<1/2\), \(u=0\)
+if \(x>1/2\), and any \(u\) at equality.
+At stages \(1,2\), either endpoint control \(u=0\) or \(u=1\)
+is optimal. At stage \(2\), if \(e\leq x\leq1-e\),
+every control in \([0,1]\) is optimal.
+The proof supplies all four branch sums for \(V_2\), all
+nine for \(V_1\), their equality boundaries and the reduction
+to the displayed lower envelopes.
+
+For \(q=4/5\) and \(x=1/10\), the four values
+\((V_4,V_3,V_2,V_1)\) are
+\((9/10,1/10,1/10,9/125)\).
+Perfect state information gives \(L_4=1-x\) and
+\(L_1=L_2=L_3=0\).
+No further observations give \(O_4=1-x\) and
+\(O_1=O_2=O_3=\min(x,1-x)\).
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p17-astrom-example-two}{The source's four-action production model}
+In Example 2 the criterion is expected profit maximization.
+There are four stages and the following exact rational data:
+\[
+ \begin{array}{c|cc|cc|rr}
+ u&p_{11}&p_{12}&p_{21}&p_{22}&g(1,u)&g(2,u)\\ \hline
+ 1&.5&.5&.4&.6&20&-5\\
+ 2&.5&.5&.7&.3&17&-8\\
+ 3&.8&.2&.4&.6&10&-15\\
+ 4&.8&.2&.7&.3&7&-18
+ \end{array}
+ \qquad
+ Q=\begin{pmatrix}.8&.2\\.3&.7\end{pmatrix}.
+\]
+The actions are respectively neither advertising nor research,
+research alone, advertising alone, and both.
+The state indicates successful or unsuccessful production,
+and the observation is an imperfect indication of that state.
+These are the source's idealized model values, not measured
+business outcomes. Its payoff matrix differs from the Howard
+example from which it takes the transitions.
+
+For \(x=b_1\), the predicted state-one probabilities are
+\[
+       a_1=.4+.1x,\quad a_2=.7-.2x,\quad
+       a_3=.4+.4x,\quad a_4=.7+.1x.
+\]
+The next observation has probabilities
+\(\lambda_1=.3+.5a_u\), \(\lambda_2=.7-.5a_u\),
+with posteriors \(F_1(1)=.8a_u/\lambda_1\) and
+\(F_2(1)=.2a_u/\lambda_2\).
+Both denominators are positive throughout this model.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p17-astrom-example-two}{proved=annex:p17.astrom.example.two}{Exact incomplete-information profits and policy thresholds}
+Writing \(V_t(x)\) now for maximum expected future profit,
+the original four-stage problem has the following exact values
+\[
+ \begin{split}
+ V_4(x)&=25x-5,\\
+ V_3(x)&=\max(27.5x,\ 20x+4.5),\\
+ V_2(x)&=\max(27.375x+7.650,\ 20.250x+11.775),\\
+ V_1(x)&=\max(27.38875x+15.09250,\
+                              20.22250x+19.25875).
+ \end{split}
+\]
+The displayed terminating decimals are exact rationals.
+At stage \(4\), action \(1\) is optimal everywhere.
+At stages \(3,2,1\), choose action \(2\) below the respective
+thresholds
+\[
+                 \frac35,\qquad\frac{11}{19},
+                                      \qquad\frac{1111}{1911},
+\]
+and action \(1\) above them; either is optimal at equality.
+The remaining actions are strictly inferior to one of these
+throughout the belief interval. The proof includes every
+action's intermediate affine expression.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p17-astrom-example-two-bounds}{proved=annex:p17.astrom.example.two.bounds}{The original perfect-information and open-loop comparisons}
+For the same profit model, let \(L_t\) now denote the
+perfect-information upper value and \(O_t\) the no-further-observation
+lower value. Their exact formulas are
+\[
+ \begin{array}{c|c|c}
+ t&L_t(x)&O_t(x)\\ \hline
+ 4&25x-5&25x-5\\
+ 3&23x+4.5&\max(27.5x,\ 20x+4.5)\\
+ 2&23.4x+12.6&\max(27x+7.5,\ 19.5x+11.25)\\
+ 1&23.32x+20.98&\max(26.95x+14.05,\ 19.6x+18.4).
+ \end{array}
+\]
+The open-loop thresholds at stages \(3,2,1\) are
+\(3/5,1/2,29/49\), respectively.
+For every \(t,x\), \(O_t(x)\leq V_t(x)\leq L_t(x)\).
+At current belief \(x=1/2\), the stage-one values are
+\[
+                    O_1=28.2,\qquad V_1=29.37,\qquad L_1=32.64.
+\]
+Thus the specified future measurements add \(1.17\) expected
+profit over the schedule baseline; perfect future state
+information adds \(4.44\) with that same current belief.
+\end{hbtheorem}
+
+\section{Boundaries of the construction}
+
+\begin{hbtheorem}{thm:p17-astrom-information-failures}{proved=annex:p17.astrom.information.failures}{Why the observation and state assumptions matter}
+The following explicit finite models show the scope of the method.
+\begin{enumerate}
+\item An observation with likelihood zero permits any default
+      posterior on that event, but permits no likelihood ratio
+      with zero denominator.
+\item One-time conditional probabilities \(P(Y_t=j\mid X_t=i)\)
+      alone do not justify the filter when observation noises
+      are correlated across time or have the wrong joint
+      relationship with the hidden process.
+\item If past realized costs reveal information that is excluded
+      from the recorded observations, the displayed belief need
+      not summarize the controller's actual information.
+\item With an uninformative observation matrix, feedback can still
+      make later beliefs depend on observations through the known
+      chosen actions. The valid assertion is absence of new
+      hidden-state information conditional on those actions.
+\item An optimal policy for one initial law can behave
+      suboptimally at unreachable beliefs.
+\end{enumerate}
+For finitely many unknown fixed transition parameters, augmenting
+the hidden state by that parameter gives an exact finite model
+and a posterior on the joint state and parameter. Replacing it
+by a transition matrix averaged once at the initial prior
+need not give the same predictions after data.
+\end{hbtheorem}
+
+\begin{proofboundary}{def:p17-astrom-source-boundary}{Finite horizons and later developments}
+The 1965 paper proves finite-horizon results and gives two
+four-stage examples. It supplies no infinite-horizon existence,
+discounted convergence, average-reward, or approximation-by-grid
+theorem. Its introductory discussion of recovering a continuous
+model by limiting quantizations is a research direction, with
+no error or convergence theorem established there.
+The construction above optimizes on the entire belief simplex.
+It has a finite observation branching rule but is not a finite
+grid algorithm for that simplex.
+The exact affine case calculations belong to the two specified
+examples. \Cref{sec:p17-astrom-incomplete-information-ii} proves
+the general finite-horizon convexity and concavity results of
+the 1969 continuation, including controlled observation quality
+and the homogeneous extension to the nonnegative cone.
+General later results about finite piecewise-linear representations
+retain their own source and proof obligations.
+\end{proofboundary}

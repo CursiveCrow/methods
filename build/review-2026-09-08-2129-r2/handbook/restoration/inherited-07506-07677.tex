@@ -1,0 +1,172 @@
+\section{Deterministic single-tape Turing machines}
+\label{sec:turing-machines-01}
+
+\begin{definition}[Turing machine]
+A \emph{deterministic single-tape Turing machine} is a tuple
+\[
+  \mathcal T=(Q,\mathcal A_{\mathrm{in}},\mathcal A_{\mathrm{tape}},
+  \delta,q_0,q_{\mathrm{acc}},q_{\mathrm{rej}})
+\]
+such that:
+\begin{enumerate}
+  \item \(Q\) is a finite set of states;
+  \item \(\mathcal A_{\mathrm{in}}\) is a finite input alphabet not containing
+        the blank symbol \(\sqcup\);
+  \item \(\mathcal A_{\mathrm{tape}}\) is a finite tape alphabet with
+        \(\mathcal A_{\mathrm{in}}\cup\{\sqcup\}
+        \subseteq\mathcal A_{\mathrm{tape}}\);
+  \item \(q_0,q_{\mathrm{acc}},q_{\mathrm{rej}}\in Q\), with
+        \(q_{\mathrm{acc}}\neq q_{\mathrm{rej}}\); and
+  \item the transition function is
+  \[
+    \delta:(Q\setminus\{q_{\mathrm{acc}},q_{\mathrm{rej}}\})
+    \times\mathcal A_{\mathrm{tape}}
+    \longrightarrow Q\times\mathcal A_{\mathrm{tape}}\times\{L,R\}.
+  \]
+\end{enumerate}
+The two \(\mathcal A\)-symbols name components of this machine tuple only;
+they are not formula contexts or arithmetical-hierarchy class names.
+The tape is infinite in both directions, has only finitely many nonblank cells
+at every finite time, and the head scans one cell.
+\end{definition}
+
+\begin{definition}[Configuration and computation]
+A \emph{configuration} of \(\mathcal T\) is a tuple
+\[
+  C=(q,T,h),
+\]
+where \(q\in Q\), \(h\in\Z\), and
+\(T:\Z\to\mathcal A_{\mathrm{tape}}\) has finite nonblank support:
+\[
+  \set{i\in\Z:T(i)\ne\sqcup}
+  \quad\text{is finite}.
+\]
+Suppose \(q\notin\set{q_{\mathrm{acc}},q_{\mathrm{rej}}}\) and
+\[
+  \delta(q,T(h))=(q',a,d).
+\]
+Let \(T':\Z\to\mathcal A_{\mathrm{tape}}\) be given by
+\[
+  T'(i)=
+  \begin{cases}
+    a,&i=h,\\
+    T(i),&i\ne h,
+  \end{cases}
+\]
+and let \(h'=h-1\) when \(d=L\), while \(h'=h+1\) when \(d=R\).  Then, and
+only then,
+\[
+  (q,T,h)\longrightarrow_{\mathcal T}(q',T',h').
+\]
+A configuration in either halting state has no successor.  Write
+\(\longrightarrow_{\mathcal T}^{*}\) for the reflexive transitive closure of
+this one-step relation.
+
+For an input word \(w\in\mathcal A_{\mathrm{in}}^*\) of length \(n\), define
+\[
+  T_w(i)=
+  \begin{cases}
+    w(i),&0\leq i<n,\\
+    \sqcup,&\text{otherwise}.
+  \end{cases}
+\]
+The initial configuration is \((q_0,T_w,0)\).  Thus on empty input the head is
+at cell \(0\), which contains a blank.  A computation on \(w\) is the unique
+maximal finite or infinite sequence beginning with this initial configuration
+and following \(\longrightarrow_{\mathcal T}\) at each successor step.  It
+\emph{halts} iff the sequence reaches either halting state, and it
+\emph{accepts} or \emph{rejects} according to which halting state it reaches.
+\end{definition}
+
+Fix the canonical binary word \(\operatorname{bin}(n)\) for each
+\(n\in\N\): \(\operatorname{bin}(0)\) is the one-symbol word \(0\), and for
+\(n>0\) it is the ordinary base-two expansion without leading zeros, with the
+most significant bit first.  Use the numerical pairing map fixed in the
+finite-string chapter:
+\[
+  \operatorname{pair}_{\N}(a,b)
+  =\frac{(a+b)(a+b+1)}2+b.
+\]
+Its arguments and value are natural numbers; it is distinct in notation and
+type from the set-theoretic ordered pair \(\tuple{a,b}\).  For each fixed
+arity \(k\), define an injective tuple code by
+\[
+ \operatorname{code}_0()\defeq0,
+ \qquad
+ \operatorname{code}_1(n)\defeq n,
+\]
+and, for \(k\geq2\),
+\[
+ \operatorname{code}_k(n_0,\ldots,n_{k-1})
+ \defeq
+ \operatorname{pair}_{\N}\bigl(n_0,
+   \operatorname{pair}_{\N}(n_1,\ldots,
+     \operatorname{pair}_{\N}(n_{k-2},n_{k-1})\ldots)\bigr).
+\]
+The arity is fixed by the type \(\N^k\), so it need not be stored inside the
+code.  A numerical input for a \(k\)-ary function is the word
+\(\operatorname{bin}(\operatorname{code}_k(\bar n))\), placed with its most
+significant bit in cell \(0\).
+
+For machines used to compute numerical functions, the input alphabet contains
+the symbols \(0,1\).  If a halting configuration has tape function \(T\), let
+\[
+  m\defeq\min\set{i\in\N:T(i)=\sqcup}.
+\]
+Finite nonblank support makes \(m\) defined.  The tape prefix of length \(m\)
+is a \emph{valid numerical output} iff it is exactly
+\(\operatorname{bin}(y)\) for a unique \(y\in\N\).  Thus the empty word, a
+word containing a symbol other than \(0,1\), and a nonzero binary word with a
+leading zero are invalid.  Cells outside this prefix and the final head
+position do not affect the output.  A machine used to compute a numerical
+function is required to halt in \(q_{\mathrm{acc}}\) with a valid numerical
+output.
+
+\begin{definition}[Partial computable function]
+\label{def:partial-computable}
+A partial function \(f:\N^k\rightharpoonup\N\) is \emph{partial computable}
+iff some Turing machine satisfies both of the following conditions for every
+\(\bar n\in\N^k\): when \(f(\bar n)\) is defined, its computation on
+\(\operatorname{bin}(\operatorname{code}_k(\bar n))\) reaches
+\(q_{\mathrm{acc}}\) with output word \(\operatorname{bin}(f(\bar n))\); and
+when \(f(\bar n)\) is undefined, that computation is infinite.  A total
+partial computable function is called \emph{computable}.
+\end{definition}
+
+The arrow \(\rightharpoonup\) permits undefined values.  Divergence is not a
+third numerical output.
+
+The fixed binary and tuple encodings have computable encoding and decoding
+maps.  For pairing, given \(z\), boundedly search for the greatest \(s\leq z\)
+with \(s(s+1)/2\leq z\), put
+\(b=z-s(s+1)/2\), and put \(a=s-b\).  When the arity \(k\) is supplied,
+iterating these projections decodes the \(k\) tuple entries; the code alone
+does not encode \(k\).  Repeated division by two produces the binary
+word, and the left-to-right recurrence \(r\mapsto2r+b\) decodes it.  Each
+description is a terminating Turing-machine procedure, so the uses of
+``code'' in the definition above do not add an unexamined computation model.
+
+\begin{example}[Unary successor]
+A machine computing \(S(n)=n+1\) reads the arity-one input word
+\(\operatorname{bin}(n)\), since \(\operatorname{code}_1(n)=n\).  On that block it
+scans right to the end, propagates a carry left through consecutive \(1\)s,
+ and writes \(1\) at the first \(0\) encountered.  If the carry passes the most
+ significant bit of an \(m\)-bit input, all old bits are now \(0\).  The
+ machine shifts that \(m\)-cell zero block one cell to the right, writes \(1\)
+ in cell \(0\), and leaves a blank in cell \(m+1\).  Thus the output prefix in
+ cells \(0,\ldots,m\) changes \(111\) to \(1000\).  It then treats that prefix as the output
+word, not as another tuple code, because the output convention requires the
+binary word for the numerical value.  The loop invariant is that every
+processed suffix is the correct low-order suffix of \(n+1\), while the state
+records whether a carry remains.  Decoding and block relocation are justified
+by the computable coding operations established above.
+\end{example}
+
+\begin{warning}[Machine formalism versus complexity measure]
+Changing from one tape to several tapes does not change which partial functions
+are computable, but it can change running time by a polynomial factor.  A
+computability claim and a complexity claim therefore require different
+invariance arguments; see \cite{BoolosBurgessJeffrey2007} for the
+multi-tape invariance argument.
+\end{warning}
+

@@ -1,0 +1,501 @@
+% P15-U3/U6: Kass--Raftery model comparison, with exact finite/dominated proofs.
+\chapter{Bayesian Model Comparison}
+\label{sec:p15-bayesian-model-comparison}
+
+A Bayes factor compares the probability laws that two models assign to the
+observed data after integrating their parameter priors. It is distinct from
+a maximized likelihood ratio, a posterior model probability and a
+significance-test tail probability. Each answers a different question.
+
+The source for this component is Kass and Raftery, Sections 3, 5, 6.1 and
+8.2 \cite[pp.~776--777, 781--784, 789--790]{KassRaftery1995BayesFactors}.
+The single-model posterior construction, conjugacy, prediction and stopping
+mechanisms belong to \cref{sec:p15-bayesian-updating-prediction}.
+Here the parameter priors, observation space and model probabilities are
+explicit parts of a comparison. The exact results below do not invoke a
+large-sample approximation or silently replace an integral by its maximum.
+
+\section{Models, marginal likelihoods and posterior odds}
+\label{sec:p15-model-likelihoods}
+
+\begin{hbdefinition}{def:p15-model-comparison-experiment}{A finite family of dominated models}
+Let \(\mathcal K=\{0,\ldots,K\}\), \(K\geq1\), index the model labels.
+Let \((\mathcal X,\mathcal A)\) and each \((\Theta_k,\mathcal T_k)\) be
+nonempty standard Borel spaces. Fix one sigma-finite observation measure
+\(\nu\) on \(\mathcal X\). Model \(H_k\) supplies a proper parameter
+prior \(\Pi_k\) and a finite, jointly measurable nonnegative likelihood density
+\(f_k(x\mid\theta)\), satisfying
+\[
+ \int_{\mathcal X}f_k(x\mid\theta)\,\nu(dx)=1
+ \qquad(\theta\in\Theta_k).
+\]
+A likelihood is evaluated as a function of \(\theta\) after observing \(x\);
+the same function is a density in \(x\) before observation.
+
+The \emph{model marginal likelihood}, or prior predictive density, is
+\[
+ m_k(x)=\int_{\Theta_k}f_k(x\mid\theta)\,\Pi_k(d\theta).
+\]
+Write \(Q_k(A)=\int_A m_k\,d\nu\). Model prior probabilities
+\(\alpha_k\geq0\) satisfy \(\sum_k\alpha_k=1\). Their predictive mixture
+is \(Q_\alpha=\sum_k\alpha_kQ_k\), with density
+\(e(x)=\sum_{k:\alpha_k>0}\alpha_km_k(x)\); zero prior weights do not
+require forming \(0\cdot\infty\).
+Use the comparison domain
+\[
+ \mathcal G=\{x:m_k(x)<\infty\text{ for all }k,\quad 0<e(x)<\infty\}.
+\]
+On \(\mathcal G\), define
+\[
+ w_k(x)=\frac{\alpha_km_k(x)}{e(x)},\qquad
+ B_{ij}(x)=\frac{m_i(x)}{m_j(x)}\quad\text{when }m_j(x)>0.
+\]
+The first index in \(B_{ij}\) identifies the numerator model, as in the
+source. A zero numerator gives factor zero. A zero denominator is not
+assigned an ordinary finite factor, and \(0/0\) is left undefined.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p15-model-posterior-odds}{proved=annex:p15.model-posterior-odds}{Marginal laws and model odds}
+Each \(m_k\) is measurable, integrates to one and is finite \(\nu\)-almost
+everywhere; \(Q_\alpha(\mathcal G)=1\). Extending \(w_k=\alpha_k\)
+outside \(\mathcal G\) gives a version of the conditional probabilities
+of the model label given the data. For \(x\in\mathcal G\), where
+\(\alpha_j>0\) and \(m_j(x)>0\),
+\[
+ \frac{w_i(x)}{w_j(x)}
+ =B_{ij}(x)\frac{\alpha_i}{\alpha_j}.
+\]
+On \(\mathcal G\), where both marginal likelihoods are positive,
+\(B_{ij}B_{ji}=1\) and \(\log B_{ij}=\log m_i-\log m_j\).
+Bayes factors hold the within-model priors fixed and do not involve
+\(\alpha\); posterior model probabilities do involve \(\alpha\).
+
+If \(x\in\mathcal G\) and \(m_k(x)>0\), the parameter posterior within \(H_k\) is the kernel
+from \cref{thm:p15-bayes-posterior-kernel}. The joint posterior of model
+and parameter weights that kernel by \(w_k(x)\). A prior-zero model has
+posterior probability zero on \(\mathcal G\).
+\end{hbtheorem}
+
+For two models with positive prior probabilities, putting \(H_0\) in
+the numerator gives
+\[
+ w_0(x)=\frac{\alpha_0 B_{01}(x)}
+              {\alpha_0 B_{01}(x)+\alpha_1}
+ \qquad(m_0(x),m_1(x)>0).
+\]
+Only for equal model priors does the Bayes factor equal posterior odds.
+Even then it is an odds ratio, not a probability. A factor of 20 with
+prior odds \(1:100\) gives posterior odds \(1:5\), or probability \(1/6\)
+for the numerator model.
+
+The logarithmic identity also compares the predictive log densities assigned
+by the two models; it remains a numerical comparison when both are regarded
+as approximations. Its sequential predictive interpretation uses the
+factorization in \cref{sec:p15-bayesian-updating-prediction}.
+No nesting condition on the parameter spaces is needed for a Bayes factor.
+
+Kass and Raftery's interpretive labels are rough conventions, not calibrated
+posterior probabilities or decision rules. Their combined Jeffreys scale
+uses approximate factor ranges 1--3.2, 3.2--10, 10--100 and above 100,
+with descriptions ranging from negligible mention to substantial, strong
+and decisive evidence. Their modified \(2\log B_{10}\) scale uses 0--2,
+2--6, 6--10 and above 10, corresponding approximately to factors 1--3,
+3--20, 20--150 and above 150. The latter descriptions are negligible
+mention, positive, strong and very strong. The numerical boundaries are
+rounded and their interpretation is contextual
+\cite[Sec.~3.2]{KassRaftery1995BayesFactors}.
+
+\section{Which changes preserve a comparison?}
+\label{sec:p15-model-density-invariance}
+
+\begin{hbtheorem}{thm:p15-model-density-invariance}{proved=annex:p15.model-density-invariance}{Density versions, reference measures and parameter coordinates}
+Changing jointly measurable likelihood versions without changing their
+conditional data laws preserves marginal laws and marginal densities
+\(\nu\)-almost everywhere. The resulting posterior model probabilities
+agree \(Q_\alpha\)-almost everywhere.
+
+More intrinsically, put \(Q_*=(K+1)^{-1}\sum_kQ_k\), and let
+\(r_k=dQ_k/dQ_*\). Then
+\[
+ B_{ij}=\frac{r_i}{r_j}\quad\text{where }r_j>0,
+ \qquad
+ w_k=\frac{\alpha_kr_k}{\sum_\ell\alpha_\ell r_\ell}
+\]
+on the appropriate almost-everywhere domains. Thus any common sigma-finite
+observation measure dominating the same model marginal laws gives the same
+comparison \(Q_*\)-almost everywhere, and the same posterior
+\(Q_\alpha\)-almost everywhere.
+
+For the particular change \(d\nu'=h\,d\nu\), where \(0<h<\infty\)
+almost everywhere and \(\nu'\) is sigma-finite, compatible versions are
+\(f'_k=f_k/h\) and \(m'_k=m_k/h\). Their factors agree pointwise where
+these equalities and positive finite denominators hold.
+
+A bimeasurable bijection of a parameter space also preserves \(m_k(x)\)
+pointwise when both its prior and its likelihood are transported by that
+bijection. Declaring a new flat prior in the new coordinates is not such
+a transport in general.
+
+A bimeasurable bijection \(S:\mathcal X\to\mathcal X'\) of observation
+spaces has pushed-forward reference measure
+\((S_\#\nu)(A)=\nu(S^{-1}A)\). It preserves the factors on corresponding
+data when \(\nu'=S_\#\nu\)
+and \(f'_k(y\mid\theta)=f_k(S^{-1}y\mid\theta)\). In that case
+\(m'_k(Sx)=m_k(x)\). Using another dominating measure afterward invokes
+the reference-measure qualification above.
+\end{hbtheorem}
+
+Continuous data require this version qualification. For example, two models
+can both have the uniform law on \([0,1]\), with density one. Altering the
+second density only at \(x=1/2\) to an arbitrary finite \(c>0\) leaves
+its probability law unchanged but changes the pointwise formula for
+\(B_{10}(1/2)\) to \(c\). The almost-everywhere factor is still one.
+Accordingly, the normal calculations below specify the usual continuous
+density versions; they do not claim that arbitrary modifications at a null
+point have an invariant numerical value.
+
+The data must also mean the same thing in each model. A density for an
+ordered sample, a mass for a count and a likelihood for selected observations
+are different observation descriptions. A comparison can use one of them
+consistently or prove an appropriate common-factor reduction; it cannot
+silently mix their reference measures.
+
+\section{Integrating nuisance parameters instead of maximizing}
+\label{sec:p15-nuisance-model-integration}
+
+\begin{hbtheorem}{thm:p15-nuisance-integration}{proved=annex:p15.nuisance-integration}{Averaging a nuisance prior}
+Suppose \(\Theta_k=\Psi_k\times\mathcal N_k\) for nonempty standard
+Borel spaces, \(\theta=(\psi,\lambda)\), and the declared proper prior has
+the form
+\(\Pi_k(d\psi,d\lambda)=\Lambda_k(\psi,d\lambda)\Pi_k^\psi(d\psi)\),
+where \(\Lambda_k\) is a probability kernel. For the nonnegative measurable
+likelihood define
+\[
+ \bar f_k(x\mid\psi)=\int f_k(x\mid\psi,\lambda)\Lambda_k(\psi,d\lambda).
+\]
+Then
+\[
+ m_k(x)=\int\bar f_k(x\mid\psi)\Pi_k^\psi(d\psi).
+\]
+The inner integral is a prior-weighted average; it is bounded above by
+\(\sup_\lambda f_k(x\mid\psi,\lambda)\) whenever that supremum is finite.
+Replacing the integral by the supremum is a different operation. Even if
+the supremum is measurable, it need not be a normalized data density.
+No equality of nuisance priors in different models is automatic.
+\end{hbtheorem}
+
+For a calculated example, let \(X\in\{0,1\}\). Model \(H_0\) assigns
+\(\Pr(X=1)=.6\). Under \(H_1\), a nuisance label has equal prior weights
+and gives success probabilities .9 and .1. Hence \(m_1(1)=m_1(0)=.5\);
+at \(X=1\), \(B_{10}=5/6\). Maximizing over the nuisance label gives
+.9 at both outcomes, whose sum is 1.8. Its ratio to \(m_0(1)\) is
+\(3/2\), reversing the comparison, but it is not the Bayes factor.
+If the nuisance prior weight on .9 is \(\beta\), its actual marginal
+success probability is \(.1+.8\beta\). This identifies precisely which
+prior choice changes the integrated evidence.
+
+The source discusses both matching a shared nuisance prior to the
+alternative's marginal and matching it to a conditional prior on a null
+constraint. These are specifications to justify, not identities required
+by Bayes' theorem \cite[Sec.~5.1, eq.~(13)]{KassRaftery1995BayesFactors}.
+A constraint of prior probability zero does not by itself determine which
+conditional-prior version to use there; an explicit example appears below.
+
+\section{A normal point null and a proper normal alternative}
+\label{sec:p15-normal-bayes-factor}
+
+Let \(\theta_0,\mu_1\in\mathbb R\). Let one observed summary \(X\),
+conditional on a real parameter \(\theta\), have law
+\(\operatorname{normal}(\theta,s^2)\), where \(s>0\) is known.
+Under \(H_0\), \(\theta=\theta_0\). Under \(H_1\),
+\(\theta\sim\operatorname{normal}(\mu_1,\tau^2)\), with \(\tau>0\).
+Normal notation and its Lebesgue density are those of
+\cref{def:p15-normal-law}. Both within-model priors are proper, including
+the point mass under \(H_0\).
+
+\begin{hbtheorem}{thm:p15-normal-point-null-factor}{proved=annex:p15.normal-point-null-factor}{The exact normal factor}
+With the continuous density versions just specified,
+\[
+ m_0(x)=\phi_{\theta_0,s^2}(x),\qquad
+ m_1(x)=\phi_{\mu_1,s^2+\tau^2}(x),
+\]
+and
+\[
+ B_{01}(x)=
+ \sqrt{\frac{s^2+\tau^2}{s^2}}\,
+ \exp\!\left\{-\frac{(x-\theta_0)^2}{2s^2}
+             +\frac{(x-\mu_1)^2}{2(s^2+\tau^2)}\right\}.
+\]
+For a prior centered at the null, \(\mu_1=\theta_0\), put
+\(z=(x-\theta_0)/s\) and \(r=\tau^2/s^2>0\). Then
+\[
+ B_{01}(x)=\sqrt{1+r}\exp\!\left(-\frac{rz^2}{2(1+r)}\right).
+\]
+The full sample \(X_1,\ldots,X_n\), \(n\geq1\), conditionally independent
+\(\operatorname{normal}(\theta,\sigma^2)\) with known \(\sigma>0\),
+gives this same factor at \(x=\bar X\), \(s^2=\sigma^2/n\), because
+its remaining likelihood factor is common to both models.
+\end{hbtheorem}
+
+A point null is a model with positive prior model mass, if it is to acquire
+positive posterior model mass. It is different from the event
+\(\theta=\theta_0\) inside the continuous alternative: that event has prior
+and posterior probability zero under \(H_1\). A high density near
+\(\theta_0\) is not a point probability.
+
+\begin{hbtheorem}{thm:p15-normal-factor-sensitivity}{proved=annex:p15.normal-factor-sensitivity}{Prior scale, normal-class bounds and limiting paths}
+For fixed \(x,s,\theta_0\) and a null-centered alternative,
+\(B_{01}\to1\) as \(r\downarrow0\), and \(B_{01}\to\infty\) as
+\(r\to\infty\). Over all positive normal prior variances,
+\[
+ \sup_{r>0} B_{10}=
+ \begin{cases}
+ 1,&z^2\leq1,\\
+ \displaystyle\frac{\exp((z^2-1)/2)}{|z|},&z^2>1.
+ \end{cases}
+\]
+For \(z^2>1\) the maximum occurs at \(r=z^2-1\); otherwise the
+supremum is approached as \(r\downarrow0\). Mixing these centered normal
+priors with any proper mixing probability cannot exceed the same bound.
+Over all proper priors on \(\theta\), without the centering restriction,
+the supremum of \(B_{10}\) is \(\exp(z^2/2)\), attained by a point prior
+at \(x\). Selecting such a prior after observing \(x\) is a sensitivity
+bound, not a prespecified Bayesian analysis.
+
+For fixed \(\tau,\sigma>0\), along summaries
+\(\bar x_n=\theta_0+z\sigma/\sqrt n\) with \(z\) fixed,
+\(B_{01}\to\infty\). Along \(\bar x_n=\theta_0+\delta\) with
+fixed \(\delta\ne0\), instead \(B_{01}\to0\).
+\end{hbtheorem}
+
+These different limits must not be conflated. Making an alternative prior
+diffuse for fixed data spreads its predictive probability over outcomes not
+observed, which can favor the null. Increasing sample size while fixing a
+nonzero observed departure gives a different comparison. The sensitivity
+analysis concerns a declared family of proper priors, not a data-independent
+justification for whichever member maximizes the factor
+\cite[Secs.~5.1--5.2]{KassRaftery1995BayesFactors}.
+
+\begin{hbexample}{def:p15-normal-factor-table}{The same standardized observation under different priors}
+For \(z=2\) and equal model prior probabilities:
+\[
+\begin{array}{r|rr}
+ r& B_{01}&w_0\\\hline
+ 1&.5203&.3422\\
+ 3&.4463&.3086\\
+ 9&.5227&.3433\\
+ 99&1.3807&.5800\\
+ 999&4.2882&.8109
+\end{array}
+\]
+Values are rounded evaluations of the exact formulas, not observations
+from a study. At \(r=3\), the alternative attains its strongest support
+within the centered-normal family, yet the equal-prior posterior null
+probability is still about .309.
+\end{hbexample}
+
+\section{Posterior model averaging}
+\label{sec:p15-posterior-model-averaging}
+
+\begin{hbdefinition}{def:p15-model-average-law}{A common quantity across models}
+For each \(k\), let \(R_k(x,\cdot)\) be a probability kernel on the same
+measurable outcome space \(\mathcal Z\), describing a posterior quantity
+or prediction conditional on \(H_k\). For example, a measurable map
+\(T_k:\Theta_k\to\mathcal Z\) can send each parameter posterior to a
+common quantity. The physical quantity, units and event meanings must
+agree across models. If a parameter is absent from one model, assigning
+it value zero is an additional model definition, not an implicit rule.
+Set
+\[
+ R(x,A)=\sum_kw_k(x)R_k(x,A).
+\]
+On exceptional data outside \(\mathcal G\), use the already specified
+default weights and the declared kernels.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p15-model-average-moments}{proved=annex:p15.model-average-moments}{Mixture laws and total posterior variance}
+The function \(R\) is a probability kernel. For a real common quantity
+and a fixed \(x\), suppose every component with \(w_k(x)>0\) has finite
+second moment. Let its mean and variance be \(a_k,v_k\), and sum only
+over these positive-weight components. Then
+\[
+ a=\sum_kw_ka_k,\qquad
+ \operatorname{Var}_R(Z)=\sum_kw_kv_k+\sum_kw_k(a_k-a)^2.
+\]
+Equivalently the variance is
+\(\sum_kw_k(v_k+a_k^2)-a^2\), as in the source.
+For an integrable common utility or other function \(u\),
+\(\int u\,dR=\sum_kw_k\int u\,dR_k\).
+The between-model term is nonnegative. Omitting it from the weighted
+within-model variance strictly understates the mixture variance when
+positive-weight component means differ, and otherwise leaves it unchanged.
+The variance
+of a particular selected model need not always be smaller than the mixture.
+\end{hbtheorem}
+
+With equal posterior weights and component laws
+\(\operatorname{normal}(-2,1)\), \(\operatorname{normal}(2,1)\), the
+mixture mean is zero and variance is \(1+4=5\). Selecting either component
+reports variance one. Conversely, equal weights on
+\(\operatorname{normal}(0,100)\) and the point mass at zero give mixture
+variance 50; selecting the first reports 100. These examples locate the
+precise omitted-uncertainty statement without claiming a universal ordering
+for every possible selected model
+\cite[Sec.~6.1, eqs.~(17)--(19)]{KassRaftery1995BayesFactors}.
+
+Model averaging accounts for uncertainty within the declared collection.
+It does not show that the collection contains an adequate description of
+the data. Relative model evidence and checks for failures of all the models
+address different questions, as the source notes when discussing goodness
+of fit \cite[Sec.~8.2]{KassRaftery1995BayesFactors}.
+
+\section{Model priors, duplicated labels and improper conventions}
+\label{sec:p15-model-prior-conventions}
+
+\begin{hbtheorem}{thm:p15-model-label-refinement}{proved=annex:p15.model-label-refinement}{Preserving prior mass when a label is split}
+Keep the model likelihoods and within-model priors fixed. Replacing
+\(\alpha\) by another model prior changes posterior odds by the corresponding
+prior-odds multiplier, while leaving Bayes factors unchanged.
+
+Replace a model \(H_j\) by finitely many labels having the same marginal
+law and the same common-quantity kernels. If their prior masses sum to
+\(\alpha_j\), the aggregate posterior probability of that group and the
+model-averaged law are unchanged almost everywhere under the original
+predictive mixture. Assigning equal mass afresh to every
+expanded label need not preserve the original comparison.
+\end{hbtheorem}
+
+For example, two identical predictive laws with equal model masses have
+posterior masses \(1/2,1/2\). Copy the first label nine times and assign
+uniform mass to the resulting ten labels: its group now has posterior .9.
+If its marginal likelihood instead is twice the second's, the original
+equal-prior group probability is \(2/3\), but the nine-copy uniform encoding
+gives \(18/19\). The changed posterior support came from changing prior
+group mass; the Bayes factor did not change. Uniformity over names therefore
+requires attention to what counts as a distinct model.
+
+\begin{hbtheorem}{thm:p15-improper-model-priors}{proved=annex:p15.improper-model-priors}{Arbitrary constants and null-constraint priors}
+Let \(\widetilde\Pi_k\) be a sigma-finite measure of infinite mass, and
+suppose \(0<Z_k(x)=\int f_k(x\mid\theta)\widetilde\Pi_k(d\theta)<\infty\)
+at the data being used. Multiplying this measure by \(c_k>0\) leaves
+the normalized within-model posterior unchanged, but multiplies \(Z_k\)
+by \(c_k\). Consequently \(Z_i/Z_j\) depends on the arbitrary ratio
+\(c_i/c_j\). Also \(\int Z_k\,d\nu=\infty\), so \(Z_k\) is not a
+proper prior predictive density.
+
+A common multiplicative constant cancels if the same explicitly identified
+nuisance measure is used in both integrations. This algebra alone neither
+normalizes the predictive measures nor justifies a unique choice of nuisance
+measure.
+
+Even proper priors do not automatically specify a nuisance prior on a
+prior-null constraint. For independent uniform \(\beta,\psi\in[0,1]\),
+both a conditional law of \(\beta\) that is uniform everywhere except
+\(\psi=1/2\), where it is \(\delta_0\), and one that is instead
+\(\delta_1\) there are valid versions. Using these versions as priors for
+a separate null model \(\psi=1/2\) makes different models.
+\end{hbtheorem}
+
+For \(X\mid\theta\sim\operatorname{normal}(\theta,1)\) and a formal
+flat measure \(c\,d\theta\), the integrated likelihood is \(c\) for every
+\(x\), while the normalized parameter posterior is
+\(\operatorname{normal}(x,1)\). Comparing it with a point-null predictive
+density \(\phi_{0,1}(x)\) produces the arbitrary value
+\(c/\phi_{0,1}(x)\). A proper uniform prior on \([-A,A]\), in contrast,
+has marginal density at most \(1/(2A)\), tending to zero for fixed data.
+It does not provide a distinguished finite value of \(c\).
+
+For the proper null-constraint example, suppose data are binary with
+\(\Pr(X=1\mid\beta,\psi)=.2+.6\beta\). The two permitted conditional
+versions at \(\psi=1/2\) give null-model success probabilities .2 and .8.
+Neither choice follows uniquely from the joint alternative prior.
+A substantive compatibility convention can choose one; a probability-zero
+conditioning event alone cannot
+\cite[Secs.~5.1, 5.3]{KassRaftery1995BayesFactors}.
+
+\section{Finite evaluation and likelihood constants}
+\label{sec:p15-finite-model-evaluation}
+
+\begin{hbtheorem}{thm:p15-finite-model-evaluation}{proved=annex:p15.finite-model-evaluation}{Exact sums and permitted cancellations}
+If model \(k\) has finite parameter values \(\theta_{k\ell}\) with
+prior masses \(p_{k\ell}\), then, at a datum where all the displayed
+likelihood values are finite,
+\[
+ m_k(x)=\sum_\ell p_{k\ell}f_k(x\mid\theta_{k\ell}),\qquad
+ w_k(x)=\frac{\alpha_km_k(x)}{\sum_j\alpha_jm_j(x)}
+\]
+on the positive finite comparison domain. A factor \(c(x)\in(0,\infty)\)
+common to all model likelihoods cancels from every Bayes factor and
+posterior model weight. Factors depending on the model do not generally
+cancel, even if they are constant in that model's parameters.
+
+For finite nonnegative terms \(a_{k\ell}=\alpha_kp_{k\ell}
+f_k(x\mid\theta_{k\ell})\), with at least one positive term, set
+\(t_{k\ell}=\log a_{k\ell}\) only for positive terms and
+\(t_*=\max t_{k\ell}\). Then
+\[
+ w_k(x)=
+ \frac{\sum_{\ell:a_{k\ell}>0}\exp(t_{k\ell}-t_*)}
+      {\sum_{j,\ell:a_{j\ell}>0}\exp(t_{j\ell}-t_*)}.
+\]
+This is an exact real-arithmetic rescaling identity, not a guarantee about
+rounding or underflow in an arbitrary implementation.
+\end{hbtheorem}
+
+As a finite example, observe one success in two Bernoulli trials as a
+binomial count. Under \(H_0\), success probability is .5; under \(H_1\),
+it is .2 or .8 with equal prior masses. The full mass values are
+\(m_0=2(.5)(.5)=.5\) and
+\(m_1=\tfrac12[2(.2)(.8)+2(.8)(.2)]=.32\).
+Thus \(B_{10}=.64=16/25\), and equal model priors give \(w_1=16/41\).
+Removing the common binomial coefficient two preserves this ratio.
+
+For contrast, at \(x=0\), the continuous densities of
+\(\operatorname{normal}(0,1)\) and \(\operatorname{normal}(0,4)\)
+have ratio two. Dropping their variance-dependent normalizing constants
+leaves two exponential kernels equal to one and incorrectly gives ratio
+one. Every calculation must retain or explicitly justify cancellation of
+the relevant constants \cite[Sec.~3.1]{KassRaftery1995BayesFactors}.
+
+\section{Significance and posterior probability}
+\label{sec:p15-bayes-factor-significance}
+
+In the known-variance normal point-null experiment, let
+\(\Phi\) be the standard normal CDF and put
+\[
+ p_{\rm tail}(x)=2\{1-\Phi(|z|)\},\qquad z=(x-\theta_0)/s.
+\]
+This is the null tail probability for an observation at least as extreme
+in absolute standardized value as the one obtained. Its probability law
+is computed under \(H_0\); it is not conditional probability of \(H_0\).
+
+\begin{hblemma}{thm:p15-normal-significance-comparison}{proved=annex:p15.normal-significance-comparison}{A calibrated null-tail statistic need not equal posterior model probability}
+Under \(H_0\), for \(0<u<1\),
+\[
+ \Pr_0\{p_{\rm tail}(X)\leq u\}=u.
+\]
+At \(z=2\) the value is approximately .0455, unchanged across the
+alternative priors in \cref{def:p15-normal-factor-table}, whose posterior
+null probabilities differ. Along the fixed-\(z\), increasing-\(n\) path
+in \cref{thm:p15-normal-factor-sensitivity}, the tail probability is
+constant while \(w_0\to1\) for fixed positive model prior masses.
+For a fixed nonzero observed departure, the different limit stated there
+applies instead.
+\end{hblemma}
+
+The comparison preserves both meanings: the null-tail statistic has its
+specified repeated-sampling calibration, while a model posterior incorporates
+the alternative's predictive law and the prior model odds. Changing those
+priors leaves the tail statistic unchanged. Conversely, a Bayes factor used
+as a frequentist test statistic needs a separate repeated-sampling calibration.
+Neither its name nor an evidence-label threshold supplies that calibration
+\cite[Sec.~8.2]{KassRaftery1995BayesFactors}.
+
+This component supplies exact dominated and finite calculations. The source's
+Laplace and Schwarz approximations, general nuisance-orthogonality
+asymptotics, generalized-linear-model prior recipes, training-sample methods
+for improper priors, and algorithms for very large model spaces require their
+own hypotheses and derivations. They are not consequences of the exact
+normal formula. Single-model sequential prediction and the conditions for
+ignoring a stopping mechanism remain with
+\cref{sec:p15-bayesian-updating-prediction}.

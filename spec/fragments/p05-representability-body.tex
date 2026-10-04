@@ -1,0 +1,279 @@
+\section{Induction-free representation of certified computations}
+\label{sec:p05-representability}
+
+The strong representation needed by the diagonal construction is the
+pointwise statement with an unrestricted output quantifier: for each
+\emph{standard} input tuple \(\vec a\),
+\(\mathsf Q\derives\forall y(\gamma_f(\overline{\vec a},y)
+\leftrightarrow y=\overline{f(\vec a)})\).
+Proving all correct and incorrect \emph{numeral} instances alone would not
+exclude a nonstandard output. Conversely, this pointwise assertion is not
+the universal termination assertion
+\(\mathsf Q\derives\forall\vec x\exists!y\gamma_f(\vec x,y)\).
+The construction below proves the former without asserting the latter.
+All complexity assertions in this section use the handbook's declared
+\emph{marked} arithmetic presentation from
+\cref{def:language-arithmetic} and the following syntactic-hierarchy
+definition: marked \(\leq\)-quantifiers are counted as bounded before
+their eliminable comparison-witness expansion. In particular, a literal
+existential prefix with bounded matrix here means that displayed marked
+presentation; it is not a claim about the quantifier prefix of the fully
+expanded raw \(\Lang_A\) string.
+For a comparison of these quantifier distinctions and the use of finite
+comparison in \(\mathsf Q\), see \cite[chs.~11,16--17,39]{Smith2020QRepresentation}.
+The certificate construction here is a separately specified reconstruction;
+it does not identify its formula with the \(\PA\) graphs of
+\cref{thm:p05-pa-pr-graphs}.
+
+\begin{hblemma}{thm:p05-rep-bounded-decisions}{proved=annex:p05-rep-bounded-decisions}{Fixed bounded computations in \(\mathsf Q\)}
+For any bounded arithmetic formula \(A(\vec x)\) in the marked syntax of
+\cref{def:language-arithmetic}, and any standard tuple \(\vec a\),
+\(\mathsf Q\) proves \(A(\overline{\vec a})\) when it is true in
+\(\mathcal N\), and proves its negation when it is false.
+For each fixed standard \(n\), bounded quantification over
+\(u\leq\bar n\) is provably equivalent in \(\mathsf Q\) to the
+corresponding finite conjunction or disjunction of instances at
+\(\bar0,\ldots,\bar n\). The analogous assertion for \(u<\bar n\)
+uses \(\bar0,\ldots,\overline{n-1}\), with empty disjunction false and
+empty conjunction true.
+\end{hblemma}
+
+\begin{hbdefinition}{def:p05-rep-register-certificate}{A fixed program and its bounded trace formula}
+Fix a finite primitive recursive description \(d\) of arity \(k\),
+using exactly the initial functions, composition and primitive recursion
+of \cref{sec:turing-machines-02}. The annex gives an effective compilation
+to a finite program \(M_d\) on registers \(R_0,\ldots,R_K\), where
+\(K\geq k\). Inputs are in \(R_0,\ldots,R_{k-1}\), the output is in
+\(R_k\), and the remaining initial registers are zero.
+Its finitely many instruction labels have initial label \(0\).
+Instructions are increment-and-jump, zero-test/decrement-and-jump, and halt.
+These are numerical programs used to specify certificates, not additions
+to the arithmetic language or replacements for the program numbering in
+Part IV.
+
+Use the already expanded bounded formulas \(\mathsf E\) and
+\(\mathsf E^{(2)}\) of \cref{def:p04-tagged-history-entry}. For this
+certificate only, family \(20\) stores the transition count at position
+\(0\), family \(21\) the instruction label at time \(i\), and family
+\(22\) the register \(j\) at time \(i\). Define
+\[
+\begin{aligned}
+ \operatorname{Row}_d(s,i,a_0,\ldots,a_K,p)
+ &\defeq \mathsf E(s,\overline{21},i,p)\land
+       \bigwedge_{j=0}^K\mathsf E^{(2)}(s,\overline{22},i,\bar j,a_j),\\
+ \operatorname{Le}(u,v)&\defeq\exists w\leq v\,(w+u=v).
+\end{aligned}
+\]
+The finite conjunction is a metalinguistic expansion, not variable-arity
+arithmetic syntax. \(\operatorname{Le}(u,v)\) has only a marked bounded
+quantifier and logically implies the source abbreviation \(u\leq v\).
+
+The quantifier-free formula
+\(\operatorname{Step}_d(p,\vec a,q,\vec b)\) is the finite disjunction
+over the nonhalt instructions of \(M_d\). An instruction at label \(h\)
+which increments register \(j\) and jumps to \(h'\) contributes
+\[
+ p=\bar h\land q=\overline{h'}\land b_j=Sa_j
+                       \land\bigwedge_{v\ne j}b_v=a_v.
+\]
+A zero-test/decrement instruction with zero target \(h_0\) and positive
+target \(h_1\) contributes
+\[
+ p=\bar h\land\bigwedge_{v\ne j}b_v=a_v\land
+ \bigl((a_j=0\land b_j=0\land q=\overline{h_0})\lor
+       (a_j=Sb_j\land q=\overline{h_1})\bigr).
+\]
+Let \(\operatorname{Halt}_d(p)\) be the finite disjunction of its halt
+labels, and \(\operatorname{Label}_d(p)\) the finite disjunction of all
+its labels. Use fresh variables in every abbreviation expansion. Put
+\[
+\begin{aligned}
+ C_d(\vec x,y,s)\defeq {}&\operatorname{Le}(y,s)\land
+ \exists\ell\leq s\,\bigl[\mathsf E(s,\overline{20},0,\ell)\land
+ \exists a_0\leq s\cdots\exists a_K\leq s\,
+    (\operatorname{Row}_d(s,0,\vec a,0)\land
+       \bigwedge_{j<k}a_j=x_j\land\bigwedge_{k\leq j\leq K}a_j=0)\\
+ &\land\forall i\leq\ell\,\exists p\leq s\,
+                         (\mathsf E(s,\overline{21},i,p)
+                                      \land\operatorname{Label}_d(p))\\
+ &\land\forall i\leq\ell\,\bigl(i=\ell\lor
+   \exists p\leq s\,\exists q\leq s\,
+   \exists a_0\leq s\cdots\exists a_K\leq s\,
+   \exists b_0\leq s\cdots\exists b_K\leq s\,
+    (\operatorname{Row}_d(s,i,\vec a,p)\land
+     \operatorname{Row}_d(s,Si,\vec b,q)\land
+                     \operatorname{Step}_d(p,\vec a,q,\vec b))\bigr)\\
+ &\land\exists p\leq s\,
+       (\mathsf E(s,\overline{21},\ell,p)\land\operatorname{Halt}_d(p)
+                         \land\mathsf E^{(2)}(s,\overline{22},\ell,\bar k,y))
+ \bigr].
+\end{aligned}
+\]
+Every displayed conjunction indexed by register numbers expands to a fixed
+finite conjunction. The other quantifiers are marked bounded with
+arithmetic-term bounds; after expanding \(\mathsf E,\mathsf E^{(2)}\),
+no array-access, pairing, subtraction or program-execution function symbol
+occurs. No standalone comparison is being treated as an atomic bounded
+formula.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p05-rep-trace}{proved=annex:p05-rep-trace}{Standard adequacy of the bounded trace certificate}
+For each fixed description \(d\), \(C_d\) is bounded and
+\[
+ f_d(\vec a)=b\quad\Longleftrightarrow\quad
+       \mathcal N\entails\exists s\,C_d(\overline{\vec a},\bar b,s).
+\]
+Its numerical truth characteristic, with all arguments standard numbers,
+is primitive recursive. Moreover \(\mathsf Q\) proves
+\(C_d(\vec x,y,s)\to y\leq s\).
+The adequacy assertion is in the standard structure; it does not assert
+internal termination or unique decoding for all nonstandard certificates.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p05-rep-least-graph}{The selected least-certificate graph}
+Define the bounded matrix and its literal existential-prefix graph by
+\[
+\begin{aligned}
+ \delta_d(\vec x,y,s)&\defeq C_d(\vec x,y,s)\land
+       \forall t\leq s\,
+         \bigl(t=s\lor\neg\exists z\leq t\,C_d(\vec x,z,t)\bigr),\\
+ \gamma_d(\vec x,y)&\defeq\exists s\,\delta_d(\vec x,y,s).
+\end{aligned}
+\]
+Thus \(\gamma_d\) is literally an existential quantifier applied to a
+bounded formula in that declared marked presentation, not merely
+standard-model equivalent to a marked prefix formula.
+The minimum is taken over certificate numbers, not over computation times
+or output values. The marked guard \(\forall t\leq s\,H(t)\) uses exactly
+the source abbreviation
+\(\forall t((\exists u\,(u+t=s))\to H(t))\), with fresh \(u\).
+It does \emph{not} replace its comparison by
+\(\operatorname{Le}(t,s)\). Consequently a premise
+\(\bar r\leq s\) obtained from the fixed-standard dichotomy supplies
+the guard's instance at \(\bar r\) directly by universal elimination
+and implication elimination. No bounded-witness conversion is required.
+The logical expansion just given exposes the meaning used in \(\mathsf Q\)
+derivations; it does not reclassify its comparison witnesses as marked
+bounded quantifiers. The complexity assertion instead follows directly
+from the original marked guard and the hierarchy's generating clauses.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p05-rep-strong-graph}{proved=annex:p05-rep-strong-graph}{Pointwise strong graph representation in \(\mathsf Q\)}
+For every fixed primitive recursive description \(d\) and every standard
+tuple \(\vec a\),
+\[
+ \mathsf Q\derives\forall y\,
+   \bigl(\gamma_d(\overline{\vec a},y)
+                         \leftrightarrow y=\overline{f_d(\vec a)}\bigr).
+\]
+The formula also defines the actual numerical graph in \(\mathcal N\).
+In particular the universally quantified output is not restricted to
+numerals. No universal input-totality conclusion for this formula is made.
+\end{hbtheorem}
+
+\begin{hbcorollary}{thm:p05-rep-numeralwise-relations}{proved=annex:p05-rep-numeralwise-relations}{Decidable numerical relations and finite aggregates}
+If \(R\subseteq\N^k\) has a fixed primitive recursive characteristic
+description \(d_R\), with value \(1\) for truth and \(0\) for falsehood,
+then
+\(\rho_R(\vec x)\defeq\gamma_{d_R}(\vec x,\bar1)\)
+is literally \(\exists s\,\delta_{d_R}(\vec x,\bar1,s)\), has a bounded
+matrix, is accurate in \(\mathcal N\), and numeralwise represents \(R\)
+in \(\mathsf Q\), positively and negatively. For every fixed standard
+bound, any finite list of these instance proofs can be assembled into the
+corresponding bounded universal statement. This last assertion does not
+require \(\rho_R\) itself to be bounded.
+\end{hbcorollary}
+
+\begin{hbdefinition}{def:p05-rep-certified-presentation}{Selection for the governing certified proof codes}
+Retain the syntax numbering and derivation checks of
+\cref{thm:arithmetization-syntax}. In particular, a certified proof has
+the governing code \(N_{16}(N_{15}(R),W)\): \(R\) is its checked
+postorder derivation record and \(W\) has exactly one accepting history
+for each \emph{root open axiom occurrence}, in the order computed by the
+checker. Fix the Part IV index \(e_T\) whose domain is exactly the set
+of codes of the given c.e. axioms of \(T\). Each history is checked by
+the bounded \(\mathsf{Comp}(\overline{e_T},a,s)\) from
+\cref{thm:bounded-verification}. Temporary discharged assumptions do not
+need axiom histories; an empty open list requires \(W=0\).
+This fixes the c.e. certificate convention, even if the chosen theory
+happens to have a finite axiom set.
+
+Let \(d_T\) be the finite primitive recursive description of the
+characteristic of this \emph{actual numerical} certified proof checker,
+including comparison with the conclusion code \(x\). Select
+\[
+ \mathsf{Proof}^{*}_T(p,x)\defeq\gamma_{d_T}(p,x,\bar1)
+                 =\exists s\,\kappa_T(p,x,s),\qquad
+ \kappa_T(p,x,s)\defeq\delta_{d_T}(p,x,\bar1,s),
+\]
+and \(\mathsf{Prov}^{*}_T(x)\defeq\exists p\exists s\,
+\kappa_T(p,x,s)\). The star denotes an explicit selection available in
+\cref{def:fixed-proof-predicate}, not a theorem that every previously
+chosen representative is \(\mathsf Q\)-equivalent to it. Proofs using
+this selection must use it throughout.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p05-rep-certified-proof}{proved=annex:p05-rep-certified-proof}{The c.e. certified-proof interface}
+Let \(T\) be a c.e. axiom set whose theory extends \(\mathsf Q\), with
+the fixed index and certificate convention just specified. The numerical
+proof relation is primitive recursive, and \(\mathsf{Proof}^{*}_T\)
+is literally existential-prefix with bounded matrix, is accurate in
+\(\mathcal N\), and has both positive and negative \(\mathsf Q\) proofs
+on every standard numeral pair. For every sentence \(\sigma\),
+\[
+ T\derives\sigma\quad\Longleftrightarrow\quad
+ \mathcal N\entails\exists p\,\mathsf{Proof}^{*}_T
+                       (p,\overline{\ulcorner\sigma\urcorner}).
+\]
+For each fixed standard \(n,a\), a finite list of negative proof-instance
+decisions gives
+\(\mathsf Q\derives\forall p\leq\bar n\,
+\neg\mathsf{Proof}^{*}_T(p,\bar a)\), whenever every numerical
+candidate \(0,\ldots,n\) is rejected. Invalid syntactic, derivation,
+conclusion, or certificate codes are among these rejected inputs.
+No consistency or soundness assumption is needed for these coding facts.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p05-rep-diagonal-default}{Total diagonal substitution with a fixed default}
+Fix distinguished variable \(x_0\). On a formula code \(n\) with free
+variables contained in \(\{x_0\}\), let \(\mathsf{diag}(n)\) be the
+code of numeral substitution \(x_0:=\bar n\). Put
+\(\tau=\ulcorner0=0\urcorner\). On every other number set
+\(\mathsf{diag}(n)=\tau\). This specifies the previously arbitrary default
+without changing any intended diagonal instance. Its computation uses the
+governing numeral function \(\nu(0)=N_1()\),
+\(\nu(n+1)=N_2(\nu(n))\), and the capture-avoiding substitution clauses
+of \cref{thm:arithmetization-syntax}. Also set
+\(\mathsf{neg}(n)=N_7(n)\) on formula codes and \(N_7(\tau)\) otherwise.
+Neither numerical function is a new primitive arithmetic symbol.
+\end{hbdefinition}
+
+\begin{hbcorollary}{thm:p05-rep-diagonal-graph}{proved=annex:p05-rep-diagonal-graph}{The diagonal and negation graph interface}
+Both \(\mathsf{diag}\) and \(\mathsf{neg}\) have fixed primitive recursive
+descriptions. For their selected graphs, in particular
+\(D(x,y)=\gamma_{d_{\rm diag}}(x,y)=\exists s\,
+\delta_{d_{\rm diag}}(x,y,s)\) with bounded matrix, every standard
+\(n\), including invalid codes, satisfies
+\[
+ \mathsf Q\derives\forall y\,
+      (D(\bar n,y)\leftrightarrow
+                              y=\overline{\mathsf{diag}(n)}).
+\]
+Thus existence and unrestricted-output uniqueness at the fixed numeral
+input used by the diagonal lemma are supplied together. The analogous
+assertion holds for negation coding.
+\end{hbcorollary}
+
+\begin{hbwarning}{def:p05-rep-boundary}{Which facts this interface does not supply}
+Standard-model adequacy of the finite certificate is not a universal
+\(\mathsf Q\) trace-determinism or sequence-existence theorem. The
+least-certificate guard is what rules out nonstandard competing outputs
+at a fixed standard input. The selected \(\mathsf{Proof}^{*}_T\) is
+\(\Sigma^0_1\), not claimed bounded; the embedded axiom-history check
+\(\mathsf{Comp}\) is bounded, which is a different statement.
+Numeralwise decisions and fixed finite aggregates suffice for the usual
+Rosser comparison. They do not make its formula automatically
+\(\Pi^0_1\). Finally, the \(\PA\) derivability conditions and internal
+proof transformations require their separate universal invariant proofs;
+the present pointwise interface is not a replacement for them.
+\end{hbwarning}

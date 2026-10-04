@@ -1,0 +1,295 @@
+% P16-C4: UAI 2006 IDC, exact exchange closure and conditional soundness.
+\section{Conditional interventional identification}
+\label{sec:p16-conditional-interventional-identification}
+
+Shpitser and Pearl's UAI 2006 procedure first exchanges eligible
+observations for actions, and only then asks the joint identification
+algorithm for the distribution to normalize
+\cite[Section~5, Figure~3 and Appendix]{ShpitserPearl2006ConditionalIdentification}.
+The author-hosted UAI version and its separate 2007 addendum are distinct
+sources. The addendum retracts the original paper's assertion that Tian's
+conditional identification algorithm is unsound; that assertion is not
+adopted here \cite{Shpitser2007ConditionalIdentificationAppendum}.
+
+\begin{hbdefinition}{def:p16-idc-query}{Conditional effects and their quantified model class}
+Fix the finite independent-latent-input class on an observed mixed graph
+\(G\), with observed vertices \(N\) and finite nonempty value sets
+\(\mathbf S=(S_i)_{i\in N}\). Let \(X,Y,Z\subseteq N\)
+be pairwise disjoint, with assignments \(x,y,z\). In a specified
+model define
+\[
+ P_x(y\mid z)=\frac{P_x(y,z)}{P_x(z)}
+ \qquad\text{when }P_x(z)>0.
+\]
+The evidence belongs to the world after \(X=x\); it is not
+an observation in a separate counterfactual world.
+
+The main execution domain here is a compatible full observed law
+\(p(v)>0\) at every assignment. For one fixed \(\mathbf S\),
+conditional identification means agreement of these kernels in every
+two compatible positive-law models sharing any common observed law.
+Graph-uniform conditional identification quantifies over every finite
+nonempty \(\mathbf S\), every possible common positive law \(p\),
+every such pair of models, and every \(x,y,z\).
+The source separately permits nonpositive observed laws and requires
+\(P_x(z)>0\); that further support domain is distinguished below.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p16-idc-positive-context}{proved=annex:p16.idc-positive-context}{Positive observations supply every conditional context in the main domain}
+If \(p>0\) everywhere, then every intervention law is positive
+at every assignment of its remaining observed variables. In particular,
+all the denominators \(P_x(z)\) in the preceding definition and
+all conditional contexts reached by IDC are positive.
+\end{hblemma}
+
+\begin{hbdefinition}{def:p16-idc-eligible}{An eligible observation and its graph license}
+For graph tests let \(\widehat G\) be the canonical DAG obtained
+by retaining the observed directed edges and replacing each bidirected
+edge \(i\leftrightarrow j\) by one formal root with arrows to
+\(i,j\). This is a separation device, not a replacement of a
+model's actual latent distributions or child sets. For the current query \((X,Y,Z)\), an
+observation vertex \(w\in Z\) is \emph{eligible} when
+\[
+ Y\mathrel{\perp_{\widehat G_{\overline X,\underline{\{w\}}}}}
+       \{w\}\mid\bigl(X\cup(Z\setminus\{w\})\bigr).
+\]
+The overline deletes incoming arrows at the current action vertices;
+the underline deletes outgoing arrows at the proposed exchange vertex.
+Let \(E(G;X,Y,Z)\) be the set of eligible vertices. This is a
+graphical set. An equality caused by one model's numerical choices
+does not by itself make a vertex eligible.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p16-idc-root-graph-bridge}{proved=annex:p16.idc-root-graph-bridge}{The canonical separation test preserves actual latent-root separation}
+For observed endpoint and conditioning sets, every separation test in
+the canonical \(\widehat G\), including the incoming/outgoing
+arrow deletions used by IDC, has the same result in the expansion
+using any model's actual independent latent roots with observed graph
+\(G\). No equivalence of the two statistical model classes is
+asserted by this graph lemma.
+\end{hblemma}
+
+\begin{hblemma}{thm:p16-idc-rule-two-step}{proved=annex:p16.idc-rule-two-step}{The exact observation-to-action exchange}
+For an eligible \(w\), at every supported current context,
+\[
+ P_x(y\mid z)=P_{x,z_w}(y\mid z_{Z\setminus\{w\}}).
+\]
+Positivity of the left conditioning event supplies the conditioning
+support on the right by consistency. In the main positive-law domain
+both sides exist for all assignments.
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p16-idc-exchange-closure}{proved=annex:p16.idc-exchange-closure}{The unique maximal graphical exchange set}
+Exchanging one eligible vertex leaves eligibility of every other
+conditioning vertex unchanged. Consequently all orders of single-vertex
+Rule 2 exchanges move exactly \(E=E(G;X,Y,Z)\), and terminate
+with action set \(X\cup E\) and conditioning set \(Z\setminus E\).
+The set \(E\) also satisfies the simultaneous Rule 2 graph
+condition. Any set satisfying that simultaneous condition is a subset
+of \(E\). Thus the maximal graphical exchange set is unique.
+\end{hbtheorem}
+
+\begin{hbmethod}{def:p16-idc-algorithm}{The IDC procedure}
+Input \((Y,X,Z,p,G)\) has the preceding meanings; value assignments
+remain explicit arguments of the returned function. Keep \(p,G\)
+unchanged during these conditioning exchanges.
+\begin{enumerate}
+\item If \(Y=\varnothing\), return one. If an eligible
+      \(w\in Z\) exists, call
+      \[
+       \mathsf{IDC}(Y,X\cup\{w\},Z\setminus\{w\},p,G),
+      \]
+      using the existing observed value \(z_w\) as its new
+      action value. Retain this exchange and its graph license.
+\item If no eligible vertex remains, call
+      \(\mathsf{ID}(Y\cup Z,X,p,G)\). If ID succeeds with
+      \(q_x(y,z)\), return
+      \[
+       \frac{q_x(y,z)}{\sum_{y'\in S_Y}q_x(y',z)}.
+      \]
+      The sum holds the action and conditioning assignments fixed.
+      If ID fails, retain its full failure record together with
+      the preceding exchange sequence; do not divide a failure.
+\end{enumerate}
+When \(Z\) is empty the terminal denominator is one. The
+empty-response return makes explicit a case already implied by the
+conditional-law definition. The two substantive branches are those
+of the source's Figure~3.
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p16-idc-termination-soundness}{proved=annex:p16.idc-termination-soundness}{Termination and soundness of every successful return}
+IDC performs at most \(|Z|\) exchanges and one terminal ID call.
+It therefore terminates. Every successful return is the original
+\(P_x(y\mid z)\), with a positive terminal denominator.
+Its retained trace is a finite derivation by Rule 2, the already
+proved ID do-calculus derivations, and ordinary normalization.
+It can identify a conditional effect even when the original joint
+\(P_x(y,z)\) is not identified.
+\end{hbtheorem}
+
+\subsection{The conditional-versus-joint necessity argument}
+
+Put \(A=X\cup E\) and \(W=Z\setminus E\) after maximal
+exchange. The source's Theorem~6 asserts that the original conditional
+query is identifiable exactly when \(P_a(y,w)\) is identifiable.
+Its sufficient direction is the normalization just proved. Its necessary
+direction requires a conditional countermodel argument, rather than the
+normalization of an unidentified joint. The following cases give complete
+necessity proofs with explicit hypotheses.
+
+\begin{hbtheorem}{thm:p16-idc-known-denominator}{proved=annex:p16.idc-known-denominator}{Conditional necessity when the terminal conditioning marginal is identified}
+Suppose the terminal marginal \(P_a(W)\) is graph-uniformly
+identified on positive laws. Then the original conditional query is
+graph-uniformly identified if and only if \(P_a(Y,W)\) is
+graph-uniformly identified. In this case IDC is complete: failure
+of the terminal ID call supplies two positive models with different
+original conditional effects. The empty \(W\) case is included.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p16-idc-response-rooted-failure}{proved=annex:p16.idc-response-rooted-failure}{A conditional countermodel when the hedge roots are response vertices}
+Suppose a hedge for the terminal joint query \((A,Y\cup W)\)
+has common roots \(K\subseteq Y\). Then the original conditional
+query is not graph-uniformly identified on positive laws. The positive
+binary forest models, extended by independent outside coordinates,
+already give such conditional countermodels. No identification of
+the marginal \(P_a(W)\) is required for this conclusion.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p16-idc-parent-root-gadget}{proved=annex:p16.idc-parent-root-gadget}{A conditional countermodel from an external parent of a conditioning root}
+Suppose a hedge for the terminal joint query has every common root
+in \(W\), and has a selected root \(r\) with an allowed
+parent \(s\in Y\) outside its larger forest. Then two positive
+binary models on the full declared graph have equal observed laws
+and different conditional effects on \(Y\) given \(W\).
+One may take \(s\) to be an independent fair bit and add it
+to the parity equation at \(r\) in both forest models.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p16-idc-hedge-scope-counterexample}{proved=annex:p16.idc-hedge-scope-counterexample}{Extra nonaction vertices can belong to the larger hedge}
+Take directed edges \(L\to X\to W\) and bidirected edges
+\(X\leftrightarrow L\leftrightarrow W\). The whole selected
+graph \(F\) and the singleton \(F'=\{W\}\) form a hedge
+for action \(\{X\}\), response \(\{W\}\), but
+\(F\not\subseteq F'\cup\{X\}\). Thus that inclusion
+cannot be used as a general hedge lemma.
+
+For a positive realization, take independent fair bits \(U,V\)
+and private \(E\) with one-probability \(1/4\). Use
+\(L=U\oplus V\), \(X=L\oplus U\), and either
+\(W=X\oplus V\oplus E\) or \(W=E\).
+Both observed laws have \(L,X\) independent fair and
+\(W\) independent with one-probability \(1/4\), but their
+response-one effects under either \(x\) are \(1/2\) and \(1/4\).
+\end{hbtheorem}
+
+\begin{hblemma}{thm:p16-idc-positive-path-gadget}{proved=annex:p16.idc-positive-path-gadget}{A finite positive gadget for an active path}
+Let \(w\) be a sink in an observed/latent-root DAG, and suppose
+it is d-connected to an observed set \(Y\) given an observed
+set \(C\), all disjoint. There is a finite vector-valued model
+on the allowed graph with a strictly positive observed law, a single
+bit \(K\) as the output at \(w\), a bit coordinate \(B\)
+at some vertex of \(Y\), and an assignment \(c\) such that
+the two-by-two conditional table of \(K,B\) given \(C=c\)
+has nonzero determinant. The bit \(K\) is not used by another
+equation. Extra allowed edges may be ignored.
+\end{hblemma}
+
+\begin{hblemma}{thm:p16-idc-unused-conditioning-bit}{proved=annex:p16.idc-unused-conditioning-bit}{A conditioning-marginal witness with an unused differing coordinate}
+If \(P_a(W)\) is not graph-uniformly identified on positive
+laws, two finite positive models with the same observed law can
+be chosen so that some bit coordinate \(L\) of a vertex
+\(w\in W\) is unused in every other equation, and the
+conditional probability of \(L=1\) given all the other observed
+coordinates at vertices of \(W\) differs between the two models
+at the same action and remaining-coordinate assignment.
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p16-idc-terminal-reduction}{proved=annex:p16.idc-terminal-reduction}{The complete terminal conditional-versus-joint reduction}
+After maximal graphical exchange, let \(A=X\cup E\) and
+\(W=Z\setminus E\). On the graph-uniform positive-law class,
+the original conditional query is identified if and only if
+\(P_a(Y,W)\) is identified. If the terminal joint is not
+identified, there are positive finite models with the same full
+observed law and different original conditional effects. The proof
+handles both an identified and an unidentified conditioning marginal.
+It uses finite additional coordinates, so it makes no assertion of
+completeness for a separately prescribed small alphabet family.
+\end{hbtheorem}
+
+\begin{hbcorollary}{thm:p16-idc-completeness}{proved=annex:p16.idc-completeness}{IDC, the terminal hedge criterion and do-calculus completeness}
+IDC is sound and complete for graph-uniform conditional identification
+on positive laws. Its result is independent of exchange order.
+A query is identified exactly when there is no hedge for the full
+terminal query \((X\cup E,Y\cup(Z\setminus E))\).
+Every identified conditional query has a finite do-calculus derivation
+with ordinary probability operations. The terminal failure record and
+the conditional-witness construction together justify nonidentification;
+failure of an arbitrary original joint alone would not do so.
+\end{hbcorollary}
+
+The general construction retains the two cases of the source's Theorem~6
+argument. Its active-path transmission is made explicit by separate
+coordinate channels and positive noise. It does not use the general
+hedge inclusion rejected above, which appears as the source's Appendix
+Lemma~5. The larger finite alphabets are part of the graph-uniform
+countermodel construction, not a change to a prescribed input family.
+
+\subsection{Complete calculated runs}
+
+\begin{hbtheorem}{thm:p16-idc-worked}{proved=annex:p16.idc-worked}{Conditioning helps in a chain and obstructs identification at a collider}
+For \(X\to Z\to Y,X\leftrightarrow Z\), IDC exchanges
+\(Z\) for an action and returns
+\(P_x(y\mid z)=p(y\mid z)\). With independent
+\(U,E,E_Y\), \(U\) fair and \(E,E_Y\) of one-probability
+\(1/4\), compare \(X=U,Z=X\oplus U\oplus E,Y=Z\oplus E_Y\)
+with the model replacing \(Z\) by \(E\). Their common table,
+for each \(x\), is
+\[
+\begin{array}{c|cc}
+z&p(x,z,0)&p(x,z,1)\\\hline
+0&9/32&3/32\\
+1&1/32&3/32
+\end{array}
+\]
+The original joint intervention law on \(Z,Y\) differs between
+the models, but the conditional response-one probabilities are
+\(1/4\) at \(z=0\) and \(3/4\) at \(z=1\) in both.
+
+For \(X\to Z\leftarrow Y,X\leftrightarrow Z\), let
+\(U,V\) be independent fair bits and \(E\) an independent
+bit of one-probability \(1/4\). Use \(X=U,Y=V\) and either
+\(Z=X\oplus U\oplus Y\oplus E\) or \(Z=Y\oplus E\).
+The common observed law is \(3/16\) when \(z=y\) and
+\(1/16\) when \(z\ne y\), for each \(x,y,z\).
+The marginal effect on \(Y\) is the fair law in both models,
+but the conditional response-one values are
+\[
+\begin{gathered}
+ P^1_x(Y=1\mid Z=z)=1/2,\\
+ P^2_x(Y=1\mid Z=0)=1/4,\\
+ P^2_x(Y=1\mid Z=1)=3/4.
+\end{gathered}
+\]
+No exchange is licensed, and the terminal joint ID call fails.
+The annex gives both complete graph traces and calculations.
+\end{hbtheorem}
+
+\begin{proofboundary}{def:p16-idc-support-boundary}{Nonpositive evidence and distinct source versions}
+At a nonpositive observed law, IDC's Rule 2 step requires the actual
+current conditioning mass positive; terminal normalization requires the
+actual terminal conditioning marginal positive. A terminal joint law
+returned by the support-aware procedures of the preceding section can
+be normalized only after these requirements are proved. The original
+action's observed support alone does not supply them.
+
+The UAI version is the eight-page author-hosted R-329 text dated May 2006.
+Its earlier February submission, its 2007 addendum, and the later arXiv
+deposit are distinct records. The addendum's correction concerns the
+separate Tian conditional algorithm. Its original four-phase
+cancellation procedure, full soundness and positive graph-uniform
+completeness are supplied in
+\cref{thm:p16-tcc-cancellation-soundness,thm:p16-tcc-completeness}.
+The corrected original comparison and its complete countermodel
+calculation are \cref{thm:p16-tcc-corrected-comparison}
+\cite{Tian2004ConditionalCausalEffects,Shpitser2007ConditionalIdentificationAppendum}.
+\end{proofboundary}

@@ -1,0 +1,515 @@
+%% toc: P1 1 1.3,1.4
+\section{Formula schemas, metavariables, quotation, and codes}
+\label{sec:p01-w02-p01-004-schemas-codes}
+
+\Cref{sec:levels-02} separates the object language from the metalanguage and
+notes that a Greek letter such as \(\varphi\) is normally a metavariable,
+not an object-language symbol. That remark leaves three devices undeveloped:
+the formula schema, in which metavariables stand for whole families of
+formulas; the quotation name, which mentions one inscription; and the
+numerical code, which assigns one natural number to one formula and, in a
+language with numerals, lets the object language itself name that formula.
+This section develops all three for the propositional language and states
+exactly how they differ.
+
+\paragraph{Inputs.} The propositional alphabet, the formula set
+\(\mathsf{Fm}_{\mathsf{CPL}}\) defined as the least set of strings closed
+under the formation clauses for \(p_n\), \(\bottom\), \(\neg\) and the
+parenthesized binary connectives \(\land,\lor,\to\), and the unique
+readability theorem \cref{thm:prop-unique-readability}
+\cite[ch.~``Propositional Syntax and Semantics'', definitions
+``Propositional alphabet'' and ``Propositional formula'', theorem ``Unique
+readability'']{FrozenFormalLogicSchemasCodes}; the numerical pairing
+\(\operatorname{pair}_{\N}(a,b)=\frac{(a+b)(a+b+1)}{2}+b\) and its proof of
+bijectivity \(\N\times\N\to\N\) in \cref{sec:strings-01}
+\cite[ch.~``Finite Strings, Induction, and Recursion'', section ``Finite
+sequences and strings'']{FrozenFormalLogicSchemasCodes}; and, for the
+relationships at the end, uniform substitution
+(\cref{def:p02-uniform-substitution}), the arithmetic coding of
+\cref{sec:arithmetic-coding-04} and \cref{thm:tarski-undefinability}.
+
+\paragraph{Conclusions.} A definition of formula schemas and their instances
+(\cref{def:p01-w02-p01-004-schema,def:p01-w02-p01-004-instance}) with unique
+readability for schemas (\cref{thm:p01-w02-p01-004-schema-readability}); the
+uniqueness of matching (\cref{thm:p01-w02-p01-004-matching-unique}), a
+matching procedure and its correctness
+(\cref{def:p01-w02-p01-004-matching,thm:p01-w02-p01-004-matching-correct});
+the size of instance sets (\cref{thm:p01-w02-p01-004-instance-count}) and their
+relation to uniform substitution
+(\cref{thm:p01-w02-p01-004-substitution-link}); a numerical code for
+formulas with injectivity and decrease on immediate subformulas
+(\cref{def:p01-w02-p01-004-code,thm:p01-w02-p01-004-code-properties}); a
+decoding procedure deciding which numbers are codes
+(\cref{def:p01-w02-p01-004-decoding,thm:p01-w02-p01-004-decoding-correct});
+and the schema/code distinction stated as a theorem
+(\cref{def:p01-w02-p01-004-distinction,thm:p01-w02-p01-004-distinction}),
+with a decidable code set for each instance family
+(\cref{thm:p01-w02-p01-004-instance-codes}). All arguments are editorial
+completions built on the inherited definitions; the proofs are in the annex.
+
+\subsection{Metavariables and formula schemas}
+\label{sec:p01-w02-p01-004-schemas}
+
+A metavariable such as \(\varphi\) is a variable of the metalanguage whose
+values are formulas. In a sentence such as ``for all formulas \(\varphi\),
+the formula \((\varphi\to\varphi)\) is valid'' it is bound by a metalinguistic
+quantifier and takes one formula as its value at a time. A display such as
+\((\varphi\to(\psi\to\varphi))\), offered as an axiom or as the premise
+pattern of a rule, is used differently: it is read as a pattern, and the
+letters in it mark the places where formulas are to be inserted. To make the
+pattern itself an object of study, the letters are taken as additional
+symbols of a metalinguistic syntax.
+
+\begin{hbdefinition}{def:p01-w02-p01-004-schema}{Schematic letters and formula schemas}
+Fix a countably infinite set \(\Xi=\{\xi_k:k\in\N\}\) of \emph{schematic
+letters}, pairwise distinct and distinct from every symbol of the
+propositional alphabet. Write \(A\) for the propositional alphabet and
+\(A^{+}=A\cup\Xi\). The set \(\mathrm{Sch}\) of \emph{formula schemas} is the
+least set of strings over \(A^{+}\) such that:
+\begin{enumerate}
+  \item \(\xi_k\in\mathrm{Sch}\) for every \(k\in\N\);
+  \item \(p_n\in\mathrm{Sch}\) for every \(n\in\N\), and
+        \(\bottom\in\mathrm{Sch}\);
+  \item if \(\mathfrak s\in\mathrm{Sch}\), then \(\neg\mathfrak s\in\mathrm{Sch}\);
+  \item if \(\mathfrak s,\mathfrak t\in\mathrm{Sch}\) and
+        \(\circ\in\{\land,\lor,\to\}\), then
+        \((\mathfrak s\circ\mathfrak t)\in\mathrm{Sch}\).
+\end{enumerate}
+For a schema \(\mathfrak s\), \(\operatorname{MV}(\mathfrak s)\) is the set of
+schematic letters occurring in \(\mathfrak s\); it is finite because
+\(\mathfrak s\) is a finite string. The letters \(\xi_k\) are symbols of the
+metalanguage. They are not added to the object language, and a schema
+containing one of them is not a formula.
+\end{hbdefinition}
+
+In displays, the handbook writes schemas with the formula metavariables
+\(\varphi,\psi,\chi\) in place of \(\xi_0,\xi_1,\xi_2\), and with the
+typographical omissions of outer parentheses declared for formulas in
+\cref{ch:prop-syntax-semantics}. Thus the display
+\(\varphi\to(\psi\to\varphi)\), read as a schema, abbreviates the string
+\((\xi_0\to(\xi_1\to\xi_0))\).
+
+\begin{hbtheorem}{thm:p01-w02-p01-004-schema-readability}{proved=annex:p01-w02-p01-004-schema-readability}{Unique readability for schemas}
+Every member of \(\mathrm{Sch}\) satisfies exactly one of the four formation
+clauses, and in the first two clauses it is a single token. In the negation
+case its immediate subschema is unique. In a binary case its main connective
+and its two immediate subschemas are unique. Moreover
+\(\mathsf{Fm}_{\mathsf{CPL}}=\{\mathfrak s\in\mathrm{Sch}:
+\operatorname{MV}(\mathfrak s)=\varnothing\}\).
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p01-w02-p01-004-instance}{Instantiation and instance}
+An \emph{instantiation} is a function
+\(\iota:\Xi\to\mathsf{Fm}_{\mathsf{CPL}}\). Its action on schemas is defined
+by structural recursion, which is well defined by
+\cref{thm:p01-w02-p01-004-schema-readability}:
+\[
+\begin{aligned}
+ \xi_k[\iota]&=\iota(\xi_k),&
+ p_n[\iota]&=p_n,&
+ \bottom[\iota]&=\bottom,\\
+ (\neg\mathfrak s)[\iota]&=\neg(\mathfrak s[\iota]),&
+ (\mathfrak s\circ\mathfrak t)[\iota]
+   &=(\mathfrak s[\iota]\circ\mathfrak t[\iota]).
+\end{aligned}
+\]
+The formula \(\mathfrak s[\iota]\) is the \emph{instance of \(\mathfrak s\)
+under \(\iota\)}. The \emph{instance set} of \(\mathfrak s\) is
+\(\operatorname{Inst}(\mathfrak s)=\{\mathfrak s[\iota]:\iota
+\text{ an instantiation}\}\). A formula \(\varphi\) \emph{matches}
+\(\mathfrak s\) when \(\varphi\in\operatorname{Inst}(\mathfrak s)\).
+\end{hbdefinition}
+
+Induction on schemas shows that \(\mathfrak s[\iota]\in
+\mathsf{Fm}_{\mathsf{CPL}}\) for every \(\iota\), because each clause applies a
+formation clause of \(\mathsf{Fm}_{\mathsf{CPL}}\) to formulas. Every
+occurrence of the same letter receives the same formula: instantiation is
+uniform. An axiom schema of a calculus contributes all members of its
+instance set as axioms, and a rule schema licenses all the rule instances
+obtained by instantiating its premises and conclusion with one common
+\(\iota\); a side condition attached to a rule further restricts which
+instantiations the rule licenses.
+
+\begin{hbconvention}{def:p01-w02-p01-004-display-reading}{The two readings of a display containing metavariables}
+Let \(\varphi_0,\ldots,\varphi_{m}\) be metavariables with current values, as
+inside the scope of a metalinguistic quantifier ``for all formulas
+\(\varphi_0,\ldots,\varphi_m\)''. A display built from them by the formation
+clauses denotes the single formula \(\mathfrak s[\iota]\), where
+\(\mathfrak s\) is the schema obtained by writing \(\xi_j\) for
+\(\varphi_j\) and \(\iota(\xi_j)\) is the current value of \(\varphi_j\); this
+is the \emph{bound reading}. A display offered as an axiom, a rule premise or
+a rule conclusion, with no enclosing quantifier, denotes its schema, and the
+claim made with it concerns every member of \(\operatorname{Inst}(\mathfrak
+s)\); this is the \emph{schematic reading}. A claim stated in the schematic
+reading is equivalent to the claim prefixed by ``for all formulas
+\(\varphi_0,\ldots,\varphi_m\)'' in the bound reading, by the definition of
+\(\operatorname{Inst}\).
+\end{hbconvention}
+
+\begin{hbtheorem}{thm:p01-w02-p01-004-matching-unique}{proved=annex:p01-w02-p01-004-matching-unique}{Uniqueness of matching}
+Let \(\mathfrak s\in\mathrm{Sch}\) and let \(\iota,\iota'\) be
+instantiations.
+\begin{enumerate}
+  \item If \(\iota\) and \(\iota'\) agree on \(\operatorname{MV}(\mathfrak
+        s)\), then \(\mathfrak s[\iota]=\mathfrak s[\iota']\).
+  \item If \(\mathfrak s[\iota]=\mathfrak s[\iota']\), then \(\iota\) and
+        \(\iota'\) agree on \(\operatorname{MV}(\mathfrak s)\).
+\end{enumerate}
+Hence a formula that matches \(\mathfrak s\) determines the values of the
+instantiation on the letters of \(\mathfrak s\) uniquely.
+\end{hbtheorem}
+
+The second clause depends on the unique readability of formulas. Without the
+parentheses required by the binary formation clause, the string
+\(p_0\land p_1\land p_2\) would match the pattern
+\(\varphi\land\psi\) in two ways, with \(\varphi\) taking the value
+\(p_0\) or the value \(p_0\land p_1\), and the instantiation would not be
+recoverable from the instance.
+
+\begin{hbmethod}{def:p01-w02-p01-004-matching}{Matching a formula against a schema}
+\emph{Input:} a schema \(\mathfrak s\in\mathrm{Sch}\) and a formula
+\(\varphi\in\mathsf{Fm}_{\mathsf{CPL}}\). \emph{Output:} a finite function
+\(m\) from schematic letters to formulas, or the answer \(\mathsf{fail}\).
+The value \(\operatorname{match}(\mathfrak s,\varphi)\) is defined by
+recursion on \(\mathfrak s\):
+\begin{enumerate}
+  \item If \(\mathfrak s=\xi_k\), return \(\{\xi_k\mapsto\varphi\}\).
+  \item If \(\mathfrak s=p_n\) or \(\mathfrak s=\bottom\), return the empty
+        function if \(\varphi=\mathfrak s\), and \(\mathsf{fail}\) otherwise.
+  \item If \(\mathfrak s=\neg\mathfrak s_1\): if \(\varphi\) is a negation
+        \(\neg\varphi_1\), return \(\operatorname{match}(\mathfrak
+        s_1,\varphi_1)\); otherwise return \(\mathsf{fail}\).
+  \item If \(\mathfrak s=(\mathfrak s_1\circ\mathfrak s_2)\): if \(\varphi\)
+        is a binary formula \((\varphi_1\circ'\varphi_2)\) with
+        \(\circ'=\circ\), compute \(m_1=\operatorname{match}(\mathfrak
+        s_1,\varphi_1)\) and \(m_2=\operatorname{match}(\mathfrak
+        s_2,\varphi_2)\); if either is \(\mathsf{fail}\), or if some letter in
+        the domain of both receives different formulas from \(m_1\) and
+        \(m_2\), return \(\mathsf{fail}\); otherwise return \(m_1\cup m_2\).
+        In every other case return \(\mathsf{fail}\).
+\end{enumerate}
+\emph{Side conditions.} The decomposition of \(\varphi\) in steps 3 and 4 is
+the unique one given by \cref{thm:prop-unique-readability}; the procedure is
+not defined on strings outside \(\mathsf{Fm}_{\mathsf{CPL}}\). The consistency
+test in step 4 is what enforces uniform instantiation of a repeated letter.
+Each recursive call is on an immediate subschema, so the recursion
+terminates after at most as many calls as \(\mathfrak s\) has symbol
+occurrences.
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p01-w02-p01-004-matching-correct}{proved=annex:p01-w02-p01-004-matching-correct}{Correctness of matching}
+For every \(\mathfrak s\in\mathrm{Sch}\) and
+\(\varphi\in\mathsf{Fm}_{\mathsf{CPL}}\):
+\begin{enumerate}
+  \item if \(\operatorname{match}(\mathfrak s,\varphi)=m\ne\mathsf{fail}\),
+        then the domain of \(m\) is \(\operatorname{MV}(\mathfrak s)\) and
+        \(\mathfrak s[\iota]=\varphi\) for every instantiation \(\iota\)
+        extending \(m\);
+  \item if \(\varphi\in\operatorname{Inst}(\mathfrak s)\), then
+        \(\operatorname{match}(\mathfrak s,\varphi)\ne\mathsf{fail}\).
+\end{enumerate}
+Consequently \(\varphi\in\operatorname{Inst}(\mathfrak s)\) if and only if
+\(\operatorname{match}(\mathfrak s,\varphi)\ne\mathsf{fail}\), and in that
+case \(\operatorname{match}(\mathfrak s,\varphi)\) is the restriction to
+\(\operatorname{MV}(\mathfrak s)\) of every instantiation \(\iota\) with
+\(\mathfrak s[\iota]=\varphi\).
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p01-w02-p01-004-instance-count}{proved=annex:p01-w02-p01-004-instance-count}{Size of instance sets}
+Let \(\mathfrak s\in\mathrm{Sch}\).
+\begin{enumerate}
+  \item If \(\operatorname{MV}(\mathfrak s)=\varnothing\), then
+        \(\mathfrak s\in\mathsf{Fm}_{\mathsf{CPL}}\) and
+        \(\operatorname{Inst}(\mathfrak s)=\{\mathfrak s\}\).
+  \item If \(\operatorname{MV}(\mathfrak s)\ne\varnothing\), then
+        \(\operatorname{Inst}(\mathfrak s)\) is countably infinite.
+\end{enumerate}
+\end{hbtheorem}
+
+The relation to uniform substitution passes through a translation of the
+schemas into formulas, which keeps the fixed variables and the schematic
+letters apart.
+Let \(\operatorname{tr}\) be the map on strings over \(A^{+}\) that replaces
+each token \(p_n\) by \(p_{2n}\) and each token \(\xi_k\) by \(p_{2k+1}\), and
+leaves every other token unchanged.
+
+\begin{hbtheorem}{thm:p01-w02-p01-004-substitution-link}{proved=annex:p01-w02-p01-004-substitution-link}{Instances as uniform-substitution instances}
+For every instantiation \(\iota\), let \(\upsilon_\iota\) be the uniform
+substitution with \(\upsilon_\iota(p_{2n})=p_n\) and
+\(\upsilon_\iota(p_{2k+1})=\iota(\xi_k)\) for all \(n,k\in\N\). Then for every
+\(\mathfrak s\in\mathrm{Sch}\):
+\begin{enumerate}
+  \item \(\operatorname{tr}(\mathfrak s)\in\mathsf{Fm}_{\mathsf{CPL}}\),
+        and \(\mathfrak s[\iota]\) is the formula
+        \(\operatorname{tr}(\mathfrak s)[\upsilon_\iota]\);
+  \item \(\operatorname{Inst}(\mathfrak s)\) is the set of formulas
+        \(\operatorname{tr}(\mathfrak s)[\upsilon]\) for the uniform
+        substitutions \(\upsilon\) with \(\upsilon(p_{2n})=p_n\) for all
+        \(n\);
+  \item if \(\entails\operatorname{tr}(\mathfrak s)\), then
+        \(\entails\varphi\) for every
+        \(\varphi\in\operatorname{Inst}(\mathfrak s)\).
+\end{enumerate}
+\end{hbtheorem}
+
+Clause 3 is the familiar use of a schema: a valid pattern has only valid
+instances. Clause 2 shows that a schema without fixed variables \(p_n\) has
+exactly the uniform-substitution instances of the formula
+\(\operatorname{tr}(\mathfrak s)\) as its instances. This agrees with the
+inherited rule sheets, where a displayed rule is a rule schema whose
+instances arise by uniformly substituting formulas for its formula
+metavariables \cite[ch.~``Rule Sheets'', section ``Classical natural
+deduction'']{FrozenFormalLogicSchemasCodes}.
+
+\subsection{Quotation}
+\label{sec:p01-w02-p01-004-quotation}
+
+A quotation name is formed in the metalanguage by enclosing an inscription in
+quotation marks; it denotes that inscription and nothing else. The
+metalinguistic sentence ``the string \(\text{`}(p_0\to p_0)\text{'}\) has
+five symbol occurrences'' mentions one formula. Quotation names are names of
+the metalanguage. A quotation cannot be filled in: the quotation of the
+display \((\varphi\to\varphi)\) names a string containing the Greek letter,
+not a formula, which is why the handbook states claims about all formulas of
+a given shape by the bound reading of
+\cref{def:p01-w02-p01-004-display-reading} rather than by quoting a display.
+
+\begin{hbwarning}{def:p01-w02-p01-004-corner-quotes}{Corner quotes in the arithmetic chapters name codes}
+\Cref{sec:levels-02} allows quotation marks or corner quotes for literal
+mention. From \cref{sec:arithmetic-coding-04} onward, corner quotes have a
+fixed different meaning: \(\ulcorner E\urcorner\) is the numerical code of the
+expression \(E\) in its declared syntactic sort, a natural number, and
+\(\overline{\ulcorner E\urcorner}\) is the arithmetic numeral of that number,
+an object-language term. In those parts a corner-quoted expression is
+therefore never a quotation name of an inscription. The code of this section
+is written \(\#\varphi\) to keep it apart from the arithmetic coding.
+\end{hbwarning}
+
+\subsection{Numerical codes}
+\label{sec:p01-w02-p01-004-codes}
+
+A code replaces a formula by a natural number from which the formula can be
+recovered. The construction below assigns a numerical tag to each formation
+clause and combines the tag with the codes of the immediate subformulas by
+the pairing of \cref{sec:strings-01}.
+
+\begin{hbdefinition}{def:p01-w02-p01-004-code}{Numerical code of a propositional formula}
+Write \(\pi\) for \(\operatorname{pair}_{\N}\). The \emph{code}
+\(\#\varphi\in\N\) of a formula \(\varphi\in\mathsf{Fm}_{\mathsf{CPL}}\) is
+defined by structural recursion:
+\[
+\begin{aligned}
+ \#p_n&=1+\pi(0,n),&
+ \#(\varphi\land\psi)&=1+\pi(3,\pi(\#\varphi,\#\psi)),\\
+ \#\bottom&=1+\pi(1,0),&
+ \#(\varphi\lor\psi)&=1+\pi(4,\pi(\#\varphi,\#\psi)),\\
+ \#\neg\varphi&=1+\pi(2,\#\varphi),&
+ \#(\varphi\to\psi)&=1+\pi(5,\pi(\#\varphi,\#\psi)).
+\end{aligned}
+\]
+The first argument of the outer pairing is the \emph{tag} of the formation
+clause. \Cref{thm:prop-unique-readability} makes the recursion well defined:
+each formula falls under exactly one line, with unique immediate
+subformulas.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p01-w02-p01-004-code-properties}{proved=annex:p01-w02-p01-004-code-properties}{Properties of the code}
+\begin{enumerate}
+  \item For all \(a,b\in\N\), \(\pi(a,b)\ge a\) and \(\pi(a,b)\ge b\).
+  \item \(\#\varphi\ge1\) for every formula \(\varphi\).
+  \item The map \(\#:\mathsf{Fm}_{\mathsf{CPL}}\to\N\) is injective.
+  \item If \(\psi\) is an immediate subformula of \(\varphi\), then
+        \(\#\psi<\#\varphi\).
+\end{enumerate}
+\end{hbtheorem}
+
+\begin{hbmethod}{def:p01-w02-p01-004-decoding}{Recognizing and decoding codes}
+\emph{Input:} \(c\in\N\). \emph{Output:} a formula \(\operatorname{dec}(c)\),
+or the answer \(\mathsf{none}\). For \(z\in\N\), let \(\pi^{-1}(z)\) be the
+unique pair \((a,b)\) with \(\pi(a,b)=z\), computed as in
+\cref{sec:strings-01}: with \(t_s=s(s+1)/2\), find the unique \(s\) with
+\(t_s\le z<t_{s+1}\), and put \(b=z-t_s\) and \(a=s-b\).
+\begin{enumerate}
+  \item If \(c=0\), return \(\mathsf{none}\). Otherwise let
+        \((k,x)=\pi^{-1}(c-1)\).
+  \item If \(k=0\), return \(p_x\).
+  \item If \(k=1\), return \(\bottom\) when \(x=0\) and \(\mathsf{none}\)
+        otherwise.
+  \item If \(k=2\), return \(\neg\operatorname{dec}(x)\) when
+        \(\operatorname{dec}(x)\) is a formula and \(\mathsf{none}\)
+        otherwise.
+  \item If \(k\in\{3,4,5\}\), let \((a,b)=\pi^{-1}(x)\); when
+        \(\operatorname{dec}(a)\) and \(\operatorname{dec}(b)\) are both
+        formulas return \((\operatorname{dec}(a)\circ_k\operatorname{dec}(b))\),
+        where \(\circ_3={\land}\), \(\circ_4={\lor}\) and \(\circ_5={\to}\);
+        otherwise return \(\mathsf{none}\).
+  \item If \(k\ge6\), return \(\mathsf{none}\).
+\end{enumerate}
+\emph{Side conditions and termination.} The search for \(s\) in
+\(\pi^{-1}(z)\) is bounded: \(t_s\ge s\) for every \(s\), so \(s\le z\). Every
+recursive call is made at \(x\), \(a\) or \(b\), and each of these is at most
+\(c-1\) by \cref{thm:p01-w02-p01-004-code-properties}, clause 1, so the
+recursion is a course-of-values recursion on \(c\) and terminates on every
+input.
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p01-w02-p01-004-decoding-correct}{proved=annex:p01-w02-p01-004-decoding-correct}{Correctness of decoding}
+For every formula \(\varphi\), the decoding of its code is \(\varphi\), that
+is, \(\operatorname{dec}(\#\varphi)=\varphi\). For every \(c\in\N\), if \(\operatorname{dec}(c)\) is a formula \(\varphi\), then
+\(c=\#\varphi\). Consequently a natural number \(c\) is the code of a formula
+if and only if \(\operatorname{dec}(c)\ne\mathsf{none}\), and
+\(\operatorname{dec}\) restricted to the set of codes is the inverse of
+\(\#\).
+\end{hbtheorem}
+
+\begin{hbexample}{def:p01-w02-p01-004-worked}{Coding, decoding and matching one formula}
+Let \(\varphi=(p_0\to\neg p_0)\). Then
+\[
+\begin{aligned}
+ \#p_0&=1+\pi(0,0)=1+0=1,\\
+ \#\neg p_0&=1+\pi(2,1)=1+(t_3+1)=1+7=8,\\
+ \pi(\#p_0,\#\neg p_0)&=\pi(1,8)=t_9+8=45+8=53,\\
+ \#\varphi&=1+\pi(5,53)=1+(t_{58}+53)=1+(1711+53)=1765.
+\end{aligned}
+\]
+Decoding \(1765\): \(c-1=1764\), and \(t_{58}=1711\le1764<1770=t_{59}\), so
+\(b=53\) and \(a=58-53=5\). The tag \(5\) calls for an implication, and
+\(\pi^{-1}(53)=(1,8)\) because \(t_9=45\le53<55=t_{10}\). Next
+\(\pi^{-1}(0)=(0,0)\) gives \(\operatorname{dec}(1)=p_0\), and
+\(\pi^{-1}(7)=(2,1)\), from \(t_3=6\le7<10=t_4\), gives
+\(\operatorname{dec}(8)=\neg p_0\). Hence
+\(\operatorname{dec}(1765)=(p_0\to\neg p_0)\). The tag \(1\) yields a code
+only with second component \(0\): \(\pi^{-1}(1)=(1,0)\), so
+\(\operatorname{dec}(2)=\bottom\) and \(\#\bottom=2\); but
+\(\pi^{-1}(4)=(1,1)\), from \(t_2=3\le4<6=t_3\), has tag \(1\) and
+\(x=1\ne0\), so \(\operatorname{dec}(5)=\mathsf{none}\) and \(5\) is not the
+code of any formula.
+
+Now match \(\varphi\) against the schema \(\mathfrak s=(\xi_0\to(\xi_1\to
+\xi_0))\), displayed as \(\varphi\to(\psi\to\varphi)\). Step 4 of
+\cref{def:p01-w02-p01-004-matching} compares the main connectives, both
+\(\to\), and calls \(\operatorname{match}(\xi_0,p_0)=\{\xi_0\mapsto p_0\}\)
+and \(\operatorname{match}((\xi_1\to\xi_0),\neg p_0)\). The second call
+fails, since \(\neg p_0\) is a negation and not an implication; so
+\(\varphi\notin\operatorname{Inst}(\mathfrak s)\). The formula
+\((p_0\to(\neg p_0\to p_0))\) does match, with the unique restriction
+\(\{\xi_0\mapsto p_0,\ \xi_1\mapsto\neg p_0\}\). The formula
+\((p_0\to(p_1\to p_2))\) does not match: the two calls for \(\xi_0\) return
+\(p_0\) and \(p_2\), and the consistency test of step 4 fails.
+\end{hbexample}
+
+\subsection{The schema/code distinction}
+\label{sec:p01-w02-p01-004-distinction}
+
+\begin{hbdefinition}{def:p01-w02-p01-004-distinction}{Schema, quotation name, code and numeral}
+Four kinds of expression are used to speak about formulas.
+\begin{enumerate}
+  \item A \emph{formula schema} \(\mathfrak s\) is a metalinguistic
+        expression; it stands for the family
+        \(\operatorname{Inst}(\mathfrak s)\) of object-language formulas,
+        its instances, and is not itself a formula when it contains a
+        schematic letter.
+  \item A \emph{quotation name} is a metalinguistic name of exactly one
+        inscription.
+  \item A \emph{code} is a natural number; the number \(\#\varphi\) is
+        correlated with exactly one formula, \(\varphi\), by an injective
+        coding fixed in advance.
+  \item In an object language containing numerals, the \emph{numeral} of a
+        code is a closed object-language term denoting that number; through
+        the fixed coding, the object language can thereby mention one
+        particular formula.
+\end{enumerate}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p01-w02-p01-004-distinction}{proved=annex:p01-w02-p01-004-distinction}{Schemas stand for families; codes name single formulas}
+\begin{enumerate}
+  \item For every formula \(\varphi\) there is exactly one \(c\in\N\) with
+        \(\operatorname{dec}(c)=\varphi\), namely \(c=\#\varphi\); and every
+        \(c\) with \(\operatorname{dec}(c)\ne\mathsf{none}\) is correlated
+        with exactly one formula.
+  \item A schema \(\mathfrak s\) is a formula if and only if
+        \(\operatorname{Inst}(\mathfrak s)\) has exactly one member, and
+        then \(\operatorname{Inst}(\mathfrak s)=\{\mathfrak s\}\).
+  \item If \(\operatorname{MV}(\mathfrak s)\ne\varnothing\), there is a
+        schema \(\mathfrak s'\ne\mathfrak s\) with
+        \(\operatorname{Inst}(\mathfrak s')=\operatorname{Inst}(\mathfrak
+        s)\). Thus a schema is not recoverable from its instance family,
+        whereas a formula is recoverable from its code.
+\end{enumerate}
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p01-w02-p01-004-instance-codes}{proved=annex:p01-w02-p01-004-instance-codes}{The codes of an instance family}
+For every schema \(\mathfrak s\),
+\[
+ \{\#\varphi:\varphi\in\operatorname{Inst}(\mathfrak s)\}
+ =\{c\in\N:\operatorname{dec}(c)\ne\mathsf{none}\text{ and }
+    \operatorname{match}(\mathfrak s,\operatorname{dec}(c))\ne\mathsf{fail}\}.
+\]
+Membership of a number in this set is therefore decided by running the
+procedures of \cref{def:p01-w02-p01-004-decoding} and
+\cref{def:p01-w02-p01-004-matching} in turn.
+\end{hbtheorem}
+
+\Cref{thm:p01-w02-p01-004-instance-codes} is the point at which the two
+devices meet. A schema is a pattern in the metalanguage, but the codes of its
+instances form one set of natural numbers. An object language that can speak
+about numbers can therefore speak about the instance family only through such
+a set of codes, while the schema itself remains outside it. Coding the
+schema itself is possible, by extending the tags to the letters \(\xi_k\);
+the resulting number names the one string \(\mathfrak s\), not its instances.
+
+\begin{hbwarning}{def:p01-w02-p01-004-schema-not-sentence}{A schema is not one sentence, and a code does not supply one}
+A schema with a schematic letter is a family of formulas, not a single
+formula, and an axiom schema adds every instance as an axiom; the inherited
+checklist for axiomatizations requires that a schema be identified as a set
+of sentences \cite[ch.~``Theories and Axiomatization'', warning on writing an
+axiomatization, item~6]{FrozenFormalLogicSchemasCodes}. Codes do not remove
+this distinction. In the arithmetic language \(\Lang_A\) with the coding of
+\cref{sec:arithmetic-coding-04}, consider the display
+\[
+ \mathsf{Tr}(\overline{\ulcorner\sigma\urcorner})\leftrightarrow\sigma .
+\]
+Here \(\sigma\) occurs twice in different roles: on the right it is a
+metavariable in the schematic reading, whose instances are sentences used in
+the formula; on the left it occurs inside a numeral, which is one closed
+object-language term mentioning the instance sentence through its code. For
+a fixed \(\Lang_A\)-formula \(\mathsf{Tr}(x)\), asking that every instance be
+true in the structure \(\mathcal N\) of the natural numbers is the definition
+of an arithmetical truth definition, and \cref{thm:tarski-undefinability}
+shows that no \(\Lang_A\)-formula satisfies it. The family of truths named by
+the schema cannot be captured by one object-language formula applied to
+codes. The inherited remark on partial truth definitions records that this
+obstacle concerns one formula for all arithmetic sentences at once, not one
+formula for each fixed level of the arithmetical hierarchy
+\cite[ch.~``Provability, the Second Incompleteness Theorem, and Truth'',
+remark ``Partial truth definitions'']{FrozenFormalLogicSchemasCodes}.
+\end{hbwarning}
+
+\paragraph{Limitations.} The schemas of this section have propositional
+instances only. Schemas with term and variable letters, as in the quantifier
+rules of first-order natural deduction, need further side conditions on
+instantiation (freshness of eigenvariables and freedom of a term for a
+variable), so their instance sets are not obtained by plain instantiation as
+in \cref{def:p01-w02-p01-004-instance}. The decoding procedure is shown to
+terminate and to be correct; its classification as a primitive-recursive
+function requires the class of primitive-recursive functions of
+\cref{sec:turing-machines-02} and is carried out for the arithmetic coding in \cref{sec:arithmetic-coding-04}, not for the code
+\(\#\) defined here.
+
+\paragraph{Relationships.} The code \(\#\) and the arithmetic coding of
+\cref{sec:arithmetic-coding-04} use the same pairing function and the same
+pattern of a constructor tag combined with child codes, and both rely on
+decrease of child codes for course-of-values recursion; the arithmetic coding
+adds terms, quantifiers, symbols and strings as further sorts. The injection
+of finite strings into \(\N\) in \cref{sec:strings-01} codes every string,
+formula or not, and so does not by itself give the clause-by-clause recovery
+of \cref{thm:p01-w02-p01-004-decoding-correct}. Instances of schemas are
+uniform-substitution instances
+(\cref{thm:p01-w02-p01-004-substitution-link}), so
+\cref{thm:p02-uniform-substitution} transfers validity from a schema's
+translation to all its instances. The level error recorded in the inherited
+error taxonomy, the confusion of a formula with a metalinguistic statement,
+is repaired by quotation or by quantifying with a metavariable
+\cite[ch.~``Writing Formal Definitions and Proofs'', section ``Error
+taxonomy'']{FrozenFormalLogicSchemasCodes}; the bound and schematic readings
+of \cref{def:p01-w02-p01-004-display-reading} make the second repair exact.

@@ -1,0 +1,373 @@
+% Complete reconstruction of the assigned original Theorem 6 dependencies.
+
+\begin{annexitem}{annex:p9.n-c-004.1.theorem6}{thm:p09-fagin74-theorem6}{Both directions of the original generalized-spectrum theorem}
+\begin{proof}
+Throughout the input type \(S\) is fixed and relational, its relations have
+positive arity, and every universe is finite and nonempty.  Write its size
+as \(n\).  The argument follows Fagin's proof on printed pp.~53--58
+\cite{Fagin1974}, with the standard reductions and the tableau's typing and
+carry conditions made explicit.
+
+\paragraph{Auxiliary functions and prenex form.}
+Replace each auxiliary \(d\)-ary function \(f\) by a fresh
+\((d+1)\)-ary relation \(F_f\) and require
+\(\forall\bar x\exists!y\,F_f(\bar x,y)\).  For a constant use a unary
+relation with exactly one element.  Define a term-value formula recursively:
+\(V_x(z)\) is \(z=x\), a constant's value is its singleton predicate,
+and
+\[
+ V_{f(t_1,\ldots,t_d)}(z):=
+ \exists z_1\cdots z_d
+  \left(\bigwedge_j V_{t_j}(z_j)\land F_f(z_1,\ldots,z_d,z)\right).
+\]
+Use fresh variables at each occurrence.  The graph axioms give a unique term
+value by induction on the term.  Replace atomic formulas by the formula
+which selects those values and applies the original relation or equality;
+extend through Boolean operations and first-order quantifiers.  Formula
+induction proves satisfaction preservation.  Conversely every graph expansion
+defines exactly the functions of a function expansion on the same universe.
+Thus this conversion preserves the class of reducts in both directions.
+
+Rename bound variables before moving quantifiers to the front.  The steps
+\((Qx\alpha)\land\beta\longleftrightarrow Qx(\alpha\land\beta)\)
+and the analogous disjunction steps apply when \(x\) is not free in
+\(\beta\); negation interchanges \(\forall\) and \(\exists\).
+Structural induction gives a fixed prenex sentence
+\(Q_1x_1\cdots Q_mx_m\varphi\), with quantifier-free \(\varphi\).
+If one common arity is wanted as in the source, pad a \(d\)-ary relation
+to arity \(h\geq d\) and require independence of the last \(h-d\)
+coordinates.  Nonemptiness supplies those coordinates; taking any such
+coordinates recovers the original relation.  This is a two-way same-universe
+coding, not a change of the input type.
+
+\paragraph{Spectrum to machine: a single guess followed by deterministic evaluation.}
+First parse the binary \(n\), separators and the required relation words.
+Use counters to check the \(n^{m_i}\) lengths and reject if a word is not
+an encoding.  Guess every bit of each auxiliary relation table, once, in
+lexicographic order.  The number of bits is \(\sum_j n^{d_j}\) for fixed
+arities \(d_j\).  Evaluate the quantifier-free matrix at each required
+assignment by computing the lexicographic index of each atomic tuple and
+reading its input or guessed bit.  Even a linear scan of an entire tape
+per access takes time polynomial in \(n\).
+
+Evaluate a universal quantifier by taking the conjunction of its \(n\)
+child values and an existential quantifier by taking their disjunction.
+Store the assignment stack and the partial conjunction/disjunction for each
+level.  There are at most \(1+n+\cdots+n^m\) nodes.  The matrix size,
+\(m\), table arities and number of tables are fixed, so the entire
+verification takes \(n^{O(1)}\) time.  It accepts exactly the expansions
+satisfying the sentence.  In particular the existential relation guess is
+\emph{outside} the first-order assignment loop; a different table at each
+assignment would verify a different formula.
+
+If \(S\ne\varnothing\), the encoding length \(\ell\) is at least
+\(n\), so this is polynomial in \(\ell\).  If \(S=\varnothing\),
+\(n<2^\ell\), so \(n^d<2^{d\ell}\).  This is exactly the original
+\(NP_1\) scale.  Constant factors and finitely many short inputs can be
+absorbed by increasing the exponent.  Malformed inputs need not be searched
+indefinitely: the parsing counters are explicitly bounded by the represented
+\(n\) and fixed arities.
+
+\paragraph{Preparing the converse without changing its input convention.}
+An \(NP\) machine on the original nonempty-type encodings takes
+\(\ell^{O(1)}=n^{O(1)}\) time.  An \(NP_1\) machine on binary size
+inputs takes \(2^{O(\ell)}=n^{O(1)}\) time.  We may clock the machine
+and reject when its polynomial-in-\(n\) budget expires; accepting inputs
+retain a bounded accepting branch.  For the construction use the source's
+modified \(r+1\)-tape input: tape~1 contains the binary representation
+of \(n\) backwards, and tape \(i+1\) contains \(b_i\).
+Reversal and concatenation, with separators, convert these tapes to the
+original input in polynomial time in \(n\).
+
+There is no need to add unboundedly many tapes to do this conversion.  On the
+first tape shift the reversed numerical word rightwards to make space for a
+work area; append the separate \(b_i\)'s there one bit at a time by scanning
+their tapes; reverse the numerical prefix in the work area.  Then simulate
+the original fixed-tape machine using a finite product alphabet whose tracks
+hold all its tapes and head marks.  A sweep finds the scanned symbols and
+marked heads; another sweep writes the chosen transition and moves the marks.
+One simulated step uses at most a polynomial number of sweeps over the
+already visited interval.  If a boundary needs extending, shift the finite
+work word and insert a fresh blank symbol.  The interval length is at most
+input length plus simulated time, both polynomial in \(n\).  The sweep
+simulation therefore has a polynomial time bound.  For \(r=0\) this is a
+one-tape simulation.  Its finite alphabet and state set are fixed.
+The source's convention that a scanned square is not rewritten as the actual
+blank can be met by a separate nonblank symbol coding a simulated blank.
+These elementary simulations suffice here; no exact speed-up factor is used.
+
+Call the resulting machine \(M\), its state set \(K\), and its tape
+alphabet \(\Gamma\), containing distinct \(0,1,B\).
+Its tapes are one-way infinite, heads start at the first square, and a
+left move from the first square rejects.  Increase a fixed integer \(k\)
+so that \(k>m_i\) for every input arity and, for all sufficiently large
+\(n\), an accepting run, its initial words and all scanned squares fit
+strictly within \(n^k\) cells and \(n^k-1\) transitions.  There are
+only finitely many remaining sizes.  We treat them separately below.
+
+\paragraph{Order and finite codes: the source's first three blocks.}
+Existentially quantify a strict linear order \(<\), endpoints \(c_1,c_2\),
+and a unary function \(S\).  The first-order matrix says
+\[
+ \begin{gathered}
+ \forall x\neg(x<x),\quad
+ \forall x\forall y\forall z((x<y\land y<z)\to x<z),\\
+ \forall x\forall y(x=y\lor x<y\lor y<x),\quad
+ \forall x\neg(x<c_1),\quad\forall x\neg(c_2<x),\\
+ S(c_2)=c_1,\qquad
+ \forall x(x\ne c_2\to
+    (x<Sx\land\neg\exists z(x<z\land z<Sx))).
+ \end{gathered}
+\]
+Finite nonempty linear orders have unique endpoints and successors, so these
+axioms give the intended cyclic successor.  Choose pairwise distinct tape
+symbol codes and pairwise distinct state codes from the first
+\(\lvert\Gamma\rvert\) and \(\lvert K\rvert\) successive elements.
+The two code lists may overlap: a tape symbol and a state are separate typed
+uses.  This works when \(n\geq\max(\lvert\Gamma\rvert,\lvert K\rvert)\).
+Order the tape-symbol list as \(0,1,B,\ldots\), and the state list as
+\(q_0,q_A,q_R,\ldots\).  Thus their respective first three codes are
+\(c_1,S(c_1),S^2(c_1)\), as in the source's first block.
+Write \(\kappa_b\) for the fixed successor term coding state \(b\), and
+\(\gamma_e\) for that coding tape symbol \(e\).  State names and tape
+symbol names in subsequent formulas abbreviate these terms.
+Explicit range constraints are
+\[
+ \forall\bar t\bigvee_{b\in K}q(\bar t)=\kappa_b,\qquad
+ \bigwedge_i\forall\bar t\forall\bar x
+                \bigvee_{e\in\Gamma}v_i(\bar t;\bar x)=\gamma_e,
+ \qquad
+ \forall x\forall y\,(G(x,y)=0\lor G(x,y)=1\lor G(x,y)=B).
+\]
+Every conjunction and disjunction here is over a fixed finite set.
+
+For tuples \(\bar x,\bar y\in A^k\), define lexicographic order by
+\[
+ \bar x<_{\rm lex}\bar y
+ \quad\longleftrightarrow\quad
+ \bigvee_{j=1}^{k}
+  \left(\bigwedge_{h<j}x_h=y_h\land x_j<y_j\right).
+\]
+This is one fixed first-order formula.  Let
+\(\mathbf a=(c_1,\ldots,c_1)\),
+\(\mathbf z=(c_2,\ldots,c_2)\).  Require the \(2k\)-ary relation
+\(S_1\) to be precisely immediate lexicographic succession, together with
+the pair \((\mathbf z,\mathbf a)\).  Immediate succession is the formula
+\(\bar x<_{\rm lex}\bar y\land
+ \neg\exists\bar v(\bar x<_{\rm lex}\bar v\land
+                       \bar v<_{\rm lex}\bar y)\).
+Thus the tuples enumerate exactly \(N=n^k\) times and squares.
+For actual time transitions put
+\(D(\bar t,\bar u):=S_1(\bar t,\bar u)\land\bar t\ne\mathbf z\);
+there is no final-to-initial time transition.
+
+\paragraph{The binary-digit block, with its carry condition explicit.}
+Use a binary function \(G(x,y)\), with values in \(\{0,1,B\}\).
+Under the order, \(x\) names the integer from \(1\) to \(n\), while
+\(y\) names a bit position from least significant upwards.  Initialize
+\[
+ G(c_1,c_1)=1,\qquad \forall y(y\ne c_1\to G(c_1,y)=B).
+\]
+Put \(C(x,y):=\forall z(z<y\to G(x,z)=1)\).
+For \(x\ne c_2\), require for every \(y\)
+\[
+ \begin{array}{ll}
+ \neg C(x,y) &\to G(Sx,y)=G(x,y),\\
+ C(x,y)\land G(x,y)=1 &\to G(Sx,y)=0,\\
+ C(x,y)\land(G(x,y)=0\lor G(x,y)=B)&\to G(Sx,y)=1.
+ \end{array}
+\]
+These exhaustive, disjoint cases define the next row from the preceding row.
+Induction on the ordered \(x\)'s shows that it is the reversed binary word
+for that integer, followed by blanks: lower bits equal to~1 become~0 until
+the first~0 becomes~1, or the first blank becomes a new leading~1; all
+higher positions are unchanged.  There are enough positions because
+\(\lfloor\log_2n\rfloor+1\leq n\).  This is the intended binary
+counter in the source's block~4, with the all-lower-bits carry test written
+explicitly rather than relying on overlapping printed antecedents.
+
+\paragraph{States, heads and input tapes: blocks five through seven.}
+Quantify \(q:A^k\to A\), \(v_i:A^{2k}\to A\), and
+\(H_i\subseteq A^{2k}\), for \(1\leq i\leq r+1\), subject to the
+range restrictions above.  At each time require exactly one tuple
+\(\bar x\) with \(H_i(\bar t;\bar x)\).
+Set \(q(\mathbf a)=q_0\), \(q(\mathbf z)=q_A\), and
+\(H_i(\mathbf a;\mathbf a)\) for every tape.
+Initialize tape~1 by
+\[
+ \begin{split}
+ v_1(\mathbf a;c_1,\ldots,c_1,y)&=G(c_2,y),\\
+ \neg(x_1=c_1\land\cdots\land x_{k-1}=c_1)
+    &\to v_1(\mathbf a;\bar x)=B.
+ \end{split}
+\]
+This gives the reversed binary word for \(n\), then blanks.
+For tape \(i+1\), set at positions
+\(\bar x=(c_1,\ldots,c_1,x_1,\ldots,x_{m_i})\)
+\[
+ v_{i+1}(\mathbf a;\bar x)=1\ \longleftrightarrow\
+ P_i(x_1,\ldots,x_{m_i}),
+ \qquad
+ v_{i+1}(\mathbf a;\bar x)=0\ \longleftrightarrow\
+ \neg P_i(x_1,\ldots,x_{m_i}).
+\]
+At all positions outside this initial segment require blank.  These are
+first-order formulas and list exactly \(b_i\) in tuple order.
+If \(r=0\), these relation-tape clauses are an empty conjunction;
+the numerical tape and all other blocks remain.
+
+\paragraph{Freezing final states and selecting a legal move: blocks eight and nine.}
+For \(D(\bar t,\bar u)\) and \(q(\bar t)\in\{q_A,q_R\}\), require
+\[
+ q(\bar u)=q(\bar t),\quad
+ \forall\bar x\,v_i(\bar u;\bar x)=v_i(\bar t;\bar x),\quad
+ \forall\bar x(H_i(\bar u;\bar x)\longleftrightarrow
+                              H_i(\bar t;\bar x))
+\]
+for every tape.  For each nonfinal state \(b\) and scanned-symbol list
+\((e_1,\ldots,e_{r+1})\in\Gamma^{r+1}\), require
+\[
+ \begin{split}
+ D(\bar t,\bar u)\land q(\bar t)=b\land
+ \bigwedge_i\bigl(H_i(\bar t;\bar x^i)\land
+                    v_i(\bar t;\bar x^i)=e_i\bigr)
+ \ \to\ \bigvee_{s\in\delta(b,e_1,\ldots,e_{r+1})}\Phi_s.
+ \end{split}
+\]
+There are only finitely many such table entries, so take their conjunction.
+For \(s=(b';d_1,\ldots,d_{r+1};T_1,\ldots,T_{r+1})\), its
+first-order formula \(\Phi_s\) says:
+\[
+ \begin{gathered}
+ q(\bar u)=b',\qquad
+ \bigwedge_i v_i(\bar u;\bar x^i)=d_i,\\
+ \bigwedge_i\forall\bar y\bigl(\bar y\ne\bar x^i\to
+              v_i(\bar u;\bar y)=v_i(\bar t;\bar y)\bigr),\\
+ \bigwedge_{i:T_i=R}\exists\bar y
+     \bigl(\bar x^i\ne\mathbf z\land S_1(\bar x^i,\bar y)
+                                     \land H_i(\bar u;\bar y)\bigr),\\
+ \bigwedge_{i:T_i=L}\exists\bar y
+     \bigl(\bar x^i\ne\mathbf a\land S_1(\bar y,\bar x^i)
+                                     \land H_i(\bar u;\bar y)\bigr).
+ \end{gathered}
+\]
+Tuple inequality abbreviates the disjunction of coordinate inequalities.
+Both tape boundaries are explicit here; a head does not move from the last
+square to the first via the cyclic successor.  The right guard does not
+eliminate a bounded accepting run because the exponent was chosen with slack.
+The left guard matches the source's rejecting off-tape convention.
+Nondeterminism is the finite disjunction of whole moves, so all tapes and the
+next state must follow one common transition, not separately selected moves.
+
+\paragraph{Why the tableau is equivalent to acceptance.}
+Given an accepting bounded run, impose any order on the universe and identify
+its elements with \(1,\ldots,n\).  Isomorphism closure says this relabeling
+does not change membership in \(\mathcal C\).  Interpret the codes, digit
+table, time, tapes, state and heads as just specified.  Fill the remaining
+rows by freezing the accepting final configuration.  The slack leaves room
+for the entire run, so every conjunct holds and the last row is accepting.
+
+Conversely, take any expansion satisfying the conjuncts.  The order and digit
+induction determine the correct input words.  The range constraints and unique
+heads make each row an actual instantaneous description of \(M\).  Each
+successor pair before the final row either freezes a final description or
+satisfies \(\Phi_s\) for one legal move.  Induction on the finite order of
+time tuples therefore reconstructs a genuine run.  Its last state is
+\(q_A\), and a rejecting final state cannot become accepting because it is
+frozen.  Thus \(M\) accepts the encoding of the ordered presentation of
+the reduct.  Its language is exactly \(E(\mathcal C)\), so the reduct
+belongs to \(\mathcal C\), again by isomorphism closure.
+All functions in this finite auxiliary type can be replaced by the graph
+translation already proved.  The result is a single ESO sentence over the
+original input type, on the same universe.
+
+\paragraph{The finitely many small sizes.}
+Let \(n_0\) cover the code-size and slack exceptions.  For each
+\(1\leq n<n_0\) there are finitely many \(S\)-structures on that size,
+since \(S\) is finite and relational.  For a selected such structure
+\(\mathcal D\) of size \(d\), its first-order complete finite diagram is
+\[
+ \exists x_1\cdots x_d\left(
+   \bigwedge_{i<j}x_i\ne x_j\ \land
+   \forall y\bigvee_i y=x_i\ \land\ \Delta_{\mathcal D}(\bar x)
+ \right),
+\]
+where \(\Delta_{\mathcal D}\) contains each positive or negative relation
+instance from \(\mathcal D\).  It defines its isomorphism class exactly.
+Disjoin these diagrams for the finitely many small structures in
+\(\mathcal C\); call the resulting sentence \(\chi\), taking an
+unsatisfiable sentence if none qualify.  To select the diagrams effectively,
+simulate the clocked machine on each of their finitely many encodings and
+enumerate its finite computation tree to the clock bound.
+Conjoin the large-universe tableau
+with the first-order assertion of at least \(n_0\) distinct elements, and
+disjoin \(\chi\).  If \(\bar R\) is its auxiliary type, then
+\(\chi\lor\exists\bar R\theta\) is equivalent to
+\(\exists\bar R(\chi\lor\theta)\): on a nonempty universe the relations
+and total functions always have some interpretations.  This is one
+generalized spectrum, not an infinite union.  In the empty type the same
+diagrams reduce to exact-size sentences.  This proves finite modification,
+closes every small case and completes both original clauses.
+
+Finally, converting a unary size word to binary and back costs polynomial in
+\(n\), and both displayed machine directions have polynomial-in-\(n\)
+bounds.  Thus the unary reformulation is a consequence of the proof, while
+the original binary empty-type clause remains the \(NP_1\) clause.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p9.n-c-004.1.unordered-boundary}{thm:p09-fagin74-unordered-boundary}{Pair certificates and the failure of unordered fixed-point parity}
+\begin{proof}
+A fixed-point-free involution divides a finite universe into disjoint
+two-element orbits, so its size is even.  Conversely on any positive even
+size, partition the universe into pairs and interchange the members of every
+pair.  The relational version has exactly one neighbour for each point,
+symmetry makes this neighbour map an involution, and irreflexivity removes
+one-element orbits.  It is the same witness in both directions.  Even size
+is also polynomial-time decidable: read an explicitly represented universe
+and count its elements modulo two.  On the original nonempty-type encoding,
+parity is the low bit of the binary \(n\) prefix; on a binary numerical
+input it is likewise trivial.  This does not assume that the structure itself
+contains a definable order.
+
+For nondefinability fix an order-free FO(LFP) sentence in the equality-only
+language.  Rename its individual variables so distinct binders use distinct
+names, and choose \(v\) at least their total number, including fixed-point
+tuple variables and parameters.  A partial bijection between two pure sets
+transports assignments of these variables exactly when it preserves their
+equality pattern.  For sets of sizes at least \(v\), every extension of an
+assignment needed by a quantifier can be matched: an old value goes to its
+matched value; a new value can be chosen outside the at most \(v-1\)
+already assigned values.  The argument works in both directions.
+
+We prove formula invariance under these matching assignments, allowing
+relation variables whose membership already depends only on the equality
+pattern of their arguments and named parameters, with the same pattern
+table in the two sets.  Equality atoms and such relation atoms agree;
+negation and the Boolean connectives preserve agreement.  The preceding
+extension argument proves both first-order quantifier cases.
+
+For a least-fixed-point subformula, fix matching assignments to its
+parameters.  Start its defined relation empty in both sets.  By induction on
+the stage number, the preceding formula invariance applied to the defining
+formula says that the next stage has the same membership table of equality
+patterns of tuple entries and parameters.  Permutations fixing the parameters
+show at each stage that every tuple of a given pattern has the same membership.
+Each pattern realizable in one set is realizable in the other, since the
+tuple and parameter slots together use at most \(v\) values.  There are
+only finitely many such patterns.  Positivity makes the operator monotone,
+so iteration from the empty relation is increasing and stabilizes after at
+most that many pattern additions.  Both sets have the same finite transition
+table on patterns, hence the same stabilized relation.  This proves the
+fixed-point case as well.  Nested fixed points are covered by structural
+induction on subformulas, not by assuming their result at the outset.
+
+There are no free parameters for the sentence.  It consequently has one
+constant truth value on all pure sets of sizes at least \(v\).  Infinitely
+many such sizes are even and infinitely many are odd.  No such sentence
+defines parity.  With an arbitrary fixed relational input type, interpret
+every input relation as empty.  Its atomic formulas are uniformly false,
+and the same induction applies.  If parity were definable on all structures
+of that type it would be definable on this subclass, a contradiction.
+\end{proof}
+\end{annexitem}

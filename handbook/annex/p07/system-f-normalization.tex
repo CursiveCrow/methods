@@ -1,0 +1,424 @@
+\section{System F normalization: complete candidate argument}
+\label{sec:annex-p07-system-f-normalization}
+
+\begin{annexitem}{annex:p7.system-f.substitution-reduction}
+ {thm:p07-system-f-sn-substitution-reduction}{Both substitutions and all reduction positions}
+\begin{proof}
+First record the syntactic commutations used in the proof. All terms below
+are raw, and substitutions are simultaneous. Binders are renamed fresh
+before applying an identity. At a term-beta redex, type substitution gives
+\[
+ ((\lambda x{:}\alpha.P)N)\tau
+  =(\lambda x{:}\alpha\tau.P\tau)(N\tau)
+  \to_{\mathsf F}(P\tau)[N\tau/x]
+  =(P[N/x])\tau.
+\]
+Term substitution, with \(x\) fresh for its domain and images, gives
+\[
+ ((\lambda x{:}\alpha.P)N)\sigma
+  =(\lambda x{:}\alpha.P\sigma)(N\sigma)
+  \to_{\mathsf F}(P\sigma)[N\sigma/x]
+  =(P[N/x])\sigma.
+\]
+At a type-beta redex choose its binder \(a\) fresh for the domains and
+free type variables of all other substitution images. Then
+\[
+ ((\Lambda a.P)[\beta])\tau
+  =(\Lambda a.P\tau)[\beta\tau]
+  \to_{\mathsf F}(P\tau)[\beta\tau/a]
+  =(P[\beta/a])\tau,
+\]
+and
+\[
+ ((\Lambda a.P)[\beta])\sigma
+  =(\Lambda a.P\sigma)[\beta]
+  \to_{\mathsf F}(P\sigma)[\beta/a]
+  =(P[\beta/a])\sigma.
+\]
+The equalities of contracta follow from structural substitution induction.
+For a term variable, distinguish the substituted variable from the other
+variables, and use the image specified by the relevant substitution.
+Term application distributes the equality to both children. A lambda
+abstraction distributes it to its annotation and freshly renamed body.
+A type abstraction uses a type binder fresh for both substitutions; a type
+application distributes it to its term and type argument. In the type
+components, the corresponding induction distinguishes a type variable,
+an arrow with its two children, and a universal type with a freshly renamed
+binder. These cases also prove that substitution acts once on an inserted
+image, rather than applying itself again to that image.
+
+For a contraction inside a larger term, induction on its surrounding
+context propagates the same genuine contraction through an application's
+function or argument, a lambda body, a type-abstraction body, or the term
+part of a type application. No reduction position lies inside a type.
+This proves both one-step assertions.
+
+For the last assertion, each free occurrence of \(x\) in the finite
+original term receives a designated copy of \(N\). Contract the given
+redex inside each such copy, using compatible reduction at that position.
+The copies are disjoint; binders were renamed to prevent capture.
+After finitely many such steps the result is \(M[N'/x]\). If no copy
+was inserted the two terms coincide. This argument includes reductions
+under both kinds of abstraction and within the term part of type
+applications. Iterating the one-step facts gives their finite-step forms.
+
+Finally a finite raw term has finitely many redex positions. Suppose it
+has arbitrarily long reductions but no infinite reduction. Some immediate
+successor must then have arbitrarily long reductions, because there are
+only finitely many immediate successors. Repeat this choice, always taking
+the first such successor in a fixed ordering of redex positions. It produces
+an infinite reduction, a contradiction. Therefore a strongly normalizing
+term has a finite greatest reduction length. For an immediate successor,
+prefixing any of its reductions by the first step shows
+\(h_{\mathsf F}(M')+1\leq h_{\mathsf F}(M)\).
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p7.system-f.typing-substitution}
+ {thm:p07-system-f-sn-typing-substitution}{Formation, typing and preservation of the two redexes}
+\begin{proof}
+Type formation is preserved by substitution, by induction on the type:
+a variable uses its specified image; an arrow uses the two induction
+hypotheses; a universal type first renames its binder fresh for the target
+context and substitution images and then uses the premise under that fresh
+type variable. The same elementary inductions show type-context weakening,
+term-context weakening and consistent renaming of fresh binders.
+
+For the first typing assertion, induct on its typing derivation. A variable
+uses its declaration with the substituted type in \(\Gamma\tau\).
+Application uses the two substituted premise judgments and arrow elimination.
+At \(\lambda x{:}\beta.P\), rename \(x\) fresh if necessary, apply
+induction to the premise under \(x:\beta\tau\), and use arrow
+introduction with annotation \(\beta\tau\).
+At \(\Lambda a.P\), rename \(a\) fresh for \(\Delta'\), the
+substitution domain and all substitution images. Extend \(\tau\) by
+fixing \(a\). The premise induction works under \(\Delta',a\);
+the context is \(\Gamma\tau\), since the source eigenvariable was
+absent from every declared context type. The fresh \(a\) is also absent
+from these substituted types, so universal introduction applies.
+At \(P[\beta]\), the premise gives the substituted universal type,
+type formation gives \(\beta\tau\), and universal elimination has
+result type
+\((\alpha\tau)[\beta\tau/a]=(\alpha[\beta/a])\tau\), after
+renaming the universal binder fresh for \(\tau\). The syntactic
+substitution induction in the preceding annex item proves this equality.
+
+For the second assertion, again induct on the five typing cases. A variable
+is precisely the hypothesis about its image. Application applies the two
+induction hypotheses. A lambda abstraction first renames its binder \(x\)
+fresh for \(\Gamma'\) and all images, weakens their typings to the context
+\(\Gamma',x:\beta\), and extends the substitution by \(x\mapsto x\).
+The premise induction followed by arrow introduction gives the required
+substituted lambda. At type abstraction, choose its type binder \(a\)
+fresh for the target context and the images. Type-context weakening types
+the same images under \(\Delta,a\). The premise induction followed by
+universal introduction is legitimate since \(a\) is absent from
+the types in \(\Gamma'\). A type application retains its well-formed
+type argument and uses the induction hypothesis for its function.
+This proves term substitution with all freshness conditions.
+
+At a typed term-beta redex, inversion of application and lambda typing
+provides \(\Delta;\Gamma,x:\beta\derives_{\mathsf F}P:\alpha\)
+and \(\Delta;\Gamma\derives_{\mathsf F}N:\beta\). Term substitution
+therefore types \(P[N/x]\) at \(\alpha\) in \(\Gamma\).
+At a typed type-beta redex, inversion provides
+\(\Delta,a;\Gamma\derives_{\mathsf F}P:\alpha\), with \(a\) absent
+from \(\Gamma\), and a type \(\beta\) over \(\Delta\). Type
+substitution by \([\beta/a]\) gives
+\(\Delta;\Gamma\derives_{\mathsf F}P[\beta/a]:\alpha[\beta/a]\).
+These are exactly the types of the two redexes.
+Induction on the surrounding typing derivation handles contractions in
+either side of a term application, in a lambda body, in a type-abstraction
+body, and in the term part of a type application. Each enclosing rule has
+the same context, result type and side conditions after replacing its
+affected premise. This proves subject reduction for the full relation.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p7.system-f.candidate-constructors}
+ {thm:p07-system-f-sn-candidate-constructors}{Closure properties of all three candidate constructors}
+\begin{proof}
+Write SN for \(\mathsf{SN}_{\mathsf F}\) in this proof. SN satisfies
+clause~1 by definition. Any infinite reduction from a successor would
+extend to one from its predecessor, proving clause~2. If all immediate
+reducts of a neutral term are strongly normalizing, an infinite reduction
+from that term would begin with one of those reducts, a contradiction.
+This proves clause~3. For any candidate, a variable is neutral and has
+no immediate reducts, so clause~3 includes it. Finite reduction closure
+follows by induction on the number of steps.
+
+Let \(R,S\) be candidates. If \(M\in R\Rightarrow S\), take any
+variable \(z\in R\). Then \(Mz\in S\subseteq\mathrm{SN}\).
+An infinite reduction of \(M\) would remain infinite in the function
+position of \(Mz\); hence \(M\in\mathrm{SN}\), giving clause~1.
+For clause~2, if \(M\to_{\mathsf F}M'\), then for any \(N\in R\)
+we have \(MN\to_{\mathsf F}M'N\). Clause~2 of \(S\) gives
+\(M'N\in S\), as required.
+
+For clause~3, suppose \(M\) is neutral and every immediate reduct
+\(M'\) belongs to \(R\Rightarrow S\). Fix \(N\in R\) and induct
+on its finite height. Every immediate reduct of \(MN\) has one of two
+forms. A reduction in the function gives \(M'N\in S\) by the
+hypothesis on \(M'\). A reduction in the argument gives \(MN'\);
+clause~2 of \(R\) gives \(N'\in R\), and its smaller height gives
+\(MN'\in S\) by induction. There is no root term-beta contraction
+because \(M\) is not a lambda abstraction; the whole term application
+cannot be a root type-beta redex. Since \(MN\) is neutral, clause~3
+of \(S\) now puts \(MN\) in \(S\). This proves the arrow clause.
+
+For \(\mathcal U(H)\), take one fixed type \(b\) and the candidate
+SN. Membership gives \(M[b]\in H_{b,\mathrm{SN}}\subseteq\mathrm{SN}\).
+An infinite reduction in \(M\) would persist inside that type application,
+so \(M\) is strongly normalizing. If \(M\to_{\mathsf F}M'\), then
+\(M[\beta]\to_{\mathsf F}M'[\beta]\); closure of each
+\(H_{\beta,C}\) gives clause~2. Finally suppose \(M\) is neutral
+and every immediate reduct lies in \(\mathcal U(H)\). An immediate
+reduct of \(M[\beta]\) is necessarily \(M'[\beta]\): types have
+no reductions and neutrality excludes a root type-beta contraction.
+Each such reduct belongs to \(H_{\beta,C}\). The whole type
+application is neutral, so that candidate's clause~3 gives membership.
+This holds for every \(\beta,C\), proving clause~3 and the result.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p7.system-f.interpretation}
+ {thm:p07-system-f-sn-interpretation}{Parametric interpretation and semantic substitution}
+\begin{proof}
+Structural induction on \(\alpha\) proves that its interpretation is
+a candidate. A type variable uses the candidate supplied by its valuation.
+An arrow uses the arrow constructor from the preceding lemma and the two
+induction hypotheses. A universal type uses that lemma's universal
+constructor with
+\(H_{\beta,C}=\mathcal R_{\rho[a\mapsto C]}(\alpha)\).
+For each index this is a candidate by induction on the proper subtype
+\(\alpha\). The already defined set of all candidates, rather than an
+interpretation of a potentially larger substituted type, is quantified over.
+
+If two valuations agree at the free variables of a type, their
+interpretations coincide. At a variable this is the agreement assumption;
+at an arrow it follows on each component. At \(\forall a.\alpha\),
+updating both valuations with the same candidate at \(a\) makes them
+agree on every free variable of its body. The induction hypothesis gives
+equal membership conditions for every type and candidate index.
+
+For completeness, fresh renaming is also respected. If \(b\) does not
+occur free in \(\alpha\), renaming the free \(a\)'s of \(\alpha\)
+to \(b\), and interpreting the new \(b\) by \(C\), has the same
+effect as interpreting the original \(a\) by \(C\). A structural
+induction proves this: the variable \(a\) has value \(C\) on both
+sides, other occurring variables retain their valuations, arrows use the
+two component identities, and a universal binder is first renamed away
+from \(a,b\) and then ranges over the same arbitrary candidate on both
+sides. Apply this fact to the bodies of \(\forall a.\alpha\) and
+\(\forall b.\alpha[b/a]\). Their universal membership conditions
+coincide for each syntactic type argument and each candidate, proving
+bound-renaming invariance.
+
+Now prove the displayed substitution identity by induction on
+\(\alpha\). At \(\alpha=a\), both sides are
+\(\mathcal R_\rho(\beta)\). At any other variable the update does
+not change its value. At an arrow apply the two induction hypotheses and
+the arrow definition. In the universal case rename its binder \(b\)
+fresh, so \(b\ne a\) and \(b\notin\operatorname{FV}(\beta)\).
+An arbitrary raw term \(M\) belongs to the left-hand interpretation
+exactly when, for every type \(\gamma\) and candidate \(C\),
+\[
+ M[\gamma]\in
+ \mathcal R_{\rho[b\mapsto C]}(\delta[\beta/a]),
+\]
+where the original type is \(\forall b.\delta\). The induction
+hypothesis turns the latter interpretation into
+\[
+ \mathcal R_{\rho[b\mapsto C]
+     [a\mapsto\mathcal R_{\rho[b\mapsto C]}(\beta)]}(\delta).
+\]
+The free-variable agreement fact makes
+\(\mathcal R_{\rho[b\mapsto C]}(\beta)=\mathcal R_\rho(\beta)\).
+The two updates at distinct variables commute. Thus the membership
+condition is precisely the universal interpretation under
+\(\rho[a\mapsto\mathcal R_\rho(\beta)]\), proving the identity.
+All candidate-valued parameters used in this argument exist by the first
+part of the proof, including interpretations of impredicative instances.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p7.system-f.beta-expansion}
+ {thm:p07-system-f-sn-beta-expansion}{Exhausting the immediate reducts of both beta forms}
+\begin{proof}
+For the term-beta form induct on
+\(h_{\mathsf F}(P)+h_{\mathsf F}(N)\). Its root contractum is
+\(P[N/x]\in R\). A step in \(P\) gives
+\((\lambda x{:}\alpha.P')N\). Substitution preservation gives
+\(P[N/x]\to_{\mathsf F}P'[N/x]\), so candidate closure puts the
+new contractum in \(R\); the smaller height permits induction.
+A step in \(N\) gives \((\lambda x{:}\alpha.P)N'\).
+The finite-copy substitution lemma gives
+\(P[N/x]\to_{\mathsf F}^*P[N'/x]\), possibly in zero steps.
+Candidate closure and the smaller height again permit induction.
+There is no reduction in the annotation \(\alpha\), and these are
+all immediate reducts of the redex. The whole application is neutral;
+clause~3 therefore places it in \(R\).
+
+For the type-beta form induct on \(h_{\mathsf F}(P)\). The root
+contractum is \(P[\beta/a]\in R\). The only other possibility is
+\((\Lambda a.P')[\beta]\) with \(P\to_{\mathsf F}P'\).
+Type substitution preserves that step, and clause~2 gives
+\(P'[\beta/a]\in R\). The smaller height permits induction.
+There is no reduction in \(\beta\). Every immediate reduct of this
+neutral type application therefore belongs to \(R\), so clause~3
+applies. These arguments concern the combined reduction in \(P\) and
+\(N\), not just one of its two generating beta rules.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p7.system-f.introduction}
+ {thm:p07-system-f-sn-introduction}{Recovering the normalization premises for introduction}
+\begin{proof}
+For arrow introduction, choose a term variable \(z\) fresh for \(P\).
+It belongs to \(R\). The hypothesis therefore puts \(P[z/x]\) in
+\(S\subseteq\mathsf{SN}_{\mathsf F}\). An infinite reduction of
+\(P\) would map to an infinite sequence of genuine contractions in
+\(P[z/x]\), by substitution preservation. Thus \(P\) is strongly
+normalizing. Every \(N\in R\) is also strongly normalizing; controlled
+term-beta expansion now puts \((\lambda x{:}\alpha.P)N\) in \(S\)
+for each such \(N\). This is the arrow membership condition.
+
+For universal introduction, first take the syntactic type argument to be
+the variable \(a\) itself and take the candidate to be
+\(\mathsf{SN}_{\mathsf F}\). The hypothesis gives
+\[
+ P=P[a/a]\in
+ \mathcal R_{\rho[a\mapsto\mathsf{SN}_{\mathsf F}]}(\alpha)
+ \subseteq\mathsf{SN}_{\mathsf F}.
+\]
+This justifies the normalization premise rather than assuming it.
+For any type \(\beta\) and candidate \(C\), the given contractum
+\(P[\beta/a]\) belongs to the candidate
+\(\mathcal R_{\rho[a\mapsto C]}(\alpha)\). Controlled type-beta
+expansion puts \((\Lambda a.P)[\beta]\) in that same candidate.
+Quantifying over all \(\beta,C\) is exactly the universal
+interpretation's membership condition.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p7.system-f.fundamental}
+ {thm:p07-system-f-sn-fundamental}{All five typing cases with both substitutions}
+\begin{proof}
+Induct on the typing derivation, with the stated conclusion universally
+quantified over the type substitution, valuation and candidate-respecting
+term substitution. All variable sets used in a particular derivation and
+its substitution images are finite, so fresh binders exist.
+
+\paragraph{Variable.}
+If the last rule reads \(x:\alpha\) from the context, then
+\((x\tau)\sigma=\sigma(x)\in\mathcal R_\rho(\alpha)\), precisely
+the substitution hypothesis.
+
+\paragraph{Term application.}
+The two premises type \(P:\beta\mathbin{\to_{\rm ty}}\alpha\)
+and \(N:\beta\). Induction puts their doubly substituted terms in
+the corresponding arrow and argument candidates. By the definition of
+\(\Rightarrow\), their application is in \(\mathcal R_\rho(\alpha)\).
+Both substitutions distribute over application, so this is the desired
+term.
+
+\paragraph{Term abstraction.}
+Write the term as \(\lambda x{:}\beta.P\), with premise typing
+\(P:\gamma\) under \(\Gamma,x:\beta\). Rename \(x\) fresh for
+the term-substitution domain and the free term variables of all images.
+For every \(N\in\mathcal R_\rho(\beta)\), extend \(\sigma\) by
+\(x\mapsto N\). Induction on the premise gives
+\[
+ (P\tau)(\sigma[x\mapsto N])\in\mathcal R_\rho(\gamma).
+\]
+By the freshness condition, the left side is
+\(((P\tau)\sigma)[N/x]\). Arrow introduction in the interpretation
+therefore gives
+\[
+ \lambda x{:}\beta\tau.((P\tau)\sigma)
+ \in\mathcal R_\rho(\beta)\Rightarrow\mathcal R_\rho(\gamma).
+\]
+This is the doubly substituted abstraction, with its actual substituted
+annotation, as required. If an argument contains \(x\) freely, its
+image is still inserted once and capture-avoiding substitution gives the
+same identity; closed arguments were not assumed.
+
+\paragraph{Type abstraction.}
+Write the term as \(\Lambda a.P\), with premise
+\(\Delta,a;\Gamma\derives_{\mathsf F}P:\beta\).
+The sheet requires \(a\) absent from \(\Delta\) and from every
+type in \(\Gamma\). Rename it further to be fresh for all free type
+variables in the images of \(\tau\) and \(\sigma\). The valuation
+interprets bound type names only under its local updates, so this renaming
+does not affect the conclusion.
+
+Fix an arbitrary syntactic type \(\gamma\) and arbitrary candidate
+\(C\). Extend the type substitution by \(a\mapsto\gamma\) and
+change the valuation to \(\rho[a\mapsto C]\). For every
+\(x:\delta\in\Gamma\), the source side condition and the semantic
+free-variable lemma give
+\(\mathcal R_{\rho[a\mapsto C]}(\delta)=\mathcal R_\rho(\delta)\).
+Thus the same \(\sigma\) satisfies the premise induction hypothesis,
+which gives
+\[
+ (P(\tau[a\mapsto\gamma]))\sigma
+     \in\mathcal R_{\rho[a\mapsto C]}(\beta).
+\]
+Freshness for the images ensures the syntactic equality
+\[
+ (P(\tau[a\mapsto\gamma]))\sigma
+       =((P\tau)\sigma)[\gamma/a].
+\]
+Indeed type substitution commutes with the other substitutions after the
+fresh renaming: no inserted type or term image contains a free \(a\)
+that the final substitution could otherwise change. The equality follows
+by the five-constructor substitution induction used earlier.
+Universal introduction in the interpretation now yields
+\(\Lambda a.((P\tau)\sigma)\in\mathcal R_\rho(\forall a.\beta)\).
+This is the required substituted term. No restriction was imposed on the
+complexity or free variables of the instance \(\gamma\).
+
+\paragraph{Type application.}
+The last rule types \(P[\gamma]\) from
+\(P:\forall a.\beta\), with result \(\beta[\gamma/a]\).
+Induction puts \((P\tau)\sigma\) in the universal interpretation.
+Choose its syntactic argument to be \(\gamma\tau\) and its
+candidate argument to be \(\mathcal R_\rho(\gamma)\), which is a
+candidate by the interpretation lemma. This gives
+\[
+ ((P\tau)\sigma)[\gamma\tau]
+ \in\mathcal R_{\rho[a\mapsto\mathcal R_\rho(\gamma)]}(\beta)
+ =\mathcal R_\rho(\beta[\gamma/a]).
+\]
+The equality is semantic type substitution. The term on the left is
+\(((P[\gamma])\tau)\sigma\), since term substitution leaves a
+type argument unchanged. This covers universal elimination for all
+well-formed instances, including impredicative ones, and completes the
+induction over every typing rule.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p7.system-f.strong-normalization}
+ {thm:p07-system-f-strong-normalization}{Strong normalization of the exact open Church-style calculus}
+\begin{proof}
+Take any derivation \(\Delta;\Gamma\derives_{\mathsf F}M:\alpha\)
+on Sheet~\ref{sheet:system-f}. Assign the candidate
+\(\mathsf{SN}_{\mathsf F}\) to every free type variable, choose the
+identity type substitution on \(\Delta\), and choose the identity
+term substitution on the variables of \(\Gamma\). Every variable is
+in every candidate, hence in the interpretation of its assigned type.
+The fundamental lemma therefore gives
+\(M\in\mathcal R_\rho(\alpha)\). This interpretation is a candidate,
+so its first clause gives \(M\in\mathsf{SN}_{\mathsf F}\).
+By definition there is no infinite sequence of either kind of beta
+contraction, interleaved in any order and at any term positions.
+
+Neither substitution closed the free variables, so the argument applies
+to open judgments exactly as stated. A maximal reduction sequence must
+be finite; if its last term had a reduct the sequence could be extended,
+contradicting maximality. It therefore ends in a normal term. Iterating
+subject reduction preserves the type and both contexts along this sequence.
+No confluence premise, erased-term termination premise or predicative
+restriction is used to obtain termination.
+\end{proof}
+\end{annexitem}

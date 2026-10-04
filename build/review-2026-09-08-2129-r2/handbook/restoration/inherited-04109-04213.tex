@@ -1,0 +1,105 @@
+\section{Soundness}
+\label{sec:fol-deduction-03}
+
+\begin{theorem}[Soundness of first-order natural deduction]
+\label{thm:fol-soundness}
+For every set \(\Gamma\cup\set{\varphi}\subseteq\Fm(\Lang)\),
+\[
+ \Gamma\derives_{\ND_{\FOL}}\varphi
+ \quad\Longrightarrow\quad
+ \Gamma\entails\varphi.
+\]
+\end{theorem}
+\begin{proof}
+Induct on the construction of the derivation, using the strengthened statement
+that any structure and assignment satisfying all open assumptions satisfies
+the conclusion.  The propositional cases are those of
+\cref{thm:prop-nd-soundness}.
+
+For \(\forall E\), if \(\Meta,s\entails\forall x\,\varphi\), then it
+satisfies \(\varphi\) under
+\(s[x\mapsto\sem{t}^{\Meta}_s]\).  The substitution lemma gives
+\(\Meta,s\entails\varphi[t/x]\).  The \(\exists I\) case reverses this
+argument: a satisfying value \(\sem{t}^{\Meta}_s\) supplies the existential
+witness.
+
+For \(\forall I\), let \(\Meta,s\) satisfy all open assumptions and choose an
+arbitrary \(a\in\abs{\Meta}\).  Because \(x\) is free in no open assumption,
+formula coincidence shows that \(s[x\mapsto a]\) also satisfies every open
+assumption.  The induction hypothesis gives
+\(\Meta,s[x\mapsto a]\entails\varphi\).  Since \(a\) was arbitrary,
+\(\Meta,s\entails\forall x\,\varphi\).
+
+For \(\exists E\), let \(\Meta,s\) satisfy the surviving open assumptions and
+\(\exists x\,\varphi\).  Choose \(a\) such that
+\(\Meta,s[x\mapsto a]\entails\varphi\), and put
+\(s'=s[y\mapsto a]\).  Freshness of \(y\), formula coincidence, and the
+substitution lemma give \(\Meta,s'\entails\varphi[y/x]\), while freshness also
+ensures that \(s'\) satisfies every other open assumption.  The induction
+hypothesis for the subsidiary derivation yields \(\Meta,s'\entails\psi\).
+Because \(y\notin\FV(\psi)\), formula coincidence gives
+\(\Meta,s\entails\psi\).
+
+The \(\alpha\) rule is sound by alpha-invariance.  For \(=I\), actual
+identity is reflexive.  For \(=E\), satisfaction of
+\(r=t\) gives
+\(\sem{r}^{\Meta}_s=\sem{t}^{\Meta}_s\).  The substitution lemma says that
+the two instances of \(\varphi\) are evaluated under updates of \(s\) by
+these equal elements, so satisfaction of one instance implies satisfaction of
+the other.  This treats every rule of \(\ND_{\FOL}\) that is not a rule
+of \(\ND_{\CPL}\), completing the induction.
+\end{proof}
+
+\begin{theorem}[Soundness of the first-order sequent calculus]
+\label{thm:fol-lk-soundness}
+Every sequent derivable in \(\LK_{\FOL}\) is satisfied by every
+\(\Lang\)-structure and assignment.
+\end{theorem}
+\begin{proof}
+Extend the induction in \cref{thm:prop-lk-soundness}: for each rule,
+if every premise is satisfied by every structure and assignment, so is the
+conclusion.  The rules \(\forall L\) and \(\exists R\) use the term value
+and the substitution lemma.
+
+For \(\forall R\), suppose toward a contradiction that some \(\Meta,s\)
+does not satisfy the conclusion
+\(\Gamma\Rightarrow\Delta,\forall x\,\varphi\) while the premise
+\(\Gamma\Rightarrow\Delta,\varphi[y/x]\) is satisfied by every structure
+and assignment.  Then \(\Meta,s\) satisfies every formula in
+\(\operatorname{supp}(\Gamma)\), no formula in
+\(\operatorname{supp}(\Delta)\), and not \(\forall x\,\varphi\).  The
+universal satisfaction clause supplies an element \(a\in\abs{\Meta}\)
+with \(\Meta,s[x\mapsto a]\notentails\varphi\).  Put
+\(s'=s[y\mapsto a]\), where \(y\) is the eigenvariable.
+
+First, \(\Meta,s'\notentails\varphi[y/x]\).  The substitution lemma
+(\cref{thm:fol-substitution}) gives
+\(\Meta,s'\entails\varphi[y/x]\) iff
+\(\Meta,s'[x\mapsto\sem{y}^{\Meta}_{s'}]\entails\varphi\), and
+\(\sem{y}^{\Meta}_{s'}=s'(y)=a\).  If \(y=x\), then
+\(s'[x\mapsto a]=s[x\mapsto a]\) and the right side fails directly.  If
+\(y\ne x\), then the eigenvariable condition---\(y\) occurs free in no
+formula of \(\Gamma,\Delta,\forall x\,\varphi\)---gives
+\(y\notin\FV(\varphi)\), so \(s'[x\mapsto a]\) and
+\(s[x\mapsto a]\) agree on \(\FV(\varphi)\), and formula coincidence
+(\cref{lem:fol-coincidence}) reduces the right side to
+\(\Meta,s[x\mapsto a]\entails\varphi\), which fails.
+
+Second, the same eigenvariable condition puts \(y\) outside the free
+variables of every formula of \(\Gamma\) and \(\Delta\), so \(s\) and
+\(s'\) agree on those free variables, and formula coincidence transfers
+the pattern above to \(s'\): \(\Meta,s'\) satisfies every formula in
+\(\operatorname{supp}(\Gamma)\) and no formula in
+\(\operatorname{supp}(\Delta)\).  Together with
+\(\Meta,s'\notentails\varphi[y/x]\), this means \(\Meta,s'\) does not
+satisfy the premise, a contradiction.  The eigenvariable condition is what
+licenses both uses of formula coincidence; without it, updating \(y\)
+could change the truth values of the contexts or of \(\varphi\) itself.
+
+The \(\exists L\) case is dual.  The equality initial sequent
+\(\Rightarrow t=t\) is satisfied by every structure and assignment
+because actual identity is reflexive, and \(=L\) preserves satisfaction by
+every structure and assignment by the same equal-update argument used for
+\(=E\) in \cref{thm:fol-soundness}.
+\end{proof}
+

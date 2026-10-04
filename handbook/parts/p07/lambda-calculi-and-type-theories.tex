@@ -1,0 +1,591 @@
+%% parts/p07/lambda-calculi-and-type-theories.tex --- Phase-4 P7 chapter 7.4
+%% New-content/depth deliverables: D-P9-003, D-P9-004, N-a-015,
+%% N-c-029, N-c-030, and apparatus A-073.  Pointer-only boundaries:
+%% N-x-001, N-x-002, N-x-011, N-x-012.
+%% This chapter is new material: it has no source-compression denominator.
+%% Rules remain in registry/calculi; the body contains statements and lookup
+%% apparatus only.
+
+\chapter{Lambda Calculi and Type Theories}
+\label{sec:p07-lambda-calculi-and-type-theories}
+\chaptermark{Lambda Calculi and Type Theories}
+
+This chapter separates four surfaces that are too often conflated: untyped
+conversion, simply typed terms, explicitly polymorphic System~F, and an
+explicitly bounded intensional dependent-type entry.  Each metatheorem is scoped to its stated
+syntax.  In particular, confluence is not normalization, Church-style
+checking is not Curry-style typability, and ``Martin--L\"of type theory'' is
+not treated as the name of one immutable calculus.  Standard sources are
+\cite{Church1936,ChurchRosser1936,Barendregt1984,
+GirardLafontTaylor1989,MartinLof1984}.
+
+\section{Untyped terms, substitution, and conversion}
+
+\begin{hbdefinition}{def:p07-untyped-lambda-terms}{Untyped lambda terms}
+Fix a countably infinite set of term variables.  The \emph{untyped lambda
+terms} form the least set that contains every term variable and is closed
+under application and abstraction: if \(M,N\) are terms, then \(MN\) is a
+term, and if \(M\) is a term and \(x\) a variable, then \(\lambda x.M\) is a
+term.  The metavariables \(M,N,P\) range over this least set.
+Application associates to the left and its scope binds more tightly than a
+lambda abstraction.  The qualifier \emph{untyped} is necessary because the
+grammar contains no type annotations and no typing judgment; it names a
+syntactic category, not a class of ill-typed terms.  It differs from the
+arrow-only simply typed syntax of Section~\ref{sec:normalization-curry-howard-02}, and that
+difference is used by the unrestricted self-application example and the
+computability calibration below.
+\index{lambda calculus@\(\lambda\)-calculus!untyped}
+\index{lambda term!untyped}
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p07-alpha-substitution}{Alpha-equivalence and capture-avoiding substitution}
+The free-variable operation on untyped terms is determined by
+\[
+\begin{aligned}
+ \FV(x)&=\{x\},&
+ \FV(MN)&=\FV(M)\cup\FV(N),\\
+ \FV(\lambda x.M)&=\FV(M)\setminus\{x\}.&&
+\end{aligned}
+\]
+Two terms are \emph{alpha-equivalent} when one is obtained from the other by
+finitely many consistent renamings of bound variables to variables fresh for
+the corresponding body, within arbitrary term contexts.
+
+For a term \(N\), capture-avoiding substitution \(M[N/x]\) is the recursion
+with \(x[N/x]=N\), \(y[N/x]=y\) for \(y\neq x\), and
+\((PQ)[N/x]=P[N/x]Q[N/x]\).  At an abstraction it satisfies
+\((\lambda x.P)[N/x]=\lambda x.P\); if \(y\neq x\) and
+\(y\notin\FV(N)\), then
+\((\lambda y.P)[N/x]=\lambda y.(P[N/x])\); otherwise the binder is first
+renamed to a variable fresh for \(P,N,x\).  Thus substitution is well defined
+up to alpha-equivalence.
+
+The two names are needed to distinguish harmless changes of bound names from
+replacement of free occurrences.  Both name metalinguistic relations on
+terms, not reduction steps; capture avoidance differs from textual
+replacement precisely when a binder would seize a free variable of \(N\).
+They are used in the beta contraction and parallel-reduction method below.
+\index{alpha-equivalence@\(\alpha\)-equivalence}
+\index{substitution!capture-avoiding}
+\index{free variable!lambda term@free variable!\(\lambda\)-term}
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p07-beta-conversion}{Beta conversion and normalization}
+A \emph{beta redex} is an occurrence of \((\lambda x.M)N\).  One-step beta
+reduction is the compatible relation specified on
+Sheet~\ref{sheet:lambda-untyped}; that sheet also records capture avoidance and
+closure under term contexts.  Write
+\(\longrightarrow_{\beta}^{*}\) for its reflexive--transitive closure and
+\(M=_{\beta}N\) for the least congruence equivalence relation containing
+one-step beta reduction.  A term is in \emph{beta-normal form} when it has no
+beta redex.
+
+These names distinguish three standings: beta reduction is a directed
+relation on terms, beta conversion is the symmetric congruence it generates,
+and normality is a property of one term.  Conversion is not redundant with
+reduction because it permits reverse conversion steps, while normality says
+nothing yet about whether a starting term can reach a normal form.  The
+distinctions are needed by Church--Rosser and its normal-form corollary.
+
+A term is \emph{weakly normalizing} when some finite beta-reduction reaches a
+normal form, and \emph{strongly normalizing} when no infinite beta-reduction
+starts from it.  These two properties must be named separately because one
+asks for a terminating route and the other requires every route to terminate;
+they are properties of terms (or, after quantification, of a calculus), not
+forms of confluence.  Their nonredundancy is witnessed by the general logical
+distinction between existential and universal termination, and the comparison
+table uses both.  The self-application term
+\((\lambda x.xx)(\lambda x.xx)\) contracts to itself, so the untyped calculus
+as a whole has neither weak nor strong normalization.
+\index{beta-reduction@\(\beta\)-reduction}
+\index{beta-conversion@\(\beta\)-conversion}
+\index{normal form!beta@normal form!\(\beta\)}
+\index{weak normalization}
+\index{strong normalization}
+\end{hbdefinition}
+
+\begin{hbmethod}{def:p07-parallel-reduction}{Parallel-reduction method}
+Ordinary one-step beta reduction does not itself have the diamond property,
+because one step contracts only one chosen redex.  \emph{Parallel reduction}
+is the following auxiliary metalinguistic relation on alpha-equivalence
+classes of terms.  Write \(M\mathrel{\mathsf{Par}}N\) for the least relation
+satisfying four clauses:
+\begin{enumerate}
+  \item \(x\mathrel{\mathsf{Par}}x\) for every variable \(x\);
+  \item if \(M\mathrel{\mathsf{Par}}M'\) and
+        \(N\mathrel{\mathsf{Par}}N'\), then
+        \(MN\mathrel{\mathsf{Par}}M'N'\);
+  \item if \(M\mathrel{\mathsf{Par}}M'\), then
+        \(\lambda x.M\mathrel{\mathsf{Par}}\lambda x.M'\);
+  \item if \(M\mathrel{\mathsf{Par}}M'\) and
+        \(N\mathrel{\mathsf{Par}}N'\), then
+        \((\lambda x.M)N\mathrel{\mathsf{Par}}M'[N'/x]\).
+\end{enumerate}
+Thus one step may contract compatible redexes and their residuals
+simultaneously.  Parallel reduction is not a new notion of beta conversion:
+its finite transitive closure is proved to be the same as ordinary finite
+beta reduction.
+
+The \emph{complete development} operation is the metalinguistic recursion
+\[
+\begin{aligned}
+ \operatorname{dev}(x)&\defeq x,\\
+ \operatorname{dev}(\lambda x.M)&\defeq
+   \lambda x.\operatorname{dev}(M),\\
+ \operatorname{dev}((\lambda x.M)N)&\defeq
+   \operatorname{dev}(M)[\operatorname{dev}(N)/x],\\
+ \operatorname{dev}(MN)&\defeq
+   \operatorname{dev}(M)\operatorname{dev}(N)
+   &&\text{when \(M\) is not an abstraction.}
+\end{aligned}
+\]
+The name is needed because this operation contracts all residuals of redexes
+already exposed by the starting syntax, rather than choosing one redex or
+asserting that arbitrary normalization terminates.  It is an operation on
+terms, not a new reduction relation, and its nonredundancy from ordinary
+one-step beta reduction is exactly the simultaneous-development property.
+That property gives the diamond argument used in
+Theorem~\ref{thm:p07-church-rosser}; the annex proves the substitution,
+development, simulation, and finite-grid lemmas on which it depends.
+\index{parallel reduction}
+\index{complete development!lambda calculus@complete development!\(\lambda\)-calculus}
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p07-church-rosser}{proved=annex:p7.lambda.1}{Church--Rosser theorem}
+If
+\(M\longrightarrow_{\beta}^{*}N_1\) and
+\(M\longrightarrow_{\beta}^{*}N_2\), then there is a term \(P\) such that
+\(N_1\longrightarrow_{\beta}^{*}P\) and
+\(N_2\longrightarrow_{\beta}^{*}P\).
+\end{hbtheorem}
+
+The theorem asserts confluence of beta reduction; it does not assert that a
+term has a normal form.  Its historical statement and a modern
+parallel-reduction development are given in
+\cite{ChurchRosser1936,GirardLafontTaylor1989}.
+
+\begin{hbcorollary}{thm:p07-beta-normal-form-unique}{proved=annex:p7.lambda.2}{Uniqueness of beta-normal forms}
+If \(M\longrightarrow_{\beta}^{*}N_1\) and
+\(M\longrightarrow_{\beta}^{*}N_2\), and both \(N_1,N_2\) are in beta-normal
+form, then \(N_1\) and \(N_2\) are alpha-equivalent.
+\end{hbcorollary}
+
+\begin{hbwarning}{def:p07-confluence-not-normalization}{Confluence is not normalization}
+Theorem~\ref{thm:p07-church-rosser} makes a common descendant available only
+after two finite reductions have already been supplied.  It neither produces
+a terminating reduction nor excludes an infinite one.  The looping
+self-application term above is therefore compatible with Church--Rosser.
+\end{hbwarning}
+
+\section[Lambda definability]{Lambda definability and combinatory computation}
+
+\begin{hbdefinition}{def:p07-church-numeral}{Church numeral}
+For \(n\in\N\), the \emph{Church numeral for \(n\)} is the closed untyped term
+\(\lambda f.\lambda x.f^n x\), where \(f^0x\) abbreviates \(x\) and
+\(f^{n+1}x\) abbreviates \(f(f^nx)\).  The name is needed because
+lambda-definability below requires one fixed encoding of numerical inputs and
+outputs; it names an encoding of a natural number by a term, not a new natural
+number.  It differs from the arithmetical numeral notation used in Part~5,
+and the fixed encoding is used in Definition~\ref{def:p07-lambda-definable}.
+\index{Church numeral}
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p07-lambda-definable}{Lambda-definable partial numerical function}
+Let \(f:\N^k\rightharpoonup\N\).  It is \emph{lambda-definable} when there is
+a closed untyped term \(F\) such that, for all \(n_1,\ldots,n_k,m\in\N\),
+application of \(F\) to the Church numerals for \(n_1,\ldots,n_k\) beta-reduces
+to the Church numeral for \(m\) exactly when
+\(f(n_1,\ldots,n_k)=m\); when the input is outside \(\dom f\), that application
+has no Church numeral as a beta-normal form.  Confluence makes a represented
+output unique.
+
+This term is necessary to compare a syntactic computation model with the
+closure-theoretic class of Definition~\ref{def:p04-partial-recursive}.  It
+names a property of a partial numerical function relative to the fixed Church
+encoding, not a property of an arbitrary lambda term.  It differs from
+normalization because undefinedness requires only the absence of a numeral
+normal form, and it is used in the equivalence theorem immediately below.
+\index{lambda-definable function@\(\lambda\)-definable function}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p07-lambda-partial-recursive}{cited=Kleene1936}{Lambda-definability and partial recursiveness}
+For every arity \(k\), the lambda-definable partial functions
+\(\N^k\rightharpoonup\N\) are exactly the partial recursive functions of
+Definition~\ref{def:p04-partial-recursive}.
+\end{hbtheorem}
+
+Church supplies the lambda-definability framework, Kleene relates the
+recursive formalisms, and Church--Rosser supplies the conversion theorem; the
+three roles are kept distinct in
+\cite{Church1936,Kleene1936,ChurchRosser1936}.
+
+\begin{hbdefinition}{def:p07-sk-combinators}{The S--K combinatory basis and bracket abstraction}
+The \emph{S--K combinatory terms} form the least set containing every variable
+and the constants \(\mathsf S,\mathsf K\), and closed under application, with
+application left-associative.
+Its two primitive contractions and their contextual closure are specified only
+on Sheet~\ref{sheet:sk-combinatory}.
+For one variable \(x\), \emph{bracket abstraction} is the recursive
+metalinguistic transformation that sends \(x\) to
+\(\mathsf S\mathsf K\mathsf K\), sends a term \(M\) with
+\(x\notin\FV(M)\) to \(\mathsf K M\), and sends an application \(MN\) to the
+application of \(\mathsf S\) to the abstractions of \(M\) and \(N\).
+
+The fixed basis is needed to state combinatory completeness without leaving
+an unspecified stock of primitives.  S--K terms are a syntactic category and
+bracket abstraction is a translation on that category; neither is a new
+lambda term constructor.  The translation differs from literal term identity
+because it removes a binder while preserving application behavior, and that
+difference is used in Theorem~\ref{thm:p07-bracket-abstraction}.
+\index{combinatory logic!S--K basis}
+\index{bracket abstraction}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p07-bracket-abstraction}{proved=annex:p07.combinatory.bracket-abstraction}{Bracket-abstraction property}
+For every S--K combinatory term \(M\) and variable \(x\), bracket abstraction
+produces a term containing no free occurrence of \(x\) whose application to
+\(x\) reduces to \(M\).  Recursively replacing lambda binders by this
+transformation gives a combinatory translation of untyped lambda terms; it is
+an operational correspondence, not literal identity of the two syntaxes.
+\end{hbtheorem}
+
+The complete abstraction and translation arguments are developed in
+Section~\ref{sec:p07-combinatory-abstraction}. The host algorithm and
+the atom-by-atom presentation \cite{Selinger2013LambdaNotesV2} retain their
+separate conversion properties; the classical reference is \cite{CurryFeys1958}.
+
+\input{parts/p07/combinatory-abstraction}
+
+\begingroup\small
+\begin{longtable}{@{}p{.17\textwidth}p{.25\textwidth}p{.25\textwidth}p{.23\textwidth}@{}}
+\caption{Untyped lambda and combinatory computation models.}
+\label{tab:p07-untyped-computation-models}\\
+\toprule
+Model & Primitive syntax & Computational step & Expressive calibration \\
+\midrule
+\endfirsthead
+\caption[]{Untyped lambda and combinatory computation models (continued)}\\
+\toprule
+Model & Primitive syntax & Computational step & Expressive calibration \\
+\midrule
+\endhead
+\midrule\multicolumn{4}{r}{\emph{continued on next page}}\\
+\endfoot
+\endlastfoot
+Untyped lambda calculus & Variables, application, abstraction &
+Capture-avoiding beta contraction & Church-numeral functions are exactly the
+partial recursive numerical functions
+(Theorem~\ref{thm:p07-lambda-partial-recursive}). \\
+S--K combinatory logic & Variables, application, \(\mathsf S,\mathsf K\) &
+The two contractions on Sheet~\ref{sheet:sk-combinatory} & Bracket
+abstraction eliminates binders; completeness is cited from
+\cite{CurryFeys1958}. \\
+\bottomrule
+\end{longtable}
+\endgroup
+
+\section{System F: explicit polymorphism}
+
+\begin{hbdefinition}{def:p07-system-f}{Church-style System F}
+The \emph{Church-style System F} used here fixes disjoint countably infinite
+sets of type variables \(a,b,\ldots\) and term variables
+\(x,y,\ldots\).  Its types form the least set containing every type variable
+and closed under the function-type former
+\(\alpha\mathbin{\to_{\mathrm{ty}}}\beta\) and universal type formation
+\(\forall a.\alpha\); \(\alpha,\beta\) range over that set.  Its terms form
+the least set containing every term variable and closed under typed
+abstraction \(\lambda x{:}\alpha.M\), application \(MN\), type abstraction
+\(\Lambda a.M\), and type application \(M[\alpha]\); \(M,N\) range over that
+set.  Its judgments have the form
+\(\Delta_{\mathrm{ty}};\Theta_{\mathrm{ty}}\derives_{\mathsf F}M{:}\alpha\).
+The type-variable context \(\Delta_{\mathrm{ty}}\) lists distinct type
+variables; the term-variable context \(\Theta_{\mathrm{ty}}\) assigns
+distinct term variables types well formed over that type context.  The exact
+formation, typing, freshness, and capture-avoidance conditions are on
+Sheet~\ref{sheet:system-f}.
+
+The style qualifier is necessary because erasing type annotations, type
+abstractions, and type applications gives a different assignment problem.
+This definition names an explicitly annotated proof-term calculus, not all
+formulations called System~F.  It differs from STLC by quantification over
+types, and the distinction controls both the encodings and the decision rows
+below.
+\index{System F!Church style}
+\index{polymorphic lambda calculus@polymorphic \(\lambda\)-calculus}
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p07-system-f-impredicativity}{Impredicativity in System F}
+System~F type quantification is \emph{impredicative}: in an instance of
+\(\forall a.\alpha\), the variable \(a\) may be replaced by any well-formed
+System~F type, including one that itself contains universal type
+quantification.  This names a property of the type-formation and elimination
+regime, not a term-reduction rule.  It differs from mere polymorphic notation
+because the quantified collection is not stratified below the quantified
+type, and it is used by the encodings in the next example.
+\index{impredicativity!System F}
+\end{hbdefinition}
+
+\begin{hbexample}{def:p07-system-f-encodings}{Boolean and numeral encodings}
+The types
+\[
+  \forall a.(a\mathbin{\to_{\mathrm{ty}}}a
+    \mathbin{\to_{\mathrm{ty}}}a)
+  \qquad\text{and}\qquad
+  \forall a.((a\mathbin{\to_{\mathrm{ty}}}a)
+    \mathbin{\to_{\mathrm{ty}}}a\mathbin{\to_{\mathrm{ty}}}a)
+\]
+support the familiar Church encodings of Booleans and natural numbers.  They
+are examples of impredicative encoding, not a claim that every desired
+extensional law for every datatype is internally derivable.
+\end{hbexample}
+
+\begin{hbtheorem}{thm:p07-system-f-confluence}{proved=annex:p7.system-f.confluence}{Confluence of System F reduction}
+For the Church-style terms and the combined compatible reduction generated by
+term-beta and type-beta contraction on Sheet~\ref{sheet:system-f}, any two
+finite reductions from the same term have a common reduct.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p07-system-f-strong-normalization}{proved=annex:p7.system-f.strong-normalization}{Strong normalization for System F}
+Every term typable on Sheet~\ref{sheet:system-f} admits no infinite sequence
+of term-beta and type-beta contractions.
+\end{hbtheorem}
+
+The theorem originates with \cite{Girard1972}. The complete candidate proof
+for this explicit open-term calculus is developed in
+Section~\ref{sec:p07-system-f-normalization} using the separately identified
+presentation \cite[Chapter~14]{GirardLafontTaylor2003Web}.
+
+Under Curry--Howard, the types of System~F are formulas of second-order
+intuitionistic propositional logic, universal type abstraction is
+second-order universal introduction, and typed terms record derivations.  The
+claim is calculus-relative: it uses the rules on Sheet~\ref{sheet:system-f},
+just as Definition~\ref{def:p07-curry-howard} fixes the STLC correspondence.
+
+\begin{hbdefinition}{def:p07-system-f-presentation-styles}{Church and Curry presentations}
+For the explicitly annotated syntax of Definition~\ref{def:p07-system-f},
+\emph{checking} asks whether a displayed judgment
+\(\Delta_{\mathrm{ty}};\Theta_{\mathrm{ty}}\derives_{\mathsf F}M{:}\alpha\) follows from
+the sheet.  In the \emph{Curry-style assignment} presentation, terms contain
+neither term-binder type annotations nor explicit type abstraction and
+application; type checking asks, for a given erased \(M\) and given
+\(\alpha\), whether \(M\) can be assigned \(\alpha\), while typability asks
+whether some type can be assigned.
+
+These style names are needed because the input data of the two decision
+problems differ.  They name two formal presentations and their metalinguistic
+decision problems, not two spellings of one algorithm.  Erasure connects but
+does not identify them, and the distinction is used by the next two theorems
+and Table~\ref{tab:p07-lambda-calculi-comparison}.
+\index{System F!Church style!type checking}
+\index{System F!Curry style}
+\index{typability!System F}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p07-system-f-church-checking}{proved=annex:p7.system-f.church-checking}{Church-style checking}
+Given finite well-formed \(\Delta_{\mathrm{ty}},\Theta_{\mathrm{ty}}\), an
+explicit Church-style term \(M\), and a type \(\alpha\), it is decidable
+whether the judgment
+\[
+ \Delta_{\mathrm{ty}};\Theta_{\mathrm{ty}}
+ \derives_{\mathsf F}M{:}\alpha
+\]
+is derivable on Sheet~\ref{sheet:system-f}.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p07-system-f-curry-undecidable}{cited=Wells1999}{Undecidability for Curry-style System F}
+In the Curry-style System~F assignment presentation fixed in
+Definition~\ref{def:p07-system-f-presentation-styles}, there are effective
+reductions in both directions between typability and type checking, and both
+decision problems are undecidable.
+\end{hbtheorem}
+
+\begin{proofboundary}{def:p07-system-f-parametricity}{Parametricity pointer}
+Reynolds's relational parametricity interprets a polymorphic type by a
+relation-preservation condition and proves an abstraction theorem for the
+selected relational model \cite{Reynolds1983}.  This chapter records that
+connection only: it does not define the logical relation, prove the
+abstraction theorem, or infer unrestricted ``free theorems'' from the two
+example encodings.  Reynolds's earlier account of polymorphism is
+\cite{Reynolds1974}.
+\index{parametricity}
+\end{proofboundary}
+
+\section[Intensional type theory]{An intensional Martin--L\"of boundary and the CIC pointer}
+
+\begin{proofboundary}{def:p07-mltt-boundary}{Selected MLTT calculus boundary}
+The literature name ``Martin--L\"of type theory'' covers inequivalent choices
+of judgments, equality, universes, and type formers. This handbook selects the
+exact core on \hyperref[sheet:mltt-intensional]{\texttt{sheet:mltt-intensional}}:
+context, type, term, type-equality, and term-equality judgments; explicit
+weakening, substitution, equivalence, congruence, and conversion rules;
+dependent products, dependent sums, intensional identity types; and a
+cumulative predicative Russell universe hierarchy. This is a formal calculus,
+not a name for the whole literature family. Its nonredundant exclusions are
+equality reflection, general recursion, quotients, proof irrelevance,
+univalence, and higher inductive types. The selected boundary is used by the
+propositions-as-types entry and by the narrower normalization comparison below
+\cite{MartinLof1984,NordstromPeterssonSmith1990,Hofmann1997}.
+\index{Martin-Lof type theory@Martin--L\"of type theory}
+\index{dependent product}
+\index{dependent sum}
+\index{identity type!intensional}
+\index{universe!type theory}
+\end{proofboundary}
+
+The sheet fixes syntax and derivability, not a normalization theorem for every
+listed former.  In particular, the theorem below concerns a proper subcalculus
+with dependent functions and one Russell universe; it is not evidence for the
+sheet's dependent sums, identity types, or cumulative hierarchy.  Normalization
+and decidable type checking remain calculus-specific metatheorems
+\cite{MartinLof1984,AbelCoquandDybjer2007}.
+
+\begin{hbdefinition}{def:p07-propositions-as-types}{Propositions as types and proof relevance}
+For this entry, \emph{propositions as types} means that a proposition is
+represented by a type and a proof by an inhabitant of that type.  This is an
+interpretive correspondence between propositions and types, not the axiom
+that every two inhabitants are equal.  \emph{Proof relevance} is the
+possibility that inhabitants, including inhabitants of identity types, remain
+distinguishable unless a separate proof-irrelevance principle is assumed.
+The second name is necessary to block the common but invalid inference from
+propositions-as-types to proof irrelevance; it names a possible feature of
+the judgmental theory and is used to delimit the MLTT row of the comparison
+table.
+\index{propositions as types}
+\index{proof relevance}
+\index{proof irrelevance}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p07-mltt-normalization-decision}{cited=AbelCoquandDybjer2007}{Normalization and typed equality in the Abel--Coquand--Dybjer subcalculus}
+For the intensional Martin--L\"of core with typed equality judgments,
+dependent functions, and one Russell-style universe specified by Abel,
+Coquand, and Dybjer, normalization by evaluation computes normal forms for
+well-typed terms and decides typed beta-eta equality.  Consequently fully
+annotated type checking is decidable for that same syntax.  This statement
+does not cover dependent sums, identity types, cumulative or stratified
+universe hierarchies, or the full selected calculus in
+\ref{def:p07-mltt-boundary}.
+\end{hbtheorem}
+
+\input{parts/p07/presentations/coquand-huet-1988}
+
+\section{Inductive and homotopical extensions: separate foundations}
+
+\begin{proofboundary}{def:p07-cic-pointer}{CIC pointer}
+The \emph{Calculus of Inductive Constructions} (CIC) is recorded here only as
+the literature name for an inductive extension of the dependent Calculus of
+Constructions. Coquand--Huet \cite{CoquandHuet1988} supplies a predecessor
+presentation. The reconstructed base syntax, distinct conversion regimes
+and complete annotated normalization proof are at
+\cref{def:p07-ch88-syntax,def:p07-ch88-judgments,
+thm:p07-ch88-full-normalization}; they do not define or establish the
+metatheory of CIC. The phrase here is therefore a
+metalinguistic pointer, not the definition of a handbook calculus: no exact
+inductive declaration, positivity checker, conversion relation, cumulative
+universe hierarchy, or constraint set has been fixed.  CIC consequently has
+no normalization or decision claim in this chapter.
+\index{Calculus of Constructions}
+\index{Calculus of Inductive Constructions}
+\end{proofboundary}
+
+\begin{proofboundary}{def:p07-hott-cubical-boundary}{HoTT, univalence, and cubical type theory boundary}
+The MLTT core above does not include univalence or higher-inductive
+principles. Paths, transport, equivalences and homotopy levels are developed
+in Chapter~\ref{sec:p07-hott-paths-and-equivalences}, with the additional
+assumptions declared where they are used. Higher-inductive constructions
+continue in Chapter~\ref{sec:p07-higher-inductive-types}; the independently
+specified CCHM dimension, face and composition rules are in
+Section~\ref{sec:p07-cchm2016}. None of these extensions is inferred merely
+from the core's name, and none is a premise of its normalization results.
+\index{homotopy type theory}
+\index{univalence}
+\index{cubical type theory}
+\index{higher inductive type}
+\end{proofboundary}
+
+\begin{proofboundary}{def:p07-proof-nets-goi-boundary}{Proof-net and GoI boundary}
+The lambda-calculus results above import no proof-net adequacy theorem.
+The occurrence graphs, switching criterion, full selected sequentialization
+and cut constructions are separately developed in
+\cref{sec:p07-multiplicative-proof-nets}; the original cut-free
+trip-and-empire proof route is
+\cref{sec:p07-girard-trips-empires}. Their declared fragments and proof
+objects are not identified with lambda terms. Geometry of interaction
+remains a distinct operator-execution and interpretation development;
+no such model is imported by the lambda-calculus theorems.
+These boundaries are adjacent to the linear
+logic material elsewhere in Part~7, not additional lambda-calculus results.
+\index{proof net}
+\index{geometry of interaction}
+\end{proofboundary}
+
+\section{Comparison table}
+
+Table~\ref{tab:p07-lambda-calculi-comparison} separates reduction facts from
+typing decision problems.  ``Confluent'' always refers to the reduction
+relation fixed by the row; ``strongly normalizing'' quantifies only over the
+terms specified by the row.  Sources for the table are
+\cite{Barendregt1984,GirardLafontTaylor1989,Girard1972,Wells1999,
+AbelCoquandDybjer2007}.
+
+\begin{landscape}
+\begingroup\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{longtable}{@{}p{.95in}p{1.30in}p{1.45in}p{1.55in}p{1.55in}@{}}
+\caption{Lambda calculi and type theories compared on confluence,
+normalization, checking, and typability.}
+\label{tab:p07-lambda-calculi-comparison}\\
+\toprule
+System / presentation & Reduction and confluence & Normalization & Checking &
+Typability / inference \\
+\midrule
+\endfirsthead
+\caption[]{Lambda calculi and type theories compared on confluence,
+normalization, checking, and typability (continued)}\\
+\toprule
+System / presentation & Reduction and confluence & Normalization & Checking &
+Typability / inference \\
+\midrule
+\endhead
+\midrule\multicolumn{5}{r}{\emph{continued on next page}}\\
+\endfoot
+\endlastfoot
+Untyped lambda calculus & Beta reduction is confluent
+(Theorem~\ref{thm:p07-church-rosser}). & Not every term is weakly or strongly
+normalizing; the self-application loop is a counterexample. & No intrinsic
+typing judgment, hence no native type-checking problem. & No native
+typability problem. \\
+STLC, explicit binders & Beta reduction on well-typed terms is confluent. &
+Every well-typed term is strongly normalizing by the source theorem in
+Section~\ref{sec:normalization-curry-howard-02}. & Syntax-directed checking
+of a fully annotated term is decidable. & For the arrow-only simple-type
+assignment problem, constraint generation and first-order unification decide
+typability; this is presentation-specific, not a System~F claim. \\
+System F, Church style & Combined term-beta and type-beta reduction is
+confluent (Theorem~\ref{thm:p07-system-f-confluence}). & Every well-typed term
+is strongly normalizing
+(Theorem~\ref{thm:p07-system-f-strong-normalization}). & Explicit checking is
+decidable (Theorem~\ref{thm:p07-system-f-church-checking}). & Erased-term
+typability is not the input problem of this presentation. \\
+System F, Curry style & Underlying beta reduction is confluent; typing is a
+separate assignment relation. & Every typable term is strongly normalizing by
+the System~F normalization theorem. & Given an erased term and a proposed
+type, checking is undecidable (Wells). & Typability is equivalent to checking
+for decidability and is undecidable
+(Theorem~\ref{thm:p07-system-f-curry-undecidable}). \\
+Abel--Coquand--Dybjer MLTT core: dependent functions and one Russell universe &
+The row tracks its typed beta-eta judgmental equality; no distinct blanket
+rewrite-confluence claim is added. & Normalization by evaluation computes
+normal forms for its well-typed terms; extensions require separate theorems. &
+Typed beta-eta equality and fully annotated checking are decidable for that
+exact calculus
+(Theorem~\ref{thm:p07-mltt-normalization-decision}). & Dependent-type
+inference is not claimed decidable by this entry. \\
+Corrected indexed full CoC / CIC boundary & Full compatible annotated
+beta reduction is specified at \cref{def:p07-ch88-beta}; no CIC reduction
+relation is fixed here. & Base-calculus strong normalization is
+Theorem~\ref{thm:p07-coc-strong-normalization}; CIC has no blanket cell. & No
+CIC claim. & No CIC claim. \\
+\bottomrule
+\end{longtable}
+\endgroup
+\end{landscape}

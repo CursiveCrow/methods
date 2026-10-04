@@ -1,0 +1,476 @@
+\chapter{Computations as decisions with costs}
+\label{sec:p17-metareasoning}
+
+Metareasoning asks which computation to perform, how much resource to
+give it, and when to act on the answer already available. A computation
+earns decision value through the external action it changes. Improving
+an evaluation number while choosing the same action is not by itself
+an improvement in the external outcome.
+
+The source is Russell and Wefald's complete 1989 conference paper,
+\emph{Principles of Metareasoning}, pp.~400--411
+\cite{RussellWefald1989KRMetareasoning}. Its later 1991 journal article
+is a different presentation. The 1989 paper gives formulas for complete
+computations, two approaches to partial computations, and practical
+approximations. It explicitly leaves the general partial-computation
+problem and some questions about imperfect self-evaluation unresolved.
+The finite constructions below supply precise conditional solutions
+and proofs without identifying those solutions with a resolution of
+the source's unrestricted problem.
+
+\section{Computations, intentions and resources}
+\label{sec:p17-meta-actions}
+
+\begin{hbdefinition}{def:p17-meta-source-notation}{The source's actions and evaluation snapshots}
+Let \(A_1,\ldots,A_m\), \(m\geq1\), be the available external actions,
+\(S_j\) a computational action, and \(S\) the computation history.
+The source writes \([X,W]\) for the situation resulting from
+action \(X\) in situation \(W\), and \([X]\) when the starting
+situation is understood. Its \(U(W)\) is actual external utility;
+\(\widehat U^S(W)\) is an estimate formed after history \(S\).
+They need not coincide. The default intention is
+\[
+ \alpha(S)=A_{i^*},\qquad
+ i^*=\operatorname*{arg\,max}_{i}\widehat U^S([A_i]),
+\]
+with a specified tie rule. A complete computation commits to an external
+action. A partial computation leaves a further choice between acting
+and computing. Write \(T\) for a future computation sequence that
+ends in an external action \(\alpha_{S.S_j.T}\).
+
+For a specified continuation policy that eventually acts, with
+integrable terminal utilities, the source's actual continuation
+value has the form
+\[
+ U([S_j])=\sum_T P(T)\,
+                     U([\alpha_{S.S_j.T},[S_j.T]]).
+\]
+The probabilities describe that policy's possible complete traces,
+including their computation outcomes. A policy chosen before those
+outcomes are known can depend on outcomes as they arrive; it cannot
+select retrospectively whichever realized trace was best.
+If a policy may never act, its nontermination payoff needs a separate
+definition; a sum over completed traces alone need not have total mass one.
+The time and space used by a computation are resources. Their utility
+cost must come from a declared delay model, resource price, or feasibility
+constraint; a number of search nodes alone is not a utility scale
+\cite[\S\S2--3, pp.~401--403]{RussellWefald1989KRMetareasoning}.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p17-meta-program-model}{A model induced by actual program steps}
+A machine configuration contains its program, input, current workspace,
+search frontier or other retained results, evaluation vector, elapsed
+time \(t\), and memory use. A feasible computation \(c\) is a
+specified executable block on that configuration. Its transition
+\(F_c\) produces a successor configuration, its running time and its
+peak memory requirement. The transition may be deterministic; executing
+a deterministic program need not give its controller advance knowledge
+of the answer.
+
+A metalevel information state \(z\) is the declared summary available
+to the controller: for example the retained tree and its backed-up
+estimates, computation type, input features, clock and remaining memory.
+Specify a finite model of problem instances \(\Omega\), with
+conditional weights \(\mu_z(\omega)\), and a summary map \(I\).
+For a deterministic block define the predictive kernel
+\[
+ K(z'\mid z,c)=\sum_{\omega:
+       I(F_c(\omega,z))=z'}\mu_z(\omega).
+\]
+Here \(F_c(\omega,z)\) includes the instance-specific configuration
+consistent with summary \(z\); the model must specify it, or include
+the additional configuration uncertainty in \(\omega\).
+Any physical random bits used by the program may also be included in
+this finite model. Require \(\mu_z(\omega)\geq0\) and
+\(\sum_\omega\mu_z(\omega)=1\); every permitted block finishes
+on the modeled support. Execution obtains no new external observation unless
+one is expressly part of the action. Its output is a computed revision
+of the workspace and decision estimates.
+
+The conditional instance law is a performance model or a subjective
+prediction over unresolved computations. It is not physical randomness
+created by a deterministic calculation. Conditioning on complete input
+and program under logical omniscience would make its answer fixed.
+Thus an empirical law conditioned on a compressed summary must not be
+claimed exact for every individual input. This is the distinction the
+source makes between expensive unperformed computations and statistical
+knowledge of similar completed computations
+\cite[\S4.2, pp.~404--405]{RussellWefald1989KRMetareasoning}.
+\index{metareasoning}\index{value of computation}\index{computational action}
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p17-meta-kernel}{proved=annex:p17.meta.kernel}{Induced transitions and a sufficient information state}
+The displayed kernel is a probability distribution on its reachable
+summaries. For each observed successor of positive probability, the
+conditional weights proportional to
+\(\mu_z(\omega)\mathbf1_{\{I(F_c(\omega,z))=z'\}}\)
+give the successor instance law, after applying any specified instance
+transition. No such quotient is required at a zero-probability successor.
+If, conditional on the entire observed history, the next-summary law,
+available computations, their costs and the stopping payoff depend only
+on \(z\), then \(z\) is sufficient for the finite recursion below.
+If this condition fails, past computation information must be retained;
+the Markov recursion on the coarser summary is unjustified.
+\end{hblemma}
+
+\section{Complete computations and consistent comparison}
+\label{sec:p17-meta-complete}
+
+\begin{hbdefinition}{def:p17-meta-complete-value}{New estimates and the same comparison baseline}
+Fix the current intention \(\alpha\). After a complete computation
+\(c\), let \(X=(X_1,\ldots,X_m)\) be its random vector of
+new intrinsic action estimates, with specified joint distribution
+\(p_c\). A named action can index its coordinate: \(X_{A_i}=X_i\).
+Select \(\alpha_c\) by maximizing that new vector with
+the declared tie rule. Assume, for this definition, that delaying all
+external actions by this computation subtracts the same cost \(k_c\)
+in utility units. Then the source's new-estimator comparison is
+\[
+ \widehat{\operatorname{VOC}}_1(c)
+   =E_{p_c}\,[X_{\alpha_c}-X_\alpha]-k_c
+   =E_{p_c}\,[\max_i X_i-X_\alpha]-k_c.
+\]
+Both candidates use the later intrinsic estimate. The old intention's
+term is its estimated value if performed without the new delay, not
+its delayed payoff. This is the separation behind source equations
+(9), (11) and (15). With a density, replace the finite expectation by
+the corresponding integrals, assuming integrability.
+
+The common delay loss is an additional hypothesis. In the general
+model use the actual action-dependent payoff at the successor clock.
+For example, an opportunity to use action 1 can disappear while action 2
+remains unchanged. No scalar time cost represents both losses, and
+the preferred action may then change solely because of delay
+\cite[\S\S4.1--4.3, pp.~404--406]{RussellWefald1989KRMetareasoning}.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p17-meta-baseline}{proved=annex:p17.meta.baseline}{The baseline correction and its calibrated special case}
+The gross new-estimator benefit is nonnegative pointwise. If the
+computation never changes the intention, its net score is \(-k_c\),
+even if all estimates increase. Replacing the baseline by the earlier
+estimate \(\widehat u_\alpha\) changes the expected score by
+\[
+                     E[X_\alpha]-\widehat u_\alpha.
+\]
+The two scores coincide exactly when this difference is zero.
+
+If the new estimates are actual posterior expectations of fixed
+integrable action utilities given the computed output, and the old
+estimates are the corresponding prior expectations, then
+\(E[X_i]=\widehat u_i\) for every action. When the old intention
+maximizes those prior expectations, the gross benefit is exactly
+the finite value-of-information improvement of
+\cref{thm:p17-information-policy-value,thm:p17-information-value-bounds}.
+This calibration condition supplies that connection; an arbitrary
+heuristic evaluation function does not supply it.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p17-meta-subtree}{proved=annex:p17.meta.subtree}{The source's two subtree-independent formulas}
+Assume common delay cost and that one computation changes only one
+intrinsic action estimate.
+If it changes a currently inferior action \(\beta\), while the
+current best estimate remains \(a\), and its new estimate is \(X\),
+the net score is
+\[
+                       E[(X-a)_+]-k_c,
+                         \qquad x_+=\max(x,0).
+\]
+If there is at least one other action and the computation changes
+the current intention's estimate to \(X\), while the
+best other estimate remains \(b\), the net score is
+\[
+                              E[(b-X)_+]-k_c.
+\]
+For an integrable density \(p\), these expectations are respectively
+\(\int_a^\infty (x-a)p(x)\,dx\) and
+\(\int_{-\infty}^b(b-x)p(x)\,dx\), reproducing source
+equations (17)--(18). Revising the preferred action downward can make
+computation useful by revealing that it should be avoided.
+With only one external action, the gross decision-change benefit is
+zero and the complete-computation score is just the negative cost.
+
+The one-affected-estimate premise is distinct from probabilistic
+independence. If several estimates change, their joint law is needed.
+Equal marginals alone do not determine the expected improvement.
+For example, if two estimates are always jointly \((0,0)\) or
+\((2,2)\), each with probability \(1/2\), the gross benefit for
+either fixed old intention is zero. Making the two same marginals
+independent would give gross benefit \(1/2\).
+\end{hbtheorem}
+
+\section{Grounding the partial-computation problem}
+\label{sec:p17-meta-partial}
+
+\begin{hbdefinition}{def:p17-meta-finite-control}{Feasible computational control with a terminal action}
+Let \(Z\) be a nonempty finite set of sufficient summaries and
+\(C(z)\) a finite set of permitted executable blocks. It may be empty.
+The stopping option commits to the implemented intention \(\alpha(z)\),
+with model expected external payoff \(g(z)\). Specifically, for
+an external payoff model \(u(a,\omega,t)\), set
+\[
+             g(z)=\sum_\omega\mu_z(\omega)
+                        u(\alpha(z),\omega,t(z)),
+\]
+where \(t(z)\) is the clock in that summary.
+It does not secretly
+optimize an uncomputed true-utility table. If several already available
+external decisions can be chosen, their finite maximum may instead be
+included as an explicitly computed stopping payoff.
+
+The data are \(K(z'\mid z,c)\), expected direct resource cost
+\(k(z,c)\), stopping payoff \(g(z)\), and a nonnegative integer
+computation budget \(N\). A controller may stop at any time and must
+stop after at most \(N\) blocks. Its return is its terminal external
+payoff minus all accumulated direct computation costs. Clock-dependent
+utility is already in \(g\) and the successor state; do not charge
+the same delay again in \(k\). Under the separable time-cost model
+one may instead keep intrinsic terminal payoff and charge its delay
+loss once as part of \(k\).
+
+Peak-space limits and deadlines remove a block from \(C(z)\) if
+any positive-probability modeled outcome violates its declared resource
+limit. An allowed block consumes its budget step and updates retained
+workspace, clock and memory as specified by its program transition.
+The metalevel's own evaluation cost must be included if incurred.
+Fresh online evaluation of these options is itself a computation:
+include its transition and cost, or apply the separately declared
+controller invocation charge in \cref{thm:p17-meta-regress}.
+The mathematical maxima below are model-based benchmark values;
+their existence does not make an online evaluator free. A compiled
+policy can instead execute a previously selected decision at its
+specified lookup and branch cost.
+All comparisons below are conditional on these supplied transition,
+payoff and cost models. Their mathematical availability does not prove
+that computing the comparison tables is cheap.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p17-meta-bellman}{proved=annex:p17.meta.bellman}{Exact finite computational control and stopping}
+For every allowed randomized history policy define its expected
+return by the finite products of its policy probabilities and \(K\).
+The optimal return with at most \(n\) remaining blocks is
+\[
+ \begin{aligned}
+ V_0(z)&=g(z),\\
+ Q_n(z,c)&=-k(z,c)+\sum_{z'}K(z'\mid z,c)V_{n-1}(z'),\\
+ V_n(z)&=\max\{g(z),\ \max_{c\in C(z)}Q_n(z,c)\}.
+ \end{aligned}
+\]
+When \(C(z)\) is empty, use just \(g(z)\). A deterministic
+policy choosing a maximizing stop or computation option is optimal
+against all randomized history policies. Stop is optimal exactly when
+every \(Q_n(z,c)\leq g(z)\); a strict reverse inequality justifies
+continuation. Ties may be resolved in favor of stopping.
+For finite rational tables this recursion and its selected policy are
+computable exactly. It grounds the source's future-computation values
+in the explicit budget boundary, using the finite-horizon method of
+\cref{thm:p17-sequential-backward}.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p17-meta-policy-model}{A prediction of the actual continuation policy}
+One can predict a controller without assuming that it is optimal.
+For remaining budget \(n>0\), let \(p_n(z)\) be its stopping
+probability and \(d_n(c\mid z)\) its conditional choice distribution
+if it continues. Then
+\[
+ W_0(z)=g(z),\qquad
+ W_n(z)=p_n(z)g(z)+(1-p_n(z))
+       \sum_c d_n(c\mid z)
+       [-k(z,c)+\sum_{z'}K(z'\mid z,c)W_{n-1}(z')].
+\]
+If continuing is impossible, set \(p_n(z)=1\) and omit the
+computation sum. A history-dependent version retains that history.
+This is the finite probability-of-acting self-model of the source's
+equations (21)--(22), with a stated stopping boundary. Expanding it
+sums over complete computational traces; their final actions are
+weighted by the probability of being selected. Estimated utilities
+must be conditioned on that selection when it carries information.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p17-meta-policy-law}{proved=annex:p17.meta.policy-law}{Trace expansion and why selection changes an estimate}
+The policy recursion equals expected terminal payoff minus accumulated
+cost, summed over its complete traces, and \(W_n\leq V_n\).
+For any random selected action \(A\) and actual terminal utility
+\(U_A\) in this finite model,
+\[
+ E[U_A]=\sum_{a:\Pr(A=a)>0}\Pr(A=a)E[U_a\mid A=a].
+\]
+Replacing the conditional means by unconditional means is generally
+false. If two action utilities are \((1,0)\) or \((0,1)\),
+with equal probabilities, a controller selecting the larger has value
+one. Averaging its selection probabilities against the unconditional
+means instead gives \(1/2\).
+\end{hbtheorem}
+
+\section{Approximations, overhead and regress}
+\label{sec:p17-meta-approximation}
+
+\begin{hbmethod}{def:p17-meta-feasible-controller}{A compiled computation policy}
+Before deployment, record completed episodes by computation type and
+declared input/workspace features. Estimate their joint changes to the
+evaluation vector, their running time, peak space and the subsequent
+external choice. Use the same completed-episode evaluation of the new
+and old intention. Store a transition model or a direct score table
+indexed by those features. Online, use a fixed finite lookup, a resource
+feasibility check, and a stated stopping rule. Price those operations.
+
+A one-step controller uses \(V_0=g\) in every computation comparison:
+it evaluates a step as though action followed immediately. The source
+calls this its single-step assumption. Restricting candidates to individual
+node expansions is its separate meta-greedy assumption. They can make
+control inexpensive, but discard complementarity between partial steps.
+The source's adaptive proposal backs up completed episode evaluations
+and revises their distributions with experience. Its convergence is a
+suggestion, not an established theorem; changes to the controller change
+which episodes it generates \cite[\S\S4.2, 4.5--5]{RussellWefald1989KRMetareasoning}.
+In particular, the source's proposed sample-label construction provisionally
+assumes that the current stop/continue decisions are correct while backing
+up completed computations. If those decisions are poor, the labels evaluate
+that policy's consequences; they do not automatically evaluate an optimal
+continuation. The grounded \(W_n\) construction states exactly which
+policy is being evaluated. Treating its values as \(V_n\) requires
+the additional optimization or a justified approximation bound.
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p17-meta-approximate}{proved=annex:p17.meta.approximate}{What an approximation certificate actually guarantees}
+At every state with \(n\) blocks left, suppose approximate scores
+\(\widetilde Q_n(z,a)\) for every option, including stop, differ
+from their exact optimal-continuation scores by at most \(\epsilon_n\).
+The policy selecting a maximum approximate score and applying the same
+rule thereafter has loss at most
+\[
+                         2\sum_{j=1}^n\epsilon_j.
+\]
+An approximate greedy score advantage greater than twice the applicable
+error bound preserves the corresponding exact comparison.
+For one-step stopping, if all exact net values are nonpositive and
+their one-step approximations have error at most \(\epsilon\),
+any accepted score exceeding \(\epsilon\) is inconsistent with
+that error guarantee. Conversely an estimated one-step net value
+greater than \(\epsilon\) certifies positive exact one-step value.
+It does not certify globally optimal allocation of further computation.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p17-meta-regress}{proved=annex:p17.meta.regress}{Ungrounded continuation and the cost of choosing a computation}
+The equation \(w=\max(g,w)\), representing a zero-cost unchanged
+continuation with no terminal boundary, has every \(w\geq g\)
+as a solution. Its positive-cost version
+\(w=\max(g,w-c)\), \(c>0\), has the sole finite solution \(g\).
+Thus a recursive valuation formula alone need not determine a value.
+
+If using a computation controller costs an action-independent amount
+\(r\geq0\) before its chosen computation or stop option, its value
+is its policy return minus \(r\). Compared with taking the current
+intention directly, the controller is worthwhile exactly when its
+policy improvement exceeds \(r\), with equality giving a tie.
+For example, a complete computation with gross benefit one and direct
+cost \(3/4\) has net benefit \(1/4\). Paying \(3/10\) to
+select it changes the net benefit to \(-1/20\).
+Further deliberation about that controller needs its own priced action
+and stopping boundary; assuming a free optimizing metalevel does not
+solve the evaluation regress.
+\end{hbtheorem}
+
+\section{A calculation with an actual two-block computation}
+\label{sec:p17-meta-computation-example}
+
+\begin{hbdefinition}{def:p17-meta-two-block-program}{A retained intermediate result and a terminal evaluation}
+Consider a fixed computational architecture with two input bits already
+in its memory. Its controller's initial summary does not include their
+values. The performance model assigns equal weights to the four input
+pairs \((p,q)\in\{0,1\}^2\). These are problem instances, not
+fresh external measurements. External action \(A\) has payoff zero.
+The evaluation program for \(B\) returns utility four when the bits
+agree and minus two otherwise. Its prior estimate is therefore one;
+the initial intention is \(B\).
+
+Block \(c_1\) loads \(p\) into retained workspace at cost
+\(2/5\). Block \(c_2\), available afterwards, loads \(q\),
+computes the exclusive-or of the two stored bits, and returns the
+exact evaluation of \(B\), at cost \(2/5\). These are the two
+available computational blocks; each has a declared one-unit duration,
+and both fit the memory limit. There is no further delay loss in this
+example. The terminal choice takes \(B\) after an equal-bit result
+and \(A\) after an unequal-bit result.
+
+This is a model of a specified instruction and control interface.
+It makes no claim that exclusive-or is intrinsically expensive or that
+the supplied feature law is exact for every other machine. The controller
+cannot inspect an unreported input component without executing a permitted
+priced block. Other instruction sets, summaries or costs give other
+metareasoning problems.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p17-meta-two-block}{proved=annex:p17.meta.two-block}{Stopping, complementarity and a feasible compiled policy}
+With one block available from the initial state, stopping has value one
+and performing \(c_1\) then stopping has value \(3/5\).
+The one-step controller stops. With two blocks available, the exact
+value is \(6/5\): perform \(c_1\), perform \(c_2\), then act
+according to the returned evaluation. At either possible first-block
+output the value of the second block followed by action is \(8/5\),
+exceeding the current stopping value one.
+
+Thus both individual first-block outputs leave the action estimate
+unchanged, while the two-block computation has net benefit \(1/5\).
+A compiled policy implementing these two blocks and the terminal choice
+with an additional total control cost \(1/10\) has return \(11/10\)
+and still improves on immediate action. If only one block fits a deadline,
+the two-block policy is infeasible and stopping is optimal.
+The result is an explicit instance of the source's meta-greedy barrier:
+one-step nonimprovement does not imply that a sequence is worthless.
+\end{hbtheorem}
+
+\section{Applications and the limits of the reported evidence}
+\label{sec:p17-meta-applications}
+
+In the source's search examples, a computation expands frontier nodes
+and backs their new values up through a retained search tree. Predicting
+the new leaf values is empirical; transmitting them through the chosen
+backup procedure is analytic. Shared graph nodes or a probability revision
+that affects many alternatives can invalidate the one-subtree premise.
+The paper distinguishes three qualitative cases: estimates so separated
+that a change is unlikely; near symmetry with little attainable payoff
+difference; and overlapping uncertain alternatives with useful expected
+change. Distance between two estimated means alone does not settle any
+of these cases; the predictive law and computation cost matter.
+
+The 1989 applications use the single-step approximation. DTA* compares
+the external path cost with a declared search-node/motion cost ratio.
+The paper's Figure~4 shows eight-puzzle and 20-polygon path-planning comparisons
+against A* and fixed-horizon RTA*. The figure is reported performance
+over varying cost ratios, not a universal optimality theorem. Details
+of the algorithms and search-theoretic proofs are referred by the source
+to its separate 1988 technical report.
+At the stated admissible-heuristic setting, the conference paper also
+attributes to that report a restriction of useful expansion to the
+current best move's subtree, a computable benefit for a set of expansions,
+a best-first policy given only the heuristic information, and a real-time
+stopping criterion. These attributed results retain their source-model
+conditions; the reported comparison does not prove that A* minimizes
+total physical-action-plus-computation cost in every metalevel model.
+
+MGSS* additionally uses individual-node meta-greedy comparisons.
+It can stop when no one-node expansion changes the preferred move,
+although a coordinated set would change it. The paper's Table~1 reports one
+32-game Othello tournament against depth-three alpha--beta search:
+16 random starting positions, each played with reversed colors.
+MGSS* won 22 games and alpha--beta won 10. The table's time entries
+are 1095 versus 1261 seconds and its node entries are 190077 versus
+279697; it does not label those two rows with a per-game or whole-tournament
+denominator. The paired game setup and reported entries do not establish statistical
+independence of 32 games, a confidence interval, reproducibility on
+unreported positions, or comparison with every search budget. The paper
+gives no instance records or machine specification sufficient here to
+reproduce the tournament \cite[\S5, pp.~408--410]{RussellWefald1989KRMetareasoning}.
+
+The source's future-work discussion proposes retaining information
+between deliberations, recursive resource allocation to reduce memory,
+and a broader decision-theoretic architecture. The theorem-proving
+proposal needs a usable intermediate recommendation and a utility for
+partial progress. Estimated success or utility cannot be substituted
+for an actual proof. These are research directions in that presentation.
+Likewise its probabilistic self-model and adaptive method do not settle
+every philosophical question about an agent trusting its own imperfect
+estimates. A finite priced model, a grounded continuation rule, and a
+validated prediction law are the inputs required to apply the proved
+control results of this chapter
+\cite[\S\S4.5, 6--7, pp.~407--411]{RussellWefald1989KRMetareasoning}.

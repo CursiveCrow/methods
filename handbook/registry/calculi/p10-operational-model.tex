@@ -1,0 +1,37 @@
+\calculussheet{sheet:p10-operational-model}{Gunter PCF: typing and call-by-name evaluation}{Simple num/bool/arrow types; source mu binder; weak call-by-name steps and natural evaluation; pred(0)=0.}
+
+\hbrule{rule:p10-oa-ty-var}{Var}{}{H\vdash x:t}{\(x:t\in H\).}
+\hbrule{rule:p10-oa-ty-abs}{Abs}{H,x:s\vdash M:t}{H\vdash\lambda x:s.M:s\to t}{\(x\text{ fresh for }H\).}
+\hbrule{rule:p10-oa-ty-app}{App}{H\vdash M:s\to t\quad H\vdash N:s}{H\vdash M\,N:t}{\none}
+\hbrule{rule:p10-oa-ty-zero}{Zero}{}{H\vdash0:\mathsf{num}}{\none}
+\hbrule{rule:p10-oa-ty-true}{True}{}{H\vdash\mathsf{true}:\mathsf{bool}}{\none}
+\hbrule{rule:p10-oa-ty-false}{False}{}{H\vdash\mathsf{false}:\mathsf{bool}}{\none}
+\hbrule{rule:p10-oa-ty-succ}{Succ}{H\vdash M:\mathsf{num}}{H\vdash\operatorname{succ}(M):\mathsf{num}}{\none}
+\hbrule{rule:p10-oa-ty-pred}{Pred}{H\vdash M:\mathsf{num}}{H\vdash\operatorname{pred}(M):\mathsf{num}}{\none}
+\hbrule{rule:p10-oa-ty-test}{IsZero}{H\vdash M:\mathsf{num}}{H\vdash\operatorname{zero?}(M):\mathsf{bool}}{\none}
+\hbrule{rule:p10-oa-ty-if}{Cond}{H\vdash L:\mathsf{bool}\quad H\vdash M:t\quad H\vdash N:t}{H\vdash\mathsf{if}\ L\ \mathsf{then}\ M\ \mathsf{else}\ N:t}{\none}
+\hbrule{rule:p10-oa-ty-rec}{Rec}{H,x:t\vdash M:t}{H\vdash\mu x:t.M:t}{\(x\text{ fresh for }H\).}
+
+\hbrule{rule:p10-oa-step-beta}{Beta}{}{(\lambda x:s.M)N\to[N/x]M}{Capture-avoiding substitution; the argument is not evaluated.}
+\hbrule{rule:p10-oa-step-pred-zero}{PredZero}{}{\operatorname{pred}(0)\to0}{\none}
+\hbrule{rule:p10-oa-step-pred-succ}{PredSucc}{}{\operatorname{pred}(\operatorname{succ}(\bar n))\to\bar n}{\(n\geq0\).}
+\hbrule{rule:p10-oa-step-test-zero}{TestZero}{}{\operatorname{zero?}(0)\to\mathsf{true}}{\none}
+\hbrule{rule:p10-oa-step-test-succ}{TestSucc}{}{\operatorname{zero?}(\operatorname{succ}(\bar n))\to\mathsf{false}}{\(n\geq0\).}
+\hbrule{rule:p10-oa-step-if-true}{IfTrue}{}{\mathsf{if}\ \mathsf{true}\ \mathsf{then}\ M\ \mathsf{else}\ N\to M}{\none}
+\hbrule{rule:p10-oa-step-if-false}{IfFalse}{}{\mathsf{if}\ \mathsf{false}\ \mathsf{then}\ M\ \mathsf{else}\ N\to N}{\none}
+\hbrule{rule:p10-oa-step-rec}{Unfold}{}{\mu x:t.M\to[\mu x:t.M/x]M}{Capture-avoiding substitution.}
+\hbrule{rule:p10-oa-step-context}{EvalContext}{M\to N}{E[M]\to E[N]}{\(E\) is a typed evaluation context of Definition~\ref{def:p10-oa-evaluation}.}
+
+\hbrule{rule:p10-oa-eval-zero}{ZeroValue}{}{0\Downarrow0}{\none}
+\hbrule{rule:p10-oa-eval-true}{TrueValue}{}{\mathsf{true}\Downarrow\mathsf{true}}{\none}
+\hbrule{rule:p10-oa-eval-false}{FalseValue}{}{\mathsf{false}\Downarrow\mathsf{false}}{\none}
+\hbrule{rule:p10-oa-eval-abs}{AbsValue}{}{\lambda x:s.M\Downarrow\lambda x:s.M}{The abstraction is closed and well typed.}
+\hbrule{rule:p10-oa-eval-succ}{SuccEval}{M\Downarrow\bar n}{\operatorname{succ}(M)\Downarrow\operatorname{succ}(\bar n)}{\(n\geq0\).}
+\hbrule{rule:p10-oa-eval-pred-zero}{PredZeroEval}{M\Downarrow0}{\operatorname{pred}(M)\Downarrow0}{\none}
+\hbrule{rule:p10-oa-eval-pred-succ}{PredSuccEval}{M\Downarrow\operatorname{succ}(\bar n)}{\operatorname{pred}(M)\Downarrow\bar n}{\(n\geq0\).}
+\hbrule{rule:p10-oa-eval-test-zero}{TestZeroEval}{M\Downarrow0}{\operatorname{zero?}(M)\Downarrow\mathsf{true}}{\none}
+\hbrule{rule:p10-oa-eval-test-succ}{TestSuccEval}{M\Downarrow\operatorname{succ}(\bar n)}{\operatorname{zero?}(M)\Downarrow\mathsf{false}}{\(n\geq0\).}
+\hbrule{rule:p10-oa-eval-app}{NameApp}{M\Downarrow\lambda x:s.L\quad[N/x]L\Downarrow V}{M\,N\Downarrow V}{No evaluation premise for \(N\).}
+\hbrule{rule:p10-oa-eval-if-true}{TrueBranch}{L\Downarrow\mathsf{true}\quad M\Downarrow V}{\mathsf{if}\ L\ \mathsf{then}\ M\ \mathsf{else}\ N\Downarrow V}{No premise for the unselected branch.}
+\hbrule{rule:p10-oa-eval-if-false}{FalseBranch}{L\Downarrow\mathsf{false}\quad N\Downarrow V}{\mathsf{if}\ L\ \mathsf{then}\ M\ \mathsf{else}\ N\Downarrow V}{No premise for the unselected branch.}
+\hbrule{rule:p10-oa-eval-rec}{RecEval}{[\mu x:t.M/x]M\Downarrow V}{\mu x:t.M\Downarrow V}{The recursive term is substituted, not evaluated as a premise.}

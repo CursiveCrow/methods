@@ -1,0 +1,298 @@
+%% toc: P2 14 14.7
+\section{Interpolation at the boundary: empty shared vocabulary and the endpoints}
+\label{sec:p02-w02-p02-015-interpolation-boundary}
+
+Method~\ref{def:p02-interpolant-truth-table} builds a Craig interpolant for a
+propositional consequence \(\varphi\entails\psi\) from the assignments to the
+common variables that extend to models of \(\varphi\), and
+Lemma~\ref{thm:p02-interpolant-truth-table-correctness} proves that its output
+is a Craig interpolant in the sense of Definition~\ref{def:p02-interpolant}.
+Three situations make that construction degenerate: the two formulas share no
+variable, the antecedent \(\varphi\) is unsatisfiable, and the consequent
+\(\psi\) is valid.  In each of them the output is, or may be, a formula with no
+variable at all, and the vocabulary clause of
+Definition~\ref{def:p02-interpolant} can then be met only by such a formula.
+This section works out the three cases one at a time under the constant
+convention that the propositional language actually uses.
+
+\emph{Inputs.} Formulas \(\varphi,\psi\in\mathsf{Fm}_{\mathsf{CPL}}\) with
+\(\varphi\entails\psi\), the common-variable set \(X\) of
+Method~\ref{def:p02-interpolant-truth-table}, and the constant convention
+restated in Convention~\ref{def:p02-w02-p02-015-constants}.
+\emph{Conclusions.} The exact output of the method in each boundary case
+(Theorems~\ref{thm:p02-w02-p02-015-empty-shared},
+\ref{thm:p02-w02-p02-015-inconsistent} and~\ref{thm:p02-w02-p02-015-valid});
+a verification, step by step, of \(\varphi\entails\theta\),
+\(\theta\entails\psi\) and the vocabulary clause for that output; the
+dichotomy that a consequence without shared variables has an unsatisfiable
+antecedent or a valid consequent
+(Corollary~\ref{thm:p02-w02-p02-015-dichotomy}); and a proof that the
+empty-vocabulary case depends on the primitive constant \(\bottom\)
+(Theorem~\ref{thm:p02-w02-p02-015-constant-needed}).
+All proofs are in the annex.  They are derived from the inherited definitions
+of \cref{sec:prop-syntax-semantics-01,sec:prop-syntax-semantics-02}; they are
+not attributed to Craig's original argument.
+
+\subsection{Constants, occurrence sets and the output formula}
+\label{sec:p02-w02-p02-015-constants}
+
+\begin{hbconvention}{def:p02-w02-p02-015-constants}{The propositional constant convention}
+The following clauses are the ones fixed in
+\cref{sec:prop-syntax-semantics-01,sec:prop-syntax-semantics-02}; they are
+collected here because every boundary case below uses them.
+\begin{enumerate}
+  \item \(\bottom\) is a primitive nullary connective: it is a formation clause
+        of \(\mathsf{Fm}_{\mathsf{CPL}}\), and \(\widehat v(\bottom)=\mathbf{F}\) for every
+        valuation \(v\).
+  \item \(\topv\) is not a constructor.  It abbreviates the formula
+        \(\neg\bottom\), so \(\widehat v(\topv)=\mathbf{T}\) for every valuation
+        \(v\).
+  \item Given an ordered finite sequence \(\chi_1,\ldots,\chi_n\), the finite
+        conjunction \(\bigwedge_{i=1}^{n}\chi_i\) and disjunction
+        \(\bigvee_{i=1}^{n}\chi_i\) are the right-associated formulas; for
+        \(n=1\) both are \(\chi_1\) itself.  For \(n=0\) the finite
+        conjunction is \(\topv\) and the finite disjunction is \(\bottom\).
+  \item The \emph{occurrence set} \(\operatorname{Var}(\chi)\) of a formula
+        \(\chi\) is the set of propositional variables that occur as symbols of
+        the string \(\chi\).  By the formation clauses,
+        \(\operatorname{Var}(p_n)=\{p_n\}\),
+        \(\operatorname{Var}(\bottom)=\varnothing\),
+        \(\operatorname{Var}(\neg\chi)=\operatorname{Var}(\chi)\) and
+        \(\operatorname{Var}((\chi\circ\chi'))=
+        \operatorname{Var}(\chi)\cup\operatorname{Var}(\chi')\) for
+        \(\circ\in\{\land,\lor,\to\}\).  In particular
+        \(\operatorname{Var}(\topv)=\operatorname{Var}(\neg\bottom)=
+        \varnothing\): both constants are variable-free.
+\end{enumerate}
+The values \(0\) and \(1\) of an assignment \(u:X\to\{0,1\}\) are identified
+with \(\mathbf{F}\) and \(\mathbf{T}\), and \(v\mathbin{\upharpoonright}X\) is the
+restriction of a valuation \(v\) to \(X\) (written \(v|_X\) in the proof of
+Lemma~\ref{thm:p02-interpolant-truth-table-correctness}).  When
+\(X=\varnothing\) there is exactly one assignment \(X\to\{0,1\}\), the empty
+function \(u_{\varnothing}\), and \(v\mathbin{\upharpoonright}\varnothing=
+u_{\varnothing}\) for every valuation \(v\).
+\end{hbconvention}
+
+The method's phrase ``complete conjunction of \(X\)-literals describing
+\(u\)'' is read in the following exact way, using the index order that the
+method already fixes on \(X\).
+
+\begin{hbdefinition}{def:p02-w02-p02-015-output}{Complete conjunctions and the output}
+Let \(\varphi\entails\psi\), let
+\(X=\operatorname{Var}(\varphi)\cap\operatorname{Var}(\psi)\), and list \(X\)
+in increasing variable index as \(x_1,\ldots,x_k\) (\(k\geq 0\)).
+\begin{enumerate}
+  \item For \(u:X\to\{0,1\}\) and \(1\leq i\leq k\), the \emph{literal for
+        \(u\) at \(x_i\)} is \(x_i\) when \(u(x_i)=1\) and \(\neg x_i\) when
+        \(u(x_i)=0\).  The \emph{complete conjunction} \(\kappa_u\) is the
+        finite conjunction of these \(k\) literals in the order
+        \(i=1,\ldots,k\).  When \(k=0\), \(\kappa_{u_\varnothing}=\topv\).
+  \item The \emph{selected family} is
+        \(U_\varphi=\{u:X\to\{0,1\}\,:\,
+        v\entails\varphi\text{ and }v\mathbin{\upharpoonright}X=u
+        \text{ for some valuation }v\}\).
+        List it as \(u_1,\ldots,u_m\) in the lexicographic order of the value
+        sequences \((u(x_1),\ldots,u(x_k))\) with \(0<1\).
+  \item The \emph{output} of Method~\ref{def:p02-interpolant-truth-table} is
+        \(\theta=\bigvee_{j=1}^{m}\kappa_{u_j}\).  When \(m=0\),
+        \(\theta=\bottom\).
+\end{enumerate}
+\end{hbdefinition}
+
+The output depends on \(\psi\) only through \(X\).  Every boundary case below
+is an instance of the following description of what \(\theta\) says.
+
+\begin{hblemma}{thm:p02-w02-p02-015-output-content}{proved=annex:p02-w02-p02-015-content}{Semantic content of the output}
+In the setting of Definition~\ref{def:p02-w02-p02-015-output}:
+\begin{enumerate}
+  \item for every valuation \(v\) and every \(u:X\to\{0,1\}\),
+        \(v\entails\kappa_u\) if and only if
+        \(v\mathbin{\upharpoonright}X=u\);
+  \item for every valuation \(v\), \(v\entails\theta\) if and only if
+        \(v\mathbin{\upharpoonright}X\in U_\varphi\);
+  \item \(\operatorname{Var}(\theta)\subseteq X\), and
+        \(\operatorname{Var}(\theta)=\varnothing\) when \(X=\varnothing\) or
+        \(U_\varphi=\varnothing\).
+\end{enumerate}
+\end{hblemma}
+
+\begin{hblemma}{thm:p02-w02-p02-015-variable-free}{proved=annex:p02-w02-p02-015-varfree}{Variable-free formulas are constant}
+If \(\operatorname{Var}(\chi)=\varnothing\), then either every valuation
+satisfies \(\chi\) or none does.  In particular \(\topv\) is satisfied by every
+valuation and \(\bottom\) by none.
+\end{hblemma}
+
+\subsection{Empty shared vocabulary}
+\label{sec:p02-w02-p02-015-empty}
+
+\begin{hbtheorem}{thm:p02-w02-p02-015-empty-shared}{proved=annex:p02-w02-p02-015-empty}{Empty shared vocabulary}
+Suppose that \(\varphi\entails\psi\) and that the common-variable set
+\(X=\operatorname{Var}(\varphi)\cap\operatorname{Var}(\psi)\) is empty.
+\begin{enumerate}
+  \item If \(\varphi\) is satisfiable, the output of
+        Method~\ref{def:p02-interpolant-truth-table} is
+        \(\theta=\topv\).  Then \(\varphi\entails\topv\), \(\psi\) is valid, and
+        \(\topv\entails\psi\).
+  \item If \(\varphi\) is unsatisfiable, the output is \(\theta=\bottom\), and
+        \(\varphi\entails\bottom\) and \(\bottom\entails\psi\).
+  \item In both cases \(\operatorname{Var}(\theta)=\varnothing=X\), so every
+        variable of \(\theta\) occurs in both \(\varphi\) and \(\psi\), and
+        \(\theta\) is a Craig interpolant for \(\varphi\entails\psi\).
+\end{enumerate}
+\end{hbtheorem}
+
+\begin{hbcorollary}{thm:p02-w02-p02-015-dichotomy}{proved=annex:p02-w02-p02-015-dichot}{Consequence without shared variables}
+If \(\varphi\entails\psi\) and \(\varphi\) and \(\psi\) have no variable in
+common, then \(\varphi\) is unsatisfiable or \(\psi\) is valid.
+\end{hbcorollary}
+
+The case of an empty shared vocabulary holds only because the language has
+a formula without variables to output, and in \(\mathsf{Fm}_{\mathsf{CPL}}\) every variable-free formula is built
+from the primitive constant \(\bottom\).  The next result makes this precise
+by removing \(\bottom\).
+
+\begin{hbdefinition}{def:p02-w02-p02-015-bottom-free}{The \(\bottom\)-free fragment}
+\(\mathsf{Fm}_{\mathsf{CPL}}^{-}\) is the least set of strings that contains every \(p_n\) and
+contains \(\neg\chi\) and \((\chi\circ\chi')\), for
+\(\circ\in\{\land,\lor,\to\}\), whenever it contains \(\chi\) and
+\(\chi'\).  It is the set of formulas of \(\mathsf{Fm}_{\mathsf{CPL}}\) in which \(\bottom\)
+does not occur, and therefore in which \(\topv\) does not occur either.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p02-w02-p02-015-constant-needed}{proved=annex:p02-w02-p02-015-bottom}{Need for the constant \(\bottom\)}
+\begin{enumerate}
+  \item Every \(\chi\in\mathsf{Fm}_{\mathsf{CPL}}^{-}\) has
+        \(\operatorname{Var}(\chi)\neq\varnothing\).
+  \item Every \(\chi\in\mathsf{Fm}_{\mathsf{CPL}}\) with
+        \(\operatorname{Var}(\chi)=\varnothing\) contains \(\bottom\).
+  \item The consequence \(p_0\entails(p_1\to p_1)\) holds, its two formulas
+        lie in \(\mathsf{Fm}_{\mathsf{CPL}}^{-}\) and share no variable, and no formula of
+        \(\mathsf{Fm}_{\mathsf{CPL}}^{-}\) is a Craig interpolant for it.  The same holds for
+        \((p_0\land\neg p_0)\entails p_1\).  In \(\mathsf{Fm}_{\mathsf{CPL}}\) these two
+        consequences have the interpolants \(\topv\) and \(\bottom\)
+        respectively, by Theorem~\ref{thm:p02-w02-p02-015-empty-shared}.
+\end{enumerate}
+\end{hbtheorem}
+
+\subsection{The inconsistent and valid endpoints}
+\label{sec:p02-w02-p02-015-endpoints}
+
+The two endpoints are the consequences that hold for a reason independent of
+the other formula: an unsatisfiable \(\varphi\) entails every \(\psi\), and a
+valid \(\psi\) is entailed by every \(\varphi\).  Here \(X\) may be empty or
+not.
+
+\begin{hbtheorem}{thm:p02-w02-p02-015-inconsistent}{proved=annex:p02-w02-p02-015-incons}{The inconsistent endpoint}
+Let \(\varphi\) be unsatisfiable and \(\psi\) arbitrary, so that
+\(\varphi\entails\psi\).  Whatever \(X\) is, the selected family is empty and
+the output is \(\theta=\bottom\).  Then \(\varphi\entails\bottom\),
+\(\bottom\entails\psi\) and
+\(\operatorname{Var}(\bottom)=\varnothing\subseteq X\), so \(\bottom\) is a
+Craig interpolant.  Conversely, if \(\varphi\) is satisfiable, the output is
+satisfiable and is therefore not \(\bottom\).
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p02-w02-p02-015-valid}{proved=annex:p02-w02-p02-015-valid}{The valid endpoint}
+Let \(\psi\) be valid and \(\varphi\) arbitrary, so that
+\(\varphi\entails\psi\), and let \(\theta\) be the output for this
+consequence.
+\begin{enumerate}
+  \item If \(\varphi\) is unsatisfiable, \(\theta=\bottom\) (the case of
+        Theorem~\ref{thm:p02-w02-p02-015-inconsistent}).
+  \item If \(\varphi\) is satisfiable and \(X=\varnothing\),
+        \(\theta=\topv\).
+  \item If \(\varphi\) is satisfiable and \(X\neq\varnothing\), \(\theta\) is
+        the disjunction, in lexicographic order, of the complete conjunctions
+        \(\kappa_u\) for \(u\in U_\varphi\); its variables are exactly those
+        of \(X\).
+  \item If \(\varphi\) is valid, then \(\psi\) is valid for every \(\psi\) with
+        \(\varphi\entails\psi\), so this case is included.  Then
+        \(U_\varphi\) consists of all \(2^{k}\) assignments
+        \(X\to\{0,1\}\), \(\theta\) is valid, and \(\theta=\topv\) if and
+        only if \(X=\varnothing\).
+  \item In every case \(\varphi\entails\theta\), \(\theta\entails\psi\) and
+        \(\operatorname{Var}(\theta)\subseteq X\).  Moreover \(\topv\) is
+        itself a Craig interpolant for every consequence with a valid
+        consequent.
+\end{enumerate}
+\end{hbtheorem}
+
+\subsection{Worked example}
+\label{sec:p02-w02-p02-015-example}
+
+\begin{hbexample}{def:p02-w02-p02-015-example}{Four boundary consequences}
+\emph{(a) Empty vocabulary, satisfiable antecedent.}
+Take \(\varphi=(p_0\land p_1)\) and \(\psi=(p_2\to p_2)\).  The occurrence
+sets are \(\{p_0,p_1\}\) and \(\{p_2\}\), so \(X=\varnothing\).  The
+valuation sending every variable to \(\mathbf{T}\) satisfies \(\varphi\), so
+\(U_\varphi=\{u_\varnothing\}\), \(\kappa_{u_\varnothing}=\topv\), and the
+disjunction of the one-term sequence \(\topv\) is \(\theta=\topv\).  Every
+valuation satisfies \(\topv\), so \(\varphi\entails\topv\).  The consequent is
+false under \(v\) only if \(v(p_2)=\mathbf{T}\) and \(v(p_2)=\mathbf{F}\), which is
+impossible; so \(\psi\) is valid and \(\topv\entails\psi\).
+
+\emph{(b) Empty vocabulary, unsatisfiable antecedent.}
+Take \(\varphi=(p_0\land\neg p_0)\) and \(\psi=p_1\).  Again \(X=\varnothing\).
+A valuation satisfying \(\varphi\) would give \(p_0\) both values, so
+\(\varphi\) is unsatisfiable, \(U_\varphi=\varnothing\), and \(\theta\) is the
+empty disjunction \(\bottom\).  The consequent \(p_1\) is not valid, so the
+satisfiable branch of Theorem~\ref{thm:p02-w02-p02-015-empty-shared} could not
+apply here; no valuation satisfies \(\varphi\) or \(\bottom\), so
+\(\varphi\entails\bottom\) and \(\bottom\entails p_1\) hold vacuously.
+
+\emph{(c) Inconsistent endpoint with a shared variable.}
+Take \(\varphi=(p_0\land\neg p_0)\) and \(\psi=(p_0\lor p_1)\).  Now
+\(X=\{p_0\}\neq\varnothing\), yet no assignment \(X\to\{0,1\}\) extends to
+a model of \(\varphi\); the output is \(\bottom\), whose occurrence set
+\(\varnothing\) lies in \(X\).
+
+\emph{(d) Valid endpoint with a shared variable.}
+Take \(\varphi=(p_0\lor\neg p_0)\) and \(\psi=(p_0\to(p_1\to p_0))\).  Both
+are valid and \(X=\{p_0\}\).  The assignment \(p_0\mapsto 0\) extends to the
+valuation sending every variable to \(\mathbf{F}\), which satisfies \(\varphi\);
+the assignment \(p_0\mapsto 1\) extends to the valuation sending every
+variable to \(\mathbf{T}\), which also satisfies \(\varphi\).  In lexicographic
+order the complete conjunctions are \(\neg p_0\) and \(p_0\), so
+\(\theta=(\neg p_0\lor p_0)\).  This formula is valid but is not the string
+\(\topv\): it contains \(p_0\).  The constant \(\topv\) is another Craig
+interpolant for the same consequence.
+\end{hbexample}
+
+\subsection{Limitations and relationships}
+\label{sec:p02-w02-p02-015-relationships}
+
+\begin{hbwarning}{def:p02-w02-p02-015-limitation}{What the boundary outputs do and do not provide}
+The method returns the constant \(\topv\) only when \(X=\varnothing\) and
+\(\varphi\) is satisfiable.  At the valid endpoint with \(X\neq\varnothing\)
+it returns a formula with exactly the variables of \(X\), equivalent to
+\(\topv\) only when every assignment to \(X\) extends to a model of
+\(\varphi\); when \(\varphi\) is valid this is a disjunction of \(2^{k}\)
+complete conjunctions of \(k\) literals each, although \(\topv\) would serve.
+The boundary results concern the language \(\mathsf{Fm}_{\mathsf{CPL}}\) with \(\bottom\)
+primitive: in the \(\bottom\)-free fragment of
+Definition~\ref{def:p02-w02-p02-015-bottom-free}, interpolation fails for
+consequences without shared variables
+(Theorem~\ref{thm:p02-w02-p02-015-constant-needed}).
+\end{hbwarning}
+
+The results above expand the final sentence of the proof of
+Lemma~\ref{thm:p02-interpolant-truth-table-correctness}, which records that the
+empty selected family yields \(\bottom\) and the empty conjunction yields
+\(\topv\); together with that lemma they give the boundary cases of
+Theorem~\ref{thm:p02-interpolation}, the propositional form of the
+interpolation theorem of \textcite{Craig1957}.  The two constants are dual in the sense
+of Table~\ref{tab:p02-duality}, and the two endpoints correspond: an
+unsatisfiable antecedent forces the output \(\bottom\), and a valid consequent
+always admits the interpolant \(\topv\).  The proof-theoretic route of
+Method~\ref{def:p07-maehara-method} constructs interpolants at its initial and
+\(\bot L\) leaves; for the propositional language of this part, the
+boundary interpolants obtained here by truth tables are the constants
+\(\topv\) and \(\bottom\).
+
+\emph{Sources.} The constant convention, the finite conjunction and
+disjunction convention, the valuation clauses and the coincidence lemma used
+in the proofs are those of
+\cref{sec:prop-syntax-semantics-01,sec:prop-syntax-semantics-02} and
+Lemma~\ref{lem:prop-coincidence}.  The construction is
+Method~\ref{def:p02-interpolant-truth-table}; the results of this section and
+their proofs are derived from these definitions.

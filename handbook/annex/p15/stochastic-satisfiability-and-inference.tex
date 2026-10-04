@@ -1,0 +1,520 @@
+\section{Stochastic satisfiability: ordered evaluation and inference}
+\label{sec:p15-ssat-annex}
+
+These proofs establish the declared finite ordered calculus, biased
+independent extension and explicit inference/sampling constructions.
+The directly read source is the January 2000 author manuscript; these
+proofs identify their fair source and their independently declared weighted scope.
+
+\begin{annexitem}{annex:p15.ssat-native-correspondence}{thm:p15-ssat-native-correspondence}{The actual ordered-map and prefix comparison}
+\begin{proof}
+An order-preserving bijection between finite variable lists carries each
+assignment to the assignment with the same Boolean values at the renamed
+variables. Induction on literals and clause truth shows that this bijection
+preserves the matrix payoff. Restriction commutes with it: true clauses
+are deleted in both matrices and false literals removed in both. The
+source's renumbering uses precisely this bijection on the remaining list,
+and transports the quantifier map with it; it does not permute positions.
+
+Induct on the number of remaining variables. At either terminal, both
+definitions return the same zero or one, independently of unused variables.
+Otherwise the order-preserving correspondence gives matching outermost
+quantifiers and corresponding two cofactors. The induction hypothesis
+identifies each child value. The native maximum and minimum are exactly
+the prefix maximum and minimum, and its arithmetic mean is the weighted
+rule at parameter \(1/2\). Applying those operators gives equality of the
+parent values. This proves both renaming invariance and the claimed native
+map/prefix equality for every finite input. Comparing equal values with
+the same threshold proves the decision correspondence. No step identifies
+different operator orders or changes a nonfair weight to \(1/2\).
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p15.ssat-strategy-semantics}{thm:p15-ssat-strategy-semantics}{Recursive soundness, completeness and nonanticipating strategies}
+\begin{proof}
+Restriction preserves the truth of a CNF under the assigned value:
+clauses with a true literal are already satisfied; false literals
+contribute nothing to their clause; a resulting empty clause is false.
+An empty matrix is true under all continuations, and an empty clause
+is false under all continuations. Thus the two terminal rules agree
+with the matrix payoff for every remaining prefix.
+
+Induct on the remaining prefix length. At an existential node there
+are two available actions. The controller chooses one before seeing
+any later draw, so the largest achievable continuation success is
+the maximum of the two already determined child values. Choosing an
+argmax and the inductively constructed continuation strategies attains
+it. At a universal node the opposing player chooses an argmin, giving
+the minimum. At a random node the fixed independent outcome weights
+are \(1-p,p\), so finite total expectation gives their weighted
+sum. After the random value is revealed the continuation strategies
+may differ in the two branches, which is exactly the legal information
+condition. No earlier decision is permitted to use that branch bit.
+
+More precisely, backward induction constructs a maximizing strategy
+which guarantees at least the node value against every minimizing
+continuation, and a minimizing strategy which guarantees at most it
+against every maximizing continuation. At max nodes the maximizing
+player selects the largest child; the minimizing player installs its
+guaranteeing continuations in both children. At min nodes reverse
+these roles. At chance nodes install both children's strategies and
+average their guaranteed payoffs. This proves matching guarantees
+and attains the value for the constructed strategy pair. A mixed
+controlled action is a convex combination of the two child payoffs,
+so cannot improve on their maximum or minimum. Pure backward actions
+therefore suffice.
+
+When there are only existential and random nodes, earlier existential
+values are determined recursively by their own tables. Eliminating
+them as independent table arguments leaves exactly the preceding
+random-history arguments claimed in the body. With universal nodes,
+all permitted earlier opposing/chance observations remain available.
+The construction fills the entire finite history tree, including null
+histories; no division by a history probability occurs. For \(p=0\)
+or \(p=1\), a child of weight zero simply does not affect its parent.
+
+Max, min and normalized nonnegative weighted sums preserve \([0,1]\).
+Every nonterminal application removes one quantifier and branches into
+at most two smaller problems. Thus the complete tree is finite,
+including unused variables whose two cofactors agree. At an empty
+prefix, all variables have been restricted, so the CNF is terminal.
+The induction proves existence of a derivation computing the value
+and that every such derivation computes that same value. This is
+soundness and completeness of the finite evaluation rules.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p15.ssat-prefix-order}{thm:p15-ssat-prefix-order}{Like operators commute; choice and observation do not}
+\begin{proof}
+Let \(f(a,b)\) be the value of the common suffix after fixing two
+adjacent variables. Two maxima give \(\max_{a,b}f(a,b)\) in either
+order; two minima give \(\min_{a,b}f(a,b)\). Two independent random
+quantifiers give the finite sum
+\(\sum_{a,b}\mu_a\nu_bf(a,b)\); distributivity and interchange
+of the two finite sums prove equality. The biases belong to their own
+variables and are not exchanged. Applying the unchanged earlier
+prefix to these pointwise equal continuation values preserves equality.
+
+For \(x\leftrightarrow y\), a controlled \(x\) before the
+random draw must be constant. Choosing one succeeds with probability
+\(p\), choosing zero with probability \(1-p\); the optimum is
+their maximum. After \(y\) is observed the policy \(x=y\)
+is legal and succeeds with probability one. At \(p=1/4\) these
+give \(3/4,1\), separated by \(4/5\).
+
+For every fixed action \(a\), \(f(a,b)\leq\max_{a'}f(a',b)\)
+for every \(b\). Multiply by nonnegative weights and sum, then
+maximize the left side over \(a\). This proves the general information-
+relaxation inequality.
+
+For completeness, restrict the source's three-clause example. At
+\(x=0\), its matrix reduces to \(y\land(y\lor\bar z)\),
+whose best \(y\) is one, giving value one. At \(x=1\) it
+reduces to \((y\lor\bar z)\land\bar y\), giving value
+\(1/2\) when \(y=0\). Averaging gives \(3/4\).
+For \(\ssatrandom x\ssatrandom z\exists y\), the assignments
+\((x,z)=(0,0),(0,1),(1,0)\) have satisfying extensions and
+\((1,1)\) does not, again giving \(3/4\). With \(y\)
+outermost, \(y=1\) succeeds precisely when \(x=0\), giving
+\(1/2\), while \(y=0\) requires \(x=1,z=0\), giving
+\(1/4\). The maximum is \(1/2\). Every displayed calculation
+therefore respects its own prefix.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p15.ssat-unit-pure}{thm:p15-ssat-unit-pure}{Structural simplifications without illegal information}
+\begin{proof}
+Each value operator is monotone in both children and positively
+homogeneous: for \(s\geq0\), combining \(sa,sb\) equals
+\(s\) times the combination of \(a,b\). The max and min identities
+follow from order preservation under nonnegative scaling; the random
+identity is distributivity. By induction, these facts hold for every
+unchanged prefix applied to its leaf continuation values.
+
+Suppose a unit forces \(x=b\). For every fixed history before
+\(x\), the opposite cofactor contains an empty clause and has
+value zero. At \(x\), existential max therefore gives the good
+cofactor value, universal min gives zero, and random averaging gives
+\(p_b\) times the good cofactor. The random factor is the same
+at every earlier history by the fixed-independent-parameter hypothesis.
+Positive homogeneity pulls it through every earlier operator, proving
+the displayed identity even for an inner unit variable. If \(p_b=0\),
+the value is identically zero; no inverse weight is needed.
+
+For a pure variable with satisfying sign \(b\), pointwise matrix
+truth at \(x=1-b\) implies matrix truth at \(x=b\): changing
+it cannot falsify any clause. Applying the unchanged suffix's monotone
+operators preserves this dominance for every earlier history. Thus
+existential max at \(x\) selects \(b\), while universal min
+selects \(1-b\). Applying the earlier prefix preserves these
+equalities. This is not an unrestricted reordering argument: it uses
+a dominant cofactor at every history. Random averaging instead retains
+both contributions, and \(\ssatrandom^{1/4}x\;(x)\) explicitly
+gives \(1/4\), disproving random purification.
+
+A tautological clause is true under every total valuation, so deleting
+it leaves the Boolean payoff unchanged; induction through the prefix
+preserves its value. An unused variable has equal cofactors of value
+\(v\); all three operators return \(v\), including deterministic
+random endpoints. This proves the remaining simplifications.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p15.ssat-window-correctness}{thm:p15-ssat-window-correctness}{Complete threshold-window induction with endpoints}
+\begin{proof}
+Use induction on the number of prefix variables. Terminals return
+their exact value, satisfying any window. The unit/pure identities
+already proved justify their recursive smaller calls. A positive
+random-unit factor rescales every comparison and the exactness interval
+by the same \(s>0\), so the transformed contract gives the root
+contract. A zero factor returns exact zero. All other transformations
+leave the contract unchanged.
+
+Let true child values be \(a,b\), and returned first value \(u_0\).
+Under the induction contract, \(u_0<L\) holds exactly when
+\(a<L\), \(u_0>H\) exactly when \(a>H\), and a return
+in the closed window equals \(a\).
+
+At an existential node, if \(u_0>H\), then \(a>H\) and
+\(\max(a,b)>H\), so the early return is valid. Otherwise
+\(a\leq H\), and either \(u_0<L,a<L\), or \(u_0=a\)
+in the window. Put \(L'=\max(L,u_0)\leq H\). If
+\(b<L'\), the second return is below \(L'\). When
+\(u_0\geq L\), \(L'=u_0=a\), so the returned maximum
+is exactly \(a=\max(a,b)\). When \(u_0<L\), both true
+children and both returned children are below \(L\), so their
+maximum is correctly below \(L\). If \(L'\leq b\leq H\),
+the second return is exactly \(b\), and \(b\geq a\) by
+the same two first-child cases, so the maximum is exact. If
+\(b>H\), the second return is above \(H\), as is the true
+maximum. This covers every case, including equality with both endpoints.
+
+At a universal node, if \(u_0<L\), then \(a<L\), making
+the true minimum and returned value below \(L\). Otherwise
+\(a\geq L\), and either \(u_0=a\leq H\), or both
+\(u_0,a>H\). Put \(H'=\min(H,u_0)\geq L\). If
+\(b>H'\), then when \(u_0\leq H\), \(H'=u_0=a\)
+and the returned minimum is exactly \(a\). When \(u_0>H\),
+both true and returned children are above \(H\), so their minima
+are above it. If \(L\leq b\leq H'\), the second return is
+\(b\), which is no larger than \(a\), so the returned minimum
+is exact. If \(b<L\), both the true and returned minima are
+below \(L\). These are all universal cases.
+
+At a random node with \(p=0\) or one, the positive-weight cofactor
+is exactly the whole value, so its unchanged contract suffices. For
+\(0<p<1\), put \(q=1-p\),
+\(L_0=(L-p)/q\), \(H_0=H/q\). These satisfy \(L_0\leq H_0\).
+If the first return satisfies \(qu_0+p<L\), it is below
+\(L_0\), so \(a<L_0\); since \(b\leq1\),
+\(qa+pb\leq qa+p<L\). The returned \(qu_0\) is also
+below \(L\). If \(qu_0>H\), the first return is above
+\(H_0\), so \(a>H_0\); since \(b\geq0\), the true
+value is above \(H\), and the returned \(qu_0\) is above
+it as required. If neither test holds, then
+\(L_0\leq u_0\leq H_0\), forcing \(u_0=a\) by the
+induction contract. The second window
+\(L_1=(L-qa)/p\), \(H_1=(H-qa)/p\) is well ordered.
+If \(b\) is below, within, or above it, the return is respectively
+below, exact within, or above it. Multiplication by positive \(p\)
+and addition of \(qa\) give precisely the three root-window
+cases. No null-weight division or unexamined equality case is used.
+
+Each call removes a variable, so induction also proves termination.
+Every true value lies in \([0,1]\), making the \((0,1)\) call
+exact. At \((\theta,\theta)\), a value below the threshold returns
+below it, equality returns exactly it, and a value above returns above
+it. Thus comparison by \(\geq\) is exactly the intended decision.
+
+For the printed-source countercase, the previous calculation gives
+first child \(1/4\) and second child \(1/2\) under outer
+\(\exists y\). A printed \(u_0\geq H\) early return at
+\(H=1/4\) returns the endpoint instead of a value above it,
+although the actual root is \(1/2\). The corrected strict test
+does not return there. This establishes the actual failing boundary.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p15.ssat-certificate-complexity}{thm:p15-ssat-certificate-complexity}{Finite exact certificates, rational space and QBF reduction}
+\begin{proof}
+The certificate checker verifies each recorded restriction and prefix
+step, then the appropriate arithmetic equation. Induction from its
+terminal leaves shows that every accepted node's value is the genuine
+continuation value. Hence an accepted root is exact. Conversely build
+the canonical full restriction tree, labeling every node by the
+finite evaluation recurrence. It satisfies every check. Its depth is
+at most \(n\), with at most \(2^{n+1}-1\) nodes. Thus complete
+finite certificates exist, without a polynomial-size claim.
+
+Finite literal-set membership/restriction tests are polynomial in
+the explicitly supplied formulas. Rational equalities and comparisons
+can be checked by integer cross multiplication; schoolbook arithmetic
+is polynomial in the explicit operand bit lengths. All recorded
+operand bits count toward certificate length. Therefore checking is
+polynomial in that length plus the input, not necessarily in the input
+alone. This is the mathematical checker guarantee, not a claim that
+a parser or executable checker has been tested.
+
+Write the independent random probabilities as \(a_i/b_i\),
+with \(0\leq a_i\leq b_i\), \(b_i\geq1\). For every suffix
+use common denominator \(D\) equal to the product of denominators
+of its remaining random variables. By induction its value has numerator
+\(N\) with \(0\leq N\leq D\). Max and min choose between
+numerators over the same suffix denominator. A random step combines
+them as
+\[
+ N'=(b_i-a_i)N_0+a_iN_1,
+ \qquad D'=b_iD.
+\]
+The bit length of every such product denominator is at most the sum
+of input denominator bit lengths, plus a constant. Numerators have
+the same bound. Depth-first evaluation stores at most \(n\) stack
+frames, restricted formulas of polynomial size and these polynomial-
+length integers. Its space is polynomial. The encoded threshold is
+compared by one further polynomial-length cross product.
+
+For hardness start with any encoded closed QBF. If its Boolean matrix
+is not CNF, introduce a fresh output variable per Boolean gate and
+the full equivalence clauses described in the projection/inference
+proofs. Require the output true and append all gate variables to an
+innermost existential block. For each fixed original valuation there
+is exactly one consistent gate assignment, and an extension satisfying
+the output unit exists exactly when the original matrix is true.
+Thus every original QBF prefix has the same truth value after this
+linear-size CNF transformation.
+
+Now replace each universal quantifier by a fair random quantifier and
+retain the existentials. The resulting SSAT uses threshold one.
+Induct from its leaves: a max of two values in \([0,1]\) is one
+exactly when at least one is one; their fair mean is one exactly when
+both are one. These are precisely existential and universal truth
+conditions in the original QBF, including constant terminals and
+unused variables. Hence the original QBF is true exactly when this
+SSAT instance is positive. This is a polynomial many-one reduction.
+The already proved TQBF \(\mathsf{PSPACE}\)-completeness in the
+book, together with membership above, establishes the stated result.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p15.ssat-projections}{thm:p15-ssat-projections}{Counting, maximizing a fixed choice and contingent projection}
+\begin{proof}
+Repeated expansion of random averages gives a sum over every random
+assignment of its product weight times the terminal truth indicator.
+This proves the random-only case. Fair weights make every complete
+assignment's weight \(2^{-n}\), giving the model-count ratio.
+An initial existential block applies a maximum over one fixed assignment
+to that block before the remaining weighted sum, giving the second
+formula. A final existential block has value one exactly for random
+assignments admitting a satisfying extension and zero otherwise;
+averaging those indicators gives the third formula.
+
+For final existential auxiliaries, only the event that at least one
+extension exists matters. Equality of those projected events on every
+random assignment proves probability preservation, regardless of the
+number of extensions. In contrast, random auxiliaries average over
+their extensions. A uniquely forced fair Boolean auxiliary has exactly
+one of its two outcomes compatible with its gate equivalence, so gives
+factor \(1/2\); \(g\) such independent fair auxiliaries give
+factor \(2^{-g}\). A genuinely unconstrained auxiliary contributes
+the sum of its two weights, namely one, and so is a different case.
+
+For explicit CNF gate projection, \(z\leftrightarrow a\land b\)
+is encoded by \((\bar z\lor a),(\bar z\lor b),
+(z\lor\bar a\lor\bar b)\). If \(z=1\), the first two force
+both inputs true; if both inputs are true, the third forces \(z=1\).
+The other input cases force \(z=0\), proving equivalence and uniqueness.
+For \(z\leftrightarrow a\lor b\), use
+\((z\lor\bar a),(z\lor\bar b),(\bar z\lor a\lor b)\):
+a true input forces \(z=1\), and both false inputs force zero.
+For \(z\leftrightarrow\bar a\), use
+\((\bar z\lor\bar a),(z\lor a)\), forcing opposite values.
+Topological gate evaluation proves unique extension for an arbitrary
+finite circuit; an output unit then projects exactly its true-input
+event. These clauses justify both the QBF transformation and the
+event-circuit encoding, rather than assuming SAT equisatisfiability
+alone preserves weighted counts.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p15.ssat-bn-translation}{thm:p15-ssat-bn-translation}{Acyclic row selection and exact Bayesian joint events}
+\begin{proof}
+Fix any full coin assignment. At a root node the unique empty-parent
+pattern selects its one coin, fixing \(A_i\). Induct in topological
+order: all parents have already been fixed, exactly one parent pattern
+is true, and the equivalence fixes \(A_i\) to the coin for that row.
+Thus there is exactly one network-variable assignment. The gate
+equivalences just proved similarly determine all auxiliaries. Every
+coin assignment has this extension, including assignments of zero
+product probability.
+
+For a proposed network assignment \(a\), the event that this
+extension is \(a\) imposes, for each \(i\), the single active
+constraint \(C_{i,\operatorname{pa}_i(a)}=a_i\). It leaves every
+other row coin free. Independence gives its probability
+\[
+ \prod_{i=1}^m
+ \begin{cases}
+ t_{i,\operatorname{pa}_i(a)},&a_i=1,\\
+ 1-t_{i,\operatorname{pa}_i(a)},&a_i=0.
+ \end{cases}
+\]
+This is exactly the Bayesian-network factorization. Unused row coins
+sum to one, even for deterministic zero/one row parameters. Therefore
+the induced distribution equals the specified joint distribution.
+
+For event \(B\), the final existential matrix succeeds exactly for
+coin assignments whose unique extension satisfies \(B\). The
+random-exist projection theorem makes its value the probability of that
+event, proving the joint-event equality. Finite conditional probability
+is the joint-event ratio only at positive \(P(E)\), giving the
+displayed two-evaluation formula. If \(P(E)=0\), also
+\(P(H\land E)=0\); their ratio is \(0/0\) and neither the
+encoding nor a numerical convention supplies a posterior.
+
+There is one coin per explicitly listed row. A row pattern has length
+equal to that node's parent count. Combining the row expressions and
+event circuits with linear-size gate equivalences is polynomial in
+that explicit representation and its rational bits. No polynomial
+claim is made relative to a compressed object hiding exponentially
+many rows.
+
+For the worked two-node network, the selected \(X=1\) row contributes
+\((1/5)(4/5)=4/25\) to \(X\land Y\); the other row contributes
+\((4/5)(1/10)=2/25\) to \(Y\), giving \(6/25\) total and
+posterior \(2/3\). Treating the two marginal values independently
+instead gives \(6/125\) for the joint event, and posterior \(1/5\),
+which is the stated failure of that alternative encoding.
+\end{proof}
+\end{annexitem}
+
+
+\begin{annexitem}{annex:p15.ssat-sampling-bound}{thm:p15-ssat-sampling-bound}{Fixed-policy concentration, uniform selection and sampled recursion}
+\begin{proof}
+For a fixed policy, each sampled full random assignment induces a
+Bernoulli success indicator \(Z_j\) of mean \(v_s\), and the
+indicators are independent. Thus the empirical average is unbiased.
+Here is a full concentration argument. For a Bernoulli variable \(Z\)
+of mean \(v\), set \(F(t)=\log E[e^{t(Z-v)}]\).
+The expectation is positive for every real \(t\), including \(v=0,1\).
+Differentiating the two-term finite sum gives \(F(0)=F'(0)=0\)
+and \(F''(t)=a_t(1-a_t)\leq1/4\), where \(a_t\in[0,1]\)
+is the exponentially tilted success probability. Taylor's integral
+formula, for either sign of \(t\), gives \(F(t)\leq t^2/8\).
+
+Independence yields
+\(E[e^{t\sum_j(Z_j-v)}]\leq e^{wt^2/8}\).
+For \(t>0\), Markov's inequality applied to that nonnegative
+exponential gives
+\[
+ P\!\left(\sum_j(Z_j-v)>w\varepsilon\right)
+ \leq \exp(-tw\varepsilon+wt^2/8).
+\]
+Choosing \(t=4\varepsilon\) gives \(e^{-2w\varepsilon^2}\).
+Using \(t=-4\varepsilon\) for the lower tail gives the same bound.
+Adding the two tail probabilities proves the fixed-policy inequality.
+Union-bounding over the \(P\) complete tables gives the simultaneous
+inequality; independence between different policies is not required.
+
+On the uniform good event, let \(s_*\) maximize true value and
+\(\widehat s\) maximize sample value. Then
+\[
+ V-\varepsilon\leq\widehat v_{s_*}
+   \leq\widehat v_*\leq V+\varepsilon,
+ \qquad
+ v_{\widehat s}\geq\widehat v_* -\varepsilon\geq V-2\varepsilon.
+\]
+Solving \(2Pe^{-2w\varepsilon^2}\leq\delta\) proves the stated
+sufficient sample size. If a returned local-search policy is at most
+\(g\) below the sampled optimum, the same inequalities give true
+value at least \(V-g-2\varepsilon\). No bound on \(g\) has
+been inferred from the act of hillclimbing.
+
+For sampled recursion, a nonempty sample multiset at an outer random
+node splits into multisets of sizes \(w_0,w_1\). Its empirical
+average is the sum of the two averages weighted by \(w_b/w\).
+If \(w_b=0\), its contribution is zero, and its undefined empty
+average is never computed. Future policy entries in two different
+random-history branches are distinct permitted table entries, so the
+two child empirical optima can be combined. At an existential node
+one decision is shared by all sample histories reaching that node;
+maximizing its two cofactor values is precisely the legal empirical
+optimization. Terminal sample payoffs are zero or one. Induction on
+the remaining prefix proves equality with the maximum empirical
+value of complete legal policies. Any unused table entries can be
+completed without affecting the sample. The prefix strictly decreases,
+proving termination. This procedure respects the empirical joint
+history distribution, not a product of fitted empirical marginals.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p15.ssat-sampling-overfit}{thm:p15-ssat-sampling-overfit}{The majority-per-history construction and necessary exponential sample size}
+\begin{proof}
+After the \(r\) fair initial bits are observed, the controlled
+\(x\) still precedes the independent fair final \(z\). Either
+controlled value matches it with probability \(1/2\), so every
+complete policy has true value \(1/2\). There are \(2^r\)
+histories, each permitting one independent choice of a table bit,
+hence \(2^{2^r}\) policies.
+
+On the sample, the table entry for history \(h\) chooses the
+majority of its observed final bits. Its number of successes in that
+group is \(\max(N_{h,0},N_{h,1})\), proving the normalized sum
+formula. Fix a sampled index \(j\). Each other sample has the same
+initial history and opposite final bit with probability
+\(2^{-r}/2=2^{-(r+1)}\). A union bound makes the probability of
+at least one such conflicting sample at most \((w-1)/2^{r+1}\).
+If there is no conflicting sample, every sample in that history group
+has the same final bit, and the empirical optimum satisfies sample
+\(j\). Therefore the expected success indicator of index \(j\)
+is at least \(1-(w-1)/2^{r+1}\). Averaging over all indices
+proves the expectation bound. No independence among these optimum-
+success indicators is assumed.
+
+Suppose the proposed accuracy event has probability at least
+\(1-\delta\). On it \(\widehat v_*\leq1/2+\varepsilon\);
+outside it \(\widehat v_*\leq1\). Hence
+\[
+ E[\widehat v_*]\leq
+ (1-\delta)(1/2+\varepsilon)+\delta
+ =1/2+\varepsilon+\delta(1/2-\varepsilon).
+\]
+Combining lower and upper bounds and rearranging gives
+\(w-1\geq2^r(1-2\varepsilon)(1-\delta)\), as claimed.
+For the numerical case the right side is
+\(1024(4/5)(19/20)=778.24\); thus \(w\geq779.24\), and
+the smallest possible integer sample size is 780. This is a necessary
+condition obtained from the alleged guarantee, not a construction
+proving 780 samples sufficient.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p15.ssat-random-formula-bound}{thm:p15-ssat-random-formula-bound}{Independent clause generation and an exact first moment}
+\begin{proof}
+Fix a complete assignment. For any chosen set of \(k\) distinct
+variables, independent fair signs make all \(k\) literals false
+with probability \(2^{-k}\). Thus the assignment satisfies one
+random clause with probability \(1-2^{-k}\). The \(m\)
+clause draws are independent, so its probability of satisfying all
+of them is \((1-2^{-k})^m\), even though duplicate clauses may
+be drawn. Sum these indicators over the \(2^n\) assignments and
+use finite linearity of expectation to obtain the displayed first
+moment. For nonnegative \(Z\), the pointwise inequality
+\(Z\geq2^t\mathbf1_{Z\geq2^t}\) gives Markov's bound by
+taking expectations and dividing by positive \(2^t\).
+
+For \(k=3\), the bound is
+\(\exp[(n-t)\log2-m\log(8/7)]\). It tends to zero under
+the stated divergence condition. At equality of the two exponents
+it is exactly one and proves no asymptotic small-probability claim.
+
+For a specified variable, the probability of belonging to the uniform
+\(k\)-subset is \(k/n\), since each of the \(n\) variables
+has the same inclusion probability and the subset has \(k\) members.
+It is absent from all independent clause draws with probability
+\((1-k/n)^m\). Summing its unused indicator over all variables
+gives \(n(1-k/n)^m\). For \(m=0\), the empty product is one,
+including \(k=n\); every variable is unused. This identifies the
+sampling model responsible for the exact formula rather than using
+a with-replacement approximation without qualification.
+\end{proof}
+\end{annexitem}

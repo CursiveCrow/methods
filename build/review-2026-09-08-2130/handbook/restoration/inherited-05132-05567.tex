@@ -1,0 +1,436 @@
+\section{Prenex form and Skolemization}
+\label{sec:fol-cardinality-normalforms-03}
+
+\begin{definition}[First-order literal and negation normal form]
+A \emph{first-order literal} is an atomic formula or the negation of an
+atomic formula.  A first-order formula is in \emph{negation normal form} iff
+it is generated from first-order literals, \(\bottom\), and
+\(\neg\bottom\) by \(\land,\lor,\forall,\exists\).  Thus every negation in
+such a formula occurs only in a first-order literal or immediately before
+\(\bottom\).  This extends the earlier propositional definition by adding
+the two quantifier constructors and supplies the induction class used in the
+prenex theorem.
+\end{definition}
+
+\begin{definition}[Prenex formula]
+A formula is in \emph{prenex form} iff it has the shape
+\[
+ Q_1x_1\cdots Q_nx_n\,\theta,
+\]
+where each \(Q_i\) is \(\forall\) or \(\exists\), and \(\theta\) contains no
+quantifier.  The formula is \emph{rectified} iff no variable has both a free
+and a bound occurrence and distinct quantifiers bind distinct variables.
+\end{definition}
+
+\begin{lemma}[First-order negation normal form]
+\label{lem:fol-nnf}
+There exist functions
+\(\operatorname{nnf},\operatorname{nnf}':\Fm(\Lang)\to\Fm(\Lang)\) such
+that, for every formula \(\varphi\):
+\begin{enumerate}
+  \item \(\operatorname{nnf}(\varphi)\) and \(\operatorname{nnf}'(\varphi)\)
+        are in negation normal form;
+  \item \(\operatorname{nnf}(\varphi)\equiv\varphi\) and
+        \(\operatorname{nnf}'(\varphi)\equiv\neg\varphi\); and
+  \item \(\FV\) and \(\operatorname{Var}\) of
+        \(\operatorname{nnf}(\varphi)\) and of
+        \(\operatorname{nnf}'(\varphi)\) equal \(\FV(\varphi)\) and
+        \(\operatorname{Var}(\varphi)\).
+\end{enumerate}
+\textit{Status: complete proof.}
+\end{lemma}
+\begin{proof}
+Define the two functions by simultaneous recursion.  For \(\alpha\)
+atomic and \(Q\in\set{\forall,\exists}\),
+\[
+\begin{aligned}
+ \operatorname{nnf}(\alpha)&=\alpha,
+ &\operatorname{nnf}'(\alpha)&=\neg\alpha,\\
+ \operatorname{nnf}(\bottom)&=\bottom,
+ &\operatorname{nnf}'(\bottom)&=\neg\bottom,\\
+ \operatorname{nnf}(\neg\varphi)&=\operatorname{nnf}'(\varphi),
+ &\operatorname{nnf}'(\neg\varphi)&=\operatorname{nnf}(\varphi),\\
+ \operatorname{nnf}(\varphi\land\psi)&=
+   \operatorname{nnf}(\varphi)\land\operatorname{nnf}(\psi),
+ &\operatorname{nnf}'(\varphi\land\psi)&=
+   \operatorname{nnf}'(\varphi)\lor\operatorname{nnf}'(\psi),\\
+ \operatorname{nnf}(\varphi\lor\psi)&=
+   \operatorname{nnf}(\varphi)\lor\operatorname{nnf}(\psi),
+ &\operatorname{nnf}'(\varphi\lor\psi)&=
+   \operatorname{nnf}'(\varphi)\land\operatorname{nnf}'(\psi),\\
+ \operatorname{nnf}(\varphi\to\psi)&=
+   \operatorname{nnf}'(\varphi)\lor\operatorname{nnf}(\psi),
+ &\operatorname{nnf}'(\varphi\to\psi)&=
+   \operatorname{nnf}(\varphi)\land\operatorname{nnf}'(\psi),\\
+ \operatorname{nnf}(Qx\,\varphi)&=Qx\,\operatorname{nnf}(\varphi),
+ &\operatorname{nnf}'(\forall x\,\varphi)&=
+   \exists x\,\operatorname{nnf}'(\varphi),\\
+ &&\operatorname{nnf}'(\exists x\,\varphi)&=
+   \forall x\,\operatorname{nnf}'(\varphi).
+\end{aligned}
+\]
+Every recursive call is on an immediate subformula, so the complexity
+\(c\) strictly decreases and the recursion is legitimate.
+
+The three claims follow by simultaneous strong induction on
+\(c(\varphi)\).  For claim 1, every clause of \(\operatorname{nnf}\) and
+\(\operatorname{nnf}'\) produces a first-order literal, \(\bottom\), or
+\(\neg\bottom\)---each admitted by the definition of negation normal
+form---or combines values of the two functions by
+\(\land,\lor,\forall,\exists\); the induction hypotheses close each case.
+
+For claim 2, check each case against the satisfaction clauses.  The
+atomic, \(\bottom\), and negation cases are immediate; the binary cases
+for \(\operatorname{nnf}'\) are the recursive truth clauses for
+\(\neg(\varphi\land\psi)\), \(\neg(\varphi\lor\psi)\), and
+\(\neg(\varphi\to\psi)\), and the \(\to\) case of \(\operatorname{nnf}\)
+is the truth clause for \(\to\).  The quantifier cases of
+\(\operatorname{nnf}'\) are the pointwise computations
+\(\Meta,s\entails\neg\forall x\,\varphi\) iff some \(a\in\abs{\Meta}\) has
+\(\Meta,s[x\mapsto a]\entails\neg\varphi\) iff
+\(\Meta,s\entails\exists x\,\neg\varphi\), and dually for
+\(\exists\)---computed directly from the satisfaction clauses, with the
+induction hypothesis applied under each updated assignment.
+
+For claim 3, every clause preserves the multiset of atomic subformulas
+and the quantifier occurrences with their variables, so the recursive
+\(\FV\) and \(\operatorname{Var}\) clauses compute the same sets on both
+sides; the induction hypotheses close each case.
+\end{proof}
+
+\begin{lemma}[Rectified variant]
+\label{lem:rectified-variant}
+For every formula \(\varphi\) and every finite set
+\(V\supseteq\operatorname{Var}(\varphi)\) of variables there is a formula
+\(r(\varphi,V)\) such that:
+\begin{enumerate}
+  \item \(r(\varphi,V)\equiv_\alpha\varphi\), hence
+        \(r(\varphi,V)\equiv\varphi\);
+  \item \(r(\varphi,V)\) is rectified, its binders are pairwise distinct
+        and lie outside \(V\), and
+        \(\FV(r(\varphi,V))=\FV(\varphi)\);
+  \item alpha-equivalent formulas have equal free-variable sets; and
+  \item \(r\) preserves the constructor tree; in particular, if
+        \(\varphi\) is in negation normal form, then so is
+        \(r(\varphi,V)\).
+\end{enumerate}
+\textit{Status: complete proof.}
+\end{lemma}
+\begin{proof}
+Define \(r\) by recursion: atomic formulas and \(\bottom\) are unchanged;
+\(r(\neg\varphi,V)=\neg r(\varphi,V)\);
+\(r(\varphi\circ\psi,V)=r(\varphi,V)\circ
+r(\psi,\,V\cup\operatorname{Var}(r(\varphi,V)))\) for
+\(\circ\in\set{\land,\lor,\to}\); and
+\(r(Qx\,\varphi,V)=Qz\,r(\varphi[z/x],\,V\cup\set{z})\), where \(z\) is
+the least variable outside \(V\).  The recursion is well founded by the
+pattern of the substitution definition: since
+\(\operatorname{Var}(\varphi)\subseteq V\) and \(z\notin V\), we have
+\(z\notin\operatorname{Var}(\varphi)\cup\set{x}\), so no binder of
+\(\varphi\) equals \(z\), the substitution \(\varphi[z/x]\) runs on the
+first two quantifier clauses only and is textual replacement---whence
+\(\operatorname{Var}(\varphi[z/x])\subseteq
+\operatorname{Var}(\varphi)\cup\set{z}\), so the invariant
+\(\operatorname{Var}\subseteq V\) persists into every recursive
+call---and \(c(\varphi[z/x])=c(\varphi)<c(Qx\,\varphi)\) by
+\cref{lem:substitution-complexity}.
+
+Prove claim 3 first.  The relation ``has the same free-variable set''
+is an equivalence relation and a congruence for every formula
+constructor, by the recursive \(\FV\) clauses.  It contains each
+generating pair \(Qx\,\varphi\equiv_\alpha Qy\,(\varphi[y/x])\) with
+\(y\notin\operatorname{Var}(\varphi)\): both cases of
+\cref{lem:substitution-fv}(2) give
+\(\FV(Qy\,(\varphi[y/x]))=\FV(Qx\,\varphi)\), because when
+\(x\in\FV(\varphi)\) the sets
+\((\FV(\varphi)\setminus\set{x})\cup\set{y}\) minus \(\set{y}\) and
+\(\FV(\varphi)\setminus\set{x}\) coincide (\(y\notin\FV(\varphi)\)), and
+when \(x\notin\FV(\varphi)\) both sides equal \(\FV(\varphi)\).  By
+leastness of \(\equiv_\alpha\), alpha-equivalence is contained in the
+relation.
+
+Claims 1, 2, and 4 follow by strong induction on \(c(\varphi)\) under the
+invariant \(\operatorname{Var}(\varphi)\subseteq V\).  For claim 1, the
+atomic and \(\bottom\) cases are reflexivity, and the connective cases
+are the congruence property of \(\equiv_\alpha\).  In the quantifier
+case, the induction hypothesis applies to \(\varphi[z/x]\) at complexity
+\(c(\varphi[z/x])=c(\varphi)<c(Qx\,\varphi)\)---licensed by
+\cref{lem:substitution-complexity}---and gives
+\(r(\varphi[z/x],V\cup\set{z})\equiv_\alpha\varphi[z/x]\); the quantifier
+congruence gives
+\(Qz\,r(\varphi[z/x],V\cup\set{z})\equiv_\alpha Qz\,(\varphi[z/x])\); the
+generating clause \(Qx\,\varphi\equiv_\alpha Qz\,(\varphi[z/x])\) is
+licensed by \(z\notin\operatorname{Var}(\varphi)\); transitivity and
+symmetry conclude.  Then \(r(\varphi,V)\equiv\varphi\) by
+\cref{cor:alpha-invariance}.
+
+For claim 2, the binders of \(r(\varphi,V)\) lie outside \(V\) and are
+pairwise distinct: the quantifier clause chooses \(z\notin V\) and
+recurses with \(V\cup\set{z}\), so all inner binders avoid \(z\) and
+\(V\), and the binary clause forbids every variable of the left output to
+the right recursion, so the right binders avoid the left binders.  By
+claims 1 and 3, \(\FV(r(\varphi,V))=\FV(\varphi)\subseteq
+\operatorname{Var}(\varphi)\subseteq V\), so no binder is also free and
+\(r(\varphi,V)\) is rectified.
+
+For claim 4, every clause of \(r\) preserves the outer constructor, and
+in the quantifier case the textual replacement \(\varphi[z/x]\) changes
+only variables inside atomic formulas; induction on the clauses shows
+that the constructor tree, and hence membership in the
+negation-normal-form class, is preserved.
+\end{proof}
+
+\begin{lemma}[Prenex extraction]
+\label{lem:prenex-extraction}
+For every rectified formula \(\varphi\) in negation normal form there is
+a formula \(p(\varphi)\) such that:
+\begin{enumerate}
+  \item \(p(\varphi)\equiv\varphi\);
+  \item \(p(\varphi)\) is rectified and in prenex form, and its matrix is
+        quantifier-free and in negation normal form; and
+  \item \emph{(invariant)} \(\FV\) and \(\operatorname{Var}\) are
+        unchanged, and the prefix of \(p(\varphi)\) consists of exactly
+        the quantifier occurrences of \(\varphi\), with the same
+        quantifier and the same variable; no new free or bound variables
+        occur.
+\end{enumerate}
+\textit{Status: complete proof.}
+\end{lemma}
+\begin{proof}
+Record two facts.  (C1) If \(y\notin\FV(\chi)\), then
+\((Qy\,\pi)\circ\chi\equiv Qy\,(\pi\circ\chi)\) and
+\(\chi\circ(Qy\,\pi)\equiv Qy\,(\chi\circ\pi)\) for
+\(Q\in\set{\forall,\exists}\) and \(\circ\in\set{\land,\lor}\).  For the
+\(\forall\)/\(\lor\) case: if
+\(\Meta,s\entails(\forall y\,\pi)\lor\chi\), then either
+\(\Meta,s[y\mapsto a]\entails\pi\) for every \(a\), or
+\(\Meta,s\entails\chi\) and, by \cref{lem:fol-coincidence},
+\(\Meta,s[y\mapsto a]\entails\chi\) for every \(a\); in both cases
+\(\Meta,s\entails\forall y\,(\pi\lor\chi)\).  Conversely, if
+\(\Meta,s\entails\forall y\,(\pi\lor\chi)\) and
+\(\Meta,s\notentails\chi\), then \cref{lem:fol-coincidence} gives
+\(\Meta,s[y\mapsto a]\notentails\chi\) for every \(a\), so every
+\(s[y\mapsto a]\) satisfies \(\pi\), and
+\(\Meta,s\entails\forall y\,\pi\).  The remaining seven cases follow by
+the same computation from the satisfaction clauses and
+\cref{lem:fol-coincidence}.  (C2) \(\equiv\) is a congruence for
+\(\land,\lor\) and for each quantifier, immediately from the
+satisfaction clauses.
+
+Define \(p\) by structural induction on the negation-normal generation
+of \(\varphi\); every subformula of a rectified formula is rectified, so
+the induction hypotheses apply.  On first-order literals, \(\bottom\),
+and \(\neg\bottom\), let \(p\) be the identity.  For a quantifier case
+\(Qx\,\alpha\), put \(p(Qx\,\alpha)=Qx\,p(\alpha)\): claim 1 is (C2) with
+the induction hypothesis, and claims 2 and 3 hold because the prefix of
+\(p(Qx\,\alpha)\) consists of \(Qx\) followed by the prefix of
+\(p(\alpha)\), whose entries are exactly the quantifier occurrences of
+\(\alpha\), pairwise distinct from \(x\) by rectifiedness.
+
+For a binary case \(\alpha\circ\beta\) with
+\(\circ\in\set{\land,\lor}\), let
+\(p(\alpha)=Q_1y_1\cdots Q_ky_k\,\alpha_0\) and
+\(p(\beta)=R_1z_1\cdots R_mz_m\,\beta_0\) with quantifier-free
+\(\alpha_0,\beta_0\), and put
+\[
+ p(\alpha\circ\beta)=
+ Q_1y_1\cdots Q_ky_k\,R_1z_1\cdots R_mz_m\,(\alpha_0\circ\beta_0).
+\]
+The required side conditions hold by rectifiedness of
+\(\alpha\circ\beta\) and the invariant: each \(y_i\) is bound in
+\(\alpha\), so \(y_i\notin\FV(\beta)=\FV(p(\beta))\); and each
+\(z_j\) is bound in \(\beta\), so
+\(z_j\notin\FV(\alpha_0)\subseteq\FV(\alpha)\cup\set{y_1,\ldots,y_k}\),
+using binder distinctness for \(z_j\ne y_i\).  An inner induction on
+\(k+m\) then proves
+\(p(\alpha\circ\beta)\equiv p(\alpha)\circ p(\beta)\): while a
+quantifier heads either side of \(\circ\), (C1) moves it outward across
+\(\circ\)---its variable is not free in the other side by the side
+conditions just checked---and (C2) transports the equivalence under the
+already-extracted prefix.  With the induction hypotheses
+\(p(\alpha)\equiv\alpha\) and \(p(\beta)\equiv\beta\) and (C2), claim 1
+follows.  The output is prenex with quantifier-free negation-normal
+matrix \(\alpha_0\circ\beta_0\); it is rectified and satisfies the
+invariant because nothing is renamed or introduced: its prefix lists
+exactly the quantifier occurrences of \(\alpha\) followed by those of
+\(\beta\), which are pairwise distinct and disjoint from the free
+variables by rectifiedness of \(\alpha\circ\beta\).  The base,
+quantifier, and binary cases exhaust the constructors of a first-order
+formula in negation normal form.
+\end{proof}
+
+\begin{theorem}[Prenex normal form]
+\label{thm:prenex-normal-form}
+Every first-order formula is logically equivalent to a rectified formula in
+prenex form in the same signature.
+\textit{Status: complete proof.}
+\end{theorem}
+\begin{proof}
+Let \(\varphi\in\Fm(\Lang)\).  Put
+\(\psi=r\bigl(\operatorname{nnf}(\varphi),
+\operatorname{Var}(\operatorname{nnf}(\varphi))\bigr)\) and
+\(\chi=p(\psi)\), with the three operations supplied by
+\cref{lem:fol-nnf,lem:rectified-variant,lem:prenex-extraction}.  By
+\cref{lem:fol-nnf}, \(\operatorname{nnf}(\varphi)\equiv\varphi\) and
+\(\operatorname{nnf}(\varphi)\) is in negation normal form.  By
+\cref{lem:rectified-variant}, \(\psi\) is rectified, remains in negation
+normal form, and satisfies \(\psi\equiv\operatorname{nnf}(\varphi)\).  By
+\cref{lem:prenex-extraction}, \(\chi\) is rectified and in prenex form
+and satisfies \(\chi\equiv\psi\).  Hence
+\(\chi\equiv\varphi\), and all three operations stay inside
+\(\Fm(\Lang)\), so \(\chi\) is in the same signature.
+\end{proof}
+
+\begin{definition}[Skolemization]
+Let
+\[
+ \sigma=Q_1x_1\cdots Q_nx_n\,\theta
+\]
+be a rectified prenex sentence.  Traverse its quantifier prefix from left to
+right.  At an existential quantifier \(\exists x_i\), let
+\(u_1,\ldots,u_m\) be the variables governed by preceding universal
+quantifiers, introduce a new \(m\)-ary function symbol \(f_i\), replace the
+occurrences bound by \(\exists x_i\) with
+\(f_i(u_1,\ldots,u_m)\), and delete that existential quantifier.  Retain every
+universal quantifier.  The resulting universal sentence in the expanded
+signature is the \emph{Skolemization} \(\operatorname{Sk}(\sigma)\).
+\end{definition}
+
+An existential quantifier with no preceding universal quantifier produces a
+new constant symbol.  A different new function symbol is used for each
+existential-quantifier occurrence.
+
+\begin{example}
+Skolemization transforms
+\[
+ \forall x\exists y\forall z\exists w\,R(x,y,z,w)
+\]
+into
+\[
+ \forall x\forall z\,R(x,f(x),z,g(x,z)).
+\]
+The second witness may depend on \(x\) and \(z\); its indirect dependence on
+the first witness is already determined by \(f(x)\).
+\end{example}
+
+\begin{theorem}[Equisatisfiability of Skolemization]
+\label{thm:skolem-equisatisfiable}
+Let \(\sigma\) be a rectified prenex \(\Lang\)-sentence.
+\begin{enumerate}
+  \item \emph{(Axiom of Choice.)}  Every \(\Lang\)-structure satisfying
+        \(\sigma\) has an expansion to the Skolem signature satisfying
+        \(\operatorname{Sk}(\sigma)\).
+  \item \emph{(No choice.)}  The \(\Lang\)-reduct of every model of
+        \(\operatorname{Sk}(\sigma)\) satisfies \(\sigma\).
+\end{enumerate}
+Hence, assuming the Axiom of Choice in the ambient set theory, \(\sigma\)
+has a \(\Lang\)-model iff \(\operatorname{Sk}(\sigma)\) has a model in its
+expanded signature; the right-to-left implication holds without choice.
+\textit{Status: complete proof.}
+\end{theorem}
+\begin{proof}
+Write \(\sigma=Q_1x_1\cdots Q_nx_n\,\theta\) with \(\theta\)
+quantifier-free.  For \(0\le i\le n\), let
+\(\sigma_i=Q_{i+1}x_{i+1}\cdots Q_nx_n\,\theta\), so that
+\(\sigma_0=\sigma\), \(\sigma_n=\theta\), and
+\(\FV(\sigma_i)\subseteq\set{x_1,\ldots,x_i}\).  Let \(q(i)\) be the
+number of universal positions among the first \(i\), let \(\bar u(j)\)
+list the variables of the universal positions before position \(j\), and,
+for each existential position \(j\), let \(t_j=f_j(\bar u(j))\) be its
+Skolem term.  Then
+\(\operatorname{Sk}(\sigma)=\forall u_1\cdots\forall u_p\,\theta^{*}\),
+where \(u_1,\ldots,u_p\) are the universal variables in prefix order,
+\(p=q(n)\), and \(\theta^{*}=\theta[t_j/x_j]\) simultaneously for all
+existential positions \(j\).  Because \(\theta\) is quantifier-free, each
+substitution is plain replacement, and because no \(t_j\) contains an
+existential variable, the simultaneous substitution equals the
+composition of the single substitutions in any order.
+
+Given a structure and a tuple \(\bar a\) of values for the universal
+variables among \(x_1,\ldots,x_i\), the \emph{Skolem-term assignment}
+\(s_{\bar a}\) assigns to a universal \(x_j\) its entry of \(\bar a\) and
+to an existential \(x_j\) the value \(v_j\) of \(t_j\) computed from the
+entries for \(\bar u(j)\); the values of all other variables are
+irrelevant by \cref{lem:fol-coincidence}.
+
+\emph{Clause 1.}  Let \(\Meta\entails\sigma\).  By finite recursion on
+\(i\), choose functions
+\(F_j:\abs{\Meta}^{\,q(j-1)}\to\abs{\Meta}\) for the existential
+positions \(j\le i\) while proving the invariant
+\[
+ \mathrm{Inv}(i):\quad
+ \Meta,s_{\bar a}\entails\sigma_i
+ \quad\text{for every }\bar a\in\abs{\Meta}^{\,q(i)},
+\]
+where \(s_{\bar a}\) computes each \(v_j\) as
+\(F_j\) applied to the entries of \(\bar a\) for \(\bar u(j)\).
+\(\mathrm{Inv}(0)\) is the hypothesis \(\Meta\entails\sigma\).
+
+Universal step (\(Q_{i+1}=\forall\)): from
+\(\Meta,s_{\bar a}\entails\forall x_{i+1}\,\sigma_{i+1}\), the universal
+satisfaction clause gives
+\(\Meta,s_{\bar a}[x_{i+1}\mapsto b]\entails\sigma_{i+1}\) for every
+\(b\in\abs{\Meta}\), which is \(\mathrm{Inv}(i+1)\) for the tuple
+\((\bar a,b)\).
+
+Existential step (\(Q_{i+1}=\exists\)): by \(\mathrm{Inv}(i)\) and the
+existential satisfaction clause, each witness set
+\[
+ W(\bar a)=\set{b\in\abs{\Meta}:
+ \Meta,s_{\bar a}[x_{i+1}\mapsto b]\entails\sigma_{i+1}}
+\]
+is nonempty.  Apply the Axiom of Choice to the set
+\(\set{\set{\bar a}\times W(\bar a):\bar a\in\abs{\Meta}^{\,q(i)}}\) of
+nonempty sets to obtain a function \(F_{i+1}\) with
+\(F_{i+1}(\bar a)\in W(\bar a)\) for every \(\bar a\).  This is one
+application of choice per existential quantifier, and choice is used
+nowhere else.  With \(v_{i+1}=F_{i+1}(\bar a)\), the Skolem-term
+assignment satisfies \(\mathrm{Inv}(i+1)\).
+
+Define the expansion \(\Meta^{*}\) of \(\Meta\) to the Skolem signature
+by \(f_j^{\Meta^{*}}=F_j\) for every existential position \(j\).  Fix
+\(\bar a\in\abs{\Meta}^{p}\).  By \(\mathrm{Inv}(n)\),
+\(\Meta,s_{\bar a}\entails\theta\), hence
+\(\Meta^{*},s_{\bar a}\entails\theta\) by \cref{lem:reduct-invariance}.
+The term-value clauses give each \(t_j\) the value \(v_j\) under
+\([\bar u\mapsto\bar a]\) in \(\Meta^{*}\), so iterating
+\cref{thm:fol-substitution} once per existential position turns
+\(\Meta^{*},s_{\bar a}\entails\theta\) into
+\(\Meta^{*},[\bar u\mapsto\bar a]\entails\theta^{*}\).  Since \(\bar a\)
+was arbitrary, the \(p\)-fold universal satisfaction clause yields
+\(\Meta^{*}\entails\operatorname{Sk}(\sigma)\).
+
+\emph{Clause 2.}  Let \(\mathcal N\entails\operatorname{Sk}(\sigma)\) in
+the expanded signature; now \(v_j\) is the value of the term \(t_j\) in
+\(\mathcal N\) at the entries for \(\bar u(j)\), and no choice is needed
+to produce it.  By downward induction from \(i=n\) to \(i=0\), prove
+\[
+ \mathrm{Inv}'(i):\quad
+ \mathcal N,s_{\bar a}\entails\sigma_i
+ \quad\text{for every }\bar a\in\abs{\mathcal N}^{\,q(i)}.
+\]
+Base \(i=n\): instantiating the universal prefix of
+\(\operatorname{Sk}(\sigma)\) at \(\bar a\) gives
+\(\mathcal N,[\bar u\mapsto\bar a]\entails\theta^{*}\), and reversing the
+iterated substitution-lemma computation of clause 1, again by
+\cref{thm:fol-substitution}, gives
+\(\mathcal N,s_{\bar a}\entails\theta\).  Universal step
+(\(Q_{i+1}=\forall\)): for every \(b\), \(\mathrm{Inv}'(i+1)\) at
+\((\bar a,b)\) gives
+\(\mathcal N,s_{\bar a}[x_{i+1}\mapsto b]\entails\sigma_{i+1}\)---the
+values \(v_j\) for the existential \(j\le i\) depend only on the entries
+of \(\bar a\)---and the universal satisfaction clause gives
+\(\mathrm{Inv}'(i)\).  Existential step (\(Q_{i+1}=\exists\)):
+\(q(i+1)=q(i)\), and \(\mathrm{Inv}'(i+1)\) at \(\bar a\) exhibits the
+witness \(v_{i+1}\), so the existential satisfaction clause gives
+\(\mathrm{Inv}'(i)\).  Then \(\mathrm{Inv}'(0)\) says
+\(\mathcal N\entails\sigma\) in the expanded signature, and
+\cref{lem:reduct-invariance} yields
+\(\mathcal N\restr\Lang\entails\sigma\).  No choice principle is used.
+\end{proof}
+
+Skolemization generally does not preserve logical equivalence: its output is
+in an expanded signature and fixes witness functions that the original
+sentence did not name.  The theorem states equisatisfiability and the precise
+expansion--reduct relation, not equivalence of formulas.
+

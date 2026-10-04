@@ -1,0 +1,671 @@
+%% toc: P1 7 7.1,7.2,7.3
+\section{Ambiguity, restricted quantification, uniqueness, and scope in translation}
+\label{sec:p01-w02-p01-022-translation}
+
+The method of \cref{sec:levels-05} tells the translator to resolve pronouns,
+plurality, restricted quantification and uniqueness before translating, and
+to keep quantifier scope with parentheses
+\cite[ch.~``Levels, Objects, and Consequence'', sec.~``Arguments and
+formalization'', method ``Formalizing an argument'']{FrozenFormalLogicFormalizing}.
+It does not say how an ambiguity is found, how a reading is chosen, how the
+choice is written down, which formula a restricted quantifier phrase or a
+uniqueness phrase becomes, or what goes wrong when the wrong pattern is used.
+This section supplies those parts of the translation step.
+
+\emph{Inputs.} A natural-language argument, a declared domain, a declared
+first-order signature \(\Lang\) with logical equality
+(\cref{def:p02-fol-signature}), and a declared set of background sentences.
+The semantics is the satisfaction relation of \cref{sec:fol-semantics-02};
+substitution \(\varphi[t/x]\) is the capture-avoiding substitution of
+\cref{sec:fol-syntax-semantics-04}; consequence \(\Gamma\entails\varphi\) and
+logical equivalence of formulas are those of the definition ``Truth,
+validity, and semantic consequence'' in \cref{sec:fol-semantics-02}
+\cite[ch.~``Structures, Satisfaction, and Translation'', secs.~``Satisfaction''
+and ``Translation with quantifiers'']{FrozenFormalLogicFormalizing}.
+
+\emph{Conclusions.} A record of readings and a test that separates harmless
+from harmful ambiguity (\cref{def:p01-w02-p01-022-reading,thm:p01-w02-p01-022-readings,def:p01-w02-p01-022-ambiguity-method}); the
+semantics of restricted quantifiers and the exact cost of the two standard
+mistranslations (\cref{thm:p01-w02-p01-022-relativization,thm:p01-w02-p01-022-mismatch}); exact formulas for ``at most one'',
+``exactly one'' and ``the'', with their counting characterization and the
+freshness condition they need (\cref{def:p01-w02-p01-022-uniqueness,thm:p01-w02-p01-022-uniqueness,thm:p01-w02-p01-022-freshness}); and the
+scope behaviour of eliminated definite descriptions
+(\cref{thm:p01-w02-p01-022-description-scope}). The results and their proofs
+are editorial completions built on the inherited definitions. The contextual
+analysis of descriptions and the conditional reading of ``all'' are
+Russell's \cite[481--482, 489--490]{Russell1905}; the proofs given here are
+not attributed to him.
+
+\subsection{Setting}
+\label{sec:p01-w02-p01-022-setting}
+
+\begin{hbconvention}{def:p01-w02-p01-022-setting}{Background sets and solution sets}
+Throughout, \(\Lang\) is a declared signature, \(\mathcal M\) ranges over
+\(\Lang\)-structures with nonempty domain \(\dom\mathcal M\), and \(s\)
+ranges over variable assignments in \(\mathcal M\), with update
+\(s[x\mapsto a]\).
+\begin{enumerate}
+  \item A \emph{background set} is a set \(\Pi\) of \(\Lang\)-sentences fixed
+        before translation. It records the connections between declared
+        symbols that the intended reading takes for granted, for example
+        that no paper is a referee. The argument
+        \(\langle\Gamma,\psi\rangle\) is \emph{valid relative to \(\Pi\)}
+        iff \(\Gamma\cup\Pi\entails\psi\). With \(\Pi=\varnothing\) this is
+        semantic validity in the sense of \cref{sec:levels-05}.
+  \item Two \(\Lang\)-formulas \(\varphi_1,\varphi_2\) are
+        \emph{\(\Pi\)-equivalent} iff
+        \(\mathcal M,s\entails\varphi_1\Leftrightarrow
+        \mathcal M,s\entails\varphi_2\) for every model \(\mathcal M\) of
+        \(\Pi\) and every assignment \(s\). For \(\Pi=\varnothing\) this is
+        logical equivalence.
+  \item For a formula \(\varphi\), a variable \(x\), a structure
+        \(\mathcal M\) and an assignment \(s\), the \emph{solution set} of
+        \(\varphi\) in \(x\) is
+        \[
+          \varphi^{\mathcal M,s}_x\defeq
+          \{a\in\dom\mathcal M:\mathcal M,s[x\mapsto a]\entails\varphi\}.
+        \]
+        By formula coincidence (\cref{lem:fol-coincidence}) it depends on
+        \(s\) only through the values of \(s\) on
+        \(\FV(\varphi)\setminus\{x\}\).
+\end{enumerate}
+\end{hbconvention}
+
+\subsection{Readings and ambiguity}
+\label{sec:p01-w02-p01-022-ambiguity}
+
+\begin{hbdefinition}{def:p01-w02-p01-022-reading}{Dictionary, reading, ambiguity}
+Fix a domain, a signature \(\Lang\) and a background set \(\Pi\).
+\begin{enumerate}
+  \item A \emph{dictionary} assigns to each content word or phrase of the
+        argument a declared symbol of \(\Lang\) together with the sense in
+        which the symbol is meant.
+  \item A \emph{reading} of a natural-language sentence is an
+        \(\Lang\)-formula together with a statement, in the metalanguage, of
+        which interpretation of the sentence it formalizes. A reading of a
+        premise or conclusion is a sentence of \(\Lang\) unless a free
+        variable is declared as a parameter.
+  \item A sentence is \emph{ambiguous relative to \(\Lang\) and \(\Pi\)}
+        iff it has two readings that are not \(\Pi\)-equivalent. Two such
+        readings are \emph{separated} by any model \(\mathcal M\) of \(\Pi\)
+        and assignment \(s\) at which exactly one of them is satisfied; this
+        pair is a \emph{separating structure}.
+  \item An ambiguity is \emph{harmless for an argument} iff the verdict
+        ``valid relative to \(\Pi\)'' or ``invalid relative to \(\Pi\)'' is
+        the same under every choice of readings; otherwise it is
+        \emph{harmful}.
+\end{enumerate}
+\index{reading}\index{ambiguity!relative to a signature}
+\end{hbdefinition}
+
+Ambiguity in this sense is a relation between a sentence and a declared
+language. A sentence whose two interpretations become \(\Pi\)-equivalent
+formulas is not ambiguous for the argument at hand, however different the
+interpretations sound; and a sentence that reads unambiguously in ordinary
+speech may still have several readings once the signature forces a choice,
+for example between a one-place predicate of individuals and a relation to
+a collection.
+
+\begin{hbdefinition}{def:p01-w02-p01-022-kinds}{Kinds of ambiguity and their formal effect}
+The following kinds are distinguished by what changes between the readings.
+\begin{enumerate}
+  \item \emph{Lexical.} One word has two senses, and the dictionary offers
+        two symbols. The readings differ in a nonlogical symbol.
+  \item \emph{Structural.} The sentence has two grammatical analyses, for
+        example two groupings of ``and'' and ``or'' or two attachments of a
+        modifying clause. The readings differ in the formation tree of the
+        formula.
+  \item \emph{Scope.} The sentence contains two or more scope-bearing items
+        (quantifier phrases, negation, ``only'', definite descriptions) whose
+        relative order is not fixed by the wording. The readings differ in
+        the order in which the corresponding operators occur on a branch of
+        the formation tree.
+  \item \emph{Pronoun.} A pronoun has more than one candidate antecedent, or
+        may either refer to a fixed object or be bound by a quantifier
+        phrase. The readings differ in which variable or constant occupies
+        the pronoun's position, and in which quantifier binds that variable.
+  \item \emph{Plurality.} A plural noun phrase combines with a predicate
+        either distributively (the predicate holds of each member) or
+        collectively (the predicate holds of the members taken together), or
+        its grammatical number may or may not be meant to assert more than
+        one object. The readings differ in whether the predicate applies to
+        individuals or to a collection, and in whether a distinctness
+        condition is asserted.
+\end{enumerate}
+\index{ambiguity!lexical}\index{ambiguity!structural}\index{ambiguity!scope}
+\index{ambiguity!pronoun}\index{ambiguity!plurality}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p01-w02-p01-022-readings}{proved=annex:p01-w02-p01-022-readings}{Validity under alternative readings}
+Let \(\Pi\) be a background set, \(\Gamma\) a set of \(\Lang\)-formulas,
+\(\varphi_1,\ldots,\varphi_k\) (\(k\geq1\)) readings of one further premise
+and \(\psi_1,\ldots,\psi_m\) (\(m\geq1\)) readings of the conclusion.
+\begin{enumerate}
+  \item If \(\varphi_1\) and \(\varphi_2\) are \(\Pi\)-equivalent, then for
+        every formula \(\psi\),
+        \(\Gamma\cup\Pi\cup\{\varphi_1\}\entails\psi\) iff
+        \(\Gamma\cup\Pi\cup\{\varphi_2\}\entails\psi\). If \(\psi_1\) and
+        \(\psi_2\) are \(\Pi\)-equivalent, then
+        \(\Gamma\cup\Pi\entails\psi_1\) iff \(\Gamma\cup\Pi\entails\psi_2\).
+  \item For every formula \(\psi\),
+        \(\Gamma\cup\Pi\cup\{\varphi_i\}\entails\psi\) for every
+        \(i\leq k\) iff
+        \(\Gamma\cup\Pi\cup\{\varphi_1\lor\cdots\lor\varphi_k\}\entails\psi\).
+  \item \(\Gamma\cup\Pi\entails\psi_j\) for every \(j\leq m\) iff
+        \(\Gamma\cup\Pi\entails\psi_1\land\cdots\land\psi_m\).
+\end{enumerate}
+\end{hbtheorem}
+
+Clause 1 says that only non-equivalent readings need to be recorded
+separately. Clauses 2 and 3 say when an unresolved ambiguity is harmless for
+a verdict of validity: the argument is valid under every combination of
+readings iff it is valid with the disjunction of the premise readings and the
+conjunction of the conclusion readings. When the argument is valid under some
+combinations and invalid under others, the ambiguity is harmful and the
+verdict has to be reported reading by reading.
+
+\begin{hbmethod}{def:p01-w02-p01-022-ambiguity-method}{Detecting, resolving and recording ambiguity}
+Apply the following steps to each premise and to the conclusion after the
+domain, the signature and \(\Pi\) have been declared and before the formula
+is written.
+\begin{enumerate}
+  \item \emph{Lexical check.} For each content word, list the dictionary
+        entries it could take. More than one candidate symbol is a lexical
+        ambiguity point.
+  \item \emph{Structural check.} Group the clauses explicitly with
+        parentheses. If two groupings, or two attachments of a modifying
+        clause, are grammatical, record a structural ambiguity point.
+  \item \emph{Scope check.} List the scope-bearing items of each clause.
+        For each pair whose order is not fixed by the wording, write both
+        orders. Each distinct order is a candidate reading.
+  \item \emph{Pronoun check.} For each pronoun, list the candidate
+        antecedents and decide, for each, whether the pronoun names a fixed
+        object (a constant) or is bound by a quantifier phrase (a variable).
+        A pronoun whose candidate binder does not have it in its scope cannot
+        be translated by that binder as written
+        (\cref{thm:p01-w02-p01-022-indefinite}).
+  \item \emph{Plurality check.} For each plural noun phrase, ask whether its
+        predicate is meant of each member or of the members together, and
+        whether the plural is meant to assert more than one object. A
+        collective reading needs a declared domain of collections and a
+        membership relation; a ``more than one'' reading needs a
+        distinctness condition.
+  \item \emph{Separation.} Translate each candidate reading. For each pair
+        of readings, either exhibit a separating model of \(\Pi\) and
+        assignment, or show that the pair is \(\Pi\)-equivalent. Equivalent
+        readings are merged by clause 1 of \cref{thm:p01-w02-p01-022-readings}.
+  \item \emph{Resolution.} Choose among the remaining readings using
+        evidence that is stated: the other premises, the declared purpose of
+        the argument, and what its author says elsewhere. A reading under
+        which a premise is false in every intended model is evidence against
+        that reading, not a reason to reject the argument. The same word is
+        read in the same sense in every premise unless a change of sense is
+        recorded.
+  \item \emph{Recording.} Write a translation record containing the domain,
+        the signature, \(\Pi\), the dictionary, and, for each ambiguity point,
+        its kind, the readings, the separating structures, the chosen reading
+        and the evidence for the choice.
+  \item \emph{Unresolved points.} If a point cannot be resolved, determine
+        validity for each combination of readings, using clauses 2 and 3 of
+        \cref{thm:p01-w02-p01-022-readings} to test all combinations at once,
+        and report the verdict per reading.
+\end{enumerate}
+\index{ambiguity!method}\index{translation record}
+\end{hbmethod}
+
+\begin{hbexample}{def:p01-w02-p01-022-lexical}{Lexical ambiguity and equivocation}
+Consider: every bank is beside a river; Halden is a bank; so Halden is
+beside a river. The dictionary offers two symbols for ``bank'':
+\(B_1(x)\), ``\(x\) is a riverbank'', and \(B_2(x)\), ``\(x\) is a
+financial institution''. Let \(W(x)\) mean ``\(x\) is beside a river'' and
+let \(h\) be a constant for Halden. The uniform readings
+\[
+  \forall x\,(B_i(x)\to W(x)),\ B_i(h)\ \entails\ W(h)\qquad(i=1,2)
+\]
+are valid: in any structure satisfying both premises, \(h^{\mathcal M}\) is
+in \(B_i^{\mathcal M}\) and so in \(W^{\mathcal M}\). The mixed reading
+\(\forall x\,(B_1(x)\to W(x)),\ B_2(h)\) with conclusion \(W(h)\) is invalid:
+take \(\dom\mathcal M=\{0\}\), \(h^{\mathcal M}=0\),
+\(B_1^{\mathcal M}=W^{\mathcal M}=\varnothing\) and
+\(B_2^{\mathcal M}=\{0\}\). The first premise holds vacuously, the second
+holds, and the conclusion fails. The argument is persuasive only under the
+mixed reading, where the first premise is plausible in the riverbank sense
+and the second in the financial sense; this is equivocation, and step 7 of
+\cref{def:p01-w02-p01-022-ambiguity-method} forbids it unless the change of
+sense is recorded, in which case the record exhibits the invalidity.
+\end{hbexample}
+
+\begin{hbtheorem}{thm:p01-w02-p01-022-negation-scope}{proved=annex:p01-w02-p01-022-negation-scope}{Negation scope over a restricted universal}
+Let \(S\) and \(P\) be unary relation symbols and put
+\[
+  \rho_1\defeq\forall x\,(S(x)\to\neg P(x)),\qquad
+  \rho_2\defeq\neg\forall x\,(S(x)\to P(x)).
+\]
+\begin{enumerate}
+  \item \(\rho_1\not\entails\rho_2\) and \(\rho_2\not\entails\rho_1\).
+  \item \(\rho_1,\exists x\,S(x)\entails\rho_2\).
+\end{enumerate}
+\end{hbtheorem}
+
+\begin{hbexample}{def:p01-w02-p01-022-scope-example}{A scope ambiguity and its record}
+``Every student did not pass'', with \(S\) for student and \(P\) for passed,
+has the two readings \(\rho_1\) (no student passed) and \(\rho_2\) (not every
+student passed) of \cref{thm:p01-w02-p01-022-negation-scope}. The structure
+with domain \(\{0,1\}\), \(S^{\mathcal M}=\{0,1\}\) and
+\(P^{\mathcal M}=\{0\}\) separates them, so they must be recorded
+separately. If the context says that some students passed, \(\rho_1\)
+contradicts the context, which is evidence for \(\rho_2\). If the argument
+needs only the weaker \(\rho_2\) and the premises guarantee that there is a
+student, clause 2 of the theorem shows that the choice is harmless for that
+inference.
+\end{hbexample}
+
+\begin{hblemma}{thm:p01-w02-p01-022-indefinite}{proved=annex:p01-w02-p01-022-indefinite}{Indefinites in conditional antecedents}
+Let \(\varphi\) and \(\chi\) be formulas and \(y\) a variable with
+\(y\notin\FV(\chi)\). Then \(\exists y\,\varphi\to\chi\) and
+\(\forall y\,(\varphi\to\chi)\) are logically equivalent.
+\end{hblemma}
+
+\begin{hbexample}{def:p01-w02-p01-022-pronoun}{A pronoun bound by an indefinite}
+Take ``every referee who read a paper graded it'', with \(R(x)\) referee,
+\(D(y)\) paper, \(H(x,y)\) ``\(x\) read \(y\)'' and \(G(x,y)\) ``\(x\) graded
+\(y\)''. The literal rendering
+\[
+  \forall x\,\bigl((R(x)\land\exists y\,(D(y)\land H(x,y)))\to G(x,y)\bigr)
+\]
+is not a sentence: the occurrence of \(y\) in \(G(x,y)\) lies outside the
+scope of \(\exists y\), so the pronoun is not bound by its antecedent.
+Widening the existential to
+\(\forall x\,\exists y\,((R(x)\land D(y)\land H(x,y))\to G(x,y))\) binds the
+pronoun but produces the mismatch pattern of
+\cref{thm:p01-w02-p01-022-mismatch}: in a model of a background set containing
+\(\forall x\,\neg(R(x)\land D(x))\), for every \(x\) the choice
+\(y\mapsto x\) makes the antecedent false, because nothing is both a
+referee and a paper; so the sentence is true whatever anyone graded. The
+recorded reading is
+\[
+  \forall x\,\forall y\,\bigl((R(x)\land D(y)\land H(x,y))\to G(x,y)\bigr).
+\]
+\Cref{thm:p01-w02-p01-022-indefinite} explains the universal force: when the
+consequent does not mention the paper, the indefinite in the antecedent is
+equivalent to a universal over the whole conditional, and the recorded
+reading is the extension of that universal form in which the same variable
+also fills the pronoun's position. This is a translation choice, stated in
+the record; it is not derived from the literal rendering, which is not a
+sentence.
+\end{hbexample}
+
+\begin{hbexample}{def:p01-w02-p01-022-plurality}{Plural readings}
+``The students lifted the piano.'' With \(S(x)\) student, \(L(x,y)\) ``\(x\)
+lifted \(y\)'' and a constant \(p\) for the piano, the distributive reading
+is \(\forall x\,(S(x)\to L(x,p))\), conjoined with \(\exists x\,S(x)\) if the
+plural is taken to assert that there are students. A collective reading
+cannot be stated with \(L\) applied to individuals; declare a domain that
+also contains collections, a relation \(\mathit{In}(x,g)\) for ``\(x\) is a
+member of \(g\)'', and read
+\(\exists g\,\bigl(\forall x\,(\mathit{In}(x,g)\leftrightarrow S(x))\land
+L(g,p)\bigr)\). The structure with domain \(\{u,v,g,p\}\), students
+\(u,v\), \(\mathit{In}^{\mathcal M}=\{(u,g),(v,g)\}\) and
+\(L^{\mathcal M}=\{(g,p)\}\) satisfies the collective reading and not the
+distributive one; replacing \(L^{\mathcal M}\) by \(\{(u,p),(v,p)\}\)
+reverses this. Number marking is a separate question. Russell set aside the
+suggestion of ``only one'' in ``a man'' and of ``more than one'' in ``some
+men'' when analysing these phrases \cite[481, footnote]{Russell1905};
+\(\exists x\,(S(x)\land L(x,p))\) asserts at least one. If ``some students''
+is meant to assert at least two, the reading is
+\(\exists x\,\exists y\,(x\ne y\land S(x)\land S(y)\land L(x,p)\land
+L(y,p))\).
+\end{hbexample}
+
+\subsection{Restricted quantification}
+\label{sec:p01-w02-p01-022-restricted}
+
+\Cref{sec:fol-semantics-03} introduces \(\forall x\in A\,\varphi\) and
+\(\exists x\in A\,\varphi\) as abbreviations of
+\(\forall x\,(A(x)\to\varphi)\) and \(\exists x\,(A(x)\land\varphi)\)
+\cite[ch.~``Structures, Satisfaction, and Translation'', sec.~``Translation
+with quantifiers'']{FrozenFormalLogicFormalizing}. Russell gives the same
+analysis of ``all men are mortal'' as a hypothetical that holds of every
+object, and of ``a man'' as a conjunction that is not always false
+\cite[481]{Russell1905}. Below the restrictor may be any formula
+\(\alpha\), so that ``every referee who read a paper'' is restricted by a
+compound condition.
+
+\begin{hbtheorem}{thm:p01-w02-p01-022-relativization}{proved=annex:p01-w02-p01-022-relativization}{Semantics of restricted quantifiers}
+Let \(\alpha\) and \(\varphi\) be formulas, \(x\) a variable, \(\mathcal M\) a
+structure and \(s\) an assignment, and write
+\(A=\alpha^{\mathcal M,s}_x\).
+\begin{enumerate}
+  \item \(\mathcal M,s\entails\forall x\,(\alpha\to\varphi)\) iff
+        \(\mathcal M,s[x\mapsto a]\entails\varphi\) for every \(a\in A\).
+  \item \(\mathcal M,s\entails\exists x\,(\alpha\land\varphi)\) iff
+        \(\mathcal M,s[x\mapsto a]\entails\varphi\) for some \(a\in A\).
+  \item \(\neg\forall x\,(\alpha\to\varphi)\) is logically equivalent to
+        \(\exists x\,(\alpha\land\neg\varphi)\), and
+        \(\neg\exists x\,(\alpha\land\varphi)\) is logically equivalent to
+        \(\forall x\,(\alpha\to\neg\varphi)\).
+  \item If \(A=\varnothing\), then \(\mathcal M,s\entails\forall x\,
+        (\alpha\to\varphi)\) and \(\mathcal M,s\not\entails\exists x\,
+        (\alpha\land\varphi)\).
+\end{enumerate}
+\end{hbtheorem}
+
+Clauses 1 and 2 say that the conditional and the conjunction are exactly
+what make the unrestricted quantifier range over \(A\) alone; the
+connective is not a stylistic choice. Clause 3 is quantifier duality inside
+the restriction: the negation of a restricted universal is a restricted
+existential, with the restrictor unchanged.
+
+\begin{hbmethod}{def:p01-w02-p01-022-patterns}{Translating restricted forms}
+With \(\alpha\) the formula for the restricting noun phrase and \(\varphi\)
+the formula for the predicate, both with \(x\) free, translate as follows.
+\begin{center}
+\begin{tabular}{@{}ll@{}}
+\toprule
+Form & Formula \\
+\midrule
+every \(\alpha\) is \(\varphi\) & \(\forall x\,(\alpha\to\varphi)\) \\
+some \(\alpha\) is \(\varphi\) & \(\exists x\,(\alpha\land\varphi)\) \\
+no \(\alpha\) is \(\varphi\) & \(\forall x\,(\alpha\to\neg\varphi)\),
+  equivalently \(\neg\exists x\,(\alpha\land\varphi)\) \\
+not every \(\alpha\) is \(\varphi\) & \(\exists x\,(\alpha\land\neg\varphi)\),
+  equivalently \(\neg\forall x\,(\alpha\to\varphi)\) \\
+only \(\alpha\) are \(\varphi\) & \(\forall x\,(\varphi\to\alpha)\) \\
+every \(\alpha\) that is \(\beta\) is \(\varphi\) &
+  \(\forall x\,((\alpha\land\beta)\to\varphi)\) \\
+\bottomrule
+\end{tabular}
+\end{center}
+The equivalences in the third and fourth rows are clause 3 of
+\cref{thm:p01-w02-p01-022-relativization}. In ``only \(\alpha\) are
+\(\varphi\)'' the restricting phrase supplies the consequent, as ``only if''
+does in the propositional case of \cref{sec:prop-syntax-semantics-03}. If
+``every \(\alpha\) is \(\varphi\)'' is meant to imply that there are
+\(\alpha\)s, add \(\exists x\,\alpha\) as a separate conjunct and record the
+addition; the universal does not carry it
+(\cref{thm:p01-w02-p01-022-mismatch}, clauses 5 and 6).
+\index{restricted quantification!translation patterns}
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p01-w02-p01-022-mismatch}{proved=annex:p01-w02-p01-022-mismatch}{The conditional and conjunction mismatches}
+Let \(\alpha,\varphi\) be formulas and \(x\) a variable.
+\begin{enumerate}
+  \item \(\forall x\,(\alpha\land\varphi)\) is logically equivalent to
+        \(\forall x\,\alpha\land\forall x\,(\alpha\to\varphi)\).
+  \item \(\exists x\,(\alpha\to\varphi)\) is logically equivalent to
+        \(\exists x\,\neg\alpha\lor\exists x\,(\alpha\land\varphi)\).
+\end{enumerate}
+For unary relation symbols \(A\) and \(Q\):
+\begin{enumerate}\setcounter{enumi}{2}
+  \item \(\forall x\,(A(x)\land Q(x))\entails\forall x\,(A(x)\to Q(x))\),
+        and the converse fails.
+  \item \(\exists x\,(A(x)\land Q(x))\entails\exists x\,(A(x)\to Q(x))\),
+        and the converse fails.
+  \item \(\forall x\,(A(x)\to Q(x))\not\entails\exists x\,(A(x)\land Q(x))\).
+  \item \(\forall x\,(A(x)\to Q(x)),\ \exists x\,A(x)\entails
+        \exists x\,(A(x)\land Q(x))\).
+\end{enumerate}
+\end{hbtheorem}
+
+\begin{hbwarning}{def:p01-w02-p01-022-mismatch-warning}{Conditional with the existential, conjunction with the universal}
+Writing ``every \(A\) is \(Q\)'' as \(\forall x\,(A(x)\land Q(x))\) asserts in
+addition that everything in the domain is an \(A\)
+(\cref{thm:p01-w02-p01-022-mismatch}, clause 1). Over a domain that contains
+anything other than \(A\)s, for instance referees and papers together, the
+sentence is false whatever \(Q\) is. Writing ``some \(A\) is \(Q\)'' as
+\(\exists x\,(A(x)\to Q(x))\) is satisfied by any object that is not an
+\(A\) (clause 2), so over such a domain it is true whatever \(Q\) is. Both
+errors make the translation insensitive to the predicate, which is the test
+to apply: a correct restricted translation changes truth value when the
+predicate's extension on the restrictor changes and is unaffected by objects
+outside the restrictor (\cref{thm:p01-w02-p01-022-relativization}, clauses 1
+and 2). The error taxonomy of \cref{sec:writing-foundations-07} lists
+explicit restricted quantification as the repair for a scope error; this
+warning concerns the connective inside the restriction.
+\index{restricted quantification!mismatch}
+\end{hbwarning}
+
+A restricted quantifier relativizes the domain without a change of
+language. Strict many-sorted logic does the same with a sort per restrictor
+and reduces to one-sorted logic by relativizing quantifiers to sort
+predicates (\cref{sec:p02-many-sorted}).
+
+\subsection{Uniqueness and counting}
+\label{sec:p01-w02-p01-022-uniqueness}
+
+\begin{hbdefinition}{def:p01-w02-p01-022-uniqueness}{At most one, exactly one}
+Let \(\varphi\) be a formula and \(x\) a variable. A \emph{comparison
+variable} for \((\varphi,x)\) is a variable \(y\ne x\) that does not occur in
+\(\varphi\), free or bound. For a comparison variable \(y\), define
+\[
+\begin{aligned}
+  \exists^{\leq1}x\,\varphi
+  &\defeq\forall x\,\forall y\,\bigl((\varphi\land\varphi[y/x])\to x=y\bigr),\\
+  \exists!x\,\varphi
+  &\defeq\exists x\,\bigl(\varphi\land\forall y\,(\varphi[y/x]\to y=x)\bigr).
+\end{aligned}
+\]
+They are read ``at most one \(x\) is such that \(\varphi\)'' and ``exactly one
+\(x\) is such that \(\varphi\)''. Different comparison variables give
+logically equivalent formulas (\cref{thm:p01-w02-p01-022-uniqueness}), so the
+choice is not recorded. These are metalinguistic abbreviations for formulas
+of \(\Lang\), not new symbols of the language. The same abbreviation
+\(\exists!\), with a fresh comparison variable, is used in the statement
+of the replacement schema in \cref{sec:zf-zfc-01}.
+\index{uniqueness quantifier}\index{exactly one}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p01-w02-p01-022-uniqueness}{proved=annex:p01-w02-p01-022-uniqueness}{Counting characterization of uniqueness}
+Let \(\varphi\) be a formula, \(x\) a variable, \(y\) a comparison variable
+for \((\varphi,x)\), \(\mathcal M\) a structure, \(s\) an assignment, and
+\(S=\varphi^{\mathcal M,s}_x\).
+\begin{enumerate}
+  \item \(\mathcal M,s\entails\exists^{\leq1}x\,\varphi\) iff \(S\) has at
+        most one element.
+  \item \(\mathcal M,s\entails\exists!x\,\varphi\) iff \(S\) has exactly one
+        element.
+  \item \(\exists!x\,\varphi\) is logically equivalent to
+        \(\exists x\,\varphi\land\exists^{\leq1}x\,\varphi\) and to
+        \(\exists x\,\forall y\,(\varphi[y/x]\leftrightarrow y=x)\).
+\end{enumerate}
+Since \(S\) does not depend on \(y\), the truth conditions in clauses 1 and 2
+are the same for every comparison variable.
+\end{hbtheorem}
+
+\begin{hblemma}{thm:p01-w02-p01-022-freshness}{proved=annex:p01-w02-p01-022-freshness}{The comparison variable must be fresh}
+Let \(x\ne y\) and let \(\varphi\) be the formula \(x=y\), in which \(y\)
+occurs free. Put
+\[
+  \chi\defeq\exists x\,\bigl(x=y\land\forall y\,(y=y\to y=x)\bigr),
+\]
+the result of using \(y\) in the pattern of
+\cref{def:p01-w02-p01-022-uniqueness}, since \((x=y)[y/x]\) is \(y=y\). In
+every structure \(\mathcal M\) with at least two elements and every
+assignment \(s\), \(\varphi^{\mathcal M,s}_x=\{s(y)\}\) has exactly one
+element, while \(\mathcal M,s\not\entails\chi\).
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p01-w02-p01-022-exactly-one}{proved=annex:p01-w02-p01-022-exactly-one}{Exactly one P is Q, and the P is Q}
+Let \(P,Q\) be unary relation symbols and \(y\ne x\). Put
+\[
+\begin{aligned}
+  E_1&\defeq\exists x\,\bigl(P(x)\land Q(x)\land
+        \forall y\,((P(y)\land Q(y))\to y=x)\bigr),\\
+  E_2&\defeq\exists x\,\bigl(P(x)\land\forall y\,(P(y)\to y=x)\land
+        Q(x)\bigr).
+\end{aligned}
+\]
+Then \(E_1\) is logically equivalent to \(\exists!x\,(P(x)\land Q(x))\),
+\(E_2\entails E_1\),
+\(E_1\not\entails E_2\), and \(\exists x\,(P(x)\land Q(x))\not\entails E_1\).
+\end{hbtheorem}
+
+\(E_1\) says that exactly one \(P\) is a \(Q\); \(E_2\) says that there is
+exactly one \(P\) and that it is a \(Q\). ``Exactly one referee read the
+draft'' is of the first form; ``the referee read the draft'' is of the
+second. The uniqueness clause attaches to the noun phrase that ``exactly
+one'' or ``the'' governs, and the translator records which phrase that is.
+
+\begin{hbexample}{def:p01-w02-p01-022-referees}{Uniqueness inside a universal}
+With \(R(x)\) referee, \(D(y)\) paper and \(H(x,y)\) ``\(x\) read \(y\)'',
+``every referee read exactly one paper'' is
+\[
+  \forall x\,\bigl(R(x)\to\exists!y\,(D(y)\land H(x,y))\bigr),
+\]
+where the comparison variable is a third variable \(z\) and the
+abbreviation expands to
+\(\exists y\,(D(y)\land H(x,y)\land\forall z\,((D(z)\land H(x,z))\to
+z=y))\). The paper may vary with the referee. ``One paper was read by every
+referee'', in its reading ``exactly one paper was read by every referee'',
+is \(\exists!y\,(D(y)\land\forall x\,(R(x)\to H(x,y)))\): the uniqueness now
+concerns papers read by all referees, and the two sentences differ in
+scope exactly as in the inherited example ``Quantifier order'' of
+\cref{sec:levels-05}. The same two sentence shapes, with reviewers in place
+of referees, are posed for translation in the inherited exercises on
+first-order deduction
+\cite[ch.~``First-Order Deduction'', exercise
+\texttt{ex:fol-deduction-06}]{FrozenFormalLogicFormalizing}.
+\end{hbexample}
+
+\subsection{Definite descriptions and their scope}
+\label{sec:p01-w02-p01-022-descriptions}
+
+The terms over a signature (\cref{sec:fol-syntax-semantics-01}) are
+variables and function applications only, so ``the \(\varphi\)'' is not a
+term of \(\Lang\). It is
+translated by eliminating it from the sentence in which it occurs.
+
+\begin{hbdefinition}{def:p01-w02-p01-022-description}{Contextual elimination of a description}
+Let \(\varphi\) and \(\chi\) be formulas, \(x\) a variable, and \(y\) a
+comparison variable for \((\varphi,x)\). The sentence frame ``the
+\(x\) such that \(\varphi\) is such that \(\chi\)'' is translated by
+\[
+  \mathsf{the}_x(\varphi,\chi)\defeq
+  \exists x\,\bigl(\varphi\land\forall y\,(\varphi[y/x]\to y=x)\land\chi\bigr).
+\]
+When the frame occurs inside a larger context, such as a negation, the
+elimination may be applied to the whole context or only to the part inside
+it. Relative to a negation, the \emph{wide} reading of ``the \(\varphi\) is
+not \(\chi\)'' is \(\mathsf{the}_x(\varphi,\neg\chi)\) and the \emph{narrow}
+reading is \(\neg\,\mathsf{the}_x(\varphi,\chi)\). This is Russell's
+analysis: a statement about ``the term having the property \(F\)'' asserts
+that exactly one term has \(F\) and that this term has the further property
+\cite[481--482, 490]{Russell1905}; his \emph{primary} and \emph{secondary}
+occurrences of a denoting phrase are the wide and narrow readings
+\cite[489--490]{Russell1905}. Here \(\mathsf{the}_x\) is a metalinguistic
+abbreviation, not a term former of \(\Lang\).
+\index{definite description!contextual elimination}
+\index{definite description!scope}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p01-w02-p01-022-description-scope}{proved=annex:p01-w02-p01-022-description-scope}{Truth conditions and scope of eliminated descriptions}
+Let \(\varphi,\chi\), \(x\) and \(y\) be as in
+\cref{def:p01-w02-p01-022-description}, and let \(S=\varphi^{\mathcal M,s}_x\).
+\begin{enumerate}
+  \item \(\mathcal M,s\entails\mathsf{the}_x(\varphi,\chi)\) iff
+        \(S=\{a\}\) for some \(a\) with
+        \(\mathcal M,s[x\mapsto a]\entails\chi\).
+  \item If \(S\) is empty or has at least two elements, then
+        \(\mathcal M,s\not\entails\mathsf{the}_x(\varphi,\chi)\) for every
+        formula \(\chi\).
+  \item \(\mathsf{the}_x(\varphi,\neg\chi)\entails
+        \neg\,\mathsf{the}_x(\varphi,\chi)\).
+  \item \(\exists!x\,\varphi,\ \neg\,\mathsf{the}_x(\varphi,\chi)\entails
+        \mathsf{the}_x(\varphi,\neg\chi)\).
+  \item If \(S=\varnothing\), then
+        \(\mathcal M,s\entails\neg\,\mathsf{the}_x(\varphi,\chi)\) and
+        \(\mathcal M,s\not\entails\mathsf{the}_x(\varphi,\neg\chi)\).
+\end{enumerate}
+\end{hbtheorem}
+
+Clause 2 is the feature Russell emphasizes: if the uniqueness condition
+fails, every statement of the form ``the \(\varphi\) is \(\chi\)'' is false
+\cite[482]{Russell1905}. Clauses 3 to 5 show that the scope of the
+description matters exactly when \(\exists!x\,\varphi\) may fail: the wide
+reading entails the narrow one, the converse holds given exactly one
+\(\varphi\), and when there is no \(\varphi\) the narrow reading is true and
+the wide one false. A translation record therefore states the scope of every
+description that occurs under negation or another operator, and states
+whether \(\exists!x\,\varphi\) belongs to the premises or to \(\Pi\).
+
+\begin{hbwarning}{def:p01-w02-p01-022-description-warning}{A description is not a name}
+Replacing ``the \(\varphi\)'' by a new constant \(c\) asserts nothing about
+existence or uniqueness: \(\neg\chi(c)\) is satisfiable whether or not
+anything satisfies \(\varphi\). The replacement is sound only if
+\(\exists!x\,\varphi\) and \(\varphi[c/x]\) are added as premises or to
+\(\Pi\) and recorded. Languages with a primitive description term former
+\(\iota x\,\varphi\) must fix what an improper description denotes, and the
+Russellian elimination is then one policy among several; see
+\cref{sec:p02-free-logic,sec:p08-conditionals-deontic-free}.
+\end{hbwarning}
+
+\subsection{Worked example}
+\label{sec:p01-w02-p01-022-worked}
+
+\begin{hbexample}{def:p01-w02-p01-022-worked}{A translation record}
+Argument: every referee who read a paper graded it; the paper by Ana was
+read by a referee; therefore some referee graded the paper by Ana.
+
+\emph{Domain and signature.} People and papers. Unary \(R\) (referee) and
+\(D\) (paper); binary \(H\) (read), \(G\) (graded) and \(B\) (``\(y\) is
+by \(z\)''); constant \(a\) (Ana). \(\Pi=\varnothing\): no background
+sentence is needed for the verdict.
+
+\emph{Ambiguity points.} (i) Pronoun: ``it'' is bound by ``a paper'' inside
+the restrictor; recorded as a universal over referee-paper pairs
+(\cref{def:p01-w02-p01-022-pronoun}). (ii) Description: ``the paper by Ana''
+is eliminated with uniqueness, with wide scope in both sentences in which it
+occurs; nothing in the argument places it under an operator, so no scope
+alternative arises. (iii) Number: ``a referee'' and ``some referee'' assert
+at least one.
+
+\emph{Translation.} With comparison variable \(z\) for the description,
+\[
+\begin{aligned}
+  \mathrm{P}_1&\defeq\forall x\,\forall y\,\bigl((R(x)\land D(y)\land
+       H(x,y))\to G(x,y)\bigr),\\
+  \mathrm{P}_2&\defeq\mathsf{the}_y\bigl(D(y)\land B(y,a),\
+       \exists x\,(R(x)\land H(x,y))\bigr),\\
+  \mathrm{C}&\defeq\mathsf{the}_y\bigl(D(y)\land B(y,a),\
+       \exists x\,(R(x)\land G(x,y))\bigr).
+\end{aligned}
+\]
+\Cref{thm:p01-w02-p01-022-worked} shows that \(\mathrm{P}_1,\mathrm{P}_2
+\entails\mathrm{C}\). It also shows that dropping the uniqueness clause from
+the second premise, which turns it into
+\[
+  \mathrm{P}_2'\defeq\exists y\,\bigl(D(y)\land B(y,a)\land
+  \exists x\,(R(x)\land H(x,y))\bigr),
+\]
+breaks the argument: the conclusion asserts uniqueness, and
+nothing else supplies it.
+\end{hbexample}
+
+\begin{hbtheorem}{thm:p01-w02-p01-022-worked}{proved=annex:p01-w02-p01-022-worked}{Verdicts for the worked example}
+With the notation of \cref{def:p01-w02-p01-022-worked},
+\(\mathrm{P}_1,\mathrm{P}_2\entails\mathrm{C}\) and
+\(\mathrm{P}_1,\mathrm{P}_2'\not\entails\mathrm{C}\).
+\end{hbtheorem}
+
+\subsection{Limitations and relationships}
+\label{sec:p01-w02-p01-022-limits}
+
+The tests above decide whether two readings differ; they do not decide which
+reading a speaker meant. Resolution rests on stated evidence, and a record
+that cannot resolve a point reports validity per reading. Every reading here
+is a first-order formula over a declared signature; a reading that the
+signature cannot express, such as the collective reading of
+\cref{def:p01-w02-p01-022-plurality} before collections are declared, forces
+a change of signature, which is itself recorded. Tense and modality, which
+step 3 of the inherited method also lists, require temporal or modal
+languages and are not translated by the patterns of this section.
+
+The section extends three inherited places: step 3 and the example
+``Quantifier order'' of \cref{sec:levels-05}, the abbreviation of restricted
+quantifiers in \cref{sec:fol-semantics-03}, and the propositional
+translations of \cref{sec:prop-syntax-semantics-03}, where ``exactly one of
+\(P\) and \(Q\)'' is the exclusive disjunction that
+\cref{def:p01-w02-p01-022-uniqueness} generalizes to a formula with a free
+variable. Many-sorted relativization is in \cref{sec:p02-many-sorted};
+primitive description terms and their free-logic policies are in
+\cref{sec:p02-free-logic,sec:p08-conditionals-deontic-free}.

@@ -1,0 +1,526 @@
+\section{A specified arithmetic graph for the direct proof checker}
+\label{sec:p05-pa-checker-arithmetization}
+
+The direct tag-19 checker now receives a finite primitive recursive
+description.  Its arithmetic formula is the graph of that description under
+\cref{def:p05-pa-pr-graph}.  The construction also supplies an internal
+\(\PA\) verification of modus ponens for this formula.  All proofs are in
+\cref{annex:p5.checker-description,annex:p5.checker-internal-mp}.
+
+\begin{hbdefinition}{def:p05-checker-description-language}{Finite description conventions}
+The equations below are finite descriptions, with the displayed argument
+order.  A reference to a previously defined function inserts its description;
+application is composition, and
+\[
+ f(\bar x,0)=g(\bar x),\qquad
+ f(\bar x,Sn)=h(\bar x,n,f(\bar x,n))
+\]
+is the primitive-recursion constructor with recursion argument last.  Auxiliary
+parameters are listed in their order of first appearance.  Reordering or
+duplicating arguments uses the corresponding projections.  A numeral constant
+uses that many successors of zero.  Parentheses determine the composition
+tree; displayed sums and products are left-associated.  A simultaneous state
+is the cons-list of its fields, so every state update has one numerical output.
+
+Use the already specified descriptions \(A,H,K,C\) of
+\cref{ex:p05-pa-pair-cons-graphs}.  Add the following descriptions in order:
+\[
+\begin{aligned}
+ D(0)&=0,&D(Sn)&=n,\\
+ Z(0)&=1,&Z(Sn)&=0,\\
+ M(x,0)&=0,&M(x,Sn)&=A(M(x,n),x),\\
+ L(x,0)&=x,&L(x,Sn)&=D(L(x,n)),\\
+ \mathsf{sg}(x)&=Z(Z(x)),&
+ E(x,y)&=Z(A(L(x,y),L(y,x))),\\
+ \mathsf{lt}(x,y)&=\mathsf{sg}(L(y,x)),&
+ I(b,x,y)&=A(M(\mathsf{sg}(b),x),M(Z(b),y)).
+\end{aligned}
+\]
+Thus \(D\) is predecessor and \(L\) is truncated subtraction.  In the
+remaining specifications \(+\), multiplication, equality tests, strict-order
+tests, negated tests, and Boolean conjunction/disjunction abbreviate
+respectively \(A,M,E,\mathsf{lt},Z\), product, and sign of the sum.
+Set \(\max(x,y)=I(\mathsf{lt}(x,y),y,x)\).
+Set \(\min(x,y)=I(\mathsf{lt}(x,y),x,y)\); a maximum of more than two
+arguments is left-associated.  A finite membership test is the sign of the
+sum of its equality tests, in the displayed order.  A list of requirements
+is the left-associated product of its tests in their printed order; an empty
+list contributes one.  A bounded requirement at every position is the bounded
+product in increasing position order.  Grammar alternatives are enumerated
+in increasing constructor-tag order.  Repeated uses of a named expression
+insert separate copies of its description, and local field names are expanded
+by their indicated projections before composing the enclosing expression.
+An ordered finite case distinction expands to nested \(I\), taking its first
+applicable case, with its stated final default.
+
+A constructor pattern \(c=N_k(b_0,\ldots,b_{r-1})\) first tests its tag
+and arity.  A newly introduced field name abbreviates the corresponding
+argument projection.  A field whose value was already specified contributes
+an equality test between that projection and its specified expression.
+Nested patterns are treated from outside inward and left to right.  Tuple
+patterns use the same convention with a list-length test.  Constructing
+\(N_k\) or a tuple as a value, rather than matching a pattern, uses its
+displayed cons expression.  Thus pattern matching does not leave a choice
+between different primitive recursive implementations.
+
+A bounded fold with initial value \(s(\bar x)\), update
+\(u(\bar x,j,v)\), and bound \(b(\bar x)\) means the description
+\[
+ V(\bar x,0)=s(\bar x),\quad
+ V(\bar x,Sj)=u(\bar x,j,V(\bar x,j)),\quad
+ V(\bar x,b(\bar x)).
+\]
+Bounds are evaluated before the fold; an update never changes its bound.
+Bounded sums and products are this fold with initial values zero and one.
+Least search over \(j<b\) starts with \([0,d]\), where \(d\) is the
+specified failure value; at \(j\), replace \([0,v]\) by \([1,j]\)
+exactly when the test succeeds, and otherwise retain the state.  Return its
+second field.  All tests in a search are already defined descriptions.
+Inclusive upper bounds mean successor bounds.  These clauses are expansion
+instructions for each separately fixed finite expression, not a uniformly
+total evaluator for arbitrary descriptions.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p05-checker-list-description}{The fixed list and table library}
+The notation \([a_0,\ldots,a_{r-1}]\) expands to
+\(C(a_0,C(a_1,\ldots,C(a_{r-1},0)\ldots))\).  Define
+\[
+\begin{aligned}
+ h(c)&=\sum_{a<c}a\,\mathsf{sg}\!\left(\sum_{b<c}E(C(a,b),c)\right),\\
+ t(c)&=\sum_{b<c}b\,\mathsf{sg}\!\left(\sum_{a<c}E(C(a,b),c)\right),\\
+ T(c,0)&=c,&T(c,Sn)&=t(T(c,n)),\\
+ \ell(c)&=\sum_{j<c}\mathsf{sg}(T(c,j)),&
+ e(c,j)&=h(T(c,j)),\\
+ V(c,z,0)&=z,&V(c,z,Sn)&=C(e(c,n),V(c,z,n)),\\
+ \mathsf{rev}(c)&=V(c,0,\ell(c)),&
+ \mathsf{cat}(c,d)&=V(\mathsf{rev}(c),d,\ell(c)).
+\end{aligned}
+\]
+Every natural number is a raw list code; \(h(0)=t(0)=0\), and entries
+beyond a list's length have value zero.  Appending one entry means
+\(\mathsf{cat}(c,[a])\).
+
+For each fixed previously defined expression \(f(\bar x,a)\),
+\(\mathsf{map}_f(\bar x,c)\) is the fold of length \(\ell(c)\)
+starting at zero and appending \(f(\bar x,e(c,j))\) at step \(j\).
+For a fixed zero-one test \(b(\bar x,a)\),
+\(\mathsf{filter}_b\) uses the same fold, appending the unchanged entry
+only when the test is one.  Set
+\(\mathsf{range}(b)\) to the length-\(b\) fold starting at zero and
+appending its counter.  Define
+\[
+ \mathsf{mem}(a,c)=\mathsf{sg}\!\left(\sum_{j<\ell(c)}E(a,e(c,j))\right),
+ \qquad
+ \mathsf{take}(c,n)=\mathsf{map}_{j\mapsto e(c,j)}
+                   (\mathsf{range}(\min(n,\ell(c)))).
+\]
+The map notation in the last display takes \(c\) as an additional parameter.
+
+A table with specified row expression \(u(\bar x,j,B)\) means
+\[
+ B(\bar x,0)=0,\qquad
+ B(\bar x,Sj)=\mathsf{cat}
+     (B(\bar x,j),[u(\bar x,j,B(\bar x,j))]).
+\]
+The row expression may consult only the given earlier-row list \(B\)
+through \(e\); it does not call the table being defined.  Out-of-range
+access consequently has the same zero default.  Write
+\(k(c)=h(c)\), \(a_j(c)=e(t(c),j)\), and
+\[
+ \mathsf{node}_{k,r}(c)=\mathsf{sg}(c)E(h(c),k)E(\ell(t(c)),r),
+ \qquad N_k(b_0,\ldots,b_{r-1})=C(k,[b_0,\ldots,b_{r-1}]).
+\]
+These are the actual constructor codes of the numerical checker.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p05-checker-syntax-description}{Type and variable descriptions}
+Define a table \(B(j)\) whose row at code \(c\) is
+\([\mathsf{tm},\mathsf{fm},\mathsf{nn},\mathsf{mx}]\).
+Use the constructor grammar of \cref{sec:arithmetic-coding-04}: tags
+\(0,1,2,3,4\) are respectively a variable, zero, successor, addition,
+multiplication; tags \(5,6,7,8,9,10,11,12\) are equality, bottom,
+negation, conjunction, disjunction, implication, universal and existential
+quantification.  Arity and child-type tests are exactly those in that grammar.
+Child metadata are retrieved from the earlier-row list at the child code.
+The term/formula fields are the zero-one disjunctions of their applicable
+grammar cases.  Wrong tag, arity, or child type gives both fields zero.
+
+At a valid node, \(\mathsf{nn}\) is one plus the sum of expression-child
+node counts.  Its expression children, in order, are: none at tags \(0,1,6\);
+\(a_0\) at tags \(2,7\); \(a_0,a_1\) at tags
+\(3,4,5,8,9,10\); and \(a_1\) at tags \(11,12\).
+The maximum-index field is \(a_0\) at a variable, zero at zero or bottom,
+the maximum of child fields at a nonbinding compound, and
+\(\max(a_0,\mathsf{mx}(a_1))\) at a quantifier.  Both metadata fields
+are zero at an invalid node.  Thus the row expression uses only previously
+defined list and numerical functions.  Retrieve row \(c\) from \(B(Sc)\)
+to define \(\mathsf{Tm}(c),\mathsf{Fm}(c),n(c),m(c)\).
+
+For each parameter \(i\), a second table has row
+\([\mathsf{av},\mathsf{fv}]\) at code \(c\).  An invalid expression
+has row \([0,0]\); a variable has both fields \(E(a_0(c),i)\); zero
+and bottom have both fields zero.  Nonbinding compounds take the Boolean
+disjunction of their children's corresponding fields.  At a quantifier with
+binder \(b\) and matrix \(u\), its row is
+\[
+ [\ E(b,i)\lor\mathsf{av}(u),\quad
+                  Z(E(b,i))\mathsf{fv}(u)\ ].
+\]
+The two children in this display mean entries from that table's earlier-row
+list.  Retrieve row \(c\) after \(Sc\) updates to obtain
+\(\mathsf{AV}(c,i),\mathsf{FV}(c,i)\).
+Finally \(F(c)\) is the increasing-index fold through \(i<c\), appending
+\(i\) exactly when \(\mathsf{Fm}(c)\mathsf{FV}(c,i)=1\), and
+\[
+ \mathsf{Sent}(c)\defeq\mathsf{Fm}(c)Z(\ell(F(c))).
+\]
+Every name here denotes its particular description and hence its particular
+\(\Gamma\)-graph when used in arithmetic.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p05-checker-substitution-description}{The fixed substitution and alpha machines}
+The following two bounded folds fix the remaining syntax operations.  A state
+is \([b,D,V]\): a success bit, a list of pending commands with the next
+command first, and a value stack with its top first.  A failed state becomes
+\([0,0,0]\) and stays there.  A successful state with \(D=0\) stays fixed.
+Require exactly three state fields and \(b\in\{0,1\}\); any other state
+fails before its commands are inspected.
+Every command must have its specified length; every required value-stack entry
+must exist.  Any other case fails.  Removing a command means taking \(t(D)\);
+prepending a command sequence means concatenating that sequence to \(t(D)\).
+Returning \(v\) means pushing \(v\) onto \(V\).
+
+For substitution use commands
+\[
+ [0,c,i,u],\quad[1,c,j,z],\quad[2,k],\quad[3,k],
+ \quad[4,k,j],\quad[5,k,z,i,u].
+\]
+They mean substitution, fresh free-variable renaming, unary assembly, binary
+assembly, quantified assembly, and substitution after a completed renaming.
+Their updates are the following ordered cases.
+\begin{enumerate}
+\item At \([0,c,i,u]\), require
+ \((\mathsf{Tm}(c)\lor\mathsf{Fm}(c))\mathsf{Tm}(u)=1\).
+ A variable returns \(u\) if its index equals \(i\), otherwise \(c\).
+ Zero and bottom return \(c\).  A unary nonbinding node prepends its child's
+ substitution command and \([2,k(c)]\).  A binary node prepends the left
+ child's command, the right child's command, and \([3,k(c)]\), in that order.
+ At \(Qx_j\theta\), return \(c\) if \(j=i\).  Otherwise, if
+ \(\mathsf{AV}(u,j)=0\), prepend the matrix's substitution command and
+ \([4,k(c),j]\).  In the remaining case let \(z\) be the least index
+ at most \(1+\max(m(a_1(c)),m(u),i,j)\) absent from both all-variable
+ tests and unequal to \(i,j\); use failure value zero.  Prepend
+ \([1,\ulcorner\theta\urcorner,j,z]\) and \([5,k(c),z,i,u]\).
+\item At \([1,c,j,z]\), require a valid expression.  A variable with
+ index \(j\) returns \(N_0(z)\); another variable, zero, or bottom returns
+ \(c\).  Nonbinding compounds recurse and assemble as in the first clause,
+ using command tag 1 at their children.  A quantifier with binder \(j\)
+ returns its entire code; another quantifier prepends its matrix's renaming
+ command and the quantified assembly command with its unchanged binder.
+ No further renaming occurs in this command mode.
+\item Command \([2,k]\) is permitted for \(k\in\{2,7\}\); pop
+ one value \(v\) and push \(N_k(v)\).  Command \([3,k]\) is permitted
+ for \(k\in\{3,4,5,8,9,10\}\); pop \(v\), then \(w\), and push
+ \(N_k(w,v)\).  Command \([4,k,j]\), for \(k\in\{11,12\}\),
+ pops \(v\) and pushes \(N_k(j,v)\).
+\item Command \([5,k,z,i,u]\), for \(k\in\{11,12\}\), pops the
+ renamed matrix \(v\) and prepends \([0,v,i,u]\), then \([4,k,z]\).
+\end{enumerate}
+Start at \([1,[[0,c,i,u]],0]\), perform \(20(n(c)+1)^2\) updates,
+and return the sole value exactly when the final state has success bit one,
+empty command list, and a one-entry value stack; otherwise return zero.
+Also return zero if the original expression/replacement type test fails.
+This description is denoted \(\mathsf{sub}(c,i,u)\).
+
+For alpha comparison use the same state format, with commands
+\([0,c,E],[1,k],[2,k],[3,k]\).  The first command traverses \(c\)
+under the list \(E\) of enclosing binder indices, nearest first.  At a
+variable with index \(i\), search \(j<\ell(E)\) for the first
+\(e(E,j)=i\), with default \(\ell(E)\).  Return \(N_{18}(j)\)
+when found and \(N_{17}(i)\) otherwise.  Zero and bottom return their codes.
+A unary or binary nonbinding node prepends its child commands in order and
+assembly command 1 or 2; these assemble \(N_k(v)\) or \(N_k(w,v)\),
+with the same pop order and permitted tags as above.  A quantifier with binder
+\(i\) prepends its matrix command under \(C(i,E)\) and \([3,k]\);
+this last command, for \(k\in\{11,12\}\), pops \(v\) and pushes
+\(N_k(v)\), with one argument.  Invalid expressions or commands fail.
+Start at \([1,[[0,c,0]],0]\), use \(4(n(c)+1)\) updates, and extract
+the final singleton by the same rule.  Require \(\mathsf{Fm}(c)=1\)
+at entry; otherwise return zero.  Call the result \(\mathsf{ar}(c)\), and set
+\[
+ \mathsf{ae}(c,d)\defeq
+          \mathsf{Fm}(c)\mathsf{Fm}(d)E(\mathsf{ar}(c),\mathsf{ar}(d)).
+\]
+All command decoding, stack changes, bounds, and searches expand through the
+preceding library.  These are finite machine transition descriptions with a
+fixed number of updates, not instructions to run an unbounded computation.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p05-checker-axiom-description}{The direct axiom description}
+Define \(U(P,c)\) by folding over \(\mathsf{rev}(P)\), starting at
+\(c\) and replacing the state \(v\) at index \(j\) by
+\(N_{11}(e(\mathsf{rev}(P),j),v)\).  Use exactly the constructor expression
+for \(J(m,i)\) and \(\mathsf{IndAx}(m,i)\) in
+\cref{def:p05-canonical-induction-code}, with the descriptions \(F,U,\mathsf{sub}\)
+just specified, and with the filter retaining indices unequal to \(i\).
+Retain the zero default when \(\mathsf{Fm}(m)=0\).
+
+The prefix-stripping fold starts at \([a,0]\) and has bound \(a\).
+On state \([c,P]\), if \(\mathsf{node}_{11,2}(c)=1\), replace it by
+\([a_1(c),\mathsf{cat}(P,[a_0(c)])]\); otherwise retain it.
+From its final \([c,P]\), recover the fields of
+\[
+ c=N_{10}(d,N_{11}(i,m)),\qquad
+ d=N_8(b,N_{11}(i',N_{10}(m',s))).
+\]
+Every displayed tag and arity is tested by \(\mathsf{node}\).
+Let \(B(a)\) be the conjunction of these tests,
+\(E(i,i'),E(m,m'),\mathsf{Fm}(m)\), and
+\(E(a,\mathsf{IndAx}(m,i))\).  Field extraction is total even if a test
+fails.  Define
+\[
+\begin{aligned}
+ Q_7&\defeq[q_1,q_2,q_3,q_4,q_5,q_6,q_7],\\
+ \mathsf{Ax}_{19}(a)&\defeq\mathsf{Sent}(a)
+       \mathsf{sg}\!\left(B(a)+\sum_{j<7}E(a,e(Q_7,j))\right).
+\end{aligned}
+\]
+The constant \(Q_7\) expands to the displayed seven-entry cons-list, and
+\(e(Q_7,j)\) uses the previously fixed total entry description, including
+its zero value when \(j\geq7\).  The sum uses the declared bounded fold
+with this particular selector.  Each of the seven \(q_j\) constants inserts
+its exact finite constructor expression in
+\cref{sec:p05-standard-pa-checker}.  Thus no axiom code or matrix remains an
+unspecified constant or a search over formulas.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p05-checker-row-description}{The exact row description}
+For a raw row list \(R\), put \(r_j=e(R,j)\), and use its five fields
+\([r,a,J,U,l]\) by entry projection.  Write \(f_R(j)=e(r_j,1)\) and
+\(\lambda_R(j)=e(r_j,4)\).  Form a table of pairs \([b_j,O_j]\),
+starting empty and appending one pair at each \(j<\ell(R)\).
+For a premise position \(v\), abbreviate
+\[
+ j_v=e(J,v),\qquad f_v=f_R(j_v),\qquad
+ O_v=e(e(B,j_v),1),
+\]
+where \(B\) is the earlier-row table.  Missing entries have value zero.
+For parameters \(i,\theta\), define
+\[
+ D_R^{i,\theta}(O)\defeq
+ \mathsf{filter}_{z\mapsto
+    Z(E(\lambda_R(z),Si)E(f_R(z),\theta))}(O).
+\]
+Its nonvacuity test is \(\mathsf{lt}(\ell(D_R^{i,\theta}(O)),\ell(O))\).
+
+The common row test requires length five, \(r<20\),
+\(\mathsf{Fm}(a)=1\), the following premise and parameter arities, and
+\(j_v<j\) at every premise position:
+\[
+\begin{aligned}
+ &(0,2,1,1,1,1,3,1,2,1,2,1,1,1,1,1,2,1,0,2),\\
+ &(0,0,0,0,0,0,2,1,0,1,0,0,1,3,3,1,4,0,1,4).
+\end{aligned}
+\]
+For \(r\ne0\) it also requires \(l=0\).  Parentheses in these two
+displays specify fixed lookup lists under the cons coding.
+
+Here is the complete additional test and open-list update for each tag.
+Formula letters are recovered by constructor projections; every constructor
+pattern includes its exact tag and arity.  Parameters displayed as terms or
+formulas receive \(\mathsf{Tm}\) or \(\mathsf{Fm}\) tests.  All formula
+equalities use \(E\).  Set \(O=0\) in a case with a wrong tag or arity.
+\begin{enumerate}
+\item[0.] No additional test; \(O=[j]\).
+\item[1.] \(a=N_8(f_0,f_1)\); \(O=\mathsf{cat}(O_0,O_1)\).
+\item[2,3.] \(f_0=N_8(c,d)\); \(a=c\) for tag 2 and \(a=d\)
+ for tag 3; \(O=O_0\).
+\item[4,5.] \(a=N_9(c,d)\); \(f_0=c\) for tag 4 and \(f_0=d\)
+ for tag 5; \(O=O_0\).
+\item[6.] \(U=[i,k]\), \(f_0=N_9(c,d)\), \(f_1=f_2=a\).
+ Both \(D_R^{i,c}(O_1)\) and \(D_R^{k,d}(O_2)\) must be nonvacuous;
+ \(O=\mathsf{cat}(O_0,\mathsf{cat}(D_R^{i,c}(O_1),D_R^{k,d}(O_2)))\).
+\item[7.] \(U=[i]\), \(a=N_{10}(c,f_0)\); require nonvacuity and put
+ \(O=D_R^{i,c}(O_0)\).
+\item[8.] \(f_1=N_{10}(f_0,a)\);
+ \(O=\mathsf{cat}(O_0,O_1)\).
+\item[9.] \(U=[i]\), \(a=N_7(c)\), \(f_0=N_6()\);
+ require nonvacuity and put \(O=D_R^{i,c}(O_0)\).
+\item[10.] \(f_1=N_7(f_0)\), \(a=N_6()\);
+ \(O=\mathsf{cat}(O_0,O_1)\).
+\item[11.] \(f_0=N_6()\); \(O=O_0\).
+\item[12.] \(U=[i]\), \(f_0=N_6()\); require nonvacuity and put
+ \(O=D_R^{i,N_7(a)}(O_0)\).
+\item[13.] \(U=[i,c,u]\) with formula \(c\) and term \(u\);
+ \(f_0=N_{11}(i,c)\), \(a=\mathsf{sub}(c,i,u)\); \(O=O_0\).
+\item[14.] The same parameter types; \(f_0=\mathsf{sub}(c,i,u)\),
+ \(a=N_{12}(i,c)\); \(O=O_0\).
+\item[15.] \(U=[i]\), \(a=N_{11}(i,f_0)\), and
+ \(\prod_{v<\ell(O_0)}Z(\mathsf{FV}(f_R(e(O_0,v)),i))=1\);
+ \(O=O_0\).
+\item[16.] \(U=[i,c,y,k]\) with formula \(c\),
+ \(f_0=N_{12}(i,c)\), \(f_1=a\).
+ Put \(O'=D_R^{k,\mathsf{sub}(c,i,N_0(y))}(O_1)\), require its
+ nonvacuity, and put \(O=\mathsf{cat}(O',O_0)\).  Require
+ \[
+ Z(\mathsf{AV}(a,y))Z(\mathsf{AV}(f_0,y))
+       \prod_{v<\ell(O)}Z(\mathsf{AV}(f_R(e(O,v)),y))=1.
+ \]
+\item[17.] \(\mathsf{ae}(f_0,a)=1\); \(O=O_0\).
+\item[18.] \(U=[u]\) with term \(u\), \(a=N_5(u,u)\); \(O=0\).
+\item[19.] \(U=[u,v,c,i]\) with terms \(u,v\) and formula \(c\);
+ \(f_0=N_5(u,v)\), \(f_1=\mathsf{sub}(c,i,u)\),
+ \(a=\mathsf{sub}(c,i,v)\); \(O=\mathsf{cat}(O_0,O_1)\).
+\end{enumerate}
+The row's bit is the conjunction of its common and additional tests.  If
+this bit is zero, store \([0,0]\); otherwise store \([1,O]\).
+The preceding cases, finite lists, folds, and projections therefore determine
+one finite row-table description \(\mathsf{Rows}(R)\).
+
+Define the parent count and record test by
+\[
+\begin{aligned}
+ \mathsf{pc}(R,i)&=\sum_{j<\ell(R)}
+                    \sum_{v<\ell(e(r_j,2))}E(e(e(r_j,2),v),i),\\
+ \mathsf{Tree}(R)&=\mathsf{sg}(\ell(R))
+       \prod_{j<\ell(R)}e(e(\mathsf{Rows}(R),j),0)
+       \prod_{i<\ell(R)}E(\mathsf{pc}(R,i),Z(E(i,D(\ell(R))))).
+\end{aligned}
+\]
+For \(\ell(R)>0\), put
+\(\mathsf{root}(R)=f_R(D(\ell(R)))\) and
+\(\mathsf{open}(R)=e(e(\mathsf{Rows}(R),D(\ell(R))),1)\);
+both have default zero for the empty record.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p05-selected-direct-pa-graph}{The selected direct arithmetic proof formula}
+Decode \(p\) by requiring \(p=N_{19}(d,0)\), \(d=N_{15}(R)\),
+with exact arities.  The binary characteristic description \(\chi_{19}(p,x)\)
+returns zero if these outer tests fail.  Otherwise it returns
+\[
+ \mathsf{Tree}(R)\mathsf{Sent}(\mathsf{root}(R))E(x,\mathsf{root}(R))
+     \prod_{v<\ell(\mathsf{open}(R))}
+       \mathsf{Ax}_{19}(f_R(e(\mathsf{open}(R),v))).
+\]
+Let \(d_{19}\) be the finite formation tree obtained by the stated
+expansions of this description and all its preceding library calls.  Select
+the actual arithmetic formulas
+\[
+ \mathsf{Prf}^{19}_{\PA}(p,x)\defeq\Gamma_{d_{19}}(p,x,\bar1),
+ \qquad
+ \mathsf{Prv}^{19}_{\PA}(x)\defeq
+                   \exists p\,\mathsf{Prf}^{19}_{\PA}(p,x).
+\]
+The \(\Gamma\) construction uses its fixed fresh-variable convention at
+every expansion.  These formulas are selected by a finite description,
+without selecting an arbitrary formula having the same standard values.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p05-selected-direct-pa-graph}{proved=annex:p5.checker-description}{Graph meaning and internal library equations}
+The preceding specifications determine finite primitive recursive descriptions.
+Numerically \(\chi_{19}\) is the characteristic function of
+\(\mathsf{StdProof}_{\PA}\) from
+\cref{def:p05-standard-pa-numerical-proof}.  The selected formulas are
+\(\Sigma^0_1\), and for every arithmetic sentence \(\sigma\),
+\[
+ \PA\derives\sigma
+ \quad\Longleftrightarrow\quad
+ \mathcal N\entails
+       \mathsf{Prv}^{19}_{\PA}(\overline{\ulcorner\sigma\urcorner}).
+\]
+For their particular graph descriptions, \(\PA\) proves the list,
+table, and syntax equations used in
+\cref{annex:p5.checker-description}, including constructor decoding,
+concatenation entries, and
+\[
+ \mathsf{Sent}(N_{10}(u,v))=1
+       \quad\longrightarrow\quad
+            \mathsf{Sent}(u)=\mathsf{Sent}(v)=1.
+\]
+All function notation in this last assertion abbreviates existentially
+quantified graph outputs, with uniqueness supplied by
+\cref{thm:p05-pa-pr-graphs}.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p05-direct-mp-description}{The fixed direct modus-ponens description}
+For an offset \(a\), let \(\mathsf{sh}(a,J)\) map each entry \(j\)
+of \(J\) to \(a+j\).  Let \(\mathsf{sr}(a,r)\) return
+\([b,c,\mathsf{sh}(a,J),U,l]\) when \(r=[b,c,J,U,l]\) has length
+five, and return zero otherwise.  Let \(\mathsf{SR}(a,R)\) map
+\(\mathsf{sr}(a,\cdot)\) over \(R\).
+
+To define \(\mathsf{mp}_{19}(p,q)\), decode both tag-19 records as above,
+write their row lists as \(R_p,R_q\), and their roots as \(c_p,c_q\).
+Require \(\chi_{19}(p,c_p)=\chi_{19}(q,c_q)=1\) and
+\(c_p=N_{10}(c_q,z)\) with exact arity.  Failure returns zero.
+On success set \(a=\ell(R_q)\), \(b=\ell(R_p)\), and return
+\[
+ N_{19}\!\left(N_{15}\!\left(
+   \mathsf{cat}\!\left(R_q,
+     \mathsf{cat}(\mathsf{SR}(a,R_p),
+          [[8,z,[D(a),D(a+b)],0,0]])\right)\right),0\right).
+\]
+This inserts the antecedent proof first and the implication proof second,
+as required by the actual implication-elimination rule.  Call its expanded
+description \(d_{\rm mp}\).  It includes the displayed failure test.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p05-direct-pa-internal-mp}{proved=annex:p5.checker-internal-mp}{Internal modus ponens and D2 for the selected formula}
+In \(\PA\), with all free numerical variables universally quantified,
+\[
+\begin{split}
+ &\mathsf{Prf}^{19}_{\PA}(p,N_{10}(u,v))
+       \land\mathsf{Prf}^{19}_{\PA}(q,u)\\
+ &\quad\longrightarrow\exists r\,
+       (\Gamma_{d_{\rm mp}}(p,q,r)
+                         \land\mathsf{Prf}^{19}_{\PA}(r,v)).
+\end{split}
+\]
+The constructor in the first line is eliminated through its specified graph.
+Consequently, for every fixed pair of arithmetic sentences \(\varphi,\psi\),
+\[
+\begin{split}
+ \PA\derives\;&\mathsf{Prv}^{19}_{\PA}
+                   (\overline{\ulcorner\varphi\to\psi\urcorner})\\
+ &\to\bigl(\mathsf{Prv}^{19}_{\PA}
+                    (\overline{\ulcorner\varphi\urcorner})
+       \to\mathsf{Prv}^{19}_{\PA}
+                    (\overline{\ulcorner\psi\urcorner})\bigr).
+\end{split}
+\]
+Also, if \(\PA\derives\sigma\), then
+\(\PA\derives\mathsf{Prv}^{19}_{\PA}
+                     (\overline{\ulcorner\sigma\urcorner})\).
+This last metatheoretic implication is D1 for this selected \(\PA\) formula.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p05-direct-graph-empty-proof}{The empty-context identity proof in the selected graph}
+Let \(o=N_1()\), \(e=N_5(o,o)\), and
+\(p=N_{19}(N_{15}([[18,e,0,[o],0]]),0)\).
+The specified description gives \(\chi_{19}(p,e)=1\), so its finite
+numeral computation yields
+\(\PA\derives\mathsf{Prf}^{19}_{\PA}(\bar p,\bar e)\).
+The direct-axiom product is empty in this computation.  No assertion that
+\(0=0\) is a nonlogical axiom is used.
+\end{hbexample}
+
+\paragraph{Evidence-to-proof construction and positive introspection.}
+For each fixed closed \(\Sigma^0_1\) sentence \(\sigma\) in its
+original syntax, \cref{thm:p05-original-sigma-evidence} supplies the
+specified unary description \(\widehat d_\sigma^+\) and proves in
+\(\PA\)
+\[
+ \forall e\,\bigl(\mathsf{Ev}_\sigma(e)\to
+    \exists p\,(\Gamma_{\widehat d_\sigma^+}(e,p)\land
+       \mathsf{Prf}^{19}_{\PA}(p,\overline{\ulcorner\sigma\urcorner}))\bigr).
+\]
+The evidence is exactly the formula constructed in
+\cref{thm:p05-pa-sigma-evidence}; the signed proof constructors retain
+the original sentence code rather than ending at its normal form.
+\Cref{thm:p05-literal-graph-evidence,thm:p05-direct-pa-d3} applies
+the construction to the literal selected provability sentence and proves D3.
+Together with the internal modus-ponens theorem, this supplies D1--D3
+for the same selected graph. An earlier arbitrarily chosen numeralwise
+representative is a separate arithmetic formula; no internal identification
+with it is assumed. The full later provability-logic completeness
+constructions retain their own proof obligations.

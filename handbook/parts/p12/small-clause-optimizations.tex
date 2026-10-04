@@ -1,0 +1,663 @@
+\chapter{Small Clause Forms: Naming, Witnesses, and Simplification}
+\label{sec:p12-opt-small-clauses}
+
+This chapter develops Sections 4--8 of Nonnengart and Weidenbach's
+\emph{Computing Small Clause Normal Forms}, in its retained 2001
+presentation \cite[pp.~347--365]{NonnengartWeidenbach2001SmallClauses}.
+The cost being optimized is initially the number of clauses produced
+before redundancy removal. It is neither the number of models nor a
+prediction of a prover's running time. Formula naming, witness selection,
+and simplification affect these quantities differently.
+
+\section{Semantic interface}
+\begin{hbdefinition}{def:p12-opt-interface}{Inputs and fresh symbols}
+Use classical first-order logic over a declared signature \(\Sigma\),
+with nonempty domains and total functions. Formulas are finite syntax
+trees; an occurrence is a position in that tree. Substitution is
+capture-avoiding. Rectification makes distinct binders use distinct
+variables, also disjoint from free variables.
+For arbitrary open input \(F\), existential-assignment satisfiability is
+handled by first taking \(\exists\operatorname{FV}(F)\,F\).
+If instead the problem requires universal closure, that closure is
+part of the input specification. These two problems are different.
+
+All newly introduced predicates and functions are outside \(\Sigma\).
+An expansion preserves the domain and every interpretation in \(\Sigma\);
+a reduct forgets only the added symbols. Choosing a name merely absent
+from the input formula permits an equisatisfiability claim only if any
+previous interpretation of that name may be changed.
+For example, on \(D=\{0,1\}\), \(P=\{1\}\), a declared \(c=0\)
+cannot witness \(\exists xP(x)\), although \(c\) does not occur there.
+Witness selection below uses ordinary set-theoretic choice for the
+families of nonempty subsets of powers of \(D\).
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p12-opt-polarity}{Occurrence polarity}
+The root has polarity \(+1\). Conjunction, disjunction, quantifiers,
+and implication's consequent preserve polarity; negation and
+implication's antecedent reverse it. Either child of a biconditional
+has polarity \(0\), and descendants of a zero-polarity occurrence
+retain polarity \(0\). Write \(C[A]\) for replacement of one designated
+occurrence, preserving its surrounding binders.
+\end{hbdefinition}
+
+The exact contextual implication theorem, including every quantifier
+case, is Theorem~\ref{thm:p12-small-context}. The closure and
+rectification interfaces are Theorems~\ref{thm:p12-small-sat-closure}
+and~\ref{thm:p12-small-rectification}. We use their all-assignment
+conclusions when one newly interpreted symbol occurs under several
+surrounding quantifiers.
+
+\section{Formula renaming and exact clause costs}
+\begin{hbdefinition}{def:p12-opt-renaming}{A polarity-sensitive name}
+For an occurrence \(A=F|_\pi\), enumerate its distinct free variables
+as \(\bar y\), including variables bound outside this occurrence.
+Choose a fresh predicate \(R\) of arity \(|\bar y|\).
+Replace the occurrence by \(R(\bar y)\) and conjoin the sentence
+\[
+ D_\pi=
+ \begin{cases}
+ \forall\bar y\,(R(\bar y)\to A),&\operatorname{pol}(F,\pi)=+1,\\
+ \forall\bar y\,(A\to R(\bar y)),&\operatorname{pol}(F,\pi)=-1,\\
+ \forall\bar y\,(R(\bar y)\leftrightarrow A),&
+                  \operatorname{pol}(F,\pi)=0.
+ \end{cases}
+\]
+Bound variables in the copied definition are renamed as necessary.
+Zero free variables give a nullary predicate and an empty universal
+prefix.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-opt-renaming}{proved=annex:p12.opt-renaming}{Naming preserves models by expansion and reduct}
+Every model of \(F\) expands to a model of
+\(F[\pi/R(\bar y)]\land D_\pi\); every model of the latter has a
+\(\Sigma\)-reduct satisfying \(F\). Thus naming preserves satisfiability.
+It does not assert equivalence for every arbitrary interpretation of \(R\).
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p12-opt-counts}{Counts before reduction}
+For formulas without truth constants define \(p(A)\) to be the number
+of clauses in the unreduced, polarity-sensitive standard translation;
+write \(q(A)=p(\neg A)\). Count repeated clauses separately. No
+tautology deletion, subsumption, equality simplification, or sharing
+is included. With \(p_i=p(A_i)\) and \(q_i=q(A_i)\), the full recursion is
+\[
+\begin{array}{c|cc}
+A&p(A)&q(A)\\ \hline
+\text{atom}&1&1\\
+\neg A_1&q_1&p_1\\
+A_1\land A_2&p_1+p_2&q_1q_2\\
+A_1\lor A_2&p_1p_2&q_1+q_2\\
+A_1\to A_2&q_1p_2&p_1+q_2\\
+A_1\leftrightarrow A_2&p_1q_2+q_1p_2&p_1p_2+q_1q_2\\
+\forall xA_1,\ \exists xA_1&p_1&q_1
+\end{array}
+\]
+First simplify constants; if the result is \(\top\) or \(\bot\),
+return respectively the empty clause set or the set containing the
+empty clause. This avoids applying the strictly positive count
+identities to zero-clause cases.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-opt-counts}{proved=annex:p12.opt-counts}{Correct counts and finite arithmetic}
+The recursion computes those clause counts. For a syntax tree of
+\(N\) nodes, both counts are at most \(2^N\).
+Thus their binary representations have at most \(N+1\) bits.
+Dynamic programming computes them in polynomial bit complexity;
+exponential numerical magnitude alone does not imply exponential
+time to represent or calculate them.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p12-opt-coefficients}{Coefficients of one occurrence}
+For a fixed root formula \(F\), put \((a_\epsilon,b_\epsilon)=(1,0)\).
+At a parent occurrence \(\tau\) with coefficients \(a,b\), the
+coefficients at its child are as follows. The other child is \(A_j\).
+\[
+\begin{array}{c|c|cc}
+\text{parent}&\text{child}&a_{\tau i}&b_{\tau i}\\ \hline
+A_1\land A_2&i&a&bq_j\\
+A_1\lor A_2&i&ap_j&b\\
+A_1\to A_2&1&b&ap_2\\
+A_1\to A_2&2&aq_1&b\\
+A_1\leftrightarrow A_2&i&aq_j+bp_j&ap_j+bq_j\\
+\neg A_1&1&b&a\\
+\forall xA_1,\ \exists xA_1&1&a&b
+\end{array}
+\]
+Counts are propagated from leaves to root; coefficients from root to
+leaves. These directions refer to the syntax tree.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-opt-coefficients}{proved=annex:p12.opt-coefficients}{Exact one-occurrence saving test}
+At any occurrence \(\pi\) there is a nonnegative integer \(c_\pi\)
+independent of the formula inserted there such that
+\[
+ p(F[\pi/B])=a_\pi p(B)+b_\pi q(B)+c_\pi.
+\]
+For positive polarity \(a_\pi\ge1,b_\pi=0\); for negative polarity
+\(a_\pi=0,b_\pi\ge1\); for zero polarity both are at least one.
+Renaming \(A=F|_\pi\) does not increase the unreduced count exactly when
+\[
+\begin{array}{ll}
+(a_\pi-1)(p(A)-1)\ge1,&\text{positive polarity},\\
+(b_\pi-1)(q(A)-1)\ge1,&\text{negative polarity},\\
+(a_\pi-1)(p(A)-1)+(b_\pi-1)(q(A)-1)\ge2,
+ &\text{zero polarity}.
+\end{array}
+\]
+The inequalities allow equality of the old and new counts.
+\end{hbtheorem}
+
+\begin{hbmethod}{def:p12-opt-capped}{Complete bounded-arithmetic implementation}
+Represent a nonnegative integer \(v\) by
+\(\langle v\rangle_3=\min(v,3)\). In both preceding tables replace
+addition and multiplication by addition and multiplication followed
+by this cap. The possible values are \(0,1,2,3\), with \(3\)
+meaning at least three. Counts never equal zero; coefficients can.
+For a positive-polarity test, both capped inputs must exceed one.
+For a zero-polarity test, compute each product after subtracting one
+from its two positive capped inputs, cap that product at two, and
+test whether the sum is at least two.
+
+For comparison, the complete threshold formulas for positive integers
+\(u,v\) are
+\[
+\begin{array}{c|l}
+u+v>2&u>1\ \text{or}\ v>1\\
+uv>2&u>2\ \text{or}\ v>2\ \text{or}\ (u>1\ \text{and}\ v>1)\\
+u+v>3&u>2\ \text{or}\ v>2\ \text{or}\ (u>1\ \text{and}\ v>1)\\
+uv>3&u>3\ \text{or}\ v>3\ \text{or}\ (u>1\ \text{and}\ v>1).
+\end{array}
+\]
+The last two lines explicitly include \(u=v=2\).
+For a coefficient product with \(a\ge0,p\ge1\),
+\(ap>1\) means \(a>1\) or \((a=1\ \text{and}\ p>1)\);
+zero coefficients cannot be dropped from this test.
+\end{hbmethod}
+
+\begin{hbmethod}{def:p12-opt-schedule}{A finite top-down naming schedule}
+Start with the rectified, constant-free input tree and give each original
+nonliteral occurrence a distinct marker. Visit these markers in a fixed
+preorder: a parent precedes its children and the first child precedes the
+second. Keep the working formula as a tree with parent links and retain
+each defining sentence as a separate conjunct of that formula.
+
+At a marker, recompute the counts, coefficients and polarity in the
+\emph{current whole formula}. If the corresponding nonincrease test
+fails, remove that marker and proceed. If it succeeds, perform the
+polarity-sensitive replacement of
+Definition~\ref{def:p12-opt-renaming}, append its defining sentence,
+and remove the visited marker. The copied subformula in the definition
+inherits its descendants' still-unvisited markers; it replaces, rather
+than duplicates, their former positions in the working tree. Rename
+copied binders to avoid capture, retaining those occurrence markers.
+The new name, definition connective and universal parameter prefix
+receive no markers. Do not expand the defining biconditionals during
+this traversal.
+
+Stop after the original finite marker list has been exhausted, then
+apply the standard clause translation to the resulting formula.
+Each accepted step preserves satisfiability and does not increase the
+stated unreduced clause count. This schedule fixes the termination and
+cost interface; it makes no global optimality claim. Shared-instance
+naming is a separate permitted operation with the conditions in
+Theorem~\ref{thm:p12-opt-sharing}.
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p12-opt-capped}{proved=annex:p12.opt-capped}{Decision cost and controlled complete renaming}
+The capped recursion decides every one-occurrence nonincrease test
+exactly, in linear time and space in a fixed formula tree under
+constant-cost operations on its finite value set.
+The schedule in Definition~\ref{def:p12-opt-schedule} visits at most
+\(N\) markers, preserves satisfiability, and gives a polynomial
+algorithm. Its final unreduced clause count is no greater than the
+original count.
+
+A concrete complete naming algorithm names every nonliteral
+occurrence once, using a full equivalence whose right-hand side
+contains only its immediate connective and the names of its children.
+Assert the root name, or the root literal if the input is already a
+literal. Treat a quantifier node by its corresponding
+quantified child name. Standard conversion of these shallow definitions
+produces \(O(N)\) clauses. With all free variables carried as arguments
+and ordinary inner Skolemization, its explicit symbol output is
+\(O(N^3)\) in the original first-order tree size, including term sizes.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p12-opt-renaming-cases}{Single and shared occurrences}
+If \(p(A)=n,p(B)=m\), then \(A\lor\forall xB\) has \(nm\)
+unreduced clauses, whereas naming \(B\), whose only free variable is
+\(x\), gives \(n+m\). The inequality is \((n-1)(m-1)\ge1\).
+For \(n=m=2\) the cost ties at four; for \(n=2,m=3\) it decreases
+from six to five.
+
+Each \(P_i\lor(Q_1\land Q_2)\) separately has two clauses and a
+private name would give three. In the conjunction of \(n\) such
+formulas, one shared positive definition
+\(R\to(Q_1\land Q_2)\) instead gives the \(n+2\) clauses
+\[
+ P_i\lor R\ (1\le i\le n),\qquad
+ \neg R\lor Q_1,\quad\neg R\lor Q_2.
+\]
+This beats \(2n\) exactly for \(n>2\).
+For instances \(Q_1(a_i)\land Q_2(a_i)\), a sufficient common
+template is \(Q_1(x)\land Q_2(y)\); use
+\(\forall x,y(R(x,y)\to(Q_1(x)\land Q_2(y)))\) and replace the
+instances by \(R(a_i,a_i)\).
+\end{hbexample}
+
+\begin{hbtheorem}{thm:p12-opt-sharing}{proved=annex:p12.opt-sharing}{Shared instances and syntactic matching}
+Suppose finitely many nonoverlapping occurrences are capture-free
+instances \(A\sigma_i\) of a template with free-variable list \(\bar y\).
+One definition \(R(\bar y)\to A\) suffices if all occurrences are
+positive; use \(A\to R(\bar y)\) if all are negative, and the full
+equivalence if signs mix or any occurrence has zero polarity.
+Replacing each by \(R(\bar y)\sigma_i\) preserves satisfiability
+by expansion and reduct.
+Ordinary syntactic matching of finite trees, with binders already
+aligned and only free variables substitutable, is decidable in time
+linear in the total pattern and target tree size.
+\end{hbtheorem}
+
+In the preceding propositional example, resolution of \(P_i\lor R\)
+with each \(\neg R\lor Q_j\) reconstructs \(P_i\lor Q_j\).
+Thus later inference can undo the syntactic saving. Restricting
+resolution on auxiliary names requires an explicitly specified ordered
+calculus; the present transformation does not establish that calculus.
+Likewise, a left-associated chain containing only \(P,Q\) and
+biconditionals has at most four assignments to its old atoms.
+Repeated naming can introduce linearly many new atoms, hence
+exponentially many possible assignments to those new atoms before
+constraints are applied. After condensation has removed repeated
+literals, a pairwise nonsubsuming, nontautological two-atom clause set
+has at most four clauses: with no units only
+the four binary clauses remain; one unit subsumes two of these;
+two units allow at most one binary clause unless they are opposite
+units, in which case they subsume all binary clauses; three or
+four units subsume every binary clause. An empty clause subsumes
+everything. Unreduced count alone misses those simplifications.
+The condensation qualification matters when clauses are multisets.
+For any \(r\ge1\), the \(r+1\) clauses containing \(i\) copies of
+\(P\) and \(r-i\) copies of \(Q\), for \(0\le i\le r\), are
+pairwise incomparable under multiset inclusion and contain no
+tautology. Removing their repeated literals restores the ordinary
+two-atom simplifications.
+
+\section{Witness functions with fewer restrictions}
+\begin{hbdefinition}{def:p12-opt-skolem-modes}{Inner, outer, and optimized steps}
+Let \(F\) be a rectified sentence in negation normal form.
+For an existential occurrence \(\exists xA\), inner Skolemization
+uses \(f(\operatorname{FV}(\exists xA))\); outer Skolemization uses
+the enclosing universally bound variables. The outer list may
+include variables absent from this occurrence. A convenient
+construction eliminates enclosing existential binders first, but
+the next theorem justifies the source's arbitrary single-step
+choice as well.
+
+For optimized Skolemization choose an occurrence
+\[
+ E=\exists x_1\cdots x_k(A\land B),\qquad
+ \bar y=\operatorname{FV}(E),
+\]
+and require the actual semantic premise
+\(F\models\forall\bar y\exists\bar x A\).
+With fresh functions \(f_1,\ldots,f_k\) of arity \(|\bar y|\),
+write \(\sigma=\{x_i\mapsto f_i(\bar y):1\le i\le k\}\).
+The transformed sentence is
+\[
+  (\forall\bar y\,A\sigma)\land F[\pi/B\sigma].
+\]
+The premise is not a syntactic test and must be proved or supplied
+by the problem's retained theory. A search for it may require a
+resource bound; failure to find it does not authorize the step.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-opt-standard-skolem}{proved=annex:p12.opt-standard-skolem}{The full inner and outer single-step domains}
+Let \(\exists xA\) be any occurrence in a closed rectified NNF
+sentence \(F\). An inner step using exactly its free-variable list,
+or an outer step using exactly the enclosing universal-variable
+list, preserves satisfiability by same-domain expansion and reduct.
+This includes an occurrence beneath other existential binders.
+For inner Skolemization the expansion can preserve equivalence
+of the existential subformula and its replacement at all parameter
+assignments. An outer step need not have this stronger local
+equivalence; its guarantee concerns the whole sentence.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p12-opt-optimized-skolem}{proved=annex:p12.opt-optimized-skolem}{Optimized Skolemization}
+Under the preceding conditions every model of \(F\) has an expansion
+satisfying the transformed sentence, and every model of the latter
+has a reduct satisfying \(F\).
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p12-opt-strong-skolem}{Free-variable splitting and the strong step}
+For \(E=\exists\bar x(A_1\land\cdots\land A_n)\), \(n\ge1\),
+with \(k\ge1\) distinct existential variables, fix an ordering
+of the finitely many free variables. List the following sets in
+that order to obtain pairwise disjoint variable lists \(Z_i\):
+\[
+ Z_1=\operatorname{FV}(A_1)\setminus\{\bar x\},\qquad
+ Z_i=(\operatorname{FV}(A_i)\setminus\{\bar x\})
+                 \setminus\bigcup_{j<i}Z_j.
+\]
+Their concatenation \(Z\) lists exactly \(\operatorname{FV}(E)\).
+Empty lists are allowed. Remove a conjunct independent of all
+\(\bar x\) from the existential scope if convenient; the theorem
+also works without that preprocessing.
+Let \(f_1,\ldots,f_k\) be fresh functions of arity \(|Z|\).
+For each conjunct use fresh universally bound lists
+\(W_{i+1},\ldots,W_n\) of the respective lengths of \(Z_{i+1},\ldots,Z_n\).
+Define
+\[
+ \Xi=\bigwedge_{i=1}^n
+ \forall W_{i+1}\cdots W_n\,
+ A_i\{x_j\mapsto
+ f_j(Z_1,\ldots,Z_i,W_{i+1},\ldots,W_n):1\le j\le k\}.
+\]
+Different conjuncts have disjoint new binders. The strong step replaces
+the positive occurrence \(E\) in the NNF sentence by \(\Xi\).
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p12-opt-selectors}{Total selectors}
+For a nonempty subset \(S\subseteq D^k\), a selector in this
+chapter is a surjection \(h:D^k\to S\), viewed also as a map into
+\(D^k\). It can be chosen as a retraction:
+fix \(s_0\in S\), set \(h(t)=t\) on \(S\), and \(h(t)=s_0\)
+elsewhere. The projection \(\operatorname{pr}_j\) returns the \(j\)-th
+coordinate. There is no selector onto the empty set.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-opt-selector}{proved=annex:p12.opt-selector}{Uniform selector construction}
+Fix a structure and a formula \(A(\bar x,\bar y)\) with no other
+free variables. There are total functions \(h_j(\bar y,\bar w)\)
+such that, at every parameter value \(\bar b\) where
+\(\exists\bar xA\) holds, all values \(h(\bar b,\bar w)\) satisfy
+\(A\), and every satisfying tuple occurs as such a value.
+Consequently, for any additional formula \(B\), pointwise
+\[
+ \exists\bar x(A\land B)\quad\Longrightarrow\quad
+ [\forall\bar w\,A(\bar h(\bar y,\bar w),\bar y)]
+ \land\exists\bar v\,B\{\bar x\mapsto\bar h(\bar y,\bar v)\}.
+\]
+The functions are defined even at empty fibers; no truth of the
+universal conjunct is claimed there.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p12-opt-strong-skolem}{proved=annex:p12.opt-strong-skolem}{Strong Skolemization at full first-order scope}
+Every structure has an expansion for the functions in \(\Xi\)
+such that \(E\) implies \(\Xi\) at every assignment to \(Z\).
+In every expansion, \(\Xi\) implies \(E\).
+It follows that replacing any existential-conjunction occurrence in a
+rectified NNF sentence by \(\Xi\) preserves satisfiability by expansion
+and reduct. Instantiating each \(W_j\) by \(Z_j\) obtains the
+corresponding ordinary inner-Skolemized conjuncts.
+The annex gives both the selector-composition route and a direct
+prefix-witness construction.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p12-opt-skolem-comparisons}{The two source comparisons}
+In these examples \(R\) denotes a binary relation in the original
+signature, rather than an auxiliary name. Consider
+\[
+ \forall x,y,z\,
+ ((R(x,y)\land R(x,z))\to
+             \exists u(R(y,u)\land R(z,u))).
+\]
+Inner Skolemization gives
+\(\neg R(x,y)\lor\neg R(x,z)\lor R(y,f(y,z))\)
+and the same first two literals followed by \(R(z,f(y,z))\).
+If the whole theory proves \(\forall y\exists uR(y,u)\),
+optimized Skolemization gives the unit \(R(y,f(y,z))\)
+and the second original clause. The added unused parameter \(z\)
+does not affect the premise in a nonempty domain.
+Strong Skolemization instead replaces the first positive literal by
+\(R(y,f(y,w))\). Its first clause is equivalent, under universal
+closure, to
+\(\neg R(x,y)\lor R(y,f(y,w))\):
+instantiate \(z=y\) for one direction; the shorter clause implies
+the longer in the other. This is the source's condensation.
+
+Next take
+\[
+ \forall x,y(R(x,y)\to\exists z(P(z)\land Q(x,z)\land S(x,y,z)))
+\]
+and retain a proof that \(R\) is nonempty. The splitting is
+\((\varnothing,(x),(y))\).
+The standard clauses have \(\neg R(x,y)\) followed respectively by
+\(P(f(x,y)),Q(x,f(x,y)),S(x,y,f(x,y))\).
+Strong Skolemization changes the first two positive literals to
+\(P(f(v,w))\) and \(Q(x,f(x,w))\).
+Nonemptiness of \(R\) then implies the universal unit \(P(f(v,w))\).
+Optimized Skolemization can also obtain the unit \(P(f(x,y))\),
+since the original sentence and nonemptiness imply \(\exists zP(z)\);
+its remaining \(Q\)-clause retains \(f(x,y)\).
+Thus a globally proved existence condition and a local dependency
+change offer different simplifications. Neither example proves a
+universal ordering of the two methods' search costs.
+\end{hbexample}
+
+\begin{hbexample}{def:p12-opt-skolem-failures}{Necessary witness qualifications}
+The optimized premise cannot be omitted. Let \(F=Q\lor
+\exists x(P(x)\land P(x))\), on a one-element domain with \(Q\)
+true and \(P\) empty. Then \(F\) is true, but pulling out the unit
+\(P(f)\) is impossible in every expansion of this structure.
+For dependence, \(\forall y\exists x(x=y)\) is true on a two-element
+domain; replacing \(x\) by one constant makes it false there.
+For context polarity, \(\neg\exists xP(x)\) must first be put in
+NNF. Replacing its negative existential occurrence by \(P(c)\)
+would admit a structure where \(P\) is nonempty but \(c\notin P\).
+\end{hbexample}
+
+\section{Equality and atom definitions}
+\begin{hbtheorem}{thm:p12-opt-equality}{proved=annex:p12.opt-equality}{Identity-based simplification}
+Interpret \(=\) as identity, let \(x\notin\operatorname{vars}(t)\),
+and perform substitution without capture. In every structure and
+assignment,
+\[
+ \exists x(x=t\land A)\ \Leftrightarrow\ A[x/t],
+ \qquad
+ \forall x(x=t\to A)\ \Leftrightarrow\ A[x/t].
+\]
+Also \(t=t\) is true. If \(y\notin\operatorname{vars}(t)\),
+\(\forall y(t\ne y)\) is false and \(\exists y(t=y)\) is true.
+On domains with more than one element, \(\forall y(t=y)\) is false
+and \(\exists y(t\ne y)\) true; on singleton domains the respective
+values are true and false.
+Each replacement is valid in an arbitrary context on the stated
+class of structures. For a background-theory application that class
+must remain fixed on both sides.
+\end{hbtheorem}
+
+The quantifier-eliminating equality replacements decrease the number
+of quantifiers even when substituting \(t\) enlarges terms. The
+cardinality replacements decrease formula size. All are terminating
+when used alone or with the standard size-decreasing Boolean rules.
+For example
+\(\forall x,y,z(x=y\to f(x,z)=f(y,z))\) becomes
+\(\forall y,z(f(y,z)=f(y,z))\), then \(\top\).
+Successively eliminate antecedent equalities to handle every
+coordinate of function congruence; predicate congruence reduces to
+\(P(\bar y)\to P(\bar y)\). Reflexivity, symmetry and transitivity
+reduce in the same way, with symmetry becoming \(y=y\) after its
+antecedent substitution and transitivity reducing its two equalities
+in succession.
+For a finite relevant signature there are finitely many such
+congruence axioms. An arbitrary infinite signature instead has
+a congruence scheme; the finite count must not be asserted for
+all of its symbols at once.
+
+A retained conjunct \(s\ne t\) certifies at least two elements for
+other replacements. A statement merely about models of the old
+whole formula is insufficient: the inconsistent formula
+\((\forall y\,c=y)\land(\exists y\,c\ne y)\) vacuously implies
+singleton cardinality, but replacing its first conjunct by \(\top\)
+creates models on larger domains.
+Nor can \(x\notin\operatorname{vars}(t)\) be removed: on two elements
+with \(f\) interchanging them, \(\exists x(x=f(x)\land\top)\)
+is false, whereas substitution into \(\top\) gives true.
+
+\begin{hbdefinition}{def:p12-opt-atom-definition}{A retained atom definition}
+Let \(\Theta\) be a retained sentence implying
+\[
+ \forall\bar x(P(\bar t)\leftrightarrow A),
+ \qquad \{\bar x\}=\operatorname{FV}(P(\bar t)),\quad
+ \operatorname{FV}(A)\subseteq\{\bar x\}.
+\]
+An occurrence \(P(\bar s)=P(\bar t)\sigma\), with capture-free
+matching substitution \(\sigma\), may be replaced by \(A\sigma\).
+The retained context is \(\Theta\land C[P(\bar s)]\).
+For a conditional definition
+\(\forall\bar x(H\to(P(\bar t)\leftrightarrow A))\),
+also require \(\operatorname{FV}(H)\subseteq\{\bar x\}\), so that
+the displayed definition is a sentence.
+The guard \(H\sigma\) must hold at every assignment relevant to the
+replacement. One sufficient explicit interface is
+\(\Theta\models\forall\operatorname{FV}(H\sigma)\,H\sigma\).
+Another is an occurrence inside \(H\sigma\to C[P(\bar s)]\),
+provided no binder between the guard and the occurrence binds
+a free variable of \(H\sigma\). Outside that guard the whole
+implication is already true.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-opt-atom-expansion}{proved=annex:p12.opt-atom-expansion}{Expansion, elimination and termination}
+These replacements preserve truth under the retained conditions at
+every polarity. For one unconditional definition whose head is
+\(P(x_1,\ldots,x_n)\) with distinct variables and whose body contains
+no \(P\), expansion eliminates all targeted \(P\)-occurrences in
+finitely many steps.
+If a theory consists of this definition and formulas using \(P\),
+fully expand \(P\) in the other formulas and delete the defining
+sentence. The resulting theory over \(\Sigma\setminus\{P\}\)
+has exactly the reducts of the original models; every such reduct
+has a unique expansion for \(P\).
+\end{hbtheorem}
+
+Expansion can increase size. A recursive definition
+\(\forall x(P(x)\leftrightarrow P(f(x)))\) allows the endless
+sequence \(P(a),P(f(a)),P(f(f(a))),\ldots\).
+Several individually nonrecursive definitions can also cycle,
+as \(P\leftrightarrow Q\), \(Q\leftrightarrow P\).
+With a guarded definition, \(H\to(P\leftrightarrow Q)\),
+a valuation with \(H\) false, \(P\) true and \(Q\) false satisfies
+the definition but refutes an unguarded replacement of \(P\) by \(Q\).
+Naming to reduce a predicted clause count and expanding a domain
+definition therefore serve different purposes.
+
+\section{Decision diagrams}
+\begin{hbdefinition}{def:p12-opt-bdd}{Ordered reduced Boolean decision diagrams}
+For a finite list of propositional variables
+\(v_1<\cdots<v_m\), a decision diagram is a finite rooted acyclic
+graph whose vertices are all reachable from its root, with terminal
+labels in \(\{0,1\}\) and internal nodes \((v_i,L,H)\).
+Either terminal may be absent when it is not reachable.
+Follow \(L\) when \(v_i=0\), \(H\) when \(v_i=1\).
+Along every path variable indices strictly increase.
+Reduction identifies equal terminals, merges nodes with identical
+triples, and replaces a node with \(L=H\) by its child.
+Discard any vertices made unreachable by a replacement.
+The result is reduced when neither operation changes it.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-opt-bdd}{proved=annex:p12.opt-bdd}{Shannon splitting, reduction and uniqueness}
+For any designated subformula \(A\) of a propositional formula \(F\),
+\[
+ F\ \Leftrightarrow\
+ (A\to F[\pi/\top])\land(\neg A\to F[\pi/\bot]).
+\]
+Full splitting by a fixed variable order followed by reduction
+terminates, preserves truth, and yields a unique reduced graph
+up to graph isomorphism respecting labels and edges.
+Truth and falsity yield the respective single terminals.
+For each root-to-\(0\) path, form the clause that forbids its partial
+assignment: negate each high-branch variable and leave each
+low-branch variable positive. The conjunction of these clauses is
+equivalent to the represented Boolean function.
+\end{hbtheorem}
+
+For the source example \((Q\leftrightarrow R)\leftrightarrow
+(Q\leftrightarrow S)\), setting \(Q\) true gives
+\(R\leftrightarrow S\); setting it false gives
+\((\neg R)\leftrightarrow(\neg S)\), the same function.
+Delete the \(Q\)-node. The two paths to \(0\) are
+\((R,S)=(1,0)\) and \((0,1)\); their clauses are
+\(\neg R\lor S\) and \(R\lor\neg S\).
+
+At a fixed first-order scope one may regard maximal quantified
+subformulas and atoms as Boolean tests. Every Boolean identity
+obtained this way remains sound after those tests are replaced
+by their formulas. It is not a complete test of first-order
+equivalence: \(\forall xP(x)\to P(c)\) is valid over nonempty
+first-order structures, but its Boolean skeleton \(U\to V\)
+has a falsifying valuation. Moving a test across a quantifier
+requires its own free-variable conditions.
+Full splitting has as many as \(2^{m+1}-1\) nodes before sharing;
+this construction gives no general polynomial bound on diagram
+size or on the number of root-to-false paths.
+
+\section{Historical and implementation scope}
+\label{sec:p12-opt-history}
+The historical claims here belong to the 2001 chapter's
+Sections 7--8 \cite[pp.~363--365]{NonnengartWeidenbach2001SmallClauses}.
+It credits polarity-sensitive equivalence elimination to the 1980
+work on Andrews's Challenge Problem 1; the introduction of new
+propositional names to Tseitin; and formula-renaming developments
+to Eder, Plaisted--Greenbaum, and Boy de la Tour.
+The selected criterion follows Boy de la Tour's count objective,
+presented using positions after Rock and a bounded-arithmetic
+implementation after Nonnengart--Rock--Weidenbach.
+
+The chapter reports a separate Boy de la Tour optimality result:
+for formulas without biconditionals, a top-down traversal using the
+count criterion obtains an optimum among the considered renamings;
+strict saving rather than nonincrease still suffices in that setting.
+This is an attribution of that narrower historical result, whose
+original optimality proof is not supplied by the selected chapter.
+It is not a theorem here about arbitrary logical equivalence,
+shared-instance matching, redundancy removal, or proof-search time.
+The chapter also reports a quadratic symbol bound for the
+Plaisted--Greenbaum approach, and a cubic bound for its own
+approach. The explicit cubic construction proved above declares
+its data and output model; these historical algorithm variants
+must not be identified merely because their bounds have the same order.
+
+The selected source directs readers to Skolem and later textbook
+treatments for standard Skolemization; Egly for antiprenexing;
+Ohlbach--Weidenbach, Nonnengart, and the 1998 joint paper for the
+advanced witness methods; Baaz--Leitsch for proof-complexity
+questions; and Goubault and Goubault--Posegga for first-order
+BDD simplification and combinations with Skolemization.
+Reuse of witness functions and introduced predicates is explicitly
+outside its treatment. Citing these works here records the
+source's referral, not acquisition of each original presentation.
+
+Its implementation discussion concerns the then-described SPASS
+work, with a reference to SPASS version 1.0.0. It recommends a
+top-down traversal with efficient access to children and parent,
+and storing formula size as a prefilter for syntactic instance
+matching. Structural matching is the relation
+\(A\sigma=B\) for some substitution \(\sigma\),
+under the chapter's restricted substitution convention; it is
+distinct from matching modulo associativity, commutativity,
+or logical implication. For capture-safe manuscript use, the
+binder-aligned interface of
+Theorem~\ref{thm:p12-opt-sharing} specifies the admissible substitutions.
+
+The source reports favorable experience and refers to the 1998 paper
+for experiments, but these selected pages give no benchmark counts,
+timing table, hardware specification, confidence intervals or
+replication data. They support a historical report of the authors'
+experience, not a numerical speedup or present-day ranking.
+Their suggestion to combine optimized and strong Skolemization
+remains a heuristic proposal illustrated by the two worked cases.
+
+\begin{proofboundary}{def:p12-opt-remaining-originals}{Exact remaining source obligations}
+The selected chapter's naming, optimized and strong witness
+constructions, and three simplification methods have explicit
+proofs above and in the annex. Separate original-source obligations
+remain for Boy de la Tour's global optimality argument, the distinct
+Plaisted--Greenbaum size analysis, the cited proof-length speedups,
+the 1998 experimental comparison, and the first-order BDD algorithms
+and witness-reuse methods only referred to here. The standard
+rectification, NNF, closure and clause-generation pipeline is the
+companion chapter on standard small-clause translation.
+\end{proofboundary}

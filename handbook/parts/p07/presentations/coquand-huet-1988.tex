@@ -1,0 +1,335 @@
+\section{Coquand--Huet 1988: indexed constructions and the full beta calculus}
+\label{sec:p07-ch88}
+
+Coquand and Huet's journal presentation uses one written universe symbol,
+indexed binding, and separate validity and typing judgments. Its logical
+``contexts'' are themselves product terms; they must not be identified
+with a modern list-of-declarations judgment or with an additional universe
+constant. The presentation below follows the source's concrete binding
+semantics in an editorially corrected indexed reconstruction. It separates
+the full calculus from the corrected restricted variant and supplies a
+normalization-preserving interpretation into the independently proved
+two-sort CC. The original article and the separate 1994 normalization proof
+retain their own attribution
+\cite[\S\S1--3, pp.~95--105]{CoquandHuet1988}
+\cite[\S\S2--3]{Geuvers1994Report9450}.
+
+\subsection{One-star syntax and binding}
+
+\begin{hbdefinition}{def:p07-ch88-syntax}{Objects and logical contexts at a fixed depth}
+For \(n\geq0\), define mutually the scoped source classes
+\(\mathcal A_i^n\) of objects, \(\mathcal A_o^n\) of logical contexts,
+and \(\mathcal A^n=\mathcal A_i^n\cup\mathcal A_o^n\).
+A logical context is \(\ast\), or \([x:A]\Delta\) with
+\(A\in\mathcal A^n\), \(\Delta\in\mathcal A_o^{n+1}\).
+An object is an index \(k\) with \(1\leq k\leq n\), a product
+\([x:A]M\), or an abstraction \((\lambda x:A)M\), with
+\(A\in\mathcal A^n\), \(M\in\mathcal A_i^{n+1}\); it may also
+be \((MN)\) with \(M,N\in\mathcal A_i^n\). The two classes
+are disjoint. Products and lambdas bind index one in the body, not in
+their annotation. The written \(x\) is a dummy concrete binder name;
+the abstract structure uses positive de Bruijn indices. Under \(d\)
+internal binders, indices at most \(d\) refer to those binders and an
+index \(k>d\) denotes external reference \(k-d\).
+
+There is no written \(\Box\), and \(\ast\) has no source type.
+The word object here includes proposition schemas and types, not just
+the inhabitants called objects in the later two-sort classification.
+No primitive eta, delta, inductive or recursor computation is included
+in this base syntax \cite[pp.~95--98]{CoquandHuet1988}.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p07-ch88-environments}{The two roles of source contexts}
+A source environment \(\Gamma\) is a closed logical-context term,
+viewed as an ordered sequence of declarations. Define its source length
+\(|\ast|=0\), \(|[x:A]\Delta|=1+|\Delta|\).
+Here \(|\cdot|\) is the source's local sequence-length notation.
+For \(\Gamma\) of length \(n\) and \(\Delta\in\mathcal A_o^n\),
+\(\Gamma;\Delta\) replaces the final \(\ast\) of \(\Gamma\)
+by \(\Delta\), with its already scoped external references. Put
+\(\Gamma[x:A]=\Gamma;[x:A]\ast\).
+Write
+\[
+ \Gamma=[x_n:A_n]\cdots[x_1:A_1]\ast,
+ \qquad A_k\in\mathcal A^{n-k}.
+\]
+Thus index one names the newest declaration, whereas the leftmost
+declaration is oldest. A logical context \(\Delta\) in a type position
+is still a product term, not an instruction to append its declarations.
+Validity will be \(\Gamma\vdash\Delta\); object typing will be
+\(\Gamma\vdash M:P\). Their empty environment is the source term
+\(\ast\), so \(\vdash E\) abbreviates \(\ast\vdash E\)
+\cite[pp.~97--99]{CoquandHuet1988}.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p07-ch88-index-operations}{Relocation, lookup and binder-removal substitution}
+For cutoff \(i\geq0\), relocation \(\xi_i\) leaves \(\ast\)
+unchanged and acts on an index by
+\[
+ \xi_i(k)=\begin{cases}k,&k\leq i,\\k+1,&k>i.\end{cases}
+\]
+It acts componentwise on application; on either binder it applies
+\(\xi_i\) to the annotation and \(\xi_{i+1}\) to the body.
+Consequently the already bound indices are fixed. Write
+\(M^+=\xi_0(M)\), \(\operatorname{add}(0,M)=M\), and
+\(\operatorname{add}(j+1,M)=\operatorname{add}(j,M)^+\).
+For \(1\leq k\leq|\Gamma|\), the source lookup is
+\(\Gamma/k=\operatorname{add}(k,A_k)\).
+
+For an object argument \(N\in\mathcal A_i^n\), define
+\(\operatorname{sub}_i(N,Q)\) recursively by fixing \(\ast\),
+distributing over application, and applying cutoff \(i\) to a binder
+annotation and cutoff \(i+1\) to its body. On indices it is
+\[
+ \operatorname{sub}_i(N,k)=
+ \begin{cases}
+ k,&k\leq i,\\
+ \operatorname{add}(i,N),&k=i+1,\\
+ k-1,&k>i+1.
+ \end{cases}
+\]
+The source notation \([N/x]Q\) means
+\(\operatorname{sub}_0(N,Q)\): replace the newest external variable
+and remove its binder. Only \(N\) is inserted; the substituted image
+is not recursively substituted into itself. The object-argument restriction
+is necessary for the source's application grammar: arbitrary logical-context
+terms are not raw application arguments. The relocation convention realizes
+the source's free-reference-only binding semantics
+\cite[pp.~98--99]{CoquandHuet1988}.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p07-ch88-index-operations}{proved=annex:p7.ch88.index-operations}{Scopedness of the actual index operations}
+Relocation preserves the object/logical-context class and sends depth
+\(n\) to depth \(n+1\). Lookup \(\Gamma/k\) is scoped at depth
+\(|\Gamma|\). If \(N\in\mathcal A_i^n\) and
+\(Q\in\mathcal A_b^{n+1}\), for \(b=i\) or \(b=o\), then
+\([N/x]Q\in\mathcal A_b^n\). These are total structural operations
+on their stated finite inputs; no normalization premise is needed.
+\end{hblemma}
+
+\begin{hbexample}{def:p07-ch88-index-example}{Lookup and capture avoidance}
+In \(\Gamma=[a:\ast][t:1]\ast\), the newest index denotes \(t\),
+and \(\Gamma/1=2\) denotes its older type \(a\), while
+\(\Gamma/2=\ast\). In the extension \(\Gamma[x:2]\), take
+\(Q=(\lambda z:3)2\): its annotation refers to \(a\), and its
+body refers to \(x\), not the new \(z\). Substitution of the old
+argument \(1\), denoting \(t\), gives
+\([1/x]Q=(\lambda z:2)2\). The two occurrences of index two have
+different scopes: the annotation refers to \(a\), and the body to
+\(t\). No inserted reference has been captured by \(z\).
+\end{hbexample}
+
+\begin{hbdefinition}{def:p07-ch88-beta}{Full compatible annotated beta reduction}
+The relation \(\longrightarrow_\beta\) is generated by the scoped
+root contraction on Sheet~\ref{sheet:p07-ch88-beta}, closed under
+both application children and both the annotation and body of a
+product or lambda. The body's external index depth increases by one.
+It is a relation on raw scoped objects and logical-context terms;
+it retains annotations and has no restricted logical typing guard.
+Write \(\longrightarrow_\beta^*\) for its reflexive-transitive
+closure and \(\longrightarrow_\beta^+\) for its positive transitive
+closure. This directed relation is not either variant's typed
+conversion judgment \cite[p.~102]{CoquandHuet1988}.
+\end{hbdefinition}
+
+\subsection{Validity, typing and the two conversion regimes}
+
+\begin{hbdefinition}{def:p07-ch88-judgments}{Common constructions and source-bound equality variants}
+For an environment of length \(n\), a validity judgment
+\(\Gamma\vdash\Delta\) has \(\Delta\in\mathcal A_o^n\);
+a typing judgment \(\Gamma\vdash M:P\) has
+\(M\in\mathcal A_i^n\), \(P\in\mathcal A^n\).
+In particular \(\Gamma\vdash\ast\) says that the environment
+is valid; it does not type \(\ast\) as its own inhabitant.
+The common validity, product, projection, abstraction and application
+rules are Sheet~\ref{sheet:p07-ch88-core}.
+
+Typed conversion is written \(\Gamma\vdash M\cong N\).
+The corrected restricted variant uses the source's logical guards:
+reflexivity on valid logical contexts and on typed objects whose type
+is a logical context; logical lambda and application compatibility;
+and beta at a body typed by a logical context. The full variant uses
+ordinary reflexivity on every typed object, arbitrary typed lambda
+compatibility, simultaneous function/argument compatibility, and beta
+at an arbitrary typed body. Both retain symmetry, transitivity, product
+compatibility and typing conversion. Their separate sheets retain these
+guards; neither typed equality is defined merely by removing a proof
+annotation or by identifying every type with its inhabitants
+\cite[\S3.1, pp.~101--102]{CoquandHuet1988}.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p07-ch88-restricted-inclusion}{proved=annex:p7.ch88.restricted-inclusion}{The corrected restricted variant embeds in the full variant}
+Every validity, typing or typed-conversion judgment derivable in the
+corrected restricted variant is derivable in the full variant, with
+the same indexed syntax and environment. This is an inclusion of
+derivations, not equality of the two conversion relations or an
+identification of their type-checking procedures.
+\end{hblemma}
+
+\begin{hbdefinition}{def:p07-ch88-logical-reduction}{The source directed logical relation}
+Write \(\Gamma\vdash M\mathrel{\triangleright}N\) for the corrected
+source logical-reduction relation on
+Sheet~\ref{sheet:p07-ch88-logical-reduction}. It has logical root-beta
+and compatible annotation/body/application clauses, with the source's
+logical typing guards. It also has an explicit transitivity rule.
+A derived edge may therefore represent several contractions; it is
+not a reflexive reduction relation and not exactly one ordinary beta step.
+The source's logical rank is
+\(\delta(M)=0\) for objects, \(\delta(\ast)=1\), and
+\(\delta([x:M]\Delta)=\max(\delta(M)+1,\delta(\Delta))\)
+for logical contexts. This rank is invariant under object substitution
+and typed equality, as proved in \cref{thm:p07-ch88-check-rank}.
+The domain-rank multiset built from it is nevertheless not decreasing
+under innermost logical contraction
+(\cref{thm:p07-ch88-check-domain-rank}). Logical termination is supplied
+by the positive-path and annotated-normalization arguments below,
+not by that multiset. The rank pertains to this logical regime,
+not to an unrestricted source checking algorithm
+\cite[pp.~104--105]{CoquandHuet1988}.
+\end{hbdefinition}
+
+\input{registry/calculi/p07-coquand-huet-1988}
+
+\subsection{The actual bridge to the proved two-sort CC}
+
+\begin{hbdefinition}{def:p07-ch88-named-encoding}{A role-sensitive named encoding}
+Fix an ordered external vector \(\vec z=(z_1,\ldots,z_n)\), oldest
+to newest. Put \(T_{\vec z}(\ast)=\ast\) and
+\(T_{\vec z}(k)=z_{n+1-k}\); preserve application, and map
+\([x:A]B\) to \(\Pi z:T_{\vec z}(A).T_{\vec z,z}(B)\),
+and \((\lambda x:A)M\) to the corresponding annotated lambda,
+choosing \(z\) fresh. Map an environment to the ordered named
+declarations \(\widehat\Gamma\), translating each annotation in
+its older prefix. A logical context occurring as a type is translated
+as a product, not flattened as an environment.
+
+The target is exactly the Figure~3 CC of
+\cref{def:p12-har-pts-specifications,thm:p12-har-cc-normalization}:
+sorts \(\ast,\Box\), axiom \(\ast:\Box\), and triples
+\((\ast,\ast,\ast),(\ast,\Box,\Box),
+(\Box,\ast,\ast),(\Box,\Box,\Box)\).
+Here \(\Box\) is the target's marker for source validity, not a
+missing original source constant. Its structural metatheory and
+strong normalization are independently proved, using the separately
+identified 1994 primary proof
+\cite[\S\S2--3]{Geuvers1994Report9450}.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p07-ch88-binding-transport}{proved=annex:p7.ch88.binding-transport}{Binding, substitution and positive beta transport}
+The named encoding is injective on the scoped source grammar, modulo
+consistent binder renaming, and has an indexed inverse on its image.
+It preserves corrected relocation and lookup. For an object argument
+\(N\) scoped over \(\Gamma\) and \(Q\) over \(\Gamma[x:A]\),
+\[
+ T_{\vec z}([N/x]Q)
+   =T_{\vec z,z}(Q)[T_{\vec z}(N)/z].
+\]
+Each full compatible source beta contraction maps to one target beta
+contraction at the corresponding root or annotation/body/application
+position. No source annotation or type argument is erased.
+This is not a bijection onto arbitrary raw CC terms, which additionally
+contain \(\Box\) and ill-typed forms absent from the source grammar.
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p07-ch88-full-transport}{proved=annex:p7.ch88.full-transport}{Full validity, typing and equality transport}
+In the full corrected indexed presentation,
+\(\Gamma\vdash\Delta\) implies
+\(\widehat\Gamma\vdash_{\rm CC}T\Delta:\Box\), and
+\(\Gamma\vdash M:P\) implies
+\(\widehat\Gamma\vdash_{\rm CC}TM:TP\).
+If \(\Gamma\vdash M\cong N\), then \(TM=_\beta TN\);
+for every target pseudo type \(U\),
+\(\widehat\Gamma\vdash_{\rm CC}TM:U\) holds if and only if
+\(\widehat\Gamma\vdash_{\rm CC}TN:U\) holds.
+Validity, typing and equality are transported jointly, including the
+separately well-sorted target needed by typing conversion. The result
+uses the proved structural CC metatheory, not a normalization or checking
+assumption for either source variant.
+\end{hbtheorem}
+
+\begin{hblemma}{thm:p07-ch88-logical-transport}{proved=annex:p7.ch88.logical-transport}{Logical edges are positive finite beta paths}
+Every derived source edge
+\(\Gamma\vdash M\mathrel{\triangleright}N\) maps to a nonempty
+finite compatible beta path \(TM\longrightarrow_\beta^+TN\).
+The transitivity rule concatenates paths; it is not treated as a
+zero-step or a single-step edge.
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p07-ch88-full-normalization}{proved=annex:p7.ch88.full-normalization}{Open, fully annotated normalization for the reconstructed full calculus}
+\label{thm:p07-coc-strong-normalization}
+Every full source-typed object \(\Gamma\vdash M:P\), and every
+valid logical-context term \(\Gamma\vdash\Delta\), is strongly
+normalizing for full compatible annotated beta reduction. Arbitrary
+valid open environments and contractions in annotations, types and
+under binders are included. The corrected restricted variant is also
+strongly normalizing for that compatible beta relation on its typable
+terms, and its directed logical relation has no infinite chain starting
+at a typed object or valid logical context. The proof transports into
+the proved exact CC theorem; it does not assume source normalization,
+closed inhabited environments, or checker completeness.
+\end{hbtheorem}
+
+\subsection{Stripped programs}
+
+\begin{hbdefinition}{def:p07-ch88-stripping}{The source's proof-level type erasure}
+For a valid environment \(\Gamma\), let \(\alpha_\Gamma\) count its
+declarations of object types and let \(j_\Gamma\) inject their new
+pure-program index positions into all source positions. Initially
+\(\alpha_\ast=0\). Appending a logical-context annotation leaves
+\(\alpha\) unchanged and adds one to every value of \(j\).
+Appending an object-type annotation raises \(\alpha\) by one,
+sets \(j(1)=1\), and sends each old \(j(k)\) to the new
+\(j(k+1)=j(k)+1\).
+
+For a typing \(\Gamma\vdash M:P\) with \(P\) an object,
+\(\nu_\Gamma(M)\) is a pure indexed lambda term over
+\(\alpha_\Gamma\) variables. At a variable \(k\), use
+\(j_\Gamma^{-1}(k)\). For an application, preserve the application
+when its argument has an object type, and erase that argument when
+its type is a logical context. For a lambda with object-type domain,
+keep an unannotated lambda over the stripped body; for a logical-context
+domain, erase the abstraction and retain the stripped body. These
+clauses apply only to the source's proof/functionality regime, not
+arbitrarily to types or logical contexts. In the empty environment,
+and only in this proof-level case, write
+\(\rho(M)=\nu_\ast(M)\) for the source's closed pure-program
+interpretation
+\cite[\S4, pp.~105--107]{CoquandHuet1988}.
+\end{hbdefinition}
+
+\input{parts/p07/presentations/coquand-huet-1988-realization}
+
+\begin{proofboundary}{def:p07-ch88-proof-standing}{Realization, annotated normalization and extensions}
+The native realization induction has its full proof in
+\cref{annex:p7.ch88.native-soundness}, and its closed stripped-image
+consequence is \cref{thm:p07-ch88-native-closed-image}. These develop
+the original article's model and proof-level induction
+\cite[\S\S4--5, pp.~105--110]{CoquandHuet1988}; they do not infer
+annotation termination from erased programs. The complete annotated/open
+argument is separately
+\cref{thm:p07-ch88-full-transport,thm:p07-ch88-full-normalization},
+using the independently supplied exact CC proof. The article's invocation
+of full constructed-term normalization on pp.~105 and 112 and its
+reference~15 retain their distinct attribution. The complete checking
+result in \cref{thm:p07-ch88-check-normal-complete} concerns the separate
+no-conversion normal-type variant. Ordinary-full constructor root
+preservation has its actual source casts in
+\cref{thm:p07-ch88-ordinary-root}; proof-valued conversions in the
+certified head-excursion family are handled by
+\cref{thm:p07-ch88-object-normalize,thm:p07-ch88-object-injection}.
+These source constructions do not establish arbitrary headedness or
+global ordinary-full checking. The remaining exhaustive typed-equality
+dependency is stated in \cref{def:p07-ch88-object-boundary}.
+
+Section~7's constants and local let are abbreviation facilities; no
+extra delta generator has been added here. Section~8's primitive
+recursors, universe proposals and Type:Type are different extensions,
+not consequences of the base normalization theorem. The article's
+warning that some proposed universe rules lose normalization is retained
+as a limit, not a claim about every stratified universe system
+\cite[pp.~105,112--117]{CoquandHuet1988}.
+\end{proofboundary}
+
+\input{parts/p07/presentations/coquand-huet-1988-checking}
+\input{parts/p07/presentations/coquand-huet-1988-ordinary-checking}
+\input{parts/p07/presentations/coquand-huet-1988-object-product}

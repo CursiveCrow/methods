@@ -1,0 +1,362 @@
+\section{Cook--Reckhow's source framework and relative comparisons}
+\label{sec:p07-cook-reckhow-source}
+
+Cook and Reckhow's 1979 paper compares representations and proof systems,
+not algorithms that find shortest proofs. Its general proof-system
+definition, uniform simulation and separate formula/line measures make
+precise what an efficiency comparison establishes
+\cite[\S\S1--5]{CookReckhow1979}. The following source treatment also
+supplies its natural-deduction and extension interfaces, its pigeonhole
+example, and the exact boundary between polynomial boundedness and
+\(\mathsf P=\mathsf{NP}\).
+
+\subsection{Encoded proof maps, verifiers and polynomial boundedness}
+
+\begin{hbconvention}{def:p07-cr-encoding}{Source string lengths and finite alphabets}
+The source uses finite alphabets \(\Sigma_1,\Sigma_2\) and total
+polynomial-time functions \(f:\Sigma_1^*\to\Sigma_2^*\).
+Write \(|x|\) for string length in this explicitly source-bound
+convention. It is not set cardinality. A fixed binary encoding of the
+finite alphabet changes lengths by a constant factor. Atoms are encoded
+as a letter followed by a binary identifier; delimiters make formulas,
+proof lines and tuples uniquely parseable. Distinct atom identifiers
+remain distinct, regardless of their numerical magnitude.
+
+A paired code \(\langle y,w\rangle\) explicitly contains both its
+claimed conclusion y and certificate w, with length
+\(O(|y|+|w|+1)\). On a malformed proof code use a fixed default
+\(y_0\) in the target language. The computation time of a total
+proof map bounds its output length. A polynomial-time relation on
+\((w,y)\) does not supply an output-recovery search from w alone.
+\end{hbconvention}
+
+\begin{hbdefinition}{def:p07-cr-proof-map}{The source definition for an arbitrary language}
+For a nonempty string language \(L\subseteq\Sigma_2^*\), a proof
+system is a polynomial-time computable surjection
+\(f:\Sigma_1^*\to L\). An f-proof of y is any x with f(x)=y.
+It is polynomially bounded when a single polynomial q satisfies:
+every \(y\in L\) has some proof x with \(|x|\leq q(|y|)\).
+The definition permits systems not presented by a familiar calculus.
+For \(L=\mathsf{TAUT}\), it gives the propositional proof systems
+of Definition~\ref{def:p07-cook-reckhow}.
+The empty language is handled separately: no total map from the nonempty
+set of all strings can have empty range
+\cite[defs.~1.2--1.3, prop.~1.4]{CookReckhow1979}.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p07-cr-map-relation}{proved=annex:p7.cr.map-relation}{The exact map--relation encoding correspondence}
+A proof map f gives a polynomial-time relation R with
+\(R(x,y)\) exactly when f(x)=y. Conversely, a polynomial-time
+decidable relation R whose existential range is exactly a nonempty L
+gives the total polynomial-time proof map
+\[
+ f_R(\langle y,w\rangle)=
+ \begin{cases}y,&R(w,y),\\ y_0,&\text{otherwise},\end{cases}
+\]
+with the same default on malformed codes. Polynomial boundedness
+corresponds to polynomially bounded witness existence for R, with y
+included in the proof code. Neither this construction nor its
+equivalence searches an unbounded set of possible outputs.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p07-cr-np-languages}{proved=annex:p7.cr.np-languages}{Source Proposition 1.4, including the empty case}
+A language L belongs to \(\mathsf{NP}\) if and only if L is empty
+or has a polynomially bounded source proof system. This is a
+short-certificate existence theorem, not a deterministic proof-search
+algorithm.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p07-cr-np-conp}{proved=annex:p7.cr.np-conp}{The exact propositional complexity equivalence}
+\[
+\begin{aligned}
+ &\text{some propositional proof system is polynomially bounded}\\
+ &\quad\Longleftrightarrow\quad \mathsf{TAUT}\in\mathsf{NP}
+ \quad\Longleftrightarrow\quad\mathsf{NP}=\mathsf{coNP}.
+\end{aligned}
+\]
+The final equivalence uses the NP-completeness reduction for SAT in
+Theorem~\ref{thm:p04-cook-levin}, the same external reduction used
+in the source's Proposition 1.1. It does not identify
+\(\mathsf{NP}=\mathsf{coNP}\) with \(\mathsf P=\mathsf{NP}\).
+If \(\mathsf P=\mathsf{NP}\), polynomial boundedness follows;
+the converse is not established by this theorem.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p07-cr-source-simulation}{Uniform simulation and shortest-proof comparison}
+For proof maps f and h with the \emph{same} target language, h
+p-simulates f when a single polynomial-time total transformation g
+satisfies \(h(g(x))=f(x)\) for all strings x, including codes sent
+to the default conclusion. The source's p-equivalence means simulation
+in both directions. Separately, put
+\(s_f(y)=\min\{|x|:f(x)=y\}\). A bound
+\(s_h(y)\leq q(s_f(y))\) compares existence of short proofs;
+it does not by itself give an algorithm translating a supplied proof.
+Different connective alphabets generally have different literal formula
+languages, so a comparison between them must state its translation or
+its length-bound meaning rather than silently use this same-range definition.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p07-cr-simulation-properties}{proved=annex:p7.cr.simulation-properties}{Composition, length transfer and what remains nonuniform}
+P-simulation is reflexive and transitive. Mutual p-simulation is an
+equivalence relation. If h p-simulates f and f is polynomially bounded,
+then h is polynomially bounded. The translation also gives a polynomial
+shortest-proof bound from f to h. The shortest-proof inequality alone
+does not specify a translating procedure or a running-time bound for
+finding its witnesses.
+\end{hbtheorem}
+
+\subsection{The source's four size measures and Frege systems}
+
+\begin{hbdefinition}{def:p07-cr-source-measures}{Formula occurrences, lines, maximum width and encoded bits}
+For a formula A, \(l(A)\) counts atom and nullary-connective
+\emph{occurrences}, not distinct atoms or encoded bits. For a sequence
+of formulas, it sums that count. For a derivation \(\pi\),
+\(\lambda(\pi)\) counts its lines and
+\(\rho(\pi)=\max_i l(A_i)\) is its maximum formula count.
+The separate measure \(|\pi|\) is its encoded string length.
+For the defining-set bounds below, also let \(m(A)\) count all
+nodes of the formula parse tree, including unary-connective occurrences.
+Thus \(l(A)\leq m(A)\leq |A|\) up to fixed encoding constants;
+an arbitrarily long unary chain can have l-count one.
+For natural-deduction lines, l counts both the ordered hypotheses
+and the conclusion. Parent indices and rule annotations also cost
+encoded bits; repeated use of one earlier line does not duplicate
+that line in a sequence proof.
+
+These source measures need not be interchangeable: a long binary
+atom name counts once in l; a proof can have few lines containing
+enormous formulas; a DAG can share a subproof that occurs many times
+in its unfolded tree. The bounds below retain their stated measures
+\cite[p.~39]{CookReckhow1979}.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p07-cr-source-frege}{Source Frege rules and implicational completeness}
+Fix a finite adequate connective set \(\kappa\), with arities at
+most two. A rule is a finite schematic inference
+\((C_1,\ldots,C_r)/D\) whose premise formulas semantically entail
+its conclusion. Instances use simultaneous formula substitution.
+A source Frege system \(\mathcal F\) is a finite collection of
+these sound rules that is \emph{implicationally complete}: every
+valid finite-premise consequence has a derivation. Zero-premise
+rules are axiom schemata. This is the hypothesis needed when replacing
+one rule by a fixed derivation in another system, not merely a
+theoremhood-completeness assumption.
+
+A proof code records the formula sequence, rule choice, premise
+indices and instance substitution, with no hypotheses for theoremhood.
+Finite template matching and local inference checking are polynomial
+in that code. Return its last formula when valid and a fixed tautology
+otherwise. Soundness and implicational completeness give a source
+proof map with exactly \(\mathsf{TAUT}_\kappa\) as its range.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p07-cr-frege-comparison}{proved=annex:p7.cr.frege-comparison}{Theorem 2.3: fixed-basis uniform Frege comparisons}
+Given source Frege systems \(\mathcal F_1,\mathcal F_2\) over
+the same \(\kappa\), one polynomial-time transformation takes a
+derivation of B from \(A_1,\ldots,A_r\) in the first into a
+derivation of the same B from the same hypotheses in the second,
+with \(\lambda(\pi')\leq c\lambda(\pi)\) and
+\(\rho(\pi')\leq c\rho(\pi)\). The associated proof maps
+p-simulate each other, including default inputs. Their constants
+depend on the two fixed rule sets, not on the individual derivation.
+The different-connective-set Frege generalization mentioned in the
+paper is attributed there to Reckhow's separate thesis; it is not
+inferred by naive expansion of duplicated connectives.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p07-cr-source-nd}{Source ordered-context natural deduction}
+A source natural-deduction line is \(\Gamma\to A\), where
+\(\Gamma=(A_1,\ldots,A_r)\) is a finite \emph{sequence}.
+It represents the left-associated disjunction
+\(L^*=\bigvee(\neg A_1,\ldots,\neg A_r,A)\), or its
+right-associated form \(L^\#\). With no hypotheses both are A.
+A source rule is a finite valid inference of such lines; an instance
+may simultaneously substitute formulas and prefix the \emph{same}
+context sequence \(\Delta\) to every premise and conclusion.
+A system \(\mathcal N\) has finitely many such rules and is
+implicationally complete for line consequences. Proofs are sequences
+of reusable lines, not obligatorily unfolded trees
+\cite[\S3]{CookReckhow1979}.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p07-cr-nd-comparison}{proved=annex:p7.cr.nd-comparison}{Theorem 3.3 and the source Frege--ND bridge}
+Two source natural-deduction systems over the same adequate basis
+have uniform conversions with \(\lambda'\leq c\lambda\) and
+\(\rho'\leq c\rho\). Every such system and every source
+Frege system on that basis p-simulate one another for theoremhood.
+The construction preserves ordered contexts and prefixes; it does
+not eliminate nested deductions by repeatedly duplicating an entire
+earlier proof. The conclusion is not a tree-proof lower-bound theorem.
+\end{hbtheorem}
+
+\subsection{Definitional extension and the source compression arguments}
+
+\begin{hbdefinition}{def:p07-cr-source-extension}{Exact extension freshness and final-formula conditions}
+The source extension \(e\mathcal F\) may add
+\(P\leftrightarrow C\) when P is absent from C, every earlier
+line, every hypothesis, and the final conclusion. Later intermediate
+lines may use P. If biconditional is not primitive, use its fixed
+representation over \(\kappa\). Definitions are introduced in
+dependency order, so they are acyclic. This is the source interface
+of the repaired \hyperref[sheet:extended-frege-cpl]{extended-Frege sheet},
+not permission to conclude an arbitrary newly declared atom.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p07-cr-extension-elimination}{proved=annex:p7.cr.extension-elimination}{Soundness and source Proposition 4.3}
+Every extension derivation is sound for its original hypotheses and
+conclusion. If it has m definitions, there is an ordinary Frege
+derivation with at most \(\lambda(\pi)+cm\) lines of that same
+conclusion from those same hypotheses. Definition elimination can
+expand its formula lengths exponentially, so this line-count claim
+is not a p-simulation of extended Frege by ordinary Frege.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p07-cr-gate-definitions}{The source defining-set construction}
+Associate to each nonatomic formula B a distinct proxy atom \(P_B\),
+and set \(P_Q=Q\) for an atom Q. Ordinary atoms and newly introduced
+proxies occupy disjoint name spaces. For connective sets
+\(\kappa,\kappa'\), fix a \(\kappa'\)-formula computing the
+truth function of each \(\kappa\) connective. The set
+\(\operatorname{def}_{\kappa'}(A)\) has one defining formula
+per distinct nonatomic subformula: a nullary proxy equals the fixed
+constant representation; a unary proxy equals its connective's
+representation on its child proxy; and a binary proxy equals its
+representation on its two child proxies. This uses child atoms,
+not recursively expanded child formulas.
+
+These definitions uniquely determine all proxies from the original
+atom values and imply \(P_A\leftrightarrow A\) when both sides
+are expressed in one basis. Their total atom-occurrence count is
+\(O(m(A))\), including gates along unary chains. In an encoded
+transformation assign proxies fresh
+integer identifiers by traversing the actual subformula records;
+their names need not contain an entire formula as a literal string.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p07-cr-gate-compression}{proved=annex:p7.cr.gate-compression}{Lemmas 4.10--4.11 with the actual introduction order}
+From a derivation of \(P_A\) under
+\(\operatorname{def}_{\kappa}(A)\) in \(e\mathcal F\), the
+source skeleton construction produces a derivation of the same
+\(P_A\) under \(\operatorname{def}_{\kappa'}(A)\) in
+\(e\mathcal F'\), with \(\lambda'\leq c\lambda\) and
+constant \(\rho'\leq d\). The hypothesis, ordinary-rule and
+extension-rule cases each use finitely many fixed gate templates.
+Unneeded gates inside a large substitution formula are not expanded.
+Extension gates are introduced online in dependency order, not
+preloaded before a source fresh variable is introduced.
+
+Conversely, replacing each hypothesis proxy for a subformula E of
+A by E converts a width-r derivation of \(P_A\) into a proof of
+A with at most \(\lambda+c m(A)\) lines and maximum formula
+count at most \((r+c)l(A)\). Fresh auxiliary definitions are first
+renamed away from the substituted formulas.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p07-cr-ef-line-compression}{proved=annex:p7.cr.ef-line-compression}{Short lines with every formula constructor counted}
+For every proof \(\pi\) of A in a fixed extended Frege system,
+there is a proof of that same A with
+\[
+ \lambda(\pi')\leq c(\lambda(\pi)+m(A)),\qquad
+ \rho(\pi')\leq c l(A).
+\]
+This transformation is effective and polynomial in the encoded input
+proof. It does not assert that an unextended Frege proof admits the
+same compression.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p07-cr-ef-relative-bounds}{proved=annex:p7.cr.ef-relative-bounds}{Relative extension bounds and the exact complexity consequence}
+Let L be a nondecreasing natural-number bound with \(L(n)\geq n\).
+If every tautology A over \(\kappa\) has an \(e\mathcal F\)-proof
+with at most \(L(m(A))\) lines, then every tautology B over
+\(\kappa'\) has an \(e\mathcal F'\)-proof with
+\[
+ \lambda(\pi')\leq cL(c m(B)),\qquad \rho(\pi')\leq c l(B).
+\]
+An arbitrary length bound can first be replaced by its nondecreasing
+prefix maximum; polynomial bounds remain polynomial under that operation.
+Consequently one extended Frege system is polynomially bounded exactly
+when every such fixed-basis system is, and polynomial line boundedness
+is equivalent to polynomial encoded-proof boundedness for these systems.
+If \(\mathsf{NP}\ne\mathsf{coNP}\), none has polynomially bounded
+line counts for all tautologies; neither do Frege or the source ND
+systems. This is the corrected premise of source Corollary 4.7
+\cite{CookReckhow1979,CookReckhow1979AuthorCorrection}.
+It is a short-proof-existence comparison across different formula
+languages, not an unstated same-range p-simulation or proof-search algorithm.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p07-cr-source-substitution}{Substitution Frege is theorem-only}
+The source system \(s\mathcal F\) adds simultaneous substitution
+of formulas for atoms to a Frege system, but permits only proofs with
+no hypotheses. Substitution preserves tautologies; it does not preserve
+a consequence from unchanged hypotheses. For example P does not entail
+Q merely because substituting Q for P changes P to Q.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p07-cr-substitution-simulation}{proved=annex:p7.cr.substitution-simulation}{Theorem 5.3: a uniform extension-to-substitution conversion}
+The source \(s\mathcal F\) p-simulates \(e\mathcal F\) on the
+same formula language. The resulting proof has
+\(\lambda'\leq c\lambda\rho\) and
+\(\rho'\leq c\lambda\rho\). Its elimination substitutions
+are applied in reverse definition order, so they do not recursively
+expand the entire definition DAG. No converse simulation is asserted.
+\end{hbtheorem}
+
+\subsection{The pigeonhole example: clause inputs, sequences and expanded trees}
+
+\begin{hbdefinition}{def:p07-cr-source-php}{The paper's indexed pigeonhole family}
+For \(n\geq2\), use \(P_{ij}\) with \(1\leq i\leq n\),
+\(1\leq j\leq n-1\). The source clause family
+\(\mathcal P_n\) consists of each row disjunction
+\(P_{i1}\lor\cdots\lor P_{i,n-1}\), and the collision clauses
+\(\neg P_{ij}\lor\neg P_{kj}\) for \(i<k\) and each hole j.
+It does not include functionality clauses forbidding one pigeon
+from having two true hole variables. Its tautology is
+\(A_n=\neg\bigwedge\mathcal P_n\).
+After renaming atoms, this is the \(n-1\)-hole instance of
+Definition~\ref{def:p07-pigeonhole-cnf}; the one-index shift is explicit.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p07-cr-php-compression}{proved=annex:p7.cr.php-compression}{The source pigeonhole induction with and without abbreviations}
+From \(\mathcal P_n\), substitute
+\(B_{ij}=P_{ij}\lor(P_{i,n-1}\land P_{nj})\),
+\(i<n,j<n-1\), for the variables of \(\mathcal P_{n-1}\).
+The resulting smaller pigeonhole clauses follow by explicit finite
+Boolean inferences. Iterating and using the n=2 contradiction gives
+Frege proofs with \(O(n^4)\) lines, whose repeated-substitution
+formulas can have exponentially many leaf occurrences. With fresh
+acyclic proxy atoms for each induction stage, the derivation from
+the individual pigeonhole clauses has \(O(n^4)\) lines and
+\(O(n)\) maximum leaf count. A guarded proof and a balanced defining
+set discharge those inputs, producing a proof of \(A_n\) in
+\(O(n^5\log(n+2))\) encoded bits. Its final formula itself has
+\(\Theta(n^3)\) leaf occurrences; the smaller width bound applies
+to the derivation, not to every line of the full proof. These are
+bounds for the construction, not a
+lower bound on the shortest unextended Frege proofs.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p07-cr-small-php}{proved=annex:p7.cr.small-php}{A complete small resolution DAG and its unfolded tree}
+The three-pigeon/two-hole instance \(\mathcal P_3\) has the
+19-node resolution DAG in its reciprocal proof: nine input clauses
+and ten derived clauses, ending in the empty clause. Its binary-tree
+unfolding has 21 clause occurrences because two input nodes are
+reused. These are sizes of the displayed derivation and its unfolding,
+not claims about either system's minimum proof size or an exponential
+separation between tree-like and DAG resolution.
+\end{hbtheorem}
+
+\paragraph{Lower bounds and dated open status.}
+The separately attributed Haken result remains
+Theorem~\ref{thm:p07-haken-resolution-lower-bound} with its
+\emph{sketched} annex status. Its exponential resolution bound does
+not imply a Frege or extended-Frege lower bound, and a lower bound for
+one fixed system does not prove \(\mathsf{NP}\ne\mathsf{coNP}\).
+The current edition's dated unrestricted-Frege/extended-Frege status
+is recorded separately in
+Theorem~\ref{thm:p07-frege-lower-bound-boundary}; it is not a result
+of the 1979 paper. The original paper's conjecture that no system
+is polynomially bounded must likewise remain a conjecture, not a
+proof of a complexity-class separation. Haken 1985, the Beame--Pitassi
+survey and Kraj\'i\v{c}ek's monograph retain their separate source
+allocations; none is represented as read or fully reconstructed here.

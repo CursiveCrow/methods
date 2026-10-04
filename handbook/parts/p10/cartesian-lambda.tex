@@ -1,0 +1,199 @@
+%% The context category of the registered arrow-only STLC.
+
+\subsection{Simply typed terms as a cartesian closed category}
+\label{sec:p10-cartesian-lambda}
+
+Use exactly the types and terms of the registered calculus
+\hyperref[sheet:stlc]{\(\mathsf{STLC}\)}: types are generated from
+\(\mathsf{Base}\) by \(\alpha\mathbin{\to_{\mathrm{ty}}}\beta\),
+and terms are variables, typed abstractions, and applications.
+The products and terminal object below are constructions on
+contexts.  A tuple of terms is a metalinguistic list.
+No product or unit constructor is added to this term language.
+
+\begin{hbdefinition}{def:p10-stlc-beta-eta}{Typed \(\beta\eta\) equality and simultaneous substitution}
+Write \(\Theta\vdash_{\beta\eta}M=N:\alpha\) for the least
+equivalence relation on terms of type \(\alpha\) in the finite
+typing context \(\Theta\) that contains consistent bound
+\(\alpha\)-renaming, preserves application and typed abstraction,
+and contains the following typed equation schemas:
+\[
+ (\lambda x{:}\alpha.M)N = M[N/x]:\beta,
+ \qquad
+ \lambda x{:}\alpha.Mx=M:
+                  \alpha\mathbin{\to_{\mathrm{ty}}}\beta.
+\]
+In the first schema,
+\(\Theta,x{:}\alpha\derives_{\mathsf{STLC}}M:\beta\) and
+\(\Theta\derives_{\mathsf{STLC}}N:\alpha\).
+In the second,
+\(\Theta\derives_{\mathsf{STLC}}M:
+ \alpha\mathbin{\to_{\mathrm{ty}}}\beta\), and \(x\) is fresh
+for \(\Theta\) and \(M\).
+Abstraction congruence carries an equation in
+\(\Theta,x{:}\alpha\) to an equation in \(\Theta\).
+These schemas define an equational metatheory of the registered
+syntax; the reduction relation on the calculus sheet is
+\(\beta\)-reduction.
+
+A typed simultaneous substitution \(\sigma:\Theta\to\Psi\),
+where \(\Psi=(y_1{:}\beta_1,\ldots,y_n{:}\beta_n)\), is a tuple
+of terms \(\Theta\derives_{\mathsf{STLC}}\sigma_j:\beta_j\).
+For a term \(M\) in \(\Psi\), the notation \(M[\sigma]\)
+replaces its free \(y_j\)'s simultaneously by \(\sigma_j\).
+Inserted terms are not substituted into again during this
+operation.  The operation is capture-avoiding, following
+Definition~\ref{def:p07-alpha-substitution}, with binder types
+retained.  Under an abstraction, first rename its bound variable
+to be fresh for the finitely many terms and contexts involved.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p10-stlc-equational-substitution}{proved=annex:p10.lambda.1}{Typing and equality under substitution}
+If \(\Psi\derives_{\mathsf{STLC}}M:\alpha\) and
+\(\sigma:\Theta\to\Psi\), then
+\(\Theta\derives_{\mathsf{STLC}}M[\sigma]:\alpha\).
+Identity substitutions act as identities, and for
+\(\tau:\Omega\to\Theta\),
+\[
+ (M[\sigma])[\tau]=_{\alpha}M[\sigma[\tau]],
+ \qquad
+ \sigma[\tau]=(\sigma_1[\tau],\ldots,\sigma_n[\tau]).
+\]
+Here \(=_{\alpha}\) denotes bound \(\alpha\)-equivalence.
+Both substitution into a typed \(\beta\eta\) equation and
+componentwise replacement of a substitution by a
+\(\beta\eta\)-equal substitution preserve typed \(\beta\eta\)
+equality.  Weakening by unused declarations and consistent
+renaming of declared variables preserve typing and equality.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p10-stlc-context-category}{The category of typed contexts}
+Let \(\mathcal S_{\beta\eta}\) have as objects finite type lists
+\(\Gamma=(\alpha_1,\ldots,\alpha_m)\), including the empty list
+\(()\).  Present \(\Gamma\) by a typing context
+\(\Theta_\Gamma=(x_1{:}\alpha_1,\ldots,x_m{:}\alpha_m)\)
+with distinct names.  A fixed enumeration of the variable supply
+can choose these names once and for all.
+An arrow from \(\Gamma\) to
+\(\Delta=(\beta_1,\ldots,\beta_n)\) is a componentwise
+\(\beta\eta\)-equivalence class of tuples \((M_1,\ldots,M_n)\)
+with \(\Theta_\Gamma\derives_{\mathsf{STLC}}M_j:\beta_j\).
+Changing the declared names consistently by position changes
+only the presentation; this renaming of free context variables
+is distinct from bound \(\alpha\)-renaming.
+
+The identity of \(\Gamma\) is the tuple \((x_1,\ldots,x_m)\).
+If \(M:\Gamma\to\Delta\) and \(N:\Delta\to\Xi\), define
+\[
+                 N\circ M=(N_j[M_1/y_1,\ldots,M_n/y_n])_j,
+\]
+where the \(y_j\)'s name the slots of \(\Delta\).
+Fresh names may be used for intermediate presentations.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p10-stlc-context-ccc}{proved=annex:p10.lambda.2}{Cartesian closed structure on contexts}
+The preceding data form a category.
+Its terminal object is \(()\); its product
+\(\Gamma\times\Delta\) is the concatenation \(\Gamma\cdot\Delta\),
+with block projections and concatenation of tuples as pairing.
+
+For \(\Gamma=(\alpha_1,\ldots,\alpha_m)\), define the
+right-associated type
+\[
+ c_\Gamma(\beta)=
+ \alpha_1\mathbin{\to_{\mathrm{ty}}}\cdots
+ \mathbin{\to_{\mathrm{ty}}}\alpha_m
+ \mathbin{\to_{\mathrm{ty}}}\beta,
+ \qquad c_{()}(\beta)=\beta.
+\]
+If \(\Delta=(\beta_1,\ldots,\beta_n)\), an exponential is
+\[
+       \Delta^\Gamma=(c_\Gamma(\beta_1),\ldots,c_\Gamma(\beta_n)).
+\]
+Its evaluation
+\(\Delta^\Gamma\cdot\Gamma\to\Delta\) is represented by
+\((f_jx_1\cdots x_m)_{j=1}^n\).
+The transpose of \(T:\Xi\cdot\Gamma\to\Delta\) is represented by
+\[
+       \bigl(\lambda x_1{:}\alpha_1\cdots
+                       \lambda x_m{:}\alpha_m.T_j\bigr)_{j=1}^n.
+\]
+For \(m=0\), application and abstraction over the empty list
+do nothing.  For \(n=0\), these tuples are empty.
+Evaluation and transposition give inverse bijections
+\[
+ \mathcal S_{\beta\eta}(\Xi\cdot\Gamma,\Delta)
+       \cong
+ \mathcal S_{\beta\eta}(\Xi,\Delta^\Gamma),
+\]
+natural in \(\Xi\).  Hence \(\mathcal S_{\beta\eta}\) is
+cartesian closed in the sense of Definition~\ref{def:p10-ccc}.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p10-stlc-ccc-interpretation}{Interpretation of arrow-only STLC in a CCC}
+Fix a cartesian closed category \(\mathcal C\) with chosen
+terminal object \(1\), binary products, and exponentials, and
+assign an object to every base type.  Interpret types by
+\[
+ \llbracket\alpha\mathbin{\to_{\mathrm{ty}}}\beta\rrbracket
+       =\llbracket\beta\rrbracket^{\llbracket\alpha\rrbracket}.
+\]
+Interpret context lists recursively by
+\(\llbracket()\rrbracket=1\) and
+\(\llbracket\Gamma\cdot(\alpha)\rrbracket
+ =\llbracket\Gamma\rrbracket\times\llbracket\alpha\rrbracket\).
+Thus a singleton context is interpreted as
+\(1\times\llbracket\alpha\rrbracket\); the construction does
+not require this object to be literally
+\(\llbracket\alpha\rrbracket\).
+A judgment \(\Theta_\Gamma\derives_{\mathsf{STLC}}M:\alpha\)
+denotes an arrow
+\(\llbracket M\rrbracket:
+ \llbracket\Gamma\rrbracket\to\llbracket\alpha\rrbracket\).
+Variables denote the corresponding product projections,
+application denotes
+\[
+ \llbracket MN\rrbracket
+      =\operatorname{ev}\circ
+           \langle\llbracket M\rrbracket,\llbracket N\rrbracket\rangle,
+\]
+and abstraction denotes
+\(\llbracket\lambda x{:}\alpha.M\rrbracket
+  =\Lambda(\llbracket M\rrbracket)\), where \(\Lambda\) is
+exponential transposition.
+The interpretation of a typed substitution is the unique
+arrow into the interpreted target context with the specified
+term components.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p10-stlc-ccc-completeness}{proved=annex:p10.lambda.3}{Substitution, soundness, and completeness for CCC equality}
+Interpretation respects bound \(\alpha\)-renaming and satisfies
+\[
+             \llbracket M[\sigma]\rrbracket
+                 =\llbracket M\rrbracket\circ\llbracket\sigma\rrbracket.
+\]
+For terms \(M,N\) of the same type \(\alpha\) in the same
+context \(\Theta\), the following are equivalent:
+\[
+ \Theta\vdash_{\beta\eta}M=N:\alpha
+ \quad\Longleftrightarrow\quad
+ \llbracket M\rrbracket=\llbracket N\rrbracket
+ \text{ in every CCC interpretation of the base types.}
+\]
+In particular, the context category itself detects every
+failure of typed \(\beta\eta\) equality.
+\end{hbtheorem}
+
+Pitts derives the interpretation of function types and the
+categorical \(\beta\) and \(\eta\) equations in
+\cite[\S3.3, pp.~22--24, equations (3.19)--(3.22)]{Pitts1995Draft}.
+His classifying-context construction uses tuples and
+simultaneous substitution, with finite products given by
+concatenation
+\cite[\S4.2, pp.~30--33, Proposition~4.2.1]{Pitts1995Draft}.
+The curried-list exponential is also given in
+\cite[\S4.4, p.~38]{Pitts1995Draft}.
+Its use for this handbook's arrow-only syntax is proved in the annex.
+All page locators here refer to the draft dated 18 May 1995.
+\index{lambda calculus!cartesian closed interpretation}
+\index{cartesian closed category!typed context category}

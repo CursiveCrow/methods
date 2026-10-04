@@ -1,0 +1,1050 @@
+%% parts/p08/modal-logics.tex --- Part 8.2
+%% Rules remain in registry/calculi; proof material lives in annex/p08/.
+\chapter{Modal Logics}\label{sec:p08-modal-logics}
+
+\section{Language, structures, and consequence}
+
+Modal formulas extend the classical propositional grammar by the constructor
+\(\Box A\), with \(\Diamond A\defeq\neg\Box\neg A\).  These symbols acquire
+no application-specific reading until a frame class and satisfaction relation
+are fixed.
+
+\begin{hbdefinition}{def:p08-modal-kripke-structure}{Modal frames and structures}
+A \emph{modal Kripke frame} is a pair \(\mathfrak F=(W,R)\), where
+\(W\ne\varnothing\) and \(R\subseteq W\times W\).  A \emph{modal Kripke
+structure} is \(\mathcal M=(W,R,V)\), where
+\(V:\mathsf{Prop}\to\mathcal P(W)\).  Satisfaction is classical for the
+propositional connectives, and
+\[
+ \mathcal M,w\entails\Box A
+ \quad\text{ iff }\quad
+ \forall v\,(wRv\to\mathcal M,v\entails A).
+\]
+Consequently, \(\mathcal M,w\entails\Diamond A\) exactly when some
+\(R\)-successor of \(w\) satisfies \(A\).  The relation \(R\) is the frame's
+accessibility relation; it is not a derivability relation
+\cite{Kripke1963}.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p08-modal-validity}{Structure validity and frame validity}
+A formula is \emph{valid in a structure} when it is satisfied at every world
+of that structure.  It is \emph{valid on a frame} when it is valid in every
+structure based on that frame.  For a class \(\mathcal C\) of frames,
+\(\entails_{\mathcal C}A\) means that \(A\) is valid on every frame in
+\(\mathcal C\).
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p08-modal-local-global}{Local and global modal consequence}
+For a frame class \(\mathcal C\), local consequence
+\(\Gamma\entails^{\ell}_{\mathcal C}A\) means that, in every structure on a
+frame in \(\mathcal C\) and at every world \(w\), satisfaction of every member
+of \(\Gamma\) at \(w\) implies satisfaction of \(A\) at \(w\).  Global
+consequence \(\Gamma\entails^{g}_{\mathcal C}A\) means that, in every such
+structure, truth of every member of \(\Gamma\) at every world implies truth of
+\(A\) at every world.  The two relations can differ; every adequacy statement
+below names which one it uses.
+\end{hbdefinition}
+
+\begin{hbconvention}{def:p08-modal-derivability}{Premise-sensitive modal derivability}
+For any displayed normal modal sheet and any premise set \(\Gamma\), an
+\(\mathfrak L\)-derivation is a finite sequence whose lines are premises,
+instances of schemas on that sheet or its named base sheets, modus-ponens
+consequences, or boxes of formulas having a separate no-premise derivation.
+Write \(\Gamma\derives_{\mathfrak L}A\) when the sequence ends in \(A\).
+Necessitation is therefore theorem-only even inside a derivation from premises;
+no card below licenses premise-dependent necessitation.
+\end{hbconvention}
+
+\section{Normal modal systems}
+
+\begin{hbwarning}{def:p08-modal-b-convention}{The system \(KTB\), the schema B, and the alias \(B\)}
+Chellas writes \(KTB\) for the reflexive symmetric modal-cube system: it
+contains both the T schema and the B schema.  The B schema alone corresponds
+to symmetry, and Chellas writes \(KB\) for the strictly weaker system obtained
+by adding only that schema to \(K\) \cite{Chellas1980}.  Hughes and Cresswell
+use \(B\) as a name for the reflexive symmetric system
+\cite{HughesCresswell1996}; here \(B\) is therefore recorded only as their
+source-bound alias for the card whose Chellas name is \(KTB\).
+\end{hbwarning}
+
+\begin{hbdefinition}{def:p08-modal-frame-properties}{Frame properties used in the system catalog}
+For a modal frame \((W,R)\), the relation \(R\) is \emph{serial} when
+\(\forall x\,\exists y\,Rxy\), \emph{Euclidean} when
+\(\forall x\forall y\forall z\,(Rxy\land Rxz\to Ryz)\),
+\emph{directed} (or \emph{convergent}) when
+\(Rxy\land Rxz\to\exists u\,(Ryu\land Rzu)\), and \emph{weakly connected}
+when \(Rxy\land Rxz\to(Ryz\lor Rzy)\).  These are exact first-order
+properties of the accessibility relation, not names for proof rules.  They are
+needed because the catalog distinguishes \(KD\), \(KD45\), \(S4.2\), and
+\(S4.3\) from systems
+characterized only by reflexivity, symmetry, or transitivity; the same clauses
+reappear in the correspondence table below.
+\end{hbdefinition}
+
+\begin{table}[!htbp]
+\centering
+\small
+\begin{tabular}{@{}p{.09\textwidth}p{.18\textwidth}p{.14\textwidth}p{.27\textwidth}p{.16\textwidth}@{}}
+\toprule
+System & Sheet & Axioms & Frames & Parents \\
+\midrule
+\(K\) & \texttt{hilbert-k} & K & all frames & --- \\
+\(KD\) & \texttt{hilbert-d} & K, D & serial & K \\
+\(KT\) & \texttt{hilbert-t} & K, T & reflexive & KD \\
+\(KTB\) & \texttt{hilbert-b} & K, T, B & reflexive, symmetric & KT \\
+\(K4\) & \texttt{hilbert-k4} & K, 4 & transitive & K \\
+\(S4\) (\(KT4\)) & \texttt{hilbert-s4} & K, T, 4 & reflexive, transitive & KT, K4 \\
+\(KD45\) & \texttt{hilbert-kd45} & K, D, 4, 5 & serial, transitive, Euclidean & KD, K4 \\
+\(S4.2\) & \texttt{hilbert-s42} & S4, .2 & directed S4 frames & S4 \\
+\(S4.3\) & \texttt{hilbert-s43} & S4, .3 & weakly connected S4 frames & S4.2 \\
+\(S5\) & \texttt{hilbert-s5} & K, T, 5 & equivalence frames & KTB, KD45, S4.3 \\
+\(\mathsf{GL}\) & \texttt{hilbert-gl} & K, L\"ob & finite transitive irreflexive & K4 \\
+\(\mathsf{Grz}\) & \texttt{hilbert-grz} & S4, Grz & finite partial orders & S4 \\
+\bottomrule
+\end{tabular}
+\caption{The named modal systems, exact rule surfaces, and inclusion parents
+used by the local lattice (apparatus A-076).  Extension names point to schemas
+on the named sheets; this table does not redisplay rules.  GL and Grz are
+separate anchored branches, not ordinary modal-cube nodes.}
+\label{tab:p08-modal-systems}
+\end{table}
+
+\begin{systementry}{entry:p08-modal-k}{Normal modal logic \(K\)}
+  \index{modal logic!K}
+  \entrylanguage{Classical modal propositional formulas with \(\Box\)
+    primitive and \(\Diamond A\defeq\neg\Box\neg A\).}
+  \entrysemantics{All nonempty Kripke frames.}
+  \entrycalculus{sheet:hilbert-k}
+  \entryadequacy{cited=BlackburnDeRijkeVenema2001}{Sound and strongly complete
+    for local consequence on all frames.  The inherited local sketch is kept
+    separately in Theorem~\ref{thm:p08-modal-four-system-adequacy}.}
+  \entrydecidability{cited=ChagrovZakharyaschev1997}{\(K\) has the finite-model
+    property and a decision procedure; Section~\ref{sec:p08-modal-filtration}
+    records the filtration boundary.}
+  \entrycharacteristic{The weakest normal system in this displayed catalog;
+    it does not validate T, 4, or 5 on arbitrary frames.}
+  \entrytranslations{A compositional first-order comparison is given later,
+    after its target signature and recursion have been defined.}
+  \entrysources{Kripke1963,BlackburnDeRijkeVenema2001,ChagrovZakharyaschev1997}
+\end{systementry}
+
+\begin{systementry}{entry:p08-modal-d}{Normal modal logic \(KD\)}
+  \index{modal logic!KD}
+  \entryaliases{\(D\) in the notation of Hughes and Cresswell
+    \cite{HughesCresswell1996}.}
+  \entrylanguage{The modal propositional language of \(K\).}
+  \entrysemantics{Serial Kripke frames: every world has an accessible world.}
+  \entrycalculus{sheet:hilbert-d}
+  \entryadequacy{cited=Chellas1980}{Sound and strongly complete for local
+    consequence on serial frames.}
+  \entrydecidability{cited=ChagrovZakharyaschev1997}{\(KD\) has the finite-model
+    property and is decidable.}
+  \entrycharacteristic{Its defining D schema corresponds to seriality.}
+  \entrytranslations{The standard translation sends seriality to the first
+    row of Table~\ref{tab:p08-modal-correspondence}.}
+  \entrysources{Chellas1980,HughesCresswell1996,ChagrovZakharyaschev1997}
+\end{systementry}
+
+\begin{systementry}{entry:p08-modal-t}{Normal modal logic \(KT\)}
+  \index{modal logic!KT}
+  \entryaliases{\(T\) in the notation of Hughes and Cresswell
+    \cite{HughesCresswell1996}.}
+  \entrylanguage{The modal propositional language of \(K\).}
+  \entrysemantics{Reflexive Kripke frames.}
+  \entrycalculus{sheet:hilbert-t}
+  \entryadequacy{cited=BlackburnDeRijkeVenema2001}{Sound and strongly complete
+    for local consequence on reflexive frames.  The inherited local sketch is
+    kept in Theorem~\ref{thm:p08-modal-four-system-adequacy}.}
+  \entrydecidability{cited=ChagrovZakharyaschev1997}{\(KT\) has the finite-model
+    property and is decidable.}
+  \entrycharacteristic{Its defining T schema corresponds to reflexivity and
+    entails the D schema.}
+  \entrytranslations{The standard translation identifies the reflexivity
+    condition in Table~\ref{tab:p08-modal-correspondence}.}
+  \entrysources{BlackburnDeRijkeVenema2001,Chellas1980,ChagrovZakharyaschev1997}
+\end{systementry}
+
+\begin{systementry}{entry:p08-modal-b}{Modal-cube system \(KTB\)}
+  \index{modal logic!KTB}
+  \entryaliases{\(B\) in the notation of Hughes and Cresswell
+    \cite{HughesCresswell1996}; not Chellas's distinct symmetry-only logic
+    \(KB\).}
+  \entrylanguage{The modal propositional language of \(K\).}
+  \entrysemantics{Reflexive and symmetric Kripke frames.}
+  \entrycalculus{sheet:hilbert-b}
+  \entryadequacy{cited=HughesCresswell1996}{Sound and strongly complete for
+    local consequence on reflexive symmetric frames.}
+  \entrydecidability{cited=ChagrovZakharyaschev1997}{\(KTB\) has the finite-model
+    property and is decidable.}
+  \entrycharacteristic{The T component supplies reflexivity; the separately
+    named B schema supplies symmetry.}
+  \entrytranslations{The B-schema correspondence is the symmetry row of
+    Table~\ref{tab:p08-modal-correspondence}.}
+  \entrysources{Chellas1980,HughesCresswell1996,ChagrovZakharyaschev1997}
+\end{systementry}
+
+\begin{systementry}{entry:p08-modal-k4}{Normal modal logic \(K4\)}
+  \index{modal logic!K4}
+  \entrylanguage{The modal propositional language of \(K\).}
+  \entrysemantics{Transitive Kripke frames.}
+  \entrycalculus{sheet:hilbert-k4}
+  \entryadequacy{cited=Chellas1980}{Sound and strongly complete for local
+    consequence on transitive frames.}
+  \entrydecidability{cited=ChagrovZakharyaschev1997}{\(K4\) has the finite-model
+    property and is decidable.}
+  \entrycharacteristic{Its defining 4 schema corresponds to transitivity.}
+  \entrytranslations{The standard translation identifies transitivity in
+    Table~\ref{tab:p08-modal-correspondence}.}
+  \entrysources{Chellas1980,HughesCresswell1996,ChagrovZakharyaschev1997}
+\end{systementry}
+
+\begin{systementry}{entry:p08-modal-s4}{Normal modal logic \(S4\) (\(KT4\))}
+  \index{modal logic!S4}
+  \entrylanguage{The modal propositional language of \(K\).}
+  \entrysemantics{Reflexive and transitive Kripke frames.}
+  \entrycalculus{sheet:hilbert-s4}
+  \entryadequacy{cited=BlackburnDeRijkeVenema2001}{Sound and strongly complete
+    for local consequence on reflexive transitive frames.  The inherited local
+    sketch is kept in Theorem~\ref{thm:p08-modal-four-system-adequacy}.}
+  \entrydecidability{cited=ChagrovZakharyaschev1997}{\(S4\) has the finite-model
+    property and is decidable.}
+  \entrycharacteristic{It combines the frame conditions represented by T and
+    4; neither the .2 nor .3 extension is built into \(S4\).}
+  \entrytranslations{The G\"odel--McKinsey--Tarski embedding of IPL is recorded
+    in Theorem~\ref{thm:p08-ipl-s4-embedding}.}
+  \entrysources{BlackburnDeRijkeVenema2001,HughesCresswell1996,ChagrovZakharyaschev1997}
+\end{systementry}
+
+\begin{systementry}{entry:p08-modal-kd45}{Normal modal logic \(KD45\)}
+  \index{modal logic!KD45}
+  \entrylanguage{The modal propositional language of \(K\).}
+  \entrysemantics{Serial, transitive, and Euclidean Kripke frames.}
+  \entrycalculus{sheet:hilbert-kd45}
+  \entryadequacy{cited=ChagrovZakharyaschev1997}{Sound and strongly complete
+    for local consequence on serial transitive Euclidean frames.}
+  \entrydecidability{cited=ChagrovZakharyaschev1997}{\(KD45\) has the finite-model
+    property and is decidable.}
+  \entrycharacteristic{Its D, 4, and 5 components correspond respectively to
+    seriality, transitivity, and Euclideanness.}
+  \entrytranslations{Each component has the standard first-order
+    correspondence in Table~\ref{tab:p08-modal-correspondence}.}
+  \entrysources{Chellas1980,HughesCresswell1996,ChagrovZakharyaschev1997}
+\end{systementry}
+
+\begin{systementry}{entry:p08-modal-s42}{Normal modal logic \(S4.2\)}
+  \index{modal logic!S4.2}
+  \entrylanguage{The modal propositional language of \(K\).}
+  \entrysemantics{Reflexive transitive frames directed above each world: any
+    two successors have a common successor.}
+  \entrycalculus{sheet:hilbert-s42}
+  \entryadequacy{cited=ChagrovZakharyaschev1997}{Sound and strongly complete
+    for local consequence on the stated directed \(S4\) frames.}
+  \entrydecidability{cited=ChagrovZakharyaschev1997}{\(S4.2\) has the finite-model
+    property and is decidable.}
+  \entrycharacteristic{The .2 schema adds directed convergence to \(S4\).}
+  \entrytranslations{Its exact relational condition is the .2 row of
+    Table~\ref{tab:p08-modal-correspondence}.}
+  \entrysources{LemmonScott1977,HughesCresswell1996,ChagrovZakharyaschev1997}
+\end{systementry}
+
+\begin{systementry}{entry:p08-modal-s43}{Normal modal logic \(S4.3\)}
+  \index{modal logic!S4.3}
+  \entrylanguage{The modal propositional language of \(K\).}
+  \entrysemantics{Reflexive transitive frames whose successors at each world
+    are weakly connected.}
+  \entrycalculus{sheet:hilbert-s43}
+  \entryadequacy{cited=ChagrovZakharyaschev1997}{Sound and strongly complete
+    for local consequence on the stated weakly connected \(S4\) frames.}
+  \entrydecidability{cited=ChagrovZakharyaschev1997}{\(S4.3\) has the finite-model
+    property and is decidable.}
+  \entrycharacteristic{The .3 schema adds weak connectedness to \(S4\) and
+    contains \(S4.2\) in the displayed selection.}
+  \entrytranslations{Its exact relational condition is the .3 row of
+    Table~\ref{tab:p08-modal-correspondence}.}
+  \entrysources{LemmonScott1977,HughesCresswell1996,ChagrovZakharyaschev1997}
+\end{systementry}
+
+\begin{systementry}{entry:p08-modal-s5}{Normal modal logic \(S5\)}
+  \index{modal logic!S5}
+  \entrylanguage{The modal propositional language of \(K\).}
+  \entrysemantics{Kripke frames whose accessibility relation is an equivalence
+    relation.}
+  \entrycalculus{sheet:hilbert-s5}
+  \entryadequacy{cited=BlackburnDeRijkeVenema2001}{Sound and strongly complete
+    for local consequence on equivalence frames.  The inherited local sketch
+    is kept in Theorem~\ref{thm:p08-modal-four-system-adequacy}.}
+  \entrydecidability{cited=ChagrovZakharyaschev1997}{\(S5\) has the finite-model
+    property and is decidable.}
+  \entrycharacteristic{The registered sheet is T plus 5; reflexivity together
+    with Euclideanness yields symmetry and transitivity.}
+  \entrytranslations{The T and 5 standard translations give the corresponding
+    frame conditions in Table~\ref{tab:p08-modal-correspondence}.}
+  \entrysources{BlackburnDeRijkeVenema2001,Chellas1980,ChagrovZakharyaschev1997}
+\end{systementry}
+
+\begin{systementry}{entry:p08-modal-gl}{G\"odel--L\"ob provability logic GL}
+  \index{provability logic!GL}
+  \entryaliases{GL; a provability logic, displayed outside the ordinary modal
+    cube.}
+  \entrylanguage{The modal propositional language of \(K\).}
+  \entrysemantics{For Kripke theoremhood completeness: finite transitive
+    irreflexive frames.  No arbitrary-frame strong-completeness claim is made.}
+  \entrycalculus{sheet:hilbert-gl}
+  \entryadequacy{cited=ChagrovZakharyaschev1997}{Theoremhood is sound and
+    complete for finite transitive irreflexive frames; the ordinary canonical
+    construction below is not asserted for GL.}
+  \entrydecidability{cited=Boolos1993}{GL has the finite-model property and is
+    decidable.}
+  \entrycharacteristic{L\"ob's schema; the arithmetical interpretation is not
+    an added edge in the modal cube.}
+  \entrytranslations{See Solovay completeness,
+    Theorem~\ref{thm:p08-gl-arithmetical-completeness}.}
+  \entrysources{ChagrovZakharyaschev1997,Solovay1976,Boolos1993}
+\end{systementry}
+
+\begin{systementry}{entry:p08-modal-grz}{Grzegorczyk modal logic Grz}
+  \index{modal logic!Grzegorczyk logic}
+  \entryaliases{Grz; displayed as a separate extension anchored at \(S4\).}
+  \entrylanguage{The modal propositional language of \(K\).}
+  \entrysemantics{Finite partial-order frames for theoremhood completeness;
+    accessibility is reflexive, transitive, and antisymmetric.}
+  \entrycalculus{sheet:hilbert-grz}
+  \entryadequacy{cited=ChagrovZakharyaschev1997}{Cited theoremhood completeness
+    for finite partial orders; the ordinary canonical method is not asserted.}
+  \entrydecidability{cited=ChagrovZakharyaschev1997}{Grz has the finite-model
+    property and is decidable.}
+  \entrycharacteristic{Its Grz schema extends \(S4\).  No inclusion edge from
+    Grz to \(S4.2\), \(S4.3\), or \(S5\) is asserted here.}
+  \entrytranslations{The relational completeness statement is kept separate
+    from the ordinary canonical-model method.}
+  \entrysources{LemmonScott1977,ChagrovZakharyaschev1997}
+\end{systementry}
+
+\begin{hbmethod}{def:p08-modal-canonical-model}{Canonical-model method}
+\index{canonical-model method!modal logic}
+For a fixed normal modal logic \(\mathfrak L\), let the worlds be the maximal
+\(\mathfrak L\)-consistent sets.  Define the metalinguistic proof relation
+\(R_{\mathfrak L}\) by
+\[
+ \Gamma R_{\mathfrak L}\Delta
+ \quad\text{ iff }\quad
+ \forall A\,(\Box A\in\Gamma\to A\in\Delta),
+\]
+and make an atom true at \(\Gamma\) exactly when it belongs to \(\Gamma\).
+This construction is needed to distinguish the proof model from an arbitrary
+semantic structure.  Its worlds are theories, unlike filtration worlds, which
+are equivalence classes of worlds from a given model.  The relation is used by
+the modal existence lemma, truth lemma, and the frame-property checks in the
+following adequacy sketch.  The ordinary construction applies to the canonical
+systems \(K\), \(KD\), \(KT\), \(KTB\), \(K4\), \(S4\) (\(KT4\)),
+\(KD45\), \(S4.2\), \(S4.3\), and \(S5\) with their source-defined
+schemas; it is not the completeness route asserted for GL or Grz.
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p08-modal-four-system-adequacy}{sketched=annex:p8.modal.1}{Soundness and strong completeness for \(K\), \(KT\), \(S4\), and \(S5\)}
+For \(\mathfrak L\in\{K,KT,S4,S5\}\), let
+\(\mathcal C_{\mathfrak L}\) be respectively all frames, reflexive frames,
+reflexive transitive frames, and equivalence frames.  For every premise set
+\(\Gamma\) and modal formula \(A\),
+\[
+ \Gamma\derives_{\mathfrak L}A
+ \quad\text{ iff }\quad
+ \Gamma\entails^{\ell}_{\mathcal C_{\mathfrak L}}A.
+\]
+Thus the statement is about strong completeness for local consequence.  It is
+not a global-consequence theorem and its inherited source argument is a sketch.
+\end{hbtheorem}
+
+\begin{figure}[!htbp]
+\centering
+\begin{tikzpicture}[
+  >=Latex,
+  every node/.style={draw,rounded corners,inner sep=4pt,font=\small},
+  x=1.8cm,y=1.05cm]
+  \node (k) at (0,0) {\(K\)};
+  \node (d) at (-2,1.5) {\(KD\)};
+  \node (k4) at (2,1.5) {\(K4\)};
+  \node (t) at (-2,3) {\(KT\)};
+  \node (kd45) at (0,2.2) {\(KD45\)};
+  \node (s4) at (2,3) {\(S4\)};
+  \node (gl) at (4,3) {\(\mathsf{GL}\)};
+  \node (b) at (-2,4.5) {\(KTB\)};
+  \node (s42) at (2,4.5) {\(S4.2\)};
+  \node (grz) at (4,4.5) {\(\mathsf{Grz}\)};
+  \node (s43) at (2,6) {\(S4.3\)};
+  \node (s5) at (0,7.5) {\(S5\)};
+  \foreach \x/\y in {
+    k/d,k/k4,d/t,d/kd45,k4/s4,k4/kd45,k4/gl,
+    t/b,t/s4,s4/s42,s4/grz,s42/s43,s43/s5,b/s5}
+    \draw[->] (\x) -- (\y);
+  \draw[->,preaction={draw=white,line width=4pt}]
+    (kd45) -- (s5);
+\end{tikzpicture}
+\caption{Theorem-set inclusion among only the twelve displayed systems
+(apparatus A-136).  This is the Hasse diagram for the displayed inclusions in
+Table~\ref{tab:p08-modal-systems}, not a complete lattice of normal modal
+logics.  GL and Grz are separately anchored at \(K4\) and \(S4\); no unshown
+comparability with \(S5\), \(S4.2\), or \(S4.3\) is asserted.}
+\label{fig:p08-modal-lattice}
+\end{figure}
+
+\section{Correspondence and translations}
+
+\begin{hbdefinition}{def:p08-modal-standard-translation}{First-order standard translation}
+For each propositional variable \(p\), choose a unary predicate symbol
+\(P_p\).  The standard translation at the displayed free world variable
+\(x\), written \(\operatorname{ST}_x\), is the metalinguistic recursion
+\[
+\begin{aligned}
+ \operatorname{ST}_x(p)&=P_p(x),
+ &\operatorname{ST}_x(\bottom)&=\bottom,\\
+ \operatorname{ST}_x(\neg A)&=\neg\operatorname{ST}_x(A),
+ &\operatorname{ST}_x(A\circ B)&=
+   \operatorname{ST}_x(A)\circ\operatorname{ST}_x(B),\\
+ \operatorname{ST}_x(\Box A)&=
+   \forall y\,(Rxy\to\operatorname{ST}_y(A)),
+ &\operatorname{ST}_x(\Diamond A)&=
+   \exists y\,(Rxy\land\operatorname{ST}_y(A)),
+\end{aligned}
+\]
+where \(\circ\in\{\land,\lor,\to\}\) and \(y\) is fresh.  This is a
+translation into first-order formulas over the frame relation and valuation
+predicates, not a new modal connective.  It is needed to state the exact frame
+conditions below and later to formulate the bisimulation characterization.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p08-modal-correspondence}{cited=Chellas1980}{Elementary modal frame correspondences}
+For every Kripke frame, validity of each named schema in the first column of
+Table~\ref{tab:p08-modal-correspondence} is equivalent to the displayed
+first-order condition on its accessibility relation.  The row named B concerns
+the B schema alone; the displayed system \(KTB\) additionally contains T and
+hence uses reflexive symmetric frames.
+\end{hbtheorem}
+
+\begin{table}[!htbp]
+\centering
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+Schema & First-order condition on \(R\) & Conventional name \\
+\midrule
+D & \(\forall x\,\exists y\,Rxy\) & serial \\
+T & \(\forall x\,Rxx\) & reflexive \\
+B & \(\forall x\forall y\,(Rxy\to Ryx)\) & symmetric \\
+4 & \(\forall x\forall y\forall z\,(Rxy\land Ryz\to Rxz)\) & transitive \\
+5 & \(\forall x\forall y\forall z\,(Rxy\land Rxz\to Ryz)\) & Euclidean \\
+.2 & \(Rxy\land Rxz\to\exists u\,(Ryu\land Rzu)\) & directed/convergent \\
+.3 & \(Rxy\land Rxz\to(Ryz\lor Rzy)\) & weakly connected \\
+\bottomrule
+\end{tabular}
+\caption{Local frame-correspondence data for D-P10-003 and N-b-002.  The .3
+row is used on the transitive S4 presentation.  This Phase-4 table supplies
+local data only; it does not close the Phase-6 master table A-077 or its
+algebra column.}
+\label{tab:p08-modal-correspondence}
+\end{table}
+
+\begin{hbdefinition}{def:p08-sahlqvist-class}{The Sahlqvist class used here}
+Rewrite modal formulas using \(\bottom,\topv,\neg,\land,\lor,\Box,\Diamond\).
+An occurrence of a variable is positive when it lies under an even number of
+negations and negative when it lies under an odd number.  A \emph{boxed atom}
+is \(\Box^n p\) for \(n\geq0\).  A \emph{Sahlqvist antecedent} is generated
+from boxed atoms, formulas all of whose variable occurrences are negative,
+and \(\bottom,\topv\) by \(\land,\lor,\Diamond\).  A \emph{Sahlqvist
+implication} has such an antecedent and a consequent all of whose variable
+occurrences are positive; finite conjunctions of these implications form the
+Sahlqvist class fixed here.  This exact syntactic class is narrower than the
+class of all modal formulas and is introduced because the following theorem
+does not hold for arbitrary schemas.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p08-sahlqvist}{cited=Sahlqvist1975}{Sahlqvist theorem}
+Every formula in the class fixed by
+Definition~\ref{def:p08-sahlqvist-class} has an effectively computable
+first-order frame correspondent, is canonical, and axiomatizes a normal modal
+logic complete for the corresponding elementary frame class.  No claim is
+made here that an arbitrary modal axiom is a Sahlqvist formula.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p08-ipl-s4-translation}{G\"odel--McKinsey--Tarski translation}
+For an IPL formula \(A\), define its modal translation \(A^{\Box}\) by
+\(p^{\Box}\defeq\Box p\), \(\bottom^{\Box}\defeq\bottom\), commuting with
+\(\land\) and \(\lor\), and
+\[
+ (A\to B)^{\Box}\defeq\Box(A^{\Box}\to B^{\Box}).
+\]
+This metalinguistic recursion is distinct from both the first-order standard
+translation and the G\"odel--Gentzen negative translation of Chapter~8.1.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p08-ipl-s4-embedding}{cited=Godel1933}{Embedding IPL into \(S4\)}
+For every IPL formula \(A\),
+\(\derives_{\mathsf{IPL}}A\) exactly when
+\(\derives_{S4}A^{\Box}\).
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p08-gl-arithmetical-completeness}{cited=Solovay1976}{Arithmetical completeness of GL}
+An arithmetical realization maps propositional variables to closed
+arithmetical sentences, commutes with the Boolean connectives, and interprets
+\(\Box B\) by the standard provability predicate
+\(\mathrm{Prov}_{\mathsf{PA}}\) applied to the G\"odel number of the realized
+sentence \(B\).  A modal formula is derivable in GL exactly when its image
+under every such arithmetical realization is derivable in \(\mathsf{PA}\).  This is an
+arithmetical-interpretation theorem, not the finite-frame completeness claim on
+the GL card \cite{Boolos1993}.
+\end{hbtheorem}
+
+\begin{table}[!htbp]
+\centering
+\small
+\begin{tabular}{@{}p{.17\textwidth}p{.14\textwidth}p{.24\textwidth}p{.34\textwidth}@{}}
+\toprule
+Translation & Source & Target & Exact role \\
+\midrule
+\(\operatorname{ST}_x\) & basic modal logic & first-order frame language &
+correspondence and van Benthem theorem \\
+\((\cdot)^{\Box}\) & IPL & \(S4\) & theoremhood embedding \\
+arithmetical realization & GL & arithmetic with \(\mathrm{Prov}_{\mathsf{PA}}\) &
+Solovay completeness \\
+\bottomrule
+\end{tabular}
+\caption{Three noninterchangeable modal translations (apparatus A-083).}
+\label{tab:p08-modal-translations}
+\end{table}
+
+\section{Bisimulation}
+
+\begin{hbdefinition}{def:p08-modal-bisimulation}{Bisimulation of pointed Kripke structures}
+Let \(\mathcal M=(W,R,V)\) and
+\(\mathcal N=(W',R',V')\) use the same propositional signature.  A relation
+\(Z\subseteq W\times W'\) is a \emph{bisimulation} when, whenever \(wZw'\):
+\begin{enumerate}
+\item for every atom \(p\), \(w\in V(p)\) exactly when \(w'\in V'(p)\)
+      (atoms);
+\item if \(wRu\), some \(u'\) satisfies \(w'R'u'\) and \(uZu'\) (forth);
+\item if \(w'R'u'\), some \(u\) satisfies \(wRu\) and \(uZu'\) (back).
+\end{enumerate}
+Two pointed structures \((\mathcal M,w)\) and \((\mathcal N,w')\) are
+\emph{bisimilar} when some such \(Z\) relates \(w\) to \(w'\).  This relation
+is needed because ordinary isomorphism is stronger than the modal
+indistinguishability used by the following results.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p08-modal-bisimulation-invariance}{cited=BlackburnDeRijkeVenema2001}{Bisimulation invariance}
+If \(wZw'\) for a bisimulation between \(\mathcal M\) and \(\mathcal N\),
+then for every basic modal formula \(A\),
+\[
+ \mathcal M,w\entails A
+ \quad\text{ iff }\quad
+ \mathcal N,w'\entails A.
+\]
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p08-van-benthem}{cited=VanBenthem1976}{Van Benthem characterization theorem}
+Over all Kripke structures, a first-order formula with one free world variable
+is equivalent to \(\operatorname{ST}_x(A)\) for some basic modal formula
+\(A\) exactly when it is invariant under bisimulations.  This statement is not
+restricted to finite structures; the finite-model version is a different
+theorem.
+\end{hbtheorem}
+
+\begin{figure}[!htbp]
+\centering
+\begin{tikzpicture}[>=Latex,node distance=2.5cm,font=\small]
+  \node[draw,rounded corners] (w) {\(w\in\mathcal M\)};
+  \node[draw,rounded corners,below=of w] (u) {\(u\in\mathcal M\)};
+  \node[draw,rounded corners,right=4.3cm of w] (wp) {\(w'\in\mathcal N\)};
+  \node[draw,rounded corners,below=of wp] (up) {\(u'\in\mathcal N\)};
+  \draw[->] (w) -- node[left]{\(R\)} (u);
+  \draw[->] (wp) -- node[right]{\(R'\)} (up);
+  \draw[dashed,<->] (w) -- node[above]{\(Z\): atoms} (wp);
+  \draw[dashed,<->] (u) -- node[below]{\(Z\): forth/back witness} (up);
+\end{tikzpicture}
+\caption{A bisimulation square (apparatus A-123).  Atom agreement is checked
+at each related pair; forth matches every left successor, and back matches
+every right successor.  The diagram depicts one matched pair, not a
+functionality requirement on \(Z\).}
+\label{fig:p08-modal-bisimulation}
+\end{figure}
+
+\section{Filtration and finite models}\label{sec:p08-modal-filtration}
+
+\begin{hbmethod}{def:p08-modal-filtration}{Filtration through a finite formula set}
+\index{filtration!modal logic}
+Fix a finite subformula-closed set \(\Phi\) and a Kripke structure
+\(\mathcal M=(W,R,V)\).  Put
+\[
+ w\sim_{\Phi}u
+ \quad\text{ iff }\quad
+ \forall A\in\Phi\,
+   (\mathcal M,w\entails A\text{ iff }\mathcal M,u\entails A).
+\]
+The quotient has worlds \([w]_{\Phi}\), at most \(2^{\lvert\Phi\rvert}\)
+of them, and the induced atomic valuation.  The minimal quotient relation
+relates \([w]_{\Phi}\) to \([u]_{\Phi}\) when some representatives are
+\(R\)-related.  The maximal quotient relation relates them when, for every
+\(\Box A\in\Phi\), truth of \(\Box A\) at \(w\) implies truth of \(A\) at
+\(u\).  A \emph{filtration relation} is a quotient relation between those two
+bounds.  This construction is an image of a given semantic model, unlike the
+maximal-consistent-theory construction in
+Method~\ref{def:p08-modal-canonical-model}; it is used to preserve truth on
+\(\Phi\) while making the model finite.
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p08-modal-filtration}{cited=Segerberg1971}{Filtration and decidability}
+Every filtration as in Method~\ref{def:p08-modal-filtration} preserves the
+truth of each formula in \(\Phi\).  For \(K\) use an ordinary filtration
+relation; for \(KT\) use its reflexive closure; for \(S4\) use the standard
+reflexive-transitive filtration construction; and for \(S5\) use the
+equivalence-class construction.
+In each case the declared filtration relation remains between the minimal and maximal
+bounds and preserves the target frame class.  Hence \(K\), \(KT\), \(S4\),
+and \(S5\) have the
+finite-model property and are decidable
+\cite{BlackburnDeRijkeVenema2001,ChagrovZakharyaschev1997}.  This is cited new
+content: no local proof or inherited compression denominator is claimed.
+\end{hbtheorem}
+
+\section{Minimal failures of T, 4, and 5}
+
+The source's degenerate T countermodel has one world, no accessibility edge,
+and \(p\) false: \(\Box p\) is vacuously true while \(p\) is false.  The
+first panel below uses a nondegenerate variant with the same failure so that
+the relevant successor valuation is visible.  The other two panels retain the
+source frames and valuations.
+
+\begin{figure}[!htbp]
+\centering
+\begin{tikzpicture}[>=Latex,font=\scriptsize,x=.9cm,y=1.1cm,
+  scale=.9,transform shape]
+  \node[font=\small,draw=none] at (0,2.3) {A-139: T};
+  \node[draw,circle] (tw) at (-.7,1) {\(w:\neg p\)};
+  \node[draw,circle] (tu) at (.7,1) {\(u:p\)};
+  \draw[->] (tw) -- node[above]{\(R\)} (tu);
+  \node[draw=none,align=center] at (0,0)
+    {\(w\entails\Box p\)\\\(w\not\entails p\)};
+
+  \node[font=\small,draw=none] at (4.2,2.3) {A-140: 4};
+  \node[draw,circle] (fw) at (2.5,1) {\(w\)};
+  \node[draw,circle] (fu) at (4.2,1) {\(u:p\)};
+  \node[draw,circle] (fv) at (5.9,1) {\(v:\neg p\)};
+  \draw[->] (fw) -- (fu);
+  \draw[->] (fu) -- (fv);
+  \node[draw=none,align=center] at (4.2,0)
+    {\(w\entails\Box p\)\\\(w\not\entails\Box\Box p\); no \(wRv\)};
+
+  \node[font=\small,draw=none] at (9,2.3) {A-141: 5};
+  \node[draw,circle] (vw) at (8,1) {\(w:p\)};
+  \node[draw,circle] (vu) at (10,1) {\(u:\neg p\)};
+  \draw[->] (vw) -- (vu);
+  \draw[->] (vw) edge[loop left] (vw);
+  \draw[->] (vu) edge[loop right] (vu);
+  \node[draw=none,align=center] at (9,-.5)
+    {\(w\entails\Diamond p\)\\\(w\not\entails\Box\Diamond p\); no \(uRw\)};
+\end{tikzpicture}
+\caption{Fully specified countermodels for the T, 4, and 5 schemas.  Only the
+displayed edges are present.  The first root is not reflexive, the middle frame
+is not transitive, and the last is the inherited two-world reflexive but
+non-Euclidean frame.}
+\label{fig:p08-modal-countermodels}
+\end{figure}
+
+\section{Neighborhood semantics}
+
+The set-of-propositions semantics used here originates independently with
+Scott and Montague \cite{Scott1970,Montague1970}.  Pacuit supplies the modern
+neighborhood presentation and comparison with relational semantics
+\cite{Pacuit2017}; the exact \(E\)/\(EM\)/\(EC\)/\(EN\)/\(EMC\) naming
+convention and the cited
+calculus results below follow Chellas \cite{Chellas1980}.
+
+\begin{hbdefinition}{def:p08-neighborhood-model}{Neighborhood model}
+A \emph{neighborhood model} is
+\(\mathcal M=(W,N,V)\), where \(W\ne\varnothing\),
+\(V:\mathsf{Prop}\to\mathcal P(W)\), and
+\(N:W\to\mathcal P(\mathcal P(W))\).  For a formula \(A\), define
+its truth-set abbreviation by
+\(\lbrack\!\lbrack A\rbrack\!\rbrack_{\mathcal M}
+\defeq\{w\in W:\mathcal M,w\entails A\}\).  The modal clause is
+\[
+ \mathcal M,w\entails\Box A
+ \quad\text{ iff }\quad
+ \lbrack\!\lbrack A\rbrack\!\rbrack_{\mathcal M}\in N(w).
+\]
+The function \(N\) is needed because a single accessibility relation
+cannot represent every congruential non-normal logic.  Its standing is a
+semantic assignment of proposition sets to each world; it is neither the
+system \(EN\) nor the set of normal worlds used in the later
+Routley--Meyer structure.  It differs from a Kripke
+relation by taking subsets of \(W\), rather than worlds, as its local semantic
+arguments, and is used in all five cards below
+\cite{Scott1970,Montague1970,Chellas1980,Pacuit2017}.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p08-neighborhood-conditions}{Neighborhood closure conditions}
+For every world \(w\) and \(X,Y\subseteq W\), call \(N\)
+\emph{upward closed} when
+\(X\in N(w)\) and \(X\subseteq Y\) imply
+\(Y\in N(w)\); \emph{binary-intersection closed} when
+\(X,Y\in N(w)\) implies
+\(X\cap Y\in N(w)\); and \emph{unit containing} when
+\(W\in N(w)\).  These are semantic frame conditions, not additional
+object-language rules.  They are introduced separately because Chellas's
+schemas M, C, and N determine different combinations of them
+\cite{Chellas1980,Pacuit2017}.
+\end{hbdefinition}
+
+\begin{table}[!htbp]
+\centering
+\small
+\begin{tabular}{@{}p{.10\textwidth}p{.19\textwidth}p{.18\textwidth}p{.42\textwidth}@{}}
+\toprule
+System & Defining composition & Exact sheet & Neighborhood condition \\
+\midrule
+\(E\) & E & \texttt{hilbert-e} & arbitrary \\
+\(EM\) & E+M & \texttt{hilbert-m} & upward closed \\
+\(EC\) & E+C & \texttt{hilbert-c} & binary-intersection closed \\
+\(EN\) & E+N & \texttt{hilbert-n} & contains \(W\) \\
+\(EMC\) & E+M+C & \texttt{hilbert-r} & upward and intersection closed \\
+\(K=EMCN\) & E+M+C+N & \texttt{hilbert-k} & upward, intersection closed, contains \(W\) \\
+\bottomrule
+\end{tabular}
+\caption{Chellas's compositional names for the displayed non-normal systems.
+M, C, and N in the second column are axiom names, not substitute system
+identifiers.  The minimal regular logic is \(EMC\), while normal \(K\) is
+\(EMCN\).}
+\label{tab:p08-neighborhood-systems}
+\end{table}
+
+\begin{systementry}{entry:p08-neighborhood-e}{Congruential modal logic \(E\)}
+  \index{neighborhood logic!E}
+  \entrylanguage{Classical modal propositional formulas with \(\Box\) and the
+    defined dual \(\Diamond\).}
+  \entrysemantics{Arbitrary neighborhood models as in
+    Definition~\ref{def:p08-neighborhood-model}.}
+  \entrycalculus{sheet:hilbert-e}
+  \entryadequacy{cited=Chellas1980}{Theoremhood is complete for arbitrary
+    neighborhood frames.  No strong-consequence claim is made.}
+  \entrydecidability{cited=Chellas1980}{E is determined by finite
+    neighborhood models and is decidable; no sharper complexity claim is made.}
+  \entrycharacteristic{Classical reasoning and theorem-only replacement of
+    equivalents, without M, C, or N.}
+  \entrytranslations{Truth sets replace relational translation; no ordinary
+    Kripke frame class is claimed adequate for E.}
+  \entrysources{Scott1970,Montague1970,Chellas1980,Pacuit2017}
+\end{systementry}
+
+\begin{systementry}{entry:p08-neighborhood-m}{Monotone modal logic \(EM\)}
+  \index{neighborhood logic!EM}
+  \entryaliases{E plus Chellas's schema M.}
+  \entrylanguage{The modal propositional language of E.}
+  \entrysemantics{Neighborhood models whose neighborhood families are upward
+    closed.}
+  \entrycalculus{sheet:hilbert-m}
+  \entryadequacy{cited=Chellas1980}{Complete at theoremhood for upward-closed
+    frames; no strong-consequence claim is made.}
+  \entrydecidability{cited=Chellas1980}{EM is determined by finite
+    neighborhood models and is decidable; no sharper complexity claim is made.}
+  \entrycharacteristic{The M extension corresponds exactly to upward closure;
+    intersection closure and the unit condition are not assumed.}
+  \entrytranslations{Its semantic condition is the M row of
+    Table~\ref{tab:p08-neighborhood-systems}.}
+  \entrysources{Chellas1980,Pacuit2017}
+\end{systementry}
+
+\begin{systementry}{entry:p08-neighborhood-c}{Intersection modal logic \(EC\)}
+  \index{neighborhood logic!EC}
+  \entryaliases{E plus Chellas's schema C.}
+  \entrylanguage{The modal propositional language of E.}
+  \entrysemantics{Neighborhood models closed under binary intersections.}
+  \entrycalculus{sheet:hilbert-c}
+  \entryadequacy{cited=Chellas1980}{Theoremhood is complete for
+    intersection-closed neighborhood frames.  No strong-consequence claim is
+    made.}
+  \entrydecidability{cited=Chellas1980}{EC is determined by finite
+    neighborhood models and is decidable; no sharper complexity claim is made.}
+  \entrycharacteristic{The C extension corresponds exactly to binary
+    intersection closure; upward closure and the unit condition are not assumed.}
+  \entrytranslations{Its semantic condition is the C row of
+    Table~\ref{tab:p08-neighborhood-systems}.}
+  \entrysources{Chellas1980,Pacuit2017}
+\end{systementry}
+
+\begin{systementry}{entry:p08-neighborhood-n}{Unit modal logic \(EN\)}
+  \index{neighborhood logic!EN}
+  \entryaliases{E plus Chellas's schema N; not normal modal logic K.}
+  \entrylanguage{The modal propositional language of E.}
+  \entrysemantics{Neighborhood models in which every neighborhood family
+    contains the full world set \(W\).}
+  \entrycalculus{sheet:hilbert-n}
+  \entryadequacy{cited=Chellas1980}{Cited theoremhood completeness for
+    unit-containing neighborhood frames; no strong consequence claim is made.}
+  \entrydecidability{cited=Chellas1980}{EN is determined by finite
+    neighborhood models and is decidable; no sharper complexity claim is made.}
+  \entrycharacteristic{The N extension corresponds exactly to the unit
+    condition; upward and intersection closure are not assumed.}
+  \entrytranslations{Its semantic condition is the N row of
+    Table~\ref{tab:p08-neighborhood-systems}.}
+  \entrysources{Chellas1980,Pacuit2017}
+\end{systementry}
+
+\begin{systementry}{entry:p08-neighborhood-r}{Regular modal logic \(EMC\)}
+  \index{neighborhood logic!EMC}
+  \entryaliases{E plus Chellas's schemas M and C.}
+  \entrylanguage{The modal propositional language of E.}
+  \entrysemantics{Neighborhood models that are both upward closed and closed
+    under binary intersections.}
+  \entrycalculus{sheet:hilbert-r}
+  \entryadequacy{cited=Chellas1980}{Cited theoremhood completeness for upward-
+    and intersection-closed frames; no strong consequence claim is made.}
+  \entrydecidability{cited=Chellas1980}{EMC is determined by finite
+    neighborhood models and is decidable; no sharper complexity claim is made.}
+  \entrycharacteristic{EMC contains M and C but not N; adding N yields normal K.}
+  \entrytranslations{The system map is Table~\ref{tab:p08-neighborhood-systems}.}
+  \entrysources{Chellas1980,Pacuit2017}
+\end{systementry}
+
+\section{Frame and two-index boundaries}
+
+\begin{hbtheorem}{thm:p08-kripke-incomplete-logics}{cited=Thomason1974}{Existence of Kripke-incomplete normal modal logics}
+Thomason exhibited a normal modal logic that is not complete with respect to
+any class of ordinary Kripke frames \cite{Thomason1974}.  Fine exhibited such
+an incomplete normal extension containing S4 \cite{Fine1974}.  These two
+existence results do not imply that every noncanonical logic is Kripke
+incomplete; the broader boundary is surveyed in
+\cite{ChagrovZakharyaschev1997}.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p08-general-frame}{General frame boundary}
+A \emph{general frame} is a triple \((W,R,\mathcal A)\), where
+\((W,R)\) is a Kripke frame and \(\mathcal A\subseteq\mathcal P(W)\) is a
+specified family of admissible proposition sets closed under the Boolean and
+modal operations used by the language.  Validity restricts valuations to
+members of \(\mathcal A\).  This extra admissible-set component distinguishes a
+general frame from the ordinary frame of
+Definition~\ref{def:p08-modal-kripke-structure}; it is used to explain how
+relational methods can represent logics missed by unrestricted Kripke
+valuations.  No blanket claim that every noncanonical logic is repaired by one
+fixed general-frame class is made.
+The admissible-set semantics is historically connected with Scott's framework
+\cite{Scott1970}; this definition does not identify general frames with the
+neighborhood models below.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p08-two-index-actuality}{Davies--Humberstone's source operators \(A\) and \(\mathcal F\)}
+Davies and Humberstone's two-index presentation of \(S5\) uses a
+model \(\langle W,V\rangle\) and writes truth as
+\(\langle W,V\rangle\models_x^y\alpha\).  The lower index \(x\) is the
+world of evaluation and the upper index \(y\) is the actual-world
+perspective.  For atoms and the three modal operators used here, their clauses
+are
+\[
+\begin{aligned}
+ \langle W,V\rangle\models_x^y p
+ &\quad\text{ iff }\quad V(p,x)=1,\\
+ \langle W,V\rangle\models_x^y\Box\alpha
+ &\quad\text{ iff }\quad
+   \forall z\in W\;\langle W,V\rangle\models_z^y\alpha,\\
+ \langle W,V\rangle\models_x^y A\alpha
+ &\quad\text{ iff }\quad
+   \langle W,V\rangle\models_y^y\alpha,\\
+ \langle W,V\rangle\models_x^y\mathcal F\alpha
+ &\quad\text{ iff }\quad
+   \forall z\in W\;\langle W,V\rangle\models_x^z\alpha.
+\end{aligned}
+\]
+Boolean clauses are evaluated at the displayed indices.  Here \(A\) is the
+source actuality operator and \(\mathcal F\) is the source fixedly operator;
+within this definition they are unary object-language operators, while
+\(\alpha\) is the source formula metavariable.  The extra index is necessary
+because one index cannot record both the evaluation world and the actual-world
+perspective.  The operators are nonredundant with \(\Box\): the S5 box varies
+the lower evaluation index, \(A\) resets it to the upper actual-world index,
+and \(\mathcal F\) instead varies the upper index while holding the lower one
+fixed.  These distinctions separate actuality from the two notions of
+necessity studied in the cited systems
+\cite{CrossleyHumberstone1977,DaviesHumberstone1980}.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p08-character-content}{Context, character, and content}
+In Kaplan's terminology, a sentence occurrence's \emph{character} is its rule
+from contexts to contents, while a \emph{content} is what that rule supplies at
+one context and is evaluated at a circumstance.  A context may contain an
+agent, time, place, and world; only its world component is used in the present
+comparison.  Thus, if context \(c\) designates \(y\), the content expressed by
+formula \(\alpha\) at \(c\) is true at circumstance \(x\) exactly when
+\(\langle W,V\rangle\models_x^y\alpha\).  Diagonal evaluation uses \(x=y\),
+so it is true exactly when
+\(\langle W,V\rangle\models_y^y\alpha\).  These are metalinguistic semantic
+levels, not additional operators or newly named maps.  Character cannot replace
+content because it still awaits a context, and content cannot replace character
+because it no longer varies with context.  The distinction is used immediately
+to state the two-dimensional payoff \cite{Kaplan1989}.
+\end{hbdefinition}
+
+\paragraph{Semantic payoff and epistemic limit.}
+The clauses now make the relevant two-dimensional profile exact.  A sentence
+may satisfy \(\langle W,V\rangle\models_u^u\alpha\) for every \(u\in W\),
+while for some \(u,w\in W\) it fails off the diagonal:
+\(\langle W,V\rangle\not\models_w^u\alpha\).  This is the
+semantic pattern used in contingent-a-priori discussions: diagonal stability
+does not entail necessity of the designated content.  The semantics alone does
+not establish that a sentence is knowable a priori, and the Kaplanian
+character/content distinction is not identified with either source operator
+\(A\) or \(\mathcal F\).
+
+\section{Quantified modal logic}
+
+\begin{hbwarning}{def:p08-qml-family}{Quantified modal logic is a parameterized family}
+There is no single calculus or semantics determined by the phrase
+``quantified modal logic.''  A source presentation must specify its
+propositional modal base, quantifier rules, domain variation, designation
+policy, and local or global consequence.  The clauses below reproduce
+Fitting's model and quantifier notation for the limited purpose of comparing
+the actualist Barcan schemas; Garson is used only for the surrounding
+comparison with other quantified-modal presentations.  No hybrid calculus or
+system card is inferred from that semantic example
+\cite{Fitting2002Alethic,FittingMendelsohn1998,Garson2001}.
+\end{hbwarning}
+
+\begin{hbdefinition}{def:p08-qml-model}{Fitting's varying-domain modal model}
+In Fitting's notation a model is
+\[
+ \mathcal M=\langle\mathcal G,\mathcal R,\mathcal D,\mathcal I\rangle,
+\]
+where \(\mathcal G\) is a nonempty set of worlds,
+\(\mathcal R\subseteq\mathcal G^2\), and
+\(\mathcal D\) maps each \(\Gamma\in\mathcal G\) to a nonempty world-domain
+\(\mathcal D(\Gamma)\).  The domain of the model is
+\(\bigcup_{\Gamma\in\mathcal G}\mathcal D(\Gamma)\).  The interpretation
+\(\mathcal I\) maps each predicate symbol \(P\) to its world-relative
+extension \(\mathcal I(P)(\Gamma)\) over that model domain.  For Fitting's
+special existence predicate \(E\),
+\[
+ \mathcal I(E)(\Gamma)=\mathcal D(\Gamma).
+\]
+Valuations \(v\) take variables into the model domain and do not vary with the
+world.  For a formula \(\Phi\), truth is written
+\(\mathcal M,\Gamma\forces_v\Phi\).  Ordinary
+\((\forall x)\) and \((\exists x)\) are possibilist and range over the whole
+model domain.  Fitting's actualist quantifiers are the exact abbreviations
+\[
+\begin{aligned}
+ (\forall^{E}x)\Phi
+ &\defeq (\forall x)[E(x)\supset\Phi],\\
+ (\exists^{E}x)\Phi
+ &\defeq (\exists x)[E(x)\land\Phi].
+\end{aligned}
+\]
+Thus the relativized quantifiers range over \(\mathcal D(\Gamma)\) at world
+\(\Gamma\), while modal satisfaction keeps \(v\) fixed when it moves along
+\(\mathcal R\).  The model-domain convention is necessary to state
+decreasing-domain failures with one world-independent valuation
+\cite{Fitting2002Alethic,FittingMendelsohn1998}.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p08-qml-domain-regimes}{Domain regimes and philosophical readings}
+The domains are \emph{constant} when \(\mathcal D(\Gamma)\) has the same
+value at every world; \emph{increasing} when
+\(\Gamma\mathcal R\Delta\) implies
+\(\mathcal D(\Gamma)\subseteq\mathcal D(\Delta)\);
+\emph{decreasing} when \(\Gamma\mathcal R\Delta\) implies
+\(\mathcal D(\Delta)\subseteq\mathcal D(\Gamma)\); and
+\emph{arbitrarily varying} when no inclusion condition is imposed.  In this
+section, \emph{actualist quantification} means Fitting's relativized
+\(\forall^E,\exists^E\), while the primitive unrelativized quantifiers are
+\emph{possibilist}; and the domain assignment is \emph{necessitist} exactly
+when every world-domain is the whole model domain.  These are explicitly defined
+interpretations of the semantic parameters, not consequences of the validity
+table below.  The displayed BF/CBF table uses the actualist clauses.  Under
+possibilist quantification over the model domain, varying the world-domains does not
+generate that table; under necessitism, actualist and possibilist
+quantification coincide with the constant-domain case.  This is the later use
+that requires the three readings to remain distinct \cite{Williamson2013}.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p08-barcan-schemas}{Barcan and converse Barcan schemas}
+For a formula \(\Phi(x)\), the actualist \emph{Barcan formula}
+\((\mathrm{BF}^{E})\) and actualist \emph{converse Barcan formula}
+\((\mathrm{CBF}^{E})\) in Fitting's notation are respectively
+\[
+ (\forall^{E}x)\Box\Phi(x)\to\Box(\forall^{E}x)\Phi(x),
+ \qquad
+ \Box(\forall^{E}x)\Phi(x)\to(\forall^{E}x)\Box\Phi(x).
+\]
+The superscript records that this table uses the source's actualist
+relativization.  With the primitive possibilist quantifier, local-domain
+variation does not yield the table below.  The two names remain in this order;
+their difference
+is used in Table~\ref{tab:p08-barcan-domains} and
+Figure~\ref{fig:p08-barcan-countermodel}; they are not interchanged when the
+domain convention changes \cite{Barcan1946}.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p08-barcan-domain-validities}{cited=Fitting2002Alethic}{Actualist Barcan validity in Fitting's model}
+Under Definitions~\ref{def:p08-qml-model}--\ref{def:p08-barcan-schemas}, the
+validity pattern is exactly that displayed in
+Table~\ref{tab:p08-barcan-domains}.  The decreasing-domain row uses the fixed
+outer domain and rigid-assignment convention; without such a convention the
+reversal is not a well-formed comparison.
+\end{hbtheorem}
+
+\begin{table}[!htbp]
+\centering
+\begin{tabular}{@{}lll@{}}
+\toprule
+World-domain regime & \(\mathrm{BF}^{E}\) & \(\mathrm{CBF}^{E}\) \\
+\midrule
+constant & valid & valid \\
+increasing & may fail & valid \\
+decreasing, with the fixed outer domain & valid & may fail \\
+arbitrarily varying & may fail & may fail \\
+\bottomrule
+\end{tabular}
+\caption{Actualist Barcan and converse-Barcan validity in Fitting's displayed
+model notation (apparatus A-078).  ``May fail'' asserts the existence of a
+model in the regime, not failure in every model.}
+\label{tab:p08-barcan-domains}
+\end{table}
+
+\begin{hbexample}{def:p08-barcan-countermodel}{Increasing-domain failure of BF}
+Let \(\mathcal G=\{\Gamma,\Delta\}\) and
+\(\mathcal R=\{(\Gamma,\Delta)\}\).  Take
+\(\mathcal D(\Gamma)=\{a\}\),
+\(\mathcal D(\Delta)=\{a,b\}\),
+\(\mathcal I(P)(\Gamma)=\varnothing\), and
+\(\mathcal I(P)(\Delta)=\{a\}\).  Thus at \(\Delta\), \(P(a)\) is true and
+\(P(b)\) is false.  At \(\Gamma\),
+\((\forall^{E}x)\Box P(x)\) is true because the sole root-domain
+object \(a\) satisfies \(P\) at the accessible world.  But
+\(\Box(\forall^{E}x)P(x)\) is false because the new object
+\(b\in\mathcal D(\Delta)\) fails \(P\) there.  Thus the model refutes
+\(\mathrm{BF}^{E}\).  It does not refute \(\mathrm{CBF}^{E}\).
+\end{hbexample}
+
+\begin{figure}[!htbp]
+\centering
+\begin{tikzpicture}[>=Latex,node distance=4.6cm,font=\small]
+  \node[draw,rounded corners,align=center,inner sep=6pt] (w)
+    {\(\Gamma\)\\\(\mathcal D(\Gamma)=\{a\}\)\\
+     \((\forall^{E}x)\Box P(x)\) true\\
+     \(\Box(\forall^{E}x)P(x)\) false};
+  \node[draw,rounded corners,align=center,inner sep=6pt,right=of w] (v)
+    {\(\Delta\)\\\(\mathcal D(\Delta)=\{a,b\}\)\\
+     \(P(a)\) true, \(P(b)\) false};
+  \draw[->] (w) -- node[above]{\(\mathcal R\); domain increases by \(b\)} (v);
+\end{tikzpicture}
+\caption{An increasing-domain countermodel to \(\mathrm{BF}^{E}\) (apparatus A-142).  The two
+displayed worlds and the one displayed edge are the whole frame.  The new
+object at \(\Delta\) is outside the antecedent's root quantifier but inside the
+consequent's successor quantifier.}
+\label{fig:p08-barcan-countermodel}
+\end{figure}
+
+\paragraph{Source and navigation note.}
+The normal-modal definitions, premise discipline for K, T, S4, and S5, bundled adequacy
+statement, and three countermodel calculations migrate v1.1 Part X,
+lines 13204--13339.  The rule schemas themselves occur only on the exact
+registry sheets.  The canonical sketch is in Annex~\ref{annex:p8.modal.1}; the
+new correspondence, filtration, bisimulation, neighborhood, and quantified
+material is cited at its stated evidence ceiling.

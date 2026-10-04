@@ -1,0 +1,632 @@
+THE STABLE MODEL SEMANTICS
+FOR LOGIC PROGRAMMING
+
+Mi hael Gelfond
+University of Texas at El Paso
+El Paso, Texas, U.S.A.
+Vladimir Lifs hitz
+Stanford University
+Stanford, California, U.S.A.
+
+
+Abstra t
+
+We propose a new de larative semanti s for logi programs with nega-
+tion. Its formulation is quite simple; at the same time, it is more gen-
+eral than the iterated xed point semanti s for strati ed programs,
+and is appli able to some useful programs that are not strati ed.
+
+1. Introdu tion
+
+
+This paper belongs to the dire tion of resear h whi h attempts to de-
+  ne the de larative meaning of logi programs by means of \ anoni al
+models". The programs under onsideration are sets of rules of the
+form
+                           A      1        m
+                                    L ;:::;L                          (1)
+where is an atom, and 1
+      A                  L ;:::;L  m are literals (i.e., atoms or negated
+atoms),  0. Rule (1) is a notational variant of the formula
+          m
+
+
+
+                         ( 1^
+                          L        :::   ^ m) 
+                                          L       A;
+
+
+
+so that any program an be viewed as a set of rst-order formulas.
+A ordingly, we an talk about models of a logi program. Every
+program has many di erent models. For instan e, a model of the
+program
+                          (1)  p     ;
+
+                          (2)  q     ;                       (2)
+                          () ()q x         p x
+ onsists of (i) a nonempty set | the universe of the model, (ii) two
+elements of the universe | the interpretations of the onstants 1 and
+2, and (iii) two subsets of the universe | the interpretations (extents)
+of the predi ates and . The only restri tion on the hoi e of the
+                  p       q
+
+interpretations is that it should make all rules of the program true:
+The obje t representing 1 must belong to the extent of , the obje t
+                                                           p
+
+representing 2 must belong to the extent of , and the extent of
+                                                       q              p
+
+must be a subset of the extent of .        q
+
+
+
+The idea of the anoni al model approa h is that a de larative se-
+manti s for a lass of logi programs an be de ned by sele ting, for
+ea h program  in this lass, one of its models as the \ anoni al"
+model CM(). This model determines whi h answer to a given query
+is onsidered orre t. For instan e, a query without variables should
+be answered yes if it is true in CM(), and no otherwise.
+The anoni al model is usually sele ted among the Herbrand models of
+, i.e., among the models whose universe is the set of ground terms
+of the language of , and whose obje t and fun tion onstants are
+interpreted in su h a way that every ground term denotes itself. An
+Herbrand model is ompletely determined by the ground atoms that
+are true in it, and it an be identi ed with the set of these atoms. For
+instan e, (2) has two Herbrand models:
+                              f (1) (1) (2)g
+                              p      ; q       ; q                  (3)
+and
+                     f (1) (2) (1) (2)g
+                          p    ; p     ; q       ; q   :        (4)
+A reasonable semanti s would designate the rst of them as anoni al.
+An Herbrand model of  is minimal, if no proper subset of is
+                      M                                           M
+
+an Herbrand model of . For instan e, (3) is a minimal model of (2),
+and (4) is not. A program that does not ontain negation, su h as (2),
+has exa tly one minimal Herbrand model, and the usual semanti s for
+negation-free programs [4℄ sele ts that model as its anoni al model
+CM(). Programs with negation may have several minimal Herbrand
+models. There has been mu h re ent work on de ning anoni al mod-
+els for programs with negation. An important lass of \strati ed" pro-
+grams was introdu ed, and anoni al models were de ned for strat-
+i ed programs using an \iterated xed point" onstru tion [2℄, [1℄,
+[14℄. Further generalizations were proposed in [12℄ (\perfe t models")
+and in [15℄ (\well-founded models"). Ea h of these de nitions im-
+poses some restri tions on the use of negation; resear hers seem to
+agree that there an be no useful de nition of anoni al models for
+arbitrary programs (see Remark 4 below).
+This theoreti al work is losely related to some pra ti al issues in the
+design of logi al query languages for databases. The uses of negation
+that are disallowed by the a epted de larative semanti s must be
+re ognized as \semanti errors" in queries. For example, the NAIL!
+system [11℄ prohibits all nonstrati ed programs.
+There is also a lose onne tion between this work and some of the ex-
+isting approa hes to the theory of nonmonotoni reasoning, in luding
+ ir ums ription [9℄ and autoepistemi logi [10℄. In parti ular, the it-
+erated xed pont semanti s for strati ed programs an be equivalently
+formulated in terms of these two on epts [7℄, [5℄.
+The de nition proposed in [5℄ is parti ularly simple. It uses the trans-
+formation of rules (1) into formulas of autoepistemi logi whi h in-
+serts the \belief" operator L after ea h negation, so that ea h nega-
+tive literal : in the body of (1) be omes :L . This mapping an
+             B                                  B
+
+be thought of as a representation of \negation as failure" in the sym-
+bolism of autoepistemi logi : : in the body of a rule expresses
+                                   B
+
+that the program gives no grounds for believing in . The anoni al
+                                                     B
+
+model assigned to a strati ed program  by the iterated xed point
+semanti s an be easily des ribed in terms of the autoepistemi theory
+obtained from  by applying this transformation to ea h of its rules.
+In this paper we dis uss another implementation of the same idea,
+whi h does not use autoepistemi logi and is, in this sense, even
+simpler than the approa h of [5℄. The de nition of the new semanti s
+is given in Se tion 2. Then we onsider a few examples; we will see
+that our semanti s is appli able to some useful programs that are
+not strati ed (Se tion 3). Familiarity with autoepistemi logi is not
+required for understanding these parts of the paper. In Se tion 4, we
+study the relation between the new semanti s and some of the other
+ anoni al model approa hes.
+2. Stable Models
+
+
+Let  be a logi program, i.e., a set of rules of form (1). We assume
+that ea h rule ontaining variables is repla ed by all its ground in-
+stan es, so that all atoms in  are ground. (Sin e  is not required
+to be nite, the variables an be eliminated in this way even when the
+program uses fun tion symbols, and its Herbrand universe is in nite.)
+For any set of atoms from , let M be the program obtained
+                M
+
+from  by deleting
+ (i) ea h rule that has a negative literal : in its body with 2 ,
+                                                  B                B   M
+
+     and
+(ii) all negative literals in the bodies of the remaining rules.
+Clearly, M is negation-free, so that M has a unique minimal Her-
+brand model. If this model oin ides with , then we say that is
+                                                  M                    M
+
+a stable set of . Su h sets an be also des ribed as the xed points
+of the operator  de ned by the ondition: for any set of atoms
+                     S                                        M
+
+from ,  ( ) is the minimal Herbrand model of M .
+            S   M
+
+
+
+
+Theorem 1.          Any stable set of  is a minimal Herbrand model of .
+
+In view of this fa t, stable sets an be also alled stable models. The
+proof of Theorem 1 is given at the end of this se tion.
+The intuitive meaning of stable sets an be des ribed in the same way
+as the intuition behind \stable expansions" in autoepistemi logi :
+they are \possible sets of beliefs that a rational agent might hold"
+[10℄ given  as his premises. If is the set of ground atoms that
+                                      M
+
+I onsider true, then any rule that has a subgoal : with 2 B        B       M
+
+is, from my point of view, useless; furthermore, any subgoal : withB
+
+B   62 is, from my point of view, trivial. Then I an simplify the
+        M
+
+premises  and repla e them by M . If happens to be pre isely the
+                                              M
+
+set of atoms that logi ally follow from the simpli ed set of premises
+M , then I am \rational".
+The stable model semanti s is de ned for a logi program , if 
+has exa tly one stable model, and it de lares that model to be the
+ anoni al model of .
+Proof of Theorem 1. Consider a stable set  . First we want to
+                                                      M
+
+show that is a model of . Let be a rule from . If the body
+                M                         R
+
+of ontains a literal : su h that 2 , then is true in .
+    R                         B               B   M       R            M
+
+If not, onsider the rule obtained from by deleting all negative
+                              R
+                                  0
+                                                  R
+literals from its body. Sin e is one of the rules of M , and is the
+                                           R
+                                               0
+                                                                                                                   M
+
+minimal model of M , it is lear that is true in . On the other            R
+                                                                               0
+                                                                                                       M
+
+hand, logi ally follows from ; onsequently, is true in . To
+          R                                            R
+                                                           0
+                                                                                                   R                   M
+
+show that is minimal, assume that a subset 1 of is a model of
+                  M                                                                            M           M
+
+. We will show that 1 is also a model of M . Consider any rule
+                              M                                                                                            R
+                                                                                                                               0
+
+
+of M ; it is obtained from some rule of  by deleting all negative    R
+
+literals from its body, and, in every su h literal : , 62 . To show                            B           B   M
+
+that is true in 1 , observe that is true in 1 (be ause 1 is a
+      R
+          0
+                          M                                        R                           M                   M
+
+model of ), that every negative literal : in the body of is true                      B                           R
+
+in 1 (be ause 62 and 1  ), and that an be obtained
+    M                     B   M             M                  M                                   R
+                                                                                                       0
+
+
+by resolving against these literals. Sin e is the minimal model
+                      R                                                                    M
+
+of M , 1 = . M       M
+
+
+
+3. Examples
+
+
+If  is negation-free, then, for every , M oin ides with , and       M
+
+S  ( ) is the minimal Herbrand model of . Consequently, this model
+      M
+
+is the only xed point of  . We see that the minimal Herbrand model
+                                  S
+
+of a negation-free program is its only stable model.
+Consider the program
+                                  p(1 2)
+                                       ;       ;
+                                                                                                                           (5)
+                                   () (
+                                  q x                  p x; y ;    ):()        q y :
+
+
+
+Let  be (5) with the se ond rule repla ed by its ground instan es:
+                                  q   (1)              p(1 1) : (1)
+                                                               ;       ;   q               ;
+
+                                  q   (1)              p(1 2) : (2)
+                                                               ;       ;   q               ;
+
+                                  q   (2)              p(2 1) : (1)
+                                                               ;       ;   q               ;
+
+                                  q   (2)              p(2 2) : (2)
+                                                               ;       ;   q               :
+
+
+
+Let   M   = f (2)g. Then M is
+                  q
+
+
+
+                                        p   (1 2)  ;       ;
+
+                                        q   (1) (1 1)          p       ;           ;
+
+                                        q   (2) (2 1)          p       ;           :
+
+
+
+The minimal Herbrand model of this program is f (1 2)g. It is di er-                               p       ;
+
+ent from , so that is not stable. (This ould have been predi ted
+              M               M
+on the basis of Theorem 1, be ause is not a model of .) Now let
+                                                               M
+
+us try = f (1 2) (1)g. In this ase M is
+      M            p       ;    ;q
+
+
+
+                                           p   (1 2)
+                                                   ;   ;
+
+                                           q   (1) (1 2)   p       ;    ;
+
+                                           q   (2) (2 2)   p       ;    :
+
+
+
+The minimal Herbrand model of this program is f (1 2) (1)g, i.e.,           p   ;   ;q
+
+M . Hen e f (1 2) (1)g is stable. Are there any other stable models
+               p       ;       ;q
+
+among the 26 possible sets of ground atoms? First of all, it is lear
+that every value of  in ludes (1 2) but does not in lude any of
+                                   S                   p       ;
+
+the atoms (1 1), (2 1), (2 2). Consequently, every xed point of
+           p       ;           p       ;   p   ;
+
+S has the same properties. Besides the xed point we have found,
+there are 3 other sets satisfying this ondition. The examination of
+ea h of them shows that it is not a xed point of  . So  has only          S
+
+one stable model.
+Remark 1.     Program (5) is not strati ed, so that the iterated xed
+point semanti s annot be applied to it. The perfe t model semanti s
+[12℄ is not appli able to it either. The method of [15℄ sele ts the same
+ anoni al model as our approa h.
+Remark 2.     The query evaluation pro edure of PROLOG handles
+program (5) orre tly relative to the stable model semanti s: For
+every query without variables, it produ es the answer yes if the query
+belongs to the stable model of (5), and no otherwise.
+Remark 3. Some programs similar to (5) an play two-person games
+[3℄, [15℄. A position is winning for White if there is a legal move
+                                    x
+
+from to a position that is not winning for Bla k. If legal moves
+     x                              y
+
+are the same for both players, then this prin iple is expressed by the
+se ond rule of (5).
+Here is another nonstrati ed program with a unique stable model:
+                                               p       q;      :   r;
+
+                                               q       r;      :   p;                    (6)
+                                               r       p;      :   q:
+
+
+
+The only minimal Herbrand model of (6) is ;, and it is obviously
+stable. This example illustrates the following general fa t: If the
+body of ea h rule of a program  ontains a positive literal, then ;
+is the only stable model of . To prove this, noti e that, for su h ,
+the bodies of all rules in any M are nonempty, and onsequently the
+minimal Herbrand model of any M is ;.
+There are two kinds of programs to whi h the stable model semanti s
+is not appli able: the programs that have no stable models, and the
+programs that have several stable models. The program onsisting
+of just one rule    p  : has no stable models. (For this program,
+                                 p
+
+S  (;) = f g and  (f g) = ;.) The program onsisting of two rules,
+          p          S       p
+
+p     : and
+      q       q   : , has two stable models: f g and f g. Similarly,
+                         p                                     p       q
+
+the program obtained from (5) by adding the rule (2 1) has two     p       ;
+
+stable models:
+                        f (1 2) (2 1) (1)g
+                                     p   ;   ;p   ;   ;q
+
+
+and
+                        f (1 2) (2 1) (2)g
+                                 p       ;   ;p   ;   ;q   :
+
+
+
+Remark 4.     The symmetry of ea h of the last two examples suggests
+that it is hardly possible to sele t a single anoni al model for any of
+them in a reasonable way.
+Remark 5. The interpretation of the se ond rule of (5) given in
+Remark 3 above impli itly assumes that the graph of the game       p
+
+is loop-free. The fa t that adding (2 1) to (5) makes the program
+                                                  p   ;
+
+meaningless re e ts this limitation.
+4. Relation to Other Approa hes
+
+
+The relation between the stable model semanti s and the well-founded
+semanti s is investigated in [15℄, and the former is found to be more
+general:
+Theorem 2         ([15℄, Corollary 6.2). If  has a well-founded model,
+then that model is its unique stable model.
+
+Moreover, Examples 6.1 and 6.2 from [15℄ show that the stable model
+semanti s is stri tly more general that the well-founded semanti s.
+Sin e the well-founded semanti s oin ides with the perfe t model
+semanti s on lo ally strati ed programs ([15℄, Theorem 6.3), we on-
+ lude:
+Corollary 1.   If  is lo ally strati ed, then it has a unique stable
+model, whi h is identi al to its perfe t model.
+
+As to the programs that are not lo ally strati ed, we an only say that
+the areas of appli ability of our de nition and of the perfe t model
+semanti s partially overlap [13℄. We have seen that the latter is not
+appli able to program (5) whi h has a unique stable model (Remark
+1). On the other hand, the only Herbrand model of        : is perfe t,
+                                                          p           p
+
+but not stable.
+Sin e the perfe t model semanti s, restri ted to strati ed programs,
+ oin ides with the iterated xed point semanti s [12℄, we also on-
+ lude:
+Corollary 2.     If  is strati ed, then its unique stable model is iden-
+ti al to its iterated xed point model.
+
+Finally, we will relate stable models to the translation of logi pro-
+grams into autoepistemi theories de ned in [5℄.
+Re all that the language of autoepistemi logi [10℄ ontains the sym-
+bols of propositional logi and the modal operator L. The formulas
+not ontaining L are alled obje tive. Let be a set of formulas. A
+                                              A
+
+set of formulas is a stable expansion of if
+                 E                          A
+
+
+             E= ( [ fL : 2 g [ f:L : 62 g)
+                 th A         F   F   E         F     F       E   :
+
+
+Here ranges over arbitrary formulas, and ( ) denotes the set of
+     F                                          th X
+
+propositional onsequen es of . If all formulas in are obje tive,
+                                  X                           A
+
+then (i) has exa tly one stable expansion , and (ii) an obje tive
+         A                                        E
+
+formula belongs to i it follows from in propositional logi ([8℄,
+                     E                    A
+
+[6℄).
+For any logi program  (without variables), () stands for the set of
+                                                I
+
+formulas of autoepistemi logi obtained from  by inserting L after
+every negation [5℄. By we denote the set of atoms o urring in .
+                         At
+
+
+
+Theorem 3.     If a logi program  has a unique stable model M , then
+I () has a unique stable expansion E , and M = E \ At.
+
+
+
+The following simple proof of Theorem 3 belongs to Halina Przy-
+musinska.
+Lemma. E              is a stable expansion of I () i                            E    is a stable expansion
+of E At .
+      \
+
+
+
+
+Proof.    It is suÆ ient to show that
+                          I   () [ fL : 2 g [ f:L : 62 g
+                                           F    F     E                       F   F           E
+
+
+
+is equivalent to
+                      E At [ fL : 2 g [ f:L : 62 g
+                              \            F    F         E                   F       F       E    :
+
+
+
+The set fL : 2 g [ f:L : 62 g ontains L for ea h
+                  F           F        E              F        F              E                        F
+
+F 2 \ and :L for ea h atom 62 \ . In the presen e of
+     E       At                    F                           F          E       At
+
+these literals, () is equivalent to E At .
+                      I                                               \
+
+
+
+Proof of Theorem 3.       Let be the only stable model of . Sin e
+                                                M
+
+M is a set of obje tive formulas, it has exa tly one stable expansion
+E , and
+                   \ = (M ) \ =  ( ) =
+                          E       At       th             At              S       M           M:
+
+
+Hen e is a stable expansion of E At . By the lemma, it follows
+         E                                                        \
+
+that is a stable expansion of (). It remains to show that ()
+     E                                                I                                                            I
+
+has no other stable expansions. Let be a stable expansion of ().
+                                                              E
+                                                                  0
+                                                                                                                   I
+
+By the lemma, is a stable expansion of E At. Sin e the latter is
+                          E
+                              0
+                                                                                  0\
+
+a set of obje tive formulas, an obje tive formula belongs to i it is                                       E
+                                                                                                               0
+
+
+a propositional onsequen e of E At . Consequently,       0\
+
+
+
+
+                     = (E At) \ =  ( \ )
+                      E
+                          0
+                              \   At   th        0\            At             S    E
+                                                                                          0
+                                                                                              At ;
+
+
+
+so that \ is a stable model of . Sin e the only stable model of
+          E
+              0
+                  At
+
+ is , it follows that \ = . Hen e E At = M , and is
+    M                                  E
+                                           0
+                                                At        M                            0\                          E
+                                                                                                                       0
+
+
+a stable expansion of M . Consequently = .                               E
+                                                                              0
+                                                                                      E
+
+
+
+A knowledgements
+
+
+We are grateful to Krzysztof Apt, Matthew Ginsberg, Kurt Kono-
+lige, Katherine Morris, Teodor Przymusinski, Kenneth Ross, Yoav
+Shoham, Je rey Ullman and Allen Van Gelder for useful dis ussions.
+We would espe ially like to thank Halina Przymusinska for her om-
+ments and for permission to in lude her proof of Theorem 3. This
+resear h was partially supported by DARPA under Contra t N0039-
+82-C-0250.
+Referen es
+
+
+[1℄ K. R. Apt, H. Blair and A. Walker, Towards a theory of de lar-
+    ative knowledge, in: J. Minker (ed.), Foundations of Dedu tive
+    Databases and Logi Programming, Morgan Kaufmann Publish-
+    ers, Los Altos, CA, 1988, 89{148.
+[2℄ A. Chandra and D. Harel, Horn lause queries and generaliza-
+    tions, The Journal of Logi Programming 1, 1985, 1{15.
+[3℄ M. H. van Emden and K. L. Clark, The logi of two-person
+    games, in: K. L. Clark and F. G. M Cabe, Mi ro-PROLOG:
+    Programming in Logi , Prenti e-Hall, 1984, 320{340.
+
+[4℄ M. H. van Emden and R. A. Kowalski, The semanti s of pred-
+    i ate logi as a programming language, Journal ACM, 23(4),
+    1976, 733{742.
+[5℄ M. Gelfond, On strati ed autoepistemi theories, Pro . AAAI-
+    87, 1, 1987, 207{211.
+
+[6℄ K. Konolige, On the relation between default and autoepistemi
+    logi , in: M. Ginsberg (ed.), Readings in Nonmonotoni Reason-
+    ing, Morgan Kaufmann Publishers, Los Altos, CA, 1987, 195{
+    217.
+[7℄ V. Lifs hitz, On the de larative semanti s of logi programs
+    with negation, in: J. Minker (ed.), Foundations of Dedu tive
+    Databases and Logi Programming, Morgan Kaufmann Publish-
+    ers, Los Altos, CA, 1988, 177{192.
+[8℄ W. Marek, Stable Theories in Autoepistemi Logi , Unpublished
+    Note, Department of Computer S ien e, University of Kentu ky,
+    1986.
+[9℄ J. M Carthy, Appli ations of ir ums ription to formalizing
+     ommonsense knowledge, Arti ial Intelligen e 28 (1), 1986, 89{
+    118.
+[10℄ R. Moore, Semanti al onsiderations on nonmonotoni logi , Ar-
+     ti ial Intelligen e 25 (1), 1985, 75{94.
+[11℄ K. Morris, J. D. Ullman and A. Van Gelder, Design overview of
+     the NAIL! system, in: G. Goos and J. Hartmanis (eds.), Third
+     International Conferen e on Logi Programming (Le ture Notes
+     in Computer S ien e 225), Springer-Verlag, 1986, 554{568.
+[12℄ T. Przymusinski, On the de larative semanti s of strati ed de-
+     du tive databases and logi programs, in: J. Minker (ed.), Foun-
+     dations of Dedu tive Databases and Logi Programming, Mor-
+     gan Kaufmann Publishers, Los Altos, CA, 1988, 193{216.
+[13℄ T. Przymusinski, personal ommuni ation, O tober 1987.
+[14℄ A. Van Gelder, Negation as failure using tight derivations for
+     general logi programs, in: J. Minker (ed.), Foundations of De-
+     du tive Databases and Logi Programming, Morgan Kaufmann
+     Publishers, Los Altos, CA, 1988, 149{176.
+[15℄ A. Van Gelder, K. Ross and J. S. S hlipf, Unfounded sets and
+     well-founded semanti s for general logi programs, Pro . Sev-
+     enth Symp. on Prin iples of Database Systems, 1988, 221{230.
+

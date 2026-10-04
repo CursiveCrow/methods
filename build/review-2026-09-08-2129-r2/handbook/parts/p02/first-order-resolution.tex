@@ -1,0 +1,253 @@
+%% Part 2.2 resolution fragment: v1.1 Part III, lines 5568--5958.
+%% The two inference rules live only on registry sheet resolution-fol.
+
+\chapter{First-Order Clauses, Unification, and Resolution}
+\label{sec:p02-first-order-resolution}
+\chaptermark{First-Order Resolution}
+
+\section{Clauses and simultaneous term substitution}
+\label{sec:p02-fol-clauses}
+
+\begin{hbdefinition}{def:p02-fol-clause}{First-order clause and formula interpretation}
+A \emph{first-order clause}\index{clause!first-order} is a finite set of
+first-order literals; order and multiplicity are not clause data.  To obtain
+one exact formula presentation, supply a well-order of the signature's symbol
+tokens, combine it with the variable and logical-token orders, and order
+formula strings first by length and then lexicographically.  If the resulting
+listing of a nonempty clause \(C\) is \(L_1\prec\cdots\prec L_k\), define
+\(\operatorname{form}_{\mathcal L}(C)\) as their right-associated
+disjunction; define the empty clause's formula to be \(\bottom\).
+
+If \(x_{i_1},\ldots,x_{i_m}\), in increasing index order, are exactly the
+variables occurring in \(C\), put
+\[
+ \operatorname{ucl}_{\mathcal L}(C)
+ \defeq
+ \forall x_{i_1}\cdots\forall x_{i_m}
+ \operatorname{form}_{\mathcal L}(C).
+\]
+Both maps are metalinguistic.  A structure satisfies \(C\) iff it satisfies
+this \emph{universal closure}\index{universal closure!of a clause}, and
+satisfies a clause set iff it satisfies every
+member.  The supplied well-order affects presentation, not satisfaction; for
+an arbitrary signature its existence is the explicit well-ordering/choice
+assumption.
+
+A clause is \emph{equality-free}\index{clause!equality-free} iff none of its
+literals contains logical
+identity.  This restricts clause contents, not the signature, since equality
+is logical rather than a signature member.  A clause set is equality-free iff
+each of its members is equality-free.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p02-fol-simultaneous-substitution}{Finite-support simultaneous term substitution}
+A \emph{term substitution}\index{substitution!simultaneous term} is a total map
+\(\theta:\mathsf{Var}\to\operatorname{Term}(\mathcal L)\) whose
+\emph{variable support}\index{substitution support!variable support}
+\[
+ \operatorname{supp}_{\mathrm{var}}(\theta)
+ \defeq\{x:\theta(x)\ne x\}
+\]
+is finite.  This support is a set of variables, unlike the multiplicity
+support of a finite multiset.  A finite display
+\(\{x_1\mapsto t_1,\ldots,x_n\mapsto t_n\}\) maps the listed variables as
+shown and fixes every other variable.  Extend \(\theta\) homomorphically to
+terms, atoms, literals, and clauses, writing
+\(t\theta,A\theta,L\theta,C\theta\).
+The action is simultaneous: it does not reapply \(\theta\) inside an inserted
+term.  On clauses it takes the pointwise image, so set equality removes
+duplicates.  It is a quantifier-free operation distinct from the earlier
+total capture-avoiding single-variable formula substitution.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p02-fol-instance-preorder}{Composition and instance preorder}
+Let \(\mathrm{id}\) fix every variable, and orient composition by
+\[
+ (\theta\eta)(x)\defeq(\theta(x))\eta.
+\]
+Then
+\(\operatorname{supp}_{\mathrm{var}}(\theta\eta)\subseteq
+  \operatorname{supp}_{\mathrm{var}}(\theta)
+  \cup\operatorname{supp}_{\mathrm{var}}(\eta)\),
+so the composite again has finite support.
+Define the \emph{instance preorder}\index{instance preorder} by
+\[
+ \theta\preceq_{\mathrm{inst}}\rho
+ \quad\text{iff}\quad
+ (\exists\eta)\;\rho=\theta\eta.
+\]
+This metalinguistic relation compares substitutions by further
+instantiation; it is not equality.  Identity and associative composition make
+it reflexive and transitive.  Its later use is exactly the definition of
+``most general.''
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p02-fol-substitution-composition}{proved=annex:p2.fol.res.1}{Composition of simultaneous substitutions}
+For every term \(t\), atom \(A\), literal \(L\), and clause \(C\),
+\[
+ t(\theta\eta)=(t\theta)\eta,
+ \quad A(\theta\eta)=(A\theta)\eta,
+ \quad L(\theta\eta)=(L\theta)\eta,
+ \quad C(\theta\eta)=(C\theta)\eta.
+\]
+Consequently substitution composition is associative.
+\end{hblemma}
+
+\begin{hblemma}{thm:p02-fol-clause-substitution}{proved=annex:p2.fol.res.2}{Satisfaction under simultaneous term substitution}
+If an \(\mathcal L\)-structure \(\mathcal M\) satisfies a clause \(C\),
+then it satisfies \(C\theta\) for every finite-support term substitution
+\(\theta\).
+\end{hblemma}
+
+\section{Unification}
+\label{sec:p02-fol-unification}
+
+\begin{hbdefinition}{def:p02-fol-renaming-apart}{Renaming apart}
+A \emph{variable renaming}\index{variable renaming} is a term substitution
+with finite support, induced by
+a bijection \(\pi:\mathsf{Var}\to\mathsf{Var}\).  Put
+\(\operatorname{Var}(C)\defeq
+  \bigcup_{L\in C}\operatorname{Var}(L)\).
+Two clause occurrences \(C\pi,D\rho\) are
+\emph{renamed apart}\index{renaming apart} iff
+\[
+ \operatorname{Var}(C\pi)\cap\operatorname{Var}(D\rho)=\varnothing.
+\]
+Such renamings exist because each
+clause uses finitely many variables and the variable supply is infinite.
+Universal closure makes the renamed clause equivalent to its original.
+This operation is required before every binary inference on
+\hyperref[sheet:resolution-fol]{\texttt{sheet:resolution-fol}}; it is not the
+alpha-equivalence relation on quantified formula strings.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p02-fol-mgu}{Unifier and most general unifier}
+A term substitution \(\theta\) \emph{unifies}\index{unifier} atoms \(A,B\) iff
+\(A\theta\) and \(B\theta\) are literally identical.  It is a
+\emph{most general unifier}\index{most general unifier} (MGU) iff
+\(\theta\preceq_{\mathrm{inst}}\rho\) for every unifier \(\rho\),
+equivalently every unifier is \(\theta\eta\) for some substitution
+\(\eta\).  Most general therefore refers to the instance preorder, not to
+syntactic size or literal uniqueness.
+\end{hbdefinition}
+
+\begin{hbmethod}{def:p02-fol-unification-procedure}{First-order unification procedure}
+\index{unification!first-order procedure}
+First fail if the two atoms have different outer predicate symbols or arities;
+for equality atoms, regard equality as the common binary outer symbol and pair
+their two ordered arguments.  Otherwise form the finite set of equations
+between corresponding argument terms and initialize the accumulated
+substitution to \(\mathrm{id}\).  Repeatedly delete \(t\doteq t\), decompose
+matching function symbols, fail on a symbol/arity clash, orient a variable to
+the left, or eliminate \(x\doteq t\): if \(x\) occurs properly in \(t\),
+fail; otherwise put \(\delta=\{x\mapsto t\}\), apply \(\delta\)
+simultaneously to every remaining equation, and replace the accumulator
+\(\theta\) by \(\theta\delta\).  Return the accumulator when
+no equation remains.  The occurs check is a procedure step needed because
+finite terms cannot contain themselves; it is not part of the definition of
+a substitution.
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p02-fol-unification}{sketched=annex:p2.fol.res.3}{First-order unification}
+The procedure terminates.  It returns failure iff the input atoms are not
+unifiable; otherwise it returns a most general unifier.
+\end{hbtheorem}
+
+\section{Resolution and factoring}
+\label{sec:p02-fol-resolution-calculus}
+
+\begin{hbdefinition}{def:p02-fol-resolution-derivation}{First-order resolution derivation}
+A \emph{first-order resolution derivation from \(S\)}
+\index{resolution!first-order derivation} is a finite sequence
+of clauses, each an input member of \(S\) or the conclusion of a registered
+Resolution or Factoring inference from earlier clauses.  Those rules are on
+\hyperref[sheet:resolution-fol]{\texttt{sheet:resolution-fol}}.
+Every binary inference uses renamed-apart parent
+occurrences and the MGU stipulated on the sheet.  This named derivation
+object is needed by the soundness and completeness statements below and is
+distinct from a propositional resolution DAG.
+\end{hbdefinition}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  font=\small,
+  node distance=10mm and 18mm,
+  clause/.style={draw,rounded corners,align=center,inner sep=4pt},
+  >=Stealth]
+  \node[clause] (c1) {\(C_1=\{P(x),Q(x)\}\)};
+  \node[clause,right=of c1] (c2) {\(C_2=\{\neg P(a)\}\)};
+  \node[clause,right=of c2] (c3) {\(C_3=\{\neg Q(a)\}\)};
+  \node[clause,below=of c2] (c4) {\(C_4=\{Q(a)\}\)};
+  \node[clause,below=of c4] (empty) {empty clause \(\varnothing\)};
+  \draw[->] (c1) -- node[left,align=right,font=\footnotesize]
+    {Resolution\\\(\{x\mapsto a\}\)} (c4);
+  \draw[->] (c2) -- (c4);
+  \draw[->] (c4) -- node[left,font=\footnotesize]{Resolution} (empty);
+  \draw[->] (c3) -- (empty);
+\end{tikzpicture}
+\caption{Resolution-refutation DAG (apparatus A-121).  Each downward node is
+the resolvent of its two incoming parents; the final node is the empty clause.
+The first parents are already renamed apart because \(C_2\) is ground, and
+their MGU is the displayed finite-support substitution.}
+\label{fig:p02-fol-resolution-dag}
+\end{figure}
+\index{resolution!refutation DAG}
+
+\begin{hbtheorem}{thm:p02-fol-resolution-soundness}{proved=annex:p2.fol.res.4}{Resolution and Factoring soundness}
+Every structure satisfying the parent clauses of a registered Resolution or
+Factoring inference satisfies its conclusion.  Consequently, if a
+first-order resolution derivation from \(S\) contains the empty clause, then
+\(S\) is unsatisfiable.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p02-fol-ground-instance}{Ground term and ground instance}
+A term \(t\) is \emph{ground}\index{ground term} iff
+\(\operatorname{Var}(t)=\varnothing\).  A \emph{ground instance} of a
+clause \(C\)\index{ground instance} is \(C\theta\), where \(\theta\) sends
+every variable of
+\(C\) to a ground term.  These notions classify terms and substitution
+instances; neither means a closed formula.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p02-herbrand-clauses}{cited=Robinson1965}{Herbrand theorem for clauses}
+Let \(S\) be a finite equality-free set of first-order clauses in a signature
+with at least one ground term.  Then \(S\) is unsatisfiable iff some finite
+set of ground instances of members of \(S\), regarded as propositional
+clauses whose distinct ground atoms are propositional variables, is
+propositionally unsatisfiable.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p02-resolution-lifting}{cited=BachmairGanzinger2001}{Lifting lemma}
+Let renamed-apart clauses \(C,D\) have disjoint variable sets, and let \(G\)
+be a ground resolvent of ground instances of them.  After factoring each
+parent literal family identified by the ground substitution, there is a
+first-order resolvent \(R\) obtained with an MGU and a ground substitution
+\(\eta\) such that \(R\eta=G\).  The analogous assertion holds for
+factoring.  Hence every finite ground resolution refutation of ground
+instances of \(S\) lifts step by step to a first-order derivation with
+factoring from \(S\).
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p02-fol-resolution-completeness}{sketched=annex:p2.fol.res.5}{Refutational completeness of first-order resolution}
+Let \(S\) be a finite equality-free set of first-order clauses.  After adding
+a constant if the signature has no ground term, \(S\) is unsatisfiable iff
+Resolution with Factoring derives the empty clause.
+\end{hbtheorem}
+
+\begin{hbwarning}{def:p02-fol-resolution-equality-boundary}{Bare resolution is not equality-complete}
+The preceding completeness theorem deliberately excludes every clause
+containing logical equality.  Equality atoms may be carried through the sheet
+for soundness, but bare Resolution and Factoring do not provide a complete
+identity treatment.  Equality axioms, paramodulation, or superposition are
+additional calculi; superposition is a Phase-5 Part-12 entry.
+\end{hbwarning}
+
+The Herbrand universe/structure validity form required by D-P3-003 is stated
+separately from Theorem~\ref{thm:p02-herbrand-clauses}.  The former concerns
+validity of a prenex existential sentence and a finite disjunction of its
+ground instances.  The latter is the dual universal-clause unsatisfiability
+form used in the resolution sketch.  Neither is the quotient term model of
+the Henkin construction.
+Complete sources for the Herbrand clause theorem and the lifting machinery
+used here are \cite{Robinson1965,BachmairGanzinger2001}.

@@ -1,0 +1,355 @@
+%% toc: P2 14 14.1,14.2,14.3,14.4
+\section{Finite inputs and the arbitrary-language theorem}
+\label{sec:p02-w02-p02-016-finite-input-scope}
+
+\emph{Purpose.}  Two different results are easy to run together once the set
+of atoms is allowed to be arbitrary.  The first is a decision result: the
+terminating procedure of \cref{thm:p02-decidability}, applied to the
+encodings of \cref{def:p02-sat-taut}, answers satisfiability, validity,
+equivalence and finite consequence.  The second is the completeness and
+compactness theorem for \(\operatorname{Form}(P)\) over an arbitrary set
+\(P\) (\cref{thm:p02-fbc-completeness,thm:p02-arbitrary-prop-completeness,%
+thm:p02-arbitrary-prop-compactness-bpi}), which over \(\mathsf{ZF}\) is
+equivalent to the Boolean Prime Ideal Theorem.  This section separates them.
+The decision procedures act only on finite encoded inputs, and those encode
+formulas over the countable variable set
+\(\mathsf{Prop}=\{p_n:n\in\N\}\) of \cref{sec:prop-syntax-semantics-01}.
+A finite input over an arbitrary \(P\) involves only finitely many atoms, and
+can be renamed into that coding without any choice principle and without
+changing any answer.  The arbitrary-language theorem, by contrast, supplies
+no decision procedure, no enumeration and no encoding of
+\(\operatorname{Form}(P)\); when \(P\) is uncountable, no encoding exists.
+The countable choice-free theorem
+(\cref{thm:prop-completeness,thm:prop-compactness}) lies between the two and
+is distinguished from the arbitrary-language theorem in
+\cref{sec:p02-free-boolean-completeness} and in the remarks after
+\cref{thm:p02-arbitrary-prop-compactness-bpi}.
+
+\emph{Inputs.}  A set \(P\) of atoms; a finite set \(\Gamma\) of formulas of
+\(\operatorname{Form}(P)\) and formulas \(\varphi,\psi\) of
+\(\operatorname{Form}(P)\); for the negative results, an arbitrary set
+\(P\) and arbitrary, possibly infinite, \(\Gamma\subseteq\operatorname{Form}(P)\).
+\emph{Conclusions.}  Finiteness of the atom set of a finite input
+(\cref{thm:p02-w02-p02-016-finite-atoms}); a renaming of any finite input
+into \(\mathsf{Fm}_{\mathsf{CPL}}\) that preserves consequence,
+satisfiability, validity and equivalence, with answers independent of the
+renaming (\cref{thm:p02-w02-p02-016-transfer}); the reduction of each such
+question to membership of one encoded string in \(\mathsf{SAT}\) or
+\(\mathsf{TAUT}\), settled by \(2^k\) assignments
+(\cref{thm:p02-w02-p02-016-decision}); and the nonexistence of an encoding or
+enumeration of \(\operatorname{Form}(P)\) for uncountable \(P\)
+(\cref{thm:p02-w02-p02-016-no-coding}).
+
+\subsection{Valuations over an arbitrary set of atoms}
+\label{sec:p02-w02-p02-016-semantics}
+
+\begin{hbconvention}{def:p02-w02-p02-016-semantics}{Semantic notions over \(\operatorname{Form}(P)\)}
+Let \(P\) be any set and let \(\operatorname{Form}(P)\) be as in
+\cref{def:p02-arbitrary-prop-language} and \cref{def:p02-fbc-language}, with
+primitive \(\bottom,\neg,\land,\lor,\to\).  A valuation is a total function
+\(v:P\to\{0,1\}\), and \(\widehat v:\operatorname{Form}(P)\to\{0,1\}\) is
+its extension by the truth clauses of \cref{sec:prop-syntax-semantics-02},
+reading \(1\) as \(\mathbf T\) and \(0\) as \(\mathbf F\).
+Write \(v\entails\chi\) when \(\widehat v(\chi)=1\).
+For \(\Gamma\subseteq\operatorname{Form}(P)\) and
+\(\varphi,\psi\in\operatorname{Form}(P)\):
+\(\Gamma\entails_P\varphi\) when every valuation \(v:P\to\{0,1\}\) satisfying
+every member of \(\Gamma\) satisfies \(\varphi\); \(\varphi\) is
+\emph{satisfiable over \(P\)} when some valuation satisfies it, and
+\emph{valid over \(P\)} when \(\varnothing\entails_P\varphi\); and
+\(\varphi\equiv_P\psi\) when \(\widehat v(\varphi)=\widehat v(\psi)\) for every
+valuation \(v\).
+For \(P=\mathsf{Prop}\), \(\operatorname{Form}(\mathsf{Prop})\) is
+\(\mathsf{Fm}_{\mathsf{CPL}}\) and these are exactly the semantic notions of
+\cref{sec:prop-syntax-semantics-02}; the subscript is then dropped.
+
+The occurring-variable set \(\operatorname{Var}(\chi)\subseteq P\) is defined
+by structural recursion:
+\(\operatorname{Var}(a)=\{a\}\) for \(a\in P\),
+\(\operatorname{Var}(\bottom)=\varnothing\),
+\(\operatorname{Var}(\neg\chi)=\operatorname{Var}(\chi)\), and
+\(\operatorname{Var}(\chi\circ\theta)=
+\operatorname{Var}(\chi)\cup\operatorname{Var}(\theta)\) for
+\(\circ\in\{\land,\lor,\to\}\).  For a set \(\Gamma\) of formulas,
+\(\operatorname{Var}(\Gamma)=\bigcup_{\gamma\in\Gamma}\operatorname{Var}(\gamma)\).
+\end{hbconvention}
+
+\begin{hbconvention}{def:p02-w02-p02-016-inputs}{Decision-procedure inputs}
+An input of the decision procedure of \cref{thm:p02-decidability} is a finite
+bit string.  Under \cref{def:p02-sat-taut} such a string is either malformed
+or the encoding of one formula of \(\mathsf{Fm}_{\mathsf{CPL}}\): each
+variable \(p_n\) is written with the binary numeral of its index, so the
+encoded formulas are exactly the formulas over the countable set
+\(\mathsf{Prop}\).  A question about a finite input over another set \(P\)
+(finitely many formulas of \(\operatorname{Form}(P)\)) is put to that
+procedure only through a translation into \(\mathsf{Fm}_{\mathsf{CPL}}\),
+such as the renaming of \cref{def:p02-w02-p02-016-renaming}.  An infinite set
+of premises is never an input.
+\end{hbconvention}
+
+\subsection{Finite inputs and their renaming into the countable coding}
+\label{sec:p02-w02-p02-016-transfer}
+
+\begin{hblemma}{thm:p02-w02-p02-016-finite-atoms}{proved=annex:p02-w02-p02-016-atoms}{A finite input has finitely many atoms}
+Let \(P\) be any set.
+\begin{enumerate}
+\item For every \(\chi\in\operatorname{Form}(P)\), the set
+      \(\operatorname{Var}(\chi)\) is finite, and every immediate
+      subformula \(\theta\) of \(\chi\) has
+      \(\operatorname{Var}(\theta)\subseteq\operatorname{Var}(\chi)\).
+\item For every finite \(\Gamma\subseteq\operatorname{Form}(P)\), the set
+      \(\operatorname{Var}(\Gamma)\) is finite.
+\item For an infinite \(\Gamma\) no such bound holds in general:
+      \(\Gamma=P\), each atom taken as an atomic formula, has
+      \(\operatorname{Var}(\Gamma)=P\).
+\end{enumerate}
+The proof uses no choice principle.
+\end{hblemma}
+
+\begin{hbdefinition}{def:p02-w02-p02-016-renaming}{Renaming a finite atom set into \(\mathsf{Prop}\)}
+Let \(P\) be a set, \(A\subseteq P\) a finite subset and
+\(\mathsf r:A\to\mathsf{Prop}\) an injection.  The induced translation
+\(\mathsf r^{\star}:\operatorname{Form}(P)\to\mathsf{Fm}_{\mathsf{CPL}}\) is defined
+by structural recursion:
+\[
+ \mathsf r^{\star}(a)=
+ \begin{cases}
+  \mathsf r(a), & a\in A,\\
+  \bottom, & a\in P\setminus A,
+ \end{cases}
+\]
+\[
+ \mathsf r^{\star}(\bottom)=\bottom,\qquad
+ \mathsf r^{\star}(\neg\chi)=\neg\mathsf r^{\star}(\chi),\qquad
+ \mathsf r^{\star}(\chi\circ\theta)=(\mathsf r^{\star}(\chi)\circ\mathsf r^{\star}(\theta))
+\]
+for \(\circ\in\{\land,\lor,\to\}\).  For a set \(\Gamma\) put
+\(\mathsf r^{\star}[\Gamma]=\{\mathsf r^{\star}(\gamma):\gamma\in\Gamma\}\).
+The atoms outside \(A\) are sent to \(\bottom\) only so that
+\(\mathsf r^{\star}\) is total; on formulas with
+\(\operatorname{Var}(\chi)\subseteq A\) it is a renaming of atoms.
+The map is \emph{initial for \(A\)} when \(A\) has \(k\) elements and
+\(\mathsf r\) is a bijection onto \(\{p_0,\ldots,p_{k-1}\}\).
+\index{renaming of atoms!finite input}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p02-w02-p02-016-transfer}{proved=annex:p02-w02-p02-016-transfer}{Finite-input transfer}
+Let \(P\) be any set, \(\Gamma\subseteq\operatorname{Form}(P)\) finite,
+\(\varphi,\psi\in\operatorname{Form}(P)\), and
+\(A=\operatorname{Var}(\Gamma\cup\{\varphi,\psi\})\).
+\begin{enumerate}
+\item \(A\) is finite, and an injection \(\mathsf r:A\to\mathsf{Prop}\) that is
+      initial for \(A\) exists.
+\item For every injection \(\mathsf r:A\to\mathsf{Prop}\),
+      \[
+       \Gamma\entails_P\varphi
+       \iff
+       \mathsf r^{\star}[\Gamma]\entails\mathsf r^{\star}(\varphi),
+      \]
+      \(\varphi\) is satisfiable over \(P\) iff \(\mathsf r^{\star}(\varphi)\) is
+      satisfiable, \(\varphi\) is valid over \(P\) iff
+      \(\mathsf r^{\star}(\varphi)\) is valid, and
+      \(\varphi\equiv_P\psi\) iff
+      \(\mathsf r^{\star}(\varphi)\equiv\mathsf r^{\star}(\psi)\).
+\item Consequently the answer to each of these four questions is the same for
+      every injection \(\mathsf r:A\to\mathsf{Prop}\).
+\end{enumerate}
+Neither the statement nor its proof uses a choice principle, the Boolean
+Prime Ideal Theorem, or any completeness or compactness theorem.
+\end{hbtheorem}
+
+\begin{hbcorollary}{thm:p02-w02-p02-016-decision}{proved=annex:p02-w02-p02-016-decision}{Finite inputs over an arbitrary set are settled in the countable coding}
+Let \(P\), \(\Gamma=\{\gamma_1,\ldots,\gamma_m\}\), \(\varphi\), \(\psi\) and
+\(A\) be as in \cref{thm:p02-w02-p02-016-transfer}, with \(A\) of size \(k\)
+and \(\mathsf r\) initial for \(A\).  Let \(\bigwedge\Gamma\) be the
+right-associated conjunction \((\gamma_1\land(\gamma_2\land\cdots))\) in the
+listed order, and \(\topv=\neg\bottom\) when \(m=0\).
+\begin{enumerate}
+\item \(\Gamma\entails_P\varphi\) iff the encoding, under
+      \cref{def:p02-sat-taut}, of
+      \(\mathsf r^{\star}((\bigwedge\Gamma)\to\varphi)\) belongs to
+      \(\mathsf{TAUT}\).
+\item \(\varphi\) is satisfiable over \(P\) iff the encoding of
+      \(\mathsf r^{\star}(\varphi)\) belongs to \(\mathsf{SAT}\); \(\varphi\) is
+      valid over \(P\) iff that encoding belongs to \(\mathsf{TAUT}\); and
+      \(\varphi\equiv_P\psi\) iff the encoding of
+      \(\mathsf r^{\star}((\varphi\to\psi)\land(\psi\to\varphi))\) belongs to
+      \(\mathsf{TAUT}\).
+\item Let \(X=\{p_0,\ldots,p_{k-1}\}\).  Each formula named in (1) and (2)
+      has all its variables in \(X\), and its membership in \(\mathsf{SAT}\) or
+      \(\mathsf{TAUT}\) is determined by its values under the \(2^k\)
+      functions \(u:X\to\{\mathbf T,\mathbf F\}\): it is
+      satisfiable iff one of them makes it true, and valid iff all of them do.
+\end{enumerate}
+\end{hbcorollary}
+
+The procedure of \cref{thm:p02-decidability} is applied to the encoded image,
+never to \(\operatorname{Form}(P)\) itself: the step from the input over
+\(P\) to a bit string is the finite table \(\mathsf r\), with \(k\) entries,
+which the corollary shows may be any injection with no effect on the answer.
+\Cref{thm:p02-w02-p02-018-decision} gives a written termination, correctness
+and running-time proof of the content of \cref{thm:p02-decidability} for the
+token encoding of \cref{def:p02-w02-p02-018-input}.  The finite-input
+decision is thus independent of the set-theoretic strength of the
+arbitrary-language theorem: it holds in \(\mathsf{ZF}\) for every set \(P\)
+and needs neither \(\mathsf{BPI}\) nor completeness.
+
+\subsection{What the arbitrary-language theorem does not supply}
+\label{sec:p02-w02-p02-016-limits}
+
+\begin{hbtheorem}{thm:p02-w02-p02-016-no-coding}{proved=annex:p02-w02-p02-016-no-coding}{No encoding or enumeration of an uncountable formula set}
+Let \(P\) be uncountable, that is, let there be no injection \(P\to\N\).
+\begin{enumerate}
+\item There is no injection \(\operatorname{Form}(P)\to\{0,1\}^*\); in
+      particular no encoding of \(\operatorname{Form}(P)\) by finite bit
+      strings exists, and \(\operatorname{Form}(P)\) is not the set of formulas
+      encoded by \cref{def:p02-sat-taut} or by any other injective coding.
+\item There is no surjection \(\N\to\operatorname{Form}(P)\); so
+      \(\operatorname{Form}(P)\) has no enumeration.
+\end{enumerate}
+\end{hbtheorem}
+
+\begin{proofboundary}{def:p02-w02-p02-016-bpi-boundary}{The BPI-relative theorem supplies no procedure, enumeration or encoding}
+\Cref{thm:p02-fbc-completeness,thm:p02-arbitrary-prop-completeness,%
+thm:p02-arbitrary-prop-compactness-bpi} assert, for each set \(P\), each
+\(\Gamma\subseteq\operatorname{Form}(P)\) and each \(\varphi\), the existence
+of a finite derivation, a finite assumption support or a satisfying valuation.
+The proof of \cref{thm:p02-fbc-completeness} obtains the countervaluation from
+one ultrafilter extension granted by \(\mathsf{BPI}\); nothing in it computes
+a finite support from \(\Gamma\), lists \(\operatorname{Form}(P)\), or assigns
+codes to formulas.  The limits are exact in three places.
+\begin{enumerate}
+\item If \(P\) is uncountable, \cref{thm:p02-w02-p02-016-no-coding} shows
+      that no encoding or enumeration of \(\operatorname{Form}(P)\) exists at
+      all, so a decision procedure in the sense of
+      \cref{def:p02-complexity-standing} cannot take
+      \(\operatorname{Form}(P)\) as its input domain.
+\item Even for \(P=\mathsf{Prop}\), where the choice-free countable theorem
+      already gives completeness and compactness, consequence from an infinite
+      premise set is undecidable in general:
+      \cref{thm:p02-w02-p02-018-limits}(1) shows that for all but countably
+      many \(S\subseteq\N\) the encodings of the consequences of
+      \(\{p_n:n\in S\}\) form a set decided by no machine.  Finite support of each
+      consequence (\cref{thm:prop-compactness}) does not say how to find the
+      supporting finite subset.
+\item If \(P\) is countable, an injection \(P\to\N\) exists by the definition
+      of countability, not by the arbitrary-language theorem, which makes no
+      reference to one; a computable presentation of such an injection is a
+      further datum that the theorem does not provide.
+\end{enumerate}
+In the other direction, the finite-input decision of
+\cref{thm:p02-w02-p02-016-decision} uses neither \(\mathsf{BPI}\) nor any
+completeness theorem.  The decision procedures and the arbitrary-language
+theorem are therefore separate tools: the first does not need the second,
+and the second does not yield the first.
+\end{proofboundary}
+
+\begingroup\small
+\begin{longtable}{@{}p{0.18\textwidth}p{0.22\textwidth}p{0.22\textwidth}p{0.26\textwidth}@{}}
+\caption{Three regimes for classical propositional consequence.}
+\label{tab:p02-w02-p02-016-regimes}\\
+\toprule
+Input & Set-theoretic standing & What holds & Effective content \\
+\midrule\endfirsthead
+\toprule
+Input & Set-theoretic standing & What holds & Effective content \\
+\midrule\endhead
+finite \(\Gamma\), \(\varphi\) over any set \(P\)
+ & \(\mathsf{ZF}\)
+ & transfer to \(\mathsf{Fm}_{\mathsf{CPL}}\)
+   (\cref{thm:p02-w02-p02-016-transfer})
+ & decided on the encoded image by \cref{thm:p02-decidability};
+   \(2^k\) rows (\cref{thm:p02-w02-p02-016-decision}) \\
+infinite \(\Gamma\subseteq\mathsf{Fm}_{\mathsf{CPL}}\)
+ & \(\mathsf{ZF}\); enumeration of \(\mathsf{Prop}\)
+   (\cref{lem:prop-lindenbaum})
+ & completeness and compactness
+   (\cref{thm:prop-completeness,thm:prop-compactness})
+ & no decision procedure in general
+   (\cref{thm:p02-w02-p02-018-limits}(1)) \\
+infinite \(\Gamma\subseteq\operatorname{Form}(P)\), \(P\) arbitrary
+ & \(\mathsf{ZF}+\mathsf{BPI}\); the scheme is equivalent to
+   \(\mathsf{BPI}\)
+ & completeness, finite support, compactness
+   (\cref{thm:p02-fbc-completeness})
+ & for uncountable \(P\), no encoding or enumeration
+   (\cref{thm:p02-w02-p02-016-no-coding}) \\
+\bottomrule
+\end{longtable}
+\endgroup
+
+\subsection{Worked example and failure case}
+\label{sec:p02-w02-p02-016-example}
+
+\begin{hbexample}{def:p02-w02-p02-016-example}{A finite input over an uncountable set of atoms}
+Let \(P=\{a_r:r\in\mathbb R\}\), one atom for each real number, with
+\(r\mapsto a_r\) injective; \(P\) is uncountable, so by
+\cref{thm:p02-w02-p02-016-no-coding} the set \(\operatorname{Form}(P)\) has no
+encoding.  Take
+\[
+ \Gamma=\{\,a_\pi\to a_{\sqrt2},\ \neg a_{\sqrt2}\,\},\qquad
+ \varphi=\neg a_\pi .
+\]
+Then \(A=\operatorname{Var}(\Gamma\cup\{\varphi\})=\{a_\pi,a_{\sqrt2}\}\), so
+\(k=2\).  The initial map \(\mathsf r(a_\pi)=p_0\), \(\mathsf r(a_{\sqrt2})=p_1\)
+gives \(\mathsf r^{\star}[\Gamma]=\{(p_0\to p_1),\neg p_1\}\) and
+\(\mathsf r^{\star}(\varphi)=\neg p_0\).  The formula of
+\cref{thm:p02-w02-p02-016-decision}(1) is
+\(\theta=(((p_0\to p_1)\land\neg p_1)\to\neg p_0)\), whose string, before the
+fixed-width binary character codes of \cref{def:p02-sat-taut}, is
+\texttt{(((p0;}\(\to\)\texttt{p1;)}\(\land\neg\)\texttt{p1;)}\(\to\neg\)\texttt{p0;)}.
+Its four rows \((p_0,p_1)\) are
+\((\mathbf T,\mathbf T)\): \(\neg p_1\) false, so the antecedent is false;
+\((\mathbf T,\mathbf F)\): \(p_0\to p_1\) false, so the antecedent is false;
+\((\mathbf F,\mathbf T)\): \(\neg p_1\) false;
+\((\mathbf F,\mathbf F)\): \(\neg p_0\) true.
+Every row makes \(\theta\) true, so the encoding lies in \(\mathsf{TAUT}\) and
+\(\Gamma\entails_P\varphi\).  The non-initial injection
+\(\mathsf r'(a_\pi)=p_7\), \(\mathsf r'(a_{\sqrt2})=p_2\) yields
+\((((p_7\to p_2)\land\neg p_2)\to\neg p_7)\), also valid, as
+\cref{thm:p02-w02-p02-016-transfer}(3) requires.  No step consulted any atom
+of \(P\) other than \(a_\pi\) and \(a_{\sqrt2}\).
+\end{hbexample}
+
+\begin{hbwarning}{def:p02-w02-p02-016-failure}{An infinite premise set over the same atoms is not an input}
+With \(P\) as in \cref{def:p02-w02-p02-016-example}, let
+\[
+ \Delta=\{a_0\}\cup\{\,a_r\to a_s : r,s\in\mathbb R,\ r<s\,\}.
+\]
+Then \(\Delta\entails_P a_1\), with finite support \(\{a_0,a_0\to a_1\}\);
+but \(\Delta\not\entails_P a_{-1}\), since the valuation with
+\(v(a_r)=1\) iff \(r\ge 0\) satisfies \(a_0\) and every \(a_r\to a_s\) with
+\(r<s\) (if \(r\ge0\) then \(s>0\)) and falsifies \(a_{-1}\).
+\Cref{thm:p02-fbc-completeness} guarantees that every consequence of
+\(\Delta\) has some finite support, but here the support was found by
+inspecting this particular \(\Delta\).  The set \(\Delta\) is infinite,
+so it is not a finite input; \(\operatorname{Var}(\Delta)=P\); and by
+\cref{thm:p02-w02-p02-016-no-coding} the formulas of
+\(\operatorname{Form}(P)\) cannot all be presented to a procedure acting on
+bit strings.  The question ``\(\Delta\entails_P\chi\)?'' for arbitrary \(\chi\)
+is therefore not a decision problem in the sense of
+\cref{def:p02-complexity-standing}; only its finite subinstances are.
+\end{hbwarning}
+
+\emph{Relationships.}
+The countable alphabet of \cref{sec:prop-syntax-semantics-01} is what makes
+both the enumeration in \cref{lem:prop-lindenbaum} and the encoding of
+\cref{def:p02-sat-taut} available; the arbitrary-language syntax of
+\cref{def:p02-arbitrary-prop-language} removes the first and the second
+together, and \cref{thm:p01-bpi-propositional-compactness} records the
+corresponding choice strength.  \Cref{def:p02-w02-p02-018-scope} states the
+same limits from the side of the decision procedure; this section supplies
+the positive transfer for finite inputs over an arbitrary \(P\) and the
+nonexistence of an encoding of \(\operatorname{Form}(P)\) itself.
+
+\emph{Sources.}  The results of this section are editorial, with complete
+proofs in the annex.  They rest on the restored definitions of
+\cref{sec:prop-syntax-semantics-01,sec:prop-syntax-semantics-02}, on
+\cref{lem:prop-coincidence}, on the encoding of \cref{def:p02-sat-taut}, and,
+for the decision procedure itself, on \cref{thm:p02-decidability}
+\parencite{EbbinghausFlumThomas1994}; the arbitrary-language theorem and its
+calibration are those of \cref{thm:p02-fbc-completeness} and
+\cref{thm:p02-arbitrary-prop-compactness-bpi} \parencite{HowardRubin1998}.
+
+\index{decision procedure!finite inputs over arbitrary atoms}
+\index{propositional language!arbitrary alphabet!decidability}

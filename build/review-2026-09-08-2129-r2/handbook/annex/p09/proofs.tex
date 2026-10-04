@@ -1,0 +1,245 @@
+%% annex/p09/proofs.tex --- editorial proofs for Part IX
+
+\begin{annexitem}{annex:p9.alc.1}{thm:p09-alc-tableau}{Correctness and termination of the \(\mathcal{ALC}\) completion procedure}
+Put
+\(\mathcal C=\operatorname{cl}(C_0,\mathcal T,\mathcal A)\), as in
+Definition~\ref{def:p09-alc-tableau}, and let \(N=|\mathcal C|\).  Every label
+is a subset of the finite set \(\mathcal C\).  A Boolean, universal, or global
+step strictly enlarges one label; each disjunction occurrence is resolved once
+on a branch; and each existential formula at a node creates at most one
+witness because its witness persists.  Only the existential rule creates
+nodes, so the number of witness children of a node is bounded by the number of
+existential formulas in \(\mathcal C\); the initial roots and declared ABox
+edges are finite fixed input data.  At every stage, an unblocked
+witness-tree root-to-node path has no descendant label contained in an
+ancestor label, and hence has at most \(2^N\) unblocked nodes.  A new witness
+can be created only at an unblocked source, so no witness-tree node can occur
+below depth \(2^N\).  The finite depth and finite witness branching bound the
+number of completion nodes.  Each such node permits only finitely many strict
+label additions and branch choices.  Every legal expansion sequence therefore
+terminates.
+
+For completeness, suppose that an interpretation \(I\) satisfies the TBox and
+ABox and, when \(C_0\) is present, has some element in \(C_0^I\).  Map every
+named root \(a\) to \(a^I\), the tested root to such an element, and a
+TBox-only anonymous root to
+any element of the nonempty domain.  The initialization rule satisfies
+\[
+ E\in\mathcal L(x)\Longrightarrow\pi(x)\in E^I,
+ \qquad
+ x\mathrel r y\Longrightarrow(\pi(x),\pi(y))\in r^I:
+\]
+ABox concept assertions give the first clause at named roots, ABox role
+assertions give the second, the tested concept gives the first at \(c_0\), and
+every global internalization is true at every domain element.  Conjunction and
+universal propagation preserve the invariant.  At a disjunction choose a true
+disjunct, and at an existential choose a semantic witness as the image of the
+fresh node.  Blocking suppresses a construction step but adds no formula, so
+it cannot create a clash.  Exhausting these model-guided choices yields a
+complete clash-free branch.
+
+For soundness, fix a complete clash-free branch and let the interpretation
+domain be the unblocked completion nodes.  Redirection is defined only where
+the role interpretation needs it.  For every retained edge
+\(x\mathrel r y\) whose source \(x\) is unblocked, put
+\[
+ \widehat y=
+ \begin{cases}
+  y,&y\text{ is unblocked},\\
+  b(y),&y\text{ is blocked},
+ \end{cases}
+\]
+where in the second case \(b(y)\) is a directly blocking ancestor satisfying
+\(\mathcal L(y)\subseteq\mathcal L(b(y))\).  This choice is defined on every
+such target: if \(y\) is blocked while its immediate predecessor \(x\) is
+unblocked, no ancestor of \(y\) is blocked, so \(y\) is directly blocked and
+each possible blocker is unblocked.  Residual nodes blocked only through an
+ancestor are outside the domain of this redirection.  Interpret a concept name
+\(A\) by
+\[
+ A^I=\{x:x\text{ is unblocked and }A\in\mathcal L(x)\},
+\]
+and put \((x,\widehat y)\in r^I\) for every retained edge \(x\mathrel r y\) whose
+source \(x\) is unblocked.  Named roots are never blocked, so interpret each
+individual by its root.
+
+For every unblocked \(x\) and \(E\in\mathcal L(x)\), structural induction on
+\(E\) proves \(x\in E^I\).  Clash-freeness handles concept names and their NNF
+negations; completion handles conjunction and disjunction.  If
+\(\exists r.D\in\mathcal L(x)\), completeness and the fact that \(x\) is
+unblocked supply an edge \(x\mathrel r y\) with
+\(D\in\mathcal L(y)\).  If \(y\) is blocked, subset blocking gives
+\(\mathcal L(y)\subseteq\mathcal L(\widehat y)\), so the induction hypothesis applies
+at the redirected target.  If \(\forall r.D\in\mathcal L(x)\), universal
+propagation puts \(D\) in every original target label; the same subset argument
+transfers it to each redirected target.  Hence the interpretation satisfies
+every labelled concept.
+
+Every global internalization labels every node, so the interpretation satisfies
+\(\mathcal T\).  Initialized named-root labels and retained declared edges
+satisfy \(\mathcal A\), and the tested root satisfies \(C_0\) when present.
+Thus a complete clash-free branch yields a finite model.  The model-guided and
+model-extraction directions, together with termination, prove
+Theorem~\ref{thm:p09-alc-tableau}.
+\end{annexitem}
+
+\begin{annexitem}{annex:p9.ctl.1}{thm:p09-ctl-labelling}{Correctness and complexity of CTL labelling}
+Proceed by structural induction on the processed CTL formula.  Atomic,
+negation, conjunction, and disjunction clauses are exactly their truth-set
+operations.  The two predecessor clauses are the semantic clauses for
+\(\mathsf{EX}\) and \(\mathsf{AX}\).
+
+For the least fixed point defining \(\mathsf E[B\mathsf U C]\), iteration from
+\(\varnothing\) has the following stage invariant: a state enters by stage
+\(i+1\) exactly when it begins a path of at most \(i\) transitions whose final
+state satisfies \(C\) and whose earlier states satisfy \(B\).  The claim follows
+by induction on \(i\), using \(\operatorname{Pre}_{\exists}\) for the first
+edge.  Taking the union of the stages gives precisely the existential-until
+semantics.
+
+For \(\mathsf A[B\mathsf U C]\), the analogous stage invariant says that every
+path reaches a \(C\)-state within the common bound \(i\), with \(B\) before
+that point.  The induction uses \(\operatorname{Pre}_{\forall}\).  If the CTL
+semantics holds but no finite common bound exists, finite branching supplies,
+by K\"onig's lemma, an infinite path that remains in \(B\setminus C\), a
+contradiction.  Thus the least fixed point is exactly universal until.
+
+Iteration for \(\mathsf{EG}B\) from \(S\) removes precisely states from which
+no arbitrarily long \(B\)-path begins.  In a finite graph, arbitrarily long
+such paths yield an infinite one; conversely the states of any infinite
+\(B\)-path form a post-fixed set.  This proves the greatest-fixed-point clause.
+The \(\mathsf{AG}B\) clause is the universal analogue: its greatest fixed point
+is the largest successor-closed subset of \(L(B)\).  The derived
+\(\mathsf{EF}\) and \(\mathsf{AF}\) cases are the until cases with left operand
+\(\top\).  This completes the truth-set induction.
+
+For complexity, store one bit per state and subformula.  Boolean and predecessor
+clauses scan states and adjacency lists once.  In an until or globally clause,
+a worklist charges each state insertion or deletion once and each incident edge
+when that change is propagated.  Hence each subformula costs
+\(O(|S|+|R|)\), and all subformulas cost
+\(O((|S|+|R|)|A|)\), as claimed.
+\end{annexitem}
+
+\begin{annexitem}{annex:p9.hoare.1}{thm:p09-hoare-soundness}{Soundness of the registered Hoare rules}
+Induct on a derivation on
+\hyperref[sheet:hoare-while]{\texttt{sheet:hoare-while}}.  Skip preserves the
+state.  Assignment followed from a state satisfying \(Q[e/x]\) produces
+exactly the updated state satisfying \(Q\); this is the substitution lemma for
+total expressions.  Consequence composes the two valid assertion implications
+with the induction hypothesis.  Sequence composes the intermediate state of
+the first big step with the second.  A conditional big step takes exactly the
+branch selected by \(b\), so the corresponding premise applies.  Each of these
+arguments preserves both the partial and total tag; in the total case the
+induction hypotheses also supply termination of the premise commands.
+
+For the partial while rule, induct on the number of body executions in a
+terminating big-step derivation.  With zero executions, \(I\land\neg b\) holds.
+Otherwise \(I\land b\) holds initially, the premise returns a state satisfying
+\(I\), and the induction hypothesis applies to the remaining loop derivation.
+
+For the total while rule, first take an arbitrary state satisfying \(I\).  If
+\(b\) is false, the loop exits immediately, with the required postcondition.
+If \(b\) is true, the first side premise makes the old integer value
+\(n=\llbracket t\rrbracket\) nonnegative.  Prove termination from every such
+guarded state by well-founded induction on \(n\in\mathbb N\).  Give the fresh
+rigid variable \(z\) the value \(n\).  The total-correctness premise terminates
+the body in a state satisfying \(I\) and having variant value \(n'<n\).  If
+the guard is now false, the loop exits.  If it remains true, the first side
+premise gives \(n'\geq0\), so the induction hypothesis applies to the
+remaining loop.  Thus every initial \(I\)-state terminates, whether it exits
+before the induction is needed or enters with a natural-valued measure.  Its
+final state satisfies \(I\land\neg b\).  Every registered rule is therefore
+sound for its printed correctness tag.
+\end{annexitem}
+
+\begin{annexitem}{annex:p9.tqbf.1}{thm:p04-tqbf-pspace}{TQBF completeness: membership and polynomial-space simulation}
+Membership is direct.  Evaluate a closed quantified Boolean formula by a
+depth-first recursion on its syntax.  At \(\exists p\), evaluate the body first
+with \(p=0\) and, if necessary, with \(p=1\); at \(\forall p\), require both
+values.  The two branches are explored sequentially.  A current assignment,
+syntax position, and recursion stack use space polynomial in the formula
+length, so \(\mathsf{TQBF}\in\mathsf{PSPACE}\).
+
+For hardness, let deterministic machine \(M\) use at most \(p(n)\) work cells.
+Modify it, without changing its language or polynomial-space bound, so that
+acceptance first erases the work tapes, resets the encoded heads, and enters
+one canonical accepting configuration.  Encode each configuration on input
+\(x\) by an \(m\)-bit block, where \(m\geq1\) is polynomial in \(|x|\).
+The read-only input contents are fixed by \(x\), rather than copied into the
+work-tape block.
+There is a polynomial-size Boolean formula
+\(\operatorname{Step}_{M,x}(u,v)\) which holds exactly when valid block \(v\)
+is the unique legal successor of valid block \(u\): it checks the state, head,
+and each tape cell by the finite local transition table, and it is false when
+either block is invalid.  Write
+\(\operatorname{Eq}(u,v)\) for bitwise equality of two \(m\)-bit blocks.
+
+The following are metalinguistic formula abbreviations, introduced solely to
+prevent the usual duplicated-recursion blow-up.  Their standing is a family of
+quantified Boolean formulas with two free \(m\)-bit parameter blocks; they add
+no connective to QBF.  Put
+\[
+ R_0(u,v)=\operatorname{Eq}(u,v)\lor
+           \operatorname{Step}_{M,x}(u,v).
+\]
+For fresh \(m\)-bit blocks \(z,a,c\) and a fresh bit \(b\), let
+\[
+\begin{aligned}
+ \operatorname{Sel}_b(u,z,v;a,c)
+  ={}&\bigl(\neg b\to
+       (\operatorname{Eq}(a,u)\land\operatorname{Eq}(c,z))\bigr)\\
+    &\land\bigl(b\to
+       (\operatorname{Eq}(a,z)\land\operatorname{Eq}(c,v))\bigr),\\
+ R_{i+1}(u,v)
+  ={}&\exists z\,\forall b\,\exists a\,\exists c\,
+       \bigl(\operatorname{Sel}_b(u,z,v;a,c)\land R_i(a,c)\bigr).
+\end{aligned}
+\]
+Here a block quantifier abbreviates \(m\) ordinary Boolean quantifiers.  The
+selector is necessary because it makes the universally chosen half use one,
+not two, textual occurrences of \(R_i\).  Its quantified blocks \(a,c\) may
+depend on \(b\).  Consequently
+\[
+ |R_{i+1}|=|R_i|+O(m),
+\]
+apart from the fixed polynomial-size base formula.
+
+Induction on \(i\) proves the following statement for all \(m\)-bit blocks,
+including invalid ones: \(R_i(u,v)\) is true exactly when there are blocks
+\[
+ u=w_0,w_1,\ldots,w_\ell=v,
+ \qquad \ell\leq2^i,
+\]
+such that every adjacent pair satisfies either \(\operatorname{Eq}\) or
+\(\operatorname{Step}_{M,x}\).  The base is the displayed definition of
+\(R_0\).  For the successor case, the existential block \(z\) is a midpoint,
+and the universal bit demands both halves: when \(b=0\) the sole recursive
+occurrence receives \((u,z)\), and when \(b=1\) it receives \((z,v)\).
+Concatenating the two paths proves one direction.  Conversely, on a path of
+length at most \(2^{i+1}\), choose \(z\) after
+\(\min\{\ell,2^i\}\) edges; both resulting pieces have length at most
+\(2^i\), and the selector supplies the required endpoints for each value of
+\(b\).
+
+Because \(\operatorname{Step}_{M,x}\) relates only valid blocks, a sequence
+beginning at a valid block cannot enter an invalid block: equality preserves
+the block, and a step has a valid target.  Hence, for valid \(u,v\), the
+induction statement is exactly reachability of the configuration encoded by
+\(v\) from that encoded by \(u\) in at most \(2^i\) machine steps; equality
+accounts only for unused allowance.
+
+There are at most \(2^m\) encoded configurations.  A deterministic accepting
+run reaches the canonical accepting configuration without repeating a
+configuration, since a repetition would loop forever.  Therefore, with the
+constant blocks \(c_{\mathrm{init}}(x)\) and \(c_{\mathrm{acc}}\),
+\[
+ \Phi_{M,x}=R_m(c_{\mathrm{init}}(x),c_{\mathrm{acc}})
+\]
+is true exactly when \(M\) accepts \(x\).  Its size is polynomial because the
+base is polynomial and the recurrence adds only \(O(m)\) symbols at each of
+\(m\) levels; it is constructed in polynomial time with fresh variable names.
+This gives a polynomial-time many-one reduction from every language in
+\(\mathsf{PSPACE}\) to \(\mathsf{TQBF}\), completing the two directions used
+by Theorem~\ref{thm:p04-tqbf-pspace}.
+\end{annexitem}

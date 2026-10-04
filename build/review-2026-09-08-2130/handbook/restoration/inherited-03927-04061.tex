@@ -1,0 +1,135 @@
+\chapter{First-Order Deduction}
+\label{ch:fol-deduction}
+
+\section{Natural-deduction rules for quantifiers and equality}
+\label{sec:fol-deduction-01}
+
+The calculus \(\ND_{\FOL}\) contains every rule of \(\ND_{\CPL}\) and the
+following rules.  Every displayed substitution is the capture-avoiding
+substitution of \cref{ch:fol-syntax-semantics}.
+\[
+\begin{array}{c@{\qquad}c}
+\Rule[\(\forall E\)]{\forall x\,\varphi}{\varphi[t/x]}
+&
+\Rule[\(\exists I\)]{\varphi[t/x]}{\exists x\,\varphi}
+\end{array}
+\]
+\[
+\Rule[\(\forall I\)]{\varphi}{\forall x\,\varphi}
+\side{provided \(x\) is not free in any open assumption}.
+\]
+\[
+\Rule[\(\exists E\)]{
+ \exists x\,\varphi\qquad
+ \begin{array}{c}[\varphi[y/x]]^i\\ \vdots\\ \psi\end{array}}
+ {\psi}
+\side{\(y\) is absent from \(\psi\), from every other open assumption,
+and from \(\exists x\,\varphi\)}.
+\]
+A variable subject to a freshness side condition in a rule instance is the
+\emph{eigenvariable} of that instance; in \(\exists E\) the eigenvariable
+is \(y\), and in \(\forall I\) it is the generalized variable \(x\).  The
+rule \(\exists E\) discharges
+all assumptions marked \(i\).  Its freshness condition prevents the temporary
+witness from appearing in the conclusion or surviving assumptions.
+
+Because formulas are strings rather than alpha-equivalence classes, the
+calculus also contains the explicit conversion rule
+\[
+  \Rule[\(\alpha\)]{\varphi}{\psi}
+  \side{provided \(\varphi\equiv_\alpha\psi\)}.
+\]
+The rule's premise and conclusion are formulas, and its side condition is the
+syntactic alpha-equivalence relation of
+\cref{sec:fol-syntax-semantics-04}.  It changes only bound-variable names, so
+it is neither identity elimination nor replacement by an arbitrary
+logically equivalent formula.  The rule is required below when a fresh
+eigenvariable of \(\forall I\) produces an alpha-equivalent, but not
+literally identical, quantified formula.
+
+Equality is governed by identity introduction and substitutivity:
+\[
+\begin{array}{c@{\qquad}c}
+\Rule[\(=I\)]{}{t=t}
+&
+\Rule[\(=E\)]{r=t\qquad\varphi[r/x]}{\varphi[t/x]}.
+\end{array}
+\]
+The formula \(\varphi\) may contain zero or more free occurrences of \(x\).
+The rule uses actual identity in the semantics; it does not merely postulate
+that an arbitrary relation is reflexive.
+
+\begin{definition}[First-order derivability]
+For \(\Gamma\subseteq\Fm(\Lang)\), write
+\(\Gamma\derives_{\ND_{\FOL}}\varphi\) iff there is a
+\(\ND_{\FOL}\)-derivation of \(\varphi\) whose open assumptions all belong to
+\(\Gamma\).
+\end{definition}
+
+\begin{lemma}[Invariance under reduct]
+\label{lem:reduct-invariance}
+Let \(\Lang'\) extend \(\Lang\), let \(\Meta'\) be a
+\(\Lang'\)-structure, and let \(s\) be a variable assignment in its domain.
+For every \(\Lang\)-term \(t\) and \(\Lang\)-formula \(\varphi\),
+\[
+ \sem{t}^{\Meta'}_s=\sem{t}^{\Meta'\restr\Lang}_s,
+ \qquad
+ \Meta',s\entails\varphi
+ \quad\Longleftrightarrow\quad
+ \Meta'\restr\Lang,s\entails\varphi.
+\]
+\end{lemma}
+\begin{proof}
+Induct on terms for the first equality.  Every function symbol in the term has
+the same interpretation in the expansion and reduct.  Then induct on formulas.
+The atomic cases use the term result and equality of the old relation-symbol
+interpretations.  The clauses for \(\bottom\) and the connectives are
+immediate from the induction hypotheses.  In a quantifier case the two
+structures have the same domain, so they range over the same elements; apply
+the induction hypothesis under each updated assignment.
+\end{proof}
+
+\begin{example}[Universal reasoning]
+The premises
+\(\forall x(P(x)\to Q(x))\) and \(\forall xP(x)\) derive
+\(\forall xQ(x)\):
+\[
+\begin{array}{rll}
+1.&\forall x(P(x)\to Q(x))&\text{premise}\cr
+2.&\forall xP(x)&\text{premise}\cr
+3.&P(y)\to Q(y)&\forall E,1\cr
+4.&P(y)&\forall E,2\cr
+5.&Q(y)&\to E,3,4\cr
+6.&\forall yQ(y)&\forall I,5\cr
+7.&\forall xQ(x)&\alpha,6.
+\end{array}
+\]
+The variable \(y\) is not free in either premise, so the side condition at
+line 6 is met.  Line 7 applies the \(\alpha\) rule, because
+\(\forall yQ(y)\) and \(\forall xQ(x)\) are alpha-equivalent but not
+identical strings.
+\end{example}
+
+\begin{example}[Existential elimination]
+From \(\exists x(P(x)\land Q(x))\) derive \(\exists xP(x)\):
+\[
+\begin{array}{rll}
+1.&\exists x(P(x)\land Q(x))&\text{premise}\cr
+2.&\quad[P(y)\land Q(y)]^1&\text{assumption, \(y\) fresh}\cr
+3.&\quad P(y)&\land E_1,2\cr
+4.&\quad\exists xP(x)&\exists I,3\cr
+5.&\exists xP(x)&\exists E,1,2\text{--}4.
+\end{array}
+\]
+The eigenvariable \(y\) does not occur in the conclusion.
+\end{example}
+
+\begin{example}[Symmetry of equality]
+The rule \(=E\) derives \(t=r\) from \(r=t\).  Choose a variable \(x\)
+with \(x\notin\operatorname{Var}(r)\); this is possible because \(\Var\)
+is infinite and \(r\) is a finite string.  From \(=I\) obtain
+\(r=r\).  In the formula \(\varphi\defeq x=r\), the instance
+\(\varphi[r/x]\) is \(r=r\) and the instance \(\varphi[t/x]\) is
+\(t=r\).  Apply \(=E\) to \(r=t\) and \(r=r\).
+\end{example}
+

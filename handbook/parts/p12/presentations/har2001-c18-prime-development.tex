@@ -1,0 +1,310 @@
+\subsection{The historical arithmetic library and Euclid development}
+
+\begin{hbdefinition}{def:p12-har-prime-regime}{The exact historical elimination boundary}
+The following development reconstructs the chapter's Coq~6.3 example,
+not a silently imported modern natural-number library. Its data declaration
+is \(\mathsf{nat}:\mathsf{Set}\), with \(O:\mathsf{nat}\) and
+\(S:\mathsf{nat}\to\mathsf{nat}\). The licensed operations are
+structural recursion and case analysis on this \emph{data} declaration,
+and the generated induction principle
+\[
+ \mathsf{nat\_ind}:\Pi P:\mathsf{nat}\to\mathsf{Prop}.
+ P O\to(\Pi n:\mathsf{nat}.P n\to P(S n))\to
+ \Pi n:\mathsf{nat}.P n.
+\]
+The historical logical declarations are likewise retained:
+\(\mathsf{and}\ A\ B:\mathsf{Prop}\) has constructor
+\(\mathsf{conj}:A\to B\to\mathsf{and}\ A\ B\);
+\(\mathsf{TT}:\mathsf{Prop}\) has \(\mathsf{trivial}:\mathsf{TT}\);
+\(\mathsf{FF}:\mathsf{Prop}\) has no constructors;
+\(\mathsf{or}\ A\ B:\mathsf{Prop}\) has
+\(\mathsf{or\_introl}:A\to\mathsf{or}\ A\ B\) and
+\(\mathsf{or\_intror}:B\to\mathsf{or}\ A\ B\).
+For \(A:\mathsf{Set}\) and \(P:A\to\mathsf{Prop}\),
+\(\mathsf{ex}\ A\ P:\mathsf{Prop}\) has
+\(\mathsf{ex\_intro}:\Pi x:A.P x\to\mathsf{ex}\ A\ P\).
+Here \(\neg a:=a\to\mathsf{FF}\) and
+\(a\leftrightarrow b:=(a\to b)\wedge(b\to a)\).
+In particular, the displayed source \(\mathsf{Is\_suc}\) case analysis
+returns a proposition code, whereas plus, times, predecessor, subtraction
+and factorial return data. Induction on \(\mathsf{leseq}\) and elimination
+of \(\mathsf{and},\mathsf{or},\mathsf{ex},\mathsf{FF}\) below have
+\(\mathsf{Prop}\) targets only. For
+\(\mathsf{eq}\ A\ x:\!A\to\mathsf{Prop}\), the constructor is
+\(\mathsf{refl\_equal}:\mathsf{eq}\ A\ x\ x\), and its generated
+\emph{propositional} eliminator transports \(P x\) along \(x=y\) to
+\(P y\), for \(P:A\to\mathsf{Prop}\). No equality reflection,
+proof irrelevance, choice, or elimination of an existential proof into
+\(\mathsf{Set}\) is used. Finally, retain the explicit source axiom
+\[
+ \mathsf{DN}:\Pi a:\mathsf{Prop}.((a\to\mathsf{FF})\to\mathsf{FF})\to a.
+\]
+These are the historical inductive/recursive extensions of the example,
+not assertions about the beta-only \(\lambda\mathsf{HOL}\) calculus.
+The chapter's historical \((x:A)B\) notation denotes a dependent
+product and \([x:A]m\) denotes annotated abstraction; the formulas
+below use \(\Pi\) and \(\lambda\) for those same constructions.
+Section~3.8's abstract \(\mathsf{nat}:\mathsf{Type}\) and its separately
+registered data/proof \(\mathsf{Rec}_{\mathsf{nat}}\) schemas are not
+identified with this historical \(\mathsf{Set}\) spelling. The following
+proofs are relative to the stated generated principles; a general
+consistency theorem for all universe/inductive extensions is a separate
+metatheoretic obligation \cite[pp.~1214--1220]{BarendregtGeuvers2001}.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p12-har-prime-arithmetic}{Source definitions and the needed finite data recursions}
+Use the source names \(\mathsf{one}:=S O\), \(\mathsf{two}:=S\mathsf{one}\),
+and \(\mathsf{Is\_suc}(O):=\mathsf{FF}\),
+\(\mathsf{Is\_suc}(S n):=\mathsf{TT}\). The source equations are
+\[
+\begin{aligned}
+ \mathsf{plus}\ O\ m&=m,& \mathsf{plus}\ (S n)\ m&=S(\mathsf{plus}\ n\ m),\\
+ \mathsf{times}\ O\ m&=O,& \mathsf{times}\ (S n)\ m&=
+               \mathsf{plus}\ (\mathsf{times}\ n\ m)\ m.
+\end{aligned}
+\]
+Write \(n+m:=\mathsf{plus}\ n\ m\), \(nm:=\mathsf{times}\ n\ m\),
+\(n\le m:=\mathsf{leseq}\ n\ m\), and
+\(n<m:=\mathsf{leseq}\ (S n)\ m\). The constructors of
+\(\mathsf{leseq}\ n\) are \(\mathsf{leseq\_n}:n\le n\) and
+\(\mathsf{leseq\_suc}:\Pi m.(n\le m)\to(n\le S m)\).
+The instantiated propositional induction schema used for the ordering is
+\[
+ \Pi n:\mathsf{nat}.\Pi P:\mathsf{nat}\to\mathsf{Prop}.
+ P n\to(\Pi m:\mathsf{nat}.(n\le m)\to P m\to P(S m))\to
+ \Pi m:\mathsf{nat}.(n\le m)\to P m.
+\]
+It is generated from these two constructors; it neither changes the
+fixed lower bound n nor eliminates into data.
+Also \(\mathsf{before}\ n\ P:=\Pi k.(k<n)\to P k\).
+The source divisor convention is crucial:
+\[
+\begin{aligned}
+ \mathsf{div}\ d\ n&:=\exists x:\mathsf{nat}.\;xd=n,\\
+ \mathsf{propdiv}\ d\ n&:=(\mathsf{one}<d)\wedge(d<n)\wedge\mathsf{div}\ d\ n,\\
+ \mathsf{prime}\ n&:=(\mathsf{one}<n)\wedge
+                    \neg\exists d.\mathsf{propdiv}\ d\ n,\\
+ \mathsf{primediv}\ p\ n&:=\mathsf{prime}\ p\wedge\mathsf{div}\ p\ n,\\
+ \mathsf{HPD}\ n&:=\exists p.\mathsf{primediv}\ p\ n.
+\end{aligned}
+\]
+Here \(\exists\) is the source \(\mathsf{ex}:\mathsf{Prop}\), not a
+strong sum. Needed data recursions, supplied rather than assumed as
+theorems, are
+\[
+\begin{aligned}
+ \mathsf{pred}\ O&:=O,&\mathsf{pred}(S n)&:=n,\\
+ O\mathbin{\dot{-}}b&:=O,&(S a)\mathbin{\dot{-}}O&:=S a,&
+ (S a)\mathbin{\dot{-}}(S b)&:=a\mathbin{\dot{-}}b,\\
+ \mathsf{fac}\ O&:=\mathsf{one},&\mathsf{fac}(S n)&:=(S n)(\mathsf{fac}\ n).
+\end{aligned}
+\]
+Subtraction is structural recursion on the first input, returning a
+function of the second; factorial is structural recursion on its input.
+All displayed equations are computation equations, not arithmetic
+lemmas. More explicitly, the historical \(\mathsf{nat\_rec}\) schema
+is instantiated at \(C=\mathsf{nat}\to\mathsf{nat}\) for
+\[
+\begin{aligned}
+ \mathsf{plus}&:=\mathsf{nat\_rec}
+  (\lambda m:\mathsf{nat}.m)
+  (\lambda n:\mathsf{nat}.\lambda r:\mathsf{nat}\to\mathsf{nat}.
+                    \lambda m:\mathsf{nat}.S(r m)),\\
+ \mathsf{times}&:=\mathsf{nat\_rec}
+  (\lambda m:\mathsf{nat}.O)
+  (\lambda n:\mathsf{nat}.\lambda r:\mathsf{nat}\to\mathsf{nat}.
+                    \lambda m:\mathsf{nat}.\mathsf{plus}(r m)m),\\
+ \mathsf{sub}&:=\mathsf{nat\_rec}
+  (\lambda b:\mathsf{nat}.O)
+  (\lambda a:\mathsf{nat}.\lambda r:\mathsf{nat}\to\mathsf{nat}.
+    \lambda b:\mathsf{nat}.
+     \mathsf{nat\_rec}(S a)
+       (\lambda c:\mathsf{nat}.\lambda z:\mathsf{nat}.r c)\ b).
+\end{aligned}
+\]
+Here \(a\mathbin{\dot{-}}b:=\mathsf{sub}\ a\ b\), and the inner
+sub recursor has \(C=\mathsf{nat}\) and ignores its recursive z.
+At that same data target,
+\(\mathsf{pred}:=\mathsf{nat\_rec}\ O\
+(\lambda n:\mathsf{nat}.\lambda r:\mathsf{nat}.n)\)
+and \(\mathsf{fac}:=\mathsf{nat\_rec}\ \mathsf{one}\
+(\lambda n:\mathsf{nat}.\lambda r:\mathsf{nat}.\mathsf{times}(S n)r)\).
+The base and step of each instance have respectively types C and
+\(\mathsf{nat}\to C\to C\); their constructor computation gives
+exactly the equations above. This uses several instantiated recursion
+schemas, not a new base-calculus constant polymorphic over a top sort.
+The source's repeated \((n,m,k:\mathsf{nat})\) binder groups in
+\(\mathsf{plus\_ass}\) and \(\mathsf{distr}\) are reconstructed below
+with one binder group: no hidden extra parameters are required
+\cite[pp.~1219--1220 and p.~1215, note~4]{BarendregtGeuvers2001}.
+If the repeated names are instead read as literal binder shadowing,
+alpha-rename the outer triple to \(n_0,m_0,k_0\). The resulting
+six-argument type has those three arguments unused; its witness is
+\(\lambda n_0:\mathsf{nat}.\lambda m_0:\mathsf{nat}.
+\lambda k_0:\mathsf{nat}.L\), where L is the fully quantified
+single-triple proof of \(\mathsf{plus\_ass}\) or distr constructed below. Thus neither
+reading requires an additional arithmetic lemma; no claim about the
+historical parser accepting that typography is needed.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p12-har-prime-logical}{proved=annex:p12.har.prime-logical}{The source logical library, with classical dependence separated}
+Let \(a,b,c:\mathsf{Prop}\), \(A:\mathsf{Set}\), and
+\(P,Q:A\to\mathsf{Prop}\); all these parameters are universally
+quantified in the following signatures.
+The source constructor/eliminator aliases
+\(\mathsf{and\_in},\mathsf{and\_ell},\mathsf{and\_elr},
+\mathsf{false\_el},\mathsf{or\_inl},\mathsf{or\_inr},\mathsf{or\_el}\)
+have the generated propositional introduction/projection/elimination
+types. Also \(\mathsf{all\_el}:\Pi x:A.(\Pi y:A.P y)\to P x\)
+and \(\mathsf{ex\_in}:\Pi x:A.P x\to\mathsf{ex}\ A\ P\)
+are constructed directly, as is
+\(\mathsf{non\_or}:\neg(a\vee b)\to\neg a\wedge\neg b\).
+The source \(\mathsf{non\_ex},\mathsf{all\_not},\mathsf{all\_and},
+\mathsf{ex\_or}\) have the following types:
+\[
+\begin{aligned}
+ \mathsf{non\_ex}&:\neg(\exists x.P x)\to\Pi x.\neg P x,\\
+ \mathsf{all\_not}&:(\Pi x.\neg P x)\to\neg\exists x.P x,\\
+ \mathsf{all\_and}&:(\Pi x.P x\wedge Q x)\to
+                         (\Pi x.P x)\wedge(\Pi x.Q x),\\
+ \mathsf{ex\_or}&:(\exists x.P x\vee Q x)\to
+                         (\exists x.P x)\vee(\exists x.Q x).
+\end{aligned}
+\]
+Each bound x has domain A. The source
+\(\mathsf{dn\_c}:\neg\neg a\leftrightarrow a\),
+\(\mathsf{tnd}:a\vee\neg a\),
+\(\mathsf{non\_all}:\neg(\forall x.P x)\to\exists x.\neg P x\),
+and \(\mathsf{ex\_c}:(\exists x.P x)\leftrightarrow\neg\forall x.\neg P x\)
+are constructed using the displayed \(\mathsf{DN}\). The first four
+displayed predicate-logic lemmas and the introduction/elimination aliases
+need no classical axiom and require no inhabitant of \(A\).
+\end{hblemma}
+
+\begin{hblemma}{thm:p12-har-prime-equality}{proved=annex:p12.har.prime-equality}{Equality transport and natural-number separation}
+The source \(\mathsf{sym\_eq},\mathsf{leib},\mathsf{eq\_ind\_r},
+\mathsf{f\_equal},\mathsf{no\_conf}\) are derivable from the stated
+propositional equality eliminator, at these exact signatures:
+\[
+\begin{aligned}
+ \mathsf{sym\_eq}&:\Pi A:\mathsf{Set}.\Pi x,y:A.(x=y)\to(y=x),\\
+ \mathsf{leib}&:\Pi A:\mathsf{Set}.\Pi P:A\to\mathsf{Prop}.
+                   \Pi x,y:A.(x=y)\to P x\to P y,\\
+ \mathsf{eq\_ind\_r}&:\Pi A:\mathsf{Set}.\Pi x:A.
+    \Pi P:A\to\mathsf{Prop}.P x\to\Pi y:A.(y=x)\to P y,\\
+ \mathsf{f\_equal}&:\Pi A,B:\mathsf{Set}.\Pi f:A\to B.
+                        \Pi x,y:A.(x=y)\to(f x=f y),\\
+ \mathsf{no\_conf}&:\Pi n:\mathsf{nat}.\neg(O=S n).
+\end{aligned}
+\]
+Moreover,
+\(S n=S m\to n=m\). None uses \(\mathsf{DN}\).
+\end{hblemma}
+
+\begin{hblemma}{thm:p12-har-prime-order}{proved=annex:p12.har.prime-order}{The inductive ordering and course-of-values induction}
+The source \(\mathsf{leseq\_trans},\mathsf{lthan\_leseq},
+\mathsf{non\_lt0},\mathsf{suc\_leseq},\mathsf{lt01},
+\mathsf{n0n1lt},\mathsf{cv\_ind}\) are derivable:
+\[
+\begin{aligned}
+ \mathsf{leseq\_trans}&:\Pi x,y,z.(x\le y)\to(y\le z)\to(x\le z),\\
+ \mathsf{lthan\_leseq}&:\Pi n,m.(n<m)\to(n\le m),\\
+ \mathsf{non\_lt0}&:\Pi n.\neg(n<O),\\
+ \mathsf{suc\_leseq}&:\Pi n,m.(S n\le S m)\to(n\le m),\\
+ \mathsf{lt01}&:\Pi x.(x=O)\vee(x=\mathsf{one})\vee(\mathsf{one}<x),\\
+ \mathsf{n0n1lt}&:\Pi n.\neg(n=O)\to\neg(n=\mathsf{one})\to(\mathsf{one}<n).
+\end{aligned}
+\]
+The omitted natural-number domains are all \(\mathsf{nat}\). Useful derived
+forms are zero minimality, trichotomy, antisymmetry, strict
+irreflexivity, \(k<S n\leftrightarrow k\le n\), and
+\(k\le S n\to(k\le n\vee k=S n)\). In particular, for every
+\(P:\mathsf{nat}\to\mathsf{Prop}\),
+\[
+ (\Pi n.\mathsf{before}\ n\ P\to P n)\to\Pi n.P n
+\]
+is proved, not supplied as a new induction axiom.
+\end{hblemma}
+
+\begin{hblemma}{thm:p12-har-prime-semiring}{proved=annex:p12.har.prime-semiring}{The actual addition and multiplication library}
+The source \(\mathsf{plus\_altsuc},\mathsf{plus\_altzero},
+\mathsf{plus\_ass},\mathsf{plus\_com},\mathsf{distr},
+\mathsf{timesaltzero},\mathsf{timesaltsuc},\mathsf{times\_ass}\)
+are proved at the following single-binder types (all variables in nat):
+\[
+\begin{aligned}
+ \mathsf{plus\_altsuc}&:\Pi n,m.n+S m=S(n+m),\\
+ \mathsf{plus\_altzero}&:\Pi n.n+O=n,\\
+ \mathsf{plus\_ass}&:\Pi n,m,k.n+(m+k)=(n+m)+k,\\
+ \mathsf{plus\_com}&:\Pi n,m.n+m=m+n,\\
+ \mathsf{distr}&:\Pi n,m,k.(n+m)k=nk+mk,\\
+ \mathsf{timesaltzero}&:\Pi n.nO=O,\\
+ \mathsf{timesaltsuc}&:\Pi n,m.n(S m)=nm+n,\\
+ \mathsf{times\_ass}&:\Pi n,m,k.n(mk)=(nm)k.
+\end{aligned}
+\]
+In addition,
+\(nm=mn\), \(\mathsf{one}\,n=n\,\mathsf{one}=n\), both addition
+cancellation laws, and
+\[
+ n\le m\quad\leftrightarrow\quad\exists k.\;n+k=m
+\]
+are derived. For \(O<d\), multiplication by \(d\) preserves strict
+order and reflects weak order. These facts require no \(\mathsf{DN}\).
+\end{hblemma}
+
+\begin{hblemma}{thm:p12-har-prime-divisibility}{proved=annex:p12.har.prime-divisibility}{The subtraction dependency actually discharged}
+Divisibility is reflexive and transitive, and \(\mathsf{one}\) divides
+every natural number. A number \(d>\mathsf{one}\) cannot divide
+\(\mathsf{one}\). For every \(d,a,b\), including \(d=O\),
+\[
+ \mathsf{div}\ d\ a\to\mathsf{div}\ d\ (a+b)\to\mathsf{div}\ d\ b.
+\]
+For local coefficients \(rd=a\), \(sd=a+b\) and \(O<d\), the
+constructed coefficient of \(b\) is \(s\mathbin{\dot{-}}r\).
+This is a proof of a \(\mathsf{Prop}\) existential, not a function
+extracting a witness from an arbitrary existential proof into
+\(\mathsf{Set}\).
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p12-har-prime-divisor}{proved=annex:p12.har.prime-divisor}{The source prime-divisor theorem, now with its proof}
+The historical declaration has an actual derivation:
+\[
+ \mathsf{numbers\_gt1\_have\_primediv}:\Pi n:\mathsf{nat}.
+             (\mathsf{one}<n)\to\mathsf{HPD}\ n.
+\]
+Its only classical step is \(\mathsf{tnd}\) on
+\(\exists d.\mathsf{propdiv}\ d\ n\), derived from
+\(\mathsf{DN}\); the remaining steps use course-of-values induction
+and the proved transitivity of divisibility.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p12-har-prime-euclid}{proved=annex:p12.har.prime-euclid}{The factorial continuation and Euclid's unboundedness statement}
+For every \(N:\mathsf{nat}\),
+\[
+ \exists p:\mathsf{nat}.\;\mathsf{prime}\ p\wedge N<p.
+\]
+The proof supplies the factorial bound and the theorem that every
+\(\mathsf{one}\le m\le N\) divides \(\mathsf{fac}\ N\), then
+applies the source prime-divisor theorem to \(\mathsf{fac}\ N+\mathsf{one}\).
+It inherits that theorem's explicit \(\mathsf{DN}\) dependence.
+No constructive prime-producing program follows by unlicensed
+\(\mathsf{Prop}\)-to-\(\mathsf{Set}\) elimination. This is the first
+formula of the source footnote. The footnote's informal variable-length
+list display is a different representation; identifying it with a single
+coded first-order arithmetic formula requires an explicit coding bridge,
+not an assertion that first-order arithmetic cannot express finite lists
+\cite[p.~1215, note~4; p.~1220]{BarendregtGeuvers2001}.
+There is also a fully typed finite-family formulation within the same
+regime. For any \(k:\mathsf{nat}\) and \(a:\mathsf{nat}\to\mathsf{nat}\),
+\[
+ \exists p.\;\mathsf{prime}\ p\wedge
+           \Pi i:\mathsf{nat}.(i<k)\to\neg(p=a i).
+\]
+The proof bounds the first k values by the actually constructed data
+fold \(B O\ a:=O\), \(B(S k)\ a:=B k\ a+a k\), then uses the
+unboundedness result. It does not require the listed values to be prime,
+so it entails the source's finite-prime-family avoidance assertion.
+This dependent-function representation supplies no unproved
+identification with an arithmetic sequence-coding library.
+\end{hbtheorem}

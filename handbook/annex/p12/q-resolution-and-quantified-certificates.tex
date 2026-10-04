@@ -1,0 +1,246 @@
+%% Six complete proofs for the declared native common Q-Res presentation.
+\begin{annexitem}{annex:p12-qres-game-strategies}{thm:p12-qres-game-strategies}{Finite game semantics and strategy construction}
+\begin{proof}
+Expand blocks into a fixed order of their variables.  Equal-type quantifiers
+within one block commute: existential quantification chooses one Boolean
+vector and universal quantification considers every such vector.  The scalar
+game tree therefore has the source block game's meaning.  Label each leaf
+by the Boolean value of its matrix.  Working upward, an existential node is
+true if one child is true; a universal node is true if both children are true.
+These are exactly the recursive quantifier clauses, including a zero-depth
+tree whose value is that of the quantifier-free matrix.
+
+Construct a winner's strategy simultaneously.  At a true existential node
+choose a true child, and at a true universal node retain the existential
+strategies of both children, selected by the universal choice.  At a false
+universal node choose a false child, and at a false existential node retain
+the universal strategies of both children, selected by the existential
+choice.  Induction on tree height proves the resulting history strategy
+wins against every opponent continuation.  It supplies a winner at every
+node, not only along one successful branch.
+
+Its permitted dependencies can be written as the stated functions.  Given
+an earlier universal-value vector for an existential variable, reconstruct
+the existential player's previous choices using its already defined
+functions in prefix order.  This determines the entire earlier history
+compatible with that opponent vector, and the chosen history-strategy value
+defines \(f_e\).  It is a function of only those earlier universal values.
+The same induction reconstructs the universal player's own earlier choices
+from earlier existential values and defines \(g_u\).  Any unused history
+entry can be filled arbitrarily to make each finite table total; no value
+of a later opponent variable is read.  Empty argument lists produce constant
+tables, and unused prefix variables cause no exception.
+
+Finally both players cannot have winning legal strategies.  Playing them
+against one another recursively gives one well-defined complete play,
+since every function reads only earlier values.  Its matrix would have to
+be both true and false.  Thus exactly one player wins, and the upward
+construction proves truth/falsity has precisely the claimed strategy meaning.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12-qres-rule-soundness}{thm:p12-qres-rule-soundness}{Rule and refutation soundness with the full prefix}
+\begin{proof}
+Fix any winning existential strategy \(S\) for the original input.  Its
+completion of each total universal assignment satisfies every input clause,
+so cl-init preserves the invariant.  Tautological input clauses, if any,
+are true in every such completion and may be ignored.
+
+For res, fix a total universal assignment and its completed valuation under
+\(S\).  If the pivot literal \(p\) is false, the true parent
+\(C_1\cup\{p\}\) supplies a true literal of \(C_1\).  If \(p\)
+is true, the true parent \(C_2\cup\{\bar p\}\) supplies a true literal
+of \(C_2\).  In either case \(C_1\cup C_2\) is true.  This works
+also for any pivot-retaining set decomposition permitted by the printed
+guards; the completeness construction uses the canonical removed-pivot
+decomposition.  The existential-pivot and non-tautology guards still define
+which steps this particular calculus accepts.
+
+For red, let the parent be \(C\cup\{l\}\) with universal variable \(u\).
+If \(l\) is already in \(C\), the conclusion equals the parent and is
+an identity.  Otherwise non-tautology also excludes \(\bar l\) from
+\(C\).  Suppose some universal assignment completed by \(S\) falsifies
+\(C\).  Change only \(u\)'s value to falsify \(l\).  Every existential
+literal in \(C\) precedes \(u\), so its function reads no \(u\).
+Its value is unchanged.  Every other universal literal in \(C\) is also
+unchanged, and the parent has no opposite-sign occurrence of \(u\) that
+could become true.  Thus the changed completion falsifies the parent,
+contradicting the invariant.  Consequently every completion satisfies
+\(C\).  With no existential literal the dependency argument is vacuous
+but the other-literal and non-tautology argument is still needed.  The proof
+does not replace the existential strategy or permit it to read a future
+universal value.
+
+Induction on the finite derivation establishes the invariant for every
+record.  No strategy satisfies an empty clause; hence an empty-clause
+derivation excludes every winning existential strategy.  The finite-game
+theorem then says the original QBF is false.
+
+The specified checker makes only finite prefix/type, set, membership and
+earlier-index tests.  At each record these tests establish exactly an
+instance of one of the displayed rules, so the same induction applies to
+acceptance.  On an explicit finite encoding, naive token/set comparison and
+scanning the prefix and previous records use a polynomial number of
+operations on strings of at most the input-plus-certificate length.  The
+procedure therefore terminates in polynomial time in that explicit length.
+This is a mathematical specification and bound, not a claim that an
+unexamined parser or checker binary implements it.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12-qres-elimination-step}{thm:p12-qres-elimination-step}{Exact innermost existential and universal elimination}
+\begin{proof}
+All current clauses are non-tautological.  Fix an arbitrary complete valuation
+\(v\) of the earlier variables.  For innermost existential \(x\), write
+the matrix as the conjunction of the no-\(x\) clauses and the two families
+\(A\cup\{x\}\), \(B\cup\{\bar x\}\), with the designated pivot
+removed from \(A,B\).  A satisfying extension to \(x\) satisfies every
+no-\(x\) clause and every pair resolvent \(A\cup B\), by ordinary
+resolution.  It thus satisfies the replacement.
+
+Conversely suppose \(v\) satisfies the replacement.  A positive-pivot
+clause with all of \(A\) false requires \(x=1\); a negative-pivot clause
+with all of \(B\) false requires \(x=0\).  Both demands cannot occur.
+If they did, the corresponding \(A\cup B\) would be false under \(v\).
+It is then necessarily non-tautological, since no consistent valuation
+falsifies a complementary literal pair.  That resolvent was included in
+the replacement, a contradiction.  Choose the demanded value if one family
+demands it, and either value if neither does.  Every remaining positive
+or negative parent already has a true remainder literal.  This extension
+satisfies all old clauses.  Empty families, empty remainders, and an already
+empty no-pivot clause are covered by the same argument.  Tautological
+resolvents were omitted because they are true under every valuation, not
+because they could be used as reduction parents.
+
+For innermost universal \(u\), a clause not mentioning \(u\) is unchanged.
+A clause \(D\cup\{u\}\), where \(D\) contains neither polarity of
+\(u\), is true for both \(u=0\) and \(u=1\) precisely when \(D\)
+is true.  The identical statement holds for \(D\cup\{\bar u\}\).
+Universal quantification distributes over the finite conjunction of these
+clauses, so deleting the universal literal from each computes exactly
+\(\forall u\) of the old matrix.  A tautological parent containing both
+signs would not meet this argument and has already been removed.  A clause
+with just that universal literal becomes the empty clause, correctly
+showing falsity.  An unused \(u\) simply disappears from the prefix.
+
+Both equivalences hold for every earlier valuation, not merely one chosen
+play.  Applying the unchanged earlier quantifiers therefore preserves truth.
+The removed variable is innermost among those still occurring in the
+working prefix; every existential literal in a universal-reduction parent
+is earlier in the original prefix too.  Thus the semantic replacement
+records only legal original-prefix rule steps.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12-qres-completeness}{thm:p12-qres-completeness}{Constructive refutational completeness}
+\begin{proof}
+Start with the non-tautological input clauses, recording their axiom IDs.
+The tautological omissions preserve the matrix under every valuation.
+Induct over the variables eliminated from the right.  Maintain that the
+working matrix mentions only remaining variables, every working clause has
+an earlier valid proof ID under the immutable original prefix, and the
+remaining-prefix truth equals the original QBF truth.
+
+For a universal stage, each containing working clause has a legal red step
+because every still-present existential is earlier.  Record the reduced
+clause and carry no-universal clauses with their existing IDs.  For an
+existential stage, record all non-tautological positive/negative pair
+resolvents with their earlier parent IDs; the pivot is existential in the
+original prefix and the canonical decomposition satisfies the two pivot
+guards.  Clauses not involving the pivot keep their IDs.  Dropping the
+pivot-containing parents affects the working matrix, not their availability
+as earlier proof records.  The elimination lemma proves truth preservation
+in either stage and that no eliminated variable remains.  Hence all three
+invariant components hold at the next stage.
+
+There are finitely many variables and every stage forms finitely many pairs,
+so the construction terminates.  At an empty prefix every current clause
+has no variables and is empty; a matrix there is false exactly when it
+contains an empty clause, and true when it has no clauses.  If the original
+input was false, the invariant therefore supplies an empty working clause
+with a valid proof ID.  A prefix-free false input already has that axiom.
+If an empty clause appears earlier, its proof can already be returned.
+
+This constructs a refutation for every false finite PCNF regardless of
+alternation or width.  Rule soundness gives the converse.  Pair generation
+may grow exponentially and the proof makes no polynomial size bound or
+claim about a solver's heuristic run.  The existential replacement used
+ordinary resolution only at its legitimate innermost existential stage;
+the universal stages and their prefix guards are essential.  It is not a
+SAT refutation of the original propositional matrix.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12-qres-strategy-checking}{thm:p12-qres-strategy-checking}{Exact meaning of finite strategy acceptance}
+\begin{proof}
+The prefix and all table argument lists are finite.  A list containing only
+permitted earlier opponent variables and a complete Boolean table defines
+a total legal function; an illegal future argument or missing row does not.
+There are finitely many assignments to all opponent variables, and matrix
+evaluation on each induced full assignment terminates.  Thus the checker
+terminates.
+
+Fix a legal existential table family.  Every complete universal-value vector
+defines one legal play with that family: in prefix order, its existential
+values are computed from already supplied earlier universal values.  Any
+play against any universal history strategy produces some such universal
+vector.  Conversely each fixed vector is realizable by a universal player
+that chooses those constants at its turns.  The enumerated plays are
+therefore exactly all possible outcomes against the family.  Requiring the
+matrix true on all of them is precisely winning.  With the roles reversed,
+the identical argument for a legal universal family enumerates all possible
+existential vectors and requires falsity, again precisely winning.  The
+argument covers dependent opponent behavior as well as constant opponents;
+one cannot evade a losing play by observing that the opponent may use functions.
+
+The game-construction theorem supplies such a family for the unique winner,
+so it supplies a finite certificate for either truth value.  With no
+opponent variable the enumeration has one empty row, not zero tests.
+With an empty prefix it tests just the matrix constant.  Tables may be
+exponentially large or require exponentially many play checks in terms
+of variable count, so no succinct-strategy complexity or arbitrary
+refutation-to-strategy extraction claim follows.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12-qres-normalized-bridge}{thm:p12-qres-normalized-bridge}{The full-reduction convention at its actual standing}
+\begin{proof}
+Full reduction removes all universal literals having no later existential
+literal in their clause.  Removing one does not change the existential
+literal set, so the others remain eligible.  There are finitely many
+literals; any such sequence of individual legal red steps gives exactly
+\(\operatorname{ur}_{\Pi}(C)\).  Rule soundness shows every winning
+strategy of the original matrix satisfies its fully reduced clauses.
+Conversely those reduced clauses are literal subsets of their parents,
+so satisfying them also satisfies the parents.  The winning existential
+strategy sets are equal, establishing the input-normalization obligation.
+
+A normalized 2013 resolution step first uses the same existential pivot
+on its fully reduced parents, rejects a tautological union, and then performs
+this finite full reduction.  Expanding it into res followed by those red
+steps gives a valid derivation on the common sheet.  Thus normalized
+refutation is sound; the initial normalization can itself be recorded by
+axioms and red steps against the original input.
+
+For completeness of that convention, start the elimination construction
+with the fully reduced input and maintain a fully reduced working matrix.
+At an innermost universal variable, it is absent from every such clause:
+no remaining existential lies after it, so full reduction has already
+removed its occurrences.  That stage is vacuous.  At an existential
+elimination stage form every non-tautological pair resolvent and fully
+reduce it.  These are exactly normalized resolution steps.  The ordinary
+existential replacement lemma gives equivalent truth for the earlier
+prefix before this full reduction, and the full-reduction argument just
+proved preserves it afterward.  No-pivot clauses already fully reduced
+remain so.  Repeating the finite construction yields the empty clause
+exactly for a false input, with a normalized proof ID.  Prefix-free falsity
+is the same empty axiom case.
+
+This proves both conventions refute precisely false closed finite PCNFs.
+It does not say every raw intermediate clause is literally equal to the
+fully reduced one; a normalized proof can remove universals sooner than
+a chosen common-sheet proof.  Nor does existence of this semantic bridge
+identify the 2013, 2021 or unheld 1995 source texts or establish any
+unclaimed polynomial proof translation or size relation.
+\end{proof}
+\end{annexitem}

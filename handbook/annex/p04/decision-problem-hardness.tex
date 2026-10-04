@@ -1,0 +1,426 @@
+\section{Decision-problem hardness: complete reductions}
+\label{sec:annex-p04-decision-hardness}
+
+\begin{annexitem}{annex:p04.dh.stcon}{thm:p04-dh-stcon}{Configuration graphs and logarithmic-space hardness}
+\begin{proof}
+Reject a malformed graph encoding. For a valid \(N\)-vertex graph, a path
+exists iff one exists with at most \(N-1\) edges: remove the segment between
+two repeated vertices from any longer witness until none repeat. A
+nondeterministic machine stores its current vertex and a counter bounded
+by \(N-1\), guesses successive vertices and checks the adjacency bit by
+rescanning the explicit matrix. It may accept whenever it reaches \(t\),
+including before a move when \(s=t\). Every branch stops at its length
+bound, and all stored numbers need \(O(\log(N+1))\) bits. This proves
+membership under the stated all-branches-halting convention.
+
+For hardness fix any language \(A\in\mathsf{NL}\) and its machine \(M\).
+On an input \(x\) of length \(n\), its configurations consist of the finite
+control state, the input-head position, the work-head positions and the
+contents of at most \(C\lceil\log(n+2)\rceil\) work cells, for a fixed \(C\).
+Encode all these fields in \(b(n)=O(\log(n+2))\) bits, increasing the fixed
+constant to allow separators and state/head fields. There are at most
+\(2^{b(n)}\), hence polynomially many, candidate configurations. Include
+all candidate bit strings, not only reachable ones; malformed configurations
+are isolated vertices. Add one additional accepting sink \(a\).
+The start vertex is the valid initial configuration; edges join valid
+configurations related by one transition of \(M\), and every accepting
+configuration has an edge to \(a\).
+
+To test a candidate edge, keep its two configurations in logarithmic
+workspace, check their fields and work-space boundary, and compare the
+local transition with the input symbol at the stored input-head position.
+The machine \(M\) is fixed, so its finite transition relation is constant
+data. Enumerate vertex indices and pairs with binary counters and emit the
+unary count, designated indices and adjacency matrix one bit at a time.
+The output has polynomial length, although it need not fit in workspace.
+The translator is deterministic logarithmic-space and outputs a valid
+graph on every \(x\), including \(n=0\). There is a path from the initial
+configuration to \(a\) iff a branch of \(M\) accepts \(x\). This is a
+many-one reduction from the arbitrary \(A\), proving hardness.
+
+We will also use the standard requested-bit implementation of these
+translations. To simulate a logarithmic-space machine on a
+polynomial-length generated word without storing that word, keep its
+input-head index and rerun the output transducer to obtain the requested
+bit. Each index and both work areas are \(O(\log(n+2))\). This proves that
+logspace reductions compose and that NL membership pulls back through
+them; it is not an assumption that the generated graph is resident in memory.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p04.dh.complement}{thm:p04-dh-complement}{Inductive counting without a negative reachability oracle}
+\begin{proof}
+The construction expands the two counting lemmas of
+\cite[theorem 1 and lemmas 1--2]{Immerman1988Complement} for the explicit
+finite graph convention used here. Reject malformed input first. For
+a valid graph, the sets \(R_d\) increase and satisfy
+\[
+ v\in R_{d+1}\quad\Longleftrightarrow\quad
+ \exists u\in R_d\;(u=v\text{ or }(u,v)\in E).
+\]
+A path certificate of length at most \(d\) is verified by storing its
+current vertex, destination and length counter. The length-zero option
+is present, so the base set is exactly \(R_0=\{s\}\).
+
+Suppose \(c_d=|R_d|\) is correct. In one scan over \(u=1,\ldots,N\),
+an included vertex must supply a verified length-at-most-\(d\) path.
+Thus no surviving branch includes a vertex outside \(R_d\), and the
+ordered scan prevents counting any vertex twice. If its final inclusion
+count equals \(c_d\), it must have included every vertex in \(R_d\).
+This is why omission is not an unjustified negative answer: omitting a
+reachable vertex makes the count too small. Conversely there exists a
+successful branch, choosing inclusion and a witnessing path for each
+\(u\in R_d\), and omission otherwise.
+
+For a fixed candidate \(v\), set its flag precisely when an included
+\(u\) equals \(v\) or has an edge to \(v\). On every branch passing the
+count check that flag is therefore exactly the membership indicator
+of \(R_{d+1}\). Repeat this full checked scan for each \(v\); increment
+a fresh counter for each true flag. All surviving branches then compute
+the same correct \(c_{d+1}\), and successful choices exist for all scans.
+Starting at \(c_0=1\) and iterating \(N-1\) times computes \(c_{N-1}\).
+There is no recursive subroutine storing older counts or path histories.
+
+Every reachable vertex has a simple witnessing path, so
+\(R_{N-1}\) is the full reachable set. Make one last ordered scan with
+path certificates of length at most \(N-1\), require exactly \(c_{N-1}\)
+inclusions, and accept iff \(t\) was not included. If \(t\) is reachable,
+every count-checked branch includes it and rejects. If not, successful
+choices include all reachable vertices and accept. For \(N=1\), there
+is no update stage and the final scan includes \(s=t\), so the no-path
+test correctly rejects.
+
+A fixed number of counters for the stage, candidates, inclusion count,
+new count and path length, plus a fixed number of vertex indices and
+flags, fit in \(O(\log(N+1))\) work cells. Path guessing and every loop
+are bounded by \(N\); every branch halts, including branches that fail
+a check. Rescanning the input to access matrix bits is logarithmic-space.
+Thus \(\mathsf{NONREACH}\in\mathsf{NL}\).
+
+For any \(A\in\mathsf{NL}\), the previous proof supplies a valid
+configuration graph \(g(x)\) for every binary word \(x\), with
+\(x\in A\) iff \(g(x)\in\mathsf{STCON}\). Therefore
+\(x\notin A\) iff \(g(x)\in\mathsf{NONREACH}\).
+The requested-bit simulation shows \(\overline A\in\mathsf{NL}\).
+Applying the same statement twice establishes
+\(\mathsf{NL}=\mathsf{coNL}\) as classes over the whole binary input space.
+
+Finally, if \(A\in\mathsf{NL}\), then \(\overline A\in\mathsf{NL}\);
+apply the configuration reduction to \(\overline A\).
+Its always-valid output satisfies \(x\in A\) iff it is a NONREACH yes
+instance. This proves NL-hardness of NONREACH. The argument never
+mistakes valid-encoding nonreachability for the whole complement of STCON.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p04.dh.two-sat}{thm:p04-dh-two-sat}{The SCC criterion, the NL upper bound, and the lower reduction}
+\begin{proof}
+Reject malformed input and handle an empty clause separately. On a valid
+input with no empty clause, form the implication relation on the \(2r\)
+signed literals: \(L\lor K\) contributes
+\(\overline L\to K\) and \(\overline K\to L\); a unit repeats its literal.
+These edges can be queried in logarithmic space by scanning the clauses.
+
+Here is a full justification of the criterion used by
+\cref{thm:p02-two-sat}. Every satisfying assignment respects each edge,
+and hence each directed path. If \(p\) and \(\neg p\) lie in the same
+SCC, either truth choice for \(p\) forces its opposite, so satisfaction
+is impossible. Conversely suppose no SCC contains an opposite pair.
+Edge reversal followed by literal complementation preserves the graph:
+an edge \(L\to K\) always has the companion
+\(\overline K\to\overline L\). Thus complementation maps each component
+\(C\) to a distinct component \(\overline C\), reversing the condensation
+DAG's edges. Choose a topological rank \(h(C)\), increasing on edges
+between distinct components; the finite DAG has such a rank by repeatedly
+removing a vertex of indegree zero. Define a literal to be true iff
+\[
+ h(C_L)>h(C_{\overline L}).
+\]
+Exactly one literal in each opposite pair is true. An edge \(L\to K\)
+with \(L\) true and \(K\) false would imply
+\[
+ h(C_{\overline L})<h(C_L)\leq h(C_K)
+ <h(C_{\overline K})\leq h(C_{\overline L}),
+\]
+a contradiction, using the companion edge for the last inequality.
+Hence every edge is respected. If a clause \(L\lor K\) were false,
+\(\overline L\) would be true and its edge to \(K\) would force \(K\)
+true, another contradiction. This constructs a satisfying assignment.
+For \(r=0\), a valid input without an empty clause is the empty clause
+list and is satisfied by the empty assignment.
+
+On well-formed inputs, unsatisfiability is therefore certified by an
+empty clause or a guessed \(i\) and two bounded paths
+\(p_i\leadsto\neg p_i\leadsto p_i\). Each path needs at most \(2r-1\)
+edges. The nondeterministic machine stores only a fixed number of
+\(O(\log(r+1))\)-bit indices and counters; adjacency is queried directly
+from the input. Syntax checking is also logarithmic-space. Consequently
+the whole complement of 2SAT, which includes malformed inputs as well
+as well-formed unsatisfiable inputs, belongs to NL. Complementation
+proved above gives \(\mathsf{2SAT}\in\mathsf{NL}\).
+
+For hardness translate a valid graph to the declared \(r=N\) variables
+and emit
+\[
+ p_s,\quad \neg p_t,\quad
+ (\neg p_u\lor p_v)\quad\text{for every }(u,v)\in E.
+\]
+If \(s\leadsto t\), the positive initial unit and the edge implications
+force \(p_t\), contrary to its negative unit. If \(t\) is not reachable,
+assign exactly the reachable vertices true. A true antecedent edge has
+a reachable successor, so every implication is satisfied; the two
+units also hold. Therefore the emitted formula is satisfiable exactly
+for NONREACH yes instances. Row/column counters and binary variable
+indices need logarithmic workspace; output length is polynomial.
+Malformed graph inputs map to the fixed valid contradiction
+\(p_1\land\neg p_1\). Thus this is a total logspace many-one reduction.
+The case \(s=t\) produces contradictory units, as required even for
+an edgeless graph. NL-hardness of NONREACH now proves the claimed lower
+bound.
+
+The same graph formula is unsatisfiable exactly for STCON yes instances.
+Map a malformed STCON input instead to the fixed satisfiable one-variable
+empty clause list. Its complement language on valid formula encodings
+therefore has the matching NL hardness and the already established
+upper bound.
+
+For arbitrary finite atom strings, enumerate occurrences by input
+position. Compare two names character by character using their position
+and length counters. To find whether an occurrence is first, compare
+it with earlier occurrences; to compute its normalized index, count
+earlier first occurrences. The fixed-depth nested scans use logarithmic
+workspace and polynomially many comparisons. Count distinct names to
+emit the unary declaration and translate each literal by rescanning.
+Malformed strings map to a fixed contradiction. The reverse translation
+prints the short indexed atom names and discards unused declarations.
+These details establish the stated encoding equivalence, rather than
+assuming that very long names can reside in logarithmic memory.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p04.dh.computation}{lem:p04-dh-computation-validity}{Actual transition simulation and a free-term countermodel}
+\begin{proof}
+First verify the stack encoding against the tape operation. For a nonempty
+right list \(\mathsf a_a(v)\), its head is the scanned symbol \(a\);
+for an empty right list the scanned symbol is blank and its tail is
+empty. A right move writes \(b\), pushes \(b\) onto the left list and
+exposes the old right tail. A stationary move replaces the scanned
+symbol by \(b\). A left move with left list \(\mathsf a_d(u)\) exposes
+\(d\) as the new scanned symbol and leaves the written \(b\) immediately
+to its right, giving \(\mathsf a_d(\mathsf a_b(v))\).
+If the left list was empty, the exposed symbol is blank and the new
+right list is \(\mathsf a_{\sqcup}(\mathsf a_b(v))\).
+When the right list was empty, replacing its pattern and tail by
+\(\mathsf{nil}\) gives exactly the same operation on the unrepresented
+blank region. Explicit blank entries are retained; no normalization
+by deleting them is presumed.
+
+Starting from \((q_0,\mathsf{nil},[w])\), these updates inductively
+represent every step of the actual machine run relative to its current
+head. Absolute head position is not needed by a transition table depending
+only on state and scanned symbol. Different list representations of the
+same all-blank region cause no problem: the update from each represented
+configuration has exactly its actual successor representation. The
+injective alphabet and state assignments make the relevant head pattern
+unique. Each list remains a finite well-formed list even after any finite
+number of moves into an initially blank region.
+
+Suppose the run reaches \(q_{\mathrm a}\) after \(k\) steps. In any
+structure satisfying \(T_M\land I_{M,w}\), the initial ground Reach atom
+is true. At each step, instantiate the appropriate universally closed
+transition clause with the actual two ground list tails. Modus ponens
+gives its successor Reach atom. Induction over these \(k\) metatheoretic
+steps gives a Reach atom with accepting constructor, whose lists witness
+\(H_M\). This proves \(\Phi_{M,w}\) valid in every structure, without
+assuming that its functions are injective or that its Reach predicate
+contains only actual configurations. It also constructs a finite
+natural-deduction derivation of the implication from the closed
+transition axioms and initial atom. Immediate acceptance uses \(k=0\).
+
+Conversely assume there is no accepting state in the run, whether it is
+infinite or ends at a missing transition. Let the domain \(D\) be all
+finite ground terms over \(\Sigma_{\mathrm H}\). It is nonempty because
+it contains \(\mathsf{nil}\). Interpret every function as the corresponding
+term constructor, including unused symbols, and the constant as its
+own ground term. Constructors are injective, have disjoint images, and
+none of their values is the constant. If identity occurs in the ambient
+language, interpret it as literal term identity.
+
+Interpret Reach as the set of exactly the configuration terms produced
+by the represented run. The initial atom is therefore true. Consider
+any assignment to the variables of any transition clause. If its
+antecedent is false, the clause holds. If true, its ground term is an
+actual run configuration. Freeness forces its state constructor and
+list pattern to match exactly the represented state and lists. A matching
+transition clause is precisely an applicable table entry; the verified
+update gives the next represented run term, which also belongs to Reach.
+Thus every universal clause is true, including assignments of arbitrary
+non-list ground terms: those cannot make a falsely typed antecedent
+equal an actual run term. This is why no typing axioms are missing.
+
+No term headed by the distinct accepting-state constructor belongs to
+Reach, since the run does not accept. Thus every choice of \(u,v\in D\)
+makes the matrix of \(H_M\) false. The structure satisfies
+\(T_M\land I_{M,w}\) and falsifies \(H_M\), so it is a concrete countermodel
+to \(\Phi_{M,w}\). It may be infinite, as the unrestricted target permits.
+
+Finally the compiler is total on all strings: parse a finite machine/word
+description, perform the stated syntactic checks, and otherwise return
+the fixed closed contradiction
+\(\mathsf{Reach}(\mathsf{nil})\land\neg\mathsf{Reach}(\mathsf{nil})\).
+For a valid pair, enumerate its finitely many transitions and symbol
+cases and form the finite sentence. A left transition emits at most
+\(|\Gamma|+1\) clauses for each of at most two right patterns; other
+moves emit at most two. Hence the stated clause bound and polynomial
+written size hold in the explicit-list encoding. No step runs the
+machine to determine whether compilation should finish.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p04.dh.validity}{thm:p04-dh-validity-complete}{The reduction from every c.e. set}
+\begin{proof}
+For the upper bound, enumerate finite derivations in the effective
+first-order calculus, check that they have no undischarged assumptions,
+and output their closed conclusions in \(\Sigma_{\mathrm H}\).
+Decidable arities and syntax let us discard other strings. Soundness
+ensures every output is valid; the existing first-order completeness
+theorem ensures every valid closed sentence is eventually output.
+This is exactly the enumerability argument at
+\cref{thm:fol-validity-enumerable}, specialized to the declared countable
+effective signature. On a requested code, syntactic invalidity is
+rejected and valid syntax is semidecided by the proof enumeration.
+The empty domain is never used.
+
+For the lower bound take any c.e. \(A\subseteq\N\). Its actual defining
+property in \cref{sec:turing-machines-03} is that \(A=\operatorname{dom}(f)\)
+for some partial computable \(f\). Unpack
+\cref{def:partial-computable}: there is a finite machine \(D_A\) which
+on each canonical \(\operatorname{bin}(x)\) accepts with the proper
+numerical output when \(f(x)\) is defined and has an infinite computation
+when it is undefined. Regard that machine as a recognizer \(M_A\),
+ignoring its numerical output after acceptance. Then it enters its
+accepting state exactly for \(x\in A\). This is a direct proof of the
+recognizer conversion needed for this reduction; it does not depend
+on the separately sketched equivalence of all c.e. presentations or on
+bounded arithmetic representability. Multiple accepting halts can be
+redirected to one fresh halting accepting state, and finitely many
+alphabet names can be indexed injectively, by effective finite-table
+transformations. The two-way tape and binary input convention agree
+with the stack compilation.
+
+With this fixed finite \(M_A\), define the total computable map
+\[
+ f_A(x)=\operatorname{code}
+        \bigl(\Phi_{M_A,\operatorname{bin}(x)}\bigr).
+\]
+Computing the finite word \(\operatorname{bin}(x)\), emitting its nested
+list term and the already fixed transition clauses, and applying the
+effective sentence coding all terminate. This computation does not
+wait for a run of \(M_A\). By the preceding lemma,
+\[
+ x\in A
+ \quad\Longleftrightarrow\quad M_A\text{ accepts }\operatorname{bin}(x)
+ \quad\Longleftrightarrow\quad
+ f_A(x)\in\mathsf{VALID}_{\mathrm H}.
+\]
+Thus every c.e. set reduces by \(\leq_m\) to the target, establishing
+c.e.-hardness, and the upper bound gives completeness.
+
+The reduction is uniform as a compiler in a supplied machine description
+and word. The choice of a fixed recognizer for each fixed c.e. set is the
+usual quantifier order for many-one hardness, not a claim that arbitrary
+descriptions of sets can be recognized without their machine data.
+For \(A=\varnothing\), take a machine that never accepts; every resulting
+sentence has the free-term countermodel. For \(A=\N\), take a machine
+accepting every canonical binary input; every resulting sentence is valid.
+The number zero is represented by the canonical word \(0\), not an
+empty numeral. The separate empty word is nevertheless handled by the
+compilation lemma. A valid empty transition table accepts only if its
+initial state is already accepting; otherwise its initial Reach atom
+and absent accepting constructor give the same countermodel.
+
+General first-order validity contains these effectively coded instances:
+rename each indexed signature symbol into the ordinary finite formula
+signature and apply the fixed computable recoding. Hence the reduction
+also proves its c.e.-hardness. General proof enumeration supplies its
+c.e. upper bound. No further assertion for every individual fixed
+finite signature follows from this argument.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p04.dh.relational}{thm:p04-dh-relational-validity}{Effective function elimination with both model directions}
+\begin{proof}
+It suffices to transform the finite-symbol sentence \(\Phi_{M,w}\).
+Choose a variable \(z_0\) absent from it. For every used \(k\)-ary
+function \(f\), where \(k=1\) or \(2\), introduce a fresh \((k+1)\)-ary
+predicate \(G_f\). Form the two closed axioms
+\[
+ \forall x_1\cdots\forall x_k\,\exists y\,G_f(\vec x,y),
+ \qquad
+ \forall\vec x\,\forall y\,\forall y'\,
+ ((G_f(\vec x,y)\land G_f(\vec x,y'))\to y=y').
+\]
+Their finite conjunction is \(J\); it contains no \(z_0\).
+It asserts genuine total functional graphs, not merely that some
+relations have been named.
+
+For each term \(t\) define a formula \(V_t(y)\), with every auxiliary
+bound variable freshly chosen outside all surrounding variables:
+\[
+\begin{aligned}
+ V_x(y)&=(y=x),\\
+ V_{\mathsf{nil}}(y)&=(y=z_0),\\
+ V_{f(t_1,\ldots,t_k)}(y)&=
+  \exists y_1\cdots\exists y_k\,
+  \left(\bigwedge_{i=1}^k V_{t_i}(y_i)
+                 \land G_f(y_1,\ldots,y_k,y)\right).
+\end{aligned}
+\]
+Replace an atom \(\mathsf{Reach}(t)\) by
+\(\exists y\,(V_t(y)\land\mathsf{Reach}(y))\).
+Retain Boolean connectives and quantifiers recursively, choosing generated
+variable names to avoid capture. Fresh names can be selected effectively
+from the infinite variable list by skipping its finite forbidden set.
+Write \(\widehat\Phi(z_0)\) for the resulting formula, and output
+\[
+ \Psi=\forall z_0\,(J\to\widehat\Phi(z_0)).
+\]
+All graph axioms were closed before this implication was formed.
+
+In any relational structure satisfying \(J\), totality and uniqueness
+give one actual function for each \(G_f\). For an assignment to \(z_0\),
+interpret the old constant as that element. Induction on terms proves
+that \(V_t(y)\) holds for exactly the value of \(t\): the variable and
+constant cases are identities; the functional case first obtains the
+unique child values and then the unique graph output. Induction on
+formulas now gives equivalence of \(\widehat\Phi\) and \(\Phi\).
+The atomic case follows from that unique value; negation and the Boolean
+connectives preserve equivalence; a quantifier varies the same original
+variable over the same nonempty domain, with all generated variables
+fresh. This establishes the full truth correspondence, not just a
+one-way satisfiability implication.
+
+If \(\Phi\) is valid, any relational structure and any \(z_0\) assignment
+either fail \(J\), making the implication true, or induce the function
+structure above, in which \(\Phi\) and hence \(\widehat\Phi\) are true.
+Thus \(\Psi\) is valid. Conversely a countermodel to \(\Phi\) supplies
+a relational model by taking each function's actual graph and assigning
+\(z_0\) its constant value. It satisfies \(J\) and falsifies
+\(\widehat\Phi\), so falsifies the universal sentence \(\Psi\).
+Both model directions use arbitrary nonempty structures.
+
+The finite term recursion, fresh-name choices and graph-axiom emission
+are total computable operations. They produce only the unary Reach
+predicate, binary graphs for unary functions and ternary graphs for
+binary functions, together with logical identity; there are no remaining
+function or constant symbols. Composing this translation with each
+\(f_A\) therefore proves c.e.-hardness of the general relational validity
+language with its finite signature encoded in the input. Enumerating
+effective first-order proofs and retaining relational closed conclusions
+gives the c.e. upper bound. If a malformed compiler input needs an image,
+the fixed relational contradiction
+\(\forall x\,(\mathsf{Reach}(x)\land\neg\mathsf{Reach}(x))\) is a closed
+nonvalid sentence on every nonempty domain. The reduction is total,
+and no uniform claim for all fixed finite relational signatures is made.
+\end{proof}
+\end{annexitem}

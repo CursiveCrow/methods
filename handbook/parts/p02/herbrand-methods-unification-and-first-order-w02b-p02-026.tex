@@ -1,0 +1,359 @@
+%% toc: P2 19 19.8
+\section{Equality boundaries and the connection to superposition}
+\label{sec:p02-w02b-p02-026-equality}
+
+Theorem~\ref{thm:fol-resolution} and its proved form
+Theorem~\ref{thm:p02-w02-p02-028-resolution} concern equality-free clause
+sets only, and the paragraph closing \cref{sec:fol-cardinality-normalforms-04}
+records that bare resolution is not complete for logical equality.  This
+section supplies one equality-complete connection in full: the clausal
+equality axioms of the input's symbols are added to the input, and the
+Resolution and Factoring rules of \cref{sec:fol-cardinality-normalforms-04}
+are then used unchanged.  It also determines exactly what bare resolution
+refutes when equality literals are present, and proves the soundness of the
+ordered-superposition rules that replace the axioms in practice.
+
+\emph{Purpose.}  To extend the soundness and refutational completeness of
+first-order resolution from equality-free clause sets to clause sets whose
+literals may contain \(=\), with \(=\) read as identity in every structure.
+\emph{Inputs.}  A finite set \(S\) of first-order clauses of a signature
+\(\Lang\) in the sense of \cref{sec:fol-cardinality-normalforms-04}; its
+literals may be equations \(r=t\) or their negations.
+\emph{Conclusions.}  Theorem~\ref{thm:p02-w02b-p02-026-eq-resolution}
+(soundness and refutational completeness of resolution with the clausal
+equality axioms), Theorem~\ref{thm:p02-w02b-p02-026-bare} (what resolution
+without the axioms refutes), Corollary~\ref{thm:p02-w02b-p02-026-failures}
+(two failures of incomplete treatments) and
+Lemma~\ref{thm:p02-w02b-p02-026-superposition-sound} (soundness of the
+superposition rules).  All proofs are in the annex.
+
+\subsection{Identity semantics and the relational reading}
+\label{sec:p02-w02b-p02-026-readings}
+
+\begin{hbconvention}{def:p02-w02b-p02-026-reading}{Identity semantics, relational reading and translation}
+\begin{enumerate}
+  \item \emph{Identity semantics.}  As everywhere in this part, an
+        \(\Lang\)-structure interprets \(=\) as the identity relation of its
+        nonempty domain, and a structure satisfies a clause \(C\) iff it
+        satisfies its universal closure \(\operatorname{ucl}_{\Lang}(C)\)
+        (\cref{sec:fol-cardinality-normalforms-04}).  A clause set is
+        \emph{satisfiable} when some \(\Lang\)-structure satisfies all its
+        members, and \emph{unsatisfiable} otherwise.
+  \item \emph{Ground terms.}  As in
+        Convention~\ref{def:p02-w02-p02-028-standing}, \(\Lang\) contains a
+        constant; when it has none, one fresh constant is added first.
+  \item \emph{The fresh symbol.}  \(\mathsf{eq}\) is a binary relation
+        symbol not in \(\Lang\), written infix.  Under the \emph{relational
+        reading} an \((\Lang\cup\{\mathsf{eq}\})\)-structure may interpret
+        \(\mathsf{eq}\) as any binary relation on its domain.
+  \item \emph{Translation.}  For \(\Lang\)-atoms put
+        \[
+         (r=t)^{\mathsf{eq}}=(r\mathrel{\mathsf{eq}}t),
+         \qquad
+         R(t_1,\ldots,t_n)^{\mathsf{eq}}=R(t_1,\ldots,t_n);
+        \]
+        for a literal
+        \((\neg A)^{\mathsf{eq}}=\neg(A^{\mathsf{eq}})\); for a clause
+        \(C^{\mathsf{eq}}=\{L^{\mathsf{eq}}:L\in C\}\); for a clause set
+        \(T^{\mathsf{eq}}=\{C^{\mathsf{eq}}:C\in T\}\).  Thus
+        \(C^{\mathsf{eq}}\) is equality-free in the sense of
+        \cref{sec:fol-cardinality-normalforms-04}, and translation leaves
+        every term unchanged.
+  \item \emph{Identity expansion.}  For an \(\Lang\)-structure
+        \(\mathcal N\), \(\mathcal N^{=}\) is its expansion to
+        \(\Lang\cup\{\mathsf{eq}\}\) that interprets \(\mathsf{eq}\) as
+        identity.
+\end{enumerate}
+\end{hbconvention}
+
+The resolution calculus of \cref{sec:fol-cardinality-normalforms-04} never
+consults the meaning of \(=\): its unification procedure treats \(=\) as one
+more binary atomic symbol, pairing the two ordered arguments.  Resolution is
+therefore sound for clauses with equality (the soundness theorem of that
+section holds for every structure), but it sees \(=\) only through the
+relational reading.  The translation lemma makes this exact.
+
+\begin{hblemma}{thm:p02-w02b-p02-026-translation}{proved=annex:p02-w02b-p02-026-translation}{Translation lemma}
+Let \(L\) be an \(\Lang\)-literal, \(C\) an \(\Lang\)-clause, \(A,B\)
+\(\Lang\)-atoms, \(\theta\) a term substitution and \(T\) a set of
+\(\Lang\)-clauses.
+\begin{enumerate}
+  \item \((L\theta)^{\mathsf{eq}}=L^{\mathsf{eq}}\theta\),
+        \((C\theta)^{\mathsf{eq}}=C^{\mathsf{eq}}\theta\) and
+        \(\operatorname{Var}(C^{\mathsf{eq}})=\operatorname{Var}(C)\); the
+        translation is injective on literals.
+  \item \(\theta\) is a unifier of \(A\) and \(B\) iff it is a unifier of
+        \(A^{\mathsf{eq}}\) and \(B^{\mathsf{eq}}\), and a most general
+        unifier of the one pair iff of the other.
+  \item A finite sequence \(C_1,\ldots,C_n\) of \(\Lang\)-clauses is a
+        first-order resolution derivation from \(T\) iff
+        \(C_1^{\mathsf{eq}},\ldots,C_n^{\mathsf{eq}}\) is one from
+        \(T^{\mathsf{eq}}\).
+  \item For every \(\Lang\)-structure \(\mathcal N\) and assignment \(s\),
+        \(\mathcal N,s\entails L\) iff
+        \(\mathcal N^{=},s\entails L^{\mathsf{eq}}\); hence \(\mathcal N\)
+        satisfies \(C\) iff \(\mathcal N^{=}\) satisfies \(C^{\mathsf{eq}}\).
+\end{enumerate}
+\end{hblemma}
+
+\subsection{The clausal equality axioms}
+\label{sec:p02-w02b-p02-026-axioms}
+
+\begin{hbdefinition}{def:p02-w02b-p02-026-eq-clauses}{Clausal equality axioms}
+Let \(\Sigma\) be a set of constant, function and relation symbols of
+\(\Lang\).  In each clause below the displayed variables are pairwise
+distinct.  \(\mathrm{Eq}(\Sigma)\) is the set of the following
+\(\Lang\)-clauses:
+\begin{enumerate}
+  \item[(E1)] reflexivity \(\{x=x\}\);
+  \item[(E2)] symmetry \(\{\neg(x=y),\ y=x\}\);
+  \item[(E3)] transitivity \(\{\neg(x=y),\ \neg(y=z),\ x=z\}\);
+  \item[(E4)] for each \(n\)-ary function symbol \(f\in\Sigma\) with
+        \(n\geq1\), function congruence
+        \[
+         \{\neg(x_1=y_1),\ldots,\neg(x_n=y_n),\
+           f(x_1,\ldots,x_n)=f(y_1,\ldots,y_n)\};
+        \]
+  \item[(E5)] for each \(n\)-ary relation symbol \(R\in\Sigma\) with
+        \(n\geq1\), relation congruence
+        \[
+         \{\neg(x_1=y_1),\ldots,\neg(x_n=y_n),\
+           \neg R(x_1,\ldots,x_n),\ R(y_1,\ldots,y_n)\}.
+        \]
+\end{enumerate}
+For a clause set \(S\), \(\Sigma_S\) is the set of constant, function and
+relation symbols occurring in \(S\), and
+\(\mathrm{Eq}_S\defeq\mathrm{Eq}(\Sigma_S)\).  When \(S\) is finite, so is
+\(\mathrm{Eq}_S\).
+\end{hbdefinition}
+
+These are the clause forms of the congruence axioms that Nieuwenhuis and
+Rubio list for treating equality by resolution, written there as
+implications: reflexivity, symmetry, transitivity, one monotonicity axiom of
+the first kind for each non-constant function symbol, and one of the second
+kind for each predicate symbol \cite[\S1.1, p.~3]{NieuwenhuisRubio2001Typescript}.
+They state that a clause set is satisfiable in first-order logic with
+equality iff its union with these axioms is satisfiable without equality
+\cite[\S1.1, p.~4]{NieuwenhuisRubio2001Typescript};
+Lemma~\ref{thm:p02-w02b-p02-026-quotient} proves that statement for the
+clause sets of this section.  The sentence form
+\(\mathrm{Eq}_{\mathcal L}\) of Definition~\ref{def:p01-w02-p01-025-eq-axioms}
+has the same function and relation congruence content and replaces symmetry
+and transitivity by the congruence axiom for \(=\);
+Theorem~\ref{thm:p01-w02-p01-025-axiom-metatheorem} is the natural-deduction
+counterpart of the theorem below.  A relation symbol of arity \(0\) needs no
+clause, and constants need none either: the function congruence clause of a
+constant \(c\) would be \(\{c=c\}\), an instance of (E1).
+
+\begin{hblemma}{thm:p02-w02b-p02-026-quotient}{proved=annex:p02-w02b-p02-026-quotient}{The equality axioms capture identity}
+Let \(T\) be a set of \(\Lang\)-clauses and \(\Sigma\) a set of symbols of
+\(\Lang\) that contains every constant, function and relation symbol
+occurring in \(T\).  Then \(T\) is satisfiable iff
+\(T^{\mathsf{eq}}\cup\mathrm{Eq}(\Sigma)^{\mathsf{eq}}\) is satisfied by some
+\((\Lang\cup\{\mathsf{eq}\})\)-structure.  The proof of the right-to-left
+direction uses no choice principle.
+\end{hblemma}
+
+\subsection{Resolution with the equality axioms}
+\label{sec:p02-w02b-p02-026-method}
+
+\begin{hbmethod}{def:p02-w02b-p02-026-method}{Resolution with the clausal equality axioms}
+\emph{Input:} a finite set \(S\) of \(\Lang\)-clauses, possibly containing
+equations.
+\begin{enumerate}
+  \item Compute \(\Sigma_S\) from the clauses of \(S\) as given, after any
+        Skolemization and clause-form conversion, so that every symbol
+        introduced by those steps is included.
+  \item Form the finite set \(S\cup\mathrm{Eq}_S\).
+  \item Build first-order resolution derivations from \(S\cup\mathrm{Eq}_S\)
+        with the Resolution and Factoring rules of
+        \cref{sec:fol-cardinality-normalforms-04}, with all their side
+        conditions: both parents of a Resolution step are replaced by
+        renamed-apart copies; the resolved literals are a positive literal
+        \(A\) of the first parent and a negative literal \(\neg B\) of the
+        second; Factoring merges two distinct literals of the same polarity;
+        and in each case the substitution applied is a most general unifier of
+        the two atoms, computed by the unification procedure of that section
+        (Lemma~\ref{thm:p02-w02-p02-028-unification}).  Equations are
+        resolved and factored as atoms with the binary atomic symbol \(=\);
+        no other rule touches them.
+\end{enumerate}
+\emph{Output:} a derivation containing the empty clause certifies that \(S\)
+is unsatisfiable.
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p02-w02b-p02-026-eq-resolution}{proved=annex:p02-w02b-p02-026-eq-resolution}{Soundness and refutational completeness of resolution with equality axioms}
+Let \(S\) be a finite set of \(\Lang\)-clauses whose literals may contain
+\(=\).  The following are equivalent.
+\begin{enumerate}
+  \item \(S\) is unsatisfiable under identity semantics.
+  \item \(S^{\mathsf{eq}}\cup\mathrm{Eq}_S^{\mathsf{eq}}\) is unsatisfiable
+        under the relational reading.
+  \item Some finite set of ground instances of members of
+        \(S\cup\mathrm{Eq}_S\), read as propositional clauses in which each
+        distinct ground atom (ground equations included) is one
+        propositional variable, is propositionally unsatisfiable.  Its ground
+        terms can be chosen from the symbols of \(\Sigma_S\), together with
+        one constant of \(\Lang\) when \(\Sigma_S\) contains none.
+  \item Resolution with Factoring, as in
+        Method~\ref{def:p02-w02b-p02-026-method}, derives the empty clause
+        from \(S\cup\mathrm{Eq}_S\).
+\end{enumerate}
+The implication from (4) to (1) is the soundness of the method; the
+implication from (1) to (4) is its refutational completeness.
+\end{hbtheorem}
+
+For an equality-free \(S\) the clauses (E1)--(E3) and the instances of (E4)
+and (E5) can be dropped: Theorem~\ref{thm:fol-resolution} already applies.
+The theorem above is the equality version of that result, obtained by
+running the proved equality-free chain (Herbrand's theorem for clauses,
+Theorem~\ref{thm:p02-w02-p02-028-clause-form}, and the lifting route of
+Theorem~\ref{thm:p02-w02-p02-028-resolution}) on the translated set.  The
+same quotient construction proves Herbrand's theorem with equality in its
+validity form, Theorem~\ref{thm:p02-w02-p02-028-st-herbrand-eq}.
+
+\begin{hbtheorem}{thm:p02-w02b-p02-026-bare}{proved=annex:p02-w02b-p02-026-bare}{What resolution without the axioms refutes}
+Let \(S\) be a finite set of \(\Lang\)-clauses whose literals may contain
+\(=\).  Resolution with Factoring derives the empty clause from \(S\) iff
+\(S^{\mathsf{eq}}\) is unsatisfiable under the relational reading.  If
+\(S^{\mathsf{eq}}\) is unsatisfiable, so is \(S\); the converse fails
+(Corollary~\ref{thm:p02-w02b-p02-026-failures}).
+\end{hbtheorem}
+
+This is the exact content of the equality boundary of
+\cref{sec:fol-cardinality-normalforms-04}: on clause sets with equality,
+bare resolution is sound, and it is complete for the relational reading, but
+not for identity.
+
+\begin{hbexample}{def:p02-w02b-p02-026-example}{A refutation that needs a congruence axiom}
+Let \(a,b\) be constants, \(f\) a unary function symbol and \(P\) a unary
+relation symbol, and
+\[
+ S_0=\bigl\{\{a=b\},\ \{P(f(a))\},\ \{\neg P(f(b))\}\bigr\}.
+\]
+Under identity semantics \(S_0\) is unsatisfiable: \(a\) and \(b\) denote the
+same element, so \(f(a)\) and \(f(b)\) do, and \(P(f(a))\) and
+\(\neg P(f(b))\) cannot both hold.  Here \(\Sigma_{S_0}=\{a,b,f,P\}\), and the
+clauses of \(\mathrm{Eq}_{S_0}\) used below are the function congruence for
+\(f\) and the relation congruence for \(P\).  Number the clauses
+\[
+ \begin{array}{ll}
+  1.\ \{a=b\} & 2.\ \{P(f(a))\}\\
+  3.\ \{\neg P(f(b))\} & 4.\ \{\neg(x_1=y_1),\ f(x_1)=f(y_1)\}\\
+  5.\ \{\neg(x_2=y_2),\ \neg P(x_2),\ P(y_2)\} &
+ \end{array}
+\]
+(4 and 5 already renamed apart from each other and from the ground clauses).
+\begin{enumerate}
+  \item[6.] Resolve 1 and 4 on \(a=b\) and \(\neg(x_1=y_1)\) with most
+        general unifier \(\{x_1\mapsto a,\ y_1\mapsto b\}\):
+        \(\{f(a)=f(b)\}\).
+  \item[7.] Resolve 2 and 5 on \(P(f(a))\) and \(\neg P(x_2)\) with
+        \(\{x_2\mapsto f(a)\}\): \(\{\neg(f(a)=y_2),\ P(y_2)\}\).
+  \item[8.] Resolve 7 and 3 on \(P(y_2)\) and \(\neg P(f(b))\) with
+        \(\{y_2\mapsto f(b)\}\): \(\{\neg(f(a)=f(b))\}\).
+  \item[9.] Resolve 6 and 8 on \(f(a)=f(b)\) and \(\neg(f(a)=f(b))\) with the
+        identity substitution: the empty clause.
+\end{enumerate}
+By the implication from (4) to (1) of
+Theorem~\ref{thm:p02-w02b-p02-026-eq-resolution} this derivation proves
+\(S_0\) unsatisfiable.  Without clauses 4 and 5 no refutation exists
+(Corollary~\ref{thm:p02-w02b-p02-026-failures}(1)): the atoms \(P(f(a))\)
+and \(P(f(b))\) do not unify, and \(a=b\) has no complementary literal.
+\end{hbexample}
+
+\begin{hbcorollary}{thm:p02-w02b-p02-026-failures}{proved=annex:p02-w02b-p02-026-failures}{Two incomplete treatments of equality}
+Let \(\Lang\) contain constants \(a,b\), a unary function symbol \(f\) and a
+unary relation symbol \(P\).
+\begin{enumerate}
+  \item The set \(S_0\) of Example~\ref{def:p02-w02b-p02-026-example} is
+        unsatisfiable, but no resolution derivation from \(S_0\) contains
+        the empty clause.
+  \item Let \(S_1=\bigl\{\{a=b\},\{P(a)\},\{\neg P(b)\}\bigr\}\) and
+        \(\Sigma'=\{a,b\}\), which omits \(P\).  Then \(S_1\) is
+        unsatisfiable, but no resolution derivation from
+        \(S_1\cup\mathrm{Eq}(\Sigma')\) contains the empty clause.
+\end{enumerate}
+\end{hbcorollary}
+
+Item~2 shows that the hypothesis on \(\Sigma\) in
+Lemma~\ref{thm:p02-w02b-p02-026-quotient} cannot be dropped: a congruence
+clause is needed for every relation symbol that occurs.
+
+\begin{hbwarning}{def:p02-w02b-p02-026-limits}{Limits of the equality-axiom route}
+\begin{enumerate}
+  \item Theorem~\ref{thm:p02-w02b-p02-026-eq-resolution} asserts that a
+        refutation exists when \(S\) is unsatisfiable.  It gives no bound on
+        its length and says nothing about the behaviour of a search on a
+        satisfiable \(S\).
+  \item Nieuwenhuis and Rubio observe that resolution and factoring with
+        these axioms tend to generate very many new clauses, most of them
+        unnecessary, and present this as the reason for building equality
+        into dedicated rules such as paramodulation
+        \cite[\S1.1, p.~4]{NieuwenhuisRubio2001Typescript}.  The observation
+        concerns search behaviour; it does not affect the soundness or
+        completeness proved above.
+  \item The clause set must be fixed before \(\mathrm{Eq}_S\) is formed.
+        A symbol introduced later, for instance by Skolemization, without
+        its congruence clause can make the method incomplete, as
+        Corollary~\ref{thm:p02-w02b-p02-026-failures}(2) shows for a
+        relation symbol.
+\end{enumerate}
+\end{hbwarning}
+
+\subsection{The connection to superposition}
+\label{sec:p02-w02b-p02-026-superposition}
+
+The ordered-superposition calculus of the registered rule sheet
+(Definition~\ref{def:p12-ordered-superposition}) removes the equality axioms
+and builds identity into three rules: Superposition, which replaces an
+instance of the larger side \(l\) of an equation \(l\approx r\) by \(r\) inside
+another literal; Equality Resolution, which deletes a disequation
+\(s\not\approx t\) whose sides unify; and Equality Factoring.  On that sheet
+\(s\approx t\) is an equation under identity semantics, that is, the atom
+\(s=t\) of this section, and \(s\not\approx t\) is \(\neg(s=t)\); the symbol
+\(\approx\) is not the relational-reading symbol \(\mathsf{eq}\).  Every
+literal is an equation or a disequation, so a relation atom
+\(R(t_1,\ldots,t_n)\) has to be encoded as an equation before the rules apply.
+For a term \(s\) and a position \(p\) of \(s\), \(s|_p\) is the subterm at
+\(p\) and \(s[u]_p\) the result of replacing it by \(u\); the sheet writes
+\(s[l']\) for a term with a distinguished subterm occurrence \(l'\) and
+\(s[r]\) for the replacement at the same position.
+
+\begin{hblemma}{thm:p02-w02b-p02-026-superposition-sound}{proved=annex:p02-w02b-p02-026-superposition-sound}{Soundness of the superposition rules}
+Read the literals of the ordered-superposition rule sheet as above.  For each of the rules Superposition, Equality Resolution and
+Equality Factoring of that sheet, every \(\Lang\)-structure that satisfies the
+premises satisfies the conclusion.  The proof uses only that the stated
+substitution is a unifier of the stated terms; the ordering, eligibility and
+selection conditions are not used.  Consequently, if these rules derive the
+empty clause from \(S\), then \(S\) is unsatisfiable.
+\end{hblemma}
+
+The converse, refutational completeness, depends on the ordering,
+selection, redundancy and fair-saturation hypotheses of the sheet.  In this
+handbook it is the cited
+Theorem~\ref{thm:p12-superposition-completeness} and is not proved; the
+equality-complete connection proved here is the one of
+Theorem~\ref{thm:p02-w02b-p02-026-eq-resolution}.  The two routes are related
+as follows.  Each Superposition step into a literal \(R(\ldots s\ldots)\)
+does in one inference what resolution does with a congruence clause and a
+chain of resolution steps, as in steps 6--8 of
+Example~\ref{def:p02-w02b-p02-026-example}; the ordering restrictions then
+forbid most of the replacements that the axioms would allow.  Nieuwenhuis and
+Rubio trace this development from paramodulation, introduced by Robinson and
+Wos, and Brand's result that the functional reflexivity axioms are not needed
+\cite[\S1.1, p.~4]{NieuwenhuisRubio2001Typescript}, to superposition, the
+restriction of paramodulation to inferences on the larger terms
+\cite[\S1.2, p.~5]{NieuwenhuisRubio2001Typescript}, and to the completeness
+of strict superposition for full first-order clauses with equality proved by
+Bachmair and Ganzinger, whose proof the chapter presents in its Section~3
+\cite[\S1.2, p.~6]{NieuwenhuisRubio2001Typescript}.
+
+\emph{Sources.}  The clausal equality axioms and the satisfiability
+equivalence are as in \cite[\S1.1, pp.~3--4]{NieuwenhuisRubio2001Typescript},
+in the typescript version of the chapter; the resolution rules and their soundness
+theorem are those of \cref{sec:fol-cardinality-normalforms-04}; the
+equality-free completeness chain is
+Theorems~\ref{thm:p02-w02-p02-028-clause-form}
+and~\ref{thm:p02-w02-p02-028-resolution}.  The proofs of the results of this
+section are written for this handbook.

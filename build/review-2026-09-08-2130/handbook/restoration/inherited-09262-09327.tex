@@ -1,0 +1,253 @@
+\section{Representability}
+\label{sec:arithmetic-coding-03}
+
+\begin{definition}[Numeralwise representation of a relation]
+Let \(T\supseteq\mathsf Q\), and let \(R\subseteq\N^k\).  A formula
+\(\rho_R(x_1,\ldots,x_k)\) \emph{numeralwise represents} \(R\) in \(T\) if,
+for every \(\bar n\in\N^k\),
+\[
+\begin{aligned}
+  R(\bar n)&\quad\Longrightarrow\quad
+  T\derives\rho_R(\overline{\bar n}),\\
+  \neg R(\bar n)&\quad\Longrightarrow\quad
+  T\derives\neg\rho_R(\overline{\bar n}).
+\end{aligned}
+\]
+The two clauses concern each standard tuple of numerals; they do not assert
+that \(T\) proves a universally quantified decision statement.
+\end{definition}
+
+\begin{definition}[Representation of a function]
+Let \(T\supseteq\mathsf Q\).  A formula \(\gamma_f(\bar x,y)\)
+\emph{represents} a total function
+\(f:\N^k\to\N\) in \(T\) if, for every \(\bar n\in\N^k\),
+\[
+  T\derives\forall y\,
+  \bigl(\gamma_f(\overline{\bar n},y)
+  \leftrightarrow y=\overline{f(\bar n)}\bigr).
+\]
+\end{definition}
+
+\begin{theorem}[Representability theorem]
+\label{thm:representability}
+Every primitive recursive relation is numeralwise representable in
+\(\mathsf Q\) by a \(\Sigma^0_1\) formula, and every primitive recursive
+function is representable in \(\mathsf Q\).  Every computably enumerable
+relation is definable in \(\mathcal N\) by a \(\Sigma^0_1\) formula.
+\textit{Status: cited theorem.}
+\end{theorem}
+
+See \cite{Shoenfield1967} for a complete proof.
+
+The construction represents the initial functions directly and preserves
+representability through composition and primitive recursion by quantifying
+over coded finite computation sequences.  The sequence-coding operations and
+the check that a code satisfies the recursion equations are primitive
+recursive.  For a computably enumerable relation, a finite accepting
+computation supplies the existential witness.  This paragraph records the
+construction used below; the cited source supplies the complete coding proof.
+
+\begin{example}[Representation of addition]
+The formula
+\[
+  \mathsf{Add}(x,z,y)\defeq x+z=y
+\]
+represents the total function \((m,n)\mapsto m+n\) in \(\mathsf Q\).  For each
+standard \(m,n\), finitely many uses of the two addition axioms give
+\(\mathsf Q\derives\bar m+\bar n=\overline{m+n}\).  Equality reasoning then
+gives
+\[
+  \mathsf Q\derives\forall y\,
+  \bigl(\mathsf{Add}(\bar m,\bar n,y)
+  \leftrightarrow y=\overline{m+n}\bigr).
+\]
+This numeral-by-numeral verification uses no induction scheme.
+\end{example}
+
+\subsection*{A specified graph construction with induction in \(\PA\)}
+
+The cited \(\mathsf Q\) theorem fixes the strength of numeralwise
+representation.  For internal calculations in \(\PA\), the following
+construction additionally specifies the formula and proves its defining
+equations.  Its index is a finite definition of a primitive recursive
+function, not an arbitrary formula defining the same function in
+\(\mathcal N\).
+
+\begin{definition}[Graph formula of a primitive recursive description]
+\label{def:p05-pa-pr-graph}
+A \emph{primitive recursive description} of arity \(k\) is a finite
+formation tree in the initial functions, composition and primitive-recursion
+clauses of \cref{sec:turing-machines-02}, with the arities recorded at each
+node.  Write \(f_d\) for the numerical function denoted by such a description
+\(d\).  The subscript \(d\) is a metalinguistic finite tree; it is not a
+program index or an object-language variable.
+
+Associate to \(d\) the arithmetic formula \(\Gamma_d(\bar x,y)\) as follows.
+For zero, successor and projection descriptions use respectively
+\(y=0\), \(y=Sx\), and \(y=x_i\).  For the composition of \(g\) with
+\(h_1,\ldots,h_m\), use
+\[
+ \exists z_1\cdots\exists z_m\,
+ \bigl(\Gamma_{h_1}(\bar x,z_1)\land\cdots\land
+       \Gamma_{h_m}(\bar x,z_m)\land\Gamma_g(\bar z,y)\bigr).
+\]
+An empty list of intermediate variables contributes no quantifier or
+conjunct; this includes composition through a nullary function.
+
+For primitive recursion with base description \(g\) and step description
+\(h\), define
+\[
+\begin{split}
+ \Gamma_d(\bar x,n,y)\defeq\exists w\,\bigl[&
+   \exists u\,(\mathsf B(w,0,u)\land\Gamma_g(\bar x,u))\\
+ &\land\forall i<n\,\exists u\,\exists v\,
+   (\mathsf B(w,i,u)\land\mathsf B(w,Si,v)
+                  \land\Gamma_h(\bar x,i,u,v))\\
+ &\land\mathsf B(w,n,y)\bigr].
+\end{split}
+\]
+Here \(\mathsf B\) is exactly the bounded beta-entry formula of
+\cref{lem:goedel-beta}.  Every bound variable introduced in these clauses is
+chosen fresh from the argument variables and previously used bound variables,
+in their fixed order, before substitution.  These conventions determine a
+formula from the finite description.  All displayed graph names abbreviate
+their recursively specified arithmetic formulas.
+\end{definition}
+
+\begin{theorem}[Primitive recursive graphs verified in \(\PA\)]
+\label{thm:p05-pa-pr-graphs}
+For every fixed primitive recursive description \(d\) of arity \(k\),
+\(\Gamma_d\) is a \(\Sigma^0_1\) formula,
+\[
+ \PA\derives\forall\bar x\,\exists!y\,\Gamma_d(\bar x,y),
+ \qquad
+ \mathcal N\entails\Gamma_d(\overline{\bar a},\bar b)
+       \quad\Longleftrightarrow\quad f_d(\bar a)=b.
+\]
+The uniqueness quantifier abbreviates existence together with equality of
+any two outputs.  For a recursion description, \(\PA\) proves
+\[
+\begin{aligned}
+ \Gamma_d(\bar x,0,y)&\leftrightarrow\Gamma_g(\bar x,y),\\
+ \Gamma_d(\bar x,Sn,z)&\leftrightarrow
+   \exists y\,(\Gamma_d(\bar x,n,y)\land\Gamma_h(\bar x,n,y,z)),
+\end{aligned}
+\]
+with universal closure; the initial and composition equations hold by the
+displayed definitions.  For each standard tuple \(\bar a\), it follows that
+\[
+ \PA\derives\forall y\,
+   (\Gamma_d(\overline{\bar a},y)
+                     \leftrightarrow y=\overline{f_d(\bar a)}).
+\]
+\end{theorem}
+\begin{proof}
+\Cref{annex:p5.internal-pr-graphs} proves the needed beta-extension and
+finite-collection statements inside \(\PA\), then proves the theorem by
+induction on the description.  In particular, sequence extension is proved
+before it is used to justify primitive recursion.
+\end{proof}
+
+The theorem is a scheme for separately fixed finite descriptions.  It does
+not assert a \(\PA\)-provably total evaluator for all primitive recursive
+descriptions at once.  Nor does it identify two graph formulas from their
+agreement in \(\mathcal N\).  In an application to proof coding, one must
+select the description of the actual checker and prove the equations and
+invariants for its proof constructors in \(\PA\).  These are further
+obligations for the internal proof predicate; they are not supplied by
+numeralwise representation alone.
+
+\begin{corollary}[Lifting a recursion invariant into \(\PA\)]
+\label{cor:p05-pa-recursion-invariant}
+Let \(d\) be a recursion description with base \(g\) and step \(h\),
+and let \(I(\bar x,n,y)\) be any arithmetic formula.  If \(\PA\)
+proves the universal closures of
+\[
+\begin{aligned}
+ \Gamma_g(\bar x,y)&\to I(\bar x,0,y),\\
+ I(\bar x,n,y)\land\Gamma_h(\bar x,n,y,z)&\to I(\bar x,Sn,z),
+\end{aligned}
+\]
+then it proves
+\[
+ \forall\bar x\,\forall n\,\forall y\,
+   (\Gamma_d(\bar x,n,y)\to I(\bar x,n,y)).
+\]
+\end{corollary}
+\begin{proof}
+In \(\PA\), induct on \(n\) in
+\(\forall y(\Gamma_d(\bar x,n,y)\to I(\bar x,n,y))\).
+The zero defining equation and the first premise give the base.  For the
+successor, the defining equation supplies a preceding value \(y\) and
+the \(\Gamma_h\) fact.  Apply the induction hypothesis and then the
+second premise.  This uses actual \(\PA\) proofs of the base and step
+implications; their truth in \(\mathcal N\) alone is insufficient.
+\end{proof}
+
+\begin{example}[Specified graphs for the governing pairing and cons]
+\label{ex:p05-pa-pair-cons-graphs}
+The following equations are finite primitive recursive descriptions, in the
+order displayed:
+\[
+\begin{aligned}
+ A(x,0)&=x,& A(x,Sn)&=S(A(x,n)),\\
+ H(0)&=0,& H(Sn)&=A(H(n),Sn),\\
+ K(a,b)&=A(H(A(a,b)),b),& C(a,b)&=S(K(a,b)).
+\end{aligned}
+\]
+The letters here name the displayed descriptions and, in the numerical
+equations, their denoted functions: addition, triangular numbers,
+the governing numerical pairing, and its positive-cons successor.  They
+abbreviate the graphs obtained by \cref{def:p05-pa-pr-graph}, not new
+primitive symbols of \(\Lang_A\).  Their graph formulas satisfy
+\[
+\begin{aligned}
+ \PA&\derives\forall x\,\forall n\,\forall y\,
+            (\Gamma_A(x,n,y)\leftrightarrow y=x+n),\\
+ \PA&\derives\forall a\,\forall b\,\forall w\,
+            (\Gamma_K(a,b,w)\leftrightarrow\mathsf P(a,b,w)),\\
+ \PA&\derives\forall a\,\forall b\,\forall c\,
+   (\Gamma_C(a,b,c)\leftrightarrow
+          \exists w\,(\mathsf P(a,b,w)\land c=Sw)).
+\end{aligned}
+\]
+For the first formula induct on \(n\): the graph's zero equation gives
+\(y=x=x+0\); its step equation gives \(y=S(x+n)=x+Sn\), and these
+same witnesses prove the converses.  For \(H\), induction gives
+\(2H(n)=n(n+1)\) by the step identity
+\(2(H(n)+n+1)=n(n+1)+2n+2=(n+1)(n+2)\).
+The internal uniqueness of the triangular solution in
+\cref{lem:p05-pa-pair-beta} therefore identifies \(H\) with that solution.
+Composition with addition gives the displayed \(\mathsf P\) equation
+for \(K\), and composition with successor gives the \(C\) equation.
+Unique total graph values justify each displayed function abbreviation;
+equivalently, insert their existentially quantified output variables and
+graph conjuncts throughout these finite arguments.
+
+Consequently \(\PA\) proves that a positive cons code has unique head
+and tail, both strictly below that code: decode its unique predecessor by
+\(\mathsf P\) and use the component bounds in
+\cref{lem:p05-pa-pair-beta}.  This is an internal assertion for the specified
+pairing construction, obtained from its equations rather than from the
+external fact that pairing is primitive recursive.
+\end{example}
+
+\begin{theorem}[Bounded evidence for a fixed \(\Sigma^0_1\) formula in \(\PA\)]
+\label{thm:p05-pa-sigma-evidence}
+For every fixed \(\Sigma^0_1\) formula \(\varphi(\bar x)\), one can
+construct a bounded arithmetic formula \(\mathsf{Ev}_\varphi(\bar x,e)\)
+with a fresh evidence variable \(e\), such that
+\[
+ \PA\derives\forall\bar x\,
+   (\varphi(\bar x)\leftrightarrow
+                         \exists e\,\mathsf{Ev}_\varphi(\bar x,e)).
+\]
+The construction permits dependent existential witnesses under a marked
+bounded universal.  It is an assignment to each fixed formula, not a
+uniform truth predicate for arbitrary arithmetic syntax.
+\end{theorem}
+\begin{proof}
+The final part of \cref{annex:p5.internal-pr-graphs} defines every evidence
+clause and proves both directions.  The bounded-universal case uses the
+internal finite-collection lemma proved there.
+\end{proof}

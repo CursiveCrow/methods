@@ -1,0 +1,209 @@
+\section{Model-based remedies and configuration: proofs}
+\label{sec:annex-p16-model-based-remedy-and-configuration}
+
+These arguments concern the source-typed, explicitly bounded constructions
+in the reader, not unperformed correctness checks of all cited implementations.
+
+\begin{annexitem}{annex:p16.rem-target-search}{thm:p16-rem-target-search}{All common targets, exact contexts and change-set minima}
+\begin{proof}
+The finite product has \(N\) assignments, including one empty assignment
+when there are no reconfigurable components. Enumerate each at most once.
+For common possibility, each target needs at most one consistency check
+per hypothesis, giving \(kN\). For guarantee, test base consistency and
+absence of a base model satisfying \(\neg G_i\), at most two per hypothesis.
+Exactness makes these tests equivalent to nonempty base models all satisfying
+the goal, yielding the \(2kN\) bound. Termination is conditional on the
+total check premise, not inferred from finite component names alone.
+
+A cached inconsistent partial state assignment is a conjunction contained
+in every extending target. A witness of an acceptable target would satisfy
+the matching background and that partial conjunction, contradicting its
+inconsistency. In the guarantee case, the nonempty goal-entailing base has
+a witness satisfying \(G_i\), so even a conflict found with goals added
+is safe to use. A mere countermodel to entailment need not remain after
+extra state constraints; it does not justify that partial-conflict pruning.
+Context matching is essential because changed observations, goals or
+structure can invalidate the cached inconsistency. Thus skipping removes
+no acceptable common target; exact testing rejects every remaining
+unacceptable one. Every acceptable target is consequently returned.
+
+Checking the finite family for strictly smaller feasible change sets yields
+exactly its inclusion-minimal members. Within the feasible subsets of a
+cheapest target's change set, select a minimal feasible change set, which
+exists by finiteness. Nondecreasing cost makes its cost no greater. This
+uses the declared cost on the selected change-set representation; arbitrary
+action-dependent downtime or irreversible risk is not proved monotone by it.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p16.rem-plan-search}{thm:p16-rem-plan-search}{Every history prefix and the complete finite belief graph}
+\begin{proof}
+At length zero, \(B_0\) is exactly the admitted initial possibilities.
+Inductively, a state in \(Post(B_j,a_j)\) has a predecessor with a
+history witness for the prefix, and appending its transition supplies a
+history of the longer prefix. Conversely every such history has a last
+transition from a member of \(B_j\), so its endpoint belongs to the
+same successor set. This proves both coverage directions, retaining the
+model tags and nondeterministic alternatives.
+
+Strong applicability gives at least one successor to every current
+possibility; no initial world disappears merely because the action is
+inapplicable. Inclusion of each full successor set in \(\mathcal S\)
+therefore proves all-prefix safety. A nonempty final set contained in
+\(\mathcal G\) makes every final history satisfy the terminal goal.
+The initial safety test is necessary by the strong-plan definition.
+
+There are at most \(2^n-1\) nonempty subsets of the finite tagged state
+universe and at most \(m\) action trials from each, proving the graph
+bounds and termination with visited-node reuse. Every strong plan follows
+edges of this graph by its applicability/safety clauses. If a belief node
+repeats along a plan, remove the cycle: the same remaining action sequence
+has the same successor sets because these sets contain all relevant state
+and history memory. Thus a successful graph path exists whenever a strong
+plan exists. Conversely each stored success path is a strong plan by the
+coverage/safety argument. Breadth-first expansion visits path lengths in
+increasing order and finds a minimum-action-count success. No weighted
+cost optimum follows from this unit-length ordering.
+
+For the physical adequacy clause, represent the actual initial state in
+\(B_0\). Inductively model applicability permits the real next action;
+outcome coverage places its actual successor in the computed next set.
+Decoded safety then holds after every prefix and decoded restoration at
+the final state. Missing faults, wrong frames or an unrealizable action
+break one of these premises, not the mathematical finite-graph proof.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p16.rem-power-transfer}{thm:p16-rem-power-transfer}{Every first step and the four required actions}
+\begin{proof}
+Both endpoints have exactly one closed switch, so are safe. In the two-
+switch case, the first action which changes a state either opens \(x\),
+giving \((0,0)\) and losing critical supply, or closes \(y\), giving
+\((1,1)\) and violating overload safety. No-op actions do not change
+this obstruction. Thus no safe single-switch plan reaches the target.
+
+With backup the displayed state sequence is
+\[
+ (1,0,0),(1,0,1),(0,0,1),(0,1,1),(0,1,0),
+\]
+in \((x,y,b)\) order. Every state has supply and at most one closed main route; every
+backup guard holds by the declared healthy-available premise. It is a
+safe target-reaching history. Any successful plan changes both \(x,y\)
+at least once. Before the first main change, backup must be on, since
+otherwise the same first-step obstruction holds. It must be off at the
+end. At least two backup changes are therefore required in addition to
+the two main changes, giving a four-action lower bound. Atomic simultaneous
+main switching or a changed supply requirement is a different transition
+model and is not excluded by this proof.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p16.rem-policy-search}{thm:p16-rem-policy-search}{Ranks, every observation branch and the converse construction}
+\begin{proof}
+All nonempty safe beliefs are drawn from at most \(2^{|\mathcal X|}-1\)
+subsets. Every nonfixed round adds at least one previously absent belief,
+so only that many strict addition rounds can occur. At rank zero a belief
+is safe and already terminal, and stopping is a depth-zero strong policy.
+Inductively, a belief inserted at rank \(j+1\) has a strongly applicable
+action with safe full successor set and every possible observation branch
+of rank at most \(j\). Each successor belongs to exactly one observed
+branch. The lower-rank policies thus cover all executions, maintain safety
+and terminate within at most \(j+1\) actions.
+
+Conversely a depth-zero strong policy must begin inside the goal and safety
+sets, so lies in \(Win_0\). For a strong policy of depth at most \(j+1\),
+its first action is strongly applicable and safe; every feasible observation
+result has a continuation of depth at most \(j\). By induction every
+branch belongs to \(Win_j\), so the starting belief belongs to
+\(Win_{j+1}\). This proves both directions for each depth. Taking the
+finite fixed point gives all and only beliefs with some finite-depth
+strong policy. The argument imposes no positive probabilities or fairness;
+it cannot discard a possible failing branch on those unprovided grounds.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p16.rem-therapy}{thm:p16-rem-therapy}{All net-rate realizations and the immediate stock constraint}
+\begin{proof}
+Over the independent closed rate intervals, the largest value of \(p-k\)
+is \(p_{max}-k_{min}\) and the smallest is \(p_{min}-k_{max}\),
+with both corners admitted. All rates give a strictly negative derivative
+exactly when the largest is negative; some do exactly when the smallest
+is negative. This proves the two strict inequalities, including their
+zero-boundary failures. The declared instantaneous persistence equation
+gives \(q_1=q_0>H\), so immediate concentration below threshold is
+inconsistent, irrespective of the new derivative. StopPump gives zero
+supply, contradicting \(Q_1=Q_0>0\).
+
+Even in the originally guaranteed-negative case, add an unmodeled positive
+rate \(r>k_{min}-p_{max}\) at the maximal/minimal corner. The revised
+derivative \(p_{max}-k_{min}+r\) is positive, proving the failure of
+the old closure-dependent guarantee. A reservoir-located trigger is not
+the tank-located instance generating its \(-k\) term; absent a declared
+transport consequence the tank equation contains no such new influence.
+Keeping the old \(q'_0>0\) as a time-one fact would also contradict
+the intended negative \(q'_1\); the indexed before/after model avoids
+that artificial conflict rather than retracting the actual old observation.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p16.rem-configuration}{thm:p16-rem-configuration}{Every slot/count case and complete bounded construction}
+\begin{proof}
+With zero or one card, capacity is at most six, below ten. With two cards,
+AA gives capacity eight and fails; BB gives power ten and fails; AB gives
+capacity ten and power eight and succeeds. These are all two-card type
+counts. The slots are identical and there is no order constraint, so AB
+and BA are exactly the two ordered realizations. Removing either card
+returns to a failing one-card case.
+
+For the general bounded construction, take the finite product of all declared
+choices, including empty-slot and connection/parameter choices. Each candidate
+appears once. A total exact check terminates and accepts precisely the
+candidates with a model of DD, that candidate and the goals. A sound
+inconsistent partial design decision cannot be extended to a valid candidate,
+since its model would also satisfy that inconsistent partial conjunction.
+Therefore cached design conflicts safely prune, and every other candidate
+is accepted or rejected exactly by its check. This proves finite termination
+and both coverage directions for the bounded catalog, not for structures
+whose permitted component count is unbounded or for absent functional laws.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p16.rem-fmea}{thm:p16-rem-fmea}{Effect partition and all four redundant-route assignments}
+\begin{proof}
+A model of consistent \(\Gamma\) satisfies either E or its classical
+negation. At least one of the two checks succeeds. If only the E check
+succeeds, no model satisfies its negation and every model satisfies E;
+if only the negated check succeeds, E is excluded; if both succeed,
+there are witnesses for E and for its failure. These cases exhaust a
+nonempty model class. Both failing instead indicates an inconsistent
+fault/scenario model, not an effect guarantee.
+
+In the route instance, the no-fault output is \((q_1,q_2,s)=(1,1,1)\).
+Fault in route one gives \((0,1,1)\); fault in route two gives
+\((1,0,1)\); faults in both give \((0,0,0)\). The deterministic
+route laws, active-source scenario and OR law force exactly these tuples,
+so each is a nonempty unique observable realization. E, which is \(s=0\),
+is excluded in the first three and guaranteed in the fourth. Projection
+to \(s\) gives the same singleton \(\{1\}\) for normal and each
+single-fault hypothesis, so that observation cannot refute either single
+in favor of normal. Projection to the two route outputs yields four
+different tuples and distinguishes all assignments. Singles-only
+enumeration therefore omits the exhibited double-fault loss of service.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p16.rem-debugging}{thm:p16-rem-debugging}{The missing increment and the finite-test countermodel}
+\begin{proof}
+Combining \(y=x\) with \(y=x+1\) would imply \(0=1\), impossible
+over the stated integers for any shared input. In the catalog, the
+input-zero output is \(\delta\); expecting one excludes zero and
+accepts one. For \(\delta=1\), the program relation is exactly
+\(y=x+1\) for every integer, proving the full claimed specification
+at that catalog's scope. The overfitting program has output one at zero,
+so satisfies the same finite expectation, but at input one returns one
+instead of two. This is a complete countermodel to identifying a passing
+test with general correctness. The old program's observed zero output
+is a fact about its old version and cannot be imposed as the new version's
+output without changing the repair task back into an artificial conflict.
+\end{proof}
+\end{annexitem}

@@ -1,0 +1,491 @@
+% Phase-2 fix designs, group G3 (first-order chain): R-007, R-008, R-009, R-010, R-014.
+% Line numbers and typewriter labels are anchors into source/formal-logic-reference.tex
+% (v1.0, 14780 lines).  Plain LaTeX; compilable under amsmath/amssymb.
+% Set in \small so that each design occupies at most one page.
+\begingroup\small
+
+\subsection*{R-007 --- Prenex normal form: missing lemma chain (v1.0 lines 4396--4446)}
+
+\paragraph{Defect.}
+The prenex theorem's proof (4424--4446) opens with unproved global operations:
+``move negations inward using De Morgan equivalences and quantifier duality,
+and alpha-rename bound variables so that the formula is rectified''
+(4425--4427).  No first-order negation-normal-form lemma exists (the
+propositional theorem, 1899--1917, covers no quantifiers and its termination
+measure counts only connectives below a negation); no rectified-variant
+existence result exists (no renaming recursion is ever defined); and
+``quantifier duality'' resolves to \texttt{lem:quantifier-duality} (3814), a
+derivability lemma of \(\mathsf{ND}_{\mathrm{FOL}}\), where a semantic
+equivalence is required.  The extraction induction then rests on
+``Rectification guarantees the side condition'' (4441) without any stated
+invariant.
+
+\paragraph{Repair.}
+Insert Lemmas A--C between the definitions (4399--4418) and the theorem
+(4420), rewrite the theorem's proof as their composition, and attach the
+missing label \texttt{cor:alpha-invariance} at 3203; \(c\) is the complexity
+of 2875 (counting quantifiers, so the measure covers quantifier prefixes) and
+\(\equiv\) is logical equivalence (3256).
+
+\emph{Lemma A (\texttt{lem:fol-nnf}, negation normal form).}  Define
+\(\operatorname{nnf},\operatorname{nnf}':\mathrm{Fm}(\mathcal{L})\to\mathrm{Fm}(\mathcal{L})\)
+by simultaneous recursion: \(\operatorname{nnf}\) fixes atomic formulas and
+\(\bot\), commutes with \(\wedge,\vee,\forall,\exists\), and satisfies
+\(\operatorname{nnf}(\neg\varphi)=\operatorname{nnf}'(\varphi)\),
+\(\operatorname{nnf}(\varphi\to\psi)=\operatorname{nnf}'(\varphi)\vee\operatorname{nnf}(\psi)\);
+and, for \(\alpha\) atomic,
+\(\operatorname{nnf}'(\alpha)=\neg\alpha\),
+\(\operatorname{nnf}'(\bot)=\neg\bot\),
+\(\operatorname{nnf}'(\neg\varphi)=\operatorname{nnf}(\varphi)\),
+\(\operatorname{nnf}'(\varphi\wedge\psi)=\operatorname{nnf}'(\varphi)\vee\operatorname{nnf}'(\psi)\),
+\(\operatorname{nnf}'(\varphi\vee\psi)=\operatorname{nnf}'(\varphi)\wedge\operatorname{nnf}'(\psi)\),
+\(\operatorname{nnf}'(\varphi\to\psi)=\operatorname{nnf}(\varphi)\wedge\operatorname{nnf}'(\psi)\),
+\(\operatorname{nnf}'(\forall x\,\varphi)=\exists x\,\operatorname{nnf}'(\varphi)\),
+\(\operatorname{nnf}'(\exists x\,\varphi)=\forall x\,\operatorname{nnf}'(\varphi)\)
+(every call is on an immediate subformula, so \(c\) strictly decreases and the
+recursion is legitimate).  Claims, by simultaneous strong induction on
+\(c(\varphi)\): (i) both values are in negation normal form (definition
+4399--4408; \(\neg\bot\) is admitted there); (ii)
+\(\operatorname{nnf}(\varphi)\equiv\varphi\) and
+\(\operatorname{nnf}'(\varphi)\equiv\neg\varphi\), each case checked against
+the satisfaction clauses (3111--3145): the \(\operatorname{nnf}'\) quantifier
+cases are the pointwise computations
+\(\mathcal{M},s\models\neg\forall x\,\varphi\) iff some \(a\) has
+\(\mathcal{M},s[x\mapsto a]\models\neg\varphi\) iff
+\(\mathcal{M},s\models\exists x\,\neg\varphi\), dually for \(\exists\) ---
+not citations of \texttt{lem:quantifier-duality}; (iii) \(\mathrm{FV}\) and
+\(\mathrm{Var}\) of both values equal those of \(\varphi\).
+
+\emph{Lemma B (\texttt{lem:rectified-variant}, rectified variant).}  For
+\(\varphi\) and finite \(V\supseteq\mathrm{Var}(\varphi)\) define
+\(r(\varphi,V)\): atomic and \(\bot\) unchanged; \(r(\neg\varphi,V)=\neg
+r(\varphi,V)\); \(r(\varphi\circ\psi,V)=r(\varphi,V)\circ r(\psi,\,V\cup
+\mathrm{Var}(r(\varphi,V)))\) for \(\circ\in\{\wedge,\vee,\to\}\);
+\(r(Qx\,\varphi,V)=Qz\,r(\varphi[z/x],\,V\cup\{z\})\) with \(z\) least outside
+\(V\).  Well-foundedness is the 2951--2958 pattern:
+\(z\notin\mathrm{Var}(\varphi)\cup\{x\}\), so no binder of \(\varphi\) equals
+\(z\), the substitution runs on the first two quantifier clauses only (textual
+replacement, so
+\(\mathrm{Var}(\varphi[z/x])\subseteq\mathrm{Var}(\varphi)\cup\{z\}\)), and
+\(c(\varphi[z/x])=c(\varphi)<c(Qx\,\varphi)\) by
+\texttt{lem:substitution-complexity} (2965).  Claims, by strong induction on
+\(c(\varphi)\) under the invariant \(\mathrm{Var}(\varphi)\subseteq V\):
+(i) \(r(\varphi,V)\equiv_{\alpha}\varphi\) --- connective cases by congruence,
+quantifier case by the generating clause \(Qx\,\varphi\equiv_\alpha
+Qz\,(\varphi[z/x])\) (2984, licensed by \(z\notin\mathrm{Var}(\varphi)\)), the
+\(Q\)-congruence, and transitivity --- hence \(r(\varphi,V)\equiv\varphi\) by
+\texttt{cor:alpha-invariance}; (ii) \(r(\varphi,V)\) is rectified: its binders
+are pairwise distinct and outside \(V\) (the binary clause forbids the left
+output's variables to the right recursion), while
+\(\mathrm{FV}(r(\varphi,V))=\mathrm{FV}(\varphi)\subseteq V\) by (iii);
+(iii) alpha-equivalent formulas have equal free-variable sets: the
+equal-\(\mathrm{FV}\) relation is a congruence equivalence containing each
+generating pair, since both cases of clause~(b) of
+\texttt{lem:substitution-fv} (added by R-010) give
+\(\mathrm{FV}(Qy\,(\varphi[y/x]))=\mathrm{FV}(Qx\,\varphi)\), so leastness of
+\(\equiv_\alpha\) applies; (iv) \(r\) preserves the constructor tree, hence
+negation normal form.
+
+\emph{Lemma C (\texttt{lem:prenex-extraction}, extraction with invariant).}
+For every rectified \(\varphi\) in negation normal form there is
+\(p(\varphi)\) with: (i) \(p(\varphi)\equiv\varphi\); (ii) \(p(\varphi)\)
+rectified and prenex with quantifier-free negation-normal matrix; (iii)
+\emph{invariant:} \(\mathrm{FV}\) and \(\mathrm{Var}\) unchanged, and the
+prefix consists of exactly the quantifier occurrences of \(\varphi\) (same
+quantifier, same variable) --- no new free or bound variables.  Route:
+structural induction on the negation-normal generation (subformulas of
+rectified formulas are rectified); \(p\) is the identity on base formulas and
+commutes with \(Qx\).  Binary case \(\alpha\circ\beta\),
+\(\circ\in\{\wedge,\vee\}\): with
+\(p(\alpha)=Q_1y_1\cdots Q_ky_k\,\alpha_0\),
+\(p(\beta)=R_1z_1\cdots R_mz_m\,\beta_0\), set
+\(p(\alpha\circ\beta)=Q_1y_1\cdots Q_ky_k\,R_1z_1\cdots R_mz_m\,
+(\alpha_0\circ\beta_0)\), proved \(\equiv\alpha\circ\beta\) by an inner
+induction on \(k+m\) from two recorded facts: (C1)
+\((Qy\,\pi)\circ\chi\equiv Qy\,(\pi\circ\chi)\) and
+\(\chi\circ(Qy\,\pi)\equiv Qy\,(\chi\circ\pi)\) whenever
+\(y\notin\mathrm{FV}(\chi)\), proved from the satisfaction clauses and
+\texttt{lem:fol-coincidence} (3148), displaying the \(\forall\)/\(\vee\) case
+(the classical distribution of \(\forall\) over a disjunct constant in the
+quantified variable); (C2) \(\equiv\) is a congruence for \(\circ\) and
+\(Qx\) (immediate from the satisfaction clauses).  The side conditions hold
+because \(y_i\notin\mathrm{FV}(p(\beta))=\mathrm{FV}(\beta)\) (\(y_i\) is
+bound in the rectified \(\alpha\circ\beta\)) and
+\(z_j\notin\mathrm{FV}(\alpha_0)\subseteq
+\mathrm{FV}(\alpha)\cup\{y_1,\ldots,y_k\}\) (rectifiedness, binder
+distinctness); the output is rectified and satisfies the invariant since
+nothing is renamed or introduced.
+
+\emph{Rewritten theorem proof} (replaces 4424--4446; the statement gains label
+\texttt{thm:prenex-normal-form}): by Lemmas A--C,
+\(p\bigl(r(\operatorname{nnf}(\varphi),\mathrm{Var}(\operatorname{nnf}(\varphi)))\bigr)
+\equiv\varphi\) is rectified, prenex, and in the same signature; all four
+results then carry \textit{Status: complete proof}.
+
+\paragraph{Acceptance.}
+(1) The rewritten proof cites only Lemmas A--C and
+\texttt{cor:alpha-invariance}; ``quantifier duality'' no longer occurs in
+4396--4446.  (2) Each lemma names its induction measure; Lemma B's renaming
+recursion cites \texttt{lem:substitution-complexity} for its non-structural
+call on \(\varphi[z/x]\).  (3) Lemma C states the no-new-variables invariant and every extraction
+step's side condition is discharged from it plus rectifiedness.
+
+\subsection*{R-008 --- Skolemization: explicit prefix induction replacing the ``quantifier game'' (v1.0 lines 4480--4512)}
+
+\paragraph{Defect.}
+Both directions of \texttt{thm:skolem-equisatisfiable} (4492--4507) are prose:
+``Induction along the prefix then shows\ldots'' states no induction hypothesis,
+and the converse appeals to ``the original quantifier game'' (4501) --- a notion
+defined nowhere in the document.  The Axiom of Choice is hypothesized for the
+whole theorem (4482) although only the expansion direction uses it.
+
+\paragraph{Repair.}
+Fix \(\sigma=Q_1x_1\cdots Q_nx_n\,\theta\) rectified prenex.  For \(0\le i\le
+n\) let \(\sigma_i=Q_{i+1}x_{i+1}\cdots Q_nx_n\,\theta\) (so
+\(\sigma_0=\sigma\), \(\sigma_n=\theta\), and
+\(\mathrm{FV}(\sigma_i)\subseteq\{x_1,\ldots,x_i\}\)); let \(q(i)\) count the
+universal positions among the first \(i\), let \(\bar u(j)\) list the universal
+variables before position \(j\), and for existential \(j\) let
+\(t_j=f_j(\bar u(j))\) be its Skolem term, so
+\(\operatorname{Sk}(\sigma)=\forall u_1\cdots\forall u_p\,\theta^{*}\) with
+\(\theta^{*}=\theta[t_j/x_j]\) simultaneously for all existential \(j\)
+(\(\theta\) is quantifier-free, so this is plain replacement; since no \(t_j\)
+contains an existential variable, the simultaneous substitution equals the
+composition of the single substitutions in any order).  Given a structure and a
+tuple \(\bar a\) of values for the universal variables among
+\(x_1,\ldots,x_i\), define the \emph{Skolem-term assignment} \(s_{\bar a}\):
+universal \(x_j\) gets its entry of \(\bar a\); existential \(x_j\) gets the
+value \(v_j\) of \(t_j\) computed from the entries for \(\bar u(j)\); values of
+other variables are irrelevant by \texttt{lem:fol-coincidence}.
+
+\emph{Restated theorem} (replaces 4480--4491): let \(\sigma\) be a rectified
+prenex \(\mathcal{L}\)-sentence.  (1) \emph{(Axiom of Choice.)}  Every
+\(\mathcal{L}\)-structure satisfying \(\sigma\) has an expansion to the Skolem
+signature satisfying \(\operatorname{Sk}(\sigma)\).  (2) \emph{(No choice.)}
+The \(\mathcal{L}\)-reduct of every model of \(\operatorname{Sk}(\sigma)\)
+satisfies \(\sigma\).  Hence, assuming the Axiom of Choice, \(\sigma\) has a
+model iff \(\operatorname{Sk}(\sigma)\) has one; the right-to-left implication
+holds without choice.
+
+\emph{Proof of (1).}  Let \(\mathcal{M}\models\sigma\).  By finite recursion on
+\(i\) choose set-functions \(F_j\) (for existential \(j\le i\)) while proving
+\[
+ \mathrm{Inv}(i):\quad
+ \mathcal{M},s_{\bar a}\models\sigma_i
+ \quad\text{for every }\bar a\in|\mathcal{M}|^{\,q(i)},
+\]
+where \(s_{\bar a}\) computes \(v_j=F_j(\text{entries of }\bar a\text{ for }
+\bar u(j))\).  \(\mathrm{Inv}(0)\) is the hypothesis.  Universal step: from
+\(\mathcal{M},s_{\bar a}\models\forall x_{i+1}\,\sigma_{i+1}\), the
+satisfaction clause gives \(\mathcal{M},s_{\bar a}[x_{i+1}\mapsto b]\models
+\sigma_{i+1}\) for every \(b\), which is \(\mathrm{Inv}(i+1)\) for
+\((\bar a,b)\).  Existential step: by \(\mathrm{Inv}(i)\) each witness set
+\(W(\bar a)=\{b:\mathcal{M},s_{\bar a}[x_{i+1}\mapsto b]\models\sigma_{i+1}\}\)
+is nonempty; apply the Axiom of Choice (definition at 651) to
+\(\{\{\bar a\}\times W(\bar a):\bar a\in|\mathcal{M}|^{\,q(i)}\}\) to obtain
+\(F_{i+1}\) with \(F_{i+1}(\bar a)\in W(\bar a)\) --- one application of choice
+per existential quantifier, and nowhere else.  Define the expansion
+\(\mathcal{M}^{*}\) by \(f_j^{\mathcal{M}^{*}}=F_j\).  From
+\(\mathrm{Inv}(n)\): for every \(\bar a\in|\mathcal{M}|^{p}\), the term-value
+clauses give \(t_j\) the value \(v_j\) under \([\bar u\mapsto\bar a]\) in
+\(\mathcal{M}^{*}\), so iterating \texttt{thm:fol-substitution} once per
+existential position turns \(\mathcal{M},s_{\bar a}\models\theta\) (equal to
+\(\mathcal{M}^{*},s_{\bar a}\models\theta\) by \texttt{lem:reduct-invariance})
+into \(\mathcal{M}^{*},[\bar u\mapsto\bar a]\models\theta^{*}\); the
+\(p\)-fold universal clause yields
+\(\mathcal{M}^{*}\models\operatorname{Sk}(\sigma)\).
+
+\emph{Proof of (2).}  Let \(\mathcal{N}\models\operatorname{Sk}(\sigma)\) in
+the expanded signature; now \(v_j\) is the value of the term \(t_j\) in
+\(\mathcal{N}\).  By downward induction from \(i=n\) to \(i=0\) prove
+\(\mathrm{Inv}'(i)\): \(\mathcal{N},s_{\bar a}\models\sigma_i\) for every
+\(\bar a\in|\mathcal{N}|^{\,q(i)}\).  Base \(i=n\): instantiate the universal
+prefix of \(\operatorname{Sk}(\sigma)\) at \(\bar a\) and reverse the same
+iterated substitution-lemma computation as in (1).  Universal step
+(\(Q_{i+1}=\forall\)): for every \(b\), \(\mathrm{Inv}'(i+1)\) at
+\((\bar a,b)\) gives \(\mathcal{N},s_{\bar a}[x_{i+1}\mapsto b]\models
+\sigma_{i+1}\) (the \(v_j\), \(j\le i\), depend only on \(\bar a\)); apply the
+\(\forall\)-clause.  Existential step: \(\mathrm{Inv}'(i+1)\) at \(\bar a\)
+exhibits the witness \(v_{i+1}\), and the \(\exists\)-clause gives
+\(\mathrm{Inv}'(i)\).  Then \(\mathrm{Inv}'(0)\) and
+\texttt{lem:reduct-invariance} yield
+\(\mathcal{N}\mathbin{\upharpoonright}\mathcal{L}\models\sigma\).  No choice
+principle is used.  The remark at 4509--4512 stays.  The theorem carries
+\textit{Status: complete proof} afterwards.
+
+\paragraph{Acceptance.}
+(1) The string ``quantifier game'' occurs nowhere in the manuscript.  (2) Each
+direction displays an induction statement indexed by prefix position with the
+Skolem-term assignment defined, and every step is discharged by a named
+satisfaction clause, \texttt{thm:fol-substitution},
+\texttt{lem:fol-coincidence}, or \texttt{lem:reduct-invariance}.  (3) The Axiom
+of Choice appears only in clause (1), invoked exactly once per existential
+quantifier on a displayed family of witness sets; clause (2)'s proof invokes no
+choice principle.
+
+\subsection*{R-009 --- Transfinite Lindenbaum lemma for the Henkin construction (v1.0 lines 3934--3985)}
+
+\paragraph{Defect.}
+The second paragraph of the Henkin--Lindenbaum proof (3978--3985) says
+``Well-order all formulas of \(\mathcal{L}^{H}\) and repeat the Lindenbaum
+construction'' and claims maximal consistency ``by the same finite-derivation
+argument as in \texttt{lem:prop-lindenbaum}.''  That lemma (2381--2405) is an
+\(\omega\)-indexed recursion over a countable enumeration; for
+\(\kappa\) possibly uncountable the construction needs transfinite recursion
+with limit stages, which the propositional argument does not contain, and the
+family whose union is taken is never defined.  The witness stage two paragraphs
+earlier (3961--3976) does all of this explicitly via
+\texttt{thm:transfinite-recursion}; the two halves of one proof sit at
+different rigor levels.
+
+\paragraph{Repair.}
+Insert between 3932 and 3934:
+
+\emph{Lemma (\texttt{lem:transfinite-lindenbaum}).}  Let \(\mathcal{L}'\) be a
+signature, \(\lambda\) an ordinal, and
+\(\langle\varphi_\alpha:\alpha<\lambda\rangle\) an enumeration of
+\(\mathrm{Fm}(\mathcal{L}')\) in which every formula occurs at least once.
+Then every set \(\Sigma\subseteq\mathrm{Fm}(\mathcal{L}')\) consistent for
+\(\mathsf{ND}_{\mathrm{FOL}}\) is contained in a maximal consistent
+\(\Delta\subseteq\mathrm{Fm}(\mathcal{L}')\).  (Choice-free given the
+enumeration; the Axiom of Choice enters only when producing one.)
+
+\emph{Proof route.}  By \texttt{thm:transfinite-recursion} (632) with domain
+\(\lambda+1\) define \(\langle\Gamma_\alpha:\alpha\le\lambda\rangle\):
+\[
+ \Gamma_0=\Sigma,\qquad
+ \Gamma_{\alpha+1}=
+ \begin{cases}
+   \Gamma_\alpha\cup\{\varphi_\alpha\},&\text{if this set is consistent},\\
+   \Gamma_\alpha,&\text{otherwise},
+ \end{cases}
+ \qquad
+ \Gamma_\beta=\bigcup_{\alpha<\beta}\Gamma_\alpha\ \text{ for limit }\beta.
+\]
+\emph{Chain claim:} \(\alpha\le\beta\le\lambda\) implies
+\(\Gamma_\alpha\subseteq\Gamma_\beta\) (transfinite induction on \(\beta\)).
+\emph{Consistency:} transfinite induction on \(\alpha\); zero by hypothesis;
+successor by the case split; at a limit \(\beta\), a derivation of \(\bot\)
+from \(\Gamma_\beta\) is finite, so its open assumptions form a finite
+\(F\subseteq\Gamma_\beta\); each \(\psi\in F\) lies in some
+\(\Gamma_{\alpha_\psi}\) with \(\alpha_\psi<\beta\), and with
+\(\alpha^{*}=\max_{\psi\in F}\alpha_\psi<\beta\) if \(F\ne\varnothing\) (a
+finite nonempty set of ordinals has a maximum) and \(\alpha^{*}=0<\beta\) if
+\(F=\varnothing\), the chain claim locates \(F\subseteq\Gamma_{\alpha^{*}}\),
+contradicting the induction hypothesis at \(\alpha^{*}\).  \emph{Maximality of}
+\(\Delta=\Gamma_\lambda\): if \(\varphi\notin\Delta\), pick \(\alpha\) with
+\(\varphi_\alpha=\varphi\); rejection at stage \(\alpha+1\) means
+\(\Gamma_\alpha\cup\{\varphi\}\) derives \(\bot\), and since a derivation from
+a set is a derivation from any superset (monotonicity, immediate from the
+definition of derivability from assumptions),
+\(\Delta\cup\{\varphi\}\) derives \(\bot\).
+
+\emph{Rewrite of 3978--3985:} ``The set \(\mathrm{Fm}(\mathcal{L}^{H})\) has
+cardinality exactly \(\kappa\), as established above from
+\texttt{thm:infinite-cardinal-finite-coding} and the formulas
+\(\exists x_0\,(x_0=d_\xi)\) (the count at 3949--3952 is retained); by the
+cardinal-assignment corollary (662, under the Axiom of Choice already assumed)
+fix a bijective enumeration
+\(\langle\varphi_\alpha:\alpha<\kappa\rangle\) of it.  Apply
+\texttt{lem:transfinite-lindenbaum} to \(\Sigma^{H}\) to obtain a maximal
+consistent \(\Delta\supseteq\Sigma^{H}\supseteq\Sigma\).''  The existing
+witness-property sentences (3981--3984) follow unchanged.  Status labels
+afterwards: the new lemma and \texttt{lem:henkin-lindenbaum} both
+\textit{Status: complete proof.}
+
+\paragraph{Acceptance.}
+(1) A lemma between \texttt{lem:new-constant-elimination} and
+\texttt{lem:henkin-lindenbaum} displays the recursion with zero, successor, and
+limit clauses and cites \texttt{thm:transfinite-recursion}.  (2) Its limit case
+contains the chain claim and locates an arbitrary finite subset of a limit
+stage inside a single earlier stage via the maximum of finitely many ordinals.
+(3) Lines 3978--3981 no longer contain ``repeat the Lindenbaum construction''
+or the appeal to \texttt{lem:prop-lindenbaum}; the paragraph applies the new
+lemma to \(\Sigma^{H}\) under an explicitly fixed enumeration of order type
+\(\kappa\).
+
+\subsection*{R-010 --- Vacuous substitution is alpha-invariant: strong induction on complexity (v1.0 lines 3006--3016)}
+
+\paragraph{Defect.}
+The unnamed lemma at 3006 (``If \(x\notin\mathrm{FV}(\varphi)\), then
+\(\varphi[t/x]\equiv_\alpha\varphi\)'') is proved ``by structural induction,''
+but in the renaming case the recursion visits \(\psi[z/y]\), which is not a
+subformula of \(Qy\,\psi\), so plain structural induction does not license the
+step; the case is discharged by the bare assertion that renaming ``changes the
+formula only within its alpha-equivalence class.''  The book's own template for
+this situation is the simultaneous strong induction on complexity at 2951--2958
+and its use at 3193--3199 of \texttt{lem:substitution-complexity}.
+
+\paragraph{Repair.}
+First insert, after the example ending at 3004 and before the lemma at 3006:
+
+\emph{Lemma (\texttt{lem:substitution-fv}, free variables under
+substitution).}  For every term \(r\): \(x\notin\mathrm{Var}(r)\) implies
+\(r[t/x]=r\), and
+\(\mathrm{Var}(r[t/x])\subseteq(\mathrm{Var}(r)\setminus\{x\})\cup\mathrm{Var}(t)\)
+(induction on \(r\)).  For every formula \(\varphi\), term \(t\), and variables
+\(x,y\):
+\begin{itemize}
+\item[(a)] \(\mathrm{FV}(\varphi[t/x])\subseteq
+      (\mathrm{FV}(\varphi)\setminus\{x\})\cup\operatorname{Var}(t)\)
+      (the book defines no \(\mathrm{FV}\) on terms; a term's variables
+      are its \(\operatorname{Var}\), as in the \(\mathrm{FV}\) clauses for
+      atomic formulas at 2862--2863);
+\item[(b)] if \(y\notin\mathrm{Var}(\varphi)\), then
+      \(\mathrm{FV}(\varphi[y/x])=(\mathrm{FV}(\varphi)\setminus\{x\})\cup\{y\}\)
+      when \(x\in\mathrm{FV}(\varphi)\), and
+      \(\mathrm{FV}(\varphi[y/x])=\mathrm{FV}(\varphi)\) when
+      \(x\notin\mathrm{FV}(\varphi)\).
+\end{itemize}
+Route: strong induction on \(c(\varphi)\).  For (b) the renaming clause of the
+substitution definition never fires (a binder \(w\) of a subformula lies in
+\(\mathrm{Var}(\varphi)\), so \(w\ne y\)), and the substitution is textual
+replacement.  For (a)'s renaming case
+\((Qy\,\psi)[t/x]=Qz\,((\psi[z/y])[t/x])\): apply the induction hypothesis to
+\(\psi\) with \([z/y]\) and to \(\psi[z/y]\) with \([t/x]\) --- the latter at
+equal complexity \(c(\psi[z/y])=c(\psi)<c(Qy\,\psi)\), licensed by
+\texttt{lem:substitution-complexity} (2965) --- then compute, using
+\(z\notin\mathrm{Var}(t)\cup\{x\}\), that
+\(\mathrm{FV}(Qz\,((\psi[z/y])[t/x]))\subseteq
+(\mathrm{FV}(Qy\,\psi)\setminus\{x\})\cup\operatorname{Var}(t)\).
+
+Then replace the proof at 3010--3016 by: \emph{Proceed by strong induction on
+formula complexity \(c\) (2875).}  Atomic case: \(x\) occurs in no term, so
+every term is unchanged by the term clause of \texttt{lem:substitution-fv} and
+\(\varphi[t/x]=\varphi\); \(\bot\) likewise.  Connective cases:
+\(x\notin\mathrm{FV}\) of each immediate subformula; induction hypotheses and
+the congruence property of \(\equiv_\alpha\).  Quantifier \(Qy\,\psi\) with
+\(y=x\): substitution stops, reflexivity.  With \(y\ne x\),
+\(y\notin\mathrm{Var}(t)\): then \(x\notin\mathrm{FV}(\psi)\); the induction
+hypothesis gives \(\psi[t/x]\equiv_\alpha\psi\), and the \(Q\)-congruence
+concludes.  With \(y\ne x\), \(y\in\mathrm{Var}(t)\): the definition returns
+\(Qz\,((\psi[z/y])[t/x])\) with \(z\) least outside
+\(\mathrm{Var}(\psi)\cup\mathrm{Var}(t)\cup\{x,y\}\).  By clause (b) of
+\texttt{lem:substitution-fv}, \(x\notin\mathrm{FV}(\psi[z/y])\) (as
+\(x\notin\mathrm{FV}(\psi)\) and \(x\ne z\)).  By
+\texttt{lem:substitution-complexity}, \(c(\psi[z/y])=c(\psi)<c(Qy\,\psi)\), so
+the \emph{strong} induction hypothesis applies to \(\psi[z/y]\) and gives
+\((\psi[z/y])[t/x]\equiv_\alpha\psi[z/y]\); the \(Q\)-congruence gives
+\(Qz\,((\psi[z/y])[t/x])\equiv_\alpha Qz\,(\psi[z/y])\); the generating clause
+(licensed since \(z\notin\mathrm{Var}(\psi)\)) gives
+\(Qz\,(\psi[z/y])\equiv_\alpha Qy\,\psi\); transitivity concludes.  Landing:
+new lemma at approximately 3005; rewritten proof in place at 3010--3016.  Both
+results carry \textit{Status: complete proof} afterwards.  (Clause (b) is also
+consumed by R-007's Lemma B.)
+
+\paragraph{Acceptance.}
+(1) The proof at 3010--3016 opens ``by strong induction on formula
+complexity'' and cites \texttt{lem:substitution-complexity} exactly where the
+induction hypothesis is applied to \(\psi[z/y]\).  (2) A stated and proved
+\texttt{lem:substitution-fv} precedes the lemma and is cited for
+\(x\notin\mathrm{FV}(\psi[z/y])\).  (3) No case applies an induction
+hypothesis to a formula that is neither of strictly smaller complexity nor of
+equal complexity justified by \texttt{lem:substitution-complexity}.
+
+\subsection*{R-014 --- \(\mathsf{LK}\) completeness for arbitrary sequents (v1.0 lines 4165--4185, 2488--2507; soundness 3674--3687, 2295--2318)}
+
+\paragraph{Defect.}
+Soundness (3674) covers every derivable sequent: the calculus is
+multi-succedent (rules at 2178--2234 and 3583--3618, satisfaction convention at
+3579--3581), and the theorem quantifies over sequents
+\(\Gamma\Rightarrow\Delta\).  Completeness (4165) is stated only ``for every
+finite multiset \(\Gamma\) and formula \(\varphi\)'' --- single-succedent.  No
+completeness statement covers sequents with empty or multi-formula succedents,
+so the two theorems do not compose to a derivability-iff-validity equivalence
+for the objects the calculus manipulates.  The propositional pair exhibits the
+identical asymmetry --- \texttt{thm:prop-lk-soundness} (2295--2318) covers
+every derivable \(\mathsf{LK}_{\mathrm{CPL}}\) sequent while completeness
+(2488--2491) is again single-succedent --- and register row R-014 spans both
+pairs (2488 vs 2295; 4165 vs 3674), so this design must repair both.
+
+\paragraph{Repair.}
+Attach \texttt{thm:fol-lk-soundness} to the theorem at 3674.  Replace the
+statement at 4165--4170 by:
+
+\emph{Theorem (\texttt{thm:fol-lk-completeness}).}  Assume the Axiom of Choice
+in the ambient set theory.  For all finite multisets \(\Gamma,\Delta\) of
+\(\mathcal{L}\)-formulas, the sequent \(\Gamma\Rightarrow\Delta\) is derivable
+in \(\mathsf{LK}_{\mathrm{FOL}}\) iff for every \(\mathcal{L}\)-structure
+\(\mathcal{M}\) and assignment \(s\): if \(\mathcal{M},s\models\gamma\) for
+every \(\gamma\in\Gamma\), then \(\mathcal{M},s\models\delta\) for some
+\(\delta\in\Delta\).
+
+(The roadmap's propositional phrasing ``every valuation'' is this schema
+instantiated for \(\mathsf{LK}_{\mathrm{CPL}}\); at first order the semantic
+data are structure plus assignment, matching 3579--3581.)  Left to right is
+\texttt{thm:fol-lk-soundness}.  Right to left, by reduction to
+\texttt{thm:fol-completeness} (4128) plus the existing translation:
+(1)~let \(\Delta=\delta_1,\ldots,\delta_m\) (\(m\ge 0\)) and let \(S\) be the
+set of members of \(\Gamma\) together with
+\(\neg\delta_1,\ldots,\neg\delta_m\); validity of the sequent makes \(S\)
+unsatisfiable, i.e.\ \(S\models\bot\), since a structure and assignment
+satisfying all of \(S\) would satisfy some \(\delta_j\) and its negation.
+(2)~\texttt{thm:fol-completeness} gives
+\(S\vdash_{\mathsf{ND}_{\mathrm{FOL}}}\bot\); the derivation's open assumptions
+form a finite \(S_0\subseteq S\), say \(\gamma_1,\ldots,\gamma_k\in\Gamma\)
+and \(\neg\delta_{j_1},\ldots,\neg\delta_{j_r}\); the translation of the
+existing sketch (4171--4185) turns it into an
+\(\mathsf{LK}_{\mathrm{FOL}}\)-derivation of
+\(\gamma_1,\ldots,\gamma_k,\neg\delta_{j_1},\ldots,\neg\delta_{j_r}
+\Rightarrow\bot\).
+(3)~Cut with the initial \(\bot\)-sequent \(\bot\Rightarrow\;\) (instance of
+\(\Gamma,\bot\Rightarrow\Delta\) with empty contexts, 2180) empties the
+succedent.
+(4)~For each \(j\), the sequent \(\;\Rightarrow\delta_j,\neg\delta_j\) is
+derivable (identity sequent \(\delta_j\Rightarrow\delta_j\), then \(\neg R\));
+cutting it against the current sequent, with cut formula \(\neg\delta_j\),
+moves \(\delta_j\) into the succedent:
+\[
+ \frac{\;\Rightarrow\delta_j,\neg\delta_j
+ \qquad \Gamma',\neg\delta_j\Rightarrow\Pi}
+ {\Gamma'\Rightarrow\delta_j,\Pi}
+ \qquad\text{yielding, after }r\text{ cuts,}\qquad
+ \gamma_1,\ldots,\gamma_k\Rightarrow\delta_{j_1},\ldots,\delta_{j_r}.
+\]
+(5)~Weakening (\(W_L,W_R\)) adds the unused members of \(\Gamma,\Delta\) and
+contraction (\(C_L,C_R\)) merges duplicates, giving exactly
+\(\Gamma\Rightarrow\Delta\) as multisets.  The case \(m=0\) runs with no
+step-(4) cuts and asserts that no structure and assignment satisfies all of
+\(\Gamma\); empty \(\Gamma\) is likewise covered.  The route uses cut, which is
+primitive in the displayed calculus; no cut-free claim is made, and extending
+the sketch's translation induction to multi-succedent targets is unnecessary
+since the reduction reuses it verbatim.  Landing: statement replaced at
+4165--4170; steps (1)--(5) appended to the proof at 4171--4185, whose
+translation subroutine is retained.  Status afterwards: \textit{Status: proof
+sketch} while the rule-by-rule translation trees remain omitted; the theorem
+inherits \textit{Status: complete proof} only if a separate work order supplies
+them.
+
+\emph{Propositional half.}  Attach \texttt{thm:prop-lk-completeness} to the
+theorem at 2488 and replace its statement (2488--2491) by: for all finite
+multisets \(\Gamma,\Delta\) of propositional formulas, the sequent
+\(\Gamma\Rightarrow\Delta\) is derivable in \(\mathsf{LK}_{\mathrm{CPL}}\)
+iff every valuation making every formula of \(\operatorname{supp}(\Gamma)\)
+true makes some formula of \(\operatorname{supp}(\Delta)\) true ---
+word-for-word the sequent-satisfaction convention of 2156--2161.  Left to
+right is \texttt{thm:prop-lk-soundness} (2295).  Right to left is the
+reduction (1)--(5) verbatim with \texttt{thm:prop-completeness} (2433) in
+place of \texttt{thm:fol-completeness}, the translation sketch at 2493--2507
+as the retained subroutine, and the same initial sequents and structural
+rules (2178--2234); no choice principle enters (the propositional Lindenbaum
+lemma runs on a countable enumeration).  Landing: statement replaced at
+2488--2491; steps (1)--(5) appended to the proof at 2493--2507.  Status
+afterwards: likewise \textit{Status: proof sketch} while its translation
+trees remain omitted.
+
+\paragraph{Acceptance.}
+(1) The completeness theorem at 4165 quantifies over sequents
+\(\Gamma\Rightarrow\Delta\) with both contexts arbitrary finite multisets, and
+its semantic condition is word-for-word the satisfaction convention of
+3579--3581, matching the scope of \texttt{thm:fol-lk-soundness}.  (2) The proof
+displays the reduction chain of steps (1)--(5), including the
+\(\;\Rightarrow\delta_j,\neg\delta_j\) construction and the empty-succedent
+case.  (3) The status label matches the evidence actually present: sketch
+while the translation trees are omitted, complete only if they are supplied.
+(4) The propositional theorem at 2488 likewise quantifies over sequents with
+both contexts arbitrary finite multisets, matches the scope of
+\texttt{thm:prop-lk-soundness}, is proved by the same reduction without any
+choice principle, and carries the same status discipline; after both
+restatements, soundness and completeness are paired over the same sequent
+class in each calculus, discharging both line pairs of the register row.
+\endgroup

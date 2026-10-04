@@ -1,0 +1,1441 @@
+% Source presentations for register row N-c-013.
+
+\subsection{The automata-theoretic verification architecture}
+\label{sec:p09-presentation-n-c-013}
+
+\subsubsection{Vardi and Wolper's 1986 presentation}
+
+\paragraph{Source state and locators.}
+The IEEE CEDA record links an eighteen-page full-text file, while Wolper's
+University of Li\`ege repository identifies the same file as an author
+preprint.  Its abstract cover is dated 15 August 1985; the separate
+proceedings record is the 1986 publication on pp.~322--331.  The accessible
+file is therefore not described as a facsimile of those ten printed pages.
+The locators below are the preprint's own body and appendix pages
+\cite{VardiWolper1986}.
+
+\paragraph{The source language and acceptor.}
+ Let \(\mathit{Prop}\) be a finite set of atomic propositions; for a fixed
+ formula it may be taken to contain exactly the letters occurring in that
+ formula.  A computation is a
+function
+\[
+ \Pi:\omega\longrightarrow 2^{\mathit{Prop}}.
+\]
+The source's propositional temporal language is closed under Boolean
+operations, next \(X\), and until \(U\).  In addition to the ordinary Boolean
+clauses, Appendix~A prints
+\[
+\begin{aligned}
+ \Pi,i\models X\psi
+ &\Longleftrightarrow \Pi,i+1\models\psi,\\
+ \Pi,i\models \xi U\psi
+ &\Longleftrightarrow
+   \exists j\ge i\,
+   \bigl(\Pi,j\models\psi\land
+         \forall k\,(i\le k<j\Rightarrow\Pi,k\models\xi)\bigr).
+\end{aligned}
+\]
+Thus the right operand of until may already hold at the current point, and
+\(\Pi\models\varphi\) means \(\Pi,0\models\varphi\).  This is the source
+presentation of the non-strict infinite-word semantics reused in
+Definition~\ref{def:p09-ltl}; it is not Kamp's strict order semantics.
+
+The source B\"uchi automaton is
+\[
+ A=(\Sigma,S,\rho,S_0,F),
+ \qquad
+ \rho:S\times\Sigma\longrightarrow 2^S,
+\]
+with a set \(S_0\subseteq S\) of starting states.  A run on
+\(a_1a_2\cdots\) is \(s_0s_1\cdots\), where
+\(s_0\in S_0\) and \(s_i\in\rho(s_{i-1},a_i)\) for every \(i\ge1\).
+It accepts when some state in \(F\) occurs infinitely often.  The source calls
+the automaton \emph{semi-deterministic} exactly when
+\[
+ |\rho(s,a)|\le1
+ \quad\text{for every }s\in S\text{ and }a\in\Sigma,
+\]
+and deterministic when this holds and \(|S_0|=1\).  Semi-determinism stands
+as a restriction on the transition data and differs from determinism only by
+permitting several starts; Section~4.4 uses precisely that distinction
+\cite[preprint pp.~4 and 10 and app.~A]{VardiWolper1986}.
+
+The handbook's automaton convention has one initial state.  For any
+permitted-start-set automaton \((Q,\Sigma,\Delta,Q_0,F)\) in the handbook's
+zero-based transition convention, choose a fresh nonaccepting state \(q_*\) and
+put
+\[
+ Q_*=Q\cup\{q_*\},
+ \qquad
+ F_*=F,
+ \qquad
+ \Delta_*(q,a)=
+ \begin{cases}
+  \displaystyle\bigcup_{q_0\in Q_0}\Delta(q_0,a),&q=q_*,\\
+  \Delta(q,a),&q\in Q.
+ \end{cases}
+\]
+No transition has target \(q_*\).  A run from \(q_*\) consumes the first
+letter while choosing and advancing from one permitted source start.  Removing
+or inserting the resulting single visit at position zero cannot change which
+old states recur infinitely often.  Thus this handbook-owned conversion
+preserves the infinite-word language, also when \(Q_0=\varnothing\), and adds
+exactly one state.  It will be used both for the Vardi--Wolper product and for
+the finite data extracted from B\"uchi's recurrent formulas below.
+
+Theorem~2.1, which the preprint attributes to Wolper--Vardi--Sistla's 1983
+paper, states that every temporal formula \(\varphi\) has an effectively
+constructed B\"uchi automaton \(A_\varphi\) over
+\(2^{\mathit{Prop}}\) such that
+\[
+ |S|\le2^{O(|\varphi|)},
+ \qquad
+ L(A_\varphi)=\{\Pi:\Pi\models\varphi\}.
+\]
+This is the literal source bound; Appendix~B of the preprint supplies the
+compact construction below, while the theorem's earlier attribution remains
+visible \cite{WolperVardiSistla1983,VardiWolper1986}.  Theorem~2.2 separately cites linear-time
+and nondeterministic-logarithmic-space procedures for B\"uchi emptiness
+\cite[preprint p.~4]{VardiWolper1986}.
+
+\paragraph{What Appendix B constructs.}
+For a formula \(\varphi\), let \(cl(\varphi)\) be its subformulas and their
+negations, with double negations identified, and let \(e(\varphi)\) be the
+until formulas in that closure.  Put
+\[
+ B_\varphi=2^{cl(\varphi)}.
+\]
+This is the intermediate alphabet of complete closure types; it differs from
+the final alphabet \(2^{\mathit{Prop}}\), and the projection between them is
+defined below.  The appendix records \(|cl(\varphi)|\le2|\varphi|\).
+
+The local-state set \(N_L\) consists exactly of the subsets
+\(u\subseteq cl(\varphi)\) satisfying the following scoped conditions:
+\[
+\begin{aligned}
+ &\psi\in u\Longleftrightarrow\neg\psi\notin u
+ &&\text{for every }\psi\in cl(\varphi),\\
+ &\xi\land\psi\in u
+   \Longleftrightarrow \xi\in u\land\psi\in u
+ &&\text{for every }\xi\land\psi\in cl(\varphi).
+\end{aligned}
+\]
+Put
+\[
+ N_\varphi=\{u\in N_L:\varphi\in u\}.
+\]
+Thus \(N_\varphi\) is the permitted initial subset.  The names \(B_\varphi\),
+\(N_L\), and \(N_\varphi\) are eliminable abbreviations for the displayed
+sets, not additional logical primitives.
+
+Define the local transition
+\[
+ \rho_L:N_L\times B_\varphi\longrightarrow\mathcal P(N_L)
+\]
+by declaring, for \(u,v\in N_L\) and \(a\in B_\varphi\), that
+\(v\in\rho_L(u,a)\) exactly when \(a=u\) and
+\[
+\begin{aligned}
+ X\psi\in u
+ &\Longleftrightarrow \psi\in v
+ &&\text{for every }X\psi\in cl(\varphi),\\
+ \xi U\psi\in u
+ &\Longleftrightarrow
+   \psi\in u\ \lor\
+   (\xi\in u\land \xi U\psi\in v)
+ &&\text{for every }\xi U\psi\in cl(\varphi).
+\end{aligned}
+\]
+These clauses check Boolean and one-step consistency but do not by themselves
+force a pending until formula ever to reach its right operand.
+
+The eventuality component has state set \(2^{e(\varphi)}\), reads
+\(B_\varphi\), starts at the empty set, and designates only the empty set.
+Its transition
+\[
+ \rho_E:2^{e(\varphi)}\times B_\varphi
+ \longrightarrow\mathcal P(2^{e(\varphi)})
+\]
+is defined, for current obligation set \(v\), current closure-type letter
+\(a\), and next obligation set \(z\), by
+\[
+ z\in\rho_E(v,a)
+ \Longleftrightarrow
+ \begin{cases}
+  \forall\,\xi U\psi\in e(\varphi)\cap a\;
+  (\psi\in a\lor \xi U\psi\in z),&v=\varnothing,\\
+  \forall\,\xi U\psi\in v\;
+  (\psi\in a\lor \xi U\psi\in z),&v\ne\varnothing.
+ \end{cases}
+\]
+When the current set is empty, the first clause requires every currently
+unsatisfied until formula to enter the next batch.  While a batch is nonempty,
+the second clause requires each member whose right operand is still false to
+remain, but requires no newly encountered eventuality to be added.  Because
+the transition is nondeterministic, an accepting run may choose no additional
+members.  Requiring the empty set to recur infinitely often therefore
+discharges each required batch before the next one is collected.
+
+The product automaton has
+\[
+ N_M=N_L\times2^{e(\varphi)},
+ \qquad
+ N_{M0}=N_\varphi\times\{\varnothing\},
+ \qquad
+ F_M=N_L\times\{\varnothing\},
+\]
+and transition
+\[
+ \rho_M((u,v),a)
+ =\rho_L(u,a)\times\rho_E(v,a)
+ \qquad
+ ((u,v)\in N_M,\ a\in B_\varphi).
+\]
+Its explicit bound is
+\[
+ |N_M|
+ \le2^{|cl(\varphi)|}2^{|e(\varphi)|}
+ \le2^{3|\varphi|}.
+\]
+The last inequality uses \(|e(\varphi)|\le|\varphi|\), since every member of
+\(e(\varphi)\) is an until subformula.  This is the source product with the
+permitted initial set \(N_\varphi\times\{\varnothing\}\); applying the
+handbook-owned single-start conversion above produces \(|N_M|+1\) states and
+does not alter the language.
+It initially reads the complete closure types in \(B_\varphi\).  Define
+\[
+ \pi:B_\varphi\longrightarrow2^{\mathit{Prop}},
+ \qquad
+ \pi(b)=b\cap\mathit{Prop},
+\]
+and, for \(c\in2^{\mathit{Prop}}\), define the projected transition by
+\[
+ \rho_M^\pi((u,v),c)
+ =\bigcup_{\substack{b\in B_\varphi\\\pi(b)=c}}
+   \rho_M((u,v),b).
+\]
+The projected automaton retains \(N_M,N_{M0},F_M\) and reads propositional
+valuations.  Appendix~B supplies this construction and its obligation
+invariant, but not a line-by-line induction for both language inclusions or a
+worked input formula
+\cite[app.~B, pp.~2--3]{VardiWolper1986}.
+
+\paragraph{Finite-state programs and the product theorem.}
+A finite-state program in Section~3.1 is
+\[
+ P=(W,s_0,R,V),
+\]
+where \(W\) is finite, \(s_0\in W\), \(R\subseteq W^2\) is total, and
+\(V:W\to2^{\mathit{Prop}}\).  An infinite \(R\)-path from \(s_0\) becomes a
+computation by reading its state labels, and \(P\) satisfies \(\varphi\) when
+every such computation satisfies it.  The program itself is the B\"uchi
+automaton
+\[
+ A_P=(2^{\mathit{Prop}},W,s_0,\rho,W),
+ \qquad
+ s'\in\rho(s,a)
+ \Longleftrightarrow
+ (s,s')\in R\land a=V(s).
+\]
+This display puts the singleton start \(s_0\) before \(\rho\), whereas the
+general tuple above puts \(\rho\) before the start set \(S_0\).  It is a
+source-order inconsistency, not a second automaton convention; the typed data
+are alphabet \(2^{\mathit{Prop}}\), states \(W\), transition \(\rho\), start
+set \(\{s_0\}\), and designated set \(W\).
+Every infinite run is accepting because every program state is designated.
+
+The required language inclusion and its emptiness form are
+\[
+ L(A_P)\subseteq L(A_\varphi)
+ \quad\Longleftrightarrow\quad
+ L(A_P)\cap L(A_{\neg\varphi})=\varnothing.
+\]
+No automata-theoretic complementation is needed: Theorem~2.1 is applied
+directly to \(\neg\varphi\).  An accepting intersection run is a legal
+program computation satisfying \(\neg\varphi\), hence a counterexample.
+Conversely, every counterexample computation is accepted by both factors.
+This is the two-direction correctness argument underlying
+Definition~\ref{def:p09-ltl-model-checking}.
+
+Lemma~3.1 cites an intersection construction with \(2|S||S'|\) states for
+two B\"uchi automata.  Because \(A_P\) designates all its states, the source
+observes that \(|S||S'|\) states suffice here.  The resulting automaton has
+\(|W|2^{O(|\varphi|)}\) states.  Theorem~3.2 gives the two-parameter bounds
+\[
+\begin{aligned}
+ \text{time}&=O(\lVert P\rVert\,2^{O(|\varphi|)}),\\
+ \text{space}&=O\bigl((\log\lVert P\rVert+|\varphi|)^2\bigr),
+\end{aligned}
+\]
+where \(\lVert P\rVert\) is the encoded finite-program size.  This theorem is
+an upper bound.  Sistla--Clarke's separate source problem asks whether some
+path in a finite \(R\)-structure satisfies the formula, exactly the
+counterexample half used here.  Their PSPACE-hardness result supplies the
+combined-input lower bound; closure of deterministic polynomial space under
+complement transfers it to the universal-path statement in
+Theorem~\ref{thm:p09-ltl-model-checking}.  Neither lower bound is silently
+attributed to Vardi--Wolper's Theorem~3.2
+\cite[preprint p.~5]{VardiWolper1986}.
+
+\paragraph{A complete product calculation.}
+The source gives no worked product graph, so the following is a handbook
+calculation rather than a source example.  Let
+\[
+ W=\{s_0,g,b\},
+ \quad
+ R=\{(s_0,g),(s_0,b),(g,g),(b,b)\},
+\]
+and let \(p\) hold only at \(g\).  Consider the specification \(Fp\).  A
+deterministic B\"uchi automaton for its negation \(G\neg p\) has an accepting
+state \(q\) and a nonaccepting sink \(d\): a letter omitting \(p\) leaves
+\(q\) at \(q\), a letter containing \(p\) sends it to \(d\), and \(d\)
+loops on every letter.  The product path
+\[
+ (s_0,q),(b,q),(b,q),\ldots
+\]
+reaches the accepting cycle at \((b,q)\).  Its projected program path stays at
+\(b\), so \(p\) never occurs and \(Fp\) fails.  The other branch reaches
+\((g,d)\) and cannot accept.  Thus the accepting product cycle is not merely
+a graph artifact: it is exactly the ultimately periodic counterexample
+\(s_0b^\omega\).
+
+\paragraph{Past operators and automata connectives.}
+Section~3.2 adds previous \(Y\) and since \(S\) with the exact clauses already
+given in Definition~\ref{def:p09-ltl}.  Appendix~B modifies the local
+transition and initial-state clauses, and the source says Theorem~2.1 and the
+model-checking bounds continue to hold.
+
+Section~3.3 instead permits a nondeterministic finite automaton to stand as an
+\(n\)-ary temporal connective.  The three resulting source languages differ
+by the connective automaton's acceptance:
+\[
+\begin{array}{c@{\quad}l}
+ ETL_f & \text{some finite run on a prefix ends in }F,\\
+ ETL_l & \text{some infinite run exists on the word},\\
+ ETL_r & \text{some infinite run visits }F\text{ infinitely often}.
+\end{array}
+\]
+The names stand for formula languages, not program classes.  The distinction
+is necessary because finite success, continued running, and infinite
+recurrence are different conditions, and the source uses all three in its
+translation comparison.  It says the analogue of Theorem~2.1 was known for
+\(ETL_f\) and \(ETL_l\); Theorem~3.3 gives for \(ETL_r\)
+\[
+ |S|\le O\bigl(\exp(|\varphi|^2)\bigr).
+\]
+That cited translation proof is not reproduced in the paper
+\cite[preprint p.~6 and app.~A]{VardiWolper1986}.
+
+\paragraph{Measure-one satisfaction is a different problem.}
+The probabilistic section begins with a labelled Markov chain
+\[
+ \Pi=(W,P,w_0,V),
+ \qquad
+ W\text{ finite},
+ \qquad
+ w_0\in W,
+ \qquad
+ P:W^2\to[0,1],
+ \qquad
+ (\forall u\in W)\ \sum_{v\in W}P(u,v)=1,
+ \qquad
+ V:W\to\Sigma.
+\]
+Define the path space
+\[
+ \Omega_\Pi=
+ \{\omega\in W^\omega:\omega(0)=w_0\text{ and }
+ P(\omega(i),\omega(i+1))>0\text{ for every }i\}.
+\]
+For every finite sequence \(w_0,\ldots,w_n\) with
+\(P(w_i,w_{i+1})>0\) for \(i<n\), its prefix-cylinder event is
+\[
+ C_\Pi(w_0,\ldots,w_n)
+ =\{\omega\in\Omega_\Pi:\omega(i)=w_i\text{ for }0\le i\le n\}.
+\]
+Let \(\mathcal B_\Pi\) be the Borel \(\sigma\)-algebra on \(\Omega_\Pi\)
+generated by these cylinders, and let \(\mu_\Pi\) be the probability measure
+determined by
+\[
+ \mu_\Pi(C_\Pi(w_0,\ldots,w_n))
+ =\prod_{i=0}^{n-1}P(w_i,w_{i+1}).
+\]
+For a probabilistic program \(\Sigma=2^{\mathit{Prop}}\).  Put
+\[
+ E_\Pi(\varphi)
+ =\{\omega\in\Omega_\Pi:
+ V(\omega(0))V(\omega(1))\cdots\models\varphi\}.
+\]
+This is the measurable formula event.  The source's measure-one semantics is
+\[
+ \Pi\models\varphi
+ \Longleftrightarrow
+ \mu_\Pi(E_\Pi(\varphi))=1.
+\]
+This is almost-sure satisfaction.  A measure-zero counterexample set may be
+nonempty, so ordinary language emptiness is not substituted for this clause.
+The distinct abbreviations \(C_\Pi\) and \(E_\Pi\) replace the source's
+overloaded \(\Delta\) notation so that a prefix cylinder is not confused with
+a formula event.  In this probabilistic subsection define
+\[
+ \lVert\Pi\rVert_+
+ =|\{(u,v)\in W^2:P(u,v)>0\}|.
+\]
+This is the source's finite program-size parameter: the algorithms use only
+the support of the transition matrix, not the magnitudes of its positive
+entries.
+These measure and size conventions are on preprint p.~7
+\cite[preprint p.~7]{VardiWolper1986}.
+
+A Streett automaton replaces the B\"uchi set by a finite family
+\(\mathcal F\subseteq(2^S)^2\).  A run accepts exactly when, for every
+\((L,U)\in\mathcal F\), infinite recurrence in \(L\) implies infinite
+recurrence in \(U\).  The pair \((S,F)\) represents B\"uchi acceptance.  The
+next sentence in the preprint calls a conversion ``opposite'' but its
+parenthesis again says B\"uchi-to-Streett while assigning an exponential
+cost.  The parenthesis repeats the already trivial direction; the intended
+expensive direction can only be Streett-to-B\"uchi.  The handbook records the
+printed defect instead of quoting it as a coherent theorem
+\cite[preprint p.~8]{VardiWolper1986}.
+
+\paragraph{Restricted probabilistic theorems.}
+Put \(F\varphi\equiv \mathit{true}\,U\,\varphi\).  Here \(TL(F)\),
+\(TL(X,F)\), and \(TL(Y,S)\) are syntactic formula classes generated from
+atomic propositions by Boolean connectives and, respectively, by \(F\) only,
+by \(X\) and \(F\) only, or by \(Y\) and \(S\) only.  The class
+\(past\text{-}TL(X,F)\) is generated by Boolean connectives and
+\(X,F,Y,S\), subject to the condition that no occurrence of \(X\) or \(F\)
+lies in the scope of an occurrence of \(Y\) or \(S\).  These names stand for
+formula fragments, differ exactly in their permitted temporal constructors,
+and are used below to delimit the source's four restricted results.
+For an infinite word
+\(w\), let \(\operatorname{let}(w)\) be the letters occurring in it and
+\(\operatorname{lim}(w)\) those occurring infinitely often.  Two words are
+\emph{limit equivalent} exactly when, for some
+\(u\in\Sigma^*\), \(a\in\Sigma\), and infinite tails \(v,v'\),
+\[
+ w=uav,
+ \qquad
+ w'=uav',
+ \qquad
+ \operatorname{let}(av)
+ =\operatorname{lim}(w)
+ =\operatorname{lim}(w')
+ =\operatorname{let}(av').
+\]
+This source relation stands between infinite words; it is weaker than word
+equality because it discards order and finite multiplicity in the tails.  Its
+distinction is used immediately in Lemma~4.1: limit-equivalent time
+structures satisfy the same \(TL(F)\) formulas at zero.
+
+A computation is \emph{probabilistically fair} when every positive-probability
+choice out of a state is taken infinitely often whenever that state itself
+occurs infinitely often.  This stands as a condition on a computation, not as
+universal quantification over paths.  It is stronger than mere recurrence and
+is used to make one computation represent a positive-measure class.  Streett
+pairs express the condition.
+
+Lemma~4.2 gives a proof sketch: equip the program automaton with that Streett
+condition, intersect it with \(A_{\neg\varphi}\), and test Streett emptiness.
+Theorem~4.3 concludes for \(TL(F)\)
+\[
+ \text{time}=O(\lVert\Pi\rVert_+\,2^{O(|\varphi|)}).
+\]
+The paper explicitly leaves open whether Theorem~3.2's space bound survives
+in this probabilistic setting
+\cite[preprint pp.~8--9]{VardiWolper1986}.
+
+For \(TL(X,F)\), a formula with \(k-1\) occurrences of \(X\) is evaluated
+through length-\(k\) factors.  Write \(k\text{-}\operatorname{let}(w)\) for
+the length-\(k\) factors which occur in \(w\), and
+\(k\text{-}\operatorname{lim}(w)\) for those which occur infinitely often.
+The source defines \(k\)-limit equivalence exactly by the existence of
+\(u\in\Sigma^*\), \(x\in\Sigma^k\), and infinite tails \(v,v'\) such that
+\[
+ w=uxv,
+ \quad
+ w'=uxv',
+ \quad
+ k\text{-}\operatorname{let}(xv)
+ =k\text{-}\operatorname{lim}(w)
+ =k\text{-}\operatorname{lim}(w')
+ =k\text{-}\operatorname{let}(xv').
+\]
+It differs from ordinary limit equivalence by remembering exactly the finite
+window needed for the next operators, and Lemma~4.4 uses it to preserve truth
+of the formula.  The program is augmented to remember a length-\(k\) history;
+details are deferred to the full paper.  Theorem~4.5 states
+\[
+ \text{time}=O(\lVert\Pi\rVert_+\,2^{O(|\varphi|^2)})
+\]
+and leaves improvement open.
+
+For the pure-past fragment \(TL(Y,S)\), Lemma~4.6 says that
+\(A_\varphi\) is semi-deterministic.  Theorem~4.7 gives
+\[
+\begin{aligned}
+ \text{time}&=O(\lVert\Pi\rVert_+\,2^{O(|\varphi|)}),\\
+ \text{space}&=O\bigl((\log\lVert\Pi\rVert_++|\varphi|)^2\bigr).
+\end{aligned}
+\]
+The broader \(past\text{-}TL(X,F)\) fragment forbids \(X\) or \(F\) inside
+the scope of \(Y\) or \(S\).  The paper says this fragment has the same
+expressive power as PTL but that the cited translation from PTL can have
+nonelementary complexity.  Its claimed model-checking extension is deferred
+to the full paper, as is the algorithm for the displayed concurrent
+Markov-chain model
+\[
+ (W,N,F,P,w_0,V),
+ \qquad
+ N\subseteq W,
+ \qquad
+ F\subseteq N,
+ \qquad
+ P:W^2\to[0,1],
+ \qquad
+ w_0\in W,
+ \qquad
+ V:W\to\Sigma.
+\]
+For \(u\in W\setminus N\), the outgoing probabilities sum to one.  For
+\(u\in N\), the condition \(P(u,v)>0\) records a possible nondeterministic
+transition rather than its probability; \(F\) marks the nondeterministic
+states subject to fair scheduling
+\cite[preprint pp.~10--11]{VardiWolper1986}.
+
+The proof boundary is therefore uneven and explicit.  Theorem~2.1 is
+attributed to Wolper--Vardi--Sistla 1983 while Appendix~B constructs the PTL
+automaton; Theorems~2.2 and 3.3 and Lemmas~3.1 and 4.1 cite prior results;
+Lemma~4.2 is only sketched; and several probabilistic and concurrent details
+are promised for a later full paper.  None of those source boundaries is
+upgraded merely because the automata-theoretic architecture is correct.
+
+\subsubsection{B\"uchi's 1962 decision method}
+
+\paragraph{Source identity and boundary.}
+The complete article is available in a later Stanford printing of the original
+1962 proceedings.  Its printed pp.~1--11 occupy file pp.~12--22 of the
+commercial preview; printed p.~11 ends with the references, and file p.~23
+begins Julia Robinson's article on printed p.~12.  The original citation is
+therefore J.~Richard B\"uchi, ``On a Decision Method in Restricted Second Order
+Arithmetic,'' in the proceedings edited by Ernest Nagel, Patrick Suppes, and
+Alfred Tarski, Stanford University Press, 1962, pp.~1--11.  No DOI appears in
+the original.  The familiar Elsevier and Springer DOIs identify the 1966
+series republication and the 1990 collected-works reprint, respectively.  The
+public preview supplies a complete research copy of this article but declares
+no open-content licence, so the account below is an independent reconstruction
+\cite{Buchi1962}.
+
+\paragraph{The interpreted formalism \(SC\).}
+B\"uchi's name \(SC\) is retained because replacing it silently by the modern
+name S1S would erase the source's own presentation.  It stands for an
+interpreted language together with its intended domains, not for an automaton
+or a word language.  Individual variables range over \(\mathbb N\), monadic
+predicate variables range over all subsets of \(\mathbb N\), and the
+nonlogical vocabulary contains \(0\) and unary successor; propositional
+connectives and quantifiers of both sorts are available.  If \(t\) denotes a
+number, the source writes \(t'\) for its successor
+\cite[pp.~1--2]{Buchi1962}.
+
+For a tuple of predicate variables
+\(\mathbf i=(i_1,\ldots,i_k)\), put
+\[
+ \mathbf i(n)=
+ \bigl(\mathbf 1_{i_1}(n),\ldots,\mathbf 1_{i_k}(n)\bigr)
+ \in\{0,1\}^k.
+\]
+Here \(\mathbf 1_{i_j}(n)=1\) exactly when \(n\in i_j\), and it is \(0\)
+otherwise.
+Thus an assignment to \(\mathbf i\) is represented by the infinite word
+\[
+ \mathbf i(0)\mathbf i(1)\mathbf i(2)\cdots
+\]
+over the \(2^k\) truth-value states.  This is the source's bridge from monadic
+set assignments to infinite words.  The word is the input assignment itself;
+no separate run has yet been introduced.  B\"uchi's proposed phrase
+``sequential calculus'' describes the use of \(SC\) as a condition language
+for sequential circuits and does not name a second formal system.
+
+\paragraph{Formula classes and recurrence.}
+The source first organizes formulas into classes \(\Sigma_n\) and \(\Pi_n\).
+These symbols name formula classes, not word languages unless a denotation is
+explicitly in view.  With propositional matrices \(A,B,C\), its displayed
+base classes and recursive clauses are
+\[
+\begin{aligned}
+ \Sigma_1:\quad
+ &(\exists\mathbf r)\bigl[
+ A[\mathbf r(0)]
+ \land(\forall t)B[\mathbf i(t),\mathbf r(t),\mathbf r(t')]
+ \land(\exists t)C[\mathbf r(t)]\bigr],\\
+ \Pi_1:\quad
+ &(\forall\mathbf r)\bigl[
+ A[\mathbf r(0)]
+ \lor(\exists t)B[\mathbf i(t),\mathbf r(t),\mathbf r(t')]
+ \lor(\forall t)C[\mathbf r(t)]\bigr],\\
+ \Sigma_{n+1}:\quad
+ &(\exists\mathbf r)F(\mathbf i,\mathbf r),
+ \qquad F\in\Pi_n,\\
+ \Pi_{n+1}:\quad
+ &(\forall\mathbf r)F(\mathbf i,\mathbf r),
+ \qquad F\in\Sigma_n.
+\end{aligned}
+\]
+The source then defines the infinitely-often quantifier by
+\[
+ (\exists^\omega t)D(t)
+ \quad\Longleftrightarrow\quad
+ (\forall x)(\exists t)\,[x<t\land D(t)].
+\]
+It then singles out \(\Sigma_1^\omega\), whose formulas have the form
+\[
+ (\exists\mathbf r)\;
+ A[\mathbf r(0)]
+ \land
+ (\forall t)B[\mathbf i(t),\mathbf r(t),\mathbf r(t')]
+ \land
+ (\exists^\omega t)C[\mathbf r(t)]
+\]
+where \(A,B,C\) are propositional matrices and \(\mathbf r\) is a finite tuple
+of auxiliary monadic predicates.  The notation \(\Sigma_1^\omega\) names a
+formula class and, under the paper's declared overload, the relations on
+infinite predicate sequences which its formulas define.  It differs from the
+ordinary first existential level by requiring the final condition infinitely
+often rather than merely once, and the distinction is used in the normal-form
+and decision theorems below \cite[pp.~2--3]{Buchi1962}.
+
+There is an exact modern automata comparison, but it is a handbook translation
+of the displayed quantifiers rather than a tuple printed in the article.
+Suppose \(\mathbf r\) has \(\ell\) coordinates.  For this one formula define
+\[
+\begin{aligned}
+ \Gamma&=\{0,1\}^k,
+ &Q&=\{0,1\}^{\ell},\\
+ Q_0&=\{q\in Q:A[q]\},
+ &\Delta(q,a)&=\{q'\in Q:B[a,q,q']\},\\
+ F&=\{q\in Q:C[q]\}.
+\end{aligned}
+\]
+These are eliminable names for the finite data extracted from the displayed
+formula: \(\Gamma\) is the input alphabet, \(Q\) the
+auxiliary state set, \(Q_0\) the permitted initial states, \(\Delta\) the
+successor relation, and \(F\) the recurrent state set.  The existential tuple
+\(\mathbf r\) supplies a sequence \(q_0q_1\ldots\), and the formula holds of
+the input word exactly when some such sequence begins in \(Q_0\), satisfies
+\[
+ q_{n+1}\in\Delta(q_n,\mathbf i(n))
+ \qquad(n\in\omega),
+\]
+and visits \(F\) infinitely often.  It is therefore extensionally the
+permitted-initial-set variant of the nondeterministic B\"uchi word automaton
+defined in Definition~\ref{def:p08-buchi-automaton}; that definition uses one
+initial state, whereas \(Q_0\) may contain several.  Nondeterminism is material
+because \(B[a,q,q']\) need not determine a unique \(q'\).  The 1962 article
+does not package these objects as a five-component tuple, call
+\(q_0q_1\ldots\) a run in this notation, or use ``B\"uchi acceptance'' as the
+name of the recurrence clause.  Applying the handbook-owned conversion above
+with this \(Q_0\) gives the single-start convention used by
+Definition~\ref{def:p08-buchi-automaton}; it adds one state and leaves the
+recognized language unchanged.
+
+\paragraph{Finite words, congruences, and regular formulas.}
+For a finite tuple \(\mathbf r\) of auxiliary monadic predicates,
+propositional matrices \(A,B,C\), and endpoints \(x\le y\), the source's class
+\(\Sigma^0\) consists of the regular formulas
+\[
+ R(\mathbf i,x,y)\equiv
+ (\exists\mathbf r)\bigl[
+ A[\mathbf r(x)]
+ \land
+ (\forall t)\bigl(x\le t<y\Rightarrow
+ B[\mathbf i(t),\mathbf r(t),\mathbf r(t')]\bigr)
+ \land
+ C[\mathbf r(y)]
+ \bigr].
+\]
+Thus the auxiliary recurrence is initialized at \(x\), constrained exactly on
+the finite interval \(x\le t<y\), and tested at \(y\).  The symbol
+\(\Sigma^0\) stands first for this formula class.  The truth of
+\(R(\mathbf i,x,y)\) depends only on
+\[
+ \mathbf i(x)\mathbf i(x+1)\cdots\mathbf i(y-1).
+\]
+Accordingly, \(\Sigma^0\) also denotes the finite-word languages defined by
+such formulas.  This is a source-declared formula/denotation overload, not an
+identification made without context.
+
+For finite words, a congruence \(\sim\) is an equivalence relation satisfying
+\[
+ u\sim v
+ \quad\Longrightarrow\quad
+ uw\sim vw\ \text{ and }\ wu\sim wv
+ \qquad\text{for every word }w.
+\]
+Its rank is its number of equivalence classes.  The source calls a finite-word
+language \emph{multiperiodic} exactly when it is a union of classes of one
+finite-rank congruence.  This name is needed for Lemmas~6 and~10; it denotes a
+finite-word language class, not an ultimately periodic infinite word, and is
+not redundant with the later restriction to ultimately periodic predicate
+sets \cite[pp.~2--4]{Buchi1962}.
+
+\paragraph{The Sequential Lemma and the finite-word bridge.}
+Let \(\mathcal E_0,\ldots,\mathcal E_n\) be a finite partition of the finite
+words over the states of one infinite sequence \(\mathbf i\).  Lemma~1, the
+Sequential Lemma, gives cut points
+\[
+ x_1<x_2<x_3<\cdots
+\]
+and one cell \(\mathcal E_c\) such that
+\[
+ \mathbf i(x_p)\mathbf i(x_p+1)\cdots\mathbf i(x_q-1)
+ \in\mathcal E_c
+ \qquad(p<q).
+\]
+The quantifier \(p<q\) matters: every concatenation of consecutive blocks
+between selected cut points has the same color, not only each adjacent block.
+The proof colors each two-element set of positions by the cell containing the
+intervening word and applies Ramsey's theorem to obtain an infinite
+homogeneous set.  This proof is printed and will be used in the complement
+argument \cite[p.~3]{Buchi1962}.
+
+Lemma~2 identifies \(\Sigma^0\)-definable finite-word languages with behaviors
+of finite-state recursions
+\[
+ \mathbf r(0)=I,
+ \qquad
+ \mathbf r(t')=J[\mathbf i(t),\mathbf r(t)],
+\]
+tested by an endpoint output condition: for a finite-word language
+\(\mathcal R\),
+\[
+ \mathbf i(0)\cdots\mathbf i(x-1)\in\mathcal R
+ \quad\Longleftrightarrow\quad
+ U[\mathbf r(x)].
+\]
+The source attributes the difficult
+direction to Myhill's subset construction and B\"uchi's 1960 paper; it renders
+the converse as a regular formula.  Lemmas~3--5 supply Boolean closure and the
+needed bounded and endpoint quantifier reductions.  Lemma~6 states that a
+finite-word language is such an automaton behavior exactly when it is
+multiperiodic, but refers its proof to Rabin and Scott.  Hence the exact bridge
+used here is
+\[
+ \Sigma^0\text{-definable}
+ \quad\Longleftrightarrow\quad
+ \text{finite-automaton behavior}
+ \quad\Longleftrightarrow\quad
+ \text{multiperiodic},
+\]
+with the cited proof dependencies left visible \cite[pp.~3--4]{Buchi1962}.
+
+\paragraph{Boolean closure and the infinite-word normal form.}
+Lemmas~7 and~8 prove closure of \(\Sigma_1^\omega\) under union and
+intersection.  The conjunction construction adds finite control which
+alternates between waiting for the two recurrent conditions.  Lemma~9 proves
+closure under complement.  For a formula with \(m\) auxiliary states, two
+finite input words are declared equivalent when, for every ordered pair of
+auxiliary states \((V,W)\), they agree both on the existence of a permitted
+path from \(V\) to \(W\) and on the existence of one passing through a
+designated recurrent state.  This is the intersection of \(2m^2\) binary
+distinctions, so its rank is at most
+\[
+ 2^{2m^2}.
+\]
+The Sequential Lemma supplies a homogeneous infinite block decomposition.
+Finitely many initial-block and repeated-block classes can then be separated
+according to whether the original formula holds, and the opposite classes
+define its complement.  This is an effective finite-congruence complement
+argument; it is not a determinization construction silently imported from a
+later automata theory \cite[pp.~5--7]{Buchi1962}.
+
+Lemma~10 extracts the structural form
+\[
+ \mathcal C\,\mathcal D\,\mathcal D\,\mathcal D\cdots,
+\]
+with \(\mathcal C\) and \(\mathcal D\) multiperiodic finite-word languages.
+The display means that an infinite input has some factorization into one
+finite stem block from \(\mathcal C\) followed by endlessly many nonempty
+finite blocks from \(\mathcal D\).  Every \(\Sigma_1^\omega\)-definable infinite-word
+language is a finite union of such sets.
+
+\paragraph{Theorem 1: collapse to one recurrent existential form.}
+Lemma~11 states that every \(SC\)-formula can first be put into some level
+\(\Sigma_n\); its proof is referred to the method of the 1960 paper rather
+than printed here.  A first-level existential formula can be changed into
+\(\Sigma_1^\omega\), and repeated use of Lemma~9 handles each alternation.
+Theorem~1 therefore states that, for every \(SC\)-formula
+\(A(\mathbf i)\), there is a \(B(\mathbf i)\in\Sigma_1^\omega\) equivalent to
+it for every assignment to \(\mathbf i\).
+The source also says that \(\Sigma_1^\omega\) and \(\Sigma_2\) define the same
+relations, so the displayed hierarchy collapses at level two.  This is a
+normal-form and definability result; its effective content depends on the
+later decision and finite-enumeration argument, not on an unprinted modern
+translation bound.  The paper extends the normal form to formulas with free
+individual variables and records consequences for the variant in which monadic
+predicate assignments are restricted to finite subsets of \(\mathbb N\)
+\cite[p.~7]{Buchi1962}.
+
+The finite-data comparison above gives a handbook corollary whose ownership is
+important.  For every \(SC\)-formula \(A(\mathbf i)\), the infinite truth-value
+words satisfying \(A\) are accepted by a nondeterministic B\"uchi automaton
+over \(\{0,1\}^k\).  Conversely, encode the finitely many states of any such
+automaton by a finite tuple of predicate bits; propositional matrices can
+enforce its initial codes, transitions, and recurrent codes while excluding
+unused bit patterns.  The resulting \(\Sigma_1^\omega\)-formula defines exactly
+its accepted words.  Theorem~1 supplies the first existence direction, and the
+paper's later effectivity argument makes it constructive.  The article itself
+does not state this equivalence using the modern automaton tuple or theorem
+name.
+
+\paragraph{Lemma 12 and Theorem 2: the decision method.}
+After existential predicates are exposed, a sentence in the recurrent normal
+form has matrix
+\[
+ K[\mathbf r(0)]
+ \land
+ (\forall t)H[\mathbf r(t),\mathbf r(t')]
+ \land
+ (\exists^\omega t)L[\mathbf r(t)].
+\]
+If \(\mathbf r\) has \(k\) coordinates, there are \(2^k\) truth-value states.
+Any satisfying infinite sequence has an \(L\)-state \(U\) which occurs
+infinitely often.  It therefore contains a finite \(H\)-path from a
+\(K\)-state to \(U\) and a nonempty finite \(H\)-cycle from \(U\) back to
+itself.  Conversely, repeating such a cycle gives a satisfying infinite
+sequence.  A path between fixed states need not exceed \(2^k\) edges: a longer
+path repeats a state, and deleting the intervening loop preserves the endpoints
+and the local \(H\)-constraints.  Only finitely many candidate stems, cycles,
+and recurrent states must therefore be considered.
+
+The paper then checks that the earlier normal-form transformations are
+effective.  In particular, the congruence used in complementation has an
+explicit finite bound, and membership of a candidate pair of homogeneous
+classes is reduced to another \(\Sigma_1^\omega\)-sentence decided by
+Lemma~12.  Theorem~2 concludes that there is an effective method for deciding
+the truth of every \(SC\)-sentence.
+The result is decidability, not a modern complexity upper bound.  The finite
+enumeration must not be promoted to an elementary, PSPACE, or optimal
+algorithm.  The article motivates the result by finite-state circuit
+verification but supplies no worked circuit instance \cite[pp.~7--9]{Buchi1962}.
+
+\paragraph{Consequences recorded after Theorem 2.}
+The paper then lists five comparisons and consequences, none with a new proof.
+First, it says that decidability for what it prints as
+\(\Sigma_2^0\)-sentences contains a result of Joyce Friedman and entails
+finite-automata algorithms associated with Church and Wang.  This
+superscripted notation is reported as the source's formula-class label; the
+paper does not define it in that paragraph, and it is not identified here with
+the earlier regular-formula class \(\Sigma^0\).  Second, \(SC\) defines
+equality, strict order, and congruence modulo each positive integer, which the
+source says improves a result of Putnam.
+
+Third, finiteness of a predicate assignment is \(SC\)-definable.  The source
+therefore obtains decidability of \(SC_{\mathrm{fin}}\), meaning the same
+interpreted formalism with monadic variables restricted to finite subsets of
+\(\mathbb N\); it cites B\"uchi's 1960 paper and reports Robinson's attribution
+of the result to Ehrenfeucht.  Fourth, taking \(\mathrm{Nn}\) as the natural
+numbers and \(\mathrm{Pw}\) as the integral powers of two, it obtains
+decidability of the first-order theory
+\([\mathrm{Nn},+,\mathrm{Pw}]\), improving Presburger's result.  Fifth, it
+relates Theorem~2 to the Skolem--Behmann decision theorem for the monadic
+predicate calculus of second order and says a modified Lemma~11 yields a simple
+solution.  These are the article's historical comparisons; the eleven pages do
+not reprove the cited results \cite[p.~9]{Buchi1962}.
+
+\paragraph{Ultimately periodic assignments and arithmetic consequences.}
+A preliminary concluding remark says that a careful analysis of the decision
+method would yield a complete axiom system for \(SC\).  It proposes as a
+candidate schema the homogeneous-sequence fragment of the Sequential Lemma
+used in the complement proof, instantiated for each regular formula
+\(E\in\Sigma^0\).  The article neither states nor proves a soundness-and-
+completeness theorem for that proposed system.
+
+A set \(X\subseteq\mathbb N\) is ultimately periodic here exactly when
+\[
+ \exists N\in\mathbb N\;\exists p\in\mathbb N\;
+ \bigl[p\ge 1\land
+ (\forall n\ge N)\,(n\in X\longleftrightarrow n+p\in X)\bigr].
+\]
+Let \(SC_{\mathrm{per}}\) be the same interpreted formalism with monadic
+variables restricted to those subsets.  This name is necessary to distinguish
+a restricted assignment domain from the full monadic domain of \(SC\); it is
+defined here, stands for an interpreted formalism, and is used immediately.
+Theorem~3 says
+\[
+ \varphi\text{ is true in }SC_{\mathrm{per}}
+ \quad\Longleftrightarrow\quad
+ \varphi\text{ is true in }SC
+\]
+for every \(SC\)-sentence \(\varphi\).  The source outlines the replacement of
+Ramsey's theorem by idempotent powers in a finite semigroup rather than giving
+the earlier level of detail \cite[pp.~9--10]{Buchi1962}.
+
+On printed p.~10, \(\mathrm{Re}\), \(\mathrm{Ra}\), and \(\mathrm{Pw}\)
+name, respectively, the nonnegative reals, the rationals, and the integral
+powers of two.  The source's meaning of \(\mathrm{Nn}\) is discrepant: p.~1
+calls it the natural numbers, whereas p.~10 calls it the integers.  With those
+source abbreviations stated first, Theorem~4 says that the first-order theories
+of
+\[
+ [\mathrm{Re},+,\mathrm{Pw},\mathrm{Nn}]
+ \quad\text{and}\quad
+ [\mathrm{Ra},+,\mathrm{Pw},\mathrm{Nn}]
+\]
+are, in its phrase, ``arithmetically equivalent,'' and are decidable.  The
+article does not define that phrase or display reductions between the two
+theories.  This presentation therefore records it only as an unresolved source
+phrase, not as a technical relation used later and not as a choice among
+interpretability, reducibility, or definitional equivalence.  The exact
+independently usable conclusion is that both displayed first-order theories
+are decidable.  The reader likewise does not decide whether the last source
+occurrence of ``integers'' was intended to mean nonnegative integers.
+
+The paper attributes undecidability after adjoining \(2x\) to Robinson.  It
+also reports, with attribution to G\"odel and without proof, that replacing
+monadic predicate quantification by quantification over monadic functions makes
+all recursive relations definable.
+
+Three open problems close the article.  Problem~1 calls the formalism with
+\(2x+1\) and \(2x+2\) as primitives in place of successor \(SC^2\) and asks
+whether it is decidable.  Problem~2 lets \(SC(\alpha)\) mean the variant whose
+individual domain is the ordinal \(\alpha\) and whose well-order is primitive,
+then asks whether \(SC(\omega^2)\) is decidable.  Problem~3 asks for an
+algorithm deciding whether an arbitrary condition
+\(C(\mathbf i,\mathbf u)\) is realizable by some finite-state recursion.  The
+last is a synthesis question.  Theorem~2 decides whether a supplied
+finite-state behavior meets a condition; it does not decide whether some
+finite-state implementation exists \cite[p.~10]{Buchi1962}.
+
+\paragraph{Proof and source-strength boundary.}
+The article prints the Ramsey proof of Lemma~1, the Boolean constructions and
+substantial complement argument of Lemmas~7--9, the finite stem--cycle proof of
+Lemma~12, and the remaining effectivity argument for Theorem~2.  Lemma~2's
+difficult direction is credited to Myhill and the 1960 paper, Lemma~6 is
+referred to Rabin--Scott, Lemma~11 is stated with its method referred
+elsewhere, and Theorem~3 receives a finite-semigroup outline.  The modern
+finite-data comparison above is handbook-owned but extensionally
+exact; the source itself gives no determinization, modern automaton
+complementation theorem, translation-state complexity, or circuit case study.
+
+\subsubsection{McNaughton's 1966 presentation}
+The publisher identifies the ten-page article and marks its version of record
+as open archive, but the article body was not available through the lawful
+access routes used here: the publisher PDF route required human verification,
+its full-content API required authentication, and the advertised OpenAlex content
+copy required a personal API key.  This is an access boundary, not evidence
+that the publisher PDF does not exist \cite{McNaughton1966}.
+
+McNaughton's own contemporary Project MAC report supplies one narrower
+first-person account.  It explicitly glosses an \(\omega\)-event as a set of
+infinite sequences.  It also uses the unanalyzed phrases ``regular
+\(\omega\)-event'' and ``finite-state'' and reports, as a Kleene--Myhill
+analogue, an equivalence between them \cite[p.~58]{MITProjectMAC1966}.  The
+last two phrases are quotations from the report, not predicates defined or
+used by the handbook: their exact definitions, their distinction, and the
+article's theorem wording remain owed until the article body is read.  The
+report likewise does not give the article's alphabet, automaton tuple,
+acceptance clause, two constructions, examples, or proof.
+
+The same report places finite-state infinite games in a separately lettered
+entry about a 1965 memo and records that the memo's claimed proof had a deep,
+then-unpatched fallacy \cite[p.~58]{MITProjectMAC1966}.  No determinacy or
+finite-state winning-strategy theorem is therefore imported from that memo
+into the 1966 article.  Conversely, no modern deterministic Muller/Rabin tuple,
+acceptance family, construction, or size bound is attributed to the article
+until its own body is read.
+
+\subsubsection{Safra's 1988 proceedings paper and expanded manuscript}
+The registered nine-page proceedings paper remains available here only through
+its authoritative abstract and bibliographic record.  The abstract announces a
+single-exponential conversion from nondeterministic B\"uchi automata to
+deterministic Rabin automata, describes the construction as essentially
+optimal, and reports applications to complementation and decision procedures
+\cite{Safra1988}.  Safra's university directory, however, also supplies a
+different source object: a twenty-page author-hosted PostScript manuscript with
+the same title.  Its title-page note calls the 1988 paper a preliminary version,
+its own bibliography says that an extended version was to appear in the
+\emph{Journal of Computer and System Science}, using that singular printed
+wording, and its PostScript header records
+generation on 21 March 1995.  No journal publication record was established.
+The detailed construction below is therefore attributed only to that expanded
+manuscript, not silently to the unread nine proceedings pages
+\cite{Safra1995Extended}.
+
+\paragraph{Source automata and pair convention.}
+In the expanded manuscript an \(\omega\)-automaton over a finite alphabet
+\(\Sigma\) is
+\[
+  \mathcal A=(\Sigma,Q,q_0,\delta,\mathcal C),
+  \qquad
+  \delta:Q\times\Sigma\longrightarrow\mathcal P(Q),
+\]
+where \(Q\) is finite, \(q_0\in Q\), and \(\mathcal C\) is an acceptance
+condition.  The input automaton may have \(\delta(q,a)=\varnothing\).  Safra
+calls an automaton deterministic exactly when
+\(|\delta(q,a)|=1\) for every \(q\in Q\) and \(a\in\Sigma\); this is a total,
+single-valued target convention, unlike the partial convention used earlier in
+this part.  A run on \(\alpha\in\Sigma^\omega\) is
+\(\rho\in Q^\omega\) with \(\rho(0)=q_0\) and
+\(\rho(i+1)\in\delta(\rho(i),\alpha(i))\) for every \(i\).  Put
+\[
+  \operatorname{Inf}(\rho)
+  =\{q\in Q:\forall m\;\exists i\ge m\;(\rho(i)=q)\}.
+\]
+For B\"uchi acceptance, \(\mathcal C=F\subseteq Q\) and a run is accepting
+when \(\operatorname{Inf}(\rho)\cap F\ne\varnothing\).  A Muller condition is
+a family \(\mathcal M\subseteq\mathcal P(Q)\), and it accepts \(\rho\) exactly
+when \(\operatorname{Inf}(\rho)\in\mathcal M\).  In the source's Rabin
+pair order, a family \(\{(L_i,U_i):i\in I\}\) accepts a run when, for some
+\(i\), a state of \(L_i\) recurs infinitely often and every state of \(U_i\)
+occurs only finitely often.  Thus \(L_i\) is the recurring or ``good''
+component and \(U_i\) the eventually absent or ``bad'' component.  This order
+must not be exchanged with Thomas's later notation merely because both are
+called Rabin pairs
+\cite[pp.~2--4]{Safra1995Extended}.
+
+\paragraph{The expanded manuscript's determinization state.}
+\label{sec:p09-safra-determinization}
+Let \(n=|Q|\), fix an \(n\)-element vocabulary \(V\), and fix a linear order on
+\(V\) solely to make name allocation deterministic.  A finite ordered
+\(V\)-tree is \(T=(N,r,p,S)\), where \(N\subseteq V\), \(r\in N\) is the
+root, \(p:N\setminus\{r\}\to N\) is the parent map, and \(S\) linearly orders
+the children of each node.  The source defines ancestor strictly; with that
+convention, its printed left-to-right clause does not compare siblings because
+it asks for strictly ancestral nodes which are siblings.  The handbook owns the
+following correction.  For two non-ancestral nodes, follow their root-to-node
+paths through their last common node and order them by the first distinct
+children, using those children's common-parent sibling order.  For the
+handbook-owned deterministic allocation below, extend this corrected relation
+to a total traversal order: an ancestor precedes every proper descendant, while
+two non-ancestral nodes occur in the corrected left-to-right order.  Unlike the
+left-to-right relation, this order also compares ancestors with descendants and
+is used only to enumerate surviving temporary nodes.  Each determinization
+state printed by the source is exactly
+\[
+  (T,\ell,c),
+  \qquad
+  \ell:N\longrightarrow\mathcal P(Q),
+  \qquad
+  c:V\longrightarrow\{\mathsf{white},\mathsf{green},\mathsf{red}\},
+\]
+subject to two invariants: the union of the children labels is a proper subset
+of the parent label, and labels on non-ancestral nodes are disjoint.  Under the
+same strict-ancestor convention, the printed specificity clause, read
+literally, would require a state both to belong and not belong to the node
+itself.  Its following parenthetical gives the intended inclusive-path
+reading.  The handbook therefore makes that correction explicit: the inclusive
+root-to-\(d\) path is \(d\) together with all its strict ancestors, and an
+original state \(q\) is \emph{specific} to \(d\) exactly when
+\(q\in\ell(d)\) and \(q\notin\ell(e)\) for every node \(e\) off that inclusive
+path.  Label containment then puts \(q\) in every ancestor label, and branch
+disjointness makes \(d\) unique.  ``Specific'' is a metalinguistic
+abbreviation for this label relation, not an additional automaton component.
+It is needed below to prove that no valid tree has more than \(n\) nodes.  Tree-node
+identity is supplied by membership in \(V\); colors do not name nodes, and
+state-subset labels do not persist as names
+\cite[pp.~9--10]{Safra1995Extended}.
+
+Choose the least \(v_0\in V\) as a handbook-owned representative for the
+source's unspecified one-node initial tree.  Initially \(N=\{v_0\}\), the
+root label is \(\{q_0\}\), and every vocabulary element is white.  Fixing
+\(v_0\), rather than choosing an unnamed root afresh, adds no mathematical
+structure: it only makes the displayed deterministic transition a function.
+
+For \(R\subseteq Q\) and \(a\in\Sigma\), define
+\[
+  \widehat\delta(R,a)=\bigcup_{q\in R}\delta(q,a).
+\]
+To read \(a\), the expanded manuscript performs the following ordered update.
+Here \(V'\) is a temporary \(n\)-element set disjoint from \(V\).
+
+\begin{enumerate}
+\item Replace every current label \(R\) by
+  \(\widehat\delta(R,a)\).
+\item Simultaneously for every node present after the first step whose new
+  label \(R\) meets \(F\), attach a youngest child with a fresh temporary name
+  from \(V'\) and label \(R\cap F\).
+\item Whenever an original state occurs on two non-ancestral paths, retain it
+  on the leftmost path and delete it from every path to the right.
+\item Delete every empty-labelled node; label containment deletes its
+  descendants as well.
+\item If a surviving old node's label equals the union of its children labels,
+  delete all of that node's descendants and color the node green.  Color every
+  other surviving old node white, and color every vocabulary name not retained
+  by an old survivor red.
+\item Enumerate the surviving temporary nodes in the total traversal order
+  defined above and rename them, in that order, by the least unused elements
+  of \(V\).
+\end{enumerate}
+
+The fixed order in the last step is a handbook-owned choice of representative
+for the source's instruction to use ``some'' unused names.  It is necessary
+only because the output automaton is asserted to be deterministic.  It does
+not identify a new kind of node or change the language.  A newly allocated
+name is red in its creation state; if its node survives later updates, the same
+name persists and is thereafter white except on a collapse update, when it is
+green.  After duplicate removal and collapse, every surviving node has at
+least one original state specific to it.  Hence at most \(n\) nodes survive,
+so the \(n\) names in \(V\) suffice
+\cite[pp.~10--11]{Safra1995Extended}.
+
+There is one definedness case which the printed six steps do not state.  If
+advancing the root produces the empty label, step~4 would delete the root even
+though every printed state is a rooted tree.  Because the source permits
+\(\delta(q,a)=\varnothing\), this case is possible.  The handbook therefore
+adds one state \(\bot_{\mathrm{dead}}\), exactly the deterministic automaton
+state reached when no original run extends the input prefix.  It is not a tree
+node or an additional mathematical structure: it is an eliminable rejecting
+sink, loops on every letter, and rejects every continuation.  The next display
+states exactly how it enters the acceptance condition.  This addition makes
+the transition total and leaves the language and asymptotic bound unchanged.
+
+For each \(v\in V\), put
+\[
+  G_v=\{(T,\ell,c):c(v)=\mathsf{green}\},
+  \qquad
+  B_v=\{(T,\ell,c):c(v)=\mathsf{red}\}\cup
+      \{\bot_{\mathrm{dead}}\}.
+\]
+The letters \(G\) and \(B\) are handbook notation for the source's green
+\(L_v\) and red \(U_v\) components.  They are used only to prevent a collision
+with language notation.  The added state \(\bot_{\mathrm{dead}}\) lies in every
+\(B_v\) and no \(G_v\).  The deterministic run is accepting exactly when
+some \(v\) is red only finitely often and green infinitely often, equivalently
+when its infinity set meets \(G_v\) and misses \(B_v\) for some \(v\).  The
+construction therefore has exactly \(n\) Rabin pairs in this expanded
+presentation
+\cite[p.~11]{Safra1995Extended}.
+
+\paragraph{Why the tree and the colors suffice.}
+The source first shows why a plain subset state loses lineage information and
+why a single root-level check that all currently represented states have
+visited \(F\) since the preceding successful check can still be incomplete.
+The tree applies its already defined child-creation and collapse operations
+recursively below each node: a child tracks the accepting-state mass seen
+within its parent's currently represented runs, horizontal deletion gives
+responsibility for a merged original state to the older branch, green records
+equality of a node label with the union of its child labels at a collapse, and
+red records loss of the named lineage.  In the manuscript's worked overview,
+one accepted word is witnessed
+by infinitely many root collapses, while another is witnessed by a stable leaf
+that collapses infinitely often.  The examples demonstrate the two ways the
+Rabin condition can select a persistent node; they are not a definition of the
+construction
+\cite[pp.~5--9]{Safra1995Extended}.
+
+Fix an input word \(\alpha\in\Sigma^\omega\) and the unique run of the
+determinized automaton on \(\alpha\).  For \(i\le j\), write
+\(\alpha[i,j)\) for the finite factor
+\(\alpha(i)\alpha(i+1)\cdots\alpha(j-1)\).  For soundness, suppose one name
+\(v\) in that determinized run is eventually never red and is green at
+positions
+\[
+  i_1<i_2<\cdots.
+\]
+Let \(S_j\) be the label of \(v\) at \(i_j\), and take
+\(S_0=\{q_0\}\), \(i_0=0\).  The child-creation and collapse clauses imply
+that every \(q\in S_{j+1}\) has some predecessor \(q'\in S_j\) joined to it
+by an \(\mathcal A\)-run over
+\(\alpha[i_j,i_{j+1})\) which visits \(F\).  Form the finitely branching tree
+whose level \(j\) consists of \((q,j)\) for \(q\in S_j\), choosing such a
+predecessor for every next-level node.  K\"onig's lemma supplies an infinite
+branch.  Concatenating its finite run segments gives one original run which
+visits \(F\) between every two successive green positions, hence is B\"uchi
+accepting
+\cite[pp.~11--12]{Safra1995Extended}.
+
+For completeness, let \(\rho\) be an accepting run of the original automaton
+\(\mathcal A\) on the same word \(\alpha\).  Its current state is always in
+the root label.  If the root turns green infinitely often,
+its name is the required Rabin witness.  Otherwise, after the root's last green
+event, the next visit of \(\rho\) to \(F\) places its state in a child.  It may
+move left to an older sibling only finitely many times, so it eventually stays
+under one surviving child.  Either that child turns green infinitely often, or
+the same argument descends another level.  Proper child containment bounds the
+depth by \(n\); the descent must therefore stop at a surviving node whose name
+is eventually never red and is green infinitely often
+\cite[p.~12]{Safra1995Extended}.
+
+The number of ordered trees on subsets of \(V\) is at most
+\(8^n n!=2^{n\log n+O(n)}\).  Indeed, there are \(2^n\) choices of the
+node set.  For a set of \(k\le n\) nodes, an ordered rooted tree shape is
+encoded by the balanced-parenthesis word of its depth-first traversal, so
+there are at most \(2^{2k}\le4^n\) shapes; assigning the chosen names to its
+nodes gives at most \(k!\le n!\) further choices.
+
+For a fixed tree, the nodes whose labels contain a given original state
+\(q\) form either the empty set or one inclusive root-to-node path:
+label containment makes the set upward closed toward the root, and
+disjointness of non-ancestral labels prevents branching.  Thus a present
+state has a unique deepest, specific node.  Fix \(\star\notin V\) and encode
+the labeling by
+\[
+ f:Q\longrightarrow N\cup\{\star\},
+\]
+sending a present state to its specific node and an absent state to
+\(\star\).  This encoding determines every label: \(q\in\ell(d)\) exactly
+when \(f(q)\in N\) and \(d\) lies on the inclusive root-to-\(f(q)\) path.
+It is therefore injective on valid labelings.  There are at most
+\((|N|+1)^n\le(n+1)^n\) encodings, whether or not every such function
+gives a valid labeling.  The symbol \(\star\) is only an encoding value.
+The color map has at most \(3^n\) possibilities, and the rejecting sink
+contributes one further automaton state.  Hence the total is at most
+\[
+ 1+8^n n!\,(n+1)^n3^n=2^{O(n\log n)}.
+\]
+Together with the correctness proof, this establishes Theorem~1: every
+\(n\)-state nondeterministic B\"uchi automaton has an equivalent deterministic
+Rabin automaton with \(2^{O(n\log n)}\) states and exactly \(n\) Rabin pairs
+\cite[p.~12]{Safra1995Extended}.
+The adjoining discussion cites a modified Michel argument for an \(n!\)
+lower bound and therefore calls the construction optimal only up to a constant
+in the exponent.  Lemma~2 separately says that conversion to deterministic
+Muller acceptance can require a family \(\mathcal M\) with doubly exponentially
+many members; its proof is only sketched in Appendix~A
+\cite[pp.~12--13, 17--18]{Safra1995Extended}.
+
+The applications preserve their own target classes.  Corollary~4 complements
+an \(n\)-state nondeterministic B\"uchi automaton by a deterministic Rabin
+automaton with \(2^{O(n\log n)}\) states and \(n+1\) pairs.  Corollary~6 obtains
+a complementary nondeterministic B\"uchi automaton with
+\(2^{O(n\log n)}\) states.  Safra calls a B\"uchi automaton
+\emph{deterministic in the limit} exactly when every accepting run has only
+finitely many positions at which its current state and input letter admit more
+than one successor.  This is a property of the automaton's accepting runs and
+is weaker than full determinism: rejecting runs need not eventually cease
+making nondeterministic choices.  Corollary~7 gives this different, partial
+determinization, producing an equivalent B\"uchi automaton deterministic in the
+limit with \(O(3^n)\) states.  The source then records the resulting
+exponential and doubly exponential upper bounds for the modal-logical decision
+procedures it discusses.  These are consequences in the expanded manuscript, not extra
+claims recovered from the unread proceedings body
+\cite[pp.~13--16]{Safra1995Extended}.
+
+This source distinction is mathematically material.  Safra's expanded
+manuscript uses an \(n\)-element persistent vocabulary and obtains \(n\) pairs;
+Thomas's 1996 report presentation below uses names from
+\(\{1,\ldots,2n\}\) and prints \(2n\) pairs.  The handbook keeps both
+constructions under their actual sources.  It does not combine the smaller
+pair count from one with the update conventions of the other, and it does not
+claim that the author-hosted expansion is a facsimile of the 1988 paper or a
+published journal article.
+
+\subsubsection{Thomas's 1996 report precursor}
+Thomas's complete May 1996 Kiel report precursor supplies the later survey
+presentation at Sections~5.1--5.3.  Renaming only the source alphabet and
+transition relation to avoid collisions, Definition~5.1 has the form
+\[
+ \mathcal A=(Q,\Sigma,q_0,\Delta,\operatorname{Acc}),
+ \qquad
+ \Delta\subseteq Q\times\Sigma\times Q,
+\]
+where \(Q\) and \(\Sigma\) are finite and \(q_0\in Q\).  A run of \(\mathcal A\)
+on \(\alpha\in\Sigma^\omega\) is a sequence \(r\in Q^\omega\) satisfying
+\[
+ r(0)=q_0,
+ \qquad
+ (r(i),\alpha(i),r(i+1))\in\Delta
+ \quad(i\in\mathbb N),
+\]
+and the source writes
+\[
+ \operatorname{In}(r)
+ =\{q\in Q:(\forall m\in\mathbb N)(\exists i\ge m)\ r(i)=q\}.
+\]
+This is the exact eliminable meaning of the source's shorthand
+\(\exists^\infty i\;r(i)=q\): the state occurs at arbitrarily late run
+positions.  The set stands for the recurrent states of this run and is used in
+each acceptance clause below.
+When the automaton is deterministic, Thomas replaces \(\Delta\) by a total
+transition function
+\[
+ \delta:Q\times\Sigma\longrightarrow Q,
+ \qquad
+ r(i+1)=\delta(r(i),\alpha(i))
+ \quad(i\in\mathbb N).
+\]
+Thus every input word has one run.  Totality, rather than the weaker condition
+that there be at most one successor, is the premise used below when the Muller
+family is complemented.
+The acceptance component has one of four explicitly different standings.  For
+\(F\subseteq Q\), B\"uchi acceptance is
+\(\operatorname{In}(r)\cap F\neq\varnothing\).  For
+\(\mathcal F\subseteq\mathcal P(Q)\), Muller acceptance is
+\(\operatorname{In}(r)\in\mathcal F\).  For a finite sequence
+\(((E_i,F_i))_{1\leq i\leq m}\), Rabin acceptance is
+\[
+ \exists i\leq m\;
+ \bigl(\operatorname{In}(r)\cap E_i=\varnothing
+       \land
+       \operatorname{In}(r)\cap F_i\neq\varnothing\bigr),
+\]
+whereas Thomas's Streett convention is its dual
+\[
+ \forall i\leq m\;
+ \bigl(\operatorname{In}(r)\cap E_i\neq\varnothing
+       \lor
+       \operatorname{In}(r)\cap F_i=\varnothing\bigr).
+\]
+Thus, with the source's ordering of a Streett pair, recurrence of some
+\(F_i\)-state requires recurrence of some \(E_i\)-state.  Example~5.2 presents
+the language ``if \(a\) occurs infinitely often, then so does \(b\)'' in all
+four forms, and Proposition~5.3 proves that nondeterministic automata with any
+of the four modes recognize the same \(\omega\)-languages.  The comparison is
+therefore source-carried rather than supplied from modern terminology
+\cite[\S5.1]{Thomas1996Report}.
+
+Thomas also records the exact finite-union characterization of this class.  An
+\(\omega\)-language \(L\subseteq\Sigma^\omega\) is B\"uchi-recognizable if and
+only if, for some \(k<\omega\), there are regular finite-word languages
+\(U_j,V_j\subseteq\Sigma^*\) such that
+\[
+ L=\bigcup_{j<k}U_j\cdot V_j^\omega.
+\]
+Here \(V^\omega\) is the set of infinite concatenations
+\(v_0v_1\cdots\in\Sigma^\omega\), with every \(v_i\in V\), for which
+\(\lim_{m\to\infty}|v_0\cdots v_m|=\infty\).  Thus empty factors cannot turn an
+infinite concatenation into a finite word and may equivalently be deleted.
+This is Thomas's report-level survey statement, not original-priority evidence
+for the underlying theorem \cite[p.~30]{Thomas1996Report}.
+
+Determinism changes the boundary.  A deterministic B\"uchi automaton recognizes
+the words with infinitely many \(a\)'s, but no deterministic B\"uchi automaton
+recognizes their complement; deterministic Muller acceptance is closed under
+complement by replacing \(\mathcal F\) with
+\(\mathcal P(Q)\setminus\mathcal F\).  Theorem~5.4 states McNaughton's
+effective conversion from a nondeterministic B\"uchi automaton to an equivalent
+deterministic Muller automaton and proves it by Safra's construction
+\cite[\S5.2]{Thomas1996Report}.
+
+The construction needs more information than a subset of reachable states,
+because recurring membership in successive subsets need not belong to one
+infinite accepting run.  Put \(n=|Q|\).  A \emph{Safra tree} in this
+presentation is a tuple \((T,\ell,\nu,M)\), where \(T\) is a finite rooted
+ordered tree with live-node set \(N(T)\),
+\(\ell:N(T)\to\mathcal P(Q)\) labels its nodes by original-state subsets,
+\(\nu:N(T)\hookrightarrow\{1,\ldots,2n\}\) assigns distinct names to distinct
+live nodes, and \(M\subseteq N(T)\) is the set of nodes carrying the source's
+breakpoint mark.  Sibling labels are disjoint, and the union of the child
+labels is a proper subset of their parent's label.  This tuple is a state of
+the determinized word automaton, not an input tree and not a run of Rabin's
+tree automaton.  Its name map is distinct from both the changing state-subset
+labels and the current-update marks: it alone identifies a surviving lineage,
+which is why persistence and the Rabin pairs below require it.  The initial
+tree has one root, labelled \(\{q_0\}\), named \(1\), and unmarked.  Fixing
+the initial name as \(1\) is a handbook-owned normalization; any other single
+initial name differs only by a renaming.  A mark records a collapse in the
+immediately preceding letter update; it is not a persistent property of a
+node.  To make that event meaning literal, the
+handbook clears every old mark before the next update while retaining the node
+names.  Only a collapse during the current update marks the successor state.
+This mark-lifetime clause is a handbook-owned clarification of the printed
+transition.  The source then performs the following operations in order:
+\begin{enumerate}
+\item for every label \(R\) meeting the B\"uchi set \(F\), add \(R\cap F\) as
+  its youngest child;
+\item advance every label, including those just created, by the transition
+  relation;
+\item whenever a state in a younger sibling's label also occurs in an older
+  sibling's label, delete it from the younger sibling and from every label in
+  that younger sibling's subtree; remove every empty-labelled node together
+  with its descendants; then collapse all children of a parent whose
+  child-label union equals its label, marking that parent.
+\end{enumerate}
+Deleting through the younger subtree is required to preserve containment of
+each descendant label in its parent label.  This is a handbook-owned
+definedness clarification of the source's compressed horizontal-deletion
+instruction, not an additional acceptance condition.
+The removal clause applies to a nonempty advanced root.  If the root image in
+the second stage is empty, the successor is instead the empty ordered tree:
+the determinized word-automaton state having no node, name, label, or mark.
+Every later letter leaves this state unchanged.  This additional state is
+necessary because deleting an empty root would not leave a rooted tree, and it
+differs from every ordinary construction state precisely by having no root.  If
+the advanced root is empty, no original run extends the prefix just read, and
+no continuation can restore such a run; the absorbing empty state therefore
+preserves rejection.  It has zero live nodes, uses no node name, and adds no
+accepting pair, so it leaves the node, name, state-asymptotic, and pair bounds
+below unchanged.  This is a handbook-owned completion of the printed update.
+Names of surviving old nodes persist.  Fix the natural order
+\(1<\cdots<2n\).  After cleanup, list the surviving newly created nodes by the
+depth-first order which lists a node before its descendants and an older
+sibling's subtree before a younger sibling's subtree.  In that order assign
+each new node the least name which occurs neither in the entire predecessor
+name set nor on an earlier new node in the same update.  This handbook-owned
+choice makes the successor name map unique, prevents a deleted lineage from
+being confused with a new one, and preserves injectivity.  At most \(n\) nodes
+are live, and the names \(1,\ldots,2n\) suffice: at most \(n\) predecessor
+names are withheld while at most \(n\) new nodes need names, and cleanup again
+leaves at most \(n\) live nodes.  The Muller condition accepts exactly when some name is
+eventually permanent and marked infinitely often.  Equivalently, for every
+\(k\in\{1,\ldots,2n\}\), let
+\[
+ E_k=\{(T,\ell,\nu,M):k\notin\operatorname{im}(\nu)\},
+ \qquad
+ F_k=\{(T,\ell,\nu,M):\exists v\in M\;\nu(v)=k\},
+\]
+with the empty absorbing state included in every \(E_k\) and no \(F_k\).  The
+resulting deterministic Rabin automaton uses the pairs \((E_k,F_k)\).  The
+proof derives an original accepting
+run from infinitely many current collapse events on a persistent lineage and
+proves the converse by descending through the bounded tree height.  The empty
+state lies in every \(E_k\) and no \(F_k\), hence is rejecting.  Clearing old
+marks is essential: for
+\(q_0\mathrel{\xrightarrow{a}}f\mathrel{\xrightarrow{b}}s\) with a
+\(b\)-loop at \(s\) and B\"uchi set \(\{f\}\), the rejected word
+\(ab^\omega\) produces only one root collapse; retaining that one mark would
+falsely place the persistent root in \(F_k\) forever.  Current-update marking
+rejects it.  Proposition~5.6 gives
+\(2^{O(n\log n)}\) determinization states and exactly \(2n\) pairs in this
+presentation.  Theorem~5.7's lower-bound qualification rules out a general
+\(2^{O(n)}\)-state, \(O(n)\)-pair conversion, using Theorem~5.8's factorial
+B\"uchi-complementation family; it is not an exact-constant claim
+\cite[\S5.2]{Thomas1996Report}.
+
+Theorem~5.9 then proves the effective equivalence between B\"uchi-recognizable
+\(\omega\)-languages and monadic-second-order definability.  State-set
+variables describe an accepting run in one direction; atomic automata,
+Boolean closure (using determinization for complement), and track projection
+give the other.  Corollary~5.10 derives decidability of \(S1S\) from an
+input-free B\"uchi automaton \(\mathcal A\): the sentence is true exactly
+when \(\mathcal A\) has an accepting run.  In its finite transition graph,
+the exact criterion is that some \(q\in F\) is reachable from the initial
+state and has a positive-length path back to itself.  The reaching path
+may have length zero; the return path must contain at least one edge.
+For necessity, an accepting run visits \(F\) infinitely often.  Since
+\(F\) is finite, some \(q\in F\) occurs infinitely often; its first
+occurrence gives a reaching path, and two successive occurrences give
+a positive-length return.  Conversely, concatenate a reaching path with
+infinitely many repetitions of a positive-length return from an accepting
+state \(q\) to itself.  This is an infinite run visiting \(q\in F\)
+infinitely often, hence accepting.  Both finite graph conditions are
+decidable by reachability search.  In particular, an isolated accepting
+state without a positive return does not suffice
+\cite[Cor.~5.10, p.~38]{Thomas1996Report}.
+
+Proposition~5.11 writes every MSO formula
+as a finite disjunction of clauses
+\[
+ \bigl(\exists x\,\forall y>x\;\neg\varphi_i(\bar X,y)\bigr)
+ \land
+ \bigl(\forall x\,\exists y>x\;\psi_i(\bar X,y)\bigr),
+\]
+where every quantifier inside \(\varphi_i\) and \(\psi_i\) is restricted below
+\(y\).  Corollary~5.12 concludes that every MSO formula over \(\omega\)-words
+is equivalent to a weak-MSO formula, meaning one whose monadic quantifiers
+range only over finite sets
+\cite[\S5.3]{Thomas1996Report}.
+
+Thomas's report is an authoritative later proof source at explicit precursor
+strength.  The registered 1997 chapter is not part of the source basis used
+here, so these locators belong only to the report.  They establish nothing
+about the literal bodies of other historical works: B\"uchi 1962 is supported
+separately by the complete article body treated above, while McNaughton 1966
+and Safra 1988 remain unread.  The report also does not convert the
+Vardi--Wolper product into an original determinization proof.
+Any admission of this text is therefore admission only of the bounded
+presentation actually printed here.  It does not close the separate
+registered-body obligations for McNaughton 1966, Safra 1988, or Thomas 1997,
+and it does not turn the Vardi--Wolper author preprint into a proceedings
+facsimile.

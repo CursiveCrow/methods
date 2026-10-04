@@ -1,0 +1,317 @@
+% ED26-REQ-N-c-004-03: Immerman 1986, selected sections 1--3.
+
+\subsection{Immerman 1986: ordered polynomial-time queries}
+\label{sec:p09-n-c-004-03}
+
+Immerman's ordered-capture theorem describes a \emph{fixed} relational
+query, not the complexity of taking arbitrary formulas as input.  Its hard
+direction constructs a single least fixed point describing a deterministic
+machine's successive tape rows.  The construction below retains the
+article's initial-row formula, three-cell transition table, and final
+accepting-cell readout \cite[secs.~1--3, thm.~1 and lem.~3.1]{Immerman1986}.
+The inspected author-hosted copy identifies the 1986 journal article but
+has its own pagination, 1--18; its selected definitions and proof are on
+author-copy pp.~2--8, corresponding to the journal locators pp.~87--93.
+It is not the six-page 1982 preliminary presentation or the 1999 book.
+
+\begin{hbdefinition}{def:p09-immerman1986-query}{Databases, queries, and the source's input convention}
+A similarity type
+\(\tau=\langle R_1^{a_1},\ldots,R_j^{a_j},c_0,\ldots,c_s\rangle\)
+is a fixed finite list of relation and constant symbols.  A database
+\(B=\langle U,R_1^B,\ldots,R_j^B,c_0^B,\ldots,c_s^B\rangle\)
+is a finite nonempty structure of this type, with \(R_i^B\subseteq U^{a_i}\)
+and \(c_i^B\in U\).  Put \(n=\lvert U\rvert\).
+The source's domain relational calculus \(\mathcal L(\tau)\) is
+first-order logic with equality, these symbols, Boolean operations and
+quantification over \(U\).  A formula \(\gamma(\bar x)\), with a
+fixed \(d\)-tuple of free variables, returns
+\[
+ \gamma^B=\{\bar a\in U^d:B,\bar x\mapsto\bar a\entails\gamma\}.
+\]
+A sentence is a Boolean query.  Query membership means deciding whether
+\(\bar a\in\gamma^B\); computing the entire answer relation is
+also polynomially related when \(d\) is fixed.
+Queries respect isomorphisms of their input type: an isomorphism maps
+the answer tuples to the corresponding answer tuples.  In the ordered
+case the distinguished order is one of the symbols it must preserve.
+
+The article implicitly encodes a database by a binary string listing the
+characteristic functions of its relations.  For fixed \(\tau\), dense
+relation tables, explicit domain size, and representations of its finitely
+many constants have size polynomial in \(n\).  Constants can equivalently
+be recorded by their singleton unary tables.  These conventions are fixed
+before discussing a machine.  Write \(\mathrm{QPTIME}\) for fixed
+queries whose membership graphs
+\(\{(B,\bar a):\bar a\in Q(B)\}\) are decidable in time
+polynomial in \(n\), under such explicit encodings.  No exponentially
+succinct database representation is included.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p09-immerman1986-lfp}{The positive fixed-point language}
+For a formula \(\varphi(R,\bar x,\bar z)\), an \(r\)-ary relation
+variable \(R\), an \(r\)-tuple of distinct variables \(\bar x\),
+and a fixed assignment \(\bar b\) to the remaining parameters, define
+\[
+ \Gamma_{\varphi,\bar b}^B(S)
+ =\{\bar a\in U^r:(B,R\mapsto S),
+                  (\bar x,\bar z)\mapsto(\bar a,\bar b)\entails\varphi\}.
+\]
+For the positive-arity binder convention underlying the source's
+constant proviso, \(r\geq1\); the output query may still be Boolean.
+The binder is admitted only when \(R\) occurs positively: with the
+source's primitive negation and conjunction syntax, its occurrences lie
+under an even number of negations.  Bound relation variables and ordinary
+variables are renamed to prevent capture.  Positivity makes this operator
+monotone.  Its least fixed point is computed from
+\[
+ I_0=\varnothing,\qquad I_{i+1}=\Gamma_{\varphi,\bar b}^B(I_i).
+\]
+The source writes \((\bar t:\mu R(\bar x))\varphi\), abbreviated
+\((\mu R)\varphi\), for membership of the value of \(\bar t\)
+in that least fixed point.  Its language \(\mathcal L_\mu(\tau)\)
+closes \(\mathcal L(\tau)\) under this operation and ordinary Boolean
+operations and quantification, so nested fixed points are allowed.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p09-immerman1986-evaluation}{proved=annex:p9.n-c-004.3.evaluation}{Least fixed points and fixed-query polynomial time}
+For every fixed \(\mathcal L_\mu\) query \(\gamma\), there is a
+polynomial \(p_\gamma\) such that \(\gamma^B\) is computable in
+time \(p_\gamma(n)\).  An \(r\)-ary monotone induction from the
+empty relation stabilizes after at most \(n^r\) strict increases.
+This is the source's Fact~2.1, including the requirement that the query
+and its relation arities be fixed \cite[sec.~2]{Immerman1986}.
+\end{hblemma}
+
+\begin{hbexample}{def:p09-immerman1986-family}{Grandparent and the actual ancestor operator}
+The source's family type has a unary female predicate \(F\), binary
+parent and husband predicates \(P,H\), and one constant, for example
+Abraham.  Grandparent is the first-order query
+\(\exists z(P(x,z)\land P(z,y))\).  Its fixed-point example is
+\[
+ \varphi(R)[x,y]\defeq x=y\lor\exists z(P(x,z)\land R(z,y)).
+\]
+The stages start with the empty relation, then the diagonal, then the
+diagonal together with parent pairs, then paths of length at most two,
+and so forth.  Thus the displayed operator defines the \emph{reflexive}
+transitive closure of \(P\): it includes paths of length zero.
+The source calls this ancestor; removing the diagonal term would instead
+require a different base clause for positive-length ancestry.  For a
+chain Abraham--Isaac--Jacob, its first three nonempty stages are the
+diagonal, the diagonal plus the two parent pairs, and those pairs plus
+(Abraham, Jacob).  Husband and female data do not enter this operator.
+\end{hbexample}
+
+\subsubsection{Order, tuple coordinates, and the first tape row}
+
+In the capture theorem, \(\leq\) is an available total ordering on
+\(U\); write \(x<y\) for \(x\leq y\land x\ne y\).
+For each fixed \(k\), lexicographic order on \(U^k\) is first-order:
+\[
+ \operatorname{Lex}_k(\bar u,\bar v)\defeq
+ \bigvee_{i=1}^k\left(\bigwedge_{j<i}u_j=v_j\land u_i<v_i\right).
+\]
+Its successor is
+\[
+ \operatorname{Succ}_k(\bar u,\bar v)\defeq
+ \operatorname{Lex}_k(\bar u,\bar v)\land
+ \neg\exists\bar w(
+   \operatorname{Lex}_k(\bar u,\bar w)\land
+   \operatorname{Lex}_k(\bar w,\bar v)).
+\]
+First and last tuple predicates are defined by the absence of a smaller
+or larger tuple.  These finite formulas supply the article's abbreviations
+\(\bar p-1,\bar p+1,\bar t-1\); they do not posit arithmetic
+functions on the database.  Identifying the ordered domain with
+\(0,\ldots,n-1\), \(k\)-tuples address \(n^k\) tape positions
+or times.  The two coordinate orders may be different, as specified below.
+
+\begin{hblemma}{thm:p09-immerman1986-initial}{proved=annex:p9.n-c-004.3.initial}{The source initial-row formula and general-type decoding}
+There is a first-order formula \(M_0(\bar p,a)\) defining the initial
+letter at each tape position for a fixed polynomial-time machine and a
+fixed database type, once the finite alphabet is coded by distinct domain
+elements.  The finitely many domains too small to provide the codes are
+handled separately, not assigned nonexistent code elements.
+
+The source prints the case of one binary input relation \(E\) and
+\(k=3\): the first \(n^2\) positions list its characteristic bits,
+and the remaining \(n^3-n^2\) positions are blank.  Here
+\(0,1\) code bits, \(2\) blank, and \(3,4\) the start state
+looking at bit zero or one.  With these numerals denoting the corresponding
+ordered code elements,
+\[
+\begin{split}
+ M_0(p_1,p_2,p_3,a)\defeq{}&
+ (p_1=p_2=p_3=0)\land
+  ((E(0,0)\land a=4)\lor(\neg E(0,0)\land a=3))\\
+ &{}\lor(p_1=0\land(p_2\ne0\lor p_3\ne0)
+       \land(a=0\lor a=1)
+       \land(E(p_2,p_3)\leftrightarrow a=1))\\
+ &{}\lor(p_1\ne0\land a=2).
+\end{split}
+\]
+No fixed-point relation is used in this initial-row definition.
+For arbitrary fixed types the annex expands the source's
+encoding/decoding generalization by order-definable characteristic-table
+blocks, including constants; the printed binary layout above is retained
+as its own case \cite[lem.~3.1]{Immerman1986}.
+\end{hblemma}
+
+\subsubsection{The local transition relation and the accepting fixed point}
+
+Normalize a fixed deterministic polynomial-time machine \(M\) to a
+one-tape machine whose head moves by at most one cell.  Its finite alphabet
+includes ordinary tape letters and letters carrying a state/head marker.
+On acceptance it returns to position zero, writes a designated accepting
+letter \(q_f\) there, and thereafter leaves the configuration unchanged;
+a distinct rejecting letter may be used on rejection.  One-way left-end
+behavior is fixed.  These changes cost only polynomial time.  Choose
+\(k\) and a fixed small-domain cutoff so that on larger domains this
+normalized computation, including input decoding and the return, ends
+before \(n^k-1\), never visits the last tape cell, and has room for
+the fixed alphabet codes.  The final tableau can then be padded with
+stationary halting rows.
+
+The source writes \(\langle xyz\rangle\to w\) for a finite local
+transition table \(\delta_M\).  Its first-order expansion is
+\[
+ \Delta_M(x,y,z,w)\defeq
+ \bigvee_{(b_{-1},b_0,b_1,b)\in\delta_M}
+ (x=b_{-1}\land y=b_0\land z=b_1\land w=b).
+\]
+The entries are letter codes, not names of database constants.  Every
+letter equality \(v=b\) in these displays abbreviates the first-order
+test \(\operatorname{Code}_b(v)\) for its prescribed fixed-rank code
+element (or \(v=c_0\) for the anchored accepting code).  Expand
+these tests in the operator; they remain well-formed formulas even on
+small domains where some code tests are false.  No partial code term
+or new input constant is introduced.  The
+matrix inspects the previous letters at the cell immediately to the left,
+the cell itself, and the cell immediately to the right.  An absent neighbor
+at a tape endpoint is a specified exterior letter \(\#\), not an
+undefined predecessor or a wraparound cell.
+
+For an induction relation \(R(\bar p,\bar t,a)\) of arity \(2k+1\),
+let \(L_R(\bar p,\bar t,a)\) be
+\[
+ (\operatorname{First}_k^p(\bar p)\land a=\#)
+ \lor\exists\bar u(
+    \operatorname{Succ}_k^p(\bar u,\bar p)\land R(\bar u,\bar t,a)),
+\]
+and let \(H_R\) be its right-hand version with \(\operatorname{Last}\)
+and \(\operatorname{Succ}_k^p(\bar p,\bar u)\).
+Superscripts \(p,t\) specify the position or time order.  Expand the
+source's tableau operator, with its endpoint clauses, as
+\[
+\begin{split}
+ \varphi_M(R)[\bar p,\bar t,a]\defeq{}&
+ (\operatorname{First}_k^t(\bar t)\land M_0(\bar p,a))\\
+ &{}\lor\exists\bar u\exists a_{-1}a_0a_1\bigl[
+ \operatorname{Succ}_k^t(\bar u,\bar t)
+ \land\Delta_M(a_{-1},a_0,a_1,a)\\
+ &\hspace{36mm}{}\land L_R(\bar p,\bar u,a_{-1})
+ \land R(\bar p,\bar u,a_0)
+ \land H_R(\bar p,\bar u,a_1)\bigr].
+\end{split}
+\]
+All occurrences of \(R\) are positive.  Tape bit zero is itself
+represented by a positive \(R\)-fact with letter code zero; the
+formula does not attempt to infer a zero bit from a missing \(R\)-fact.
+
+\begin{hblemma}{thm:p09-immerman1986-tableau}{proved=annex:p9.n-c-004.3.tableau}{The positive induction generates exactly the machine rows}
+Let \(C_M=(\mu R)\varphi_M\).  In a database large enough for the
+chosen codes, \(C_M(\bar p,\bar t,a)\) holds exactly when the
+machine's tape letter at that position and time is \(a\).
+Iteration zero is empty; iteration \(i\), for \(1\leq i\leq n^k\),
+contains precisely the first \(i\) complete rows and no later row.
+Each position in each produced row has exactly one letter.  Consequently
+the accepting readout is the source's
+\(C_M(\bar0,\overline{n^k-1},q_f)\), using the indicated first
+position and last time, rather than merely the existence of an arbitrary
+partial accepting configuration.
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p09-immerman1986-capture}{proved=annex:p9.n-c-004.3.capture}{Theorem 1: ordered capture in the article's syntax}
+On finite databases with a distinguished total order, and with the
+source's at-least-one-constant convention,
+\[
+ \Sigma_\omega(\leq)=\mathrm{QPTIME}=\mathcal L_\mu(\leq).
+\]
+Here \(\Sigma_\omega\) is the article's one-fixed-point level:
+a single outer \(\mu\) with a first-order defining formula.  It is
+not an arithmetical-hierarchy class.  The formula and vocabulary are fixed
+while the input database varies.  The source proves the construction for
+Boolean queries for simplicity; the annex gives the return to fixed-arity
+query relations by coding the tested output tuple as parameters.
+
+For a Boolean query, its constant \(c_0\) permits the single fixed-point
+expression \(C_M(c_0,\ldots,c_0)\): the position order puts \(c_0\)
+first, the time order puts \(c_0\) last, and the alphabet coding makes
+\(c_0\) the accepting letter.  These are three different typed uses of
+one element, as in the source's footnote~3.  Finite small-domain exceptions
+are included by complete first-order diagrams and can be folded into the
+same positive operator.  Without a constant, the corresponding normal
+form allows one final ordinary quantifier, \(\exists z\), after the
+fixed-point expression, with \(z\) serving as its coding anchor.
+\end{hbtheorem}
+
+The order is not a disposable label: it supplies first-order tape and time
+successors and characteristic-table coordinates.  Queries on ordered
+structures respect isomorphisms of \emph{all} their symbols, including
+the order; forgetting that order changes the input class.  The source's
+separate Theorem~2 concerns collapse of the unordered fixed-point hierarchy
+and has its own section~4 proof.  Neither that collapse nor the 1986
+capture proof supplies the separately required 1999 Chapter~4 treatment.
+
+\subsubsection{Input axes and the unordered boundary}
+
+\begin{table}[htbp]
+\centering\small
+\begin{tabular}{@{}p{0.21\textwidth}p{0.28\textwidth}p{0.43\textwidth}@{}}
+\toprule
+Task & Variable input; fixed data & Conclusion here \\
+\midrule
+Fixed-query evaluation & Database \(B\) and tested tuple vary;
+query, type, arities and output arity fixed & Polynomial time by
+Fact~2.1; output enumeration has a fixed polynomial factor. \\
+Expression complexity & Formula varies; database fixed & Not the
+input axis bounded by Fact~2.1. Formula length, variable count,
+fixed-point arity and nesting are no longer constants. \\
+Combined evaluation & Both database and formula vary & No uniform
+polynomial-time bound follows from the fixed-query proof. \\
+Ordered descriptive capture & One fixed query/property on ordered
+databases; its membership graph in polynomial time & Theorem~1 constructs
+one fixed positive induction for that query. It is a class correspondence,
+not a combined model-checking bound or a test for whether an arbitrary
+program runs in polynomial time. \\
+Unordered parity & Database varies without an order;
+formula and type fixed & Polynomial-time counting query, but not
+\(\mathcal L_\mu\)-definable; order cannot be deleted from capture. \\
+\bottomrule
+\end{tabular}
+\caption{Task and input axes for the 1986 capture statement.}
+\label{tab:p09-immerman1986-input-axes}
+\end{table}
+
+\begin{hbtheorem}{thm:p09-immerman1986-unordered}{proved=annex:p9.n-c-004.3.unordered}{The source's even-number-of-females boundary}
+In the unordered family type \(\langle F,P,H,c_0\rangle\), the
+Boolean query ``\(\lvert F\rvert\) is even'' is polynomial-time
+computable but not expressible in \(\mathcal L_\mu\).
+For every fixed sentence, its truth is eventually constant on the databases
+with \(F=U\), \(P=H=\varnothing\), and one distinguished \(c_0\).
+Parity is not eventually constant on that subclass.  This is the example
+reported in Fact~2.2, attributed in the article to Chandra and Harel;
+the annex supplies the explicit equality-pattern argument for this example
+\cite[sec.~2, fact~2.2]{Immerman1986}.
+\end{hbtheorem}
+
+\begin{proofboundary}{def:p09-immerman1986-standing}{Source construction and editorial completion}
+The source prints the binary initial-row case and the positive
+three-neighbor operator.  Its general-type decoding, machine normalization,
+endpoint values, row-by-row exactness, and finite-exception integration are
+expanded here as explicit completions of that construction.  The
+article's constant coding is retained, including its alternative final
+quantifier when no constant is available.  No 1982, 1999, or generic
+successor-tableau account is used in place of its \(2k+1\)-ary
+cell/time/letter induction.  The independently paginated author copy is
+qualified as that copy, not misidentified as a journal facsimile.
+\end{proofboundary}

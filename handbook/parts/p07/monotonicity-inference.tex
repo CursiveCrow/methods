@@ -1,0 +1,648 @@
+%% ED26-P07-monotonicity-0001. Assigned source: Icard--Moss--Tune 2017.
+\chapter{Monotonicity and Typed Inference}
+\label{sec:p07-monotonicity-inference}
+
+Replacing an expression by a more inclusive one can preserve an inference,
+reverse its direction, or invalidate it. The answer depends on the position
+occupied by the expression. This entry develops the marked typed calculus
+of Icard, Moss and Tune \cite{IcardMossTune2017Monotonicity}, with the
+interpretation of type coercions made explicit. Its conclusions are
+inequalities in specified ordered domains. Natural-language uses additionally
+require the lexical and compositional premises stated in the application.
+\index{monotonicity!typed inference}\index{natural logic!polarity}
+\index{antitone function}\index{polarity!occurrence}
+
+\section{Types, markings and coercions}
+
+\begin{hbdefinition}{def:p07-monotonicity-types}{Marked types and their order}
+Fix a set \(B\) of base types. The markings are
+\(\mathsf{Mar}=\{+,-,\cdot\}\), ordered by
+\( +\sqsubseteq\cdot\), \( -\sqsubseteq\cdot\), and reflexivity.
+Here \(+\) asserts monotonicity, \(-\) antitonicity, and \(\cdot\) makes
+neither assertion. A function bearing the last marking can happen to be
+monotone. The composition of markings is multiplication of signs on
+\(\{+,-\}\), and is \(\cdot\) if either factor is \(\cdot\).
+Thus \(+\) is its identity and the operation is associative.
+Indeed, if one of three factors is \(\cdot\), both groupings are
+\(\cdot\); otherwise this is multiplication of the numbers \(1,-1\).
+
+The set \(T\) is the least set containing \(B\) and
+\(\sigma\xrightarrow{m}\tau\) whenever \(\sigma,\tau\in T\) and
+\(m\in\mathsf{Mar}\). Arrows associate to the right.
+The height of a base type is \(0\); the height of an arrow is one plus
+the maximum of the heights of its argument and result types.
+The type preorder \(\preceq\) is the least preorder satisfying
+\[
+ \sigma'\preceq\sigma,\quad \tau\preceq\tau',\quad
+ m\sqsubseteq m'
+ \quad\Longrightarrow\quad
+ (\sigma\xrightarrow m\tau)
+ \preceq(\sigma'\xrightarrow{m'}\tau').
+\]
+This is an order of admissible coercions, contravariant in the argument type.
+It is not a formation rule giving a term additional intrinsic types.
+
+The source's auxiliary compatibility relation \(\uparrow\) and partial
+operation \(\vee\) are specified by
+\(\sigma\uparrow\sigma\) and \(\sigma\vee\sigma=\sigma\).
+Whenever \(\tau_1\uparrow\tau_2\), it also declares
+\((\sigma\xrightarrow{m_1}\tau_1)\uparrow
+  (\sigma\xrightarrow{m_2}\tau_2)\)
+and defines their join to be
+\(\sigma\xrightarrow{m_1\vee m_2}(\tau_1\vee\tau_2)\).
+For distinct markings \(m_1,m_2\), \(m_1\vee m_2=\cdot\).
+No value is assigned when these clauses do not define one.
+Finally,
+\(\widehat b=b\) and
+\(\widehat{\sigma\xrightarrow m\tau}=
+  \sigma\xrightarrow{\cdot}\widehat\tau\).
+This last operation changes markings along the result spine; it does not
+erase all markings in argument types.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p07-monotonicity-type-order}
+ {proved=annex:p7.monotonicity.type-order}{Structural characterization of the type order}
+Distinct base types are incomparable. A base type and an arrow type are
+incomparable. For arrow types,
+\[
+ \sigma\xrightarrow m\tau\preceq\sigma'\xrightarrow{m'}\tau'
+ \quad\Longleftrightarrow\quad
+ \sigma'\preceq\sigma,\quad \tau\preceq\tau',\quad m\sqsubseteq m'.
+\]
+In particular, the relation is antisymmetric. If the auxiliary
+\(\sigma\vee\tau\) is defined, both inputs are below it.
+Not every pair of types has such an auxiliary join.
+\end{hblemma}
+
+\begin{hbdefinition}{def:p07-monotonicity-prestructure}{Coherent prestructures}
+For every \(\tau\in T\), let \(D_\tau\) be a set with a reflexive,
+transitive relation \(\leq_\tau\). For every \(\sigma\preceq\tau\), supply
+an order-preserving map \(\pi_{\sigma,\tau}:D_\sigma\to D_\tau\).
+Require identity and composition:
+\[
+ \pi_{\sigma,\sigma}=\operatorname{id},\qquad
+ \pi_{\sigma,\upsilon}=\pi_{\tau,\upsilon}\pi_{\sigma,\tau}
+ \quad(\sigma\preceq\tau\preceq\upsilon).
+\]
+At arrow types require actual functions, with
+\[
+ D_{\sigma\xrightarrow+\tau}\cup D_{\sigma\xrightarrow-\tau}
+ \subseteq D_{\sigma\xrightarrow{\cdot}\tau}
+ \subseteq \{f:D_\sigma\to D_\tau\}.
+\]
+The \(+\) functions preserve order; the \(-\) functions reverse order.
+Every arrow domain carries pointwise order. Coercions at arrows act by
+precomposition and postcomposition:
+\[
+ \pi_{\sigma\xrightarrow m\tau,\,
+       \sigma'\xrightarrow{m'}\tau'}(f)(a)
+ =
+ \pi_{\tau,\tau'}\bigl(f(\pi_{\sigma',\sigma}(a))\bigr).
+ \tag{C}
+\]
+Here the source type is below the target and \(a\in D_{\sigma'}\).
+Forgetting only a marking is consequently the inclusion of the same
+function. Equation (C) is part of the semantic specification throughout
+this entry.
+\end{hbdefinition}
+
+\begin{hbexample}{def:p07-monotonicity-full-domains}{Full and restricted function domains}
+Given base preorders, recursively take all functions at a \(\cdot\)-arrow,
+all monotone functions at a \(+\)-arrow and all antitone functions at a
+\(-\)-arrow. Use pointwise orders and (C). These are full prestructures.
+The structural characterization above verifies the construction recursively:
+composition with monotone coercions preserves a required \(+\) or \(-\)
+marking, and pointwise order makes every coercion monotone.
+
+Restricted function domains are also allowed, provided they satisfy the
+same conditions and contain the denotations of all abstractions.
+For \(B=\{r\}\) and \(D_r=\mathbb R\) with its usual order,
+\(D_{r\xrightarrow-\!r}\) contains \(a\mapsto 1-a\), and
+\(D_{r\xrightarrow+\!r}\) contains \(a\mapsto a-1\).
+\end{hbexample}
+
+\section{Terms and occurrence polarity}
+
+\begin{hbdefinition}{def:p07-monotonicity-terms}{Intrinsic types and marked occurrences}
+Choose constants, each with one assigned type, and infinitely many
+variables of each type. A variable or constant is a term of its assigned
+type. If \(M:\sigma\xrightarrow m\tau\) and \(N:\rho\preceq\sigma\),
+then \(M(N):\tau\). The intrinsic type is denoted \(\operatorname{tp}(M)\).
+
+Each free occurrence of a variable in itself has polarity \(+\).
+An occurrence in the function part \(M\) of \(M(N)\) retains its polarity.
+An occurrence of polarity \(n\) in the argument \(N\) acquires polarity
+\(m\circ n\). Constants have no free occurrences.
+
+For \(x:\sigma\) and \(M:\tau\), the term \(\lambda x.M\) has type
+\(\sigma\xrightarrow m\tau\), where \(m=+\) if there is at least one free
+\(x\) in \(M\) and all such occurrences are positive; \(m=-\) if there is
+at least one and all are negative; otherwise \(m=\cdot\).
+In particular, vacuous abstraction has intrinsic marking \(\cdot\),
+although its denotation is both monotone and antitone.
+Occurrences of other variables retain their polarities under abstraction.
+Terms are identified up to renaming bound variables by fresh variables of
+the same type. Every term has exactly one intrinsic type.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p07-monotonicity-structures}{Structures and interpretation}
+An assignment \(\varphi\) gives \(x:\sigma\) a value in \(D_\sigma\).
+Interpret each constant by a fixed element of its assigned domain.
+An interpretation on a coherent prestructure satisfies
+\[
+ \sem{x}_\varphi=\varphi(x),\qquad
+ \sem{c}_\varphi=c^D,\qquad
+ \sem{M(N)}_\varphi
+ =\sem{M}_\varphi\bigl(\pi_{\rho,\sigma}(\sem N_\varphi)\bigr),
+\]
+where \(M:\sigma\xrightarrow m\tau\) and \(N:\rho\preceq\sigma\).
+Writing \(\varphi_x^a\) for the assignment changed only at \(x\), require
+\[
+ \sem{\lambda x.M}_\varphi(a)=\sem M_{\varphi_x^a}.
+\]
+Every value belongs to the term's intrinsic domain. A structure is a
+prestructure equipped with such an interpretation; closure under all
+abstractions is therefore required. Whenever a term \(M:\rho\) is compared
+at a supertype \(\tau\), its value there is
+\(\pi_{\rho,\tau}(\sem M_\varphi)\).
+
+In full prestructures these clauses define an interpretation recursively.
+The following result verifies that the abstraction clauses have the required
+markings. It also applies to restricted structures.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p07-monotonicity-polarity}
+ {proved=annex:p7.monotonicity.polarity}{Occurrence polarity controls variation}
+Fix a structure, an assignment, a term \(M:\tau\), and a variable
+\(x:\sigma\). If every free occurrence of \(x\) in \(M\) is positive,
+then \(a\mapsto\sem M_{\varphi_x^a}\) is monotone.
+If every such occurrence is negative, this function is antitone.
+When \(x\) is absent, both assertions apply and the function is constant.
+\end{hblemma}
+
+\begin{hbexample}{def:p07-monotonicity-real-terms}{Real-function examples}
+Take \(0,1:r\), addition of type
+\(r\xrightarrow+(r\xrightarrow+r)\), and subtraction of type
+\(r\xrightarrow+(r\xrightarrow-r)\), with their usual meanings.
+Then
+\[
+ \begin{array}{c|c|c}
+ \text{term}&\text{intrinsic type}&\text{denotation}\\ \hline
+ +(0)(1)&r&1\\
+ +(1)(1)&r&2\\
+ -(0)(1)&r&-1\\
+ x&r&\varphi(x)\\
+ -(x)&r\xrightarrow-r&b\mapsto\varphi(x)-b\\
+ -(0)&r\xrightarrow-r&b\mapsto-b\\
+ -(1)(x)&r&1-\varphi(x)\\
+ -(x)(1)&r&\varphi(x)-1\\
+ -(x)(y)&r&\varphi(x)-\varphi(y)\\
+ \lambda x.-(1)(x)&r\xrightarrow-r&a\mapsto1-a\\
+ \lambda x.-(x)(1)&r\xrightarrow+r&a\mapsto a-1
+ \end{array}
+\]
+If \(f:r\xrightarrow{\cdot}r\), then
+\(\lambda f.\lambda x.-(0)(f(x))\) has intrinsic type
+\((r\xrightarrow{\cdot}r)\xrightarrow{-}
+ (r\xrightarrow{\cdot}r)\).
+Its denotation is pointwise negation of a function. The outer negative
+marking follows because the free occurrence of \(f\) is in the negative
+second argument of subtraction. The inner \(\cdot\) marking records that
+the occurrence of \(x\) passes through the unspecified argument position
+of \(f\). No monotonicity of an arbitrary input function is assumed.
+\end{hbexample}
+
+\section{Substitution, conversion and finite assertions}
+
+\begin{hbdefinition}{def:p07-monotonicity-substitution}{Typed substitution and conversion}
+A substitution \(s\) assigns each \(x:\sigma\) a term \(s(x)\) of type
+\(\preceq\sigma\). Substitution is simultaneous and capture avoiding:
+constants remain fixed, variables are replaced by their assigned terms,
+and application is treated componentwise. Before descending beneath a
+binder, rename it to a variable of the same type fresh for the finitely
+many substitution images relevant to the body. Thus
+\[
+ (\lambda x.M)[s]=\lambda y.(M[s_x^y])
+\]
+with \(y\) fresh. Here \(s_x^y\) replaces the assignment to \(x\) by \(y\).
+Write \(M[N/x]\) for a one-variable substitution.
+
+The relation \(\approx\) is the congruence generated by alpha conversion,
+capture-avoiding beta conversion
+\((\lambda x.M)N\approx M[N/x]\), and eta conversion
+\(\lambda x.M(x)\approx M\), with \(x\notin\FV(M)\).
+Every displayed term and application must be well typed. Eta conversion
+allows the binder type to be below the intrinsic argument type of \(M\).
+It compares the function with its corresponding restriction; semantic
+comparisons always name the type at which that restriction is used.
+Congruence includes abstraction and application, with their actual
+well-typedness conditions. A beta-eta normal term has neither kind of
+redex. Mark-erasure gives an ordinary simply typed lambda term.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p07-monotonicity-substitution}
+ {proved=annex:p7.monotonicity.substitution}{Substitution, type refinement and interpretation}
+For a term \(M:\tau\), \(M[s]\) is a term of a type
+\(\tau_s\preceq\tau\). If an occurrence of \(x\) has polarity \(m\) in
+\(M\), and an occurrence of \(y\) has polarity \(n\) in \(s(x)\), every
+corresponding surviving occurrence in \(M[s]\) has a polarity
+\(\sqsubseteq m\circ n\).
+In particular, a positive or negative polarity remains that same sign
+whenever the product is a sign.
+
+Put
+\[
+ \varphi_s(x)=
+ \pi_{\operatorname{tp}(s(x)),\operatorname{tp}(x)}
+       (\sem{s(x)}_\varphi).
+\]
+Then
+\[
+ \pi_{\tau_s,\tau}(\sem{M[s]}_\varphi)=\sem M_{\varphi_s}.
+ \tag{S}
+\]
+Beta reduction refines types and preserves every tracked positive or
+negative free-occurrence polarity. Both sign-refinement and the
+possibility that substitution erases or duplicates occurrences are included.
+\end{hblemma}
+
+\begin{hblemma}{thm:p07-monotonicity-conversion}
+ {proved=annex:p7.monotonicity.conversion}{Conversion is stable under substitution}
+If \(M\approx N\), then \(M[s]\approx N[s]\) for every typed,
+capture-avoiding substitution \(s\).
+Beta reduction terminates by erasure into ordinary simply typed terms.
+No uniqueness assertion about the remaining marked binder types is needed.
+The ordinary normalization dependency is
+Theorem~\ref{thm:p07-stlc-strong-normalization}, with inert symbols covered by
+Corollary~\ref{thm:p07-stlc-inert-constants}.
+\end{hblemma}
+
+\begin{hbdefinition}{def:p07-monotonicity-conversion-coherence}
+ {The conversion-coherence property}
+A structure has conversion coherence when, whenever \(M\approx N\)
+and both intrinsic types
+are below \(\tau\), at every assignment
+\[
+ \pi_{\operatorname{tp}(M),\tau}(\sem M_\varphi)
+ =
+ \pi_{\operatorname{tp}(N),\tau}(\sem N_\varphi).
+ \tag{E}
+\]
+Use an explicitly specified common upper type; an undefined auxiliary
+join is never required. The property will follow from comparison-directed
+elaboration, rather than being imposed as an additional model axiom.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p07-monotonicity-ordinary-long}
+ {proved=annex:p7.monotonicity.ordinary-long}{The ordinary long-form input}
+In the arrow-only ordinary simply typed lambda calculus, with a fixed
+typed context and inert constants, every term has a finite beta-normal,
+eta-long representative. Two terms of the same type are beta-eta
+convertible exactly when these representatives are alpha-equivalent.
+Here long means that every function-typed result is abstracted over its
+arguments and every neutral head is fully applied to a base-typed result;
+the arguments are recursively long.
+This is the unmarked normalization input used below
+\cite[Sections 4.2--4.4 and 8.7]{Selinger2013LambdaNotesV2}.
+\end{hblemma}
+
+\begin{hbdefinition}{def:p07-monotonicity-long-form}
+ {Comparison-directed long forms}
+For \(\operatorname{tp}(M)\preceq\tau\), let \(L_\tau(M)\) be the
+beta-normal, eta-long elaboration at expected type \(\tau\).
+Use fresh bound variables of the expected argument types.
+At an expected arrow \(\tau=\sigma\xrightarrow m\rho\), form
+\(\lambda u:\sigma.\,L_\rho(M(u))\), beta-normalizing the application
+before descending. At an expected base type, a beta-normal term is a
+variable or constant head with an application spine; elaborate each
+argument at the corresponding argument type declared by that head.
+Existing abstractions are processed by replacing their binders by the
+fresh expected-type variables. Recompute intrinsic markings from the
+resulting occurrences. The following lemma establishes that this
+procedure is finite, well typed and independent of the choices of fresh
+names up to typed alpha conversion.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p07-monotonicity-long-coherence}
+ {proved=annex:p7.monotonicity.long-coherence}
+ {Long elaboration and semantic coherence}
+For every \(\operatorname{tp}(M)\preceq\tau\):
+\begin{enumerate}
+\item \(L_\tau(M)\) is a term of intrinsic type below \(\tau\), and
+      \(L_\tau(M)\approx M\).
+      Every tracked signed free occurrence survives with the same sign,
+      possibly in several copies; an unspecified occurrence can refine.
+\item In every coherent structure,
+\[
+ \pi_{\operatorname{tp}(L_\tau(M)),\tau}
+        (\sem{L_\tau(M)}_\varphi)
+ =
+ \pi_{\operatorname{tp}(M),\tau}(\sem M_\varphi).
+\]
+\item If \(M\approx N\) and both are comparable at \(\tau\), their
+      long elaborations at \(\tau\) are typed alpha-equivalent.
+\end{enumerate}
+Consequently every coherent structure has property (E).
+Uniqueness here concerns the elaboration at a fixed comparison type,
+not raw marked short normal forms.
+\end{hblemma}
+
+\begin{hbdefinition}{def:p07-monotonicity-consequence}{Assertions and universal premises}
+An assertion is \(M\precsim_\tau N\), where
+\(\operatorname{tp}(M),\operatorname{tp}(N)\preceq\tau\).
+It is true at an assignment precisely when
+\[
+ \pi_{\operatorname{tp}(M),\tau}(\sem M_\varphi)
+ \leq_\tau
+ \pi_{\operatorname{tp}(N),\tau}(\sem N_\varphi).
+\]
+A structure satisfies an assertion when it is true at every assignment.
+For a set \(\Gamma\) of assertions, write
+\(\Gamma\models_{\mathrm{mon}}M\precsim_\tau N\) when every structure
+satisfying every member of \(\Gamma\) satisfies the conclusion.
+Thus free variables in premises are universally interpreted.
+A derivation \(\Gamma\vdash_{\mathrm{mon}}M\precsim_\tau N\) is a finite
+tree built from members of \(\Gamma\) and the rules on
+Sheet~\ref{sheet:p07-monotonicity}.
+\end{hbdefinition}
+
+\showcalculus{p07-monotonicity}
+
+\begin{hblemma}{thm:p07-monotonicity-instantiation}
+ {proved=annex:p7.monotonicity.instantiation}{Instantiation and extensional comparison}
+The following hold in the calculus.
+\begin{enumerate}
+ \item If \(M\approx M'\), \(N\approx N'\), and all four terms are
+       comparable at \(\tau\), then
+       \(\Gamma\vdash M\precsim_\tau N\) implies
+       \(\Gamma\vdash M'\precsim_\tau N'\).
+ \item For every typed substitution \(s\),
+       \[
+       M\precsim_\tau N\ \vdash_{\mathrm{mon}}\
+       M[s]\precsim_\tau N[s].
+       \]
+       Consequently derivability from \(\Gamma\) is closed under
+       substitution of its conclusion while retaining \(\Gamma\).
+ \item Suppose \(M,N\) have intrinsic types below
+       \(\sigma\xrightarrow m\tau\). If
+       \(\Gamma\vdash M(O)\precsim_\tau N(O)\) for every term
+       \(O:\sigma\), then
+       \(\Gamma\vdash M\precsim_{\sigma\xrightarrow m\tau}N\).
+\end{enumerate}
+\end{hblemma}
+
+\section{Representing syntax by ordered functions}
+
+\begin{hbdefinition}{def:p07-monotonicity-term-structure}{Term structures}
+Write \(\langle M\rangle\) for a conversion class and set
+\[
+ T_\tau=\{\langle M\rangle:
+            \operatorname{tp}(M)\preceq\tau\}.
+\]
+This means that the class has such a representative. Application of
+classes is computed with representatives that type-check; congruence
+makes the result independent of that choice.
+
+A term structure supplies each \(T_\tau\) with a preorder
+\(\sqsubseteq_\tau\). A class in \(T_{\sigma\xrightarrow+\tau}\)
+acts monotonically on \(T_\sigma\); a class in
+\(T_{\sigma\xrightarrow-\tau}\) acts antitonically; and
+\[
+ \langle M\rangle\sqsubseteq_{\sigma\xrightarrow m\tau}\langle N\rangle
+ \quad\Longleftrightarrow\quad
+ \langle M(O)\rangle\sqsubseteq_\tau\langle N(O)\rangle
+ \text{ for every }\langle O\rangle\in T_\sigma .
+\]
+The inclusions \(i_{\sigma,\tau}:T_\sigma\to T_\tau\) compose and have
+identity components.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p07-monotonicity-term-inclusions}
+ {proved=annex:p7.monotonicity.term-inclusions}{Order preservation between term domains}
+The inclusion maps of a term structure preserve its preorders.
+\end{hblemma}
+
+\begin{hblemma}{thm:p07-monotonicity-term-model}
+ {proved=annex:p7.monotonicity.term-model}
+ {Comparison-indexed functional realization}
+Every term structure has a realization by a coherent structure \(D\)
+and order isomorphisms \(\iota_\tau:T_\tau\to D_\tau\).
+The realization depends on its comparison type. For legal representatives,
+\[
+ \iota_{\sigma\xrightarrow m\tau}(\langle M\rangle)
+       \bigl(\iota_\sigma(\langle O\rangle)\bigr)
+   =\iota_\tau(\langle M(O)\rangle),
+\qquad
+ \pi_{\sigma,\tau}
+   =\iota_\tau i_{\sigma,\tau}\iota_\sigma^{-1}.
+\]
+Every valuation \(\varphi\) is represented by a typed substitution \(s\),
+and the interpretation is
+\[
+ \sem M_\varphi
+    =\iota_{\operatorname{tp}(M)}(\langle M[s]\rangle).
+\]
+The displayed index is the original type of \(M\), even when substitution
+refines its intrinsic type. The construction uses choice to select
+representatives for a whole valuation.
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p07-monotonicity-soundness}
+ {proved=annex:p7.monotonicity.soundness}{Soundness}
+Let \(S\) be a structure that satisfies every member of \(\Gamma\) under
+every assignment.
+Every assertion derivable from \(\Gamma\) is then true in \(S\) under
+every assignment. Equivalently, derivability implies
+\(\models_{\mathrm{mon}}\)-consequence.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p07-monotonicity-completeness}
+ {proved=annex:p7.monotonicity.completeness}{Completeness with universal premises}
+For every set of assertions \(\Gamma\),
+\[
+ \Gamma\models_{\mathrm{mon}}M\precsim_\tau N
+ \quad\Longrightarrow\quad
+ \Gamma\vdash_{\mathrm{mon}}M\precsim_\tau N .
+\]
+Together with soundness this gives equivalence. The models include
+restricted function domains; completeness solely for full function
+hierarchies is not asserted.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p07-monotonicity-lyndon}
+ {proved=annex:p7.monotonicity.lyndon}
+ {The polarity converse after coercion-aware elaboration}
+Let \(\operatorname{tp}(M)\preceq\tau\) and \(x:\sigma_0\).
+The following are equivalent:
+\begin{enumerate}
+\item Every free occurrence of \(x\) in \(L_\tau(M)\) is positive.
+\item In every coherent structure and for every assignment \(\varphi\),
+      the map
+\[
+ a\longmapsto
+ \pi_{\operatorname{tp}(M),\tau}
+      (\sem M_{\varphi_x^a}),\qquad a\in D_{\sigma_0},
+\]
+      is monotone.
+\end{enumerate}
+Replacing positive and monotone by negative and antitone gives the
+corresponding equivalence. If \(x\) is absent from the long form, both
+syntactic conditions hold and the displayed map is constant.
+The criterion uses the specified comparison type and the receiving types
+inside the elaboration. It is not a criterion on raw short normal syntax.
+The model class includes restricted coherent structures.
+\end{hbtheorem}
+
+\begin{hbwarning}{def:p07-monotonicity-completion-target}
+ {The scope of the adequacy and occurrence results}
+The completeness and polarity-converse proofs use general coherent
+structures, including syntactically constructed restricted function
+domains. Neither result is a completeness claim solely about full
+function hierarchies. The consequence relation has universally interpreted
+premises throughout. The inference from raw unspecified polarity to
+failure of semantic monotonicity is also unavailable, as
+Theorem~\ref{thm:p07-monotonicity-coercion-polarity} demonstrates
+\cite[Sections 8--10]{IcardMossTune2017Monotonicity}.
+\end{hbwarning}
+
+\section{Worked inference and failure cases}
+
+\begin{hbexample}{def:p07-monotonicity-lexical}{Replacing a quantified term}
+Interpret the predicate type \(p\) by subsets of a fixed universe, ordered
+by inclusion, and truth values by \(0\leq1\).
+Then
+\[
+ \mathsf{all}:p\xrightarrow-(p\xrightarrow+t),\qquad
+ \mathsf{some}:p\xrightarrow+(p\xrightarrow+t).
+\]
+For example, \(\mathsf{all}(A)(B)=1\) precisely when \(A\subseteq B\).
+If \(A\subseteq A'\), then every \(A'\) being a \(B\) entails every \(A\)
+being a \(B\); if \(B\subseteq B'\), every \(A\) being a \(B\) entails
+every \(A\) being a \(B'\). Nonempty intersection establishes the two
+positive positions of \(\mathsf{some}\).
+
+With \(\mathsf{poodle}\precsim_p\mathsf{dog}\), Anti at the first
+argument of \(\mathsf{all}\), followed by Point, yields
+\[
+ \mathsf{all}(\mathsf{dog})(\mathsf{bark})
+ \precsim_t
+ \mathsf{all}(\mathsf{poodle})(\mathsf{bark}).
+\]
+Mono and Point give
+\[
+ \mathsf{some}(\mathsf{poodle})(\mathsf{bark})
+ \precsim_t
+ \mathsf{some}(\mathsf{dog})(\mathsf{bark}).
+\]
+The lexical inclusion is a premise, not a consequence of a word's spelling.
+Likewise the set of plays lasting more than five hours is contained in the
+set lasting more than two hours. Antitonicity of the subject position of
+\(\mathsf{all}\) therefore turns \emph{Every play lasting more than two hours
+is too long} into \emph{Every play lasting more than five hours is too long}.
+The duration comparison supplies the set inclusion used by the rule.
+\end{hbexample}
+
+\begin{hbexample}{def:p07-monotonicity-neutral-failure}{An exact-count context}
+Let \(\mathsf{two}(A)(B)\) assert that \(A\cap B\) has exactly two
+elements. It is neither monotone nor antitone in either argument over all
+sets. For a fixed set of barking dogs, enlarging a subject set from one to
+two to three of them changes the truth values \(0,1,0\).
+Consequently a \(\cdot\)-marked position licenses neither replacement
+direction. In particular, two barking dogs that are not poodles make
+\(\mathsf{two}(\mathsf{dog})(\mathsf{bark})\) true and
+\(\mathsf{two}(\mathsf{poodle})(\mathsf{bark})\) false.
+\end{hbexample}
+
+\begin{hbexample}{def:p07-monotonicity-source-language-case}{The source's higher-order language example}
+In addition to \(\mathsf{all}\), use
+\(\mathsf{few}:p\xrightarrow{\cdot}(p\xrightarrow-t)\) and
+\(\mathsf{deftly}:p\xrightarrow{\cdot}p\).
+Suppose the following four assertions are supplied:
+\[
+ \begin{gathered}
+ \lambda x.\mathsf{all}(x)(\mathsf{run})
+   \precsim_{p\xrightarrow{\cdot}t}
+ \lambda x.\mathsf{few}(x)(\mathsf{fly}),\\
+ \mathsf{deftly}\precsim_{p\xrightarrow{\cdot}p}\lambda x.x,\qquad
+ \mathsf{marsupial}\precsim_p\mathsf{mammal},\qquad
+ \mathsf{soar}\precsim_p\mathsf{fly}.
+ \end{gathered}
+\]
+Point and conversion give
+\(\mathsf{deftly}(\mathsf{soar})\precsim_p\mathsf{soar}
+ \precsim_p\mathsf{fly}\).
+Anti for \(\mathsf{few}(\mathsf{marsupial})\) reverses this comparison.
+The first abstraction on the first line is antitone in \(x\), so Anti
+gives its mammal instance below its marsupial instance.
+Point applied to the first premise then gives the corresponding
+\(\mathsf{few}\) assertion. Transitivity combines these steps to yield
+\[
+ \mathsf{all}(\mathsf{mammal})(\mathsf{run})
+ \precsim_t
+ \mathsf{few}(\mathsf{marsupial})
+                  (\mathsf{deftly}(\mathsf{soar})).
+\]
+The substantive bridge concerning running and flying is explicitly
+assumed. The calculus does not establish it as a fact about animals.
+\end{hbexample}
+
+\begin{hbexample}{def:p07-monotonicity-source-arithmetic}{Instantiation in the source's arithmetic case}
+Let \(2\) abbreviate \(+(1)(1)\). From \(0\precsim_r1\) and the
+universally interpreted premise \(x\precsim_r +(x)(0)\), instantiate
+\(x=1\). Mono for \(+(1)\) and Trans give \(1\precsim_r2\).
+Mono in the first argument of subtraction gives
+\(-(1)\precsim_{r\xrightarrow-r}-(2)\), hence Point gives
+\(-(1)(1)\precsim_r-(2)(1)\).
+Anti in the second argument and \(0\precsim_r1\) give
+\(-(2)(1)\precsim_r-(2)(0)\). Thus
+\(-(1)(1)\precsim_r-(2)(0)\), namely \(1-1\leq2-0\).
+
+A separate analytical application uses the comparison theorem for
+nonnegative improper integrals: on \(x\geq1\),
+\(x\leq x^2\), so \(e^{-x^2}\leq e^{-x}\).
+Together with nonnegativity and convergence of
+\(\int_1^\infty e^{-x}\,dx=e^{-1}\), that theorem yields convergence of
+\(\int_1^\infty e^{-x^2}\,dx\).
+The calculus accounts for the variance steps; the integral comparison
+theorem and its domain assumptions remain analytical premises.
+\end{hbexample}
+
+\begin{hbwarning}{def:p07-monotonicity-local-premises}{Why open premises are not local observations}
+From a premise \(x\precsim_r0\) interpreted only at the assignment \(x=0\),
+one cannot infer \(\lambda x.x\precsim_{r\xrightarrow{\cdot}r}
+\lambda x.0\): evaluate both functions at \(1\).
+Func is justified here because premises hold under every assignment.
+The full-structure question and an alternative local-premise consequence
+relation are different metatheoretic problems. This entry makes no
+completeness claim for either alternative.
+\end{hbwarning}
+
+\begin{hbtheorem}{thm:p07-monotonicity-coercion-polarity}
+ {proved=annex:p7.monotonicity.coercion-polarity}{A coercion can expose monotonicity}
+Let \(b\) be a base type, \(x:b\) a variable, and put
+\(\rho=b\xrightarrow+b\), \(\sigma=b\xrightarrow{\cdot}b\).
+Let \(F:(\rho\xrightarrow+b)\xrightarrow+b\) be a constant.
+The term
+\[
+ M=F(\lambda f:\sigma.\,f(x))
+\]
+is well typed, beta-eta normal, and its raw free occurrence of \(x\)
+has polarity \(\cdot\). Nevertheless
+\(a\mapsto\sem M_{\varphi_x^a}\) is monotone in every coherent
+structure. The argument coercion restricts \(f\) to the monotone
+function domain \(D_\rho\).
+\end{hbtheorem}
+
+\begin{hbmethod}{def:p07-monotonicity-lookup}{Using the entry}
+First choose ordered semantic domains and type every constant.
+Record lexical or mathematical inequalities as explicit premises.
+Trace the polarity of the occurrence to be replaced, preserving argument
+positions through application and abstraction. Use Mono in a positive
+position and Anti in a negative one; a \(\cdot\) position needs further
+information. Keep coercions and the comparison type visible whenever types
+differ. Such coercions can expose additional signed behavior, as in
+Theorem~\ref{thm:p07-monotonicity-coercion-polarity}; a raw unspecified
+occurrence does not prove failure of semantic monotonicity.
+Finally check whether a proposed premise is universal or only a
+local observation, and state which nonlogical facts were assumed.
+\end{hbmethod}

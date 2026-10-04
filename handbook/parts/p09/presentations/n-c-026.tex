@@ -1,0 +1,509 @@
+% Source presentations for register row N-c-026.
+
+\subsection{Source-exact complexity boundaries for SAT, QBF, and modal logic}
+\label{sec:p09-presentation-n-c-026}
+
+\subsubsection{Cook's historical reduction and the modern SAT theorem}
+
+\paragraph{The reduction Cook actually defines.}
+A \emph{query machine} is a deterministic multitape Turing machine with a
+query tape and three distinguished states: query, yes, and no.  Relative to a
+language \(T\), entering the query state with \(u\) on the query tape moves in
+one step to yes when \(u\in T\) and to no otherwise.  Cook calls a language
+\(S\) \emph{\(P\)-reducible} to \(T\) when such a machine decides \(S\) in
+time polynomial in its input length.  The term therefore stands for an
+oracle computation that may issue several adaptive queries.  It is not the
+single-output many-one map fixed in Part~IV, and this distinction is used when
+the historical theorem is related to its modern descendant.
+
+Cook's Theorem~1 says that if a nondeterministic Turing machine accepts \(S\)
+in polynomial time, then \(S\) is \(P\)-reducible in this query-machine sense
+to the disjunctive-normal-form tautologies.  For input \(w\), his proof first
+constructs a conjunctive-normal-form formula \(A(w)\) satisfying
+\[
+ w\in S
+ \quad\Longleftrightarrow\quad
+ A(w)\text{ is satisfiable}.
+\]
+Consequently \(\neg A(w)\) is already in DNF and
+\[
+ \neg A(w)\text{ is a tautology}
+ \quad\Longleftrightarrow\quad
+ w\notin S.
+\]
+The query machine asks the one question \(\neg A(w)\) and accepts when the
+oracle answers no.  This proves Cook's stated query reduction.  The displayed
+map \(w\mapsto A(w)\), viewed separately, is the bridge to the later many-one
+SAT theorem \cite[pp.~151--156]{Cook1971}.
+
+\paragraph{A complete modern reconstruction of the tableau.}
+Let \(L\in\mathsf{NP}\), and fix a nondeterministic machine deciding \(L\) in
+polynomial time.  A polynomial-length string \(y\) can record its successive
+nondeterministic choices.  A fixed deterministic machine \(V\) then checks the
+computation encoded by \((x,y)\) within a polynomial time bound \(T=T(|x|)\),
+and
+\[
+ x\in L
+ \quad\Longleftrightarrow\quad
+ \exists y\; V(x,y)\text{ accepts within }T\text{ steps}.
+\]
+Invalid choice codes are made rejecting, and the accepting state is made
+absorbing, so it is enough to inspect the configuration at exactly time \(T\).
+This deterministic verifier presentation is used only to make every local
+tableau successor uniquely determined once the free witness bits have been
+chosen.  A standard one-tape simulation is fixed once and for all; its
+polynomial overhead is absorbed into \(T\).
+
+Let \(\Sigma\), including fixed nonoverwritable endmarkers, and \(Q\) be the
+tape alphabet and state set of \(V\).
+A tableau cell carries a label in the fixed finite alphabet
+\[
+ \Lambda=\Sigma\cup(Q\times\Sigma).
+\]
+The label \(\sigma\) says that the cell contains \(\sigma\) and is not scanned;
+the label \((q,\sigma)\) additionally says that the head scans that cell while
+the machine is in state \(q\).  This packaging is an eliminable abbreviation
+for Cook's separate tape-symbol, state, and scanned-square proposition
+families; it changes no computation condition and is used to make locality
+visible.
+
+Choose a width \(W\) large enough to hold the initial encoding of \(x\) and
+\(y\), both endmarkers, and every cell reachable in \(T\) steps.  Thus
+\(W=O(T+|x|+|y|)\).  For
+\(0\leq t\leq T\), \(1\leq s\leq W\), and
+\(\lambda\in\Lambda\), introduce a propositional variable
+\(X_{t,s,\lambda}\), intended to say that cell \(s\) has label \(\lambda\) at
+time \(t\).
+
+For a finite list of formulas \(Z_1,\ldots,Z_k\), use the metalinguistic
+abbreviation
+\[
+ \operatorname{One}(Z_1,\ldots,Z_k)
+   = (Z_1\lor\cdots\lor Z_k)
+     \land
+     \bigwedge_{1\leq i<j\leq k}(\neg Z_i\lor\neg Z_j).
+\]
+It is a CNF formula, not a new connective: the first clause supplies at least
+one true member and the binary clauses forbid two.  It is needed twice below.
+For every \((t,s)\), include
+\[
+ \operatorname{One}\bigl((X_{t,s,\lambda})_{\lambda\in\Lambda}\bigr),
+\]
+and, for every row \(t\), require exactly one variable whose label lies in
+\(Q\times\Sigma\).  Every satisfying assignment therefore decodes to one tape
+symbol at every position and exactly one state/head position in every row.
+
+The remaining clauses have three roles.
+
+\begin{enumerate}
+\item The \emph{initial clauses} fix the endmarkers, the literal bits of \(x\),
+the initial state and head position, and the blank cells.  Each witness position
+is restricted to the two labels for \(0\) and \(1\) but is otherwise free, so a
+satisfying assignment chooses exactly one string \(y\).
+
+\item The \emph{transition clauses} express the fixed finite transition table
+of \(V\).  With fixed boundary labels, the next label at position \(s\) depends
+only on the three labels at positions \(s-1,s,s+1\) in the preceding row.  Let
+\(\Delta\subseteq\Lambda^3\times\Lambda\) be exactly the finite set of allowed
+quadruples.  For every \(t<T\), every interior \(s\), and every
+\((\alpha,\beta,\gamma,\delta)\notin\Delta\), include
+\[
+ \neg X_{t,s-1,\alpha}\lor
+ \neg X_{t,s,\beta}\lor
+ \neg X_{t,s+1,\gamma}\lor
+ \neg X_{t+1,s,\delta}.
+\]
+The formula forbids precisely a next-cell label incompatible with the local
+window.  Boundary positions use the analogous fixed-endmarker clauses.
+
+\item The \emph{acceptance clause} is
+\[
+ \bigvee_{1\leq s\leq W,\,\sigma\in\Sigma}
+       X_{T,s,(q_{\mathrm{acc}},\sigma)}.
+\]
+Because the accepting state is absorbing, this says exactly that the encoded
+run accepts within the original time bound.
+\end{enumerate}
+
+Let \(F_{V,x}\) be the conjunction of these clauses.  If \(x\in L\), choose an
+accepting witness \(y\) and give each \(X_{t,s,\lambda}\) its actual tableau
+value.  Every exactly-one, initial, transition, and acceptance clause is true,
+so \(F_{V,x}\) is satisfiable.  Conversely, a satisfying assignment first
+selects one label for every cell and one head/state label per row.  The initial
+clauses produce the genuine initial configuration of \(V(x,y)\) for the chosen
+\(y\).  Induction on \(t\), using the forbidden local quadruples, shows that
+each later row is its genuine successor.  The final clause therefore supplies
+an accepting computation.  Hence
+\[
+ x\in L
+ \quad\Longleftrightarrow\quad
+ F_{V,x}\in\mathsf{SAT}.
+\]
+
+The label alphabet is fixed with \(V\).  There are \(O(TW)\) tableau variables;
+the cell and transition clauses have polynomial total size, and even the naive
+pairwise exactly-one condition for each row has only \(O(TW^2)\) clauses.
+Nested counters over \(t,s\) and the fixed label alphabet emit the formula in
+polynomial time.  Thus \(x\mapsto F_{V,x}\) is a polynomial-time many-one
+reduction.
+
+Finally, \(\mathsf{SAT}\in\mathsf{NP}\): an assignment has at most one bit per
+variable occurring in the encoded formula, and its truth value is checked by
+one traversal of the formula.  The reduction and this membership argument
+give the exact modern statement in Theorem~\ref{thm:p04-cook-levin}; the
+written proof under the machine conventions of Part~4, including the passage
+from nondeterministic machines to certificates, is
+Annex~\ref{annex:p02-w02b-p02-015-cook-levin}.
+Cook's 1971 paper controls the historical query-reduction statement; Levin's
+independent 1973 work supplies the other historical source for the compound
+name \cite{Cook1971,Levin1973,AroraBarak2009}.
+
+\subsubsection{Stockmeyer--Meyer's quantified language and the complete proof}
+
+\paragraph{The source language and the scalar-variable bridge.}
+Stockmeyer and Meyer write
+\(X_i=(x_{i,1},x_{i,2},\ldots)\) for a finite block of Boolean variables.  For
+\(k\geq1\), their language \(B_k\) consists of encoded Boolean expressions
+\(A(X_1,\ldots,X_k)\) made true by the alternating prefix
+\[
+ \exists X_1\,\forall X_2\,\exists X_3\cdots Q_kX_k,
+ \qquad
+ Q_k=
+ \begin{cases}
+  \exists,&k\text{ odd},\\
+  \forall,&k\text{ even}.
+ \end{cases}
+\]
+The notation \(\exists X_i\) abbreviates one Boolean quantifier for each scalar
+variable in the encoded block; it is not a quantifier over an infinite object.
+The union
+\[
+ B_\omega=\bigcup_{k\geq1}B_k
+\]
+allows the finite alternation depth to grow with the input.  It is one language
+of true encoded formulas, not the polynomial hierarchy as a class of languages.
+The source's Theorem~4.3 states that \(B_\omega\) is complete for polynomial
+space under logspace many-one reductions
+\cite[thm.~4.3]{StockmeyerMeyer1973}.
+
+The bridge to Definition~\ref{def:p04-qbf-languages} is syntactic.  Expand each
+block quantifier into its scalar Boolean quantifiers and retain the same Boolean
+matrix.  Conversely, rename and collect every maximal run of like scalar
+quantifiers into one block \(X_i\); if a TQBF begins universally, prepend one
+unused existential variable so that the block sequence begins existentially.
+If the chosen scalar encoding admits quantifiers inside Boolean subformulas,
+first rename bound variables apart, push negations through quantifiers, and pull
+each quantifier across a neighboring subformula in which its variable is not
+free.  These equivalences produce prenex form without copying the matrix.
+For already prenex inputs the two block/scalar maps have linear output length;
+the optional prenex normalization remains polynomial in length.  In either
+case a transducer needs only an input-position counter, a block counter, and a
+polarity bit, so it uses logarithmic work space.  No compilation of an unstated
+polynomial-time predicate is required: \(B_k\) already contains the Boolean
+expression as part of its input.
+
+\paragraph{Membership of TQBF in polynomial space.}
+Evaluate a closed QBF recursively.  At \(\exists p\), evaluate the body with
+\(p=0\) and then, only if necessary, with \(p=1\); at \(\forall p\), require
+both evaluations.  The two branches are explored sequentially.  Store the
+current syntax position, the values of variables on the active quantifier path,
+and one return bit per recursive level.  Each object has size polynomial in the
+input formula, so the procedure may take exponential time but uses polynomial
+space.  Thus \(\mathsf{TQBF}\in\mathsf{PSPACE}\).
+
+\paragraph{Polynomial-space hardness without recursive duplication.}
+Let a deterministic machine \(M\) decide a language in polynomial space.
+Modify it so that acceptance first reaches one canonical accepting
+configuration.  On input \(x\), encode every configuration by an \(m\)-bit
+block, where \(m\geq1\) is polynomial in \(|x|\).  There are Boolean formulas
+\(\operatorname{Eq}(u,v)\) and
+\(\operatorname{Step}_{M,x}(u,v)\) of polynomial size saying, respectively,
+that two blocks agree bitwise and that \(v\) is the unique legal successor of a
+valid \(u\).  Put
+\[
+ R_0(u,v)=\operatorname{Eq}(u,v)\lor
+          \operatorname{Step}_{M,x}(u,v).
+\]
+Here and below \(R_i\) is a metalinguistic family of ordinary QBFs with two free
+\(m\)-bit parameter blocks.  It adds no reachability connective to the
+language.
+
+If the naive recursion conjoined \(R_i(u,z)\) and \(R_i(z,v)\), its text would
+double at every level.  Instead, for fresh \(m\)-bit blocks \(z,a,c\) and a
+fresh selector bit \(b\), define
+\[
+\begin{aligned}
+ \operatorname{Sel}_b(u,z,v;a,c)
+  ={}&\bigl(\neg b\to
+       (\operatorname{Eq}(a,u)\land\operatorname{Eq}(c,z))\bigr)\\
+    &\land\bigl(b\to
+       (\operatorname{Eq}(a,z)\land\operatorname{Eq}(c,v))\bigr),\\
+ R_{i+1}(u,v)
+  ={}&\exists z\,\forall b\,\exists a\,\exists c\,
+       \bigl(\operatorname{Sel}_b(u,z,v;a,c)\land R_i(a,c)\bigr).
+\end{aligned}
+\]
+Every displayed block quantifier expands into \(m\) scalar Boolean quantifiers.
+The existential blocks \(a,c\) follow \(b\), so they may receive the first pair
+\((u,z)\) when \(b=0\) and the second pair \((z,v)\) when \(b=1\).  There is
+only one textual occurrence of \(R_i\), and hence
+\[
+ |R_{i+1}|=|R_i|+O(m).
+\]
+
+Induction on \(i\) proves, for all \(m\)-bit blocks \(u,v\),
+\[
+ R_i(u,v)\text{ is true}
+ \quad\Longleftrightarrow\quad
+ v\text{ is reachable from }u\text{ by at most }2^i
+ \text{ equality-or-machine steps}.
+\]
+The base is the definition of \(R_0\).  At the successor step, a true formula
+supplies one midpoint and the universal selector establishes both half paths;
+concatenating them gives a path of length at most \(2^{i+1}\).  Conversely,
+split any such path after at most \(2^i\) steps.  The two pieces satisfy the
+induction hypothesis, and the selector routes their endpoints to the single
+recursive occurrence.  Equality steps merely pad a shorter path.
+
+There are at most \(2^m\) encoded configurations.  A deterministic accepting
+run has no repeated preaccepting configuration, because a repetition would
+begin a loop and prevent later acceptance.  Therefore
+\[
+ \Phi_{M,x}=R_m(c_{\mathrm{init}}(x),c_{\mathrm{acc}})
+\]
+is true exactly when \(M\) accepts \(x\).  Its length is polynomial: the base
+formula is polynomial and each of the \(m\) recursion levels adds only
+\(O(m)\) symbols.
+
+The map is also logspace-constructible, as in the historical source strength.
+A transducer stores a level counter and the indices of the currently named
+blocks, emits the \(m\) nested prefixes from outside inward, streams the fixed
+local clauses for \(\operatorname{Step}_{M,x}\) with logarithmic counters, and
+then emits the closing suffixes in the reverse level order.  All names and
+counters require \(O(\log m)=O(\log|x|)\) bits because the machine and its
+polynomial space bound are fixed.  This proves PSPACE-hardness under logspace
+many-one reductions, and therefore proves the weaker polynomial-time
+many-one statement of Theorem~\ref{thm:p04-tqbf-pspace}.  The full formal
+argument, including validity of blocks that do not encode configurations, is
+Annex~\ref{annex:p9.tqbf.1}.
+
+\paragraph{Papadimitriou's distinct QSAT presentation.}
+Papadimitriou's printed p.~455 uses \emph{QSAT} for the language of true closed
+formulas
+\[
+ \exists x_1\,\forall x_2\,\exists x_3\cdots Q_n x_n\,
+ \varphi(x_1,\ldots,x_n),
+\]
+where the scalar Boolean quantifiers alternate strictly and \(\varphi\) is in
+conjunctive normal form.  This is a decision language, not an abbreviation for
+the unrestricted input syntax of Definition~\ref{def:p04-qbf-languages}; it
+also differs from Stockmeyer--Meyer's block-variable \(B_\omega\).  The
+distinction is needed to state the book's theorem at its own strength.
+
+The source contains an internal conflict that must not be normalized away.
+The display, the parity clause for \(Q_n\), and the proof's alternating
+OR/AND evaluation all begin existentially, but the prose immediately before
+the display describes both truth values for \(x_1\), which would begin
+universally.  The inspected errata give no correction for p.~455.  The
+display-and-proof-controlled reading above is therefore the coherent one, but
+the contradictory prose remains part of the source record.
+
+Theorem~19.1, printed pp.~456--458, states that this QSAT language is
+\(\mathsf{PSPACE}\)-complete.  Under the book's standing definition, the
+reduction is a deterministic logspace-computable membership-preserving
+function---a logspace many-one reduction in current terminology.  Membership
+evaluates the implicit alternating assignment tree depth first.  For hardness,
+the proof converts polynomial-space configuration reachability into a
+single-copy formula family.  Reusing the bitwise equality and legal-successor
+formulas defined above, put
+\[
+ \psi_0(A,B)=\operatorname{Eq}(A,B)\lor
+              \operatorname{Step}_{M,x}(A,B).
+\]
+For fresh blocks \(Z,X,Y\) at each level, the recurrence has the eliminable
+form
+\[
+ \psi_{i+1}(A,B)=
+ \exists Z\,\forall X\,\forall Y\,
+ \left(
+   \bigl((X=A\land Y=Z)\lor(X=Z\land Y=B)\bigr)
+   \to \psi_i(X,Y)
+ \right),
+\]
+where each capital letter denotes a finite Boolean block and each displayed
+block equality expands bitwise.  The \(\psi_i\) are a metalinguistic family of
+ordinary quantified formulas, not a new reachability connective.  This
+recurrence is recorded separately because its universally quantified endpoint
+blocks are not the selector-bit construction above; it is used here only to
+preserve Papadimitriou's own presentation.  After prenexing, the proof handles
+the polynomial DNF matrix through the complement of the displayed CNF language
+and \(\mathsf{PSPACE}=\mathsf{coPSPACE}\), rather than silently asserting that
+the prenexed matrix is already a polynomial CNF
+\cite[pp.~455--458]{Papadimitriou1994}.
+
+Google Books primary-text snippets independently confirm the p.~455 definition
+and conflict, the p.~456 theorem and proof opening, and the p.~458 logspace and
+complement conclusion.  Its volume remains nonviewable, however, and no
+readable publisher or named-library body was found for the continuous p.~457
+recurrence or the p.~487 historical note.  The latter says that QSAT
+PSPACE-completeness was established in the Stockmeyer--Meyer paper; it does not
+literally call that paper the ``first proof.''  Those two page bodies therefore
+remain provenance-qualified even though the theorem statement, locator,
+intended syntax, reduction strength, and earlier first-party proof lineage are
+independently secured.
+
+\subsubsection{Ladner's polarity-correct modal table}
+
+Ladner's input is a modal propositional formula together with a fixed choice of
+system, not a supplied finite Kripke model.  Under the Kripke semantics used in
+the source, \(\mathsf K\) has arbitrary frames, \(\mathsf T\) reflexive frames,
+\(\mathsf S4\) reflexive-transitive frames, and \(\mathsf S5\) equivalence
+frames.  For each of these systems, Kripke completeness identifies provability
+with validity.  Negation gives the distinct dualities
+\[
+ \begin{aligned}
+  A\text{ is not valid}
+    &\quad\Longleftrightarrow\quad \neg A\text{ is satisfiable},\\
+  A\text{ is not provable}
+    &\quad\Longleftrightarrow\quad \neg A\text{ is satisfiable}.
+ \end{aligned}
+\]
+The second equivalence uses completeness.  It does not identify nonprovability
+of \(A\) with satisfiability of the same formula \(A\); the linear negation map
+is part of the reduction.  With that polarity exposed, the exact rows are:
+
+\begin{table}[htbp]
+\centering\scriptsize
+\begin{tabularx}{\textwidth}{@{}l l X X@{}}
+\toprule
+System & Frame class & Decision problem & Exact class and reduction \\
+\midrule
+\(\mathsf K\) & arbitrary & provability/validity &
+\(\mathsf{PSPACE}\)-complete under logspace many-one reductions \\
+\(\mathsf K\) & arbitrary & satisfiability; equivalently nonprovability after
+negating the input & \(\mathsf{PSPACE}\)-complete under the same reductions \\
+\(\mathsf T\) & reflexive & provability/validity &
+\(\mathsf{PSPACE}\)-complete under logspace many-one reductions \\
+\(\mathsf T\) & reflexive & satisfiability; equivalently nonprovability after
+negating the input & \(\mathsf{PSPACE}\)-complete under the same reductions \\
+\(\mathsf S4\) & reflexive and transitive & provability/validity &
+\(\mathsf{PSPACE}\)-complete under logspace many-one reductions \\
+\(\mathsf S4\) & reflexive and transitive & satisfiability; equivalently
+nonprovability after negating the input & \(\mathsf{PSPACE}\)-complete under
+the same reductions \\
+\(\mathsf S5\) & equivalence & satisfiability; equivalently nonprovability
+after negating the input & \(\mathsf{NP}\)-complete under logspace many-one
+reductions \\
+\(\mathsf S5\) & equivalence & provability/validity &
+\(\mathsf{coNP}\)-complete under logspace many-one reductions \\
+\bottomrule
+\end{tabularx}
+\caption{Ladner's modal complexity results with decision polarity exposed.}
+\label{tab:p09-ladner-polarity}
+\end{table}
+
+\paragraph{The common lower bound from quantified Boolean truth.}
+Ladner calls a modal system \(S\) \emph{between \(\mathsf K\) and
+\(\mathsf S4\)} when
+\[
+ \mathsf K\text{-PROVABLE}
+ \subseteq S\text{-PROVABLE}
+ \subseteq \mathsf S4\text{-PROVABLE}.
+\]
+This is an inclusion condition on theorem sets, not a new frame class.
+Theorem~3.1 proves that \(B_\omega\) is logspace many-one reducible to
+\(S\)-provability for every such \(S\).  The explicit completeness conclusions
+later combine this lower bound with upper algorithms only for
+\(\mathsf K,\mathsf T,\mathsf S4\).
+
+The reduction first turns a closed QBF
+\[
+ A=Q_1X_1\cdots Q_mX_m\,A'(X_1,\ldots,X_m)
+\]
+into a modal conjunction \(B\).  Auxiliary propositions mark quantifier levels
+and record the values already chosen.  At a universal level the formula forces
+accessible successors for both truth values; at an existential level one
+appropriate successor suffices.  Box formulas propagate every earlier choice,
+and the final-level obligation requires \(A'\).
+
+The proof invariant at a world representing level \(i\) is that the recorded
+values of \(X_1,\ldots,X_i\) make the remaining quantified suffix
+\[
+ Q_{i+1}X_{i+1}\cdots Q_mX_m\,A'
+\]
+true.  If \(A\) is true, its existential choices and universal branches build a
+reflexive-transitive model satisfying \(B\).  Conversely, from any arbitrary
+\(\mathsf K\)-model satisfying \(B\), the forced successors recover choices
+that establish the invariant backwards and hence show that \(A\) is true.
+The modal gadgets realizing the level markers and propagation occupy the long
+middle of Ladner's Theorem~3.1 and remain cited rather than silently replaced
+by this invariant.
+
+At the source's exact polarity, the direct construction establishes
+\[
+ A\in B_\omega
+ \quad\Longleftrightarrow\quad
+ \neg B\notin S\text{-PROVABLE}.
+\]
+Ladner's preceding Fact~2.7 supplies a logspace self-complementing reduction
+for \(B_\omega\); composing it with this construction yields the stated
+reduction to \(S\)-PROVABLE rather than merely to its complement.  This is why
+the lower bound cannot be summarized safely by dropping either the negation or
+the decision polarity \cite[thm.~3.1]{Ladner1977}.
+
+\paragraph{Why \(\mathsf K,\mathsf T,\mathsf S4\) use only polynomial space.}
+Ladner's Section~5 reformulates Kripke satisfiability procedures as recursive
+world-construction algorithms.  A call retains finite sets of subformulas that
+must be true or false at the current world, checks their Boolean consistency,
+and recursively constructs only the successor demanded by the next modal
+obligation.  A satisfying model may have exponentially many worlds, but the
+algorithm explores one branch at a time and reuses the space of a completed
+branch.
+
+The frame conditions determine what must be carried into the recursive call.
+The \(\mathsf K\) procedure carries the direct box obligations;
+\(\mathsf T\) also enforces them at the current reflexive world; and
+\(\mathsf S4\) propagates them down the transitive branch.  Subformulas and the
+propagated finite sets bound the recursion depth polynomially.  The source's
+explicit bounds are
+\[
+ \mathsf K\text{-PROVABLE}\in\operatorname{SPACE}(n^2),\qquad
+ \mathsf T\text{-PROVABLE}\in\operatorname{SPACE}(n^3),\qquad
+ \mathsf S4\text{-PROVABLE}\in\operatorname{SPACE}(n^4).
+\]
+These are sufficient upper bounds, not optimality claims.  Together with
+Theorem~3.1 they give the three PSPACE-completeness rows in
+Table~\ref{tab:p09-ladner-polarity}; closure of PSPACE under complement and the
+linear negation map give the corresponding satisfiability rows
+\cite[thm.~5.1 and cor.~5.2--5.3]{Ladner1977}.
+
+\paragraph{Why \(\mathsf S5\) has a smaller certificate.}
+Suppose \(A\) is \(\mathsf S5\)-satisfiable and contains \(m\) modal
+connectives.  Restrict a satisfying model to the equivalence class of its
+distinguished world, so accessibility is universal on that class.  Keep the
+distinguished world and, for each relevant false box occurrence \(\Box C\),
+one accessible witness at which \(C\) is false.  True boxes remain true after
+worlds are removed, and every retained false box keeps its witness.  Induction
+over the selected subformula occurrences therefore preserves their truth
+values.  At most one new world is needed per modal occurrence, so the retained
+model has at most \(m+1\) worlds.  This is Ladner's Lemma~6.1, not a finite-model
+claim for the other three systems.
+
+A nondeterministic machine can guess the at-most-\(m+1\) worlds and the truth
+values of the proposition letters occurring in \(A\), then evaluate every
+subformula at every world in polynomial time.  Hence \(\mathsf S5\)
+satisfiability is in NP.  Propositional SAT embeds as the fragment with no modal
+operator, giving NP-hardness under logspace reductions.  Thus satisfiability,
+and equivalently nonprovability after negation, is NP-complete; validity and
+provability are its coNP-complete complements
+\cite[lem.~6.1 and thm.~6.2]{Ladner1977}.  Saying only that “\(\mathsf S5\) is
+NP-complete” would leave out the decision problem and would be false for the
+validity/provability row unless \(\mathsf{NP}=\mathsf{coNP}\).
+
+Modal model checking on a supplied finite Kripke structure is a different input
+problem and does not inherit this provability table.  Likewise,
+Theorem~\ref{thm:fol-validity-undecidable} says unrestricted first-order
+validity is undecidable, while
+Corollary~\ref{thm:fol-validity-enumerable} says it is recursively enumerable.
+Those first-order conclusions neither give a finite-model result nor one of the
+modal complexity classes above.

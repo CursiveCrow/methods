@@ -1,0 +1,254 @@
+\section{A decidable axiom presentation and numerical checker for \(\PA\)}
+\label{sec:p05-standard-pa-checker}
+
+The c.e.-theory construction uses an arbitrary fixed domain index and
+accepting histories.  For \(\PA\) we now specify a separate direct
+axiom-checking convention. This section gives the numerical construction;
+\cref{def:p05-selected-direct-pa-graph} supplies its arithmetic formula,
+followed by the internal derivability proofs. Its numerical proofs are in
+\cref{annex:p5.direct-pa-axioms,annex:p5.standard-pa-checker}.
+
+Use exactly the arithmetic tree codes, deterministic capture-avoiding
+substitution and twenty-rule annotated \(\mathsf{ND}_{\mathsf{FOL}}\) checker of
+\cref{sec:arithmetic-coding-04}.  Expand numerals, infix notation,
+comparisons and marked bounded quantifiers before choosing a matrix code.
+Write \(v_i=N_0(i)\) and \(o=N_1()\)
+for the variable and zero-term codes.  In the seven fixed arithmetic axioms,
+write the two distinct displayed variable names \(x,y\) as \(x_0,x_1\).
+This fixes their previously schematic names for literal serialization;
+it does not turn their term instances into additional axiom leaves.
+The seven chosen axiom codes are the following exact natural-number
+constructor expressions:
+\[
+\begin{aligned}
+ q_1&=N_{11}(0,N_7(N_5(N_2(v_0),o))),\\
+ q_2&=N_{11}(0,N_{11}(1,
+       N_{10}(N_5(N_2(v_0),N_2(v_1)),N_5(v_0,v_1)))),\\
+ q_3&=N_{11}(0,N_{10}(N_7(N_5(v_0,o)),
+                         N_{12}(1,N_5(v_0,N_2(v_1))))),\\
+ q_4&=N_{11}(0,N_5(N_3(v_0,o),v_0)),\\
+ q_5&=N_{11}(0,N_{11}(1,
+       N_5(N_3(v_0,N_2(v_1)),N_2(N_3(v_0,v_1))))),\\
+ q_6&=N_{11}(0,N_5(N_4(v_0,o),o)),\\
+ q_7&=N_{11}(0,N_{11}(1,
+       N_5(N_4(v_0,N_2(v_1)),N_3(N_4(v_0,v_1),v_0)))).
+\end{aligned}
+\]
+They code, in order, the universal closures of
+\(Sx_0\ne0\), \(Sx_0=Sx_1\to x_0=x_1\),
+\(x_0\ne0\to\exists x_1(x_0=Sx_1)\), \(x_0+0=x_0\),
+\(x_0+Sx_1=S(x_0+x_1)\), \(x_0\times0=0\), and
+\(x_0\times Sx_1=(x_0\times x_1)+x_0\).
+The sign \(\ne\) in this explanatory list is expanded as negated equality
+in the codes.  The seven constants are not prime-power encodings.
+
+\begin{hbdefinition}{def:p05-canonical-induction-code}{Canonical closure and induction-axiom codes}
+For a formula code \(m\), let \(F(m)\) be the list of its distinct free
+variable indices in increasing numerical order.  Obtain it by scanning
+\(j<m\), retaining \(j\) exactly when it belongs to the computed
+free-variable list.  Every occurring index of a valid expression is below
+its tree code, so this scan includes every free variable.  Put \(F(m)=0\)
+when \(m\) is not a formula code.
+
+For a raw list \(P=[j_0,\ldots,j_{r-1}]\) and formula code \(c\), set
+\[
+ U(P,c)=N_{11}(j_0,N_{11}(j_1,\ldots N_{11}(j_{r-1},c)\ldots)),
+ \qquad U(0,c)=c.
+\]
+Compute this by reversing \(P\), then wrapping once for each entry.
+It is defined on arbitrary numerical inputs by the same list recursion;
+uses as a formula constructor include a formula type test on \(c\).
+Thus increasing indices appear from the outside inward.  The canonical
+universal closure of a formula code \(c\) is \(U(F(c),c)\).
+
+Let \(\mathsf{sub}(m,i,t)\) be the already specified substitution code
+for replacing free \(x_i\) by the term coded by \(t\).  For a formula
+code \(m\) and any \(i\in\N\), define
+\[
+\begin{aligned}
+ b(m,i)&=\mathsf{sub}(m,i,o),\\
+ s(m,i)&=\mathsf{sub}(m,i,N_2(v_i)),\\
+ J(m,i)&=N_{10}\bigl(
+    N_8(b(m,i),N_{11}(i,N_{10}(m,s(m,i)))),N_{11}(i,m)\bigr),\\
+ \mathsf{IndAx}(m,i)&=U(F(m)\setminus[i],J(m,i)).
+\end{aligned}
+\]
+Here \(F(m)\setminus[i]\) means filtering out the entry equal to \(i\),
+preserving the list order.  If \(m\) is not a formula code, set
+\(\mathsf{IndAx}(m,i)=0\).  The constructor permits \(x_i\) to be absent
+freely from the matrix, and permits any bound-variable shadowing already
+present there.  It uses the book's exact substitution, not textual replacement
+of bound occurrences and not an alpha-equivalence class.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p05-direct-pa-axioms}{Direct \(\PA\) axiom recognizer}
+The numerical predicate \(\mathsf{Ax}^{\rm d}_{\PA}(a)\) holds exactly
+when the following complete decision procedure returns one.
+\begin{enumerate}
+\item Reject unless \(a\) is a sentence code.  Accept if
+      \(a=q_j\) for one of \(j=1,\ldots,7\).
+\item Starting with \(a\), strip its maximal leading sequence of universal
+      quantifiers, recording their indices in their outside-in order \(P\).
+      The residual code is \(c\).  Each stripped matrix is a proper child;
+      at most \(a\) stripping updates suffice.  After the first nonuniversal
+      constructor, make the state fixed for all remaining updates.
+\item Require \(c=N_{10}(d,N_{11}(i,m))\).  Require
+      \(d=N_8(b,N_{11}(i',N_{10}(m',s)))\), with all displayed constructor
+      arities exact.  Reject unless \(i'=i\), \(m'=m\), and \(m\)
+      is a formula code.
+\item Compute \(\mathsf{IndAx}(m,i)\) by the preceding definition.
+      Accept exactly when it equals \(a\) literally.  Equivalently, check
+      \(b=b(m,i)\), \(s=s(m,i)\), and
+      \(P=F(m)\setminus[i]\), with literal equality of the listed data.
+\end{enumerate}
+Every unaccepted input has value zero.  The definition applies no additional
+alpha-equivalence, logical-equivalence, term-instance or theoremhood closure.
+An alpha-equivalent formula is accepted only if it independently has one
+of the displayed literal forms.  Let \(\PA^{\rm d}\) be the set of
+sentences whose codes this predicate accepts.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p05-direct-pa-axioms}{proved=annex:p5.direct-pa-axioms}{Exactness of the direct axiom presentation}
+The functions and predicate just defined are primitive recursive.  The
+accepted codes are exactly
+\[
+  \{q_1,\ldots,q_7\}\cup
+ \{\mathsf{IndAx}(m,i):m\text{ is a formula code},\ i\in\N\}.
+\]
+They are codes of sentences.  For every arithmetic formula \(\sigma\),
+\[
+ \PA^{\rm d}\derives_{\mathsf{ND}_{\mathsf{FOL}}}\sigma
+       \quad\Longleftrightarrow\quad
+ \PA\derives_{\mathsf{ND}_{\mathsf{FOL}}}\sigma,
+\]
+where the seven fixed arithmetic axioms use the literal representatives
+just declared, and the source induction scheme permits its displayed
+parameter closures.  The equivalence includes any order of the free
+parameters in those closures.  Any extra vacuous parameter binders, when
+used as a source presentation variant, are transported explicitly as well.
+\end{hbtheorem}
+\Cref{annex:p5.direct-pa-axioms} proves the substitution identities,
+recognition bounds and both source-presentation transports.
+
+The source's free parameter order is a closing convention, not a new
+induction principle.  The annex gives actual \(\forall E\) and
+\(\forall I\) derivations in both directions, then verifies their insertion
+into larger derivations.  In particular it checks the all-occurrence
+freshness condition of \(\exists E\); closedness alone would not justify
+that insertion.
+
+Examples of rejected induction shapes are: a missing base conjunct; a
+different step/conclusion binder; a mismatched copy of the matrix; substitution
+that changes an occurrence beneath its own induction-variable binder; a
+parameter prefix that is not strictly increasing; and an additional vacuous
+prefix binder.
+Reordering the two required parameter binders can therefore produce a
+derivable sentence that fails the literal axiom test.  Such a derivation
+uses the actual ND rules rather than another axiom-recognition convention.
+
+\begin{hbexample}{def:p05-induction-shadowing-example}{Parameters and shadowing in induction recognition}
+Let \(\theta\) be \(x_0+x_2=x_5\) and let the induction index be zero.
+Its induction core is
+\[
+ \bigl(0+x_2=x_5\land
+  \forall x_0((x_0+x_2=x_5)\to(Sx_0+x_2=x_5))\bigr)
+        \to\forall x_0(x_0+x_2=x_5).
+\]
+The canonical axiom prefixes this core by \(\forall x_2\forall x_5\).
+The reversed prefix \(\forall x_5\forall x_2\) is rejected by the
+literal recognizer.  From the accepted axiom, instantiate first with
+\(x_2\), then with \(x_5\), to obtain the core; generalize first
+\(x_2\), then \(x_5\), to derive exactly that reversed closure.
+The sole open axiom is a sentence throughout these four inferences.
+
+For the matrix \(\theta=\forall x_0(x_0=x_2)\) and induction index
+zero, both computed substitution instances equal \(\theta\) literally:
+substitution stops at its outer binder.  The canonical parameter prefix
+still binds \(x_2\), and the induction constructor is valid despite
+the absence of a free \(x_0\).  A proposed step that replaces the bound
+\(x_0\) inside this matrix by \(Sx_0\) fails the exact comparison.
+Thus neither a free-occurrence requirement nor replacement of bound
+occurrences belongs to the schema being recognized.
+\end{hbexample}
+
+\begin{hbdefinition}{def:p05-standard-pa-numerical-proof}{Standard direct numerical \(\PA\) proof codes}
+A code in this new proof sort has the form \(N_{19}(d,0)\), where
+\(d=N_{15}(R)\).  Tag \(19\) is a new outer record tag; it is distinct
+from the c.e.-certificate outer tag \(16\).  The field zero is the empty
+certificate field.  It does not stand for an unverified accepting history.
+
+Define \(\mathsf{StdProof}_{\PA}(p,x)\) by this exact numerical procedure.
+\begin{enumerate}
+\item Require outer tag \(19\) with exactly two arguments, the second zero;
+      require the first argument to have tag \(15\) with exactly one argument
+      \(R\), and require \(n=\ell(R)>0\).
+\item Apply the complete twenty-rule derivation procedure of
+      \cref{sec:arithmetic-coding-04} to \(R\), in increasing row order.
+      Each row has exactly \([r,a,J,U,l]\); rule tags are precisely
+      \(0,\ldots,19\), with their exact premise arities, parameter lists,
+      formula/term tests, nonassumption marker zero, and earlier references.
+      Compute each open-occurrence list \(O_j\) by the stated branch-specific,
+      formula-specific, nonvacuous discharge filters.  Apply the stated free-
+      versus all-variable tests and the exact substitution/alpha tests.
+\item Require every nonlast row to have exactly one parent occurrence and
+      the last row none.  Require a sentence at the last row and literal
+      equality of its code with \(x\).
+\item For every leaf index in \(O_{n-1}\), apply
+      \(\mathsf{Ax}^{\rm d}_{\PA}\) to its row formula and require value one.
+      Temporary assumptions absent from this final open list need no axiom
+      test.  An empty open list passes this step.
+\end{enumerate}
+The relation holds exactly when all these checks pass; its characteristic
+function returns one in that case and zero otherwise.
+There is no Comp call and no implicit replacement of a noncanonical axiom
+by a theorem at a leaf.  All twenty inference-rule tests themselves are
+unchanged, including body-order implication elimination and premise-free
+identity introduction.
+\end{hbdefinition}
+
+\begin{hbexample}{def:p05-direct-pa-proof-examples}{Axiom and empty-context direct proofs}
+For each \(q_j\), the one-row derivation record
+\(d_j=N_{15}([[0,q_j,0,0,0]])\) is an assumption with one open leaf.
+The direct code \(N_{19}(d_j,0)\) proves that arithmetic axiom: the leaf
+passes the fixed-constant axiom test, and no computation certificate is needed.
+
+Put \(e=N_5(o,o)\).  The one-row record
+\(d_{=}=N_{15}([[18,e,0,[o],0]])\) is the premise-free \(=I\) proof
+of \(0=0\).  Its open list is empty, and \(N_{19}(d_{=},0)\) passes
+the direct checker with root code \(e\).  Replacing the empty outer
+field in either example by a nonempty list makes the direct code fail.
+The empty-context example does not test membership of \(0=0\) in the
+nonlogical axiom set.
+\end{hbexample}
+
+\begin{hbtheorem}{thm:p05-standard-pa-numerical-proof}{proved=annex:p5.standard-pa-checker}{Numerical standard \(\PA\) proof meaning}
+The relation \(\mathsf{StdProof}_{\PA}\subseteq\N^2\) is primitive
+recursive, and for every arithmetic sentence \(\sigma\),
+\[
+ \PA\derives\sigma
+   \quad\Longleftrightarrow\quad
+ \exists p\in\N\,\mathsf{StdProof}_{\PA}
+                         (p,\ulcorner\sigma\urcorner).
+\]
+For any fixed c.e. domain-index convention for the source \(\PA\) axioms,
+the right-hand side is also equivalent to existence of a certified
+\(\mathsf{Proof}_{\PA}\) code from
+\cref{def:fixed-proof-predicate}.  This is an equivalence of proof existence;
+the two predicates and their code sorts are distinct.
+\end{hbtheorem}
+\Cref{annex:p5.standard-pa-checker} proves axiom recognition, source-presentation
+transport, the primitive-recursion bounds, and both proof-meaning directions.
+It also specifies the bridge to the separate c.e.-certificate convention.
+
+\paragraph{The arithmetic formula and its internal verification.}
+The numerical checker supplies the procedure whose fixed description is
+expanded in \cref{def:p05-selected-direct-pa-graph}, using the graph
+construction of \cref{def:p05-pa-pr-graph}. Its exact formula is
+\(\mathsf{Prf}^{19}_{\PA}\), with existential closure
+\(\mathsf{Prv}^{19}_{\PA}\).
+The internal proof-combining theorem is
+\cref{thm:p05-direct-pa-internal-mp}; the full original-sentence
+evidence construction is \cref{thm:p05-original-sigma-evidence}, and
+\cref{thm:p05-direct-pa-d3} proves positive introspection for that
+same predicate. These later verifications supply the internal results
+in addition to the numerical proof-meaning theorem above.

@@ -1,0 +1,1244 @@
+% Working proof-authoring fragment, not an adopted handbook input.
+% Owner: lambda_hol_metatheory_author; 2026-10-02.
+% Exact source: Barendregt--Geuvers 2001, Figure 2 and §§3.2--3.4.
+% No new calculus rules are introduced here. Paragraph names are working IDs.
+
+\section*{Working construction: the exact three-sort lambdaHOL metatheory}
+
+This fragment treats only the beta-only Figure~2 system. Its sorts are
+\(\mathrm{Prop},\mathrm{Type},\mathrm{Type}'\), its axioms are
+\(\mathrm{Prop}:\mathrm{Type}\), \(\mathrm{Type}:\mathrm{Type}'\),
+and its product triples are exactly
+\((\mathrm{Type},\mathrm{Type},\mathrm{Type})\),
+\((\mathrm{Prop},\mathrm{Prop},\mathrm{Prop})\), and
+\((\mathrm{Type},\mathrm{Prop},\mathrm{Prop})\).
+There are no definitions, delta contractions, recursors, or equality
+reflection. These constructions do not assert a result for an arbitrary
+PTS or for the informal beta/iota/delta regime of source section~2.
+The raw annotated pseudo-term confluence and entire-context substitution
+proofs are separately supplied by the source author; they are used, not
+reproved below. None of W1--W7 assumes normalization or checker completeness.
+
+\paragraph{W1. Valid contexts, projection, and thinning.}
+Define a valid context inductively: the empty context is valid; a fresh
+extension \(\Gamma,x:A\) is valid when \(\Gamma\) is valid and
+\(\Gamma\vdash A:s\) for a source sort \(s\). Every context in a
+source derivation is valid. This follows by induction on that derivation:
+the sort cases have empty context; variable and weakening exhibit the
+annotation certificate; product and abstraction inherit their base
+context from a premise; application and conversion inherit their common
+context. Conversely every valid context admits
+\(\Gamma\vdash\mathrm{Prop}:\mathrm{Type}\): start from the axiom and
+weaken through its annotation certificates. Thus this explicit validity
+is equivalent to the source's occurrence-in-a-judgment definition.
+
+If \(x:A\) occurs in a valid context, the variable rule types \(x:A\)
+at its own prefix and successive weakenings carry that judgment through
+the suffix. This proves projection without a new primitive rule.
+If \(\Gamma\) and \(\Delta\) are valid, every declaration of
+\(\Gamma\) occurs literally in \(\Delta\), and
+\(\Gamma\vdash M:A\), then \(\Delta\vdash M:A\).
+Induct on the displayed derivation. For a sort, weaken its empty-context
+axiom through \(\Delta\). For a variable, use the projection just proved.
+A weakening case uses the induction hypothesis on its subject premise;
+its formerly added declaration is already present in \(\Delta\).
+Product and abstraction use the induction hypotheses on their premises,
+renaming the bound variable fresh for \(\Delta\); the new annotation
+judgment makes \(\Delta,x:B\) valid, so the body induction applies
+there. Application combines the two induction judgments. Conversion
+combines its subject and well-typed result-type induction judgments and
+the unchanged raw beta equality. This covers all Figure~2 rules.
+In particular this thinning proof does not infer strengthening by
+substituting a possibly nonexistent inhabitant.
+
+\paragraph{W2. Generation and product injectivity.}
+For every source judgment, generation has the following exact content.
+For a variable \(x:T\) in the context, any type of \(x\) is
+beta-equal to \(T\). Any type of \(\mathrm{Prop}\) is beta-equal to
+\(\mathrm{Type}\); any type of \(\mathrm{Type}\) is beta-equal to
+\(\mathrm{Type}'\); no judgment has subject \(\mathrm{Type}'\).
+For a product \(\Pi x:B.C\), there are premises
+\(\Gamma\vdash B:s_1\),
+\(\Gamma,x:B\vdash C:s_2\), an allowed pair, and its conclusion type
+is beta-equal to \(s_2\). For an abstraction \(\lambda x:B.P\),
+there is a \(C\) with \(\Gamma,x:B\vdash P:C\),
+\(\Gamma\vdash\Pi x:B.C:s\), and conclusion type beta-equal to
+\(\Pi x:B.C\). For an application \(PQ\), there are
+\(\Gamma\vdash P:\Pi x:B.C\), \(\Gamma\vdash Q:B\), and its
+conclusion type is beta-equal to \(C[Q/x]\).
+The displayed constructor judgment at this generated type is itself
+derivable in \(\Gamma\).
+
+Prove these statements by induction on the typing derivation. Its
+constructor rule supplies the witnesses. A final conversion composes
+the generated type equality with its own equality. A final weakening
+carries every generated premise into the enlarged valid context by W1,
+including the fresh binder extension, and leaves the equalities intact.
+No other rule has the selected subject constructor. These are all cases.
+
+Raw beta confluence gives product injectivity without normalization.
+If \(\Pi x:B.C=_\beta\Pi x:D.E\), choose a common reduct.
+A product has no root beta contraction, and every reduct still has
+the product constructor with a reduced domain and body. After choosing
+the same fresh binder, the common reduct therefore identifies common
+reducts of \(B,D\) and of \(C,E\). Hence
+\(B=_\beta D\), \(C=_\beta E\). Distinct sorts are not beta-equal,
+and a product is not beta-equal to a sort, by the same argument.
+
+\paragraph{W3. Type correctness.}
+If \(\Gamma\vdash M:A\), then either \(A\) is a sort or
+\(\Gamma\vdash A:s\) for a sort \(s\).
+Induct on the derivation. Sort and product conclusions have sort types.
+Variable supplies the annotation's sort judgment, carried to its
+extended context by weakening. Weakening carries the type-correctness
+judgment from its subject premise; abstraction supplies the product's
+sort judgment; conversion supplies the new type's sort judgment.
+For application, apply the induction hypothesis to its function premise.
+Its literal product type is not a sort, so it is well typed at some sort.
+W2 applied to that product yields its domain and codomain sort premises;
+the codomain sort is the product's sort, since sorts do not beta-convert.
+The separately supplied substitution theorem, with the actual argument
+premise, yields \(\Gamma\vdash C[Q/x]:s_2\). This proves the remaining
+case. No subject-reduction hypothesis entered W3.
+
+\paragraph{W4. Context conversion.}
+Suppose \(\Gamma,x:B,\Theta\) is valid,
+\(\Gamma\vdash B':s'\), and \(B=_\beta B'\).
+Every judgment in the old context is derivable in
+\(\Gamma,x:B',\Theta\), with its subject, type, and later raw
+annotations unchanged. The new context is valid.
+Use induction on the source derivation, split at the selected declaration.
+Premises before \(x\) are unchanged, by the free-variable discipline
+already established in the supplied substitution proof. At the selected
+variable case derive \(x:B'\), then convert to \(x:B\): the original
+validity certificate \(\Gamma\vdash B:s\) is available in the new
+extension by weakening. At a later variable or weakening step transform
+its annotation judgment first, making the new prefix valid, then apply
+the same variable or weakening rule. Product and abstraction transform
+the base and fresh extended premises and keep the same sort pair;
+application transforms both premises; conversion transforms its subject
+and result-type premises and keeps its raw equality. A sort case before
+the selected declaration is unchanged. These cases also construct all
+later annotation certificates, proving new-context validity. Reversing
+the roles of \(B,B'\) proves the reverse transport when both are typed
+in the prefix. This does not require subject reduction.
+
+\paragraph{W5. Stratification and the complete source disambiguation.}
+Choose disjoint variable classes \(V_D,V_L,V_P\). Domain expressions and
+object expressions are the following auxiliary syntactic classes:
+\[
+ D ::= \mathrm{Prop}\mid a\ (a\in V_D)\mid D\to D,
+\]
+\[
+ O ::= x\ (x\in V_L)\mid\lambda x:D.O\mid OO
+       \mid\Pi x:D.O\mid\Pi z:O.O,
+\]
+where object binders belong to \(V_L\), proof binders to \(V_P\), and
+the last object's codomain contains no occurrence of its proof binder.
+The notation \(D\to E\) is its actual source product with a fresh,
+unused binder; it is not an additional constructor. This broad object
+grammar is not a typing claim: only source-typed members will be used.
+In particular its product clauses need not be well typed without the
+source formation premises.
+
+Every \(D\) is beta normal. Every beta reduct of an \(O\) is again an
+\(O\), including reduction in annotations. To prove the latter, first
+prove structurally that substituting an object for an object variable
+preserves \(O\): domain annotations contain no object variables;
+fresh binders permit induction on bodies; a proof binder has no occurrence
+in an object body. A root object beta redex thus has an object contractum,
+and compatible subterm contraction preserves the grammar. The classes
+\(D,O,\{\mathrm{Type}\},\{\mathrm{Type}'\}\) are pairwise disjoint:
+the variable classes differ; products in \(D\) end recursively in a
+domain atom, whereas products in \(O\) have an object body; abstractions
+and applications occur only in \(O\); the remaining sorts are neither.
+Consequently no members of different such classes are beta-equal, by
+their reduction closure and raw confluence. Beta-equal domain expressions
+are literally equal up to their irrelevant binder names.
+
+For each valid source context, assign its variables incrementally to the
+three classes by its annotation certificates. Every source derivation
+then has exactly one of these four forms:
+\begin{enumerate}
+\item \(\Gamma\vdash\mathrm{Type}:\mathrm{Type}'\);
+\item \(\Gamma\vdash D:\mathrm{Type}\), with \(D\) in the domain grammar;
+\item \(\Gamma\vdash O:D\), with \(D\) in the domain grammar and
+      \(\Gamma\vdash D:\mathrm{Type}\);
+\item \(\Gamma\vdash p:F\), with \(F\) in the object grammar and
+      \(\Gamma\vdash F:\mathrm{Prop}\).
+\end{enumerate}
+Here a declaration is respectively a domain declaration \(a:\mathrm{Type}\),
+an object declaration \(x:D\), or a proof declaration \(z:F\).
+The third case includes formulas themselves, at the domain
+\(D=\mathrm{Prop}\). The fourth case imposes no new grammar on the
+proof subject; its stated formula typing is carried as part of the invariant.
+
+Prove context classification and this four-case invariant simultaneously
+by induction on annotation certificates and typing derivations. The sort
+axioms give cases two and one. In a variable rule, the annotation premise
+at a sort can be only case one (annotation Type), case two (annotation
+domain), or case three at domain Prop (annotation formula); the new
+variable consequently has its prescribed domain/object/proof class.
+Weakening assigns that class and retains the invariant for its subject.
+For product formation with result sort Type both domain and codomain
+are domain expressions. Its binder is an object variable and so cannot
+occur in its domain-grammar codomain; this is a nondependent domain arrow.
+With result sort Prop, the codomain is an object expression at domain
+Prop. A Type-sorted annotation makes an object binder and gives
+\(\Pi x:D.F\); a Prop-sorted annotation makes a proof binder, which
+cannot occur in the object codomain, and gives \(\Pi z:F.G\).
+Thus both admitted cases are in the object grammar at domain Prop.
+
+For abstraction, its well-formed product premise has one of precisely
+these product forms. A domain-arrow type requires a domain annotation
+and object body, so the resulting lambda belongs to the object grammar.
+A propositional-product type gives case four, and that product's
+Prop typing is already its premise. For application with a domain-arrow
+function type, the domain and codomain are rigid domain expressions;
+function and argument are objects and the application is an object at
+the unchanged, nondependent codomain. With a propositional function type,
+W2 gives a Prop-sorted object codomain. An object argument substitutes an
+object for an object variable, preserving that grammar. A proof argument
+substitutes for a variable absent from the object codomain, leaving it
+unchanged. The supplied substitution theorem gives the resulting formula's
+Prop judgment, establishing case four. These cases exhaust applications.
+
+For conversion, its well-typed target at a sort is either Type, a domain,
+or an object formula, by the induction hypothesis. Its old type belongs
+to one of the four separated type classes. Raw confluence therefore
+forces the same class. A domain target and old domain are identical,
+so the object invariant persists. Formula conversion retains case four
+with the new target's explicit Prop judgment. Conversion to Type retains
+case two; conversion from the exceptional Type' result is impossible,
+since no well-typed target belongs to that class. This is the step that
+rules out spurious syntax allowed by arbitrary untyped beta expansions;
+neither a normalization theorem nor untyped expansion closure is used.
+
+The induction proves more than free-variable absence: domain-expression
+judgments reconstruct in the domain subcontext alone, and object judgments
+reconstruct in its domain-and-object subcontext, in their original relative
+order. For domains use their structural formation: a domain atom has its
+axiom/projection, and a domain arrow uses Type/Type with a weakened codomain.
+For objects use the same induction cases above. Object projection retains
+its object declaration. Object abstraction and application retain just
+their object premises. A universal-product clause retains the object
+binder and its two premises. An implication-product clause first reconstructs
+its two object formulas without the proof binder, then weakens the
+codomain by that binder solely to apply the source Prop/Prop formation
+rule. An object conversion has identical rigid domain types and can be
+omitted. Every ambient proof weakening is omitted; domain/object weakening
+is retained. This supplies actual smaller-context derivations rather
+than appealing to a general unproved strengthening principle.
+
+Now form \(\Gamma_D\) from all domain declarations, then
+\(\Gamma_L\) from all object declarations, then \(\Gamma_P\) from all
+proof declarations, keeping relative order within each. Domain declarations
+have the constant annotation Type, so their reordered context is valid.
+Every object annotation is a domain formed in \(\Gamma_D\); therefore
+\(\Gamma_D,\Gamma_L\) is valid. Every proof annotation is a formula
+reconstructed in the old domain/object subcontext; W1 carries it into
+\(\Gamma_D,\Gamma_L\), so \(\Gamma_P\) can be appended. The permutation
+is valid and has exactly the old declarations, hence W1 carries every
+old judgment to it. All assertions of source Lemma~3.11 follow:
+domains are simple arrows formed in \(\Gamma_D\); objects need no proof
+declarations; a Prop/Prop product's body does not contain its proof binder.
+In particular Type/Type dependence is impossible as well.
+
+\paragraph{W6. Uniqueness of types.}
+For the exact source system, \(\Gamma\vdash M:A\) and
+\(\Gamma\vdash M:B\) imply \(A=_\beta B\).
+Induct structurally on the common subject \(M\), using W2 to remove
+terminal weakening/conversion in both derivations. Variable and sort
+types are fixed by their declaration or single axiom. A product's two
+codomain sort premises type the same smaller body in the same literal
+extended context; the induction hypothesis makes these sorts beta-equal
+and hence equal. Their product result sorts are therefore equal.
+For an abstraction the annotation is the same syntactic domain in both
+derivations. The body induction gives equality of the two body types;
+compatible products give equality of the generated abstraction types.
+For an application the function induction gives equality of its two
+generated product types. W2's product injectivity gives beta equality of
+their domains and bodies (with the same fresh binder). Substitution of
+the common argument preserves beta equality, so the result types are
+equal. Finally compose with the two generated outer type equalities.
+These are every possible subject constructor. The proof needs only
+generation, raw confluence, and the exact functional sort/product rules;
+it assumes neither subject reduction nor checker uniqueness.
+
+\paragraph{W7. Subject reduction, including annotation contraction.}
+If \(\Gamma\vdash M:T\) and \(M\longrightarrow_\beta M'\), then
+\(\Gamma\vdash M':T\). Induct structurally on \(M\), with the induction
+statement quantified over every typing derivation and valid context for
+that smaller subject. This avoids treating generated witnesses as if
+they necessarily had smaller derivation heights. W2 yields a constructor
+judgment at generated type \(T_0=_\beta T\).
+If the subject reduces, W5 excludes its rigid domain and sort cases;
+it is an object or proof, whose type \(T\) has a sort by W3 and W5.
+Thus once the reduced constructor has type \(T_0\), conversion to
+the original \(T\) is licensed. The following are the constructor cases.
+
+For \(M=\Pi x:A.B\), a domain-annotation contraction gives
+\(\Gamma\vdash A':s_1\) by the smaller-subject induction on \(A\).
+W4 carries \(B:s_2\) to \(\Gamma,x:A'\), and the same allowed pair
+rebuilds the product at \(s_2\). A body contraction uses the induction
+on \(B\) under the old extension and rebuilds the same product.
+For \(M=\lambda x:A.P\), W2 applied also to its well-formed product
+gives \(A:s_1\), \(B:s_2\). A body contraction uses the induction
+on \(P:B\). An annotation contraction uses the induction on
+\(A:s_1\), then W4 to carry both \(P:B\) and \(B:s_2\) to the
+new binder context. Product formation and abstraction give the new
+lambda type \(\Pi x:A'.B\), beta-equal to the old generated type.
+The original product type is well formed, so conversion restores it
+before any outer conversion. This explicitly preserves typed annotations.
+
+For \(M=PQ\), a contraction in either proper child uses its
+smaller-subject induction with the generated product or domain type,
+then the same application rule. At a root redex
+\((\lambda x:A.P)Q\), generation of the function judgment yields
+\(\Gamma,x:A\vdash P:B\), a well-formed product
+\(\Pi x:A.B\), and its equality to the application's product
+\(\Pi x:C.E\). Product injectivity gives \(A=_\beta C\),
+\(B=_\beta E\). Its formation gives \(\Gamma\vdash A:s_1\),
+so convert the actual argument \(Q:C\) to \(Q:A\). Substitution
+gives \(\Gamma\vdash P[Q/x]:B[Q/x]\). The generated application
+type \(E[Q/x]\) has a sort by the carried typing invariants in W5:
+a domain is formed at Type, and an object formula is typed at Prop.
+This also covers the literal domain Prop, for which W3's weaker
+``type is a sort'' alternative alone would not supply the sort judgment.
+Substitution preserves \(B=_\beta E\), so convert to
+\(E[Q/x]\), then to \(T\). Sorts and variables have no contraction.
+These cases cover beta at every source-compatible position.
+Induction on a finite path yields multi-step subject reduction.
+
+\paragraph{W8. A valid normalization bridge, not the printed inverse.}
+Let the target be precisely source CC:
+sorts \(\ast,\Box\), axiom \(\ast:\Box\), and all four product
+pairs \((\ast,\ast),(\ast,\Box),(\Box,\ast),(\Box,\Box)\).
+Define a homomorphism \(h\) on raw pseudo terms by
+\(h(\mathrm{Prop})=h(\mathrm{Type})=\ast\),
+\(h(\mathrm{Type}')=\Box\), fixing variables and the product,
+abstraction, and application constructors. It commutes with substitution
+by structural induction and preserves each designated beta contraction,
+including contractions in annotations. It is not a PTS morphism:
+the source axiom Prop:Type would homomorphically become the false
+target axiom \(\ast:\ast\).
+
+For a domain expression \(D\), define \(\sigma(D)=\ast\) when its
+rightmost atom is a declared domain variable and \(\sigma(D)=\Box\)
+when that atom is Prop. Equivalently, \(\sigma(a)=\ast\),
+\(\sigma(\mathrm{Prop})=\Box\), and
+\(\sigma(D\to E)=\sigma(E)\).
+Map source contexts homomorphically on annotations; in particular
+\(a:\mathrm{Type}\) becomes \(a:\ast\). Map their classified
+judgments as follows:
+\[
+\begin{array}{rcl}
+ \Gamma\vdash\mathrm{Type}:\mathrm{Type}'
+   &\mapsto& h\Gamma\vdash\ast:\Box,\\
+ \Gamma\vdash D:\mathrm{Type}
+   &\mapsto& h\Gamma\vdash hD:\sigma(D),\\
+ \Gamma\vdash O:D
+   &\mapsto& h\Gamma\vdash hO:hD,\\
+ \Gamma\vdash p:F
+   &\mapsto& h\Gamma\vdash hp:hF.
+\end{array}
+\]
+The result-sort override is part of this typed judgment map; it is not
+an assumption that the homomorphic sort image types every image term.
+
+Prove valid target contexts and these judgment translations simultaneously
+by induction on the W5-classified source derivations. Both source sort
+axioms become the target axiom \(\ast:\Box\). A domain declaration
+becomes a type variable licensed by that axiom. An object declaration
+is licensed by \(hD:\sigma(D)\); a proof declaration is licensed
+by \(hF:\ast\). Variable and weakening consequently work at the
+translated sorts. A source domain product becomes a target product with
+domain sort \(\sigma(D)\), codomain sort \(\sigma(E)\), and result
+sort \(\sigma(E)\). All four possibilities are admitted by exact CC.
+A formula product has target codomain sort \(\ast\); its domain
+sort is \(\sigma(D)\) for a data annotation, or \(\ast\) for a
+formula annotation. The corresponding \((\ast,\ast)\) or
+\((\Box,\ast)\) pair is admitted. Abstraction uses the translated
+body and exactly this translated well-formed product. Application uses
+the translated product and argument; substitution commutation identifies
+the target result with the mapped source result.
+
+In a source conversion of an object/proof type, the target type has its
+translated sort judgment and the raw beta equality maps by \(h\), so
+target conversion is legal. A source conversion in a domain judgment
+retains the literal result Type by W5's separation, and the source domain
+is unchanged; its already translated \(hD:\sigma(D)\) is retained
+without an invalid attempted conversion to \(\ast\). The exceptional
+top-result judgment has no conversion case, again by W5. These are all
+rules, establishing transport on every actual Figure~2 derivation.
+
+For example, with \(a:\mathrm{Type}\), the source domain
+\((a\to\mathrm{Prop})\to a\) maps to
+\((a\to\ast)\to a:\ast\). Its domain has target sort \(\Box\)
+and its codomain has target sort \(\ast\), using exactly the CC pair
+\((\Box,\ast,\ast)\). This is the mixed case missed by the printed
+PRED-omega inverse described next.
+
+It follows that strong normalization of this exact CC, if separately
+supplied for its full compatible annotated beta reduction, entails strong
+normalization of the exact source lambdaHOL. Indeed a hypothetical
+infinite source path starts with a source-typed term (or source-typed
+type); the translated starting subject is CC typed by the construction,
+and every contraction maps to one contraction at the same position.
+Thus it gives an infinite target contraction path, contrary to that
+theorem. A source top sort appearing only as a type maps to \(\Box\)
+and is already a beta-normal atom. Identifying two sort symbols erases
+no lambda/application redex. This proves the transfer, not the target
+CC normalization theorem itself.
+
+\paragraph{W9. Exact CC normalization construction: source and standing.}
+The following is an independently worded reconstruction of the direct
+two-interpretation argument in Geuvers's December~1994 Computing Science
+Report~94/50, sections~2--3, printed pp.~2--10. This is a separately
+identified report manifestation, not a claim of byte identity with the
+1995 LNCS publication cited by the 2001 chapter. The report's CC rules
+are exactly the two-sort Figure~3 rules required by W8. Here the
+candidate notion is the reduction-closed neutral-expansion version,
+rather than the report's key-redex saturated-set version; every closure
+property actually used is proved below. The argument uses ordinary sets
+of finite syntax, powersets and finite iterated function sets; it needs
+no inaccessible cardinal or set-theoretic model of an impredicative
+universe as its own member. No CC normalization theorem is a premise.
+
+\paragraph{W9a. CC structural prerequisites, with the untyped top case.}
+For the exact CC rules, reapply W1's validity/projection/thinning,
+W2's generation, W3's type-correctness, W4's context conversion, and
+W6's structural uniqueness inductions. Their respective rule cases use
+only the declared axiom, the actual admitted product pair, substitution,
+and raw product injectivity; replace the two lambdaHOL axioms by
+\(\ast:\Box\) and use the four exact CC pairs. In particular the
+application type-correctness case still explicitly derives its result
+type at the codomain's sort by substitution. In the uniqueness product
+case the result is again the codomain sort, so equality of the two body
+sorts gives equality of the result sorts. Nothing in these five inductions
+uses the lambdaHOL-specific domain/object grammar of W5.
+
+For precision, CC subject reduction is also supplied here rather than
+assumed from W7, whose domain argument was lambdaHOL-specific.
+Use structural induction on the subject, universally over its typings.
+For product and lambda annotation contractions, use the smaller
+annotation judgment, transport the body judgment by context conversion,
+and rebuild the same admitted product or abstraction. Body contractions
+use the smaller body judgment. In an application, proper-child contractions
+use the generated function/argument premises. At a root lambda redex,
+generation and product injectivity convert the actual argument to the
+literal lambda annotation; substitution types the contractum at the
+literal body instance; the generated application's result type is
+explicitly well typed by the application case of type correctness, so
+conversion restores it. These are the W7 construction steps, but here
+the existence of that result-type sort is supplied directly by CC type
+correctness, not by W5.
+
+Outer conversion is licensed for every original type other than
+\(\Box\): a nonsort has its sort by type correctness, and the only
+other sort \(\ast\) has type \(\Box\) by the axiom and thinning.
+For original type \(\Box\), no final conversion can have that target,
+since no judgment types \(\Box\); generation proves this absence by
+induction on the typing rules. Strip final weakenings. A variable of
+literal type \(\Box\) would require a forbidden annotation certificate;
+a lambda has a literal product type; an application of literal result
+\(\Box\) contradicts its explicitly derived result-type sort judgment.
+Thus the subject is \(\ast\), which does not reduce, or a product whose
+formation result is literally \(\Box\). Product contractions rebuild
+that same sort without an illicit conversion premise. This exhausts the
+exception and establishes full compatible CC beta subject reduction.
+Together with raw confluence it supplies typed common reducts; no
+normalization was used. Raw confluence here is the main author's
+parallel annotated-grammar proof with the sort alphabet instantiated
+to \(\{\ast,\Box\}\), and substitution is the supplied Figure~3
+whole-context theorem, not a new assumed CC normalization result.
+
+If \(\Gamma\vdash A:s\), \(\Gamma\vdash B:t\), and \(A=_\beta B\),
+with \(s,t\in\{\ast,\Box\}\), typed common reducts and uniqueness
+give \(s=_\beta t\), hence \(s=t\). This is sort discrimination.
+Also a typable subject \(\Gamma\vdash A:T\) cannot beta-convert to
+\(\Box\): since that atom is normal, confluence would make it a
+reduct, and subject reduction would type it. This excludes subjects,
+not the normal atom \(\Box\) counted as well typed merely because
+it occurs on the right of the axiom. These facts justify classification and
+semantic conversion cases below independently of normalization.
+
+\paragraph{W9b. CC classification and kind shapes.}
+Partition variable names into constructor variables \(\alpha\) and
+object variables \(x\), by the unique sort of each declaration's
+annotation, renaming binders consistently. Write \(K,C,O\) for these
+auxiliary syntax classes:
+\[
+\begin{aligned}
+ K&::=\ast\mid\Pi x:C.K\mid\Pi\alpha:K.K,\\
+ C&::=\alpha\mid\lambda x:C.C\mid\lambda\alpha:K.C
+       \mid CC\mid CO\mid\Pi x:C.C\mid\Pi\alpha:K.C,\\
+ O&::=x\mid\lambda x:C.O\mid\lambda\alpha:K.O\mid OO\mid OC.
+\end{aligned}
+\]
+These grammars classify syntax, not arbitrary untyped grammar members
+as typable. They are pairwise disjoint. For products, compare the body
+class recursively; for lambdas likewise compare the body; for applications
+compare the left child recursively; variables and the atom \(\ast\)
+separate the initial cases. Matching substitution preserves all three
+classes: a constructor substituted for a constructor variable, or an
+object for an object variable, preserves \(K,C,O\). Prove this by
+simultaneous structural induction: the selected variable is replaced
+in its own class; application combines its child classes; fresh binder
+renaming permits the annotation/body inductions in every binder case;
+the atom is unchanged.
+
+Every typed CC subject belongs to exactly the appropriate one of these
+classes: \(M:\Box\) gives \(M\in K\); \(M:A\) with
+\(A:\Box\) gives \(M\in C\); \(M:A\) with \(A:\ast\) gives
+\(M\in O\). In particular an expression of type \(\ast\) is a
+constructor, and a kind is an expression of type \(\Box\).
+Prove the classifications simultaneously by induction on derivations,
+carrying the literal class of the subject's type and the context tags.
+The axiom supplies \(\ast\in K\). An annotation at \(\Box\) is a
+kind, so its variable is a constructor; an annotation at \(\ast\)
+is a constructor type, so its variable is an object. Weakening retains
+these facts. A product with codomain sort \(\Box\) has kind body and
+is in \(K\), with annotation in \(C\) or \(K\) according to its
+domain sort. A product with codomain sort \(\ast\) has constructor
+body and is in \(C\), with exactly the analogous two annotation cases.
+For a lambda, its product-sort premise exposes the codomain sort. A
+kind codomain requires a constructor body; a type codomain requires an
+object body. This gives the two lambda-body classes in the grammar.
+
+For an application, the function induction classifies its literal
+product type. A kind product has kind body and constructor function;
+a type product has constructor body and object function. The argument
+induction gives constructor or object according to the domain's sort.
+The matching-substitution lemma makes the resulting kind/type instance
+remain in its class. The explicit substitution sort judgment supplies
+its typing. Conversion preserves the sort of every typed old/new type
+by W9a's sort discrimination. The untyped old top \(\Box\) cannot
+convert to a well-typed target, again by W9a. Thus conversion retains
+the induction class. This treats all primitive rule and sort cases,
+including the top case, without an appeal to the report's unproved
+classification citation. An expression \(\Box\) itself occurs only
+as the exceptional type, never inside a typed subject.
+
+Define a finite kind shape by
+\(\kappa(\ast)=\mathbf b\),
+\(\kappa(\Pi x:A.B)=\kappa(B)\) for an object binder, and
+\(\kappa(\Pi\alpha:A.B)=\kappa(A)\to\kappa(B)\) for a constructor
+binder. Kind syntax has no variable, lambda or application at its root;
+constructor variables occur only inside its ignored type annotations.
+Matching constructor/object substitution therefore leaves its shape
+unchanged, by structural induction. A typed kind contraction also leaves
+its shape unchanged: it cannot be a root redex; contractions in type
+annotations are ignored; contractions in kind annotation/body use their
+structural induction. The domain's type/kind tag cannot change under
+that contraction by subject reduction and sort discrimination.
+Beta-equal typed kinds consequently have identical shapes, by their
+typed common reduct. These statements require no normal form for a kind.
+
+\paragraph{W9c. Candidates and the actual beta-expansion lemma.}
+Use finite untyped lambda terms with one inert constant \(d\), ordinary
+compatible beta contraction, and \(\mathsf{SN}\) as the set having no
+infinite such path. A candidate \(R\) is a subset of this one raw-term
+set satisfying: (i) \(R\subseteq\mathsf{SN}\); (ii) it is closed
+under contraction; (iii) a neutral term whose every immediate reduct is
+in \(R\) belongs to \(R\). Here variables, \(d\), and applications
+are neutral; only a lambda is nonneutral. A redex application is neutral
+and is not exempted from (iii). Candidates exist: \(\mathsf{SN}\)
+itself satisfies these clauses, since any infinite path from a neutral
+term must start at an immediate reduct. Every candidate contains every
+variable and \(d\), since they have no reducts.
+
+For a strongly normalizing finite term \(P\), let \(\eta(P)\) be its
+greatest reduction length. This is finite: there are finitely many redex
+positions at each finite term; if arbitrarily long paths existed, at
+each finite branching one could choose a child admitting arbitrarily
+long continuations, constructing an infinite path. Reducts strictly
+lower \(\eta\). Subterms of an SN term are SN, since any subterm path
+lifts through its fixed context. An inert-headed application
+\(dP_1\cdots P_n\) is SN when all \(P_i\) are SN: every step lowers
+\(\sum_i\eta(P_i)\). A lambda is SN exactly when its body is SN.
+
+The controlled expansion lemma is: if \(F,N\in\mathsf{SN}\) and
+\(F[N/x]\in R\), then \((\lambda x.F)N\in R\).
+Induct on \(\eta(F)+\eta(N)\). Its immediate root contraction is
+the given member. A contraction in \(F\) gives \(F'\); substitution
+preserves that contraction, so \(F'[N/x]\in R\) by reduction closure,
+and the smaller induction gives \((\lambda x.F')N\in R\).
+A contraction \(N\to N'\) gives
+\(F[N/x]\to^*F[N'/x]\) by reducing its finitely many substituted
+copies, possibly zero, so reduction closure and the smaller induction
+give \((\lambda x.F)N'\in R\). These are all immediate reducts;
+neutral expansion proves the desired membership. Substitution preservation
+and the finite-copy statement follow structurally on untyped syntax,
+freshening binders, by the same capture-avoiding substitution identity
+as in the main author's substitution proof. This lemma does not assert
+arbitrary beta expansion preserves SN.
+
+Nonempty intersections of candidates are candidates, clause by clause.
+The arrow
+\(R\Rightarrow S=\{F:\forall N\in R,\ FN\in S\}\)
+is also a candidate. First choose a fresh variable in \(R\): if
+\(F\) were not SN, its path would lift into \(Fx\in S\), a
+contradiction. Reduction closure follows by lifting \(F\to F'\)
+into each application and using closure of \(S\). For neutral
+expansion, suppose every immediate reduct of neutral \(F\) belongs
+to the arrow. For \(N\in R\), induct on \(\eta(N)\).
+Every immediate reduct of \(FN\) is either \(F'N\), in \(S\)
+by the assumption, or \(FN'\), in \(S\) by closure of \(R\) and
+the smaller induction. There is no root contraction because \(F\)
+is not a lambda. Thus \(FN\in S\) by neutral expansion. This proves
+the last candidate clause and finishes arrow closure.
+
+Arrow introduction is now justified: if \(F[N/x]\in S\) for every
+\(N\in R\), then \(\lambda x.F\in R\Rightarrow S\).
+Take \(N=x\), after the usual fresh choice, to get \(F\in S\)
+and hence its SN premise; all other \(N\) are SN by membership in
+\(R\). Controlled expansion gives the required applications.
+Let \(\mathrm K=\lambda p.\lambda q.p\). Applying this introduction
+twice shows \(\mathrm K\in R\Rightarrow(\mathsf{SN}\Rightarrow R)\)
+for every candidate \(R\). Hence
+\(F\in R,\ A\in\mathsf{SN}\) implies \(\mathrm KFA\in R\).
+This is the annotation-retention lemma used below, with both premises
+proved rather than hidden inside an expansion assumption.
+
+\paragraph{W9d. Finite semantic domains and canonical inhabitants.}
+Let \(\mathcal C\) be the set of all candidates, a subset of the
+powerset of the fixed raw-term set. Interpret a finite kind shape by
+\(V(\mathbf b)=\mathcal C\) and
+\(V(k\to\ell)=V(\ell)^{V(k)}\), the ordinary function set.
+Write \(V(A)=V(\kappa(A))\) for a source kind. Each is a set by
+finite recursion, and the collection over all finite shapes is a set
+by replacement over the countable finite-shape syntax. No universe
+closure axiom is used. Each is nonempty with explicit canonical element:
+\(c_{\mathbf b}=\mathsf{SN}\), and
+\(c_{k\to\ell}\) is the constant function of value \(c_\ell\).
+Kind-shape invariance gives \(V(A[P/\alpha])=V(A[t/x])=V(A)\)
+and \(V(A)=V(B)\) for beta-equal typed kinds. These equalities do not
+say that all kind candidates are equal.
+
+A semantic constructor valuation \(\xi\) assigns to every declared
+\(\alpha:A\) an element of \(V(A)\). These domains do not depend
+on object assignments or on \(\xi\). Define a partial structural
+interpretation for constructors and kinds, and an auxiliary interpretation
+of the exceptional top, by
+\[
+\begin{aligned}
+ [\ast]_\xi&=[\Box]_\xi=\mathsf{SN},&
+ [\alpha]_\xi&=\xi(\alpha),\\
+ [PQ]_\xi&=[P]_\xi([Q]_\xi)&&\text{for a constructor argument }Q,\\
+ [Pt]_\xi&=[P]_\xi&&\text{for an object argument }t,\\
+ [\lambda\alpha:A.P]_\xi&=(a\mapsto[P]_{\xi[\alpha:=a]})
+      &&(a\in V(A)),\\
+ [\lambda x:A.P]_\xi&=[P]_\xi&&\text{for an object binder},\\
+ [\Pi x:A.B]_\xi&=[A]_\xi\Rightarrow[B]_\xi
+      &&\text{for an object binder},\\
+ [\Pi\alpha:A.B]_\xi&=[A]_\xi\Rightarrow
+           \bigcap_{a\in V(A)}[B]_{\xi[\alpha:=a]}
+      &&\text{for a constructor binder}.
+\end{aligned}
+\]
+The product codomain \(B\) is a type or kind, so its interpretation is
+a candidate, not an arbitrary semantic function. The constructor-lambda
+body \(P\) is a constructor, whose interpretation may be a function.
+These distinctions are supplied by W9b. An object does not itself have
+a set interpretation; it is only ignored when occurring as an argument
+of a constructor. Thus \([\ast]\) is a candidate, whereas its kind
+domain \(V(\ast)\) is the set of candidates; they are not identified.
+
+\paragraph{W9e. Definedness, membership, and semantic substitution.}
+For every actual typed constructor \(P:A\) with \(A:\Box\), and
+every semantic valuation of its context, this interpretation is defined
+and \([P]_\xi\in V(A)\). For every kind \(A:\Box\), its
+interpretation is a candidate. In particular every type \(T:\ast\)
+has a candidate interpretation. Prove these assertions simultaneously
+by structural induction on the classified constructor/kind syntax,
+quantified over its source typing derivations; W9a generation supplies
+the typing cases. A constructor variable has the prescribed valuation
+member. A kind atom gives the candidate SN. A constructor lambda over
+a constructor binder gives a genuine function from \(V(A)\) to
+\(V(B)\), since every extended semantic valuation is valid and the
+body induction supplies its value there; these are exactly the target
+kind shape's function sets. A constructor lambda over an object binder
+retains the body value; its target kind domain also ignores that binder.
+
+In a constructor application to a constructor, the function induction
+gives a member of \(V(A)\to V(B)\), and the argument induction
+gives its input in \(V(A)\), so the semantic application is defined
+and lies in \(V(B)\). The actual result kind has this same domain by
+kind-shape substitution. With an object argument, both the semantic
+value and the result's kind domain are unchanged. In a product with
+object binder, the two proper-subterm inductions give candidate domain
+and codomain, so arrow closure gives a candidate. With constructor
+binder, its proper kind-domain induction gives a candidate, and every
+extended valuation gives a candidate codomain. The indexing set \(V(A)\)
+is nonempty by W9d, so intersection and arrow closure give a candidate.
+For a product at sort \(\ast\), this candidate is exactly membership
+in \(V(\ast)=\mathcal C\). For a product at sort \(\Box\), it
+is the asserted kind-candidate property. Conversion of a constructor's
+kind type retains the semantic-domain membership by kind-shape equality
+from W9b; conversion does not change the recursively evaluated subject.
+A target literal \(\Box\) has no conversion case, as in W9a.
+Weakening or a changed ambient valid context changes no used assignment.
+These cases exhaust the syntax and its typing rules. This argument
+establishes the evaluator's definedness; it does not assume it when
+applying a purported undefined function.
+
+The exact substitution equalities are
+\[
+ [B[P/\alpha]]_\xi=[B]_{\xi[\alpha:=[P]_\xi]},\qquad
+ [B[t/x]]_\xi=[B]_\xi,
+\]
+for typed matching substitutions and a constructor or kind \(B\).
+Prove them by simultaneous structural induction, with fresh binders.
+A constructor variable gives its selected replacement or unchanged
+valuation; the atom is unchanged. Constructor application uses the two
+constructor substitutions and ordinary function application. An object
+argument stays an object under matching substitution and remains ignored.
+At a constructor lambda, the bound variable is fresh, its value ranges
+over the unchanged \(V(A)\) by W9d, and the body induction gives the
+same function pointwise. At an object lambda, both sides ignore the
+binder and the body induction applies. At a product the annotation and
+body inductions identify the arrow factors; for a constructor binder the
+indexing domain is unchanged and the equality holds at every index, so
+the intersections agree. Object substitution cannot introduce a new
+constructor argument or alter a variable tag; matching-substitution
+classification supplies this fact. These are all clauses.
+
+The interpretation is invariant along every typed beta contraction.
+At a constructor-binder root, its semantic function application and the
+first substitution equality give the contractum. At an object-binder
+root, both abstraction and argument were ignored, and the second equality
+gives the contractum. A kind has no root redex. Compatible steps in
+constructor children use these same identities and structural induction;
+object-only children are ignored. A step in a binder annotation keeps
+its type/kind tag by W9a, keeps the indexing domain by W9d when it is a
+kind, and keeps its candidate factor by this smaller-subterm induction.
+Consequently every binder clause is preserved, including product factors
+and constructor-lambda function domains. Typed common reducts from W9a
+then show \([A]_\xi=[B]_\xi\) for beta-equal well-typed types or
+kinds. This is why untyped conversion is sound for this evaluator; no
+normalization or untyped expansion closure of classified syntax is used.
+
+\paragraph{W9f. The annotation-retaining untyped interpretation.}
+Define \(E\) structurally on typed subjects, with \(d\) inert and
+\(\mathrm K=\lambda p.\lambda q.p\):
+\[
+\begin{aligned}
+ E(\ast)&=d,& E(v)&=v,& E(MN)&=E(M)E(N),\\
+ E(\lambda v:A.M)&=\mathrm K(\lambda v.E(M))E(A),&&&\\
+ E(\Pi v:A.B)&=dE(A)(\lambda v.E(B)).&&&
+\end{aligned}
+\]
+Top \(\Box\) need not be interpreted as a subject, since W9b shows
+it never occurs in one; for an isolated type it is already normal.
+All binders are freshened for substituted images. Structural induction
+proves \(E(M[N/v])=E(M)[E(N)/v]\): the variable/atom/application cases
+are immediate; a binder uses the annotation/body inductions and the same
+fresh name. The annotation is outside its binder in both source and
+target, which preserves the exact source binding scope.
+
+A designated root contraction is simulated by three target contractions:
+\[
+ \mathrm K(\lambda v.E(M))E(A)E(N)
+ \longrightarrow^3 E(M)[E(N)/v]=E(M[N/v]).
+\]
+For a designated contraction in an annotation or body, its positive
+induction path lifts through the actual corresponding target context.
+For a contraction in an application child it likewise lifts through
+application. The product annotation and body have both been retained
+in \(dE(A)(\lambda v.E(B))\); the lambda annotation remains present
+as an argument of K until its administrative contraction. Thus every
+source compatible contraction, at every position, has a positive finite
+target path. We do not erase an annotation first and then claim its
+reductions survive. Concatenating the positive paths from an infinite
+source path would give an infinite target path. Hence \(E(M)\in
+\mathsf{SN}\) implies full compatible source SN, including annotations.
+
+For a finite raw substitution \(\rho\) on the context variables, let
+\(E_\rho(M)=E(M)\rho\), substituting once into the original syntax.
+This definition and the preceding substitution identity give
+\(E_\rho(M[N/v])=E_{\rho[v:=E_\rho(N)]}(M)\) when the bound name
+is fresh for the other images. In particular the image of a binder
+under \(\rho\) uses its body evaluated with its own variable left
+as that variable, not recursively substituted through the inserted images.
+
+\paragraph{W9g. Fundamental lemma: every sort/product/binder case.}
+Call \((\xi,\rho)\) a realized valuation of \(\Gamma\) when
+\(\xi\) is its semantic constructor valuation and, for every
+declaration \(v:A\), \(\rho(v)\in[A]_\xi\). Every annotation is
+a type or kind, so W9e supplies this candidate. For every actual typing
+\(\Gamma\vdash M:T\) and every realized valuation,
+\[
+                         E_\rho(M)\in[T]_\xi.
+\]
+Prove this by structural induction on the subject, universally over its
+typings, using generation and semantic conversion invariance. This
+induction calls only proper annotation/body/application children, not
+possibly larger synthesized types. A generated outer conversion replaces
+\([T_0]\) by the identical \([T]\); the top case has no conversion.
+Generation removes final weakenings, or restricts the valuation to the
+used prefix. The constructor cases are as follows.
+
+For the sort \(\ast:\Box\), the image is \(d\in\mathsf{SN}
+=[\Box]\). A variable's image is its realized-valuation member of
+the declared type candidate; conversion invariance gives its final type.
+For a product \(\Pi v:A.B:s_2\), the annotation induction yields
+\(E_\rho(A)\in[s_1]=\mathsf{SN}\), for either \(s_1\).
+Extend the valuation by \(\rho(v)=v\). A fresh variable belongs to
+every candidate. If this is a constructor binder, also choose the explicit
+canonical \(c_{\kappa(A)}\in V(A)\) for \(\xi(v)\); if it is an
+object binder no semantic assignment is added. Hence the body induction
+gives \(E_{\rho[v:=v]}(B)\in[s_2]=\mathsf{SN}\), for either
+\(s_2\). Its lambda is SN. The inert-headed application
+\(dE_\rho(A)(\lambda v.E_{\rho[v:=v]}(B))\) is therefore SN,
+which is membership in the product's target sort interpretation.
+This covers all four product triples, including \((\Box,\Box,\Box)\),
+not just the type/object product cases printed in the report's abbreviated
+soundness argument.
+
+For an abstraction over an object \(x:A\), the generated body is
+\(P:B\) and its target product interpretation is
+\([A]_\xi\Rightarrow[B]_\xi\). For every \(p\in[A]_\xi\),
+the extended realized valuation gives by induction
+\(E_{\rho[x:=p]}(P)\in[B]_\xi\); object assignments do not change
+the semantic candidate of the codomain. By the E substitution identity,
+these are exactly the instances of the fresh-body term
+\(F=E_{\rho[x:=x]}(P)\). Arrow introduction from W9c gives
+\(\lambda x.F\) in the required arrow. The annotation induction
+gives \(E_\rho(A)\in\mathsf{SN}\); K retention therefore puts
+the whole image of the annotated source abstraction in that arrow.
+This holds whether \(P\) is a constructor or an object.
+
+For an abstraction over a constructor \(\alpha:A\), the target
+candidate is \([A]_\xi\Rightarrow J\), where
+\(J=\bigcap_{a\in V(A)}[B]_{\xi[\alpha:=a]}\).
+For every \(p\in[A]_\xi\) and every \(a\in V(A)\), extend both
+valuations by \(\rho(\alpha)=p\), \(\xi(\alpha)=a\).
+The body induction gives membership in the corresponding codomain
+candidate. Its raw image depends only on \(\rho\), not on \(\xi\),
+so the same term belongs to the entire intersection \(J\). It follows
+by arrow introduction and annotation K retention that the whole lambda
+image belongs to \([A]_\xi\Rightarrow J\). This argument also
+covers both object and constructor bodies and supplies the SN body
+premise using the fresh-variable instance; it never assumes the source
+lambda was already normalizing.
+
+For application with object argument \(N:A\), the generated function
+candidate is \([A]_\xi\Rightarrow[B]_\xi\). Function and argument
+inductions therefore give \(E_\rho(M)E_\rho(N)\in[B]_\xi\).
+Semantic object-substitution invariance identifies this with
+\([B[N/x]]_\xi\), the actual result type candidate.
+For application with constructor argument \(N:A\), the function
+candidate is \([A]_\xi\Rightarrow J\) with the preceding
+intersection. Application of the two induction members gives membership
+in \(J\). Independently W9e supplies \([N]_\xi\in V(A)\), so choose
+that very index. The resulting membership is in
+\([B]_{\xi[\alpha:=[N]_\xi]}=[B[N/\alpha]]_\xi\) by semantic
+substitution. These two application cases cover both object and
+constructor functions; no semantic value is assigned to an object
+argument. Products, abstractions, applications, variable, and sort are
+every subject constructor, so the fundamental lemma is established.
+
+\paragraph{W9h. Open-context realization and full strong normalization.}
+Every valid finite CC context has a realized valuation with raw
+\(\rho(v)=v\): assign to each constructor declaration
+\(\alpha:A\) the explicit canonical member
+\(c_{\kappa(A)}\in V(A)\). Kind-domain shapes do not depend on any
+prior semantic value, so these assignments are valid simultaneously.
+W9e says every annotation's interpretation is a candidate; its variable
+belongs to that candidate by W9c. Thus identity \(\rho\) realizes
+all object and constructor declarations, including uninhabited source
+types: a raw open variable is a candidate member, not a fabricated
+closed proof of that type. No closure or inhabited-context assumption
+has been added.
+
+For \(\Gamma\vdash M:T\), the fundamental lemma now gives
+\(E(M)\in[T]_\xi\subseteq\mathsf{SN}\). W9f's positive path
+simulation implies that \(M\) has no infinite full compatible beta
+path. If a well-typed pseudo term occurs only on the right of a judgment,
+type correctness gives a sort judgment for it, unless it is a sort;
+\(\ast\) has its axiom judgment and \(\Box\) is a normal atom.
+Hence the same conclusion covers both subjects and types in the
+source's definition of well typed. The proof treats arbitrary well-formed
+open contexts, all four product triples, reductions beneath binders,
+and contractions inside annotations/types. It assumes neither CC SN,
+closed-term normalization, weak-head termination, checker completeness,
+nor an impredicative set universe. Combining this constructed CC result
+with W8 proves strong normalization for the exact beta-only source
+lambdaHOL, leaving definitions, delta, recursors, and later inductive
+extensions outside the conclusion.
+
+\paragraph{W10. Failure of the source's printed inverse PRED-omega map.}
+In the source context \(a:\mathrm{Type}\), Type/Type forms
+\(a\to\mathrm{Prop}:\mathrm{Type}\) and then
+\((a\to\mathrm{Prop})\to a:\mathrm{Type}\).
+The printed judgment-dependent inverse maps \(a:\mathrm{Type}\)
+to \(a:\mathrm{Set}\), with \(a\to\mathrm{Prop}:\mathrm{Type}\)
+in PRED-omega. Its final arrow ending in \(a\) is assigned sort Set,
+but its product formation would require
+\((\mathrm{Type},\mathrm{Set},\mathrm{Set})\), which is absent from
+the exact six source PRED-omega triples. Generation proves rejection:
+the two rigid argument/codomain sorts cannot be changed by conversion.
+Thus the displayed inverse is not derivation preserving on this legitimate
+lambdaHOL domain. This countercase does not affect the separately proved
+forward PRED-omega-to-lambdaHOL morphism, nor does it refute lambdaHOL
+normalization. W8 supplies a different, explicitly editorial CC transport
+that handles this omitted case without changing either source calculus.
+
+\paragraph{W11. The live P7 interface and separate P12-draft/W9 bridge.}
+This is a separate construction for the lead's later reconciliation, not
+a change to the live P7 theorem. At the inspection checkpoint the live
+route is \texttt{handbook/main.tex:35}, then
+\texttt{handbook/parts/p07.tex:119}, then
+\texttt{handbook/parts/p07/lambda-calculi-and-type-theories.tex:465}.
+The result labelled \texttt{thm:p07-coc-strong-normalization} is
+\texttt{cited=CoquandHuet1988} and asserts normalization of the exact
+calculus presented by Coquand and Huet, excluding later inductive
+extensions. Its live comparison-table consumer is at that chapter's
+lines~567--569; the separate live proof-complexity consumer is
+\texttt{handbook/parts/p07/proof-complexity.tex:300--301}.
+The P7 annex driver selects no CoC normalization annex.
+
+That P7 chapter selects no CoC pseudo-term grammar, sort specification,
+context formation, inference sheet, conversion generators, or compatible
+reduction relation. Its nearby \texttt{sheet:mltt-intensional} is not a
+CoC sheet. Nor does its earlier unannotated untyped-lambda beta definition
+declare a reduction relation for annotated CoC types. Therefore the
+legacy citation is not an explicitly presented calculus to which one
+can currently apply a checked bijective notation map. The original
+1988 article's actual rule and equality extent has not been inspected
+in this block. In particular no claim that it has, or lacks, eta, delta,
+universe constraints, or a different context convention is inferred
+from its title or from the 1994 report's attribution.
+
+\paragraph{W11a. The genuine formal-P12-draft/W9 identity bridge.}
+The current source-author P12 draft does declare an exact calculus:
+\texttt{def:p12-har-pts-specifications}, with
+\texttt{sheet:p12-har-pts}, specifies sorts \(\ast,\Box\), axiom
+\(\ast:\Box\), and the four triples
+\((\ast,\ast,\ast),(\ast,\Box,\Box),
+(\Box,\ast,\ast),(\Box,\Box,\Box)\).
+Its \texttt{thm:p12-har-cc-normalization} expressly selects full
+compatible annotated beta reduction. At this checkpoint the P12 body and
+annex drivers do not input that source-author presentation pair; it is
+therefore not yet a reader-routed P12 result. This exact formal draft calculus
+and W9's CC have a bijective bridge \(r\): fix both sorts and every
+variable, preserve application, and send
+\(\Pi x:A.B\) to \(\Pi x:rA.rB\) and
+\(\lambda x:A.M\) to \(\lambda x:rA.rM\).
+Send a context \(x_1:A_1,\ldots,x_n:A_n\) to the ordered context
+\(x_1:rA_1,\ldots,x_n:rA_n\). The inverse uses the same clauses.
+Structural induction proves both composites are identity, including
+annotations, binder scopes and every context position. Alpha-equivalent
+representatives map to alpha-equivalent representatives since variable
+renaming is unchanged. The same structural induction gives
+\(r(M[N/x])=rM[rN/x]\): a selected variable gives the replacement;
+other variables and sorts are unchanged; application uses its two
+inductions; a fresh lambda/product binder uses annotation and body
+inductions. This supplies actual capture-avoiding substitution transport.
+
+The root beta generator is preserved and reflected at exactly one step:
+the image of \((\lambda x:A.M)N\) contracts to
+\(rM[rN/x]=r(M[N/x])\), and every image root contraction has this
+unique inverse source redex. A compatible step at any proper position
+maps to a step at the same position: application children, lambda
+annotation/body, and product annotation/body have been preserved.
+Applying the inverse proves reflection in all these cases. Thus finite
+beta paths, their reflexive/symmetric/transitive equality closure, and
+infinite beta paths correspond in both directions. No redex is erased
+and no eta/delta/iota generator is silently introduced.
+
+Prove typing transport in each direction by induction on derivations.
+The single sort axiom is unchanged. Variable formation uses its mapped
+annotation-sort judgment and the unchanged fresh name. Weakening uses
+its mapped annotation and subject judgments, keeping declaration order.
+Product formation uses the two mapped sort judgments and precisely the
+same one of the four listed triples. Abstraction uses the mapped body
+judgment and mapped well-formed product. Application uses the mapped
+function/argument judgments, with substitution commutation identifying
+its result type. Conversion uses the mapped subject and well-sorted
+target premises and the proved beta-equality correspondence. These are
+every Figure~3 rule. The inverse induction has the identical seven
+cases, so this is equivalence of judgments, not just a sound embedding.
+Context validity corresponds both by these typed judgments and by the
+equivalent prefix annotation certificates established in W9a; fresh
+variables and every dependent annotation remain in their original order.
+Hence the source's subject-or-type definition of well typed corresponds
+as well. Finally an infinite normalization counterexample on either side
+maps to an infinite one on the other. W9 therefore proves the formal
+draft's exact beta-CC normalization claim, without a closed-context
+restriction, and conversely both normalization claims have identical scope.
+
+\paragraph{W11b. The precise legacy reconciliation boundary.}
+Once the source-author P12 pair is actually routed, W11a allows the lead
+to connect a P7 consumer explicitly scoped to that same two-sort beta PTS
+to the new proved P12 result. It does not justify
+replacing the legacy \texttt{cited=CoquandHuet1988} standing while keeping
+the words ``exact calculus presented by Coquand and Huet'' unexamined.
+The original source facet is the 1988 article, \emph{Information and
+Computation}~76(2--3), pp.~95--120, DOI
+\texttt{10.1016/0890-5401(88)90005-3}, identified by the canonical
+bibliography entry. A bibliographic record is not its mathematical body.
+The separate proof facet is the held Geuvers December~1994 report and
+the editorial candidate reconstruction W9. The original facet remains
+unresolved until its actual syntax, context discipline, rules, conversion
+and full normalization relation are supplied, and a complete bridge to
+the specified beta PTS is proved if appropriate. If that source uses
+additional equality/reduction clauses, a matching preservation and
+normalization argument for those clauses is still required; W11a has
+no such clause in its domain.
+
+The neighboring selected MLTT cannot close this interface. Its sheet
+has separate context/type/term/equality judgments, Pi/Sigma/identity
+constructors, unannotated term lambdas, and the cumulative Russell
+axiom family \(\mathcal U_i:\mathcal U_{i+1}\). These are not W9's
+two sorts, one axiom, and sole product/lambda/application grammar;
+in particular an infinite primitive universe-sort family has no
+sort-bijective renaming onto W9's two-element sort set. The selected
+sheet itself assumes no additional Pi-eta law, whereas P7's separately
+cited Abel--Coquand--Dybjer comparison concerns typed beta-eta equality
+in its own subcalculus. Neither that comparison nor the CIC pointer
+defines the cited 1988 CoC. No reader, P7, shared, or canonical edit is
+made by this construction; the lead owns the editorial reconciliation.
+
+\paragraph{W12. Qualified original 1988 body and the corrective full-system bridge.}
+The original journal-layout Coquand--Huet article is now held, with its
+printed \emph{Information and Computation}~76, pp.~95--120, 1988 heading,
+1988 Academic Press copyright, and PII
+\texttt{0890-5401(88)90005-3}. It has 26 consecutive printed pages.
+The read scope is the base syntax and rules in sections~1--3, pp.~95--105,
+the stripping/normalization standing in sections~4--5, pp.~105--110,
+and the distinctions from variants/extensions in sections~6--8,
+pp.~111--117. This is not a substituted 1985 or 1986 report.
+The formal qualification record is
+\texttt{spec/research/p07-coquand1988-source-qualification.md}.
+
+The source has one written constant \(\ast\), one-based de Bruijn
+indices, application, annotated lambda, and product \([x:A]B\).
+Its syntactic logical contexts \(\mathcal A_o^n\) are \(\ast\)
+or products whose codomain is another logical context. Its objects
+\(\mathcal A_i^n\) are indices, applications of objects, lambdas with
+object bodies, and products with object bodies; either class may be a
+binder annotation. An environment is a closed logical context ending
+in \(\ast\), viewed as an ordered list of declarations. The distinct
+judgments are \(\Gamma\vdash\Delta\) for logical-context validity,
+\(\Gamma\vdash M:P\) for object typing, and typed conversion
+\(\Gamma\vdash M\cong N\). The source \(\ast\) has no type.
+Thus no bijective sort renaming can turn this surface into
+\(\ast:\Box\). Validity must instead become typing at the target's
+auxiliary top \(\Box\). The source full variant is exactly the
+starred-rule replacement definition on p.~102, not its restricted variant.
+
+\paragraph{W12a. Literal-source corrections that must not be hidden.}
+The p.~98 relocation is described as moving only free references up
+one level, but its printed \(M^+=\xi_0(M)\), binder-body
+\(\xi_{i+1}\), and variable condition \(k<i\) do not implement
+that description with the expressly one-based indices. For the closed
+legal object \(L=(\lambda x:\ast)1\), literal \(\xi_0\) gives
+\((\lambda x:\ast)2\), introducing an external reference where the
+source had only a bound one. Hence a literal use of this recurrence
+does not commute with the intended binding interpretation. The
+free-reference-only relocation used in the bridge below is the
+explicit correction \(k\le i\) in that variable condition; with
+\(i=0\) at the root, indices at most \(i\) are bound and unchanged,
+and greater indices increase. An equivalent repair starts the cutoff
+at one and retains the printed strict comparison. No correction is
+made to the held primary PDF.
+
+Also the restricted starred rule on p.~101 literally concludes
+\(\Gamma\vdash M\cong\Delta\) from \(\Gamma\vdash M:\Delta\).
+In \(\Gamma=[A:\ast]\), projection gives \(A:\ast\), and that
+printed rule gives \(A\cong\ast\). Its named images are distinct
+beta-normal terms, so this is not a beta-sound equality rule. The
+same example contradicts the source's Lemma~6 on p.~105: its logical
+rank assigns zero to object \(A\) and one to \(\ast\), although
+that literal equality rule relates them.
+p.~102 full replacement instead prints ordinary reflexivity
+\(M:N\) implying \(M\cong M\). The bridge uses that actual full
+replacement and never imports the bad restricted rule. Thus the
+uncorrected restricted system is not silently called a subsystem of
+the full system. The conclusions below concern the full rule surface
+with the explicitly corrected one-based relocation, or equivalently
+its stated concrete binding semantics. They are not an equivalence
+claim for the literal misprinted indexed surface.
+
+\paragraph{W12b. Indexed-to-named syntax, environments, and substitutions.}
+For an ordered external variable vector \(\vec z=(z_1,\ldots,z_n)\)
+from oldest to newest, define \(T_{\vec z}(\ast)=\ast\) and
+\(T_{\vec z}(k)=z_{n+1-k}\). Map application homomorphically.
+Map a source product to \(\Pi z:T_{\vec z}(A).
+T_{\vec z,z}(B)\), and a lambda to the analogous annotated lambda,
+choosing \(z\) fresh for the external vector. An environment
+\(\Gamma=[x_n:A_n]\cdots[x_1:A_1]\ast\) maps to the ordered
+declarations whose annotations are translated in their respective
+older prefixes, rather than to a single type term. A logical context
+appearing as a type \(\Delta\) still maps by \(T\) to a product
+ending in \(\ast\). These are distinct roles of the source's
+same product syntax and are not conflated.
+
+The named encoding has a unique indexed inverse on its image, modulo
+alpha-renaming: each variable names its position in the external vector
+or binder stack; products/lambdas extend that stack only for the body,
+and application recursively decodes both children. Induction on syntax
+proves both composites are identity on the scoped source grammar and
+its named image. It is not claimed to be onto arbitrary raw CC terms,
+which additionally contain \(\Box\) and many ill-typed forms.
+
+Corrected relocation commutes with this encoding. More generally, raise
+the external indices by \(k\) with the correct cutoff under every
+internal binder. A variable then still designates the same older named
+variable; an internal bound reference still designates its binder.
+The star/application cases are immediate; annotation/body induction
+proves the binder cases. In particular the source lookup
+\(\Gamma/l=\operatorname{add}(l,A_l)\) translates to the
+original named annotation of the corresponding declaration, not to
+an annotation containing that declaration's own fresh name.
+
+For source \(Q\) scoped over \(\Gamma[x:A]\) and \(N\) scoped
+over \(\Gamma\), corrected substitution/removal of index one gives
+\[
+ T_{\vec z}(Q[N/1])
+   =T_{\vec z,z}(Q)[T_{\vec z}(N)/z].
+\]
+For index one this gives the argument; a larger external index decreases
+by one when the removed binder disappears, identifying the same external
+name on both sides. Under an inner binder, its local references stay
+fixed, the substituted argument is correctly relocated, and a fresh
+named binder prevents capture. Induction on annotation and body proves
+both product and lambda cases, and application combines the child
+identities. The same structural proof gives simultaneous substitutions
+in all later environment annotations. A source beta contraction thus
+maps to one designated named beta contraction at the same position,
+including a contraction in a binder annotation or product body.
+
+\paragraph{W12c. Joint full-source validity, typing, and equality transport.}
+Write \(\widehat\Gamma\) for the named environment just defined.
+Simultaneously induct on original full-system derivations to establish:
+\(\Gamma\vdash\Delta\) gives
+\(\widehat\Gamma\vdash_{\rm CC}T\Delta:\Box\);
+\(\Gamma\vdash M:P\) gives
+\(\widehat\Gamma\vdash_{\rm CC}TM:TP\);
+and \(\Gamma\vdash M\cong N\) gives raw
+\(TM=_\beta TN\), together with the following endpoint transport:
+for every target type \(U\), either endpoint's CC judgment at \(U\)
+implies the other endpoint's judgment at that same \(U\).
+This stronger equality induction supplies the target sort premise needed
+for source conversion; it does not assume the source's Lemmas~3--4,
+whose full proofs the article refers elsewhere.
+
+The primitive validity axiom maps to \(\ast:\Box\) in the empty
+target environment. Extension by a source logical context \(\Delta\)
+uses its mapped \(\Box\) judgment as the annotation certificate;
+extension by an object \(M:\ast\) uses its mapped \(\ast\)
+judgment. Both make the extended target environment valid, and the
+weakened axiom types \(\ast\) there. A validity product rule has
+premise \(\Gamma[x:A]\vdash\Delta\); its induction gives
+\(T\Delta:\Box\) in the extended target context. CC validity
+extracts the annotation certificate \(TA:s_1\); the triple
+\((s_1,\Box,\Box)\) forms its image product. An object product rule
+has body premise \(M:\ast\); similarly use
+\((s_1,\ast,\ast)\). Both possible domain sorts are admitted.
+
+For source projection, its validity premise makes
+\(\widehat\Gamma\) valid. CC projection types the corresponding
+named variable at its older-prefix annotation, and W12b's lookup
+identity identifies this with \(T(\Gamma/l)\). A source abstraction
+uses its body induction in the target extension. Its annotation sort
+is obtained from that extension's CC validity. Its body type \(TP\)
+has a sort by CC type correctness; if it is the literal sort \(\ast\),
+use \(\ast:\Box\). It cannot be \(\Box\), which has no source
+preimage. The requisite product is therefore well formed by one of
+the four triples, and CC abstraction applies. Application uses the
+two mapped premises and W12b's substitution identity.
+
+Full equality reflexivity (for typed objects or valid logical contexts)
+and symmetry/transitivity map to raw beta equality and preserve endpoint
+typing immediately or by composing the endpoint inductions. For product
+congruence, suppose an endpoint product is typed at \(U\). CC generation
+exposes its annotation sort and body sort. Annotation equality induction
+transports the first sort judgment to the second annotation; body
+equality induction transports the body sort in the old binder context.
+CC context conversion moves it to the new, beta-equal annotation.
+Rebuild the product at its original result sort, then restore \(U\)
+by conversion when required. If \(U=\Box\), the generated product
+result is literally \(\Box\), so no illegal top-sort conversion is
+used. For the reverse direction, first transport the new domain sort
+to the old annotation, then use context conversion to carry the
+second body judgment into the old binder context, where the body
+equality induction is stated. Apply its reverse implication there
+and rebuild the first product. This preserves the required body
+context rather than assuming the equality was supplied in both contexts.
+
+For lambda congruence, generation of a typed endpoint gives its literal
+body judgment and a sorted product type. Annotation equality transports
+its domain sort; body equality transports its body at the same generated
+body type. Context conversion transports that body judgment and its
+body-type sort to the changed annotation. Abstraction produces the new
+product type, beta-equal to the old one; convert back to \(U\).
+No lambda has the unsorted top as a type, by W9a. For full application
+congruence, endpoint generation gives function and argument judgments.
+Their endpoint inductions retain the same function product and argument
+domain. Apply them; raw argument equality and substitution give equality
+of the new and old codomain instances, permitting conversion to \(U\).
+Both directions use the same steps with endpoints interchanged.
+This covers the full system's simultaneous function/argument replacement,
+not only the restricted one-child congruence rules.
+For reverse lambda transport, analogously carry the second endpoint's
+generated body judgment and body-type sort from the new domain back to
+the old domain before applying the reverse body equality implication.
+Then reconstruct the first lambda and restore the given type. Compatible
+raw beta equality of each mapped domain/body or function/argument pair
+gives the asserted raw lambda, product, or application equality in
+these congruence cases.
+
+For the full beta equality generator, its source body/argument premises
+are mapped by the joint induction. The same type-correctness/product
+construction as in abstraction gives a CC-typed root redex. Substitution
+types its contractum at the same codomain instance. Raw equality is the
+mapped root beta step. For endpoint transport from any additionally
+given root type \(U\), use CC subject reduction. In the reverse
+direction, uniqueness between the contractum's principal instance and
+its given type \(U\) gives beta equality; convert the already typed
+root to \(U\). Here \(U\) is sorted: if it were \(\Box\), its
+equality to the explicitly sorted principal result type would contradict
+W9a's impossibility of a typable subject converting to that atom.
+Thus this case does not assume unsafe general beta expansion.
+
+Finally consider the original typing conversion. Its subject induction
+gives \(TM:TP\). CC type correctness sorts \(TP\), with the same
+literal-star exception handled by \(\ast:\Box\); no source type
+maps to \(\Box\). The equality endpoint induction applied to this
+sort judgment gives \(TQ\) at the same sort, while its raw equality
+gives \(TP=_\beta TQ\). CC conversion therefore licenses the desired
+\(TM:TQ\). This closes the mutual induction, including the otherwise
+missing target-type sort premise. No normalization entered transport.
+
+\paragraph{W12d. The actual normalization transfer and its precise scope.}
+Each full source-typed object and each valid source logical context has
+a CC-typed named image by W12c. Every raw compatible source beta
+contraction preserves scope and maps to one target contraction by W12b,
+at root, in application children, or in either annotation/body field of
+either binder. Hence an infinite source path would map to an infinite
+CC path. W9 excludes that path. The full concrete/binding-semantics
+1988 calculus, with corrected indexed relocation, is therefore strongly
+normalizing for full annotated beta, in every valid open environment.
+The restricted logical-reduction generators of p.~104, if considered
+with their reflexivity and relocation corrected, map to nonempty finite
+beta paths as well: root/context cases map to one step and its explicit
+transitivity rule concatenates paths. They are not equated to arbitrary
+full beta reduction or to the literal erroneous restricted rule system.
+
+This is a proved normalization-preserving forward bridge, which suffices
+for the legacy normalization property. It is not advertised as a
+bijection of raw syntax, an inverse to the extra target \(\Box\),
+or an equivalence of restricted and full source equality judgments.
+Nor does it use the paper's stripped program \(v(M)\) to infer
+termination of erased annotations. The original p.~110 Corollary~1
+proves SN for a closed stripped image; p.~105 refers full constructed-term
+normalization to [15], and p.~112 uses it for a normal-type presentation.
+W9 and this bridge supply the separate annotated argument editorially.
+Primitive recursion, constants-as-extra-rewrite-generators, the optional
+universe hierarchy, and Type:Type in section~8 are not in the base claim.
+No eta generator occurs in the read base conversion rules. The immutable
+1988 source remains unchanged; adoption of its explicit corrective
+presentation and routing of a P7 reader result are lead-owned work.

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>High Load - Verifying Browser</title>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+	<style>
+		body { font-family: system-ui, sans-serif; text-align: center; padding: 50px; background-color: #f9f9f9; color: #333; }
+		.box { background: #fff; padding: 40px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: inline-block; max-width: 400px; }
+		.spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
+		@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+	</style>
+</head>
+<body>
+	<div class="box">
+		<h2>Site is under high load</h2>
+		<p>Please wait a moment while we verify your browser. You will be redirected automatically.</p>
+		<div class="spinner"></div>
+	</div>
+	<script>
+		const ts = "1790904588";
+		const signature = "d3bda58b3c3630e156f8b93291f21510";
+		const prefix = "00000";
+		let nonce = 0;
+		
+		// Asynchronous non-blocking browser puzzle solver
+		function solve() {
+			const start = performance.now();
+			while (performance.now() - start < 50) {
+				const data = signature + nonce;
+				const hash = CryptoJS.MD5(data).toString();
+				
+				// Matches server-side difficulty (prefix of zeros)
+				if (hash.substring(0, prefix.length) === prefix) {
+					document.cookie = "captcha_pow=" + ts + "_" + nonce + "; path=/; max-age=900; Secure; SameSite=Strict";
+					location.reload();
+					return;
+				}
+				nonce++;
+			}
+			// Yield execution to the browser to maintain UI responsiveness
+			setTimeout(solve, 10);
+		}
+		setTimeout(solve, 100);
+	</script>
+</body>
+</html>
+				

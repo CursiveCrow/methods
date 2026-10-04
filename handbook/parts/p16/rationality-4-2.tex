@@ -1,0 +1,792 @@
+\chapter{Bayes Nets as Models of Rationality}
+\label{sec:p16-rationality-4-2}
+
+Hartmann's chapter distinguishes the general Bayesian framework from
+the particular models built within it. A probability calculus does not
+select the relevant propositions, their dependencies, the source of a
+report, or the task an agent is trying to solve. Bayes nets make those
+modeling choices explicit and permit their consequences to be calculated
+\cite[chapter~4.2, pp.~253--264]{Hartmann2021BayesNets}.
+The chapter's examples concern confirmation, testimony and argumentation.
+Their arrows primarily represent a joint probability law; their causal
+vocabulary is explicitly heuristic, not an intervention semantics
+\cite[note~4, pp.~262--263]{Hartmann2021BayesNets}.
+
+This treatment follows that account through the three elementary networks,
+partially reliable reports, the variety-of-evidence comparison, the
+no-alternatives and no-reason-for arguments, and learning conditionals.
+It keeps graphical representation, normative assessment and psychological
+interpretation separate. The numerical illustrations below are stipulated
+models, not measurements of actual witnesses or scientific communities.
+Two selected primary empirical records are identified separately.
+
+\section{What a graph represents and what its probabilities add}
+\label{sec:p16-rat42-graphical-representation}
+
+\begin{hbconvention}{def:p16-rat42-notation}{Variables, values and the common probability law}
+Following the chapter's note~2, italic letters such as \(A,B,H\)
+denote variables; roman \(\mathrm A,\neg\mathrm A\) and
+\(\mathrm H,\neg\mathrm H\) denote their binary values or the
+corresponding events. Thus \(P(\mathrm A,\mathrm B)\) abbreviates
+\(P(\mathrm A\land\mathrm B)\), not a new probability operation.
+The multivalued variable \(Y\) has value events \(\mathrm Y_i\).
+The graphical tables below have finite value sets; the no-reason-for
+argument explicitly also permits a countable number-of-arguments variable.
+Each calculation uses one specified probability law \(P\).
+Conditional probabilities are asserted only on
+events of positive probability. We retain the source's shorthand
+\(\bar x=1-x\) for a probability parameter, distinct from event
+negation. A posterior law is denoted \(P'\).
+\end{hbconvention}
+
+\begin{hbdefinition}{def:p16-rat42-bayes-net}{A finite Bayes net and the parental Markov condition}
+A Bayes net has a finite DAG whose nodes are variables
+\(A_1,\ldots,A_n\), together with a normalized nonnegative local
+probability table \(k_i(a_i\mid a_{pa(A_i)})\) at each node,
+specified for every parent assignment. For a root the parent set
+\(pa(A_i)\) is empty, so its table is a prior mass function.
+A root has no incoming arrow; an isolated node is also a root.
+A descendant is reached by a directed path of positive length.
+
+The \emph{parental Markov condition} (PMC) states that each node's
+variable is jointly independent of its nondescendant nonparent
+variables, conditional on its parents. The node itself is excluded
+from its nondescendants. This is joint conditional independence,
+not merely a list of pairwise independence claims. For finite
+variables, \(A\perp B\mid C\) means
+\[
+ P(a,b\mid c)=P(a\mid c)P(b\mid c)
+ \quad\text{whenever }P(c)>0.
+\]
+It is equivalent to \(P(a\mid b,c)=P(a\mid c)\) on the
+positive \((b,c)\) strata. An arrow alone specifies neither a
+numerical probability nor a counterfactual or intervention effect.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p16-rat42-product}{proved=annex:p16.rat42-product}{Product representation and its exact parameter count}
+The local tables define a normalized joint law
+\[
+ P(a_1,\ldots,a_n)=\prod_{i=1}^n k_i(a_i\mid a_{pa(A_i)}).
+\]
+It satisfies PMC. Conversely a law satisfying PMC factors in this
+way, with its ordinary conditionals on positive parent strata;
+the unspecified tables on null strata can be filled arbitrarily.
+For binary variables the unrestricted joint has \(2^n-1\) free
+parameters, while unrestricted local tables on the given DAG have
+\(\sum_i2^{|pa(A_i)|}\). Sparse graphs can reduce this count
+substantially; a fully connected topologically ordered DAG does not.
+Every finite marginal is obtained by summing this joint law, and
+every positive-event conditional by summing and normalizing it.
+\end{hbtheorem}
+
+The source's virtues are representational economy, systematic probability
+calculation, and an accessible graphical theory. Economy depends on which
+independences are defensible. Efficient implementations exploit the graph,
+but a compact specification is not by itself a guarantee that every
+inference query is inexpensive. No particular cognitive algorithm follows
+from the product representation.
+
+\begin{hblemma}{thm:p16-rat42-semigraphoid}{proved=annex:p16.rat42-semigraphoid}{The conditional-independence operations used by the chapter}
+For finite variable tuples, conditional independence satisfies symmetry,
+decomposition, weak union and contraction:
+\[
+\begin{aligned}
+ A\perp B\mid C&\Longrightarrow B\perp A\mid C,\\
+ A\perp(B,D)\mid C&\Longrightarrow A\perp B\mid C,\\
+ A\perp(B,D)\mid C&\Longrightarrow A\perp B\mid(C,D),\\
+ A\perp B\mid C,\quad A\perp D\mid(B,C)
+     &\Longrightarrow A\perp(B,D)\mid C.
+\end{aligned}
+\]
+No assertion of an intersection axiom on arbitrary zero-containing
+distributions is included.
+\end{hblemma}
+
+The chapter illustrates these relations with its figures~4.2.1--4.2.3:
+\[
+ \begin{array}{c|c}
+  \text{source graph}&\text{graph-guaranteed independence}\\\hline
+  A\leftarrow C\to B&A\perp B\mid C\\
+  B\to C\to A&A\perp B\mid C\\
+  A\to C\leftarrow B&A\perp B
+ \end{array}
+\]
+The first two describe the same independence constraint despite different
+orientations. Their equality does not identify a causal direction.
+The collider is different: conditioning on its common effect can make
+the parent variables dependent, rather than screening them off.
+
+\begin{hbtheorem}{thm:p16-rat42-three-networks}{proved=annex:p16.rat42-three-networks}{Equivalent noncolliders and a calculated collider contrast}
+A finite law with \(A\perp B\mid C\) has both the common-parent
+and chain factorizations displayed above. In the binary collider let
+\[
+\begin{gathered}
+ P(\mathrm A)=a,\quad P(\mathrm B)=b,\quad A\perp B,\\
+ P(\mathrm C\mid\mathrm A,\mathrm B)=\alpha,\quad
+ P(\mathrm C\mid\mathrm A,\neg\mathrm B)=\beta,\\
+ P(\mathrm C\mid\neg\mathrm A,\mathrm B)=\gamma,\quad
+ P(\mathrm C\mid\neg\mathrm A,\neg\mathrm B)=\delta.
+\end{gathered}
+\]
+Then \(P(\mathrm A,\mathrm B,\mathrm C)=ab\alpha\) and
+\(P(\mathrm A,\neg\mathrm B,\mathrm C)=a\bar b\beta\).
+For \(a=b=1/2\) and
+\((\alpha,\beta,\gamma,\delta)=(9/10,4/5,7/10,1/10)\),
+\[
+ P(\mathrm A\mid\mathrm B,\mathrm C)=9/16,
+ \qquad P(\mathrm A\mid\mathrm C)=17/25.
+\]
+Thus this collider's parents become dependent given \(\mathrm C\).
+If instead all four conditional parameters are equal to \(2/5\),
+the parents remain conditionally independent. Collider structure
+permits the dependence; it does not force it for every table.
+\end{hbtheorem}
+
+For larger graphs the source points to d-separation rather than enumerating
+all independence consequences manually. The exact active-path criterion
+and its complete finite soundness proof are
+\cref{def:p16-active-path,thm:p16-finite-global-markov}; they apply to
+the normalized finite product law above without requiring causal equations.
+They supply independence implications guaranteed by factorization.
+Additional accidental independences can hold for a particular numerical
+law, as the constant collider table demonstrates. Inferring the entire
+graph from observed independences needs further assumptions, not just PMC.
+
+\section{The Bayesian framework is not the particular model}
+\label{sec:p16-rat42-framework-and-model}
+
+Hartmann separates a static requirement, representing coherent degrees of
+belief by a probability law over a selected Boolean algebra, from a dynamic
+requirement, revising that law when information arrives. For example,
+credence \(.3\) in tomorrow's rain requires \(.7\) in its negation
+if they are genuinely complementary events under the same law. Selecting
+which propositions to include precedes that coherence calculation.
+\cite[Sec.~3.1, pp.~255--256]{Hartmann2021BayesNets}
+
+For certain evidence \(\mathrm E\) with positive prior probability,
+conditionalization sets \(P'(X)=P(X\mid\mathrm E)\) for every event
+\(X\). The chapter cites pragmatic Dutch-book arguments and epistemic
+accuracy arguments as distinct normative foundations. Its account of
+conservativity supplies another proposed principle: satisfy the new
+information while changing the old beliefs as little as possible.
+Specifying what counts as little change is an additional choice.
+The local finite result below makes one such choice precise; it is not
+evidence that people actually optimize that quantity.
+
+\begin{hbdefinition}{def:p16-rat42-kl}{Directed divergence and a learning constraint}
+For mass functions \(Q,P\) on the same finite outcome space, set
+\[
+ D(Q\|P)=\sum_{\omega:Q(\omega)>0}
+                  Q(\omega)\log\frac{Q(\omega)}{P(\omega)}.
+\]
+The value is \(+\infty\) if a positive \(Q\)-mass has zero
+\(P\)-mass; zero \(Q\)-terms contribute zero. This is the
+Kullback--Leibler divergence, directed from proposed posterior to prior,
+not a symmetric distance or a metric. A learning constraint is a
+specified condition on \(Q\), such as \(Q(\mathrm E)=1\) or
+\(Q(\mathrm C\mid\mathrm A)=t\). The latter also requires
+\(Q(\mathrm A)>0\).
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p16-rat42-kl-update}{proved=annex:p16.rat42-kl-update}{The finite conservativity calculation and its direction}
+If \(P(\mathrm E)>0\), the unique minimizer of \(D(Q\|P)\)
+subject to \(Q(\mathrm E)=1\) is \(Q=P(\cdot\mid\mathrm E)\).
+For a strictly positive law on the four \((A,C)\) assignments, put
+\(s=P(\mathrm A)\), \(u=P(\mathrm C\mid\mathrm A)\), and
+\(v=P(\mathrm C\mid\neg\mathrm A)\). For the constraint
+\(Q(\mathrm C\mid\mathrm A)=t\in[0,1]\), define
+\[
+ d=t\log(t/u)+(1-t)\log((1-t)/(1-u)),
+ \qquad
+ s'=\frac{s e^{-d}}{\bar s+s e^{-d}},
+\]
+using zero-term conventions. The unique minimizer has
+\(Q(\mathrm A)=s'\), \(Q(\mathrm C\mid\mathrm A)=t\),
+and \(Q(\mathrm C\mid\neg\mathrm A)=v\).
+When \(t=1\), this law is also
+\(P(\cdot\mid\neg\mathrm A\lor\mathrm C)\).
+The mathematical coincidence for this hard constraint does not establish
+that all indicative conditionals mean material implications.
+\end{hbtheorem}
+
+The general framework does not choose a graph, a reliability parameter,
+a likelihood, or this particular divergence. Hartmann compares it with
+Newtonian mechanics: a framework and general laws do not specify the
+system to be modeled or its initial conditions. Particular models apply
+the framework, expose assumptions, organize bookkeeping, solve questions,
+and yield predictions that can be compared with evidence. Model simplicity
+and fidelity to details can conflict. Combining variables into a single
+macro-variable or deleting an alleged weak dependence requires a substantive
+justification; it is not licensed merely by a cleaner diagram.
+\cite[Secs.~3.1--3.2, pp.~256--257]{Hartmann2021BayesNets}
+
+\begin{hbmethod}{def:p16-rat42-modeling-method}{From a reasoning question to an assessable Bayes-net model}
+\begin{enumerate}
+\item State the question, the agent's information, and the target:
+      a posterior, confirmation comparison, argument assessment, or
+      descriptive prediction. Distinguish a normative target from an
+      observed response measure.
+\item Specify variable meanings and mutually exclusive, exhaustive values.
+      Include uncertainty about a source when it matters; do not silently
+      equate a report with the reported fact.
+\item State the graph's joint independence assumptions and give the
+      particular scenario's reasons for them. Identify alternative
+      dependencies, omitted variables and plausible coarser models.
+\item Specify every local table and its provenance: elicited credences,
+      externally estimated rates, fixed task information, or fitted
+      parameters. Record zeros and the learning constraints.
+\item Form the joint product, sum unwanted variables, and normalize only
+      positive evidence events. Inspect limiting and contrary cases.
+\item Evaluate the resulting claim at its proper level. An internally
+      coherent posterior is conditional on the model. A descriptive
+      prediction needs task-matched evidence and comparison with alternatives.
+\end{enumerate}
+This reconstructs the chapter's framework/model distinction and its
+functions of models; it does not automate variable selection or supply
+a universal graph-learning rule.
+\end{hbmethod}
+
+\section{Confirmation and partially reliable reports}
+\label{sec:p16-rat42-reliability-confirmation}
+
+\begin{hbdefinition}{def:p16-rat42-confirmation}{Confirmation relative to an agent's law}
+For \(0<P(\mathrm H)<1\) and \(P(\mathrm E)>0\),
+\(\mathrm E\) confirms \(\mathrm H\) if
+\(P(\mathrm H\mid\mathrm E)>P(\mathrm H)\), disconfirms it if
+the inequality is reversed, and is irrelevant if equality holds.
+This is a comparison of credences, not deductive proof or refutation.
+Let \(h=P(\mathrm H)\), \(p=P(\mathrm E\mid\mathrm H)\),
+and \(q=P(\mathrm E\mid\neg\mathrm H)\). The source uses
+the inverse likelihood ratio \(x=q/p\) when \(p>0\).
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p16-rat42-confirmation}{proved=annex:p16.rat42-confirmation}{The posterior and the likelihood comparison}
+Under these assumptions,
+\[
+ P(\mathrm H\mid\mathrm E)=\frac{hp}{hp+\bar hq}
+     =\frac{h}{h+\bar h x}\quad(p>0).
+\]
+Confirmation, disconfirmation and irrelevance are respectively
+\(p>q\), \(p<q\), and \(p=q\). If \(p=0<q\), the
+posterior is zero but \(q/p\) is undefined; if \(q=0<p\),
+it is one. If \(p=q=0\), the evidence cannot be conditioned on.
+\end{hblemma}
+
+Hartmann starts with error rates: false positives are
+\(fp=P(\mathrm E\mid\neg\mathrm H)=q\), and false negatives
+are \(fn=P(\neg\mathrm E\mid\mathrm H)=1-p\).
+Those rates can sometimes be estimated for an instrument, but are often
+unknown for testimony. A larger graph can unpack them into interpretable
+uncertainties rather than treating them as unexplained numbers.
+\cite[Sec.~3.3, pp.~257--259]{Hartmann2021BayesNets}
+
+\begin{hbdefinition}{def:p16-rat42-source-model}{The chapter's reliable-or-randomizing witness}
+Let \(H\) be the hypothesis that Paul is the murderer, \(Rel\)
+the witness's reliability, and \(Rep\) the witness's report.
+The graph is \(H\to Rep\leftarrow Rel\), with independent roots
+\(P(\mathrm H)=h\), \(P(\mathrm{Rel})=r\). A reliable source
+always reports the truth; an unreliable one reports positively with
+probability \(a\), independently of the truth. Thus
+\[
+\begin{array}{c|cc}
+ &\mathrm{Rel}&\neg\mathrm{Rel}\\\hline
+ P(\mathrm{Rep}\mid\mathrm H,\cdot)&1&a\\
+ P(\mathrm{Rep}\mid\neg\mathrm H,\cdot)&0&a
+\end{array}
+\]
+The parameters are the modeled agent's assumptions, not measured
+properties of an actual witness. Dishonesty, honest error, copying,
+and changing reliability are not all represented by this binary split.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p16-rat42-witness}{proved=annex:p16.rat42-witness}{One report, two sources, and the failure of a universal variety claim}
+For the one-report model,
+\[
+ p=r+a\bar r,\quad q=a\bar r,\qquad
+ P(\mathrm H\mid\mathrm{Rep})=
+                   \frac{h(r+a\bar r)}{hr+a\bar r}
+\]
+whenever the denominator is positive. For \(0<h<1\) and
+\(r>0\), a positive report confirms \(\mathrm H\).
+For \(r=0\), it is irrelevant if \(a>0\); for \(r=1\),
+it makes the hypothesis certain if the report has positive probability.
+
+Compare two positive reports, with the same \(h,r,a\).
+In the separate-source model the roots \(H,Rel_1,Rel_2\) are
+mutually independent; \(Rep_j\) has parents \(H,Rel_j\) and
+uses the one-report table. The reports are independent given
+\(H,Rel_1,Rel_2\). In the shared-source model the independent
+roots \(H,Rel\) parent both reports, each using that same table;
+the reports are independent given \(H,Rel\). The respective likelihoods are
+\[
+ (p_I,q_I)=((r+a\bar r)^2,(a\bar r)^2),
+ \qquad (p_D,q_D)=(r+a^2\bar r,a^2\bar r).
+\]
+For \(0<h,r,a<1\), the shared-reliability model confirms more
+strongly precisely when
+\[
+        a<\tfrac12,
+        \qquad r<\frac{1-2a}{2(1-a)}.
+\]
+At \(h=1/2,r=a=1/10\), the posteriors are
+\(361/442\) for separate reliability and \(109/118\) for shared
+reliability. At \(a=1/2\) and \(0<r<1\), the separate-source
+model confirms more strongly. Thus dependence can help or hurt;
+equal one-report marginals do not settle the two-report comparison.
+\end{hbtheorem}
+
+The source's figures~4.2.5--4.2.6 motivate this contrast and refer to
+Bovens and Hartmann for its analysis. The displayed derivation is supplied
+locally. The separate reports are not unconditionally independent: both
+carry information about the shared \(H\). The common-reliability model
+is also not a model of two literal copies of one report. Its conditionally
+independent randomizations are part of the comparison. This explains why
+the result is compatible with the duplicated-report calculation in
+\cref{thm:p15-bayes-flag-calculation}.
+
+The chapter connects these models to the variety-of-evidence thesis,
+Landes's examination of its conditions, and applications involving learning
+source reliability. It also sketches analogue confirmation: observing
+a testable phenomenon predicted by \(T'\) may bear on an untestable
+analogous prediction of \(T\) only through additional common structural
+assumptions. An analogy alone supplies no likelihood for the target.
+The legal applications likewise concern intertwined testimony and source
+credibility. These are the chapter's attributed application directions,
+not a claim that a single reliability graph proves every such inference.
+\cite[Sec.~3.3, pp.~258--259]{Hartmann2021BayesNets}
+
+\section{Argumentation as learning: validity and probabilistic force}
+\label{sec:p16-rat42-argument-learning}
+
+In the chapter's reconstruction, an agent has beliefs about premises and
+a conclusion. Another person attempts to alter the agent's beliefs about
+the premises; the agent then revises the joint law. An argument has
+probabilistic force for this agent when the revised probability of its
+conclusion exceeds the old probability. This is a relative confirmation
+criterion, not a claim that every persuasive argument is sound or that
+truth is whatever an audience finds convincing. Deductive relations
+constrain the allowed joint distributions, while the content and the
+learning procedure determine the actual change.
+\cite[Sec.~4, pp.~259--260]{Hartmann2021BayesNets}
+
+\begin{hbtheorem}{thm:p16-rat42-validity}{proved=annex:p16.rat42-validity}{Certain material premises and specified partial learning}
+If the event \(\mathrm A\land(\neg\mathrm A\lor\mathrm C)\)
+has positive probability, learning both material modus-ponens premises
+by conditionalization yields
+\[
+ P'(\mathrm C)=P(\mathrm C\mid\mathrm A,
+                                  \neg\mathrm A\lor\mathrm C)=1.
+\]
+For partial learning, suppose the material major premise already has
+probability one, \(0<s=P(\mathrm A)<1\), and
+\(t=P(\mathrm C\mid\neg\mathrm A)\). Change \(P(\mathrm A)\)
+to \(s'>s\) while preserving the conditionals of \(C\) on
+\(A\) and \(\neg A\), as in a binary Jeffrey update. Then
+\[
+ P'(\mathrm C)-P(\mathrm C)=(s'-s)(1-t)\geq0.
+\]
+The increase is strict only if \(t<1\); if \(s'<1\) and
+\(t<1\), the posterior remains below one.
+
+Denying the antecedent is invalid deductively but can have either
+probabilistic direction. With \(P(\mathrm A)=1/2\), choosing
+\((P(\mathrm C\mid\mathrm A),P(\mathrm C\mid\neg\mathrm A))
+=(.9,.2)\) makes learning \(\neg\mathrm A\) and the material
+conditional raise \(P(\neg\mathrm C)\) from \(.45\) to \(.8\).
+Choosing instead \((.1,.8)\) lowers it from \(.55\) to \(.2\).
+\end{hbtheorem}
+
+This makes the chapter's valid/invalid contrast precise without assigning
+an automatic increase to every unspecified change in uncertain premises.
+Validity guarantees a true conclusion when the premises are jointly
+certain under fixed meanings. With partial premise information, which
+conditionals are retained and which probabilities change must be stated.
+The fixed material validity result in
+\cref{thm:p19-conditional-benchmark} does not contradict observed suppression
+or a changed interpretation of an indicative conditional.
+
+\section{No alternatives and no reasons: the hidden common variable}
+\label{sec:p16-rat42-search-arguments}
+
+\begin{hbdefinition}{def:p16-rat42-common-parent}{The number-of-candidates model}
+Let \(Y\) take mutually exclusive values \(\mathrm Y_i\), with
+probabilities \(y_i\) summing to one. Let
+\(h_i=P(\mathrm H\mid\mathrm Y_i)\) and
+\(f_i=P(\mathrm F\mid\mathrm Y_i)\) on positive \(y_i\);
+on zero strata these symbols name stipulated local table entries,
+not conditional probabilities on null events. The graph
+\(H\leftarrow Y\to F\) stipulates \(H\perp F\mid Y\),
+equivalently the joint table
+\[
+       P(\mathrm H,\mathrm F,\mathrm Y_i)=y_i h_i f_i,
+\]
+with the other three \((H,F)\) cells obtained by complementing
+\(h_i\) and \(f_i\). The index set may be finite or countable;
+all resulting series converge absolutely. Assume
+\(P(\mathrm F)=\sum_i y_i f_i>0\) when conditioning on \(F\).
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p16-rat42-covariance}{proved=annex:p16.rat42-covariance}{The exact confirmation identity for the common-parent model}
+For this model,
+\[
+ P(\mathrm H\mid\mathrm F)-P(\mathrm H)
+ =\frac{\displaystyle
+   \frac12\sum_{i,j}y_i y_j(h_i-h_j)(f_i-f_j)}
+        {\displaystyle\sum_i y_i f_i}.
+\]
+The formula applies also to countably many values of \(Y\).
+The conditional-independence assumption is what makes the mixed
+expectation equal to \(\sum_i y_i h_i f_i\).
+\end{hblemma}
+
+\subsection{The no-alternatives argument}
+\label{sec:p16-rat42-no-alternatives}
+
+Hartmann's scientist has a theory \(H\) satisfying desirable constraints
+but cannot yet test its predictions. Despite substantial search, the
+community has found no alternative satisfying those same constraints.
+The proposed conclusion is a reason in favor of \(H\), not its deductive
+truth. The chapter uses the discussion of string theory as its historical
+motivation; this is a reconstruction of that 2021 argument, not a current
+forecast about empirical physics.
+\cite[Sec.~4.1, pp.~260--261]{Hartmann2021BayesNets}
+
+In this application \(\mathrm F\) means no suitable alternative has yet
+been found, and \(\mathrm Y_i\) means exactly \(i\) suitable alternatives
+exist. The source uses a finite maximum \(N\). Its assumptions are:
+\[
+\begin{array}{ll}
+ \mathrm{NAA1}:&0\leq y_i<1,\quad \sum_{i=0}^N y_i=1;\\
+ \mathrm{NAA2}:&h_i\text{ is nonincreasing in }i;\\
+ \mathrm{NAA3}:&f_i\text{ is nonincreasing in }i;\\
+ \mathrm{NAA4}:&H\perp F\mid Y.
+\end{array}
+\]
+The restriction \(y_i<1\) keeps uncertainty about the count;
+it is not a consequence of coherence alone. More alternatives can
+lower the hypothesis's credence only under the specified comparison of
+suitable candidates. More alternatives make search failure less likely
+only if search is sensitive to them. The screening-off assumption says
+the count carries all relevant dependence between the theory and the
+search outcome. It is a modeling premise, not something guaranteed by
+the variable's name. A lack of logical entailment between \(F\) and
+\(H\) does not rule out direct probabilistic dependence between them.
+
+\begin{hbtheorem}{thm:p16-rat42-naa}{proved=annex:p16.rat42-naa}{The no-alternatives confirmation criterion}
+Under NAA1--NAA4 and \(P(\mathrm F)>0\), \(F\) confirms \(H\)
+exactly when there are \(i>j\) with
+\[
+           y_i y_j>0,\qquad f_i<f_j,
+                          \qquad h_i<h_j.
+\]
+The posterior change is otherwise zero, not negative, under these
+same monotonicity assumptions.
+For \(y_0=y_1=1/2\),
+\((h_0,h_1)=(4/5,1/5)\), and
+\((f_0,f_1)=(4/5,1/5)\), the prior is \(1/2\),
+the probability of \(F\) is \(1/2\), and the posterior is \(17/25\).
+\end{hbtheorem}
+
+The theorem exposes the argument's vulnerable premises. If the agent is
+certain of the number of alternatives, no count uncertainty is available
+to mediate confirmation. The philosophical objection that appropriate
+alternatives may be unlimited therefore challenges the finite count model
+and its priors, rather than being settled by this theorem. A restricted
+class of suitable theories must be justified, not silently treated as
+all logically possible competitors.
+
+Search difficulty is a further competing explanation. Adding a variable
+\(D\) for that difficulty need not remove all confirmation, but it can
+make the marginal \(f_i\)'s constant, leaving \(F\) uninformative about
+\(Y\) and hence \(H\). For example, a search procedure that never
+reports a found alternative has \(f_i=1\) for every \(i\); then
+\(P(\mathrm H\mid\mathrm F)=P(\mathrm H)\) whatever the count prior.
+Less extreme difficulty can merely weaken, rather than eliminate, the
+signal. Finally, community agreement that no alternative has been found
+is a different proposition from no alternative existing. An adequate
+search process, agreed suitability standards and reliable reporting are
+needed to justify the \(f_i\)'s.
+
+\subsection{The no-reason-for argument}
+\label{sec:p16-rat42-no-reason-for}
+
+The source's contrasting example examines someone who searches for good
+arguments for God's existence and finds none. It asks whether that search
+outcome can constitute a reason against the hypothesis. The reconstructed
+\(H\) can be any hypothesis: \(\mathrm F\) means no good argument for
+it has yet been found, and \(\mathrm Y_i\) means exactly \(i\) good
+arguments for it exist. Here the count can range over all nonnegative
+integers. The model assumptions are:
+\[
+\begin{array}{ll}
+ \mathrm{NRF1}:&0\leq y_i<1,\quad\sum_i y_i=1;\\
+ \mathrm{NRF2}:&h_i\text{ is nondecreasing in }i;\\
+ \mathrm{NRF3}:&f_i\text{ is nonincreasing in }i;\\
+ \mathrm{NRF4}:&H\perp F\mid Y.
+\end{array}
+\]
+Unlike NAA2, NRF2 makes more supporting arguments raise the hypothesis's
+credence. This is a substantive relation between good reasons and truth,
+not a count of rhetorically persuasive but unsound arguments. NRF3 models
+a search more likely to succeed when more good arguments are available.
+
+\begin{hbtheorem}{thm:p16-rat42-nrf}{proved=annex:p16.rat42-nrf}{The no-reason-for disconfirmation criterion}
+Under NRF1--NRF4 and \(P(\mathrm F)>0\), \(F\) disconfirms \(H\)
+exactly when there are \(i>j\) with
+\[
+            y_i y_j>0,\qquad f_i<f_j,
+                           \qquad h_i>h_j.
+\]
+The posterior change is otherwise zero, not positive, under these
+same assumptions. For \(y_0=y_1=1/2\),
+\((h_0,h_1)=(1/5,4/5)\), and
+\((f_0,f_1)=(4/5,1/5)\), the prior is \(1/2\) and the
+posterior is \(8/25\).
+\end{hbtheorem}
+
+This is a conditional vindication of the argument under an explicit
+search-and-reasons model. It does not make every failure to discover an
+argument evidence against a hypothesis. An uninformative search, fixed
+count, or missing relationship between argument availability and truth
+can remove the conclusion. The model does not settle the theological
+example's premises by assigning them labels.
+
+\section{Indicative conditionals and the interpretation of new information}
+\label{sec:p16-rat42-indicative-learning}
+
+The source's section~4.3 returns to a limit of the material-premise
+illustration. An indicative sentence of the form ``If A, then C'' need
+not assert the truth-functional proposition \(\neg\mathrm A\lor\mathrm C\).
+Treating it that way makes conditioning easy but does not settle its
+meaning. Some accounts do not represent its content by a single event
+at all. Hartmann therefore sketches a more general procedure: translate
+what was learned into a constraint such as
+\(P'(\mathrm C\mid\mathrm A)=1\), then choose a conservative posterior
+subject to that constraint. His cited Eva--Hartmann--Rafiee Rad proposal
+distinguishes interpretation of evidence from the update implementing it.
+\cite[Sec.~4.3, p.~262]{Hartmann2021BayesNets}
+
+The directed-KL calculation above shows both what this proposal can do
+and what it leaves to interpretation. It handles constraints on
+conditional probabilities, not only certainty in an event. A softer
+constraint \(t<1\) is not ordinary conditioning on the material
+conditional; it can allow positive mass for
+\(\mathrm A\land\neg\mathrm C\). Different distances, additional
+constraints, or a different account of testimony may produce different
+posteriors. A perfectly reliable informant is an explicit idealization,
+not a default description of every speaker.
+
+The chapter also points to Bayes-net models of disablers. A disabler adds
+a relevant condition on which the original dependence or likelihood can
+change. For instance, a report that a switch normally turns a lamp on
+must be reconsidered when a power-failure variable is learned. Introducing
+that variable changes the modeled information and possibly the original
+conditional's intended background. It does not create a counterexample
+to fixed material modus ponens. The empirical suppression comparison in
+\cref{sec:p19-conditional-reasoning-suppression} is therefore an adjacent
+task with its own premise interpretations, not proof that every disabler
+instantiates this particular distance-minimizing account.
+
+\section{Cognitive interpretation: two bounded empirical comparisons}
+\label{sec:p16-rat42-cognitive-evidence}
+
+The psychological question is not whether the product rule is true but
+which representation, prior, information and response objective a person
+uses. A normative network can be tested as a computational-level account
+of judgments without claiming a particular mental algorithm. Aggregate
+agreement, individual prediction, mechanism identification and population
+generalization are different evidential goals, as
+\cref{def:p19-benchmark,def:p19-evidence-record} make explicit.
+The following two primary studies are the finite empirical comparison
+set for this treatment; their studies are not pooled into a universal
+estimate of Bayesian reasoning.
+
+\subsection{Expertise and trustworthiness in an appeal to an expert}
+\label{sec:p16-rat42-expert-study}
+
+Harris, Hahn, Madsen and Hsu distinguish expertise from trustworthiness:
+an expert knows the fact, while a trustworthy person reports what they
+believe. Their simplified model assumes an untrustworthy expert reports
+the opposite, and an uninformed source randomizes fairly. This is not
+Hartmann's reliable-or-randomizing binary source: informed systematic
+deceit has been separated from ignorance.
+\cite[accepted manuscript, pp.~12--16]{HarrisHahnMadsenHsu2016Expert}
+
+\begin{hblemma}{thm:p16-rat42-expertise-trust}{proved=annex:p16.rat42-expertise-trust}{The distinct roles of expertise and honesty}
+Let independent roots \(H,Exp,T\) have probabilities
+\(h,e,t\). Given \(Exp\), an honest source reports the truth and
+a dishonest source its opposite; given \(\neg Exp\), either
+source reports positively with probability \(1/2\). Then
+\[
+ p=et+(1-e)/2,\quad q=e(1-t)+(1-e)/2,
+ \quad p-q=e(2t-1).
+\]
+For \(0<h<1\), a positive report confirms, is irrelevant, or
+disconfirms the hypothesis according to the sign of \(e(2t-1)\).
+For \(e=4/5\), \(t=9/10\) gives likelihoods \((41/50,9/50)\),
+whereas \(t=1/10\) reverses them. More informed systematic deception
+need not be more favorable evidence for the stated hypothesis.
+\end{hblemma}
+
+\paragraph{Task, sample and design.}
+Experiment~1 analyzed 84 unpaid online volunteers, 29 male and 55 female,
+aged 18--80, median 20, recruited through an online experiment listing.
+Each judged four dialogues concerning fictional medical claims.
+Expertise was doctor versus musician; trustworthiness was friend versus
+enemy of the argument proponent. Both were within-person factors.
+Other experts' opinions were a three-level between-person factor:
+no mention, agreement or disagreement. A Latin-square assignment varied
+which content instantiated each within-person combination.
+Participants used unnumbered sliders, recorded on a 0--100 scale,
+to judge what the dialogue's recipient \emph{should} believe and to
+estimate expertise and trust before and after the report. These are
+elicited judgments about a recipient, not observed beliefs of that
+fictional person or medical measurements.
+\cite[accepted manuscript, pp.~16--20]{HarrisHahnMadsenHsu2016Expert}
+
+\paragraph{Comparison, findings and uncertainty.}
+The local conditional table was fixed by the researchers. Expertise and
+trust priors were elicited; the hypothesis prior was fitted separately
+for the three other-expert conditions, giving three fitted parameters.
+The model accounted for a reported 89\% of variance across condition-mean
+convincingness ratings. Across the three response types within individuals,
+the reported variance account was 38\%, not 89\%. The group statistic
+must not be presented as individual predictive accuracy. The authors
+reported a systematic model/data interaction involving expertise and
+others' opinions, \(F(2,70)=3.81,p=.027\), after excluding predictions
+of certainty. The mismatch was particularly visible for a trustworthy
+doctor disagreeing with other experts. Their figures use 95\% confidence
+intervals; no numerical interval for the reported variance accounts is
+supplied here or invented.
+\cite[accepted manuscript, pp.~20--25]{HarrisHahnMadsenHsu2016Expert}
+
+Experiment~2 retained 57 unpaid online volunteers, 23 male and 34 female,
+aged 16--54, median 23, after excluding two respondents under 16 and one
+reporting age 99. It reworded expertise as whether the source knows the
+answer and elicited the hypothesis prior rather than fitting it.
+The three condition sizes were 18, 19 and 20. With no fitted prior
+parameters, but the same stipulated conditional table, it reported 94\%
+variance account for group convincingness and again 38\% at the individual
+level across response types. Among 50 participants for whom the
+four-convincingness-response correlation comparison was possible, the
+full model fit best for 27, a model omitting trust for 15, and a model
+omitting expertise for 8. Four points per individual provide only weak
+discrimination among process accounts.
+\cite[accepted manuscript, pp.~25--31]{HarrisHahnMadsenHsu2016Expert}
+
+The authors explicitly disclaim identifying the psychological process.
+Elicited priors and researcher-fixed conditionals, interpreting certainty
+responses, task wording and the sparse individual record remain material
+assumptions. They discuss both an omitted dependence and conservative
+human revision as possible explanations of mismatch. These observations
+support a bounded judgment-model comparison, not a normative theorem
+or a population claim that people always use Bayes nets.
+\cite[accepted manuscript, pp.~31--36]{HarrisHahnMadsenHsu2016Expert}
+
+\subsection{Consistency, credibility and guilt judgments in a trial task}
+\label{sec:p16-rat42-legal-study}
+
+Connor Desai, Reimers and Lagnado used an assault-trial transcript to
+study whether inconsistency changes witness credibility and guilt judgments.
+Study~1 reports 126 US/UK online recruits, 64 female, mean age
+\(29.12\) with SD \(10.80\), paid \(\pounds2.40\), randomly split
+among six conditions. Testimony consistency had two levels and the
+defendant's prior-conviction information three. Participants read 20
+evidential statements in a common order and repeatedly rated guilt and
+victim/defendant credibility, then gave final ratings. Repeated statements
+are not independent participants. Average completion time was 31 minutes.
+\cite[pp.~626--628]{ConnorDesaiReimersLagnado2016Credibility}
+
+Consistent testimony produced mean final guilt rating \(72.20\)
+(SD \(26.49\)), versus \(58.98\) (SD \(29.03\)) for inconsistent
+testimony, on the 0--100 scale; the reported ANOVA was
+\(F(1,98)=12.35,p<.001\). Victim credibility likewise differed,
+\(F(1,98)=16.97,p<.001\); defendant-credibility and prior-conviction
+comparisons were not significant. The report gives 126 participants
+but residual degrees of freedom 98 without explaining the corresponding
+analysis-count discrepancy. The exact analyzed denominator for this
+ANOVA is therefore not silently supplied.
+
+Study~2 recruited 137 paid online participants, 65 female, mean age
+\(32.52\), SD \(10.67\), randomly split between consistency conditions.
+It elicited each participant's conditional probabilities \emph{after}
+their posterior judgments and used them to parameterize a network of
+selected testimony, intoxication, credibility and provocation. A
+\(.50\) intoxication prior was fixed for all model calculations.
+The model's provocation posterior served as a proxy for guilt, not as
+an identical guilt variable. Its correlation with observed guilt ratings
+was \(r=-.37,p<.001\), with reported \(R^2=.14\).
+The observed guilt means \(73.87\) versus \(68.34\) differed in the
+same direction as Study~1 but not significantly,
+\(t(135)=-1.41,p>.05\). Both victim- and defendant-credibility
+contrasts were significant. No numerical confidence interval for these
+correlations is given in the selected report.
+\cite[pp.~629--631]{ConnorDesaiReimersLagnado2016Credibility}
+
+The authors note that the model includes only some testimony, omits
+important defendant evidence, and uses provocation as a proxy. Parameter
+elicitation after the outcomes is not held-out prediction. The trial
+material is richer than a bare hypothesis-report problem but does not
+make this online sample representative of actual juries, nor identify
+a unique mental representation. The nonsignificant Study~2 guilt contrast
+and the unaccounted Study~1 analysis denominator limit the stronger
+claim that all effects were replicated. The paper supports a specific
+modeling and judgment pattern, not legal advice or a verdict rule.
+
+\section{Related treatments, successful use and failure cases}
+\label{sec:p16-rat42-comparisons-and-use}
+
+The probability operations agree with
+\cref{sec:p15-finite-probability,sec:p15-bayesian-updating-prediction};
+this source adds an analysis of choosing variables, modeling testimony,
+and evaluating argumentation. The dependent-source example explains
+why dependence is not synonymous with duplicated data. The existing
+P16 structural-causal chapters add equations and intervention invariance:
+\(P(Y\mid\operatorname{do}(X=x))\) is not licensed merely by a
+Bayes-net arrow or by conditioning. The exact distinction and worked
+counterexample are
+\cref{def:p16-causal-intervention,thm:p16-causal-confounded-example}.
+
+P19's empirical framework asks which task, population, information,
+response measure and model comparison justify a cognitive interpretation.
+Its suppression treatment concerns interpreted premises, whereas the
+material-premise theorem above holds with fixed meanings. A description
+of a reasoning error and a formal invalidity claim need not be the same
+claim. Conversely reinterpreting every disagreement post hoc would make
+a cognitive account untestable; representation choices need independent
+constraints or predictive tests.
+
+\begin{hbexample}{def:p16-rat42-success-failure}{Task and property lookup cases}
+For calculating the effect of two witness reports, specify whether the
+reliability variables are separate or shared and whether reports are
+conditionally independent given their parents. The reliability theorem
+then returns different justified posteriors under equal one-report
+marginals. Using a single ``independent evidence is always better''
+rule fails in its displayed low-\(a\), low-\(r\) case.
+
+For evaluating an unsuccessful search argument, give the count prior,
+the truth/count relation, the search-success relation and the screening
+assumption. The covariance identity distinguishes confirmation,
+disconfirmation and no information. Counting a search failure as
+disconfirmation without a sensitive search model fails when all
+\(f_i\)'s are equal.
+
+For a cognitive claim, compare the participant-level elicited inputs and
+judgments under the actual task. A close condition-mean fit can be a
+success for a bounded computational-level model while failing to establish
+individual accuracy, a mental algorithm or population generalization.
+For a causal query, use a causal model's intervention semantics; merely
+reversing a Markov-equivalent graph does not resolve that query.
+\end{hbexample}
+
+The source's outlook points to decision-making applications, ranking
+theory and imprecise-probability independence. Those are extensions and
+comparisons, not a claim that ordinary probability tables, ranking values
+and sets of probabilities share one numerical semantics. Its references
+to Spohn, Cozman and Halpern retain that cited boundary; it proposes
+constructing and comparing analogous models rather than proving every
+other framework here. The notes also locate the semigraphoid and
+d-separation background, explain the variable/value convention and root
+factor, and mention attempts at automated variable discovery. None
+removes the need to justify the model of the actual reasoning task.
+\cite[Sec.~5 and notes~1--10, pp.~262--264]{Hartmann2021BayesNets}

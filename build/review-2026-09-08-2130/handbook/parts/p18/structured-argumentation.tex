@@ -1,0 +1,463 @@
+\chapter{Structured arguments, preferences, and defeat}
+\label{sec:p18-structured-argumentation}
+
+An abstract argumentation framework records which arguments defeat which
+others. A structured framework also specifies how the arguments are built
+and where a challenge reaches them. This chapter develops the two-premise-sort
+ASPIC+ construction of Modgil and Prakken's tutorial, including its general
+contrary function \cite[Sections 3 and 5]{ModgilPrakken2014ASPICTutorial}.
+The captured author manuscript is dated December 16, 2013; the article was
+published in 2014. The attack relation, preference convention, and admissible
+argument trees below are fixed together. Every finite argument tree is
+available; no additional consistent-premise or minimal-support restriction
+is imposed.
+
+\section{The language and the argument trees}
+
+\begin{hbdefinition}{def:p18-aspic-system}{Typed argumentation data}
+An argumentation system consists of a set of formulas \(L\), a function
+\(C:L\longrightarrow\mathcal P(L)\), disjoint sets \(R_s,R_d\) of strict and
+defeasible rules, and a partial naming function \(n:R_d\rightharpoonup L\).
+A rule \(r\) has a finite ordered list
+\(\operatorname{ant}(r)=(\phi_1,\ldots,\phi_k)\in L^k\), where \(k\geq0\),
+and a consequent \(\operatorname{head}(r)\in L\). We write its data as
+\((\phi_1,\ldots,\phi_k\to\psi)\in R_s\) or
+\((\phi_1,\ldots,\phi_k\Rightarrow\psi)\in R_d\).
+These arrows classify rules; they are not formulas of \(L\).
+A rule is identified by its type, antecedent list, and consequent;
+repeating the same rule description does not create a second rule.
+
+The knowledge base is a disjoint union \(K=K_n\mathbin{\dot\cup}K_p\subseteq L\).
+Members of \(K_n\) are axiom premises; members of \(K_p\) are ordinary,
+challengeable premises. Rule names are formulas, not additional premises.
+An unnamed defeasible rule has no name-based undercutter. Injectivity of
+\(n\) is not required: a challenge to a shared name can reach each rule
+with that name.
+
+The statement \(\alpha\in C(\beta)\) says that \(\alpha\) conflicts with the
+target \(\beta\). It is a \emph{contrary} conflict if
+\(\beta\notin C(\alpha)\), and a \emph{contradictory} conflict if
+\(\beta\in C(\alpha)\). Every formula is required to have at least one
+contradictory. A contradictory need not be unique. The construction does
+not assume that \(C\) is symmetric or that self-conflict is impossible.
+The usual paired literals \(p,\neg p\), with \(C(p)=\{\neg p\}\) and
+\(C(\neg p)=\{p\}\), give a special case.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p18-aspic-arguments}{Finite trees and their components}
+The set \(\mathcal A\) of arguments is the least set generated as follows.
+For each \(\phi\in K\), there is a premise argument \([\phi]\).
+If \(r\in R_s\cup R_d\) has antecedents
+\((\phi_1,\ldots,\phi_k)\), and arguments \(A_i\) conclude \(\phi_i\),
+there is an argument \([A_1,\ldots,A_k;r]\) concluding
+\(\operatorname{head}(r)\). A nullary rule gives the distinct argument
+\([\,;r]\). Arguments are finite labelled ordered trees, rather than
+their conclusions or their sets of premises.
+
+For a premise argument \(A=[\phi]\), put
+\[
+ \operatorname{Conc}(A)=\phi,\quad
+ \operatorname{Prem}(A)=\{\phi\},\quad
+ \operatorname{Sub}(A)=\{A\},\quad
+ \operatorname{Def}(A)=\operatorname{Last}(A)=\varnothing .
+\]
+Its top rule \(\operatorname{Top}(A)\) is undefined.
+For \(A=[A_1,\ldots,A_k;r]\), put
+\[
+\begin{aligned}
+ \operatorname{Conc}(A)&=\operatorname{head}(r),&
+ \operatorname{Top}(A)&=r,\\
+ \operatorname{Prem}(A)&=\bigcup_i\operatorname{Prem}(A_i),&
+ \operatorname{Sub}(A)&=\{A\}\cup\bigcup_i\operatorname{Sub}(A_i),\\
+ \operatorname{Def}(A)&=\bigcup_i\operatorname{Def}(A_i)
+                   \ \cup\ \bigl(\{r\}\cap R_d\bigr).
+\end{aligned}
+\]
+If \(r\in R_d\), set \(\operatorname{Last}(A)=\{r\}\); if \(r\in R_s\),
+set \(\operatorname{Last}(A)=\bigcup_i\operatorname{Last}(A_i)\).
+All empty unions are empty.
+
+Write \(\operatorname{Prem}_p(A)=\operatorname{Prem}(A)\cap K_p\).
+An argument is \emph{strict} if \(\operatorname{Def}(A)=\varnothing\),
+and otherwise \emph{defeasible}; it is \emph{firm} if
+\(\operatorname{Prem}_p(A)=\varnothing\), and otherwise \emph{plausible}.
+A strict top rule does not erase defeasible inferences below it.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p18-aspic-tree-properties}{proved=annex:p18.aspictree}{Tree invariants}
+The construction gives a set of finite arguments. Every argument has finitely
+many subarguments, premises, and defeasible rules.
+If \(B\in\operatorname{Sub}(A)\), then
+\(\operatorname{Sub}(B)\subseteq\operatorname{Sub}(A)\).
+Moreover,
+\(\operatorname{Last}(A)=\varnothing\) if and only if \(A\) is strict.
+\end{hblemma}
+
+\section{An explicit preference convention}
+
+The relation \(A\prec B\) means that \(A\) is strictly less preferred
+than \(B\). It can be supplied directly as an asymmetric relation, including
+the empty relation. The following alternatives compute it from two
+independent preorders: \(\leq_d\) on \(R_d\), and \(\leq_p\) on \(K_p\).
+Neither preorder must be total. An axiom is outside the domain of
+\(\leq_p\), so every premise comparison below uses
+\(\operatorname{Prem}_p\).
+For \(i\in\{p,d\}\), write \(x<_i y\) exactly when
+\(x\leq_i y\) and \(\neg(y\leq_i x)\).
+
+\begin{hbdefinition}{def:p18-aspic-set-lifting}{Finite-set comparisons}
+For a preorder \(\leq\) on a set \(X\), define relations
+\(\unlhd_{\rm E},\unlhd_{\rm D}\) on finite subsets of \(X\).
+For either relation, an empty left operand never compares below another
+operand; a nonempty left operand compares below an empty right operand.
+For nonempty \(\Gamma,\Delta\), define
+\[
+\begin{split}
+ \Gamma\unlhd_{\rm E}\Delta
+   &\iff (\exists x\in\Gamma)(\forall y\in\Delta)\ x\leq y,\\
+ \Gamma\unlhd_{\rm D}\Delta
+   &\iff (\forall x\in\Gamma)(\exists y\in\Delta)\ x\leq y .
+\end{split}
+\]
+The subscripts denote the elitist and democratic comparisons, respectively.
+For either chosen comparison, its strict part is
+\[
+ \Gamma\lhd\Delta
+ \iff \Gamma\unlhd\Delta\ \hbox{and}\ \neg(\Delta\unlhd\Gamma).
+\]
+The empty-set clauses apply before the quantified clauses.
+The strict part is calculated from the complete relation; it is not defined
+by replacing each occurrence of \(\leq\) with its strict part.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p18-aspic-set-properties}{proved=annex:p18.aspicsets}{Properties and a strict-comparison boundary}
+Both set comparisons are transitive, and their strict parts are irreflexive
+and transitive. The set comparisons need not be reflexive:
+in particular, \(\varnothing\not\unlhd\varnothing\).
+On nonempty finite subsets of a totally preordered set, the elitist
+comparison is comparison of a least element of each set; the democratic
+comparison is comparison of a greatest element.
+
+For partial preorders, replacing every base weak comparison by a strict
+comparison can change the strict set relation. With incomparable
+\(a,b\), the sets \(\{a,b\}\) and \(\{a\}\) witness this for the elitist
+comparison.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p18-aspic-argument-lifting}{Last-link and weakest-link comparisons}
+Choose one of the two set comparisons, using \(\leq_p\) for premise sets
+and \(\leq_d\) for rule sets. These typed instances are both denoted
+\(\unlhd\).
+Define the last-link comparison by
+\[
+\begin{split}
+A\preceq_{\rm L}B\iff{}&
+ \operatorname{Last}(A)\unlhd\operatorname{Last}(B)\\
+&{}\lor\bigl(
+ \operatorname{Last}(A)=\operatorname{Last}(B)=\varnothing
+ \ \land\
+ \operatorname{Prem}_p(A)\unlhd\operatorname{Prem}_p(B)\bigr).
+\end{split}
+\]
+Define the weakest-link comparison by the following ordered cases:
+\[
+ A\preceq_{\rm W}B\iff
+ \begin{cases}
+ \operatorname{Prem}_p(A)\unlhd\operatorname{Prem}_p(B),
+       &A,B\text{ both strict},\\
+ \operatorname{Def}(A)\unlhd\operatorname{Def}(B),
+       &A,B\text{ both firm and not both strict},\\
+ \operatorname{Prem}_p(A)\unlhd\operatorname{Prem}_p(B)
+   \ \land\ \operatorname{Def}(A)\unlhd\operatorname{Def}(B),
+       &\text{otherwise}.
+ \end{cases}
+\]
+In either case, use exactly
+\[
+ A\prec_{\rm L}B\iff
+ A\preceq_{\rm L}B\land\neg(B\preceq_{\rm L}A),
+ \qquad
+ A\prec_{\rm W}B\iff
+ A\preceq_{\rm W}B\land\neg(B\preceq_{\rm W}A).
+\]
+Thus the resulting strict relation is asymmetric. This definition makes no
+additional claim that every such argument comparison has all properties
+required by a general consistency theorem.
+\end{hbdefinition}
+
+\section{Where attacks land and when they defeat}
+
+\begin{hbdefinition}{def:p18-aspic-attacks}{Three attacks at identified subarguments}
+Let \(A,B\in\mathcal A\). An attack includes its target occurrence type.
+The following conditions define the three possibilities.
+
+\emph{Undermining:} a premise subargument \(B'=[\phi]\) of \(B\) has
+\(\phi\in K_p\), and \(\operatorname{Conc}(A)\in C(\phi)\).
+
+\emph{Rebutting:} a subargument \(B'\) of \(B\) has a top rule in \(R_d\),
+and \(\operatorname{Conc}(A)\in C(\operatorname{Conc}(B'))\).
+
+\emph{Undercutting:} a subargument \(B'\) of \(B\) has top rule
+\(r\in R_d\cap\operatorname{dom}(n)\), and
+\(\operatorname{Conc}(A)\in C(n(r))\).
+
+An undermining or rebutting attack is called contrary when its displayed
+conflict is asymmetric, and contradictory when that conflict is symmetric.
+An argument may attack another in more than one way. Axiom premises and
+strict top-rule applications are not undermining or rebutting targets.
+Their superarguments may nevertheless contain other, attackable targets.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p18-aspic-defeat}{Preference at the point of attack}
+Fix one asymmetric strict preference relation \(\prec\) on \(\mathcal A\).
+An undercut always succeeds. A contrary undermining or contrary rebutting
+attack always succeeds. A contradictory undermining attack at
+\(B'=[\phi]\) succeeds exactly when \(\neg(A\prec B')\).
+A contradictory rebutting attack at \(B'\) succeeds exactly when
+\(\neg(A\prec B')\).
+
+Write \(A\,D\,B\) if at least one attack of \(A\) on \(B\) succeeds.
+The preference comparison is against the attacked subargument \(B'\);
+it is not a comparison against the whole superargument \(B\).
+Equality of strength and incomparability both satisfy
+\(\neg(A\prec B')\).
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p18-aspic-locality}{proved=annex:p18.aspiclocality}{Propagation and strict roots}
+If \(B\in\operatorname{Sub}(T)\), every attack and every defeat of \(B\)
+also attacks or defeats \(T\), respectively.
+If \(T=[A_1,\ldots,A_k;r]\) with \(r\in R_s\), every defeater of \(T\)
+defeats at least one \(A_i\). Consequently a nullary strict argument has
+no defeaters.
+\end{hblemma}
+
+\begin{hbdefinition}{def:p18-aspic-semantics}{Translation and conclusion queries}
+The induced abstract framework is \(F_{\rm AS}=(\mathcal A,D)\).
+Use the complete, grounded, preferred, and stable semantics of
+Definitions~\ref{def:p18-extension-semantics} and
+\ref{def:p18-arbitrary-framework}, with \(D\) as the edge relation for
+both conflict-freeness and defense. Structural attacks that fail the
+preference condition are not edges of this framework.
+
+For an extension \(E\), set
+\(\operatorname{Conc}(E)=\{\operatorname{Conc}(A):A\in E\}\).
+For a specified nonempty family \(\mathcal E\) of extensions, distinguish
+three formula questions:
+\[
+\begin{array}{ll}
+\text{credulous:}&
+  (\exists E\in\mathcal E)(\exists A\in E)\
+                  \operatorname{Conc}(A)=\phi,\\
+\text{common-argument skeptical:}&
+  (\exists A\in\bigcap\mathcal E)\
+                  \operatorname{Conc}(A)=\phi,\\
+\text{extensionwise skeptical:}&
+  (\forall E\in\mathcal E)(\exists A\in E)\
+                  \operatorname{Conc}(A)=\phi .
+\end{array}
+\]
+All three are declared false when \(\mathcal E=\varnothing\); the absence
+of extensions is also reported explicitly, as in
+Definition~\ref{def:p18-acceptance-queries}.
+The tutorial's formula-skepticism uses the common-argument reading.
+Its exclusive use of \emph{credulous} can be recovered by adding
+\emph{and not common-argument skeptical} to the first query.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p18-aspic-query-distinction}{proved=annex:p18.aspicqueries}{Different witnesses in different extensions}
+Common-argument skepticism implies extensionwise skepticism, but the
+converse fails even in a finite ASPIC+ system with only ordinary premises
+and defeasible rules. An explicit four-argument example is supplied in
+the proof.
+\end{hbtheorem}
+
+\section{Closure and the limits of consistency}
+
+\begin{hbdefinition}{def:p18-aspic-consistency}{Strict closure and consistency}
+For \(S\subseteq L\), put \(S_0=S\) and
+\[
+ S_{j+1}=S_j\cup
+ \{\operatorname{head}(r):r\in R_s,\
+       \text{every antecedent of }r\text{ belongs to }S_j\}.
+\]
+The strict closure is \(\operatorname{Cl}_s(S)=\bigcup_{j<\omega}S_j\).
+A set \(S\) is directly consistent if no
+\(\alpha,\beta\in S\) satisfy \(\alpha\in C(\beta)\);
+it is indirectly consistent if \(\operatorname{Cl}_s(S)\) is directly
+consistent. These definitions allow \(\alpha=\beta\).
+For a language of paired literals, a transposition of
+\((\phi_1,\ldots,\phi_k\to\psi)\), at position \(i\), is the strict
+rule obtained by replacing antecedent \(\phi_i\) with the paired
+contradictory \(\neg\psi\) and replacing the consequent with
+\(\neg\phi_i\). Here pairing is an involution, so
+\(\neg(\neg\phi)=\phi\). A strict-rule set is closed under
+transposition if it contains these rules for every rule and every
+antecedent position.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p18-aspic-structural-rationality}{proved=annex:p18.aspicclosure}{Subarguments and strict consequences in complete extensions}
+For every complete extension \(E\) of \(F_{\rm AS}\),
+\[
+ A\in E\Longrightarrow\operatorname{Sub}(A)\subseteq E,
+ \qquad
+ \operatorname{Cl}_s(\operatorname{Conc}(E))
+       =\operatorname{Conc}(E).
+\]
+The statement holds with infinite languages and argument sets, arbitrary
+finite-arity strict rules, and either preference construction above.
+It also holds for grounded, preferred, and stable extensions.
+It does not assert that these conclusion sets are consistent.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p18-aspic-flat-consistency}{proved=annex:p18.aspicflat}{Consistency when every root is challengeable}
+Suppose \(K_n=R_s=\varnothing\) and \(\prec\) is asymmetric.
+Every conflict-free set of arguments has a directly consistent set of
+conclusions. Consequently every complete extension satisfies both forms
+of consistency and both closure properties of the preceding theorem.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p18-aspic-rationality-boundaries}{proved=annex:p18.aspicboundaries}{Three failures with explicit finite systems}
+Each of the following can occur.
+First, conflicting axiom premises belong to the unique extension.
+Second, directly consistent ordinary premises and unopposed strict
+inferences produce inconsistent conclusions when the strict-rule set
+lacks the needed transpositions.
+Third, changing rebuttal to permit attacks at strict roots can produce a
+stable extension that is not closed under strict inference, even when
+the strict rules occur in transposed pairs.
+The proof gives all arguments and defeats in each system.
+\end{hbtheorem}
+
+\section{A complete competing-argument calculation}
+
+Use paired positive and negative literals for
+\(p,q,r,s,t,u,v,x,d_1,\ldots,d_6\), with the symmetric conflict convention
+of Definition~\ref{def:p18-aspic-system}. Set \(K_n=\{p\}\),
+\(K_p=\{s,u,x\}\). The two strict rules have data
+\[
+ s_1:(p,q)\to r,\qquad s_2:v\to\neg s,
+\]
+and the six defeasible rules have data
+\[
+\begin{array}{lll}
+ d_1:p\Rightarrow q,&d_2:s\Rightarrow t,&d_3:t\Rightarrow\neg d_1,\\
+ d_4:u\Rightarrow v,&d_5:(v,x)\Rightarrow\neg t,&
+ d_6:s\Rightarrow\neg p .
+\end{array}
+\]
+Set \(n(d_i)=d_i\); the symbols on the right denote the corresponding
+name formulas. All arguments are listed below. This reconstruction
+includes the argument generated by \(d_6\).
+\[
+\begin{array}{c|l|c|c}
+\text{argument}&\text{tree}&\operatorname{Prem}_p&\operatorname{Def}\\ \hline
+A_1&[p]&\varnothing&\varnothing\\
+A_2&[A_1;d_1]&\varnothing&\{d_1\}\\
+A_3&[A_1,A_2;s_1]&\varnothing&\{d_1\}\\
+B_1&[s]&\{s\}&\varnothing\\
+B_2&[B_1;d_2]&\{s\}&\{d_2\}\\
+B_3&[B_2;d_3]&\{s\}&\{d_2,d_3\}\\
+B_4&[B_1;d_6]&\{s\}&\{d_6\}\\
+C_1&[u]&\{u\}&\varnothing\\
+C_2&[C_1;d_4]&\{u\}&\{d_4\}\\
+C_3&[C_2;s_2]&\{u\}&\{d_4\}\\
+D_3&[x]&\{x\}&\varnothing\\
+D_4&[C_2,D_3;d_5]&\{u,x\}&\{d_4,d_5\}
+\end{array}
+\]
+In particular, \(A_3,C_3\) have strict top rules but are defeasible
+arguments. The top rule of \(D_4\) is defeasible.
+
+\begin{hbtheorem}{thm:p18-aspic-worked-graph}{proved=annex:p18.aspicgraph}{All attacks and the unranked extensions}
+The displayed list is exhaustive. All structural attack edges, grouped
+by their source and target sets, are
+\[
+\begin{array}{c|c|l}
+\text{source}&\text{targets}&\text{mode}\\ \hline
+B_3&\{A_2,A_3\}&\text{undercut at }A_2\\
+C_3&\{B_1,B_2,B_3,B_4\}&\text{undermine at }B_1\\
+D_4&\{B_2,B_3\}&\text{rebut at }B_2\\
+B_2&\{D_4\}&\text{rebut at }D_4\\
+A_1&\{B_4\}&\text{rebut at }B_4 .
+\end{array}
+\]
+There are no further edges. In particular \(B_4\), despite concluding
+\(\neg p\), does not attack the axiom argument \(A_1\).
+
+When \(\prec=\varnothing\), every displayed attack is a defeat.
+There is a unique complete, grounded, preferred, and stable extension,
+\[
+ E_0=\{A_1,A_2,A_3,C_1,C_2,C_3,D_3,D_4\}.
+\]
+The conclusion \(r\) is therefore skeptically accepted under either formula
+reading for each of these semantics.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p18-aspic-worked-preferences}{proved=annex:p18.aspicpreferences}{The two link principles give different conclusions}
+For the same system, use the elitist set comparison and priorities
+\(u<_p s,\ x<_p s,\ d_4<_d d_2<_d d_5\).
+One concrete total-preorder choice assigns ranks \(0,0,1\) to \(u,x,s\),
+respectively, and ranks \(0,1,2\) to \(d_4,d_2,d_5\);
+assign any ranks to \(d_1,d_3,d_6\). Lower rank means less preferred.
+
+Under last-link preferences the unique extension in all four semantics is
+\[
+ E_{\rm L}=\mathcal A\setminus\{B_2,B_3,B_4\}.
+\]
+Under weakest-link preferences it is
+\[
+ E_{\rm W}=\mathcal A\setminus\{A_2,A_3,B_4,D_4\}.
+\]
+Thus \(r\) is accepted in the first case and is absent from every extension
+in the second. Both extensions contain \(s,\neg s\)
+as conclusions; these data therefore do not satisfy a general consistency
+guarantee.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p18-aspic-contrary-example}{proved=annex:p18.aspiccontrary}{An asymmetric contrary defeats a stronger premise}
+Let \(L=\{p,\bar p,s,\bar s\}\), with
+\[
+ C(p)=\{\bar p\},\quad C(\bar p)=\{p\},\quad
+ C(s)=\{\bar s,p\},\quad C(\bar s)=\{s\}.
+\]
+Take \(K_p=\{p,s\}\), \(K_n=R_s=R_d=\varnothing\), and \(p<_p s\).
+For either link comparison, \([p]\prec[s]\), but \([p]\) defeats \([s]\).
+The unique extension in all four semantics is \(\{[p]\}\).
+Every formula in this example has a contradictory, although the additional
+conflict from \(p\) to \(s\) is asymmetric.
+\end{hbtheorem}
+
+\section{When the construction is a finite decision procedure}
+
+\begin{hbtheorem}{thm:p18-aspic-finite-generation}{proved=annex:p18.aspicfinite}{Finite generation under an acyclic dependency rank}
+Suppose \(K,R_s,R_d\) are finite and every formula occurring in these data
+has a rank in \(\{0,\ldots,H\}\), for a nonnegative integer \(H\),
+such that every antecedent of every
+non-nullary rule has smaller rank than its consequent.
+Then \(\mathcal A\) is finite. Generate premise and nullary-rule arguments,
+and then process rule consequents in increasing rank, forming every ordered
+tuple of already generated arguments with the required conclusions.
+This procedure generates each argument tree and terminates.
+
+If conflict membership, rule names, and the chosen priorities on these finite
+data are explicitly given, the attack and defeat relations are decidable by
+the displayed definitions. The existing finite extension methods then decide
+argument and formula acceptance. Finite \(K,R_s,R_d\) alone are insufficient:
+with \(K_n=\{p\}\) and \(R_s=\{p\to p\}\), there are infinitely many arguments.
+\end{hbtheorem}
+
+\begin{proofboundary}{def:p18-aspic-next-boundary}{Further source results}
+The construction and the proved closure results above are available without
+a general consistency theorem. The next stronger source result concerns
+axiom consistency, a precise contraposition or transposition condition,
+and the technical reasonable-order condition of the 2013 general account.
+For asymmetric contraries its additional well-formedness condition excludes
+a target of a one-way contrary from both \(K_n\) and the consequents of
+\(R_s\). These conditions must be stated and their complete derivation
+supplied before invoking that stronger theorem.
+
+Separate further constructions include the tutorial's classical and Tarskian
+instantiations with restricted argument supports, its assumption-based
+translation, and its detailed argument-scheme models. Their additional
+restrictions are not implicit in the all-finite-trees construction here.
+\end{proofboundary}

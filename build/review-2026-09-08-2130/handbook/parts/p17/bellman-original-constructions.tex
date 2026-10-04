@@ -1,0 +1,449 @@
+\chapter{Bellman's original resource and search constructions}
+\label{sec:p17-bellman-original-constructions}
+
+This chapter supplies the remaining six presentations in Bellman's
+1952 note: the shrinking-resource equation, probability-vector
+stopping, the two-resource recurrence, convex splitting, box search,
+and the scalar threshold equation
+\cite[Theorems~2--7, pp.~717--719]{Bellman1952DynamicProgramming}.
+The first bounded-transformation theorem is
+\cref{thm:p17-bellman-bounded-transformations}.
+The continuous state domains below remain continuous. Each
+construction states the solution class and the boundary condition
+that make its conclusion valid.
+
+\section{Shrinking resources: the exact continuity condition}
+
+\begin{hbdefinition}{def:p17-bellman-shrinking-model}{Allocations, shrinking state and finite-horizon values}
+Fix \(x_0>0\), an integer \(m\geq1\), and \(0<c<1\).
+Let
+\[
+ D=\{\mathbf z\in[0,\infty)^m:\ \textstyle\sum_i z_i\leq x_0\},
+ \qquad D(x)=\{\mathbf z\in D:\textstyle\sum_i z_i=x\}.
+\]
+The reward \(a:D\to[0,\infty)\) and successor
+\(b:D\to[0,\infty)\) are continuous, with
+\[
+                a(\mathbf0)=0,\qquad
+                0\leq b(\mathbf z)\leq c\sum_i z_i.
+\]
+At resource level \(x\), choose \(\mathbf z\in D(x)\),
+receive \(a(\mathbf z)\), and continue at \(b(\mathbf z)\).
+Put
+\[
+\begin{aligned}
+ (Tf)(x)&=\max_{\mathbf z\in D(x)}
+                         [a(\mathbf z)+f(b(\mathbf z))],\\
+ F_0(x)&=0,\qquad F_{n+1}=TF_n,\qquad
+ V(x)=\sup_{n\geq0}F_n(x)\in[0,\infty],\\
+ h(x)&=\max_{\mathbf z\in D(x)}a(\mathbf z),\qquad
+ H(t)=\max_{\substack{\mathbf z\in D\\\sum_i z_i\leq t}}a(\mathbf z)
+                                           \quad(0\leq t\leq x_0).
+\end{aligned}
+\]
+The maximum defining \(T\) is used for continuous \(f\).
+\(F_n\) is the optimal total reward for \(n\) decisions
+with terminal reward zero. Infinite total reward means
+the nonnegative series along a trajectory; \(V\) is its
+supremum over trajectories. There is no time discount.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p17-bellman-shrinking}{proved=annex:p17.bellman.shrinking}{The continuous solution and a constructive sufficient condition}
+Every \(F_n\) is continuous, \(F_n(0)=0\), and \(F_n\)
+increases with \(n\). The equation \(F=TF\) has a continuous
+solution on \([0,x_0]\) with \(F(0)=0\) if and only if
+\[
+             \lim_{\delta\downarrow0}
+                    \sup_{0\leq x\leq\min(\delta,x_0)}V(x)=0.
+\]
+When this condition holds, the solution is unique and equals \(V\).
+Writing \(\eta(t)=\sup_{0\leq x\leq t}V(x)\), one has
+\[
+                 0\leq V(x)-F_n(x)\leq\eta(c^n x_0).
+\]
+In particular the sufficient envelope condition
+\[
+                           \sum_{j=0}^{\infty}H(c^j x_0)<\infty
+\]
+ensures existence and gives the uniform tail bound
+\[
+          0\leq V(x)-F_n(x)
+                          \leq\sum_{j=n}^{\infty}H(c^j x_0).
+\]
+The original geometric values \(h(c^j x_0)\) alone do not
+give this conclusion without further control between those levels.
+
+For linear data \(a(\mathbf z)=\sum_i r_i z_i\),
+\(b(\mathbf z)=\sum_i d_i z_i\), with \(r_i\geq0\) and
+\(0\leq d_i\leq c\), the exact solution is
+\[
+                     V(x)=Kx,\qquad
+                     K=\max_i\frac{r_i}{1-d_i}.
+\]
+An index attaining this maximum can receive the entire
+resource at every stage. If \(x_0=0\), the domain consists
+only of zero and the boundary condition gives the sole value zero.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p17-bellman-shrinking-counterexample}{proved=annex:p17.bellman.shrinking.counterexample}{A continuous counterexample to geometric-grid summability}
+Take \(m=1,x_0=1,c=1/2\), \(b(x)=x/4\), and
+\[
+ a(x)=\sum_{j=0}^{\infty}\frac1{j+1}
+       \left(1-8\,4^j\left|x-\frac34\,4^{-j}\right|\right)_+,
+             \qquad (t)_+=\max(t,0).
+\]
+This is a nonnegative continuous reward on \([0,1]\)
+with \(a(0)=0\), and
+\(\sum_{j\geq0}h(2^{-j})=0\).
+Nevertheless the total reward from \(x=3/4\) is infinite.
+There is no continuous solution with boundary value zero.
+\end{hbtheorem}
+
+\section{The probability-vector stopping equation}
+
+\begin{hbdefinition}{def:p17-bellman-probability-stopping}{Absorption, transformations and a probe}
+Let \(d\geq1\), \(M\geq1\), and
+\[
+ \Delta_d=\{(p_0,\ldots,p_d):p_i\geq0,\ \textstyle\sum_i p_i=1\}.
+\]
+Write \(e_i\) for the coordinate probability vector
+(the source's \(x_i\)); \(e_0\) is absorbing and has cost zero.
+At any other vector one pays one unit and chooses either:
+a probe, whose successor is \(e_i\) with probability \(p_i\);
+or one of the maps \(S_l:\Delta_d\to\Delta_d\), \(1\leq l\leq M\).
+Assume constants \(0<c_l<1\) satisfy
+\[
+              \sum_{i=1}^d(S_lp)_i
+                            \leq c_l\sum_{i=1}^d p_i.
+\]
+No continuity of \(S_l\) is assumed.
+The value is the infimum expected number of steps to absorption,
+over all policies on the successive histories; failure ever to
+absorb has infinite step cost.
+For a fixed initial vector the histories form a finitely branching
+tree, so all probabilities used here are defined by its finite
+products. No global Borel regularity of the maps is being asserted.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p17-bellman-probability-stopping}{proved=annex:p17.bellman.probability.stopping}{Existence, uniqueness, policy and approximation on the entire simplex}
+There is a unique bounded real solution of
+\[
+ \begin{split}
+ F(e_0)&=0,\\
+ F(p)&=\min\left\{1+\sum_{i=0}^d p_iF(e_i),\
+                          1+F(S_1p),\ldots,1+F(S_Mp)\right\}
+                                                     \quad(p\ne e_0).
+ \end{split}
+\]
+It is the stated minimum expected absorption time, is at least
+one off \(e_0\), and is attained by choosing a minimizing
+action at each vector.
+For any selected \(l\), let \(K=2/(1-c_l)\). Then \(F\leq K\).
+Starting with \(F_0=0\), applying the displayed operator
+with value zero fixed at \(e_0\) gives
+\[
+                0\leq F(p)-F_n(p)\leq K^2/n\qquad(n\geq1).
+\]
+Thus successive approximation is justified uniformly, without
+assuming a contraction with a time discount or continuity at \(e_0\).
+If the strict mass-reduction premise is dropped, \(d=M=1\)
+with the identity map has no finite solution at \(e_1\).
+\end{hbtheorem}
+
+\section{Two resources and the priority comparison}
+
+\begin{hbdefinition}{def:p17-bellman-two-resources}{The original recurrence and its value class}
+Fix \(0<p_1,p_2,s_1,s_2<1\) and \(r_1,r_2>0\).
+At \((x,y)\in[0,\infty)^2\), action 1 gives
+the expression \(p_1[r_1x+F(s_1x,y)]\), and action 2
+gives \(p_2[r_2y+F(x,s_2y)]\).
+For an infinite action sequence \(w_0,w_1,\ldots\in\{1,2\}\),
+its return is
+\[
+ \sum_{j\geq0}\left(\prod_{h=0}^j p_{w_h}\right)
+ \begin{cases}
+      r_1s_1^{N_1(j)}x,&w_j=1,\\
+      r_2s_2^{N_2(j)}y,&w_j=2,
+ \end{cases}
+\]
+where \(N_i(j)\) counts the occurrences of \(i\) before position \(j\).
+Define \(V(x,y)\) as the supremum of these returns.
+All such series converge on each bounded rectangle.
+The solution class for the recurrence is the functions bounded
+on every rectangle \([0,X]\times[0,Y]\).
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p17-bellman-two-resources}{proved=annex:p17.bellman.two.resources}{The complete priority rule, ties and axes}
+The value \(V\) is the unique solution in the stated class of
+\[
+           V(x,y)=\max\{p_1[r_1x+V(s_1x,y)],
+                             p_2[r_2y+V(x,s_2y)]\}.
+\]
+It is continuous, convex and positively homogeneous.
+Define the two current indices
+\[
+                         I_1=\frac{p_1r_1x}{1-p_1},\qquad
+                         I_2=\frac{p_2r_2y}{1-p_2}.
+\]
+If \(I_1\geq I_2\), action 1 attains the maximum;
+if \(I_2\geq I_1\), action 2 does. Thus both are optimal
+at equality, and choosing a larger current index at every
+stage attains \(V\).
+The boundary values are
+\[
+     V(0,0)=0,\qquad
+     V(x,0)=\frac{p_1r_1x}{1-p_1s_1},\qquad
+     V(0,y)=\frac{p_2r_2y}{1-p_2s_2}.
+\]
+For any fixed rectangle, finite-horizon iteration from zero
+has a geometric tail bounded by
+\[
+ \frac{\bar p^{\,n}}{1-\bar p}(p_1r_1X+p_2r_2Y),
+                         \qquad \bar p=\max(p_1,p_2)<1.
+\]
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p17-bellman-commensurate}{proved=annex:p17.bellman.commensurate}{The actual piecewise-linear construction}
+Suppose \(s_1^m=s_2^n\) for positive integers \(m,n\).
+Choose relatively prime positive integers \(u,v\) and
+\(0<q<1\) so that \(s_1=q^u,s_2=q^v\).
+For \(x,y>0\), on each open cone
+\[
+                       q^{k+1}<I_1/I_2<q^k,\qquad k\in\mathbb Z,
+\]
+the optimal action sequence is determined by the integer recursion
+\[
+       k\longmapsto
+       \begin{cases}k+u,&k<0\quad(\hbox{action 1}),\\
+                     k-v,&k\geq0\quad(\hbox{action 2}).\end{cases}
+\]
+It enters \(\{-v,\ldots,u-1\}\) after finitely many steps.
+There it is periodic with period \(u+v\), containing
+\(v\) actions of type 1 and \(u\) of type 2.
+
+For a finite word \(w\), let \(D_w=\prod_jp_{w_j}\),
+let \(n_i(w)\) be its number of type-\(i\) actions, and define
+\[
+ A_w=r_1\sum_{j:w_j=1}\left(\prod_{h=0}^j p_{w_h}\right)s_1^{N_1(j)},
+ \qquad
+ B_w=r_2\sum_{j:w_j=2}\left(\prod_{h=0}^j p_{w_h}\right)s_2^{N_2(j)}.
+\]
+Empty words have \(D_w=1,A_w=B_w=0,n_i(w)=0\).
+If \(w\) is the entrance prefix and \(z\) the subsequent
+cycle, then the exact value on that cone is
+\[
+ V(x,y)=A_wx+B_wy+
+ D_w\frac{A_zs_1^{n_1(w)}x+B_zs_2^{n_2(w)}y}
+                     {1-p_1^v p_2^u q^{uv}}.
+\]
+This gives a linear function on each of countably many cones,
+locally finitely many away from the axes. Adjacent formulas
+agree at their common boundary by continuity; the axes have
+the preceding explicit values.
+
+For \(p_1=p_2=s_1=s_2=1/2\), \(r_1=r_2=1\),
+\[
+             V(x,y)=\frac{4x+2y}{7}\quad(1\leq x/y\leq2),
+ \qquad
+             V(x,y)=\frac{2x+4y}{7}\quad(1/2\leq x/y\leq1).
+\]
+In particular \(V(3/2,1)=8/7\).
+\end{hbtheorem}
+
+\section{Convex splitting and its concave boundary}
+
+\begin{hbtheorem}{thm:p17-bellman-convex-split}{proved=annex:p17.bellman.convex.split}{The continuous split problem reduces to endpoints}
+Fix \(x_0>0\), \(0<a,b<1\), and continuous,
+nondecreasing convex functions \(g,h:[0,x_0]\to\mathbb R\)
+with \(g(0)=h(0)=0\). This includes the source's
+twice-differentiable case \(g'',h''\geq0\); continuity
+of the second derivatives is not required.
+The unique continuous value with \(F(0)=0\) for
+\[
+ F(x)=\max_{0\leq y\leq x}
+          \{g(y)+h(x-y)+F(ay+b(x-y))\}
+\]
+is convex and satisfies exactly
+\[
+                   F(x)=\max\{g(x)+F(ax),\ h(x)+F(bx)\}.
+\]
+Thus an optimal split assigns the entire resource to one
+of the two activities. Put
+\[
+ c=\max(a,b),\qquad K=\max(g(x_0),h(x_0))/x_0.
+\]
+The \(n\)-step endpoint recursion from zero differs from
+\(F(x)\) by at most \(Kxc^n/(1-c)\).
+Equivalently, \(F(x)\) is the supremum of the convergent
+reward series over all binary endpoint sequences, with that
+explicit uniform tail bound.
+
+For \(g(x)=Ax^\lambda,h(x)=Bx^\lambda\), \(A,B\geq0\)
+and \(\lambda\geq1\), the same result holds directly under
+convexity and gives
+\[
+        F(x)=
+          \max\!\left\{\frac A{1-a^\lambda},
+                       \frac B{1-b^\lambda}\right\}x^\lambda .
+\]
+For example \(g=x^2,h=2x^2,a=1/2,b=1/4\) gives
+\(F(x)=32x^2/15\), attained by the second activity.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p17-bellman-concave-split}{proved=annex:p17.bellman.concave.split}{A complete interior-split counterexample}
+For \(x_0=1\), \(a=b=1/2\), and
+\(g(x)=h(x)=x-x^2/2\), the functions are increasing
+and strictly concave. The unique continuous value is
+\[
+                          F(x)=2x-x^2/3.
+\]
+At every \(x>0\) the optimal split is \(y=x/2\).
+The endpoint-only problem instead has value
+\(2x-2x^2/3\), strictly smaller for every \(x>0\).
+\end{hbtheorem}
+
+\section{Box search: retrieval and location are different tasks}
+
+\begin{hbdefinition}{def:p17-bellman-box-search}{Boxes, completed inspections and attempt costs}
+Exactly one of \(d\geq1\) boxes contains the ball.
+Its probabilities are \(p_i\geq0,\sum_i p_i=1\).
+Here indices range from 1 to \(d\),
+\(\operatorname{supp}p=\{i:p_i>0\}\), and \(e_i\)
+denotes the unit prior on box \(i\).
+An attempt on box \(i\) costs \(t_i>0\).
+Conditional on the past and on the ball's location, an
+attempt fails to inspect its contents with probability
+\(q_i\in[0,1)\); otherwise it reveals whether the ball is
+there and retrieves it if present.
+This conditional failure law is the operational premise
+for the source's completed-inspection cost
+\[
+                              c_i=\frac{t_i}{1-q_i}.
+\]
+A failed attempt supplies no location information.
+After a successful empty inspection of \(i\), the
+remaining probabilities are \(p_j/(1-p_i)\), \(j\ne i\).
+Denote that prior by \(p^{(-i)}\), assigning coordinate
+zero to the inspected box.
+If \(p_i=1\), there is no remaining-state distribution:
+the continuation term is zero, without evaluating that quotient.
+Zero-probability boxes can be ignored.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p17-bellman-box-retrieval}{proved=annex:p17.bellman.box.retrieval}{The full ordering and the original recursion}
+Let \(\sigma\) order the positive-probability boxes so that
+\[
+            \frac{p_{\sigma(1)}}{c_{\sigma(1)}}\geq
+            \frac{p_{\sigma(2)}}{c_{\sigma(2)}}\geq\cdots .
+\]
+The minimum expected retrieval cost, among all randomized
+history-dependent attempt policies, is
+\[
+ F(p)=\sum_{j=1}^{|\operatorname{supp}p|}
+             c_{\sigma(j)}
+                    \left(1-\sum_{h<j}p_{\sigma(h)}\right).
+\]
+It is attained by completing inspections in this order,
+repeating the current box after a failed attempt.
+Ties may be ordered arbitrarily.
+For every probability vector it satisfies the original equation
+\[
+ F(p)=\min_{i:p_i>0}
+           \{c_i+(1-p_i)F(p^{(-i)})\},\qquad F(e_i)=c_i,
+\]
+with the zero continuation convention at \(p_i=1\).
+The source's index is exactly \(p_i(1-q_i)/t_i\).
+The formula is valid on the entire probability simplex
+and is linear on each region of a fixed ordering.
+
+If a positive-probability box has \(q_i=1\), retrieval
+cannot occur almost surely and its expected completion
+time is infinite. A box with \(p_i=0\) remains irrelevant.
+The equation as an equation of completed costs does not
+need an attempt model; using \(t_i/(1-q_i)\) as that cost
+requires the stated conditional failure law.
+If zero attempt costs are allowed, the same formula holds
+among policies required to complete retrieval almost surely:
+put every positive-probability zero-cost box first and use
+the equivalent cross-product comparisons \(p_ic_j\geq p_jc_i\).
+The printed ratio index is used only when its denominator is positive.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p17-bellman-box-location}{proved=annex:p17.bellman.box.location}{The source's location-only qualification, completed}
+If the task is only to identify the occupied box, the last
+remaining positive-probability box need not be inspected.
+For each proposed uninspected last box \(l\), order all
+other positive-probability boxes by decreasing \(p_i/c_i\)
+and compute
+\[
+ L_l(p)=\sum_{j=1}^{m-1}c_{\sigma(j)}
+                 \left(1-\sum_{h<j}p_{\sigma(h)}\right),
+                     \qquad m=|\operatorname{supp}p|,\quad \sigma(m)=l.
+\]
+Then \(L(p)=\min_l L_l(p)\) is the minimum expected
+location cost. For any fixed highest-index box there
+is an optimal policy which inspects it first or leaves
+it uninspected. If \(m=1\), \(L=0\), whereas retrieval
+still costs \(c_i\).
+If inspection probabilities \(q_i=1\) are allowed, location
+has finite cost exactly when at most one positive-probability
+box is uninspectable. When there is one, it must be the
+uninspected last box and the same sorted-prefix formula applies
+to the other boxes.
+
+For \(p=(1/2,3/10,1/5)\), \(q_i=0\) and
+\(t=(2,1,4)\), the retrieval order is \(2,1,3\),
+with \(F=16/5\); location omits box 3 and costs \(12/5\).
+For \(p=(4/5,1/5)\), \(t=(1,3/10)\), \(q_i=0\),
+retrieval starts with the highest-index box 1 and costs
+\(53/50\); location leaves that box uninspected and costs \(3/10\).
+\end{hbtheorem}
+
+\section{The scalar threshold equation}
+
+\begin{hbtheorem}{thm:p17-bellman-threshold}{proved=annex:p17.bellman.threshold}{The exact threshold, minimizing integer and all ties}
+Fix \(0<a<1\). The unique bounded solution with \(f(0)=0\) of
+\[
+                   f(x)=1+\min\{x f(1),\,f(ax)\},
+                                    \qquad 0<x\leq1,
+\]
+is obtained as follows:
+\[
+ C=\min_{k\geq1}\frac{k+1}{1-a^k},\qquad
+ \tau=\frac1{C(1-a)}.
+\]
+The integer minimum is attained; it suffices to examine
+\(1\leq k\leq\lfloor2/(1-a)-1\rfloor\).
+Every minimizing \(k\) gives the same threshold
+\[
+                 \tau=\frac{1-a^k}{(k+1)(1-a)},\qquad 1/2\leq\tau<1.
+\]
+For \(x>0\), let \(n(x)\) be the least nonnegative integer
+with \(a^{n(x)}x\leq\tau\). Then
+\[
+                f(x)=n(x)+1+a^{n(x)}x C,\qquad f(1)=C.
+\]
+In particular
+\[
+ f(x)=1+xC\quad(0<x\leq\tau),\qquad
+ f(x)=1+f(ax)\quad(\tau\leq x\leq1).
+\]
+Both actions are optimal at the threshold. A tie
+\(a^n x=\tau\) allows probing after either \(n\) or \(n+1\)
+transformations, with the same cost.
+The value has limit one as \(x\downarrow0\), while its
+absorbing boundary value is \(f(0)=0\).
+At the excluded parameter endpoint \(a=0\), the equation
+instead has \(f(x)=1\) for \(x>0\); at \(a=1\) it has
+no finite solution.
+
+For \(a=1/2\), \(C=4\), both \(k=1,2\) minimize,
+\(\tau=1/2\), and
+\[
+ f(x)=\begin{cases}
+ 0,&x=0,\\
+ 1+4x,&0<x\leq1/2,\\
+ 2+2x,&1/2\leq x\leq1.
+ \end{cases}
+\]
+\end{hbtheorem}

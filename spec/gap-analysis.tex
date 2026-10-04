@@ -1,0 +1,568 @@
+\documentclass[11pt,letterpaper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage[margin=0.8in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{array,booktabs,longtable}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage[hidelinks]{hyperref}
+
+% Fix-design fragments cite v1.0 manuscript labels with \cref; in this
+% document those labels do not exist, so render them literally as label
+% names (the honest reading: they are addresses into the tagged source).
+% \spectt is a line-breakable teletype (breaks at : - / .) via url.
+\usepackage{url}
+\DeclareUrlCommand\spectt{\urlstyle{tt}}
+\newcommand{\cref}[1]{\spectt{#1}}
+\newcommand{\Cref}[1]{\spectt{#1}}
+
+\lstdefinestyle{spec}{
+  basicstyle=\ttfamily\small,
+  columns=fullflexible,
+  keepspaces=true,
+  frame=single,
+  rulecolor=\color{black!25},
+  breaklines=true
+}
+\lstset{style=spec}
+
+\setlist{nosep}
+\raggedbottom
+\emergencystretch=3em
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{2}
+
+\title{\bfseries Gap Analysis and Completion Specification\\
+\Large for the \emph{Handbook of Formal Logic}}
+\author{Campaign document --- generated from the audit registers}
+\date{10 August 2026 \textperiodcentered\ registers at \texttt{spec/registers/}}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent
+This document is the completion specification for transforming
+\emph{Formal Logic: Language, Semantics, Deduction, and Metatheory}
+(v1.0, 9 August 2026) into a comprehensive CRC-style handbook of logic.
+It records every verified defect and gap from three exhaustive full-text
+audits of the 14{,}780-line manuscript, fixes the target architecture and
+editorial standards, and lays out the phased campaign.  The registers in
+\texttt{spec/registers/} are the single source of truth; every table in
+this document is generated from them by \texttt{tools/csv2tex.py} and is
+regenerated, never hand-edited.
+\end{abstract}
+
+\tableofcontents
+
+\section{Baseline and how to use this document}
+\label{sec:baseline}
+
+\paragraph{Source identification.}
+The audited manuscript is
+\texttt{source/formal-logic-reference.tex} at git tag
+\texttt{v1.0-audit} (commit \texttt{676d170}), 14{,}780 lines,
+SHA-256
+\texttt{81bf3c0a\-b12863d7\-d89e1b44\-648ccc1d\-63832dc6\-8ab8e32b\-84aa9a07\-00cd6de1}.
+\emph{Every line number in this document and in the registers refers to
+that revision.}  Line references do not track the working tree; when a
+register row is executed, the executing commit is recorded in the row's
+status cell, and the frozen reference remains valid via the tag.
+
+\paragraph{Audit provenance.}
+Three independent full-text audits were performed on 10~August~2026,
+covering lines 1--4995 (Parts I--III), 4995--10622 (Parts IV--IX), and
+10622--14780 (Parts X--XI and back matter).  Each audit read its entire
+segment, re-derived displayed calculations and countermodels, verified
+the hypotheses of the major theorems against the literature, and ran
+mechanical checks over the whole file (labels, references, citations).
+The consolidated findings were reviewed and approved before this
+specification was drawn up.
+
+\paragraph{Identifier scheme.}
+Every finding carries a permanent identifier.  Line numbers rot as soon
+as editing begins; identifiers plus the frozen tag do not.
+
+\begin{center}\small
+\begin{tabular}{@{}llp{3.4in}@{}}
+\toprule
+\textbf{Prefix} & \textbf{Register} & \textbf{Class} \\
+\midrule
+R-\emph{nnn} & \texttt{defects.csv} & rigor defects (mathematical / proof content) \\
+S-\emph{nnn} & \texttt{defects.csv} & standards defects (status policy, notation, citation discipline) \\
+L-\emph{nnn} & \texttt{defects.csv} & \LaTeX{} / production defects \\
+D-P\emph{n}-\emph{nnn} & \texttt{depth-gaps.csv} & depth gaps within existing part $n$ \\
+N-\emph{d}-\emph{nnn} & \texttt{new-content.csv} & new-domain items, $d\in\{a,b,c,d\}$; N-x = recorded exclusions \\
+A-\emph{nnn} & \texttt{apparatus.csv} & apparatus items (index, registries, sheets, tables, figures, checks) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\paragraph{Dispositions.}
+Each R/S/L row carries one of four dispositions, which is what prevents
+wasted work given the restructure:
+\textbf{FIX-SOURCE} (mathematical repair applied to the v1.0 text in
+Phase~2, because migrated text inherits it);
+\textbf{RESOLVE-BY-MIGRATION} (fixed for free when the text is rewritten
+into the new tree);
+\textbf{OBSOLETE} (mooted by the restructure; no action ever);
+\textbf{CARRY} (a requirement transferred to the new tree's
+specification).
+
+\paragraph{Status vocabulary of this document.}
+Every claim about the manuscript in this document is
+\emph{verified-by-audit} unless marked \emph{spot-check pending}.  The
+handbook's own three-term result-status policy (complete proof / proof
+sketch / cited theorem) is quoted throughout and becomes
+compile-enforced in the new tree (§\ref{sec:rulings}).
+
+\section{Executive dashboard}
+\label{sec:dashboard}
+
+\paragraph{The three fixed decisions.}
+These were made by the author and define ``done'':
+\begin{enumerate}[label=\textbf{D\arabic*.}]
+  \item \textbf{Comprehensiveness} spans four domains: (a)~deep
+        mathematical logic, (b)~philosophical logic, (c)~logic in
+        computer science, (d)~algebraic and categorical logic.
+  \item \textbf{Format}: restructure toward a pure CRC-style handbook ---
+        topical lookup entries and tables; proofs compressed into a
+        proof annex; the dependency-ordered v1.0 manuscript becomes
+        verified source material and is not printed.
+  \item \textbf{First deliverable}: this specification; the writing
+        campaign runs against it in later sessions.
+\end{enumerate}
+
+\paragraph{Headline findings.}
+(i)~The manuscript's mathematics is largely sound --- every re-derived
+countermodel and calculation checked out --- but roughly a dozen proofs
+have genuine defects, the worst being that the book does not prove
+$\mathrm{Con}(\mathsf{ZFC})\Rightarrow\mathrm{Con}(\mathsf{ZFC}+\neg\mathrm{CH})$
+(R-001).
+(ii)~The book's signature status discipline is applied in only about a
+quarter of the text (48 of 60 status labels sit in lines 5000--7999).
+(iii)~Whole fields required by decision~D1 are absent (registers
+N-a\ldots N-d).
+(iv)~The reference apparatus is far below handbook grade: the index is
+$\sim$308 auto-generated theorem titles, there are no figures in 14{,}780
+lines, rule sheets cover 3 of $\sim$10 calculi, and the notation
+register covers none of Part~X.
+(v)~The back matter's Exercise Feedback chapter is the exception ---
+mechanically verified complete (112 = 112) --- and its discipline is
+institutionalized by ruling~\ref{ruling:annex}.
+
+\medskip
+\input{generated/dashboard}
+
+\section{Defect register}
+\label{sec:defects}
+
+\subsection{Priorities}
+\textbf{P0} --- mathematical falsity or unsoundness: the statement as
+printed is wrong, the proof as printed is invalid, or the source fails
+to compile.  \textbf{P1} --- violates the book's own declared policy
+(the three-term status policy, the one-symbol-one-role rule, the
+primary-source rule, the rule-display requirements).  \textbf{P2} ---
+polish.  All P0 items and load-bearing P1 proof gaps are dispositioned
+FIX-SOURCE and repaired in Phase~2; fix designs for them follow in
+§\ref{sec:fixdesigns}.
+
+\subsection{The register}
+Projection of \texttt{registers/defects.csv} (full columns --- part,
+acceptance criterion, effort --- live in the CSV).
+
+\input{generated/defects-table}
+
+\subsection{Fix designs for the Phase-2 repairs}
+\label{sec:fixdesigns}
+
+Each design below is a work order: it states the defect, the exact
+mathematical repair (statements, proof routes, landing sites), and
+acceptance criteria.  The designs were drafted against the v1.0 text and
+adversarially verified.
+
+% Within the fragments every \texttt argument is a plain label/file token,
+% so the breakable teletype is safe there (it is NOT safe document-wide:
+% \texttt elsewhere carries \- discretionaries).
+\begingroup\let\texttt\spectt
+\input{fragments/fixdesigns-G1-settheory}
+\input{fragments/fixdesigns-G2-computability}
+\input{fragments/fixdesigns-G3-fol-chain}
+\input{fragments/fixdesigns-G4-prop-proof-model}
+\endgroup
+
+\section{Depth-gap inventory}
+\label{sec:depth}
+
+Gaps \emph{within} the eleven existing parts, each assigned a target
+home in the new architecture (§\ref{sec:architecture}) and a
+\textbf{treatment level}, which is a ceiling, not a floor to exceed:
+
+\begin{center}\small
+\begin{tabular}{@{}lp{4.6in}@{}}
+\toprule
+\textbf{E} & full reference entry (definitions, adequacy theorems with status, tables) \\
+\textbf{T} & table row(s) only, in a master or per-chapter table \\
+\textbf{S} & statement with exact hypotheses + status + citation; no development \\
+\textbf{P} & pointer: one sentence and a source \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\input{generated/depth-table}
+
+\section{New-domain specification}
+\label{sec:newdomains}
+
+One register row per deliverable, keyed to the four domains of
+decision~D1.  The \emph{sources} column seeds the bibliography intake
+(§\ref{sec:apparatus}); rows with domain \textbf{x} are the
+\textbf{NOT-IN-SCOPE register} --- exclusions recorded as decisions so
+that absence is never again ambiguous between ``omitted deliberately''
+and ``overlooked.''  The spec-first rule (§\ref{sec:campaign}) applies:
+writing beyond a row's treatment ceiling requires editing the row first.
+
+\input{generated/newcontent-table}
+
+\section{Target handbook architecture}
+\label{sec:architecture}
+
+\subsection{Design rules}
+\begin{enumerate}
+  \item The handbook has \textbf{14 parts plus a proof annex}; the body
+        is lookup material (entries, tables, statements with status and
+        citation) and the annex holds compressed proofs, organized
+        parallel to the body.
+  \item Per-chapter proof sections and a separate companion volume are
+        both rejected: the former re-interleaves proofs with lookup
+        material; the latter is premature (the annex can be split out
+        later without rework).
+  \item The v1.0 manuscript is \textbf{not printed}.  After Phase-2
+        repairs it lives at \texttt{source/} as the verification
+        substrate; its exercises, feedback chapter, and qualifying
+        problems are retired from print but retained as verification
+        assets, and solutions that currently do theorems' work are
+        promoted into annex proofs during migration.
+  \item Every numbered body item carries a status field with an address:
+        \emph{proved} (Annex~P$n$.$x$) / \emph{sketched}
+        (Annex~\ldots) / \emph{cited} (source).  Compression may only
+        \emph{downgrade} status; upgrading requires re-verification.
+\end{enumerate}
+
+\subsection{The fourteen parts}
+\begin{description}[style=nextline]
+  \item[Part 1 --- Notation, Symbols, and Conventions.]
+    Master symbol registry (generated from
+    \texttt{registry/symbols.csv}); binding and precedence for
+    \emph{all} systems; notation variants across the literature; the
+    16 binary truth functions; mathematical preliminaries as
+    definition/theorem tables.
+  \item[Part 2 --- Classical Logic.]
+    2.1 propositional (semantics, equivalences, normal forms incl.\
+    Tseitin, functional completeness with Post's lattice, duality,
+    calculi side by side: Hilbert / ND / LK / tableaux / resolution,
+    metatheorems, complexity); 2.2 first-order (syntax, semantics,
+    calculi, metatheorem catalog incl.\ the countable/choice-free
+    completeness case, prenex--Skolem--clausal pipeline,
+    decidable-fragments table, equality metatheory); 2.3 second- and
+    higher-order (full vs.\ Henkin, a displayed SOL calculus, simple
+    type theory); 2.4 variants (many-sorted, free, infinitary,
+    generalized quantifiers).
+  \item[Part 3 --- Model Theory.]
+    Elementary maps and diagrams; Ehrenfeucht--Fra\"iss\'e games;
+    types, saturation, prime/atomic models; ultraproducts and
+    \L o\'s; preservation theorems; the QE catalog per theory;
+    categoricity and Morley; stability/NIP/o-minimality overview
+    tables; finite model theory; Lindstr\"om.
+  \item[Part 4 --- Computability and Complexity.]
+    Machine models and $\mu$-recursion with the equivalence theorem;
+    Church--Turing; s-m-n, recursion, Rice; undecidability catalog;
+    c.e.-set structure; degrees, jump, Post's problem, priority
+    method; arithmetical and analytical hierarchies; Kolmogorov
+    complexity; complexity-class ladder and logic-relevant
+    completeness results; descriptive complexity.
+  \item[Part 5 --- Arithmetic and Incompleteness.]
+    Q and PA; representability and coding (repaired); the diagonal
+    lemma; the G\"odel~I and~II, Rosser, L\"ob, and Tarski entries;
+    provability logic GL with Solovay completeness; decidable
+    arithmetics; nonstandard models and Tennenbaum; independence
+    catalog (Paris--Harrington, Goodstein); interpretability;
+    second-order arithmetic and the reverse-mathematics calibration
+    table.
+  \item[Part 6 --- Set Theory.]
+    ZFC axiom table and system variants; ordinal arithmetic and
+    Cantor normal form; cardinal arithmetic, cofinality, K\"onig; AC
+    equivalents; clubs/stationary/Fodor, $\Delta$-system, Ramsey;
+    combinatorial principles ($\Diamond$, $\square$, MA); $V$, $L$,
+    HOD; absoluteness and reflection; forcing entries with the honest
+    $\neg$CH treatment; independence catalog; the large-cardinal
+    chart; descriptive set theory and determinacy.
+  \item[Part 7 --- Proof Theory and $\lambda$-Calculi.]
+    Calculi catalog with identity cards; structural-rules table; cut
+    elimination with mix displayed; subformula property, midsequent,
+    Herbrand; interpolation (Maehara); normalization and strong
+    normalization; Curry--Howard correspondence table; untyped
+    $\lambda$-calculus and Church--Rosser; System F; MLTT/CIC
+    overview; ordinal-analysis calibration; Gentzen's consistency
+    proof (survey, honestly labeled); proof complexity.
+  \item[Part 8 --- Nonclassical Logics.]
+    The flagship part: uniform per-system \textbf{entry cards}
+    (name/aliases, language, semantics, axioms/rules with a pointer to
+    the rule sheet, adequacy theorems with status, characteristic
+    theorems and failures, decidability and complexity, translations,
+    algebraic counterpart, sources).  8.1 intuitionistic and
+    intermediate; 8.2 modal (systems lattice, correspondence table,
+    canonical models, filtration, decidability, quantified modal
+    logic, GL); 8.3 temporal, dynamic, epistemic (LTL, CTL/CTL*,
+    $\mu$-calculus, PDL, S5$_n$, common knowledge with its induction
+    axiom, public announcement); 8.4 conditionals, deontic, free
+    logic; 8.5 many-valued and fuzzy; 8.6 substructural (family map,
+    relevance, full classical linear logic, Lambek); 8.7
+    paraconsistent and nonmonotonic (with the AGM postulates table).
+  \item[Part 9 --- Logic in Computer Science.]
+    Description-logic family table with complexity; logic programming
+    (SLD resolution, negation as failure, Prolog, ASP, Datalog);
+    Hoare logic and weakest preconditions, separation-logic pointer;
+    model checking (automata-theoretic LTL, fixpoint CTL, BDDs);
+    database and finite-model connections; type systems.
+  \item[Part 10 --- Algebraic and Categorical Logic.]
+    Boolean algebras and Stone duality; Lindenbaum--Tarski algebras;
+    Heyting, MV, and modal algebras with J\'onsson--Tarski;
+    residuated lattices; cylindric/relation-algebra pointers;
+    categorical semantics (CCC $\leftrightarrow$ STLC, hyperdoctrine
+    pointer, topos overview).
+  \item[Part 11 --- Philosophy of Logic.]
+    Paradox catalog with resolution strategies; theories of truth
+    (Tarski hierarchy, Kripke fixed points, revision); consequence
+    relations; vagueness; identity; ontological commitment; schools
+    capsules.
+  \item[Part 12 --- Automation and Mechanization.]
+    SAT: DPLL and CDCL, 2-SAT/Horn; resolution refinements;
+    unification (Martelli--Montanari algorithm and theorem);
+    superposition as a calculus; SMT (theories table, Nelson--Oppen,
+    DPLL(T)); tableau and connection methods; QBF/\#SAT/MaxSAT;
+    prover and proof-assistant landscape; kernel foundations (LCF,
+    de Bruijn criterion, MLTT/CIC in kernels); landmark
+    formalizations; typesetting and reproducibility reference.
+  \item[Part 13 --- Chronology and Biography.]
+    Chronology table; landmark-papers table; $\sim$40 capsule
+    biographies; notation-history table.
+  \item[Part 14 --- Apparatus.]
+    Complete rule sheets ($\sim$20, generated from the calculus
+    registry); master cross-reference tables (decidability and
+    complexity per logic; consistency-strength ladder; expressive
+    power; axiom$\,\leftrightarrow\,$frame$\,\leftrightarrow\,$algebra
+    correspondence) --- \emph{harvested} from entry-card fields, not
+    authored; glossary; per-part further reading; subject, symbol,
+    person, and named-theorem indexes.
+  \item[Appendix P --- Proof Annex.]
+    Parallel to Parts 2--12.  Tier 1: method entries (Henkin,
+    diagonalization, \L o\'s, back-and-forth, canonical models,
+    filtration, cut elimination, normalization, forcing, EF, priority)
+    --- compressed proof plus a body method box.  Tier 2: results the
+    manuscript proves completely --- compressed to 40--60\% of source
+    length, \texttt{proofboundary} markers retained.  Tier 3: cited
+    theorems --- statement only, no annex entry.
+\end{description}
+
+\subsection{Source-to-target mapping}
+\begin{center}\small
+\begin{tabular}{@{}llp{2.9in}@{}}
+\toprule
+\textbf{v1.0 part (lines)} & \textbf{Target} & \textbf{Disposition} \\
+\midrule
+I Foundations (363--1546) & P1, P6 & compress $\sim$4:1 to registry tables; proof-writing chapter's core into front matter \\
+II Propositional (1547--2695) & P2.1 & entries + tables; proofs to annex \\
+III First-order (2696--4994) & P2.2, P2.4 & entries + tables; Henkin to annex Tier 1 \\
+IV Model theory (4995--6203) & P3 & entries; \L o\'s, back-and-forth to annex Tier 1 \\
+V Computability (6204--7190) & P4 & entries + hierarchy tables \\
+VI Arithmetic (7191--8068) & P5 & entries; audit table institutionalized \\
+VII Set theory (8069--9134) & P6 & entries; forcing to annex Tier 1 (repaired) \\
+VIII Proof theory (9135--9948) & P7 & entries; cut elimination to annex Tier 1 \\
+IX Second/higher-order (9949--10621) & P2.3 & entries; many-sorted translation to annex Tier 2 \\
+X Nonclassical (10622--11683) & P8 & exploded into entry cards \\
+XI Practice/automation (11684--12675) & P12 & compressed + heavy additions \\
+Back matter (12676--14780) & P14 / retired & registers and sheets rebuilt from data; exercises retired to verification assets \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Templates}
+\label{sec:templates}
+
+The entry-card and theorem environments carry \emph{mandatory} keys;
+compilation fails without them (ruling~\ref{ruling:status}).  Sketch of
+the planned interface:
+
+\begin{lstlisting}
+\begin{systementry}{name=S5, aliases={KT5},
+    language=modal-prop, sheet=sheet:S5}
+  \entrysemantics{Kripke frames with equivalence relations}
+  \entryadequacy{sound+strongly complete for local consequence,
+    status=proved, annex=P8.2.4}
+  \entrydecidability{decidable; SAT is NP-complete,
+    status=cited, source=Ladner1977}
+  \entrytranslations{into FOL via standard translation}
+  \entryalgebra{monadic algebras}
+  \entrysources{BlackburnDeRijkeVenema2001}
+\end{systementry}
+
+\begin{hbtheorem}{title=Compactness, status=proved,
+    annex=P2.2.7, sources={Godel1930,Malcev1936}}
+  ...statement only; the proof lives at the annex address...
+\end{hbtheorem}
+\end{lstlisting}
+
+Label taxonomy for the new tree: \texttt{entry:}, \texttt{thm:},
+\texttt{tab:}, \texttt{fig:}, \texttt{sheet:}, \texttt{annex:},
+\texttt{sec:} --- replacing the v1.0 label population of which
+$\sim$85\% is never referenced.
+
+\section{Apparatus program}
+\label{sec:apparatus}
+
+\paragraph{Indexes.}
+Four indexes, hand-authored at definition sites with inverted headings
+and sort keys (\texttt{Godel@G\"odel}); \emph{see}/\emph{see also}
+entries; target 2{,}500--4{,}000 subject entries.  The v1.0 auto-index
+wrapper (theorem titles as entries) is retired.
+
+\paragraph{Registries as data.}
+\texttt{registry/symbols.csv} (glyph, macro, role, scope, precedence
+rank, first use) generates the Part-1 tables and drives the notation
+lint; \texttt{registry/calculi/*.tex} holds every inference rule ---
+body chapters, entry cards, and Part-14 rule sheets all \verb|\input|
+from it, making body--sheet divergence structurally impossible.
+
+\paragraph{Bibliography.}
+Manual \texttt{thebibliography} (64 entries) converts to biblatex in
+Phase~3; the five missing primaries (Glivenko 1929, G\"odel 1933,
+Gentzen 1936, Kleene 1938, Priest 1979) enter immediately; the
+per-domain source lists in \texttt{new-content.csv} are the intake
+queue.  Projected final size 250--350 entries.
+
+\paragraph{The build list.}
+\input{generated/apparatus-table}
+
+\section{Standards and rulings}
+\label{sec:rulings}
+
+Binding for the new tree; enforced by the check suite
+(\texttt{tools/check.py --strict}).
+
+\begin{enumerate}[label=\textbf{Ruling \arabic*.},ref=\arabic*,leftmargin=2.2em]
+  \item \label{ruling:status}\textbf{Status is compile-mandatory.}
+        Every theorem-class environment takes a status key
+        (\texttt{proved}/\texttt{sketched}/\texttt{cited}) with an annex
+        address or source; omission is a compile error.  The body
+        contains no \texttt{proof} environments at all --- proofs live
+        only in the annex.
+  \item \textbf{LK nomenclature.}  Canonical \textsf{LK} is the
+        Parts~II--III presentation (primitive negation rules, contexted
+        initial sequents) --- the one the rule sheets and completeness
+        proofs already use.  Part~VIII's defined-negation variant is
+        documented as a named variant with an equivalence theorem.
+        \textsf{LK}$^=$ (with equality rules) is a separately named
+        calculus whose cut-elimination status is its own row.  No
+        theorem cites a calculus without its exact registry name.
+  \item \textbf{Glyph roles.}  $|\cdot|$ means cardinality only;
+        structure domains are written $\mathrm{dom}\,\mathcal M$
+        (closing the Part III/IV seam).  $\equiv$ means elementary
+        equivalence only; formula equivalence is $\Leftrightarrow$; the
+        definitional sign is $:\equiv$.  Forcing is one registered
+        macro ($\Vdash$ with a negated partner), ending the
+        $\models$/$\Vdash$ drift.  Worlds, matrices, and carriers get
+        registered letters distinct from valuations, structures, and
+        formulas.
+  \item \textbf{Rules live in the registry.}  Every inference rule is
+        named, labeled, and displayed only in
+        \texttt{registry/calculi/}; every display shows premises,
+        conclusion, name, discharge, and side conditions (the book's
+        own requirement at v1.0 lines 12518--12525, mechanized).
+  \item \textbf{Numbered semantic environments.}  \texttt{warning} and
+        \texttt{proofboundary} are numbered, indexed environments;
+        \verb|\paragraph| never again does semantic work.
+  \item \textbf{Generated audit tables.}  Every part ends with a
+        generated register of its numbered results with status and
+        dependencies (institutionalizing the v1.0 incompleteness audit
+        table at lines 8002--8035).
+  \item \label{ruling:annex}\textbf{Bidirectional completeness.}  Every
+        \emph{proved} status resolves to exactly one annex item and
+        every annex item is pointed to exactly once --- the Exercise
+        Feedback chapter's 112=112 discipline, mechanized as a check.
+  \item \textbf{Primary sources.}  Historical results cite primary
+        sources (with modern expositions alongside); the
+        zero-citation-chapter check enforces the floor.
+\end{enumerate}
+
+\section{Campaign plan and session protocol}
+\label{sec:campaign}
+
+\subsection{Phases}
+\begin{center}\small
+\begin{tabular}{@{}clp{2.75in}l@{}}
+\toprule
+\textbf{Ph} & \textbf{Name} & \textbf{Output} & \textbf{Scale} \\
+\midrule
+0 & Infrastructure & repo, \texttt{v1.0-audit} tag, baseline build, check suite & done \\
+1 & Gap report & this document + four registers & done at sign-off \\
+2 & Source math repairs & FIX-SOURCE rows executed; tag \texttt{v1.1-verified} & $\sim$25--40 proof sites \\
+3 & Skeleton + registries & new tree, templates, calculus/symbol registries, biblatex & +5\% \\
+4 & Migration + depth fill & Parts 1--7 body+annex, Part 8/12 cores; one part = one visit & $0.9$--$1.1\times$ \\
+5 & New domains & Parts 8--13 completed; deepenings in 3--7 & $+0.6$--$0.9\times$ \\
+6 & Master apparatus & Part 14, four indexes, master tables & $+0.1\times$ \\
+7 & Release audit & the book passes its own checklist; v2.0 & --- \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent Projected final size $1.7$--$2.1\times$ the current volume; a
+hard ceiling of $2.2\times$ triggers re-scoping review.
+
+\subsection{Dependency register}
+(1)~Phase-2 repairs strictly before migration of the affected parts.
+(2)~Rulings before registries before any prose in the new tree.
+(3)~Calculus registry before any calculus-bearing chapter migrates.
+(4)~biblatex before migration.  (5)~Inline \verb|\index| tagging from
+each chapter's birth; the index \emph{pass} only in Phase~6.
+(6)~Part~8 entry cards before Parts~9--11 (they cite into them).
+(7)~Part-14 master tables after Parts 2--12 land (harvested from entry
+fields).  (8)~Part~13 last.
+
+\subsection{Session protocol}
+Every later session: (1)~run \texttt{tools/check.py}; (2)~pick open
+register rows for the current phase; (3)~\textbf{spec-first rule}: any
+scope deviation edits the register row before prose is written;
+(4)~work; (5)~flip row status with the commit hash; (6)~regenerate
+tables (\texttt{tools/csv2tex.py}); (7)~run checks; (8)~commit.  The
+registers alone make any session resumable.
+
+\subsection{Standing controls}
+Treatment-level ceilings and the NOT-IN-SCOPE register against scope
+explosion; the calculus registry against body--sheet divergence; the
+compile-mandatory status key against policy drift (base rate: the v1.0
+policy collapsed twice); the mechanical check suite every session;
+\texttt{source/} immutable outside Phase~2 so the old book remains
+intact and compilable throughout.
+
+\section{Traceability}
+\label{sec:traceability}
+
+Finding-to-ID mapping lives in the registers themselves (each row cites
+its v1.0 lines); the full audit reports are archived in the campaign
+plan file.  During migration each executed row gains the new tree's
+label in its status cell, so the specification remains navigable in both
+directions for the whole campaign.
+
+\subsection{Frozen v1.0 table of contents}
+Parts and chapters of the audited manuscript with their line anchors
+(generated from the tagged source):
+
+\input{generated/toc-v1}
+
+\end{document}

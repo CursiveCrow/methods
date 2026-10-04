@@ -1,0 +1,276 @@
+%% Complete proofs for the separately authored DRAT mathematical checking core.
+
+\begin{annexitem}{annex:p12-drat-up-sound}{thm:p12-drat-up-sound}{Unit-propagation termination and conflict soundness}
+\begin{proof}
+First suppose the initial assumptions contain both \(l\) and \(\bar l\).
+No Boolean valuation makes both true, so the immediate conflict has the
+asserted meaning.  Otherwise the initial trail is consistent.  The algorithm
+checks whether a clause is already satisfied before forming its residual.
+Thus a singleton residual consists of an unassigned literal: a true literal
+would have made the clause satisfied, and a false literal would have been
+removed.  Appending its literal assigns a previously unassigned variable.
+At most \(\lvert X\rvert\) such assignments are possible.  Each intervening
+scan visits finitely many finite clauses.  Therefore the procedure either
+conflicts or terminates with no applicable singleton.
+
+Let \(v\) be any model of \(F\) that satisfies the assumptions.  We prove
+by induction on the number of appended literals that \(v\) extends the
+current partial valuation.  The initial case is exactly the assumption on
+\(v\).  For a propagation with residual \(\{l\}\) from \(D\in F\),
+every other literal of \(D\) is false under the preceding trail.  By the
+induction hypothesis it is also false under \(v\).  Since \(v\) satisfies
+\(D\), it must make \(l\) true.  This proves the induction step.  If an
+empty residual is found, every literal of that original clause is false under
+the trail, hence under \(v\), contrary to \(v\models F\).  If the input
+already contains the empty clause, this contradiction needs no assignments.
+There is no such \(v\) in either conflict case.
+
+For completeness of the boundary discussion, a tautological clause containing
+\(l,\bar l\) is satisfied if their variable has been assigned.  If it has
+not, both literals remain in the residual, so the clause is neither empty nor
+unit.  An empty database contains no residual at all and cannot conflict
+under consistent assumptions.  No part of this argument infers the existence
+of a model from a saturated nonconflicting trail.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12-drat-ala-rup}{thm:p12-drat-ala-rup}{ALA--RUP correspondence and monotonicity}
+\begin{proof}
+All clauses below are sets of signed literals over the fixed finite \(X\).
+Put \(K_0=C\), and let \(K_{j+1}\) be \(K_j\) together with every
+\(\bar l\) for which \(D\in F\), \(l\in D\), and
+\(D\setminus\{l\}\subseteq K_j\).  The sequence increases and is
+contained in the \(2\lvert X\rvert\)-element set of all signed literals.
+After finitely many strict increases it reaches a fixed point \(K_*\).
+For any closed literal set \(K\) containing \(C\), induction on \(j\)
+gives \(K_j\subseteq K\): each added literal is licensed by a clause
+whose other literals were already in \(K\).  Hence \(K_*\) is the least
+closed set containing \(C\), namely \(\operatorname{ALA}(F,C)\).
+Sequentially adding eligible literals also stays inside \(K_*\); whenever
+it stops with no new eligible literal, its result is closed and contains
+\(C\), hence contains \(K_*\).  The two inclusions prove uniqueness and
+order independence of every completed closure calculation.
+
+Assume now that \(F\) has no empty clause.  First suppose \(K_*\) contains
+no complementary pair.  The initial assumptions \(\bar C\) are consistent,
+and throughout unit propagation the complements of all trail literals are
+contained in \(K_*\).  This is true initially because those complements
+are exactly \(C\).  If \(D\) forces \(l\), every other literal of
+\(D\) is false under the trail, so it belongs to \(K_*\).  Closure then
+puts \(\bar l\) in \(K_*\), maintaining the invariant after appending
+\(l\).  The invariant prevents complementary trail assignments, since
+they would place a complementary pair in \(K_*\).
+
+It also prevents a falsified clause.  For if a nonempty \(D\in F\) were
+falsified, all its literals would belong to \(K_*\).  Choose any
+\(l\in D\).  Its other literals lie in \(K_*\), so closure puts
+\(\bar l\) there as well, a contradiction.  The nonempty-clause hypothesis
+is used precisely for this choice of \(l\).  Therefore no propagation
+order can conflict when \(K_*\) is non-tautological.
+
+Conversely suppose a propagation run terminates without conflict.  Let \(T\)
+be its consistent set of true trail literals, and put
+\(\bar T=\{\bar l:l\in T\}\).  It contains \(C\).  We show it is
+closed under the ALA operation.  Suppose
+\(D\setminus\{l\}\subseteq\bar T\).  All the other literals of
+\(D\) are false under the trail.  Literal \(l\) cannot be false, for that
+would falsify \(D\); it cannot be unassigned, for that would leave a
+singleton residual at termination.  Hence \(l\) is true and
+\(\bar l\in\bar T\).  This proves closure, and consequently
+\(K_*\subseteq\bar T\).  The latter is consistent, so \(K_*\) is
+not tautological.  Termination from
+Annex~\ref{annex:p12-drat-up-sound} now yields the claimed equivalence of
+ALA tautology and unit conflict, for every choice of eligible unit steps.
+If \(C\) itself is tautological, its assumptions already conflict and its
+closure is tautological, agreeing with both directions.  If \(F\) contains
+the empty clause, the operational RUP test conflicts immediately instead;
+the literal-extension calculation alone need not become tautological.
+
+To prove entailment, let \(v\models F\).  If it falsified a RUP clause
+\(C\), it would make every literal of \(\bar C\) true.  This contradicts
+unit-conflict soundness.  Thus \(v\models C\).  This also treats
+\(C=\varnothing\): a successful RUP test of the empty clause means
+\(F\) has no model.
+
+Finally take \(F\subseteq G\) and \(C\subseteq E\).  If \(F\)
+contains the empty clause, so does \(G\), and both RUP tests conflict.  If
+only \(G\) contains it, its test still conflicts immediately.  In the
+remaining case both databases have no empty clause.  The least ALA closure
+of \((G,E)\) contains every round of the closure of \((F,C)\): it contains
+the initial seed \(C\), and every licensing clause of \(F\) is also in
+\(G\).  Thus
+\(\operatorname{ALA}(F,C)\subseteq\operatorname{ALA}(G,E)\).
+A complementary pair in the former persists in the latter.  The established
+correspondence gives \(\operatorname{RUP}(G,E)\), including a
+tautological seed and the empty seed.  This is monotonicity of the RUP
+\emph{test}, not a converse to RUP entailment: unit refutation is not a
+complete test of arbitrary semantic consequence.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12-drat-resolvent-test}{thm:p12-drat-resolvent-test}{Pivot-retaining and ordinary-resolvent tests}
+\begin{proof}
+Put \(R=\operatorname{Res}_l(C,D)\) and
+\(E=C\cup(D\setminus\{\bar l\})\).  Since \(l\in C\),
+\(E=R\cup\{l\}\).  Therefore RUP of \(R\) implies RUP of
+\(E\) by clause-weakening monotonicity from
+Annex~\ref{annex:p12-drat-ala-rup}.
+
+For the converse, if \(F\) contains an empty clause, RUP of \(R\)
+holds immediately.  Otherwise ALA--RUP correspondence applies.  If \(l\)
+already lies in \(R\), then \(E=R\) and there is nothing to change.
+If \(l\notin R\), use the actual opposing clause \(D\in F\).
+We have \(\bar l\in D\) and
+\(D\setminus\{\bar l\}\subseteq R\).  The ALA extension licensed
+by that clause adds \(l\) to the closure of \(R\).  Let that closure be
+\(K_*\).  It follows that \(R\subseteq E\subseteq K_*\).
+As \(K_*\) is closed and contains \(E\), the least closure of \(E\)
+is contained in \(K_*\).  As \(R\subseteq E\), monotonicity of closure
+gives the reverse inclusion.  The two closures are equal.  RUP of \(E\)
+means its closure is tautological, so the closure of \(R\) is tautological
+and \(R\) is RUP.  This includes tautological clauses and resolvents:
+no complementary pair is discarded, and no empty database clause is used as
+a literal-extension premise.
+
+For the final assertion, take a nonempty RUP clause \(C\) and any
+\(l\in C\).  Each test clause
+\(C\cup(D\setminus\{\bar l\})\) contains \(C\), hence is RUP
+by weakening.  All the universally quantified RAT tests pass.  The empty
+clause has no \(l\) to choose and is governed by its own RUP check.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12-drat-rat-preservation}{thm:p12-drat-rat-preservation}{RAT preserves satisfiability by pivot repair}
+\begin{proof}
+Every model of \(F\cup\{C\}\) is a model of \(F\), so one direction
+is immediate.  For the other, take any \(v\models F\).  If \(v\)
+satisfies \(C\), the same valuation suffices.  Otherwise every literal of
+\(C\), in particular \(l\), is false under \(v\).  In this case \(C\)
+cannot be tautological.  Let \(w\) agree with \(v\) on all variables
+except the variable of \(l\), and give that variable the value making
+\(l\) true.  Thus \(w\models C\).  It remains to prove
+\(w\models F\); the fact that one coordinate was flipped does not by
+itself establish this.
+
+Take an arbitrary old clause \(D\in F\).  There are three exhaustive
+cases.  If \(l\in D\), then \(w\models D\) because \(l\) is true.
+This case also covers a tautological \(D\) containing both \(l\) and
+\(\bar l\).  If neither \(l\) nor \(\bar l\) lies in \(D\), every
+literal has the same value under \(v\) and \(w\), so the old satisfaction
+witness is retained.  Finally suppose \(\bar l\in D\) but \(l\notin D\).
+RAT requires RUP of
+\(E=C\cup(D\setminus\{\bar l\})\) against \(F\).  By RUP
+entailment, \(v\models E\).  Every literal of \(C\) is false under
+\(v\); therefore some literal in \(D\setminus\{\bar l\}\) is true
+under \(v\).  None of those literals uses the pivot variable: both its
+possible polarities have been excluded.  That same literal is true under
+\(w\), so \(w\models D\).  If the opposing clause is the singleton
+\(\{\bar l\}\), this last argument would require a true literal in an
+empty set; hence the hypothesized falsifying model cannot coexist with a
+successful RAT test in that case.  The case is not silently omitted.
+
+These cases show that \(w\) satisfies every \(D\in F\).  If the pivot
+is fresh for \(F\), the last case never occurs and all old clauses are
+unchanged; the same repair argument works.  A valuation originally specified
+only on \(\operatorname{Var}(F)\) can first be extended arbitrarily to
+the finite variables of \(C\), and the argument then applies.  If there is
+no model of \(F\), the forward satisfiability implication is vacuous and
+the reverse implication still prohibits a model of \(F\cup\{C\}\).
+An empty input clause is covered by this no-model case; a tautological added
+clause is covered by the retained-model case.  Only a nonempty added clause
+has the pivot used by this theorem.  Thus all cases of the claimed general
+finite-CNF equisatisfiability statement have been discharged.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12-drat-trace-sound}{thm:p12-drat-trace-sound}{A verified DRAT refutation certifies UNSAT}
+\begin{proof}
+The input and proof are finite, so their combined variable set is finite.
+Every RUP test terminates by
+Annex~\ref{annex:p12-drat-up-sound}; every RAT test runs at most one such
+test per opposing clause in a finite active database.  A finite number of
+updates and local tests therefore terminates.  No premise concerning solver
+fairness, restarts, clause-learning heuristics, or solver termination is used.
+
+We prove the invariant by induction on accepted prefix length \(i\).
+At \(i=0\), the active database is the input, so the implication is an
+identity.  Suppose it holds at \(i-1\), and assume the input is satisfiable.
+The induction hypothesis supplies some model of \(F^{i-1}_P\).  A deletion
+removes only a constraint, so that model satisfies the new database as well.
+A declared absent-deletion no-op, or ignored unit deletion, changes nothing.
+For a RUP addition, RUP entailment proves that every current model satisfies
+the added clause; hence the same model remains.  For a non-RUP addition
+accepted by RAT, the full model-repair theorem supplies a model of the
+enlarged database.  This model need not be the preceding model or a model of
+the original input.  The invariant asserts existence, not preservation of a
+fixed valuation.  These are all kinds of accepted updates, proving the
+induction step.
+
+At the accepting empty-clause addition, its RUP check was performed before
+insertion.  Unit-conflict soundness with no temporary assumptions already
+shows that the preceding active database has no model.  Equivalently, after
+insertion the active database contains the empty clause and has no model.
+Either fact contradicts the invariant if the original input were
+satisfiable.  Consequently it is unsatisfiable.  In particular the proof
+does not infer that arbitrary deletion preserves unsatisfiability; that false
+converse is neither needed nor used.
+
+For the separately declared multiset version, valuation satisfaction depends
+only on which clauses have a positive multiplicity.  Adding a copy adds the
+same constraint tested by RUP or RAT, and removing one copy either removes
+that constraint or leaves it represented by other copies.  The latter is a
+no-op at the semantic level.  The same induction therefore applies, provided
+the local RAT tests enumerate the clauses actually active under that policy.
+This does not identify the set and multiset parser semantics or assert that
+they accept the same serialized traces.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12-drat-drup-complete}{thm:p12-drat-drup-complete}{Finite-CNF DRUP certificate completeness}
+\begin{proof}
+Let \(F\) be unsatisfiable and list its \(n\) variables.  A full assignment
+\(s\) falsifies at least one original clause \(D\in F\), since it is
+not a model.  Every literal of that \(D\) is opposite to the corresponding
+value of \(s\), so \(D\subseteq B_s\).  In the RUP test of \(B_s\),
+its complementary assumptions assign all variables exactly as \(s\).
+The original clause \(D\) has empty residual immediately.  Therefore each
+full-assignment blocking clause is RUP of the original input.  It remains
+RUP when checked after earlier additions, by database monotonicity.  All
+leaf clauses can thus be added in any order.
+
+Proceed from prefixes of length \(n-1\) down to length zero.  When a prefix
+\(s\) to \(k\) variables is processed, its two children have already
+been added.  Their blocking clauses are precisely
+\(B_s\cup\{x_{k+1}\}\) for the child setting the next variable false,
+and \(B_s\cup\{\neg x_{k+1}\}\) for the child setting it true.
+Negating \(B_s\) assigns the first \(k\) variables as \(s\).
+The next variable is still unassigned.  Unless an earlier conflict already
+ends the test successfully, the two child clauses are residual units
+\(\{x_{k+1}\}\) and \(\{\neg x_{k+1}\}\).  Propagating either
+falsifies the other.  Thus \(B_s\) passes RUP.  After all nodes of a
+given length have been added, this same argument applies to the preceding
+length.  At the root, \(B_{\varnothing}=\varnothing\), so the last
+addition is a verified empty clause with no assumptions.
+
+The complete binary assignment tree has
+\(1+2+\cdots+2^n=2^{n+1}-1\) nodes.  There is one proposed addition per
+node; if a blocking clause was already present, it still passes its test and
+the set insertion merely leaves that constraint in place.  Hence this count
+is an upper bound without requiring distinct new database entries.  If
+\(n=0\), there is exactly one full assignment, the empty assignment.
+Unsatisfiability then means an original clause is false under it; a clause
+with no variables can only be the empty clause.  The unique root/leaf
+blocking clause is empty, and its RUP test conflicts on that input clause.
+This agrees with the same one-node construction.
+
+Every addition used is RUP, so the log is valid in the DRUP subsystem and in
+the stated DRAT checking core.  If the input uses the 2016 syntactic
+restrictions, all generated blocking clauses are duplicate-free and
+non-tautological, so the same construction is serializable there as well.
+The number of nodes can be exponential in the variable count.  Nothing in
+this existence proof makes a particular solver enumerate this tree, complete
+a log within a resource bound, or produce a polynomial-size refutation.
+Together with trace soundness it establishes exactly the claimed
+refutational completeness, separately from those production questions.
+\end{proof}
+\end{annexitem}

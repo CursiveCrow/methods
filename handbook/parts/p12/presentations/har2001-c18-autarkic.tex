@@ -1,0 +1,293 @@
+\subsection{Actual autarkic programs and their reusable proofs}
+
+\begin{hbdefinition}{def:p12-har-autarkic-regime}{The source computation mechanism and this concrete instantiation}
+Section~4.3 leaves the program representing square root unspecified,
+while requiring its universal adequacy proof; it also leaves the
+arithmetic-syntax interpreter and its free-variable bookkeeping to be
+constructed. Here those programs are built using the chapter's primitive
+recursion mechanism in the explicitly historical arithmetic regime of
+\cref{def:p12-har-prime-regime,def:p12-har-prime-arithmetic}.
+Thus \(\mathsf{nat}:\mathsf{Set}\), its constructor computation,
+generated induction into \(\mathsf{Prop}\), propositional equality,
+and the already proved order/semiring library are the assumptions.
+The available classical DN axiom is not used in the following programs
+or proofs. No proof is eliminated to select data.
+
+The source's abstract \(\mathsf{nat}:\mathsf{Type}\) recursor
+schemas describe the same primitive-recursion mechanism at that different
+declared sort; they are not being silently substituted for this Set-based
+library. Nor are these programs terms of the unchanged beta-only HOL
+calculus. Each recursion below has a fixed admitted target and explicitly
+typed branches. General universe/inductive extension consistency remains
+separate. These are concrete source-based reconstructions, not programs
+printed in the chapter or claims of Coq execution
+\cite[pp.~1220--1223]{BarendregtGeuvers2001}.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p12-har-autarkic-eqb}{The actual equality-code and data selector}
+Use O and one as the false and true \emph{data codes}. Put
+\[
+\begin{aligned}
+ z&:=\mathsf{nat\_rec}\ \mathsf{one}
+       (\lambda j:\mathsf{nat}.\lambda r:\mathsf{nat}.O),\\
+ b&:=\lambda n:\mathsf{nat}.\lambda q:\mathsf{nat}\to\mathsf{nat}.
+       \lambda m:\mathsf{nat}.
+          \mathsf{nat\_rec}\ O
+            (\lambda j:\mathsf{nat}.\lambda r:\mathsf{nat}.q j)\ m,\\
+ \mathsf{eqb}&:=\mathsf{nat\_rec}\ z\ b,\\
+ \mathsf{choose}&:=\lambda c:\mathsf{nat}.\lambda u:\mathsf{nat}.
+  \lambda v:\mathsf{nat}.
+    \mathsf{nat\_rec}\ v
+       (\lambda j:\mathsf{nat}.\lambda r:\mathsf{nat}.u)\ c.
+\end{aligned}
+\]
+The outer eqb recursion has target \(\mathsf{nat}\to\mathsf{nat}\);
+the two inner recursions and choose have target nat. Consequently
+\(\mathsf{eqb}:\mathsf{nat}\to\mathsf{nat}\to\mathsf{nat}\) and
+\(\mathsf{choose}:\mathsf{nat}\to\mathsf{nat}\to\mathsf{nat}\to\mathsf{nat}\).
+Their actual computation equations are
+\[
+\begin{aligned}
+ \mathsf{eqb}\ O\ O&\longrightarrow^*\mathsf{one},&
+ \mathsf{eqb}\ O\ (S m)&\longrightarrow^*O,\\
+ \mathsf{eqb}\ (S n)\ O&\longrightarrow^*O,&
+ \mathsf{eqb}\ (S n)\ (S m)&\longrightarrow^*\mathsf{eqb}\ n\ m,\\
+ \mathsf{choose}\ O\ u\ v&\longrightarrow^*v,&
+ \mathsf{choose}\ (S c)\ u\ v&\longrightarrow^*u.
+\end{aligned}
+\]
+The arrows expand these finite definitions and perform beta/iota
+contractions; the equations are not postulated boolean axioms.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p12-har-autarkic-eqb}{proved=annex:p12.har.autarkic-eqb}{The complete equality-code specification}
+For all \(n,m:\mathsf{nat}\),
+\[
+\begin{aligned}
+ &\mathsf{eqb}\ n\ m=O\ \vee\ \mathsf{eqb}\ n\ m=\mathsf{one},\\
+ &\mathsf{eqb}\ n\ m=\mathsf{one}\ \longleftrightarrow\ n=m,\\
+ &\mathsf{eqb}\ n\ m=O\ \longleftrightarrow\ \neg(n=m).
+\end{aligned}
+\]
+This is a constructed decision procedure, not classical excluded middle
+used to define a Set-valued program.
+\end{hblemma}
+
+\begin{hblemma}{thm:p12-har-autarkic-squares}{proved=annex:p12.har.autarkic-squares}{Square growth and the unique integer square-root bounds}
+Write \(Q(r):=\mathsf{times}\ r\ r\). Then
+\[
+ Q(S r)=Q(r)+S(r+r),\qquad Q(r)<Q(S r).
+\]
+Squaring preserves weak and strict order on nat. If two values r,s
+satisfy \(Q(r)\le n<Q(S r)\) and \(Q(s)\le n<Q(S s)\),
+then \(r=s\). These assertions follow from the proved arithmetic
+library; no square-root existence assumption is used.
+\end{hblemma}
+
+\begin{hbdefinition}{def:p12-har-autarkic-square-root}{The omitted square-root program F, explicitly constructed}
+The actual fixed-target recursion is
+\[
+ F:=\mathsf{nat\_rec}\ O\
+  (\lambda n:\mathsf{nat}.\lambda r:\mathsf{nat}.
+     \mathsf{choose}\ (\mathsf{eqb}\ (S n)\ (Q(S r)))\ (S r)\ r).
+\]
+Its step has type \(\mathsf{nat}\to\mathsf{nat}\to\mathsf{nat}\),
+so \(F:\mathsf{nat}\to\mathsf{nat}\). Operationally it increments
+the current root exactly when the next input reaches the next square.
+All branching inputs are computed natural-number data.
+For a meta-level natural number k, retain the source's unary numeral
+representation, written here
+\(\ulcorner k\urcorner_{\mathsf{nat}}:=S^k O\);
+this is not a quotation of arithmetic syntax into the term datatype below.
+The nat and T subscripts on quotation brackets are editorial sort tags
+exposing the two different representation types.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-har-autarkic-square-root}{proved=annex:p12.har.autarkic-square-root}{The universal F adequacy proof and the actual 45 reduction}
+The constructed program satisfies the source's precise proof obligation
+\[
+ \Pi n:\mathsf{nat}.\quad Q(F n)\le n<Q(S(F n)).
+\]
+Since \(S(F n)=F n+\mathsf{one}\), this is
+\((F n)^2\le n<(F n+1)^2\). Its values are the unique natural-number
+integer square roots specified by these bounds. In particular the
+explicit definitions admit the finite computation
+\[
+ F\ulcorner45\urcorner_{\mathsf{nat}}
+     \twoheadrightarrow_{\beta\iota\delta}
+          \ulcorner6\urcorner_{\mathsf{nat}}.
+\]
+The annex supplies the invariant's branches and the finite computation
+trace. No executed kernel replay is asserted by this mathematical
+reduction derivation \cite[p.~1221]{BarendregtGeuvers2001}.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p12-har-autarkic-syntax}{The actual arithmetic syntax and its five generated branches}
+The source \(\mathrm{term}(\mathrm{Nat})\) contains terms over
+\(\langle\mathrm{Nat};+,\times,0,1\rangle\); it is not a datatype
+of arbitrary typed lambda terms. Make its omitted variable representation
+explicit with the positive data declaration \(T:\mathsf{Set}\) and
+constructors
+\[
+\begin{aligned}
+ Z,U&:T,&\mathsf{Var}&:\mathsf{nat}\to T,\\
+ \mathsf{Add},\mathsf{Mul}&:T\to T\to T.
+\end{aligned}
+\]
+The numeral argument of Var is an index for a free variable name, not its
+value. This is the historical Set-based instance of the source's stated
+inductive syntax mechanism. For each fixed admitted target C, the generated
+fold has seeds \(z,u:C\), variable branch \(v:\mathsf{nat}\to C\),
+and two branches \(a,m:T\to T\to C\to C\to C\).
+The parenthesized five-argument fold notation means five curried
+applications, not a new tuple datatype. Its constructor computations are
+\[
+\begin{aligned}
+ \mathsf{fold}_T^C(z,u,v,a,m)Z&\longrightarrow z,\\
+ \mathsf{fold}_T^C(z,u,v,a,m)U&\longrightarrow u,\\
+ \mathsf{fold}_T^C(z,u,v,a,m)(\mathsf{Var}\ i)&\longrightarrow v i,\\
+ \mathsf{fold}_T^C(z,u,v,a,m)(\mathsf{Add}\ s\ t)&\longrightarrow
+    a s t(\mathsf{fold}_T^C(z,u,v,a,m)s)(\mathsf{fold}_T^C(z,u,v,a,m)t),\\
+ \mathsf{fold}_T^C(z,u,v,a,m)(\mathsf{Mul}\ s\ t)&\longrightarrow
+    m s t(\mathsf{fold}_T^C(z,u,v,a,m)s)(\mathsf{fold}_T^C(z,u,v,a,m)t).
+\end{aligned}
+\]
+Only direct recursive fields occur, so the source strictly positive
+branch construction gives precisely the two recursive values/proofs.
+For a fixed \(P:T\to\mathsf{Prop}\), the generated induction has
+branches \(PZ\), \(PU\), \(\Pi i.P(\mathsf{Var}\ i)\), and
+\(\Pi s,t.Ps\to Pt\to P(\mathsf{Add}\ s\ t)\), respectively
+\(\Pi s,t.Ps\to Pt\to P(\mathsf{Mul}\ s\ t)\).
+These are the particular source-licensed recursion/induction schemas,
+not a parametricity assumption or a new top-sort-polymorphic constant
+\cite[pp.~1206--1209,1221--1222]{BarendregtGeuvers2001}.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p12-har-autarkic-interpreter}{The constructed valuation-sensitive interpreter and substitution}
+For each fixed \(A:\mathsf{Set}\), take specified values
+\(0_A,1_A:A\), operations \(+_A,\times_A:A\to A\to A\),
+and a valuation \(\nu:\mathsf{nat}\to A\). Define the actual fold
+\[
+ E_\nu^A:=\mathsf{fold}_T^A
+   (0_A,1_A,\nu,
+    \lambda s,t:T.\lambda a,b:A.a+_A b,
+    \lambda s,t:T.\lambda a,b:A.a\times_A b).
+\]
+Every branch has the type just declared; no algebraic laws are needed
+to form this interpreter. Its original natural-number instance uses
+\(A=\mathsf{nat}\), \(0_A=O\), \(1_A=\mathsf{one}\), and the
+already constructed plus/times. Abbreviate that instance by \(E_\nu\).
+The arbitrary fixed A version is an explicit interpretation schema,
+not a claim that the chapter prints a polymorphic model interpreter.
+
+Quotation of a finite arithmetic expression is defined by its five
+clauses: 0 maps to Z, 1 to U, and a name \(x_i\) with meta-level
+natural-number index i maps to
+\(\mathsf{Var}\ulcorner i\urcorner_{\mathsf{nat}}\);
+a sum maps to Add of the two quotations, and a product to Mul of them. Write it
+as \(\ulcorner p\urcorner_T\). Under a valuation, \(p[\nu]\)
+replaces every \(x_i\) by
+\(\nu\ulcorner i\urcorner_{\mathsf{nat}}\) and uses the declared values
+and operations. There are no binders in this arithmetic grammar.
+Finite open contexts have an actual valuation extension as well. For a
+fixed A, define the data selector
+\[
+ \mathsf{sel}_A:=\lambda c:\mathsf{nat}.\lambda u,v:A.
+      \mathsf{nat\_rec}\ v
+        (\lambda j:\mathsf{nat}.\lambda r:A.u)\ c.
+\]
+For distinct meta-level indices \(i_1,\ldots,i_k\) with given
+well-typed values \(a_1,\ldots,a_k:A\) in a valid context, take
+\[
+ \nu_\Gamma(m):=
+  \mathsf{sel}_A(\mathsf{eqb}\ m\ulcorner i_1\urcorner_{\mathsf{nat}})a_1
+   \bigl(\cdots\mathsf{sel}_A
+    (\mathsf{eqb}\ m\ulcorner i_k\urcorner_{\mathsf{nat}})a_k\,0_A\cdots\bigr).
+\]
+This finite nesting is a fully specified term (at meta-level k=0 it
+is the constant \(0_A\) function); the annex proves each assigned-index
+computation. It uses neither choice nor a proof-to-data map.
+Also define actual syntactic substitution, for \(\sigma:\mathsf{nat}\to T\),
+by
+\[
+ \mathsf{sub}_\sigma:=\mathsf{fold}_T^T
+ (Z,U,\sigma,
+    \lambda s,t:T.\lambda a,b:T.\mathsf{Add}\ a\ b,
+    \lambda s,t:T.\lambda a,b:T.\mathsf{Mul}\ a\ b).
+\]
+Neither program consults a logical proof to return data.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-har-autarkic-interpreter}{proved=annex:p12.har.autarkic-interpreter}{Actual interpretation, quotation and open-valuations agreement}
+For every finite expression in the declared arithmetic grammar and every
+well-typed valuation in a valid context, expansion and constructor reduction
+give
+\[
+ E_\nu^A\ulcorner p\urcorner_T
+            \twoheadrightarrow_{\beta\iota\delta}p[\nu].
+\]
+Here \(p[\nu]\) is the A-valued interpreted expression, not a
+purported raw Nat expression of type A. For the Nat instance this is
+exactly the source arithmetic quotation/evaluation relationship, with
+the missing free-variable valuation supplied. Moreover, if
+\(\Pi i:\mathsf{nat}.\nu i=\mu i\) in primitive equality on A,
+then \(\Pi t:T.E_\nu^A t=E_\mu^A t\). Finite-context agreement on
+the indices actually occurring in a given quotation is sufficient too,
+as the annex's constructor-by-constructor proof recipe demonstrates.
+No function extensionality or parametricity theorem is assumed.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p12-har-autarkic-substitution}{proved=annex:p12.har.autarkic-substitution}{The full open-term substitution equation}
+For every fixed A with the declared operations, every
+\(\nu:\mathsf{nat}\to A\), \(\sigma:\mathsf{nat}\to T\), and
+\(t:T\), put \(\nu_\sigma:=\lambda i:\mathsf{nat}.E_\nu^A(\sigma i)\).
+Then
+\[
+ E_\nu^A(\mathsf{sub}_\sigma t)=E_{\nu_\sigma}^A t.
+\]
+The equality is proved by the actual five generated induction branches,
+not by supposing interpretation automatically commutes with substitution.
+\end{hbtheorem}
+
+\begin{hblemma}{thm:p12-har-autarkic-prime-bound}{proved=annex:p12.har.autarkic-prime-bound}{The actual finite coefficient bound needed by primality search}
+For \(\mathsf{one}\le d\), every coefficient satisfies
+\(x\le xd\). For such a d, consequently,
+\[
+ \mathsf{div}\ d\ n\to
+      \exists x:\mathsf{nat}.(x\le n)\wedge(xd=n).
+\]
+In particular the source's proper-divisor proposition has the finite
+search characterization
+\[
+\begin{aligned}
+ &\exists d:\mathsf{nat}.\mathsf{propdiv}\ d\ n\\
+ &\quad\longleftrightarrow\quad
+ \exists d,x:\mathsf{nat}.
+  (d\le n)\wedge(x\le n)\wedge(\mathsf{one}<d)\wedge(d<n)\wedge(xd=n).
+\end{aligned}
+\]
+Both existentials are in Prop. This bounds the later data-search loops
+used by the actual KPrime program in \cref{def:p12-har-kprime-program,thm:p12-har-kprime-correct}.
+That program and its characteristic proof are supplied separately;
+the loops are not obtained by extracting these Prop witnesses into data.
+\end{hblemma}
+
+\begin{proofboundary}{def:p12-har-autarkic-residual}{What these constructions do not supply}
+The source square-root program and its full reusable proof are now supplied,
+as are the actual arithmetic-syntax interpreter and its open-term laws.
+The actual KPrime term and all order/boolean/bounded-fold/characteristic
+proofs are supplied in \cref{def:p12-har-kprime-program,thm:p12-har-kprime-correct}.
+The actual polynomial program and universal interpretation proof are
+supplied in \cref{def:p12-har-poly-normalizer,def:p12-har-poly-quotation,thm:p12-har-poly-preservation}.
+Its nontrivial source-pattern output is given with the explicit
+association convention in \cref{thm:p12-har-poly-example}; it is not
+identity G or a claim of syntax equality across different parses.
+The external primitive-recursive representation templates and the distinct
+internal formula compiler are supplied in
+\cref{thm:p12-har-prcompiler-representation,thm:p12-har-prcompiler-ok,thm:p12-har-prcompiler-predicate}.
+They are not consequences of these particular programs or an automatic
+inverse from arbitrary propositions to formula data. The Pocklington/Fermat
+variant and large-number certificate remain distinct additional constructions.
+The global
+extension metatheory and arithmetic sequence-coding bridge remain separate.
+\end{proofboundary}

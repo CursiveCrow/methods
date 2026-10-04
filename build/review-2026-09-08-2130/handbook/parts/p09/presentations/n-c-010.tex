@@ -1,0 +1,2041 @@
+% Source presentations for register row N-c-010.
+
+\subsection{Three tractability mechanisms and the normative OWL boundary}
+\label{sec:p09-presentation-n-c-010}
+
+\subsubsection{The \(\mathcal{EL}^{++}\) saturation of Baader--Brandt--Lutz}
+
+\paragraph{Sources and proof boundary.}
+The principal source is the six-page official IJCAI paper, printed
+pp.~364--369.  It expressly sends proofs and technical details to the authors'
+thirty-two-page LTCS-05-01 report.
+IJCAI numbering controls statements below; report numbering identifies
+report-only material.  The procedure here uses the source's finite completion
+state and rules with three explicit handbook corrections.  A conservative
+concrete-atom abbreviation prepass gives linear written normalization size
+also for unbounded concrete arities.  A fresh nominal then marks the queried
+concept before saturation, and concrete-atom propagation checks that all
+required features are already defined in the relevant concrete domain.
+The soundness and countermodel arguments below prove this corrected
+procedure for the full displayed language, including nominals and partial
+features.  The source's unmarked simultaneous-classification claim is not used
+as a premise of that proof.  The official proceedings reserve reproduction
+rights, so the handbook reconstructs the mathematics rather than reproducing
+the printed pages
+\cite{BaaderBrandtLutz2005,BaaderBrandtLutz2005TR}.
+
+\paragraph{The language, concrete domains, and CBoxes.}
+Let \(N_C,N_R,N_I,N_F\) be the source sets of concept names, role names,
+individual names, and feature names.  A concrete domain is
+\(\mathcal D=(\Delta^{\mathcal D},P^{\mathcal D})\), where every
+\(p\in P^{\mathcal D}\) has a positive arity and an extension over
+\(\Delta^{\mathcal D}\).  When
+\(\mathcal D_1,\ldots,\mathcal D_n\) are used together, their carriers are
+pairwise disjoint.  The source concepts are exactly
+\[
+ C,D::=A\mid\top\mid\bot\mid\{a\}\mid C\sqcap D
+       \mid\exists r.C\mid p(f_1,\ldots,f_k),
+\]
+where \(A\in N_C\), \(a\in N_I\), \(r\in N_R\), the \(f_i\in N_F\), and
+\(p\in P^{\mathcal D_j}\) has arity \(k\).  The six non-name forms stand for
+top, bottom, a nominal, conjunction, an existential role restriction, and a
+concrete-domain atom; none is OWL syntax imported into the paper.
+
+An interpretation \(\mathcal I=(\Delta^{\mathcal I},\cdot^{\mathcal I})\)
+has \(\Delta^{\mathcal I}\ne\varnothing\) and assigns
+\[
+\begin{gathered}
+ A^{\mathcal I}\subseteq\Delta^{\mathcal I},\qquad
+ r^{\mathcal I}\subseteq\Delta^{\mathcal I}\times\Delta^{\mathcal I},
+ \qquad a^{\mathcal I}\in\Delta^{\mathcal I},\\
+ f^{\mathcal I}:\Delta^{\mathcal I}\rightharpoonup
+       \bigcup_{j=1}^{n}\Delta^{\mathcal D_j}.
+\end{gathered}
+\]
+Besides the usual clauses for \(\top,\bot,\sqcap\),
+\[
+\begin{aligned}
+ \{a\}^{\mathcal I}&=\{a^{\mathcal I}\},\\
+ (\exists r.C)^{\mathcal I}
+ &=\{x:\exists y\,((x,y)\in r^{\mathcal I}\land y\in C^{\mathcal I})\},\\
+ p(f_1,\ldots,f_k)^{\mathcal I}
+ &=\{x:\exists y_1,\ldots,y_k\in\Delta^{\mathcal D_j}
+       (\bigwedge_{i=1}^{k}f_i^{\mathcal I}(x)=y_i
+        \land (y_1,\ldots,y_k)\in p^{\mathcal D_j})\}.
+\end{aligned}
+\]
+A concrete atom is consequently false when a required feature is undefined.
+
+A \emph{constraint box}, or CBox, is a finite set whose members may be GCIs
+\(C\sqsubseteq D\) and RIs
+\(r_1\circ\cdots\circ r_k\sqsubseteq r\).  The former require
+\(C^{\mathcal I}\subseteq D^{\mathcal I}\); the latter require relational
+composition on the left to be included in the single role on the right.  A
+finite GCI-only set is a general TBox in this source.  Hence a CBox and a
+general TBox are not synonyms.  For a CBox \(\mathcal C\),
+\[
+ C\sqsubseteq_{\mathcal C}D
+ \quad\Longleftrightarrow\quad
+ C^{\mathcal I}\subseteq D^{\mathcal I}
+ \text{ for every model \(\mathcal I\) of \(\mathcal C\)}.
+\]
+There is no global unique-name assumption: selected inequality can instead be
+forced by \(\{a\}\sqcap\{b\}\sqsubseteq\bot\)
+\cite[table~1 and \S2]{BaaderBrandtLutz2005}.
+
+\paragraph{Normal form and the written-size convention.}
+\label{sec:p09-elpp-normalization}
+For any finite CBox \(\mathcal C\), its basic descriptions form exactly
+the smallest set \(\mathsf{BC}_{\mathcal C}\) containing \(\top\), all
+concept names occurring in \(\mathcal C\), and all nominals and concrete
+atoms occurring as concept subdescriptions in \(\mathcal C\).
+There are no other elements: \(\bot\), conjunctions and existential
+restrictions are not basic.  The same definition is used for each later
+normalized or marked CBox.
+
+In this normalization discussion, the source-local notation
+\(|\mathcal C|\) means the number of symbols in a fully written CBox,
+not its number of axioms
+\cite[\S3.1, before lem.~2]{BaaderBrandtLutz2005TR}.
+Names are atomic vocabulary symbols in this measure.  Every occurrence
+of a connective, role, feature argument and punctuation symbol is counted;
+a concrete atom \(p(f_1,\ldots,f_k)\) has length proportional to \(k+1\),
+rather than unit length.  Write \(\ell(E)\) for the corresponding written
+length of a concept description \(E\).
+No upper bound on concrete-predicate arities is assumed.
+The later bars in \(b=|\mathsf{BC}_{\mathcal K}|\) and
+\(m_R=|R_{\mathcal K}|\) mean ordinary cardinalities of the indicated
+finite vocabularies.  Encoded complexity, which also counts written
+identifiers and concrete-predicate parameters, is addressed after the
+normalization proof.
+
+A normalized CBox has only
+\[
+\begin{array}{c@{\qquad}c}
+ C_1\sqsubseteq D & C_1\sqcap C_2\sqsubseteq D\\
+ C_1\sqsubseteq\exists r.C_2 & \exists r.C_1\sqsubseteq D
+\end{array}
+\qquad
+\begin{array}{c}
+ r\sqsubseteq s\\
+ r_1\circ r_2\sqsubseteq s,
+\end{array}
+\]
+where \(C_1,C_2\in\mathsf{BC}_{\mathcal C}\) and
+\(D\in\mathsf{BC}_{\mathcal C}\cup\{\bot\}\).
+
+\paragraph{A conservative concrete-atom abbreviation step.}
+The following prepass is a handbook addition to the report's NF schedule.
+For each syntactically distinct occurring concrete atom \(X\), introduce a
+fresh concept name \(A_X\), with different atoms receiving different names.
+Its subscript identifies the associated atom
+in this description of the construction; the output uses an ordinary fresh
+name, not a copy of the expression \(X\) inside that name.
+Replace every occurrence of \(X\) in the input GCIs by \(A_X\), and
+adjoin the two defining GCIs
+\[
+ A_X\sqsubseteq X,\qquad X\sqsubseteq A_X.
+ \tag{N0}
+\]
+Role inclusions are unchanged.  Denote the replaced input by
+\(\mathcal C^\flat\) and the set of these defining GCIs by
+\(\mathcal E\).  For an original description \(E\), write \(E^\flat\)
+for the result of the same atom replacement within \(E\).
+The definitions in \(\mathcal E\) are already normalized and are
+protected: the prepass is not applied again to their atoms, and subsequent
+NF rewrites act only on \(\mathcal C^\flat\).
+Their full atom expressions remain in the final output.
+The basic set of \(\mathcal C^\flat\cup\mathcal E\) includes both
+\(A_X\) and \(X\), by the exact definition above.
+
+Every original interpretation \(\mathcal I\) has an expansion
+\(\mathcal I^+\) satisfying \(\mathcal E\), by setting
+\(A_X^{\mathcal I^+}=X^{\mathcal I}\) for every such atom and keeping all
+original symbols unchanged.  This assignment uses the given partial-feature
+semantics of \(X\), including undefined-feature cases.
+A structural induction on an original concept description \(E\) then gives
+\(E^{\mathcal I}=(E^\flat)^{\mathcal I^+}\): the concrete-atom case is
+the defining assignment, the other atomic cases are unchanged, conjunction
+uses intersection, and existential restriction uses the unchanged role and
+the inductive equality of its filler.
+Thus an original model expands to a model of
+\(\mathcal C^\flat\cup\mathcal E\).
+Conversely, the two inclusions in (N0) force
+\(A_X^{\mathcal J}=X^{\mathcal J}\) in any model \(\mathcal J\)
+of the expanded CBox.  The same induction equates original and replaced
+descriptions, so its reduct satisfies every original GCI; the RIs were
+unchanged.  The prepass is therefore a model-conservative extension.
+
+Put \(N=|\mathcal C|\).
+Concrete atoms contain feature names rather than nested concepts, so their
+occurrence subexpressions are disjoint in the written input.
+Consequently the sum of \(\ell(X)\) over distinct occurring atoms is at
+most the sum over all occurrences, and hence at most \(N\).
+The two definitions for \(X\) have total length
+\(2\ell(X)+O(1)\); their total length is \(O(N)\).
+The replacement part has length \(O(N)\) as well, because every occurrence
+is replaced by a single name.  This proves linear written size of the
+prepass output.  It neither treats a whole atom as a unit-cost expression
+nor assumes a shared-expression final output.
+Distinct atoms can be identified by finite syntactic comparison; even the
+direct pairwise comparison procedure takes only polynomial time.
+
+\paragraph{The seven source normalization transformations.}
+The conference paper states the reduction; the report supplies the following
+NF1--NF7 rules
+\cite[lem.~1]{BaaderBrandtLutz2005}
+\cite[fig.~1 and \S3.1]{BaaderBrandtLutz2005TR}.
+In these schemas, \(B,C,D,E\) range over arbitrary concept descriptions,
+not just concept names.  A hat requires that the indicated description
+is not basic in the current CBox; in particular \(\bot\) is nonbasic.
+The letters \(r_i,r,s\) denote role names.
+Every \(A\) introduced by a rule is a fresh concept name, and every \(u\)
+is a fresh role name, distinct also from all prepass names and earlier
+introduced names.  Fresh names enter the basic vocabulary when they are
+introduced.
+\begin{enumerate}
+\item[(NF1)] for \(k>2\), replace
+\(r_1\circ\cdots\circ r_k\sqsubseteq s\) by
+\(r_1\circ\cdots\circ r_{k-1}\sqsubseteq u\) and
+\(u\circ r_k\sqsubseteq s\);
+\item[(NF2)] replace \(C\sqcap\widehat D\sqsubseteq E\) by
+\(\widehat D\sqsubseteq A\) and \(C\sqcap A\sqsubseteq E\), modulo
+commutativity of conjunction;
+\item[(NF3)] replace \(\exists r.\widehat C\sqsubseteq D\) by
+\(\widehat C\sqsubseteq A\) and \(\exists r.A\sqsubseteq D\);
+\item[(NF4)] delete \(\bot\sqsubseteq D\);
+\item[(NF5)] replace \(\widehat C\sqsubseteq\widehat D\) by
+\(\widehat C\sqsubseteq A\) and \(A\sqsubseteq\widehat D\);
+\item[(NF6)] replace \(B\sqsubseteq\exists r.\widehat C\) by
+\(B\sqsubseteq\exists r.A\) and \(A\sqsubseteq\widehat C\);
+\item[(NF7)] replace \(B\sqsubseteq C\sqcap D\) by
+\(B\sqsubseteq C\) and \(B\sqsubseteq D\).
+\end{enumerate}
+Exhaust NF1--NF4 on the mutable part first, then exhaust NF5--NF7.
+Keep \(\mathcal E\) in the CBox throughout, without rewriting its
+already-normal definitions.  This is the source's two-phase order,
+applied after the additional prepass.
+
+Each NF step is conservative.  For NF1, expand an original model by
+interpreting \(u\) as \(r_1\circ\cdots\circ r_{k-1}\).
+Conversely, inclusion of that prefix in \(u\), followed by
+\(u\circ r_k\sqsubseteq s\), implies the old RI.
+For NF2 and NF3, interpret the new \(A\) as the extension of the
+extracted \(\widehat D\) and \(\widehat C\), respectively.
+In a model of the replacement axioms, those extracted descriptions are
+included in \(A\); monotonicity of intersection and existential restriction
+then gives the original GCI.
+For NF5, interpret \(A\) as \(\widehat C\); conversely transitivity
+of inclusion recovers \(\widehat C\sqsubseteq\widehat D\).
+For NF6, interpret \(A\) as \(\widehat C\); conversely
+\(A\sqsubseteq\widehat C\) gives
+\(\exists r.A\sqsubseteq\exists r.\widehat C\).
+NF4 deletes a GCI with empty antecedent extension, and NF7 uses exactly
+the equivalence between inclusion in an intersection and the two separate
+inclusions.  Freshness leaves every other axiom, including \(\mathcal E\),
+unchanged in each expansion.  Finite composition of these expansion and
+reduct arguments proves conservativity of the whole normalization.
+
+\paragraph{Termination, application count and linear written size.}
+The count here is proved for the amended construction, rather than inferred
+from the number of axioms in the input.
+For the mutable prepass output, let \(g\) be its number of GCIs,
+\(e\) the number of concept-child edges in all its left-hand concept
+trees, and
+\[
+ h=\sum_{\text{input RIs }r_1\circ\cdots\circ r_k\sqsubseteq s}
+            \max(k-2,0).
+\]
+Let \(a\) and \(v\) be, respectively, the numbers of conjunction and
+existential-constructor occurrences in its right-hand concept trees.
+All five counts are \(O(N)\).
+
+An NF2 or NF3 application cuts one existing left-tree edge whose child
+is nonbasic, replacing that child occurrence by a fresh basic name and
+moving the original subtree to the left of a new GCI.
+No old concept subtree is copied in phase one.  The replacement edge has
+a basic child and cannot be cut again.
+Charging each step to its removed original edge therefore bounds the
+combined number of NF2 and NF3 applications by \(e\).
+At most \(g+e\) left-hand GCI roots are ever created in this phase, so
+NF4 applies at most \(g+e\) times.  Each NF1 step shortens its one
+remaining long chain by one and emits a chain of length two; hence it
+applies exactly \(h\) times.
+Phase one therefore takes at most
+\[
+ g+2e+h
+\]
+steps and leaves at most \(g+e\) mutable GCIs.
+
+After phase one, every mutable left side is basic, a conjunction of two
+basic descriptions, or an existential restriction with basic filler;
+a left side \(\bot\) has been deleted.
+There are no concrete atoms in the mutable part, since the prepass
+replaced them all.  Its basic leaves are therefore names, nominals and
+\(\top\), all of bounded symbol length.  Every mutable left side has
+bounded symbol length independent of the input's predicate arities.
+
+Phase two never copies a right-hand concept subtree.
+NF7 removes its conjunction root and places the two children on separate
+right sides, so it can be charged to one of the \(a\) original right-hand
+conjunction occurrences.
+NF6 extracts its nonbasic filler while replacing that occurrence by a
+fresh name.  The same existential occurrence then has a basic filler and
+cannot trigger NF6 again, so there are at most \(v\) such steps.
+NF5 moves its right side without copying it and replaces the corresponding
+nonbasic left side, for further right-side processing, by a fresh name.
+To count these steps, count GCIs with both sides nonbasic.  Initially in
+phase two there are at most \(g+e\) such GCIs.
+NF5 reduces this count by one; NF6 does not increase it; NF7 increases
+it by at most one.
+Thus NF5 applies at most \(g+e+a\) times.
+The entire NF schedule uses at most
+\[
+ 2g+3e+h+v+2a=O(N)
+ \tag{N1}
+\]
+applications.  In particular it terminates.
+
+Phase two keeps each left side equal to a phase-one left side or a fresh
+name, with possible copies under NF7.  Those left sides all have bounded
+length.  NF1--NF3 and NF5--NF6 increase written length by only a fixed
+constant per step: existing subexpressions are moved, and only a bounded
+number of fresh-name and punctuation occurrences is added.
+NF4 only deletes text.  NF7 copies only its bounded-length left side and
+adds bounded punctuation.  Combining this observation with (N1) and the
+prepass bound proves that the fully written final CBox has size \(O(N)\),
+including both full copies of every distinct concrete atom in \(\mathcal E\).
+
+At termination no phase-one rule has become newly applicable: phase two
+introduces only fresh basic left sides or copies of the already shallow
+ones.  A nonbasic left side and nonbasic right side would still trigger
+NF5.  With a basic left side, a conjunction on the right triggers NF7,
+and an existential with nonbasic filler triggers NF6.
+All remaining mutable GCIs therefore have one of the four required
+normal forms; the protected definitions and the RIs do as well.
+
+For example, write \(X_k=p_k(f_1,\ldots,f_k)\).
+The input \(X_k\sqsubseteq A_1\sqcap\cdots\sqcap A_k\) becomes
+\(A_{X_k}\sqsubseteq A_1\sqcap\cdots\sqcap A_k\) together with the
+two definitions of \(A_{X_k}\).
+NF7 produces \(A_{X_k}\sqsubseteq A_i\) for each \(i\).
+The full \(k\)-argument atom occurs only twice, in its protected definitions,
+so the complete output has linear symbol length.  The same construction
+handles repeated occurrences by using one definition pair per distinct atom.
+
+For effective complexity, let \(L_{\mathrm{enc}}\) count a direct encoding
+of the fully written input, including identifiers and concrete-predicate parameters.
+Fresh names may be encoded by consecutive fresh indices of polynomial bit
+length.  There are only linearly many output symbol occurrences in the
+source measure, and each original name or parameter has length at most
+\(L_{\mathrm{enc}}\).  Hence even a direct written encoding of the output
+has polynomial length in \(L_{\mathrm{enc}}\).
+Finite comparison for the prepass and direct rescanning for NF applications
+also take polynomial time.  The linear claim just proved is a written
+symbol-size and rewrite-count claim; the effective polynomial bound does
+not assume unit-cost arithmetic on unbounded predicate parameters.
+
+\paragraph{Arbitrary queries before normalization.}
+For a raw query \(C\sqsubseteq_{\mathcal C}D\), first adjoin
+\(A_0\sqsubseteq C\) and \(D\sqsubseteq B_0\), with two fresh concept
+names.  Apply the concrete-atom prepass to this entire expanded input,
+including atoms from the query, and then apply the proved two-phase
+normalization.
+If the original subsumption holds, every element of \(A_0\) in a
+model of the expanded raw CBox belongs successively to \(C,D,B_0\).
+Conversely, an original countermodel with
+\(x\in C^{\mathcal I}\setminus D^{\mathcal I}\) expands by
+\(A_0^{\mathcal I}=C^{\mathcal I}\) and
+\(B_0^{\mathcal I}=D^{\mathcal I}\), retaining that counterexample.
+The prepass and NF transformations have the expansion/reduct properties
+proved above and do not change these queried names' extensions.
+Thus the atomic query is preserved in both directions, and the normalized
+output has size linear in
+\(|\mathcal C|+\ell(C)+\ell(D)+1\) under the stated source convention.
+
+\paragraph{Marking the queried element.}
+\label{sec:p09-elpp-query-marking}
+Let \(\mathcal C\) now be a normalized CBox and let
+\(A_0\sqsubseteq B_0\) be the atomic query.  Take an individual name
+\(a_\ast\) fresh for \(\mathcal C,A_0,B_0\), and put
+\[
+ N_\ast=\{a_\ast\},\qquad
+ \mathcal K=\mathcal C\cup
+       \{N_\ast\sqsubseteq A_0,\ B_0\sqsubseteq B_0\}.
+\]
+The tautology ensures that the queried name \(B_0\) occurs in the finite
+vocabulary even when it did not occur in \(\mathcal C\).
+The new axioms are already normalized.  Then
+\[
+ A_0\sqsubseteq_{\mathcal C}B_0
+ \quad\Longleftrightarrow\quad
+ N_\ast\sqsubseteq_{\mathcal K}B_0.
+ \tag{Q}
+\]
+For the forward implication, a \(\mathcal K\)-model is a
+\(\mathcal C\)-model and its element \(a_\ast^{\mathcal I}\) belongs to
+\(A_0^{\mathcal I}\).  For the reverse implication, any
+\(\mathcal C\)-model with
+\(x\in A_0^{\mathcal I}\setminus B_0^{\mathcal I}\) expands to a
+\(\mathcal K\)-model by setting \(a_\ast^{\mathcal I}=x\).
+Freshness is essential to this expansion.  In particular, the marking is a
+query reduction, not a model-conservative extension: if \(A_0\) is forced
+empty, \(\mathcal K\) has no model and the original subsumption is true.
+The saturation below is run on \(\mathcal K\), and its queried label is
+\(S(N_\ast)\).
+
+\paragraph{The finite saturation state and its abbreviations.}
+For the marked normalized CBox \(\mathcal K\), let \(R_{\mathcal K}\) be its finite role
+vocabulary.  The algorithm computes
+\[
+\begin{aligned}
+ S&:\mathsf{BC}_{\mathcal K}\longrightarrow
+   \mathcal P(\mathsf{BC}_{\mathcal K}\cup\{\top,\bot\}),\\
+ R&:R_{\mathcal K}\longrightarrow
+   \mathcal P(\mathsf{BC}_{\mathcal K}\times
+              \mathsf{BC}_{\mathcal K}),
+\end{aligned}
+\]
+initialized by \(S(C)=\{C,\top\}\) and \(R(r)=\varnothing\).  The intended
+invariants are
+\[
+ D\in S(C)\Rightarrow C\sqsubseteq_{\mathcal K}D,
+ \qquad
+ (C,D)\in R(r)\Rightarrow C\sqsubseteq_{\mathcal K}\exists r.D.
+\]
+The abbreviation \(C\rightsquigarrow D\) holds exactly when a finite nonempty
+sequence \(C_1,\ldots,C_k\), with \(k\geq1\), ends in \(D\), begins either in \(C\) or in some nominal
+\(\{b\}\), and each adjacent pair belongs to \(R(r_j)\) for some role
+\(r_j\).  It is computed from the current \(R\); it is not a new interpreted
+role.
+
+For a set \(\Gamma\) of concepts, put
+\[
+ \operatorname{con}_j(\Gamma)=
+ \bigwedge_{\substack{p(f_1,\ldots,f_k)\in\Gamma\\
+                       p\in P^{\mathcal D_j}}}
+ p(f_1,\ldots,f_k).
+\]
+Let \(F_j(C)\) be the finite set of feature names occurring in
+\(\operatorname{con}_j(S(C))\).  A solution of this conjunction is a map
+from exactly these feature names to \(\Delta^{\mathcal D_j}\) satisfying
+each displayed atom.  The empty conjunction has the empty map as a solution.
+Implication to an atom all of whose features lie in \(F_j(C)\) means truth
+under every such solution.  These are finite concrete constraints; they do
+not assign values to features not required at the abstract element.
+
+A concrete domain is \emph{\(p\)-admissible} when satisfiability and
+implication for finite conjunctions of its atoms are decidable in polynomial
+time, and it is convex: whenever such a conjunction implies a nonempty finite
+disjunction of atoms, it implies a disjunct.  The finite supports and
+empty-conjunction convention fix the tests used here.  Polynomial constraint
+reasoning makes CR7--CR8 executable; convexity supplies the simultaneous
+avoiding assignment in the completeness proof.
+
+\paragraph{Partial-feature propagation.}
+\label{sec:p09-elpp-partial-features}
+CR8 below requires every feature of its conclusion to belong to \(F_j(C)\).
+The positive atoms already in \(S(C)\) then ensure that, at any instance of
+\(C\), each required feature is defined and takes a value in
+\(\Delta^{\mathcal D_j}\).  Without that condition, a concrete implication
+under total variable assignments need not be an implication between concepts
+with partial features.  For example, the source rational domain has a
+universal unary predicate \(\top_{\mathbb Q}\).  In a one-element abstract
+model with \(A\) true, \(B\) false and \(f\) undefined, the normalized GCI
+\(\top_{\mathbb Q}(f)\sqsubseteq B\) holds.  Consequently it does not force
+\(A\sqsubseteq B\).  The guarded rule leaves
+\(\top_{\mathbb Q}(f)\) absent from that otherwise unconstrained \(A\)-label:
+the feature \(f\) is not in \(F_{\mathbb Q}(A)\).
+This feature-support condition is part of the corrected procedure; the source
+Table~2 states its concrete implication test without that condition
+\cite[table~1, table~2 and prop.~5]{BaaderBrandtLutz2005}.
+
+\paragraph{All eleven completion rules.}
+Each applicable rule makes the one displayed monotone addition; none branches
+or removes information.
+\begin{enumerate}
+\item[(CR1)] If \(C'\in S(C)\), \(C'\sqsubseteq D\in\mathcal K\), and
+\(D\notin S(C)\), add \(D\) to \(S(C)\).
+\item[(CR2)] If \(C_1,C_2\in S(C)\),
+\(C_1\sqcap C_2\sqsubseteq D\in\mathcal K\), and \(D\notin S(C)\), add
+\(D\) to \(S(C)\).
+\item[(CR3)] If \(C'\in S(C)\),
+\(C'\sqsubseteq\exists r.D\in\mathcal K\), and \((C,D)\notin R(r)\), add
+\((C,D)\) to \(R(r)\).
+\item[(CR4)] If \((C,D)\in R(r)\), \(D'\in S(D)\),
+\(\exists r.D'\sqsubseteq E\in\mathcal K\), and \(E\notin S(C)\), add
+\(E\) to \(S(C)\).
+\item[(CR5)] If \((C,D)\in R(r)\), \(\bot\in S(D)\), and
+\(\bot\notin S(C)\), add \(\bot\) to \(S(C)\).
+\item[(CR6)] If \(\{a\}\in S(C)\cap S(D)\),
+\(C\rightsquigarrow D\), and \(S(D)\nsubseteq S(C)\), add all of \(S(D)\)
+to \(S(C)\).
+\item[(CR7)] If \(\operatorname{con}_j(S(C))\) is unsatisfiable in
+\(\mathcal D_j\) and \(\bot\notin S(C)\), add \(\bot\) to \(S(C)\).
+\item[(CR8)] If \(X=p(f_1,\ldots,f_k)\in\mathsf{BC}_{\mathcal K}\),
+\(p\in P^{\mathcal D_j}\), every \(f_i\) belongs to \(F_j(C)\),
+\(\operatorname{con}_j(S(C))\) implies \(X\) in \(\mathcal D_j\), and
+\(X\notin S(C)\), add \(X\) to \(S(C)\).
+\item[(CR9)] If atoms from distinct concrete domains occur in \(S(C)\) and
+share a feature name, add \(\bot\) to \(S(C)\) if it is absent.  Formally the
+premises are \(p(f_1,\ldots,f_k),p'(f'_1,\ldots,f'_{k'})\in S(C)\),
+\(p\in P^{\mathcal D_j}\), \(p'\in P^{\mathcal D_\ell}\), \(j\ne\ell\),
+and \(f_s=f'_t\) for some \(s,t\).
+\item[(CR10)] If \((C,D)\in R(r)\), \(r\sqsubseteq s\in\mathcal K\), and
+\((C,D)\notin R(s)\), add \((C,D)\) to \(R(s)\).
+\item[(CR11)] If \((C,D)\in R(r_1)\), \((D,E)\in R(r_2)\),
+\(r_1\circ r_2\sqsubseteq r_3\in\mathcal K\), and
+\((C,E)\notin R(r_3)\), add \((C,E)\) to \(R(r_3)\).
+\end{enumerate}
+The rules form a finite forward saturation.  CR1--CR7 and CR9--CR11
+use the source Table~2 premises, with the typed CR11 update to \(R(r_3)\).
+CR8 includes the feature-support condition just proved necessary.
+The extra query nominal belongs to the same basic-description state as every
+other nominal.  This remains the source's completion format; it introduces
+neither a branching ABox tableau nor a blocking condition
+\cite[table~2]{BaaderBrandtLutz2005}
+\cite[table~2 and lem.~6]{BaaderBrandtLutz2005TR}.
+
+\paragraph{Termination and the marked decision criterion.}
+\label{sec:p09-elpp-query-correctness}
+Put \(b=|\mathsf{BC}_{\mathcal K}|\) and \(m_R=|R_{\mathcal K}|\).
+There are at most \(b(b+1)\) possible label memberships and \(m_Rb^2\)
+possible role pairs.  Each successful rule application adds at least one
+previously absent entry, so at most \(b(b+1)+m_Rb^2\) applications can succeed.
+The rule instances can be searched in polynomial time: the sets are finite,
+the reachability test is graph reachability, and the concrete satisfiability
+and guarded implication tests are polynomial by \(p\)-admissibility.
+Feature supports are read directly from finite labels.  Thus applying rules
+until none is applicable terminates in polynomial time.
+
+For the marked input \(\mathcal K\), let \(S,R\) be the resulting maps.
+The decision criterion is
+\[
+ A_0\sqsubseteq_{\mathcal C}B_0
+ \quad\Longleftrightarrow\quad
+ B_0\in S(N_\ast)
+ \ \lor\
+ \bigl(\exists\{a\}\in\mathsf{BC}_{\mathcal K}\;
+                         \bot\in S(\{a\})\bigr).
+ \tag{D}
+\]
+The second disjunct includes \(N_\ast\).
+It detects inconsistency of the marked CBox, which may arise either from
+inconsistency of the original CBox or from impossibility of an
+\(A_0\)-instance.  Both imply the queried subsumption.  Inconsistency forced
+by a different, disconnected nominal must also be detected.
+
+\paragraph{Two saturation runs.}
+For a run using conjunction and role composition, take
+\[
+\begin{array}{rcl@{\qquad}rcl}
+ A&\sqsubseteq&B, & A&\sqsubseteq&\exists r.C,\\
+ C&\sqsubseteq&D, & \exists r.D&\sqsubseteq&E,\\
+ B\sqcap E&\sqsubseteq&F, & r&\sqsubseteq&s,\\
+ C&\sqsubseteq&\exists t.G, & s\circ t&\sqsubseteq&u.
+\end{array}
+\]
+For the query \(A\sqsubseteq F\), adjoin \(N_\ast\sqsubseteq A\).
+CR1 puts \(A,B\) in \(S(N_\ast)\) and \(D\) in \(S(C)\).
+CR3 creates \((N_\ast,C)\in R(r)\) and \((C,G)\in R(t)\).
+CR4 adds \(E\) to \(S(N_\ast)\), and CR2 adds \(F\).
+CR10 also gives \((N_\ast,C)\in R(s)\), after which CR11 gives
+\((N_\ast,G)\in R(u)\).  The first disjunct of (D) answers the query.
+
+For the nominal case, take distinct concept names \(A,C,D,P,Q\), roles
+\(r,s\), and the seven normalized GCIs
+\[
+\begin{gathered}
+ A\sqsubseteq\exists r.C,\qquad A\sqsubseteq\exists s.D,\qquad
+ C\sqsubseteq\{a\},\qquad D\sqsubseteq\{a\},\\
+ C\sqsubseteq P,\qquad D\sqsubseteq Q,\qquad P\sqcap Q\sqsubseteq\bot.
+\end{gathered}
+\]
+For \(A\sqsubseteq P\), marking gives \(A\in S(N_\ast)\) and the two
+edges \((N_\ast,C)\in R(r)\), \((N_\ast,D)\in R(s)\).
+Both successor labels contain \(\{a\}\); they contain \(P\) and \(Q\),
+respectively.  Since \(D\) is reachable from the nominal \(N_\ast\),
+\(C\rightsquigarrow D\) holds.  CR6 copies \(Q\) into \(S(C)\);
+CR2 then adds \(\bot\) there and CR5 adds \(\bot\) to \(S(N_\ast)\).
+Criterion (D) therefore answers yes.  Semantically, any \(A\)-instance would
+have both successors equal to \(a^{\mathcal I}\), forcing that one element
+into \(P^{\mathcal I}\cap Q^{\mathcal I}\).  Hence \(A\) is empty in every
+model.  The original CBox nevertheless has a one-element model with all five
+concept names and both roles empty.  This run checks the empty-query-concept
+case as well as the nominal merge.  Both runs are handbook constructions.
+
+\paragraph{Soundness of every completion rule.}
+We prove the two invariants displayed above for every intermediate state,
+relative to \(\mathcal K\), by induction on the sequence of additions.
+Initialization is immediate: \(C\sqsubseteq_{\mathcal K}C,\top\), and
+there are no role pairs.
+
+For CR1, if \(x\in C^{\mathcal I}\), the induction hypothesis puts it in
+\(C'^{\mathcal I}\), and the GCI puts it in \(D^{\mathcal I}\).
+For CR2 the two hypotheses similarly put \(x\) in the intersection of
+the two antecedents, so its GCI supplies the conclusion.
+For CR3 the GCI supplies, for each such \(x\), an \(r\)-successor in
+the indicated filler.  For CR4 the existing role-pair invariant supplies
+\(y\in D^{\mathcal I}\) with \((x,y)\in r^{\mathcal I}\); its label
+\(D'\) gives \(y\in D'^{\mathcal I}\), and the left-existential GCI
+gives \(x\in E^{\mathcal I}\).
+For CR5 the same witness would belong to \(\bot^{\mathcal I}\).
+There can therefore be no \(x\in C^{\mathcal I}\), making the added
+bottom subsumption sound.
+
+For CR6, suppose \(x\in C^{\mathcal I}\).  The shared nominal label
+gives \(x=a^{\mathcal I}\).
+If the reachability sequence begins in \(C\), start with this \(x\);
+if it begins in \(\{b\}\), start with \(b^{\mathcal I}\).
+Apply the role-pair invariant successively along the finite sequence.
+This produces an element \(y\in D^{\mathcal I}\), including the
+zero-edge case.  The shared nominal label gives
+\(y=a^{\mathcal I}=x\).  Every label copied from \(S(D)\) consequently
+holds at \(x\).  The reachability premise remains necessary: membership
+in a nominal alone does not ensure that an arbitrary concept has an instance.
+
+For CR7, an element \(x\in C^{\mathcal I}\) would satisfy every positive
+domain-\(j\) atom in \(S(C)\).  For each feature in \(F_j(C)\), its value
+at \(x\) would thus be defined and lie in \(\Delta^{\mathcal D_j}\).
+Those values form a solution of
+\(\operatorname{con}_j(S(C))\), contradicting the rule's premise.
+For CR8 the same assignment exists.  Its implication premise makes the
+conclusion atom true under that assignment, and the support premise ensures
+that every feature needed by that atom is among these defined values.
+Thus the conclusion holds at \(x\) under the partial-feature semantics.
+For CR9 a feature shared by positive atoms of two different domains would
+have to take its single value in their disjoint carriers, which is impossible.
+
+For CR10, the witness edge given by the role-pair invariant belongs to
+the larger role by the RI.  For CR11, an instance \(x\) of \(C\) has an
+\(r_1\)-successor \(y\) in \(D\); that particular instance \(y\) has an
+\(r_2\)-successor \(z\) in \(E\).  The composition RI puts
+\((x,z)\) in \(r_3^{\mathcal I}\).  This proves the second invariant.
+All additions have now been covered.
+
+If the first disjunct of (D) holds, soundness gives
+\(N_\ast\sqsubseteq_{\mathcal K}B_0\), and (Q) gives the original query.
+If its second disjunct holds, soundness would put the necessarily existing
+element \(a^{\mathcal I}\) in \(\bot^{\mathcal I}\) in every
+\(\mathcal K\)-model.  Thus \(\mathcal K\) is inconsistent and
+\(N_\ast\sqsubseteq_{\mathcal K}B_0\) holds vacuously.  Equation (Q)
+again yields the original query.
+
+\paragraph{The reachable quotient for completeness.}
+Assume that both disjuncts of (D) fail.
+Let \(L\) be the set of basic descriptions reachable by zero or more
+current role edges from some occurring nominal:
+\[
+ L=\{D\in\mathsf{BC}_{\mathcal K}:
+       \exists\{a\}\in\mathsf{BC}_{\mathcal K}\;
+       \{a\}\text{ has an }R\text{-path to }D\}.
+\]
+Here an \(R\)-path uses edges from any \(R(r)\).
+Every nominal belongs to \(L\), in particular \(N_\ast\in L\).
+If \(C\in L\) and \((C,D)\in R(r)\), then \(D\in L\) by appending
+that edge.  Moreover \(\bot\notin S(C)\) for every \(C\in L\):
+otherwise repeated CR5 applications backwards along a path to \(C\)
+would put bottom in its initial nominal's label, contradicting the failed
+second disjunct.
+
+For any \(C\in\mathsf{BC}_{\mathcal K}\) and \(D\in L\), the relation
+\(C\rightsquigarrow D\) holds, using a nominal-to-\(D\) path in its
+definition.  Therefore, if \(C,D\in L\) share a nominal in their labels,
+non-applicability of CR6 in both directions gives \(S(C)=S(D)\).
+Define on \(L\)
+\[
+ C\sim D\quad\Longleftrightarrow\quad
+ C=D\ \text{ or }\ 
+ \exists\{a\}\in S(C)\cap S(D).
+\]
+Reflexivity and symmetry are immediate.  For transitivity, the only
+nontrivial case has \(C,D\) sharing a nominal \(N\) and \(D,E\) sharing
+another nominal.  The label equalities just proved give
+\(S(C)=S(D)=S(E)\), so \(N\) also witnesses \(C\sim E\).
+Thus \(\sim\) is an equivalence relation, and \(S(C)\) depends only on
+the class \([C]\).
+
+We also need agreement of outgoing role pairs:
+\[
+ C\sim C'\quad\Longrightarrow\quad
+ \bigl((C,D)\in R(r)\ \Longleftrightarrow\
+       (C',D)\in R(r)\bigr)
+ \qquad(C,C'\in L).
+ \tag{R}
+\]
+For one implication, induct on the first addition of the pair \((C,D)\)
+during the finite run, keeping the final relation \(C\sim C'\) fixed.
+If CR3 added the pair from a label \(E\) and
+\(E\sqsubseteq\exists r.D\), final label agreement puts \(E\) in
+\(S(C')\), so final saturation under CR3 gives \((C',D)\in R(r)\).
+If CR10 added it, apply the induction hypothesis to the earlier pair in
+the smaller role, then final CR10.  If CR11 added it using earlier pairs
+\((C,E)\in R(r_1)\) and \((E,D)\in R(r_2)\), the induction hypothesis
+transfers the first pair to \((C',E)\), and final CR11 supplies the result.
+These are the only rules adding role pairs; the initial relations are empty.
+Interchanging \(C,C'\) proves the converse.  This argument uses final
+saturation, and does not require equivalence to have been present at the
+earlier insertion stage.
+
+\paragraph{Concrete witnesses on each quotient class.}
+For \([C]\in L/{\sim}\) and domain \(j\), the feature set \(F_j(C)\)
+and the conjunction \(\Gamma_j=\operatorname{con}_j(S(C))\) depend only
+on the class.  Since \(\bot\notin S(C)\) and CR7 is no longer applicable,
+\(\Gamma_j\) has a solution on \(F_j(C)\).
+Let \(E_j\) be the finite set of basic domain-\(j\) atoms not in \(S(C)\)
+all of whose features belong to \(F_j(C)\).
+There is a solution of \(\Gamma_j\) making every member of \(E_j\)
+false.  Indeed, if no such solution existed, every solution would satisfy
+\(\bigvee E_j\).  If \(E_j\) is empty this contradicts satisfiability
+directly; otherwise convexity says that \(\Gamma_j\) implies a member
+of \(E_j\).  Its feature-support condition holds, so CR8 would add it,
+contrary to final saturation.  Choose one such solution
+\[
+ \delta([C],j):F_j(C)\longrightarrow\Delta^{\mathcal D_j}.
+ \tag{F}
+\]
+When \(F_j(C)\) is empty, the empty assignment suffices: all concrete
+predicates have positive arity, so \(E_j\) is then empty.
+There are only finitely many classes and domains, so this construction uses
+only a finite choice of witnesses, and no choice of a representative of each
+class.  By CR9 and absence of bottom, the sets \(F_j(C)\) for different
+domains are pairwise disjoint.
+
+Define an interpretation by
+\[
+\begin{aligned}
+ \Delta^{\mathcal I}&=L/{\sim},\\
+ A^{\mathcal I}&=\{[C]:A\in S(C)\}
+       &&(A\in N_C\cap\mathsf{BC}_{\mathcal K}),\\
+ a^{\mathcal I}&=[\{a\}]
+       &&(\{a\}\in\mathsf{BC}_{\mathcal K}),\\
+ r^{\mathcal I}&=\{([C],[D]):C,D\in L,\ (C,D)\in R(r)\}
+       &&(r\in R_{\mathcal K}),\\
+ f^{\mathcal I}([C])&=\delta([C],j)(f)
+       &&(f\in F_j(C)).
+\end{aligned}
+\]
+The domain is nonempty because it contains \([N_\ast]\).
+Label agreement makes the concept and feature clauses independent of
+representatives; disjoint feature supports make the indicated \(j\) unique.
+Features are undefined elsewhere.  Concept and role names absent from the
+finite vocabulary are interpreted as empty, and each individual name whose
+nominal is absent is interpreted as \([N_\ast]\).  The role clause defines
+a set of class pairs without choosing representatives; (R) permits the
+source representative of any witnessing edge to be replaced as needed.
+
+For every \(C\in L\) and \(D\in\mathsf{BC}_{\mathcal K}\cup\{\bot\}\), we have
+\[
+ [C]\in D^{\mathcal I}\quad\Longleftrightarrow\quad D\in S(C).
+ \tag{T}
+\]
+For \(\top\) this follows from initialization; for \(\bot\) from its
+empty extension and the absence of bottom in all retained labels.
+For concept names it is the defining clause.
+For a nominal \(D=\{a\}\), membership on the left means
+\([C]=[\{a\}]\), which gives equal labels and hence
+\(\{a\}\in S(C)\).  Conversely that label, together with
+\(\{a\}\in S(\{a\})\), gives \(C\sim\{a\}\).
+
+For a domain-\(j\) atom \(D=p(f_1,\ldots,f_k)\) in \(S(C)\),
+every feature is in \(F_j(C)\), and (F) satisfies this conjunct, so the
+semantic atom holds.  If the atom is absent and every feature lies in
+\(F_j(C)\), it belongs to \(E_j\) and (F) makes it false.
+If some feature does not lie in \(F_j(C)\), that feature is either
+undefined at \([C]\) or takes a value in another domain.  The carriers
+are disjoint, so either possibility makes the domain-\(j\) atom false.
+This proves both directions of (T), including the partial-feature cases.
+
+\paragraph{Verification of the normalized axioms and the query.}
+For \(C_1\sqsubseteq D\), an instance \([E]\) of \(C_1\) has
+\(C_1\in S(E)\) by (T).  CR1 then gives \(D\in S(E)\), and (T)
+gives its conclusion.  For \(C_1\sqcap C_2\sqsubseteq D\), use both
+labels and CR2 in the same way.
+For \(C_1\sqsubseteq\exists r.C_2\), (T) and CR3 give
+\((E,C_2)\in R(r)\).  The closure of \(L\) puts \(C_2\) in \(L\),
+and its initial self-label makes \([C_2]\) an instance of \(C_2\).
+This is the required successor.
+
+For \(\exists r.C_1\sqsubseteq D\), take an \(r\)-edge from \([E]\)
+to a class \([F]\) satisfying \(C_1\).
+The role definition and (R) provide a representative \(F'\in[F]\)
+with \((E,F')\in R(r)\).  By (T), \(C_1\in S(F')\);
+CR4 gives \(D\in S(E)\), as required.
+For \(r\sqsubseteq s\), every witnessing pair in \(R(r)\) belongs to
+\(R(s)\) by CR10, so the semantic inclusion holds.
+Finally suppose \([C]\,r_1^{\mathcal I}\,[D]\) and
+\([D]\,r_2^{\mathcal I}\,[E]\).
+Choose witnessing pairs \((C',D')\in R(r_1)\) and
+\((D'',E')\in R(r_2)\), with the indicated equivalent representatives.
+Since \(D'\sim D''\), (R) gives \((D',E')\in R(r_2)\).
+CR11 then supplies \((C',E')\in R(r_3)\) for every
+\(r_1\circ r_2\sqsubseteq r_3\) in \(\mathcal K\).
+Thus every normalized GCI and RI holds in \(\mathcal I\).
+
+The root class satisfies \(N_\ast\), while \(B_0\notin S(N_\ast)\)
+makes it fail \(B_0\) by (T).  Hence \(\mathcal I\) is a
+\(\mathcal K\)-countermodel to the right side of (Q), and its reduct
+is a \(\mathcal C\)-countermodel to \(A_0\sqsubseteq B_0\).
+This proves the remaining direction of (D).
+
+\paragraph{Complexity and the other reasoning tasks.}
+The concrete-atom prepass and NF schedule have the linear written symbol-size
+bound just proved, and adjoining the query marker adds only a constant number
+of name and axiom occurrences.  Their actual encoded output has polynomial
+length in the encoded raw CBox and query, including concrete-predicate
+parameters; the construction takes polynomial time in the original encoded
+input length.
+The finite vocabularies and every concrete constraint passed to a rule test
+are bounded by this encoded output.  Thus \(p\)-admissibility and the
+completion bound give polynomial cost in the original encoded input.
+Consequently subsumption in the displayed
+\(\mathcal{EL}^{++}(\mathcal D_1,\ldots,\mathcal D_n)\) language with
+CBoxes is polynomial whenever the concrete domains are \(p\)-admissible.
+All pairs of original concept names can be classified by polynomially many marked
+runs.  This establishes the complexity conclusion corresponding to conference
+Theorem~4 using the procedure and proof supplied here; the source locators for
+its normalization, completion and model construction remain
+\cite[lems.~1--3 and thm.~4]{BaaderBrandtLutz2005}
+and \cite[\S3.1, lems.~5--7 and thm.~8]{BaaderBrandtLutz2005TR}.
+
+For completeness of the task interface, an ABox is a finite set of
+assertions \(C(a)\) and \(r(a,b)\).  Replace them, respectively, by the
+GCIs \(\{a\}\sqsubseteq C\) and
+\(\{a\}\sqsubseteq\exists r.\{b\}\).  Define
+\(\mathcal C_{\mathcal A}\) to be the union of all these GCIs and the
+original CBox \(\mathcal C\).
+The singleton semantics makes each replacement equivalent to its assertion
+in every interpretation; no unique-name assumption is added.
+An ABox is consistent exactly when this combined CBox does not entail
+\(\top\sqsubseteq\bot\), because abstract domains are nonempty.
+Instance checking for \(C(a)\) is exactly
+\(\{a\}\sqsubseteq_{\mathcal C_{\mathcal A}}C\).
+Concept satisfiability is the failure of
+\(C\sqsubseteq_{\mathcal C}\bot\).
+These are polynomial-size reductions to the arbitrary-query normalization and
+marked test already proved.  They give the four tasks listed in report
+Theorem~8; that task list is broader than the literal conference Theorem~4.
+
+\paragraph{Concrete examples and the convexity boundary.}
+Proposition~5 gives two \(p\)-admissible source domains.  The rational domain
+has unary \(\top_{\mathbb Q},=_{q},>_{q}\), binary equality, and binary
+\(+_{q}\), where \((x,y)\in(+_q)^{\mathbb Q}\) iff \(x+q=y\).  The string
+domain over the ISO~8859-1 alphabet has \(\top_{\mathbb S},=_{w}\), equality,
+and \(\operatorname{conc}_{w}\), where \((x,y)\) belongs iff \(y=xw\).
+The sources misprint the latter predicate's domain superscript as
+\(\mathbb Q\); the surrounding string definition fixes the intended
+\(\mathbb S\) reading.  By contrast, adding a rational \(\leq_q\) predicate,
+or suitable prefix and suffix predicates to the string domain, gives the
+paper's non-convex examples: a conjunction can force a disjunction without
+forcing any individual disjunct
+\cite[prop.~5]{BaaderBrandtLutz2005}
+\cite[props.~10--11]{BaaderBrandtLutz2005TR}.
+
+\paragraph{Exact failure boundaries.}
+Section~4 returns to the smaller \(\mathcal{EL}\) grammar---concept names,
+\(\top\), conjunction, and existential restriction---with general TBoxes.
+The comparison-language names below have the following exact standing:
+\(\mathcal{EL}^{(\neg)}\) permits complement only on concept names;
+\(\mathcal{ELU}\) adds concept union; \(\mathcal{EL}^{\geq2}\) adds the
+unqualified restriction ``at least two \(r\)-successors'';
+\(\mathcal{EL}(\mathcal D)\) adds atoms from one concrete domain;
+\(\mathcal{ELI}\) adds \(\exists r^{-}.C\);
+\(\mathcal{EL}^{\leq1}\) adds ``at most one \(r\)-successor''; and
+\(\mathcal{FL}_0\) has conjunction and universal value restriction.  With
+these definitions, the literal conference results are:
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{@{}l X X@{}}
+\toprule
+result & input and task & exact source strength\\
+\midrule
+Theorem 6 & \(\mathcal{EL}^{(\neg)}\), satisfiability and subsumption &
+\(\mathsf{EXPTIME}\)-complete\\
+Theorem 7 & \(\mathcal{ELU}\), subsumption &
+\(\mathsf{EXPTIME}\)-complete\\
+Theorem 8 & \(\mathcal{EL}^{\geq2}\), subsumption &
+\(\mathsf{EXPTIME}\)-complete\\
+Theorem 9 & \(\mathcal{EL}(\mathcal D)\) for every non-convex
+\(\mathcal D\), subsumption & \(\mathsf{EXPTIME}\)-hard; not stated complete\\
+Theorem 10 & \(\mathcal{ELI}\), subsumption & \(\mathsf{PSPACE}\)-hard;
+the 2005 upper bound is \(\mathsf{EXPTIME}\), and the exact class is stated
+open\\
+Theorem 11 & \(\mathcal{EL}^{\leq1}\), subsumption &
+\(\mathsf{EXPTIME}\)-complete\\
+Theorem 12 & \(\mathcal{FL}_0\), subsumption &
+\(\mathsf{EXPTIME}\)-complete\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The reductions explain why these are constructor-sensitive results.  Theorem~6
+replaces complex complements by fresh names constrained in both directions.
+Theorem~7 replaces every atomic complement by a fresh name, forces each
+original/fresh pair to cover \(\top\), and propagates a fresh failure concept.
+Theorem~8 simulates a disjunctive choice with two existential witnesses: their
+coincidence selects one branch and their distinctness, detected by
+\((\geq2\ r)\), selects the other.  Theorem~9 uses a minimal disjunction forced
+by non-convexity to simulate the single disjunctive GCI needed for hardness.
+Theorem~10 translates \(A\sqsubseteq\forall r.B\) into
+\(\exists r^{-}.A\sqsubseteq B\) and atomic complement into a propagated
+failure concept.  Theorem~11 replaces left-hand value restrictions by
+existentials and right-hand value restrictions by a conjunction of existence
+and at-most-one, using total functional roles.  Theorem~12 unfolds an
+\(\mathcal{FL}_0\) countermodel into the tree of finite role words, where every
+role becomes a total function.  These are the source proof routes; cited
+external hardness and upper-bound theorems are not re-proved by either paper
+\cite[\S4, thms.~6--12]{BaaderBrandtLutz2005}
+\cite[\S\S5--6]{BaaderBrandtLutz2005TR}.
+
+The paragraph between Theorems~8 and~9 additionally reports
+\(\mathsf{EXPTIME}\)-completeness when role terms admit, respectively,
+relational complement in \(\Delta^{\mathcal I}\times\Delta^{\mathcal I}\),
+relational union, or transitive closure; the report numbers this
+three-language result Theorem~16.  Conversely, the paper's permitted RIs keep
+a role chain only on the left and one role name on the right.  Its footnote and
+report Theorem~12 warn that arbitrary role-value maps with a chain on the
+right are undecidable.  Neither fact licenses transfer to another role
+language.
+
+Finally, \(\mathcal{EL}^{++}\) is the 2005 research logic.  OWL~2~EL is a
+later W3C profile with its own functional-style grammar, datatype inventory,
+axiom forms, and global restrictions.  The former influenced the latter; they
+are not definitionally identical.  No ABox tableau, anonymous-node expansion,
+blocking condition, OWL profile checker, or later role-regularity mechanism is
+part of this saturation presentation.
+
+\subsubsection{The DL-Lite query-rewriting presentation}
+
+\paragraph{Source and reconstruction boundary.}
+The source is the complete forty-five-page author-hosted version of
+the 2007 \emph{Journal of Automated Reasoning} article, printed pp.~385--429.
+The language and model theory occur on pp.~389--395, the chase on
+pp.~395--405, the universal-model argument on pp.~411--413, and
+\textsc{PerfectRef} and its complexity analysis on pp.~413--425.  The source
+prints a full journal argument, but several local omissions and index slips
+must be repaired below rather than silently copied.  The later W3C
+Recommendation is used only to delimit OWL~2~QL; it is not evidence for what
+the 2007 authors called their logics \cite{CalvaneseEtAl2007}.
+
+\paragraph{Three languages, with their categories kept distinct.}
+Let \(A\) range over atomic concept names, \(P\) over atomic role names, and
+\(a,b\) over individual constants.  The source grammar for
+\(\mathrm{DL\mbox{-}Lite}_{core}\) is
+\[
+\begin{array}{rcl@{\qquad}rcl}
+ B&::=&A\mid\exists R,&R&::=&P\mid P^{-},\\
+ C&::=&B\mid\neg B,&E&::=&R\mid\neg R.
+\end{array}
+\]
+Thus \(B,C,R,E\) stand respectively for basic concepts, general concepts,
+basic roles, and general roles.  If \(R=P\), then \(R^{-}=P^{-}\), while
+\((P^{-})^{-}=P\); double syntactic negations are removed.  A knowledge base is
+\(\mathcal K=\langle\mathcal T,\mathcal A\rangle\), with finite TBox
+\(\mathcal T\) and finite ABox \(\mathcal A\).  In the core language,
+\(\mathcal T\) contains inclusions \(B\sqsubseteq C\), while \(\mathcal A\)
+contains only \(A(a)\) and \(P(a,b)\).  In particular, the positive left side
+of a concept inclusion is basic, and arbitrary general concepts are not
+primitive ABox assertions.
+
+\(\mathrm{DL\mbox{-}Lite}_{\mathcal R}\) adds inclusions \(R\sqsubseteq E\),
+including positive and negative role inclusions.  It adds no functionality
+axiom.  Separately, \(\mathrm{DL\mbox{-}Lite}_{\mathcal F}\) adds
+\((\mathsf{funct}\ R)\) for a basic role \(R\), but no role inclusion.  The
+paper studies these as two extensions of the core, not as one unnamed union.
+It also proves that the former has the finite-model property while the latter
+does not \cite[\S\S2.1--2.2]{CalvaneseEtAl2007}.
+
+\paragraph{Interpretations, satisfaction, and the source's UNA.}
+An interpretation \(I=(\Delta^I,\cdot^I)\) has nonempty domain and assigns
+\[
+\begin{aligned}
+ A^I&\subseteq\Delta^I,&
+ P^I&\subseteq\Delta^I\times\Delta^I,\\
+ (P^{-})^I&=\{(y,x):(x,y)\in P^I\},&
+ (\exists R)^I&=\{x:\exists y\,(x,y)\in R^I\},\\
+ (\neg B)^I&=\Delta^I\setminus B^I,&
+ (\neg R)^I&=(\Delta^I\times\Delta^I)\setminus R^I.
+\end{aligned}
+\]
+Concept and role inclusions mean inclusion of the corresponding extensions;
+\(A(a)\) and \(P(a,b)\) mean \(a^I\in A^I\) and
+\((a^I,b^I)\in P^I\).  Functionality has the typed clause
+\[
+ (x,y),(x,z)\in R^I\Longrightarrow y=z.
+\]
+Because \(R\) may be inverse, this also expresses inverse functionality of an
+atomic role.  The article expressly requires different constants to denote
+different domain elements: its semantics includes the unique-name assumption
+(UNA).  That hypothesis is used by the consistency and complexity development
+and may not be transferred silently to OWL semantics
+\cite[pp.~389--392]{CalvaneseEtAl2007}.
+
+\paragraph{Queries, certain answers, and the two source complexity axes.}
+A first-order query is an open formula \(q=\{\vec x\mid\varphi(\vec x)\}\),
+with equality allowed.  A conjunctive query (CQ) has the form
+\[
+ \{\vec x\mid\exists\vec y\,
+       \mathit{conj}(\vec x,\vec y)\},
+\]
+where the matrix is a conjunction of atoms and equalities; a union of
+conjunctive queries (UCQ) is a finite disjunction of such matrices with one
+free tuple.  The source states that equality atoms are eliminated by
+identifying terms but does not spell out the distinct-constant failure case;
+the following UNA-respecting completion is a handbook reconstruction.  For
+each CQ, take the equivalence closure on its terms generated by the equality
+atoms.  If one equivalence class contains two distinct constants, that
+conjunction is false in every source interpretation and the disjunct is removed
+from its UCQ.  Otherwise replace each class by its unique constant, if it has
+one, and by one chosen representative variable if it does not; then delete the
+equality atoms.  The empty union left when every disjunct is removed is the
+identically false query.  Only the surviving equality-free CQs enter the
+datalog notation and \textsc{PerfectRef}
+\cite[pp.~392--393]{CalvaneseEtAl2007}.  Such a CQ over \(\mathcal K\) is
+displayed as
+\[
+ q(\vec x')\leftarrow\mathit{conj}'(\vec x',\vec y'),
+\]
+using only atoms \(A(z)\) and \(P(z_1,z_2)\).  Head variables are
+distinguished; body-only variables are non-distinguished.
+
+Write \(\operatorname{Const}(\mathcal K)\) for the individual constants
+occurring in \(\mathcal K\).  The certain answers are
+\[
+ \operatorname{ans}(q,\mathcal K)
+ =\{\vec a\in\operatorname{Const}(\mathcal K)^{|\vec x|}:
+    \vec a^{\,M}\in q^M
+    \text{ for every }M\models\mathcal K\}.
+\]
+For an inconsistent \(\mathcal K\), the universal quantification has no
+countermodel, so every tuple of the required arity is returned; the source
+calls this finite set \(\operatorname{AllTup}(q,\mathcal K)\).
+
+Only two complexity regimes are formally defined in this article.  In
+\emph{data complexity}, \(\mathcal T\) and the query are fixed and only
+\(|\mathcal A|\) varies.  In \emph{combined complexity}, every recognition
+input varies---for query answering, the parameter is
+\(|\mathcal K|+|Q|\).  The expressions \emph{taxonomic complexity} and
+\emph{query complexity} belong to the later W3C table, not to this paper
+\cite[\S\S2.3--2.4]{CalvaneseEtAl2007}.
+
+\paragraph{The ABox database and first-order reducibility.}
+For nonempty \(\mathcal A\), the finite database interpretation is
+\[
+\begin{aligned}
+ \Delta^{db(\mathcal A)}&=\{a:a\text{ occurs in }\mathcal A\},&
+ a^{db(\mathcal A)}&=a,\\
+ A^{db(\mathcal A)}&=\{a:A(a)\in\mathcal A\},&
+ P^{db(\mathcal A)}&=\{(a,b):P(a,b)\in\mathcal A\}.
+\end{aligned}
+\]
+This is a minimal model of the ABox, not generally a model of the TBox.
+Definition~3 says that UCQ answering is first-order reducible when, for every
+fixed \(\mathcal T,Q\), one FO query \(Q_{\mathcal T}\), independent of
+\(\mathcal A\), satisfies
+\[
+ \vec a\in\operatorname{ans}
+   (Q,\langle\mathcal T,\mathcal A\rangle)
+ \quad\Longleftrightarrow\quad
+ \vec a\in Q_{\mathcal T}^{db(\mathcal A)}
+\]
+for every nonempty ABox and every active-domain tuple.  This is a uniform
+definability statement.  A machine-space bound follows only after a fixed FO
+formula is evaluated over the varying database; the two claims are not
+synonyms.  Definition~3 says that the rewriting is over the alphabet of
+\(\mathcal T\), while Section~5 assumes a query over \(\mathcal T\); the
+printed phrase must not be read as licensing predicates in \(Q\) and then
+forbidding them from its rewriting \cite[\S2.5]{CalvaneseEtAl2007}.
+
+Every statement below whose right side contains \(db(\mathcal A)\) therefore
+has the standing hypothesis \(\mathcal A\ne\varnothing\).  This is exactly the
+input domain of the article's first-order-reducibility Definitions~2--3 and of
+Theorems~41 and~46.  No empty-domain object \(db(\varnothing)\) is introduced.
+When \(\mathcal A=\varnothing\), each TBox in either displayed variant has a
+nonempty one-element model interpreting every atomic concept and role as empty;
+query answering must be read directly from the query semantics, and a
+non-Boolean answer has no active constants from which to form a tuple.
+
+\paragraph{Positive inclusions and the chase.}
+A \emph{positive inclusion} (PI) is \(B_1\sqsubseteq B_2\), or in the
+\(\mathcal R\)-variant \(R_1\sqsubseteq R_2\); a \emph{negative inclusion}
+(NI) has the same left category and a negated right side.  These names classify
+existing TBox formulas and add no new object-language constructor.  For a
+basic role \(R\), define the metalinguistic orientation abbreviation
+\[
+ \operatorname{ga}(R,a,b)=
+ \begin{cases}
+  P(a,b),&R=P,\\
+  P(b,a),&R=P^{-}.
+ \end{cases}
+\]
+It merely lets one chase rule cover a role and its inverse.
+
+Put
+\[
+ \Gamma_{\mathcal A}:=
+ \{a:a\text{ is an individual constant occurring in }\mathcal A\},
+\]
+and take a countably infinite fresh set \(\Gamma_N\) disjoint from
+\(\Gamma_{\mathcal A}\).  Fix orders on the ABox facts, PIs, and
+\(\Gamma_N\).  Starting with \(S_0=\mathcal A\), the chase adds one fact at a time by
+the first applicable instance of
+\[
+\begin{array}{lll}
+ \mathsf{cr1}:&A_1\sqsubseteq A_2,\ A_1(a)
+     &\rightsquigarrow A_2(a),\\
+ \mathsf{cr2}:&A\sqsubseteq\exists R,\ A(a)
+     &\rightsquigarrow\operatorname{ga}(R,a,a_{new}),\\
+ \mathsf{cr3}:&\exists R\sqsubseteq A,\ \operatorname{ga}(R,a,b)
+     &\rightsquigarrow A(a),\\
+ \mathsf{cr4}:&\exists R_1\sqsubseteq\exists R_2,\
+       \operatorname{ga}(R_1,a,b)
+     &\rightsquigarrow\operatorname{ga}(R_2,a,a_{new}),\\
+ \mathsf{cr5}:&R_1\sqsubseteq R_2,\ \operatorname{ga}(R_1,a,b)
+     &\rightsquigarrow\operatorname{ga}(R_2,a,b).
+\end{array}
+\]
+Rules \(\mathsf{cr2}\) and \(\mathsf{cr4}\) fire only when the required outgoing
+witness is absent; the other rules fire only when their conclusion is absent.
+Rule \(\mathsf{cr5}\) belongs only to the \(\mathcal R\)-variant.  The printed
+Definition~5 omits the saturated case.  The conservative completion used here
+is
+\[
+ \text{if no PI applies to }S_j,\qquad S_{j+1}:=S_j.
+\]
+It makes every stage total without changing any generated fact or the intended
+union \(\operatorname{chase}(\mathcal K)=\bigcup_{j\in\mathbb N}S_j\).
+Proposition~6 proves fairness of the fixed-order construction
+\cite[defs.~4--5 and prop.~6]{CalvaneseEtAl2007}.
+
+Put \(\Gamma_C=\Gamma_{\mathcal A}\cup\Gamma_N\).  The canonical
+interpretation reads the union chase literally:
+\[
+\begin{aligned}
+ \Delta^{\operatorname{can}(\mathcal K)}&=\Gamma_C,&
+ a^{\operatorname{can}(\mathcal K)}&=a\quad(a\in\Gamma_C),\\
+ A^{\operatorname{can}(\mathcal K)}
+   &=\{a:A(a)\in\operatorname{chase}(\mathcal K)\},&
+ P^{\operatorname{can}(\mathcal K)}
+   &=\{(a,b):P(a,b)\in\operatorname{chase}(\mathcal K)\}.
+\end{aligned}
+\]
+Lemma~7 proves that it satisfies the ABox and every PI.  For a nonempty ABox,
+Lemma~8 proves, in the \(\mathcal F\)-variant, that its functionality axioms
+hold exactly when they already hold in \(db(\mathcal A)\).
+
+\paragraph{Negative inclusions and finite consistency checking.}
+The NI-closure \(\operatorname{cl}_n(\mathcal T)\) is a TBox obtained by the
+following least closure.  It contains every NI in \(\mathcal T\), and, for the
+\(\mathcal F\)-variant, every functionality assertion.  It is closed under:
+\begin{enumerate}
+\item if \(B_1\sqsubseteq B_2\in\mathcal T\) and either
+\(B_2\sqsubseteq\neg B_3\) or \(B_3\sqsubseteq\neg B_2\) is already present,
+add \(B_1\sqsubseteq\neg B_3\);
+\item if \(R_1\sqsubseteq R_2\in\mathcal T\) and either
+\(\exists R_2\sqsubseteq\neg B\) or \(B\sqsubseteq\neg\exists R_2\) is present,
+add \(\exists R_1\sqsubseteq\neg B\);
+\item under the same role premise, if either
+\(\exists R_2^{-}\sqsubseteq\neg B\) or
+\(B\sqsubseteq\neg\exists R_2^{-}\) is present, add
+\(\exists R_1^{-}\sqsubseteq\neg B\);
+\item under the same role premise, if either \(R_2\sqsubseteq\neg R_3\) or
+\(R_3\sqsubseteq\neg R_2\) is present, add \(R_1\sqsubseteq\neg R_3\);
+\item in the \(\mathcal F\)-variant, the presence of either
+\(\exists R\sqsubseteq\neg\exists R\) or
+\(\exists R^{-}\sqsubseteq\neg\exists R^{-}\) forces both; in the
+\(\mathcal R\)-variant, the presence of either of those or
+\(R\sqsubseteq\neg R\) forces all three.
+\end{enumerate}
+The \(\mathcal F\)-closure uses only the initial assertions, the first rule, and
+its last \(\mathcal F\)-clause; the \(\mathcal R\)-closure uses the initial NIs,
+the first rule, the three role-propagation rules, and the last
+\(\mathcal R\)-clause.  These rules are metalinguistic closure rules, not
+additions to the DL grammar.
+
+For \(\mathcal A\ne\varnothing\), Lemmas~12 and~14 yield the decisive
+equivalence
+\[
+ \mathcal K\text{ is satisfiable}
+ \quad\Longleftrightarrow\quad
+ \operatorname{can}(\mathcal K)\models\mathcal K
+ \quad\Longleftrightarrow\quad
+ db(\mathcal A)\models
+   \langle\operatorname{cl}_n(\mathcal T),\mathcal A\rangle.
+\]
+For an assertion \(\alpha\) in the closure, the source turns its violation into
+a Boolean FO formula \(\delta(\alpha)\):
+\[
+\begin{aligned}
+ \delta((\mathsf{funct}\ P))
+   &=\exists x\,y\,z\,[P(x,y)\land P(x,z)\land y\ne z],\\
+ \delta((\mathsf{funct}\ P^{-}))
+   &=\exists x\,y\,z\,[P(x,y)\land P(z,y)\land x\ne z],\\
+ \delta(B_1\sqsubseteq\neg B_2)
+   &=\exists x\,[\gamma_1(x)\land\gamma_2(x)],\\
+ \delta(R_1\sqsubseteq\neg R_2)
+   &=\exists x\,y\,[\rho_1(x,y)\land\rho_2(x,y)],
+\end{aligned}
+\]
+where \(\gamma_i(x)\) is \(A_i(x)\), \(\exists y_iP_i(x,y_i)\), or
+\(\exists y_iP_i(y_i,x)\) according as \(B_i\) is \(A_i\), \(\exists P_i\),
+or \(\exists P_i^{-}\), and \(\rho_i(x,y)\) is \(P_i(x,y)\) or \(P_i(y,x)\)
+according as \(R_i=P_i\) or \(R_i=P_i^{-}\).  Define
+\[
+ q_{\mathrm{unsat}}
+ :=\bigvee_{\alpha\in\operatorname{cl}_n(\mathcal T)}\delta(\alpha),
+\]
+with the empty disjunction equal to \(\mathsf{false}\).  For
+\(\mathcal A\ne\varnothing\), define the Boolean procedure used below by
+\[
+ \operatorname{Consistent}(\mathcal K)=\mathsf{true}
+ \quad\Longleftrightarrow\quad
+ q_{\mathrm{unsat}}^{db(\mathcal A)}=\mathsf{false}.
+\]
+Here \(q_{\mathrm{unsat}}\) is a metalinguistic Boolean first-order
+inconsistency detector assembled from all closure violations, not the user's
+UCQ \(Q\), and \(\operatorname{Consistent}\) is its truth-value test.  The two
+abbreviations are needed later to state \(\operatorname{Answer}\) and to supply
+the inconsistent-KB completion of Theorem~41; neither names a motive or an
+object-language constructor.  Lemma~16 proves that evaluating this disjunction
+gives a terminating and correct consistency test; Theorem~17 obtains
+first-order reducibility of satisfiability
+\cite[def.~9 and thms.~15--17]{CalvaneseEtAl2007}.
+
+\paragraph{Homomorphism into every model and UCQ evaluation.}
+For every satisfiable \(\mathcal R\)- or \(\mathcal F\)-knowledge base and every
+model \(M\models\mathcal K\), Lemma~28 constructs
+\[
+ \psi:\Delta^{\operatorname{can}(\mathcal K)}\longrightarrow\Delta^M
+\]
+preserving atomic concept and role facts.  ABox symbols go to their denotations,
+and each chase witness goes to a witness supplied by \(M\).  The printed proof
+does not assign the unused members of \(\Gamma_N\); mapping all of them to one
+fixed element of the nonempty \(\Delta^M\) makes \(\psi\) total without changing
+any preserved fact.  The article prints Theorem~29 as
+\(\operatorname{ans}(Q,\mathcal K)=Q^{\operatorname{can}(\mathcal K)}\).
+The left side contains tuples of source constants, whereas an ordinary query
+extension on the right may also contain fresh chase elements.  Its type-correct
+content, for a UCQ \(Q\) of arity \(r\), is therefore
+\[
+ \operatorname{ans}(Q,\mathcal K)
+ =\{\vec a\in\operatorname{Const}(\mathcal K)^r:
+     \vec a^{\,\operatorname{can}(\mathcal K)}
+       \in Q^{\operatorname{can}(\mathcal K)}\}.
+\]
+Theorem~31 distributes this set over the CQ disjuncts.  Its proof names
+Theorem~28 at one point, but the equality it uses is Theorem~29; Lemma~28
+alone supplies only the homomorphism \cite[\S4]{CalvaneseEtAl2007}.
+
+\paragraph{Typed input to \textsc{PerfectRef}.}
+In a query atom, an argument occurrence is \emph{bound} iff it is a
+distinguished variable, a variable occurring at least twice in the body, or a
+constant.  It is \emph{unbound} iff it is a body-only variable occurring once.
+The printed underscore \(\_\) denotes such an occurrence; different underscores
+are treated as different variables during unification.
+
+A PI is applicable to \(A(x)\) exactly when its right side is \(A\).  It is
+applicable to \(P(x_1,x_2)\) exactly when either \(x_2=\_\) and its right side is
+\(\exists P\), or \(x_1=\_\) and its right side is \(\exists P^{-}\), or it is a
+role inclusion whose right side is \(P\) or \(P^{-}\).  The first two side
+conditions prevent a backward existential step from deleting a join, output
+variable, or constant constraint.
+
+For an applicable PI \(I\), Definition~32 defines the replacement
+\(\operatorname{gr}(g,I)\) by all eleven cases:
+\begin{center}
+\scriptsize
+\begin{tabularx}{\textwidth}{@{}X X X@{}}
+\toprule
+atom \(g\) & inclusion \(I\) & \(\operatorname{gr}(g,I)\)\\
+\midrule
+\(A(x)\) & \(A_1\sqsubseteq A\) & \(A_1(x)\)\\
+\(A(x)\) & \(\exists P\sqsubseteq A\) & \(P(x,\_)\)\\
+\(A(x)\) & \(\exists P^{-}\sqsubseteq A\) & \(P(\_,x)\)\\
+\(P(x,\_)\) & \(A\sqsubseteq\exists P\) & \(A(x)\)\\
+\(P(x,\_)\) & \(\exists P_1\sqsubseteq\exists P\) & \(P_1(x,\_)\)\\
+\(P(x,\_)\) & \(\exists P_1^{-}\sqsubseteq\exists P\) & \(P_1(\_,x)\)\\
+\(P(\_,x)\) & \(A\sqsubseteq\exists P^{-}\) & \(A(x)\)\\
+\(P(\_,x)\) & \(\exists P_1\sqsubseteq\exists P^{-}\) & \(P_1(x,\_)\)\\
+\(P(\_,x)\) & \(\exists P_1^{-}\sqsubseteq\exists P^{-}\) & \(P_1(\_,x)\)\\
+\(P(x_1,x_2)\) & \(P_1\sqsubseteq P\) or \(P_1^{-}\sqsubseteq P^{-}\) &
+\(P_1(x_1,x_2)\)\\
+\(P(x_1,x_2)\) & \(P_1\sqsubseteq P^{-}\) or \(P_1^{-}\sqsubseteq P\) &
+\(P_1(x_2,x_1)\)\\
+\bottomrule
+\end{tabularx}
+\end{center}
+The first nine rows rewrite concept inclusions; the last two are available only
+with \(\mathcal R\)-role inclusions.
+
+Write \(q[g/g']\) for replacing one selected atom.  If two atoms unify,
+\(\operatorname{reduce}(q,g_1,g_2)\) applies a most general unifier to the whole
+query and removes the duplicate atom.  Finally, \(\tau(q)\) turns each variable
+that has become body-only and non-shared into an underscore.  This second pass
+is required because a reduction can make a formerly shared variable unbound.
+
+The exact Figure~2 control flow can now be stated without a new algorithmic
+vocabulary.  Initialize \(PR:=\{q\}\).  At the start of each pass save
+\(PR':=PR\).  For every \(q'\in PR'\), first add every applicable
+\(q'[g/\operatorname{gr}(g,I)]\); then, for every unifiable atom pair, add
+\(\tau(\operatorname{reduce}(q',g_1,g_2))\).  Stop when \(PR'=PR\) and return
+\(PR\).  Newly added queries are processed on the next pass, and set union
+suppresses duplicates \cite[def.~32 and fig.~2]{CalvaneseEtAl2007}.
+
+\paragraph{Termination and its exact finite-state repair.}
+Lemma~34 observes that no generated query has more body atoms than the input,
+no new term other than an underscore is introduced, and the concept/role
+vocabulary is finite.  If \(n\) is the source's query-size parameter and \(m\)
+the number of concept and role names in \(\mathcal T\) or \(q\), the paper gives
+\(m(n+1)^2\) possible atoms and prints
+\((m(n+1)^2)^n\) as a coarse bound on queries.  Because the paper does not fix a
+literal coding of heads and shorter bodies inside that power, a
+convention-independent sufficient bound is obtained by putting
+\(a=m(n+1)^2\):
+\[
+ (n+1)^n\sum_{i=0}^{n}a^i
+ \leq (n+1)^{n+1}a^n\qquad(a\geq1).
+\]
+Quotienting by atom order, duplicate removal, or variable renaming only reduces
+this finite number.  Each nonfinal pass adds a new set element, so termination
+follows.  For fixed \(q\), the repaired bound remains polynomial in \(m\),
+which is exactly what Lemma~42 later needs.
+
+\paragraph{The source's student--tutor rewrite and answer.}
+Example~35 uses
+\[
+\begin{aligned}
+ \mathsf{Professor}&\sqsubseteq\exists\mathsf{TeachesTo},&
+ \mathsf{Student}&\sqsubseteq\exists\mathsf{HasTutor},\\
+ \exists\mathsf{TeachesTo}^{-}&\sqsubseteq\mathsf{Student},&
+ \exists\mathsf{HasTutor}^{-}&\sqsubseteq\mathsf{Professor},\\
+ \mathsf{Professor}&\sqsubseteq\neg\mathsf{Student}
+\end{aligned}
+\]
+and begins with
+\[
+ q_0(x)\leftarrow
+ \mathsf{TeachesTo}(x,y),\mathsf{HasTutor}(y,\_).
+\]
+Backward application and one reduction generate exactly
+\[
+\begin{array}{rcl}
+ q_1(x)&\leftarrow&\mathsf{TeachesTo}(x,y),\mathsf{Student}(y),\\
+ q_2(x)&\leftarrow&\mathsf{TeachesTo}(x,y),\mathsf{TeachesTo}(\_,y),\\
+ q_3(x)&\leftarrow&\mathsf{TeachesTo}(x,\_),\\
+ q_4(x)&\leftarrow&\mathsf{Professor}(x),\\
+ q_5(x)&\leftarrow&\mathsf{HasTutor}(\_,x).
+\end{array}
+\]
+The negative inclusion participates in consistency checking but never in
+\textsc{PerfectRef}.  Example~38 evaluates this returned UCQ on
+\[
+ \{\mathsf{Student}(\mathsf{John}),
+   \mathsf{HasTutor}(\mathsf{John},\mathsf{Mary}),
+   \mathsf{TeachesTo}(\mathsf{Mary},\mathsf{Bill})\}.
+\]
+Queries \(q_2,q_3,q_5\) return Mary; the other three have no database match.
+The union is therefore exactly \(\{\mathsf{Mary}\}\)
+\cite[examples~35 and~38]{CalvaneseEtAl2007}.
+
+\paragraph{Rewriting correctness.}
+Lemma~39 states, for an \(\mathcal R\)-TBox, a CQ \(q\), its returned set \(PR\),
+and every nonempty ABox for which \(\mathcal K\) is satisfiable,
+\[
+ \operatorname{ans}(q,\mathcal K)=PR^{db(\mathcal A)}.
+\]
+For soundness, each backward inclusion step maps any match of the rewritten
+atom to a match of its predecessor, and reduction preserves a match of the
+unreduced query.  Since every ABox fact occurs in the chase, iteration gives
+that each active-domain tuple in \(PR^{db(\mathcal A)}\) belongs to the
+constant-restricted canonical answer set displayed above, hence to
+\(\operatorname{ans}(q,\mathcal K)\).
+
+For completeness, take \(\vec a\in\operatorname{ans}(q,\mathcal K)\).  By the
+type-correct form of Theorem~29, the corresponding canonical match is a finite
+match of \(q\) in the union chase and already occurs at some finite stage.
+Retain only the chase facts and parent applications needed for that match, and
+reverse them.  Reversing a produced leaf is a Figure~2
+backward-inclusion step; when two query atoms acquire one predecessor fact,
+reduction unifies them.  At stage \(0\) the resulting query has an ABox match.
+This gives the opposite inclusion.  The article expands the
+\(\mathsf{cr2}\) case and declares the other four chase forms analogous.
+
+Four printed slips are corrected here: the witness set is a subset of
+\(\operatorname{chase}(\mathcal K)\), not of the interpretation object; the
+reverse-step predecessor is \(\operatorname{chase}_{k-i}(\mathcal K)\), not
+\(\operatorname{chase}_{i}(\mathcal K)\); the post-reduction cardinality is
+\(|q_2|=|G_{k-i}|\), not \(|G_{k-i+1}|\); and Figure~2's literal operation is
+\(\tau\circ\operatorname{reduce}\), even where the proof abbreviates it to
+\(\operatorname{reduce}\) \cite[pp.~419--421]{CalvaneseEtAl2007}.
+
+\paragraph{From one CQ to arbitrary consistent or inconsistent UCQs.}
+For \(\mathcal A\ne\varnothing\), Figure~3's procedure has the typed value
+\[
+ \operatorname{Answer}(Q,\langle\mathcal T,\mathcal A\rangle)=
+ \begin{cases}
+  \operatorname{AllTup}(Q,\mathcal K),
+       &\operatorname{Consistent}(\mathcal K)=\mathsf{false},\\
+  \left(\displaystyle\bigcup_{q_i\in Q}
+     \operatorname{PerfectRef}(q_i,\mathcal T)\right)^{db(\mathcal A)},
+       &\text{otherwise}.
+ \end{cases}
+\]
+Lemma~16 supplies the first branch, Lemmas~34 and~39 supply termination and
+correctness of each CQ rewrite, and Theorem~31 supplies their union.  Theorem~40
+therefore proves exact correctness for every \(\mathcal R\)-knowledge base in
+this nonempty-ABox regime.
+
+Theorem~41 says the result is first-order reducible, including inconsistent
+knowledge bases.  Its satisfiable case is local.  For the inconsistent case,
+the source describes a finite FO augmentation and refers to its reference~[10]
+rather than printing the formula.  Using only the source definitions, the
+missing formula is immediate: for answer arity \(r>0\), disjoin the returned
+UCQ with
+\[
+ q_{\mathrm{unsat}}\land\bigwedge_{i=1}^{r}(x_i=x_i);
+\]
+for a Boolean query, use \(q_{\mathrm{unsat}}\) itself.  Because the domain of
+\(db(\mathcal A)\) is exactly its active constants, this disjunct returns every
+tuple exactly in the inconsistent case.  This is a handbook reconstruction of
+the referred step, not a formula printed by the article.
+
+\paragraph{Exact parameterized results and proof boundaries.}
+The paper's conclusions are:
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{@{}l X X@{}}
+\toprule
+result & hypotheses and varying input & exact conclusion and proof status\\
+\midrule
+Theorem 41 & fixed \(\mathcal R\)-TBox and fixed UCQ; arbitrary nonempty ABox &
+UCQ answering is first-order reducible; inconsistent-case formula described
+and referred, with the local completion above\\
+Theorem 43 & fixed UCQ and fixed nonempty ABox for varying TBox; fixed UCQ and
+TBox for varying nonempty ABox &
+polynomial time in TBox size with the UCQ and ABox fixed, and a
+\(\mathsf{LOGSPACE}\) data upper bound; not completeness claims\\
+Theorem 44 & variable \(\mathcal R\)-KB, UCQ, and candidate tuple; size
+\(|\mathcal K|+|Q|\) & \(\mathsf{NP}\)-complete combined complexity; local
+nondeterministic rewrite sketch and hardness from CQ database evaluation with
+empty TBox\\
+Theorem 46 & fixed \(\mathcal F\)-TBox and fixed UCQ; arbitrary nonempty ABox &
+first-order reducible, as an immediate transfer through removal of functionality
+from the canonical chase\\
+Theorem 47 & the three parameter regimes of Theorem~43 and Theorem~44, with a
+fixed nonempty ABox in the TBox-size regime and a nonempty varying ABox in the
+data regime &
+polynomial in TBox size for fixed UCQ and ABox, \(\mathsf{LOGSPACE}\) in data, and
+\(\mathsf{NP}\)-complete combined; stated by transfer, without a new proof body\\
+Theorem 48 & fixed extended core TBox and fixed CQ; varying ABox &
+\(\mathsf{coNP}\)-hard data complexity if one admits (i) \(\forall R.A\) or
+\(\neg A\) on an inclusion left, (ii) either as a query atom, or (iii) concept
+union on an inclusion right; hardness only, imported from reference~[19]\\
+\bottomrule
+\end{tabularx}
+\end{center}
+Lemma~42's polynomial TBox-size claim concerns the rewriting phase and keeps
+the UCQ fixed; the answering-time TBox-size regimes above also fix the ABox.
+Theorems~43 and~47 derive their data bound by evaluating a fixed rewriting and
+fixed inconsistency query on \(db(\mathcal A)\).  No theorem says that
+materializing all rewrites is
+\(\mathsf{LOGSPACE}\) in the combined input; Theorem~44's
+\(\mathsf{NP}\)-completeness rules out that conflation absent a class collapse
+\cite[\S\S5.3--7]{CalvaneseEtAl2007}.
+
+\paragraph{Why this source logic is not OWL~2~QL.}
+The term \emph{OWL QL} does not occur in the 2007 article.  The later W3C
+Recommendation says that OWL~2~QL is based on the DL-Lite family and that
+\(\mathrm{DL\mbox{-}Lite}_{\mathcal R}\) supplies its logical underpinning; it
+does not assert identity.  The nonidentity is formal: the article enforces UNA,
+while OWL~2~QL does not; OWL~2~QL has its own structural grammar for individuals,
+object and data properties, datatypes, axiom forms, and global restrictions;
+and its normative complexity table includes axes and bounds not stated in this
+paper.  Therefore \textsc{PerfectRef} is the 2007 research algorithm, not the
+normative OWL~2~QL specification \cite[\S3]{W3COWL2Profiles2012}.
+
+\subsubsection{W3C profiles as normative languages}
+
+\paragraph{The dated normative bodies and their standing.}
+The normative source is the W3C Recommendation
+\emph{OWL 2 Web Ontology Language: Profiles (Second Edition)}, dated
+11 December 2012.
+The same-date Structural Specification and Direct Semantics bodies, needed to
+type imported axioms, inherited restrictions, and inference tasks, are used
+with it.
+W3C makes these Recommendations publicly readable and citable under its
+document-use terms, but they are not public-domain material or permission to
+publish an altered substitute specification.  The handbook therefore preserves
+the indispensable functional-syntax names and reconstructs the restrictions in
+its own prose
+\cite{W3COWL2Profiles2012,W3COWL2Syntax2012,W3COWL2DirectSemantics2012}.
+Every CamelCase expression below is a W3C functional-syntax constructor or
+axiom name.  The words class, datatype, object/data property expression, class
+expression, data range, and axiom name the Recommendation's grammar categories;
+none is a new handbook ontology object.
+
+The Recommendation calls OWL~2~EL, OWL~2~QL, and OWL~2~RL \emph{profiles}:
+independently defined structural fragments of OWL~2 chosen for different
+reasoning regimes.  Profile membership is determined by the whole ontology's
+functional-style grammar and global restrictions, even when the ontology is
+serialized in another syntax.  None of the three profiles is a subset of
+another; that does not mean that they are disjoint.
+
+Let \(Ax\) denote the source's \emph{axiom closure}: the axioms in the import
+closure, with anonymous individuals from distinct imported ontologies renamed
+apart.  This is a metalinguistic input set, not an OWL entity or semantic
+relation.  It is needed because declarations, entity typing, property
+simplicity, role-chain regularity, and anonymous-individual conditions are
+checked over \(Ax\), not over one displayed axiom in isolation
+\cite[\S1]{W3COWL2Profiles2012}
+\cite[\S\S3.4 and~11]{W3COWL2Syntax2012}.
+
+\paragraph{Restrictions inherited by all three profiles.}
+Before any profile-specific production is applied, every ontology must satisfy
+the OWL~2~DL typing and structural conditions.  Classes and datatypes have
+disjoint types; object, data, and annotation properties have pairwise disjoint
+types; every class, datatype, and property occurrence must have the appropriate
+declaration; individual declarations are optional.  A version IRI may occur
+only when an ontology IRI occurs, and neither IRI may use reserved vocabulary
+in OWL~2~DL.  Imported ontologies must themselves be OWL~2 ontologies, reserved
+vocabulary may identify entities only in its specified built-in positions, and
+a literal's lexical form must belong to its datatype's lexical space.
+
+Every data range admitted by these profiles is unary.  Consequently, although
+the main EL and RL productions inherit a one-or-more list of data properties
+in \texttt{DataSomeValuesFrom} or \texttt{DataAllValuesFrom}, the inherited
+arity equality leaves exactly one property in a well-formed profile ontology.
+Likewise, the two property lists printed by \texttt{HasKey} may each be empty,
+but at least one property must occur overall.
+
+The remaining restrictions are stated over \(Ax\).
+\texttt{owl:topDataProperty} may occur only as the superproperty in
+\texttt{SubDataPropertyOf}.  Every datatype \(DT\) occurring in \(Ax\) must
+satisfy exactly one of the following: \(DT\) is \texttt{rdfs:Literal}; \(DT\)
+belongs to the OWL~2 datatype map; or \(DT\) is the subject of exactly one
+\texttt{DatatypeDefinition} axiom in \(Ax\).  There must also be a strict
+partial order on the occurring datatypes such that every datatype mentioned in
+the defining data range lies below the datatype being defined.  This separate
+order is the acyclicity condition.
+
+A datatype introduced as the subject of \texttt{DatatypeDefinition} must also
+be explicitly declared.  The Structural Specification gives every such
+defined datatype an empty lexical space, so it cannot type a literal.  It also
+supports no facets and therefore cannot occur as the datatype in
+\texttt{DatatypeRestriction}.  The profile grammars already omit
+\texttt{DatatypeRestriction}, but the literal prohibition remains substantive
+because all three profiles admit literal-bearing forms
+\cite[\S9.4]{W3COWL2Syntax2012}.
+
+The property restrictions require their source definitions.  An
+object-property expression \(OPE\) is either a named object property \(OP\) or
+\texttt{ObjectInverseOf(\(OP\))}.  Define the metalinguistic involution
+\[
+ \operatorname{INV}(OP)=\texttt{ObjectInverseOf(\(OP\))},
+ \qquad
+ \operatorname{INV}(\texttt{ObjectInverseOf(\(OP\))})=OP.
+\]
+The set \(\operatorname{AllOPE}(Ax)\) is the smallest set containing \(OP\)
+and \(\operatorname{INV}(OP)\) for every named object property \(OP\) occurring
+in \(Ax\).  An \(OPE\) is \emph{composite in \(Ax\)} exactly when
+\begin{enumerate}
+\item it is \texttt{owl:topObjectProperty} or
+\texttt{owl:bottomObjectProperty}; or
+\item \(Ax\) contains a length-greater-than-one
+\texttt{ObjectPropertyChain} inclusion whose target is \(OPE\) or
+\(\operatorname{INV}(OPE)\); or
+\item \(Ax\) contains \texttt{TransitiveObjectProperty(\(OPE\))} or
+\texttt{TransitiveObjectProperty(\(\operatorname{INV}(OPE)\))}.
+\end{enumerate}
+Define \(\to\) to be the smallest relation on
+\(\operatorname{AllOPE}(Ax)\) satisfying all five clauses:
+\begin{enumerate}
+\item \texttt{SubObjectPropertyOf(\(OPE_1\ OPE_2\))} gives
+\(OPE_1\to OPE_2\);
+\item \texttt{EquivalentObjectProperties(\(OPE_1\ OPE_2\))} gives both
+directions;
+\item \texttt{InverseObjectProperties(\(OPE_1\ OPE_2\))} gives
+\(OPE_1\to\operatorname{INV}(OPE_2)\) and
+\(\operatorname{INV}(OPE_2)\to OPE_1\);
+\item \texttt{SymmetricObjectProperty(\(OPE\))} gives
+\(OPE\to\operatorname{INV}(OPE)\); and
+\item \(OPE_1\to OPE_2\) entails
+\(\operatorname{INV}(OPE_1)\to\operatorname{INV}(OPE_2)\).
+\end{enumerate}
+Its reflexive-transitive closure is \(\to^{*}\).  The expression \(OPE\) is
+\emph{simple in \(Ax\)} exactly when every \(OPE'\) with
+\(OPE'\to^{*}OPE\) is noncomposite.  Cardinality restrictions and
+\texttt{ObjectHasSelf}, together with functional, inverse-functional,
+irreflexive, asymmetric, and disjoint object-property axioms, may mention only
+simple object-property expressions.
+
+Regularity requires the existence of a strict partial order \(<\) on
+\(\operatorname{AllOPE}(Ax)\).  For the named object properties quantified by
+the source it must satisfy
+\[
+ OP_1<OP_2
+ \quad\Longleftrightarrow\quad
+ \operatorname{INV}(OP_1)<OP_2,
+\]
+and, for all object-property expressions,
+\[
+ OPE_1<OPE_2\quad\Longrightarrow\quad
+ \neg(OPE_2\to^{*}OPE_1).
+\]
+Each inclusion
+\texttt{SubObjectPropertyOf(ObjectPropertyChain(\(OPE_1\ \cdots\ OPE_n\))
+\(OPE\))}, with \(n\geq2\), must then have one of exactly five shapes:
+\begin{enumerate}
+\item \(OPE=\texttt{owl:topObjectProperty}\);
+\item \(n=2\) and \(OPE_1=OPE_2=OPE\);
+\item \(OPE_i<OPE\) for every \(1\leq i\leq n\);
+\item \(OPE_1=OPE\) and \(OPE_i<OPE\) for every \(2\leq i\leq n\); or
+\item \(OPE_n=OPE\) and \(OPE_i<OPE\) for every \(1\leq i<n\).
+\end{enumerate}
+The relations \(\to^{*}\) and \(<\) are not interchangeable: the former is
+generated by the ontology and defines simplicity, whereas the latter is an
+existential witness constrained not to reverse the former and governs legal
+chains.  All of \(\operatorname{INV}\), \(\operatorname{AllOPE}\),
+\emph{composite}, \(\to^{*}\), \emph{simple}, and \(<\) are source-defined
+metalinguistic objects or predicates on \(Ax\), not OWL entities or new
+object-language constructors; their later use in expression and axiom
+restrictions is why each distinction is needed.
+
+Finally, no anonymous individual may occur in same/different-individual or
+negative-property assertions, or inside \texttt{ObjectOneOf} or
+\texttt{ObjectHasValue}.  Define the \emph{anonymous-individual graph} of
+\(Ax\) to have the anonymous individuals in \(Ax\) as vertices and an
+undirected edge between \(\_\!:\!x\) and \(\_\!:\!y\) for each
+\texttt{ObjectPropertyAssertion(\(OPE\ \_\!:\!x\ \_\!:\!y\))} in \(Ax\).
+This graph must be a forest.  For each pair of anonymous individuals joined by
+an edge of this graph, \(Ax\) may contain at most one object-property assertion
+between the pair in either direction.  Every tree must contain at least one anonymous vertex having at
+most one object-property assertion to a named individual, in either direction.
+EL and QL exclude anonymous individuals, so these graph conditions are vacuous
+there; RL admits them and inherits the conditions substantively
+\cite[\S\S3.1, 5.8.1, and~11]{W3COWL2Syntax2012}.
+
+The six admitted/excluded axiom shapes below are handbook-derived membership
+checks against these productions and restrictions; none is a W3C-printed
+example.
+
+\paragraph{OWL~2~EL: one expression grammar and its axiom positions.}
+EL admits named individuals, named object properties but no inverse
+object-property expressions, and named data properties.  Its admitted
+predefined datatype IRIs are
+\begin{quote}\small
+\texttt{rdf:PlainLiteral}, \texttt{rdf:XMLLiteral},
+\texttt{rdfs:Literal}, \texttt{owl:real}, \texttt{owl:rational},
+\texttt{xsd:decimal}, \texttt{xsd:integer},
+\texttt{xsd:nonNegativeInteger}, \texttt{xsd:string},
+\texttt{xsd:normalizedString}, \texttt{xsd:token}, \texttt{xsd:Name},
+\texttt{xsd:NCName}, \texttt{xsd:NMTOKEN}, \texttt{xsd:hexBinary},
+\texttt{xsd:base64Binary}, \texttt{xsd:anyURI}, \texttt{xsd:dateTime},
+and \texttt{xsd:dateTimeStamp}.
+\end{quote}
+It expressly excludes the floating-point datatypes, the remaining signed and
+fixed-width integer datatypes, \texttt{xsd:language}, and
+\texttt{xsd:boolean}.  A nonreserved IRI may nevertheless name one declared,
+acyclically defined custom datatype.
+
+An EL data range is an admitted datatype, an intersection of at least two EL
+data ranges, or a one-literal \texttt{DataOneOf}.  One class-expression grammar
+serves every class position.  It contains a class, an intersection of at least
+two EL expressions, a one-individual \texttt{ObjectOneOf},
+\texttt{ObjectSomeValuesFrom}, \texttt{ObjectHasValue},
+\texttt{ObjectHasSelf}, \texttt{DataSomeValuesFrom}, and
+\texttt{DataHasValue}.  The object existential has an EL filler; the data
+existential has the unary range just described.
+
+The complete logical axiom inventory is:
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{@{}l X@{}}
+\toprule
+family & admitted EL forms\\
+\midrule
+class axioms &
+\texttt{SubClassOf}, \texttt{EquivalentClasses}, and
+\texttt{DisjointClasses}, with EL expressions in every class position\\
+object-property axioms &
+ordinary or chained \texttt{SubObjectPropertyOf},
+\texttt{EquivalentObjectProperties}, domain and range,
+\texttt{ReflexiveObjectProperty}, and
+\texttt{TransitiveObjectProperty}\\
+data-property axioms &
+subproperty, equivalence, domain, range, and
+\texttt{FunctionalDataProperty}\\
+datatype and key axioms &
+\texttt{DatatypeDefinition} and \texttt{HasKey}; at least one object or data
+key property must occur\\
+assertions &
+same/different individuals, class assertions, and positive or negative object
+and data-property assertions, all with named individuals\\
+\bottomrule
+\end{tabularx}
+\end{center}
+Declarations and annotation axioms are also admitted.  Disjoint union,
+disjoint object/data properties, functional object properties, inverses, and
+the constructors absent from the displayed expression grammar are excluded
+\cite[\S2.2 and app.~6.1]{W3COWL2Profiles2012}.
+
+EL alone adds a range/chain condition.  The source says that \(Ax\)
+\emph{imposes class-expression range \(CE\) on the named object property
+\(OP_1\)} exactly when there are named object properties
+\(OP_1,\ldots,OP_k\), for some \(k\geq1\), such that
+\[
+ \texttt{SubObjectPropertyOf(\(OP_i\ OP_{i+1}\))}\in Ax
+ \quad(1\leq i<k)
+\]
+and
+\[
+ \texttt{ObjectPropertyRange(\(OP_k\ CE\))}\in Ax.
+\]
+This is a source-defined metalinguistic relation on \(Ax\), not an OWL axiom:
+it differs from an explicit range axiom by following zero or more ordinary
+subproperty inclusions.  That closure is needed in the following condition.
+If \(Ax\) contains
+\texttt{SubObjectPropertyOf(ObjectPropertyChain(\(OP_1\ \cdots\ OP_n\)) \(OP\))}
+and imposes class-expression range \(CE\) on \(OP\), then \(Ax\) must also
+impose \(CE\) on the final chain member \(OP_n\).  Hence
+\begin{quote}\small\ttfamily
+SubObjectPropertyOf(ObjectPropertyChain(:r :s) :t)\par
+ObjectPropertyRange(:t :C)
+\end{quote}
+is excluded unless the closure also imposes range \texttt{:C} on
+\texttt{:s}; adding \texttt{ObjectPropertyRange(:s :C)} is one direct repair.
+The trigger need not be direct: replacing the second displayed axiom by
+\texttt{SubObjectPropertyOf(:t :u)} together with
+\texttt{ObjectPropertyRange(:u :C)} still makes \(Ax\) impose that range on
+\texttt{:t}.
+
+The axiom
+\begin{quote}\small\ttfamily
+SubClassOf(:A ObjectSomeValuesFrom(:r :B))
+\end{quote}
+is admitted by the EL grammar.  Replacing the right side by
+\texttt{ObjectAllValuesFrom(:r :B)} is excluded because universal object
+restriction is not an EL class expression.  These are grammar-membership
+examples, not satisfiability claims
+\cite[\S\S2.2.3 and~2.2.6]{W3COWL2Profiles2012}.
+
+\paragraph{OWL~2~QL: different left and right class positions.}
+QL admits named individuals, named data properties, and a named object property
+or its inverse as an object-property expression.  Its predefined datatype
+whitelist and blacklist are exactly EL's.  Its data ranges are admitted
+datatypes and intersections of at least two QL data ranges; it excludes
+\texttt{DataOneOf}, union, complement, and datatype restriction.
+
+There is no freely substitutable QL class-expression grammar.  The two source
+positions are:
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{@{}l X@{}}
+\toprule
+position & admitted QL forms\\
+\midrule
+subclass expression &
+a class; \texttt{ObjectSomeValuesFrom} with filler exactly
+\texttt{owl:Thing}; or \texttt{DataSomeValuesFrom} with a QL data range\\
+superclass expression &
+a class; intersection of at least two superclass expressions; complement of a
+subclass expression; \texttt{ObjectSomeValuesFrom} with an atomic class filler;
+or \texttt{DataSomeValuesFrom} with a QL data range\\
+\bottomrule
+\end{tabularx}
+\end{center}
+The object property may be named or inverse in either existential position.
+The main body inherits a one-or-more data-property list while Appendix~6.2
+prints one; unary data ranges make exactly one the only well-formed case, so
+the surface mismatch does not change profile membership.
+
+The axiom grammar uses those positions exactly.  \texttt{SubClassOf} takes one
+subclass expression on the left and one superclass expression on the right.
+\texttt{EquivalentClasses} and \texttt{DisjointClasses} take two or more
+subclass expressions; \texttt{DisjointUnion} is absent.  QL admits ordinary,
+but not chained, object subproperties; object-property equivalence,
+disjointness, and inverse axioms; object-property domain and range axioms whose
+class position is a superclass expression; and reflexivity, symmetry, and
+asymmetry.  Its data-property axioms comprise subproperty, equivalence,
+disjointness, domain with a superclass expression, and range with a QL data
+range.  \texttt{DatatypeDefinition} takes a QL data range.  Assertions comprise
+\texttt{DifferentIndividuals}, \texttt{ClassAssertion} with an atomic
+\texttt{Class}, and positive object- and data-property assertions.  Declarations
+and annotation axioms are also admitted.  QL excludes functionality, inverse
+functionality, transitivity, keys, \texttt{SameIndividual}, and negative-
+property assertions.  The dated source is internally inconsistent about
+irreflexivity: the overview calls it supported, while both operative grammar
+locations omit it.  The reconstruction does not silently insert it
+\cite[\S\S3.1--3.2 and app.~6.2]{W3COWL2Profiles2012}.
+
+The following shape is admitted:
+\begin{quote}\small\ttfamily
+SubClassOf(ObjectSomeValuesFrom(:r owl:Thing)\par
+\hspace*{2em}ObjectSomeValuesFrom(ObjectInverseOf(:s) :B))
+\end{quote}
+The following is excluded because a superclass existential requires an atomic
+class filler:
+\begin{quote}\small\ttfamily
+SubClassOf(:A ObjectSomeValuesFrom(:r ObjectIntersectionOf(:B :C)))
+\end{quote}
+The Recommendation omits \texttt{SameIndividual} because its advertised
+first-order-rewriting behavior is obtained without equality assertions; it
+mentions equality-closure preprocessing in logarithmic space, but that does
+not add the axiom to the profile grammar
+\cite[\S\S3.1 and~3.2.3]{W3COWL2Profiles2012}.
+
+\paragraph{OWL~2~RL: three class positions and inherited role restrictions.}
+RL admits named and anonymous individuals subject to the inherited forest
+conditions.  Object-property expressions may be named or inverse; data
+properties are named.  It excludes the four predefined top and bottom object
+and data properties.  Its admitted predefined datatype IRIs are
+\begin{quote}\small
+\texttt{rdf:PlainLiteral}, \texttt{rdf:XMLLiteral},
+\texttt{rdfs:Literal}, \texttt{xsd:decimal}, \texttt{xsd:integer},
+\texttt{xsd:nonNegativeInteger}, \texttt{xsd:nonPositiveInteger},
+\texttt{xsd:positiveInteger}, \texttt{xsd:negativeInteger},
+\texttt{xsd:long}, \texttt{xsd:int}, \texttt{xsd:short},
+\texttt{xsd:byte}, \texttt{xsd:unsignedLong}, \texttt{xsd:unsignedInt},
+\texttt{xsd:unsignedShort}, \texttt{xsd:unsignedByte},
+\texttt{xsd:float}, \texttt{xsd:double}, \texttt{xsd:string},
+\texttt{xsd:normalizedString}, \texttt{xsd:token},
+\texttt{xsd:language}, \texttt{xsd:Name}, \texttt{xsd:NCName},
+\texttt{xsd:NMTOKEN}, \texttt{xsd:boolean}, \texttt{xsd:hexBinary},
+\texttt{xsd:base64Binary}, \texttt{xsd:anyURI}, \texttt{xsd:dateTime},
+and \texttt{xsd:dateTimeStamp}.
+\end{quote}
+It expressly excludes \texttt{owl:real} and \texttt{owl:rational}; a declared
+custom datatype may still have one acyclic legal definition.  An RL data range
+is an admitted datatype or an intersection of at least two RL data ranges.
+
+The three class positions are:
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{@{}l X@{}}
+\toprule
+position & admitted RL forms\\
+\midrule
+subclass expression &
+an atomic class other than \texttt{owl:Thing}; recursive intersection or union
+of at least two subclass expressions; \texttt{ObjectOneOf} with one or more
+individuals; \texttt{ObjectSomeValuesFrom};
+\texttt{ObjectHasValue}; \texttt{DataSomeValuesFrom}; or
+\texttt{DataHasValue}.  The object existential has a subclass-expression
+filler, with a separately admitted \texttt{owl:Thing} filler\\
+superclass expression &
+an atomic class other than \texttt{owl:Thing}; recursive intersection of at
+least two superclass expressions;
+complement of a subclass expression; \texttt{ObjectAllValuesFrom};
+\texttt{ObjectHasValue}; object maximum cardinality exactly \(0\) or \(1\),
+either unqualified, qualified by a subclass expression, or explicitly qualified
+by \texttt{owl:Thing}; \texttt{DataAllValuesFrom};
+\texttt{DataHasValue}; or data maximum cardinality exactly \(0\) or \(1\),
+optionally qualified by an RL data range\\
+equivalence expression &
+an atomic class other than \texttt{owl:Thing}; recursive intersection of at
+least two equivalence expressions;
+\texttt{ObjectHasValue}; or \texttt{DataHasValue}\\
+\bottomrule
+\end{tabularx}
+\end{center}
+The universal object filler is a superclass expression.  The object/data
+maximum-cardinality productions have separately printed unqualified
+alternatives; the object production additionally prints \texttt{owl:Thing}
+separately because that class is not a subclass expression.  Anonymous
+individuals are forbidden inside \texttt{ObjectOneOf} by the inherited global
+restriction.  Every restricted object property must remain simple.
+
+The axiom grammar maps those positions exactly.  \texttt{SubClassOf} takes a
+subclass expression on the left and a superclass expression on the right.
+\texttt{EquivalentClasses} takes two or more equivalence expressions;
+\texttt{DisjointClasses} takes two or more subclass expressions; and
+\texttt{DisjointUnion} is absent.  RL admits every Structural Specification
+object-property axiom except reflexivity, including regular chains,
+functionality, inverse functionality, irreflexivity, symmetry, asymmetry, and
+transitivity; object-property domain and range take a superclass expression.
+It admits every data-property axiom, with a superclass expression in domain and
+an RL data range in range, and \texttt{DatatypeDefinition} likewise takes an RL
+data range.  Every assertion form is admitted, with a superclass expression in
+positive \texttt{ClassAssertion}.  \texttt{HasKey} takes a subclass expression
+followed by its object- and data-property lists, with at least one property in
+total.  Declarations and annotation axioms are also admitted.  RL's
+functionality, cardinality, asymmetry, irreflexivity, and disjointness forms
+remain subject to simplicity, and its chains remain subject to regularity
+\cite[\S4.2 and app.~6.3]{W3COWL2Profiles2012}.
+
+The following axiom is admitted:
+\begin{quote}\small\ttfamily
+SubClassOf(ObjectUnionOf(:A :B)\par
+\hspace*{2em}ObjectAllValuesFrom(:r ObjectComplementOf(:C)))
+\end{quote}
+The following is excluded because an object existential is not an RL
+superclass expression:
+\begin{quote}\small\ttfamily
+SubClassOf(:A ObjectSomeValuesFrom(:r :B))
+\end{quote}
+
+\paragraph{RL syntax is not the RL/RDF rule artifact.}
+Section~4.2 defines the syntactic profile interpreted by Direct Semantics.
+Section~4.3 separately gives a partial first-order axiomatization of
+RDF-Based Semantics over a ternary triple predicate \(T\), organized into list,
+equality, property, class, datatype, and schema-vocabulary tables.  It omits
+RDF/RDFS axiomatic triples and some RDFS entailment rules.  For arbitrary RDF
+graphs the Recommendation promises soundness of rule-derived entailments but
+does not promise completeness.
+
+Theorem~PR1 gives an equivalence only when both premise and conclusion are RL
+ontologies, no IRI has more than one entity type, the premise has no annotation
+subproperty/domain/range axioms, and every conclusion axiom is an atomic
+named-individual class assertion, named object-property assertion, named
+data-property assertion, or \texttt{SameIndividual}.  Only then is
+Direct-Semantics entailment equivalent to first-order entailment from the
+premise's RDF translation plus the RL/RDF rules.  The printed proof is a sketch
+through depth-one normalization, DLP rules, and corresponding derivation trees.
+It is not completeness for arbitrary RDF graphs, arbitrary conclusions,
+annotations, or every RDF-Based-Semantics task
+\cite[thm.~PR1]{W3COWL2Profiles2012}.
+
+\paragraph{All six directed failures of profile inclusion.}
+With the required declarations and absence of unrelated global violations
+understood, the following one-axiom witnesses derive the source's non-nesting
+claim:
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{@{}l X X@{}}
+\toprule
+failed inclusion & witness in the first profile & exclusion from the second\\
+\midrule
+EL \(\nsubseteq\) QL & \texttt{TransitiveObjectProperty(:r)} &
+QL omits transitivity\\
+QL \(\nsubseteq\) EL & \texttt{InverseObjectProperties(:r :s)} &
+EL omits inverse-property expressions and axioms\\
+EL \(\nsubseteq\) RL & \texttt{ReflexiveObjectProperty(:r)} &
+RL expressly omits reflexivity\\
+RL \(\nsubseteq\) EL & \texttt{FunctionalObjectProperty(:r)}, with
+\texttt{:r} simple & EL omits object-property functionality\\
+QL \(\nsubseteq\) RL & \texttt{ReflexiveObjectProperty(:r)} &
+QL's operative grammar admits reflexivity; RL excludes it\\
+RL \(\nsubseteq\) QL & \texttt{TransitiveObjectProperty(:r)} &
+RL admits transitivity; QL excludes it\\
+\bottomrule
+\end{tabularx}
+\end{center}
+The witnesses establish lack of inclusion, not disjointness
+\cite[\S\S1--4]{W3COWL2Profiles2012}.
+
+For the standardized OWL rows, both the reasoning task and the varying input
+must be fixed before a complexity class is read.  Under Direct Semantics,
+\emph{ontology consistency} asks whether the ontology has a model;
+\emph{class-expression satisfiability} asks whether the checked expression has
+a nonempty extension in some model of the ontology; \emph{class-expression
+subsumption} asks whether the first checked expression's extension is included
+in the second's in every model; and \emph{instance checking} asks whether a
+named individual belongs to the checked expression's extension in every model.
+A Boolean conjunctive query is a closed existential conjunction of class,
+object-property, and data-property atoms, and query answering asks whether it
+holds in every model.
+
+The checked expressions have an additional Direct-Semantics input condition.
+Every object-property expression used by a cardinality restriction or
+\texttt{ObjectHasSelf} in the expression checked for satisfiability, in either
+expression checked for subsumption, or in the expression checked for instance
+membership must be simple in the ontology's axiom closure \(Ax\).  This is not
+exhausted by the corresponding restriction on expressions already occurring
+inside \(Ax\) \cite[\S2.5]{W3COWL2DirectSemantics2012}.
+
+The four axes have the Recommendation's exact metalinguistic standing.  In
+\emph{data complexity} only the total size of the assertions varies.  In
+\emph{taxonomic complexity} only the total size of the nonassertional axioms
+varies.  In \emph{query complexity} only the conjunctive query varies, so that
+axis applies only to query answering.  In \emph{combined complexity} the
+axioms and assertions, the conjunctive query for query answering, and the
+expression or expressions being checked for class-expression satisfiability,
+subsumption, or instance checking vary.  Components not named by the measure
+are fixed.  These are input-size measures, not constructors of a description
+logic \cite[\S5 and table~10]{W3COWL2Profiles2012}.
+
+\paragraph{Reasoning-task table and proof ownership.}
+The five Direct-Semantics reasoning tasks and four varying-input axes are
+defined before Table~\ref{tab:p09-owl-profile-complexity}.  Those task meanings
+govern the Direct-Semantics, profile, and OWL~1~DL rows.  The RDF-Based row is a
+literal transcription of Recommendation Table~10; this presentation does not
+reconstruct the separate RDF-Based-Semantics definitions of those tasks.  The
+table reproduces every row, including RL, RDF-Based Semantics, OWL~1~DL,
+membership-only bounds, lower bounds, open entries, conditional results, and
+nonapplicability.  The Recommendation calls every entry worst-case.  It gives
+no row-specific reduction, algorithm, proof, or technical-paper citation:
+Section~5 defines the axes, sketches most class names, and records the table.
+Consequently the table is authoritative for the dated classifications, but it
+is not a local proof of them.  Theorem~PR1 is the Recommendation's separate,
+narrow proof sketch; it does not prove Table~10.
+
+The polynomial-size-NFA condition in Table~10 has no operational test,
+construction, or size convention in Section~5.  The same section sketches
+several complexity classes but omits definitions of \(\mathsf{EXPTIME}\) and
+\(\mathsf{coNP}\), even though the table uses both.  These presentation gaps do
+not refute a cell; they require the handbook to preserve its logical force
+without manufacturing a missing definition or proof
+\cite[\S5 and table~10]{W3COWL2Profiles2012}.
+
+\paragraph{Printed grammar conflicts and the reconstruction policy.}
+The dated Recommendation contains unresolved local defects:
+\begin{enumerate}
+\item The QL overview includes irreflexivity, but Section~3.2.5 and
+Appendix~6.2 both omit it.
+\item The QL overview both admits subclass-position
+\texttt{DataSomeValuesFrom} and later lists it as unsupported.  The explicit
+subclass production admits it and controls the reconstruction.
+\item QL's main-body \texttt{DataSomeValuesFrom} production inherits one or
+more data properties while Appendix~6.2 prints one.  Unary data ranges make one
+the only well-formed profile case.
+\item The RL object-property-axiom alternatives omit a separator before
+\texttt{TransitiveObjectProperty}; both adjacent productions are independently
+defined and the overview admits both.
+\item RL Appendix~6.3 refers to undefined \texttt{superComplementOf} where the
+main grammar defines \texttt{superObjectComplementOf}; it also leaves a
+trailing separator after the sole \texttt{superDataMaxCardinality} alternative.
+\item Section~4.2.3 calls \texttt{equivClassExpression} plural in one prose
+sentence while every operative production uses the singular.
+\end{enumerate}
+The current W3C errata page contains no Profiles entry resolving these points.
+The handbook therefore uses the unambiguous main productions, separately
+defined alternatives, and inherited arity rules, and discloses every choice
+rather than representing it as an official correction
+\cite{W3COWL2Errata}.
+
+\paragraph{Research lineages are influences, not profile identities.}
+OWL~2~EL is based on the \(\mathcal{EL}^{++}\) line, but the profile has the OWL
+entity/datatype system, functional-style axiom families, keys, assertions, and
+inherited global restrictions rather than the 2005 paper's arbitrary
+\(p\)-admissible concrete-domain parameter.  The 2008 update supplies the
+final-chain range condition and shows why dropping it can make subsumption
+undecidable; it is still not the normative profile grammar
+\cite{BaaderBrandtLutz2005,BaaderBrandtLutz2008,W3COWL2Profiles2012}.
+
+OWL~2~QL uses \(\mathrm{DL\mbox{-}Lite}_{\mathcal R}\) as its logical
+underpinning, but it rejects the 2007 paper's required UNA, excludes
+functionality and keys, and uses OWL position-sensitive syntax.  Conversely,
+its grammar has OWL axiom names not present in the paper's three-variant
+language.  The W3C \(\mathsf{AC}^{0}\) cells are later Recommendation claims,
+not literal theorems of the 2007 article.
+
+The 2006 SROIQ paper starts from the description-logical basis of OWL~1~DL,
+adds the constructors and role restrictions leading toward OWL~2, and proves
+decidability, but expressly leaves SROIQ's exact complexity open.  Direct
+Semantics says that OWL~2 extends and corresponds to SROIQ where their
+constructs overlap because the paper lacks OWL datatypes and punning.  Thus the
+paper cannot own Table~10's later exact \(\mathsf{N2EXPTIME}\) classification
+\cite{HorrocksKutzSattler2006,W3COWL2DirectSemantics2012}.
+
+Finally, full structural OWL~2 under Direct Semantics and arbitrary RDF graphs
+under RDF-Based Semantics are different semantic rows, not a fourth and fifth
+profile.  Neither may be called \emph{OWL 2 Full} as though syntax, global
+restrictions, and semantic regime were interchangeable.
+
+\paragraph{The 2017 book presentation.}
+The registered 2017 textbook separately contains its own EL completion,
+DL-Lite rewriting, expressive-DL ladder, and OWL comparison in Chapters~6--8.
+The chapter locators and scope are established, but those bodies are not part
+of the available source basis.  Their exact algorithms, examples, theorem
+statements, and proofs are not reconstructed from the two research papers or
+the W3C Recommendation \cite{BaaderHorrocksLutzSattler2017}.  Those three
+presentations fulfill only their own source roles.

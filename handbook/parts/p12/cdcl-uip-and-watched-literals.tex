@@ -1,0 +1,385 @@
+%% General CDCL construction, with source manifestations kept distinct.
+\chapter{CDCL, First-UIP Analysis, and Watched-Literal Propagation}
+\label{sec:p12-cdcl-uip-and-watched-literals}
+
+This chapter supplies the operational learning and propagation algorithms that
+the apparatus in Definition~\ref{def:p12-cdcl-apparatus} does not by itself
+prove.  The older handbook manuscript, the Chaff author paper, and MiniSat's
+explicitly extended version~1.2 are separately attributed
+\cite{MarquesSilvaLynceMalik2008CDCLManuscript,MoskewiczEtAl2001ChaffV56,EenSorenssonMiniSatExtended12}.
+The older manuscript prints 2008 and pages 127--149; it is not silently
+identified with the final 2009 chapter or its much longer 2021 successor.
+The finite-CNF algorithm and complete proofs below state their own operational
+side conditions, rather than crediting every solver bearing these names with
+the same algorithm or liveness policy.
+
+\section{Source notation and the operational state}
+
+\begin{hbdefinition}{def:p12-cdcl-uip-state}{Formula, assignment, trail, and reasons}
+Retain the older handbook's notation: \(X\) is a finite variable set,
+\(\varphi\) a CNF clause set, \(\omega\) a clause, and
+\(\nu:X\to\{0,u,1\}\) a partial assignment, with \(u\) meaning
+unassigned, not a third propositional truth value.  For a signed literal
+\(p\), \(\neg p\) denotes sign-flipping literal complement, so the
+complement of \(\neg x\) is \(x\), not a new double-negation formula.
+For literal evaluation,
+\((\neg x)^\nu=1-\nu(x)\) with \(1-u=u\); clauses are false when all
+literals are false, true when some literal is true, and unit when exactly one
+literal is unassigned and every other literal false
+\cite[Sec.~4.2]{MarquesSilvaLynceMalik2008CDCLManuscript}.  An empty clause
+is false; an empty database is true.  Clauses are sets, so duplicate literal
+occurrences are removed.  Tautological clauses can be discarded without
+changing any model; if retained they cannot force or conflict under a
+consistent assignment.  The proved loop retains its input clauses; optional
+tautology removal is a separate model-equivalent initial normalization.
+
+The operational state has an immutable input \(\varphi_0\), an active
+database \(\varphi\) containing the input and retained learned clauses, a
+consistent ordered trail \(T\), a current decision level \(d\), levels
+\(\delta(x)\), reasons \(\alpha(x)\), and a queue \(Q\) of assigned
+literals whose watch events remain to be processed.  A trail entry is the
+literal made true; no variable occurs twice.  Level zero contains the root
+propagations.  Each positive level begins with one decision and continues
+with its propagations.  Set \(\delta(x)=-1\) for an unassigned variable.
+\(\alpha(x)=\mathrm{NIL}\) for a decision or an
+unassigned variable.  For a propagated literal \(p\), its reason clause
+contains \(p\), and all other reason literals were false before \(p\)
+was appended.  Reasons are retained while their trail entries exist.
+
+The manuscript assigns a propagated variable the maximum level of the other
+variables in its reason, or zero for a unit reason.  MiniSat's extended
+implementation instead records the current decision level at enqueueing
+\cite[Eq.~(4.6)]{MarquesSilvaLynceMalik2008CDCLManuscript}
+\cite[Fig.~9]{EenSorenssonMiniSatExtended12}.  The operational core here uses
+the latter, block-ordered trail convention; it always saturates propagation
+before making a new decision.  These level policies are not identified for
+arbitrary out-of-order propagation or incremental constraint insertion.
+\index{CDCL!operational state}\index{reason clause}\index{trail}
+\end{hbdefinition}
+
+\begin{hbmethod}{def:p12-cdcl-uip-enqueue}{Enqueue, propagate, decide, and cancel}
+To enqueue \(p\) with a reason \(\omega\), do nothing if \(p\) is
+already true; report a conflict if it is false; otherwise set it true, append
+it to \(T\) and \(Q\), and record \(\delta\) and \(\alpha\).
+A decision enqueues a literal of an unassigned variable with no reason,
+after incrementing \(d\), and is permitted only when \(Q\) is empty and
+the database is unit-saturated and nonconflicting.  Propagation repeatedly
+uses an actual unit clause, stopping at a falsified clause or a fixed point.
+The watched implementation is specified below, not assumed correct by name.
+
+Cancel to level \(b\) by erasing every trail entry with level greater than
+\(b\), resetting its assignment and reason, and setting \(d=b\).
+Unchanged reasons refer only to earlier retained entries.  On a conflict all
+pending forward events belong to the current level; after backjumping below
+that level they can be discarded, followed by enqueueing the new assertion.
+A voluntary restart is made at a propagation boundary and cancels to level
+zero while retaining the chosen learned clauses.  It does not flip root facts
+or treat a conflict as SAT.  These are operations on a general finite input,
+not a replay of a single example.
+\end{hbmethod}
+
+\begin{hblemma}{thm:p12-cdcl-uip-local-sound}{proved=annex:p12-cdcl-uip-local-sound}{Reason and resolution invariants}
+Unit propagation terminates on a fixed finite database and preserves all
+models extending the preceding trail.  Every reason's nonpropagated literals
+occur earlier on the trail.  If two clauses are consequences of
+\(\varphi_0\), their propositional resolvent on a complementary pivot pair
+is also a consequence.  Thus learning by the stated sequence of resolution
+steps preserves exactly the input models.  The claim concerns entailed CDCL
+clauses; it does not apply to non-entailed RAT additions.
+\end{hblemma}
+
+\section{A terminating first-UIP construction}
+
+\begin{hbdefinition}{def:p12-cdcl-uip-graph}{Implication graph and the first UIP}
+The implication graph has a node for each true trail literal and a conflict
+node \(\kappa\).  A propagated literal \(p\) has incoming edges from
+the true complements of the other literals in its reason.  The conflict node
+has incoming edges from the true complements of its falsified clause.
+Edges follow trail order, so the graph is acyclic.  A current-level node is a
+\emph{unique implication point} (UIP) if every path from the current
+decision node to \(\kappa\) passes through it.  The \emph{first UIP} is
+the downstream-most such node: no other UIP lies strictly between it and
+the conflict.  This is a domination relation, not a shortest-edge-distance
+definition.  Only conflict-relevant ancestors are needed for analysis.
+\index{unique implication point}\index{first UIP}\index{implication graph}
+\end{hbdefinition}
+
+\begin{hbmethod}{def:p12-cdcl-uip-analyze}{Reverse-trail first-UIP analysis}
+At a conflict above level zero, initialize the temporary clause \(\omega_L\)
+to the falsified conflict clause.  While it has more than one current-level
+literal, choose the literal \(\neg p\) whose true trail complement \(p\)
+is latest among its current-level entries.  Resolve with the reason
+\(\alpha(p)\):
+\[
+ \omega_L\ \gets
+ (\omega_L\setminus\{\neg p\})\cup(\alpha(p)\setminus\{p\}).
+\]
+Here \(\alpha(p)\) means the reason of the variable of \(p\).
+Stop as soon as exactly one current-level literal \(a\) remains.  Set
+\[
+ b=\max\bigl(\{0\}\cup
+       \{\delta(l):l\in\omega_L\setminus\{a\}\}\bigr).
+\]
+Erase levels greater than \(b\), insert \(\omega_L\), and enqueue
+\(a\) with that clause as its reason.  The maximum is zero for a learned
+unit.  At a root conflict return UNSAT instead of trying to select a positive
+level pivot.  A literal's level is its variable's level, regardless of its
+polarity.  The original source's selected-resolution and UIP-count equations
+are in §4.4; the reverse-trail pivot choice and assertion placement are explicit
+in MiniSat's analyze/record methods
+\cite[Eqs.~(4.16)--(4.18)]{MarquesSilvaLynceMalik2008CDCLManuscript}
+\cite[Figs.~10--11]{EenSorenssonMiniSatExtended12}.
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p12-cdcl-uip-analysis}{proved=annex:p12-cdcl-uip-analysis}{First-UIP analysis, assertion, and backjumping}
+For a conflict reached by the stated propagate-before-decide discipline at
+level \(d>0\), the construction terminates.  Each intermediate clause is
+entailed by the input and falsified by the conflict trail, and is therefore
+non-tautological.  Every required reason exists.  The final clause has exactly
+one current-level literal; its complement is the first UIP.  The computed
+\(b<d\) is the lowest retained level at which the final clause is unit.
+After cancellation it asserts \(a\).  The argument covers root literals and
+learned units without deleting them from the intermediate clauses.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p12-cdcl-uip-source-trace}{The source conflict and its two learning boundaries}
+Retain the manuscript's variables and clauses:
+\[
+\begin{array}{lll}
+ \omega_1=\{x_1,x_{31},\neg x_2\},&
+ \omega_2=\{x_1,\neg x_3\},&
+ \omega_3=\{x_2,x_3,x_4\},\\
+ \omega_4=\{\neg x_4,\neg x_5\},&
+ \omega_5=\{x_{21},\neg x_4,\neg x_6\},&
+ \omega_6=\{x_5,x_6\}.
+\end{array}
+\]
+The decisions \(x_{21}=0@2\), \(x_{31}=0@3\), and \(x_1=0@5\)
+give the ordered implications \(\neg x_2\) by \(\omega_1\),
+\(\neg x_3\) by \(\omega_2\), \(x_4\) by \(\omega_3\),
+\(\neg x_5\) by \(\omega_4\), and \(\neg x_6\) by
+\(\omega_5\).  All five are at level 5.  Earlier levels not affecting
+these clauses may contain other decisions; the displayed level numbers are
+the source's, not a newly contiguous three-decision renumbering.
+Clause \(\omega_6\) is false.  Reverse-trail analysis first resolves it
+with \(\omega_5\), producing \(\{x_5,x_{21},\neg x_4\}\), then
+with \(\omega_4\), producing \(\{x_{21},\neg x_4\}\).
+Only \(\neg x_4\) is at the current level, so \(x_4\) is the first UIP.
+Backjumping to level 2 retains \(\neg x_{21}\), erases level-5 assignments,
+and the learned clause asserts \(\neg x_4\).
+
+The source's other admissible initial resolution order gives
+\(\{x_5,x_6\}\), \(\{\neg x_4,x_6\}\), then
+\(\{\neg x_4,x_{21}\}\), the same first-UIP clause.  Continuing
+past the UIP, rather than stopping there, gives
+\(\{x_2,x_3,x_{21}\}\), \(\{x_1,x_{31},x_3,x_{21}\}\), and
+\(\{x_1,x_{31},x_{21}\}\); its backjump level is 3.
+The source's all-UIP/decision-boundary learning and the first-UIP stopping
+boundary are thereby kept distinct
+\cite[Examples~4.2.4, 4.4.1--4.4.3; Tables~4.1--4.2]{MarquesSilvaLynceMalik2008CDCLManuscript}.
+The later backjump makes \(x_4\) false, which immediately satisfies
+\(\omega_4,\omega_5\); the conflict is not left on the trail.
+\end{hbexample}
+
+\section{The full two-watched-literal update}
+
+\begin{hbdefinition}{def:p12-cdcl-uip-watches}{Watch lists, units, and attachment}
+For each nonunit active clause, select two distinct literal positions,
+\(w_1(\omega),w_2(\omega)\).  A list \(W(l)\) contains every clause
+currently watching the literal \(l\); making \(l\) false triggers that
+list.  This is the Chaff literal-oriented convention.  MiniSat instead indexes
+the lists by the newly true complementary literal; the event is the same,
+not a different semantic condition
+\cite[Sec.~2]{MoskewiczEtAl2001ChaffV56}
+\cite[Figs.~7--9]{EenSorenssonMiniSatExtended12}.
+Initialize input watches before decisions, handle an empty input clause as
+an immediate conflict, and enqueue input units separately at level zero.
+Do not simulate a unit by two duplicate watch positions.  For a newly learned
+nonunit clause, watch its asserting literal and a nonasserting literal of
+maximal level \(b\), attach both list references, and immediately enqueue
+the asserting literal.  Learned units are root facts and are retained for the
+plain-SAT core.  The maximal-level second watch is essential to the rollback
+proof, not a heuristic choice without correctness content.
+\end{hbdefinition}
+
+\begin{hbmethod}{def:p12-cdcl-uip-watch-update}{Process a false-watch event}
+When dequeuing a true literal \(p\), inspect the current list
+\(W(\neg p)\).  For each live clause, designate the watched false literal
+\(\neg p\) and its other watch \(q\):
+\begin{enumerate}
+ \item If \(q\) is true, leave the watches and clause in the current list.
+ \item Otherwise search all nonwatched clause positions for a literal that
+       is not false.  If one exists, move the false watch to that position,
+       remove the old list reference, insert the new one, and continue.
+ \item If none exists, leave the false watch registered.  If \(q\) is
+       unassigned, enqueue \(q\) with this clause as reason.  If \(q\)
+       is false, report this clause as a conflict.
+\end{enumerate}
+Thus a true replacement may be chosen, not just an unassigned one.  A binary
+clause has no nonwatched position and goes directly to the third case.
+Queue a newly assigned literal only once; a repeated true enqueue is a no-op
+and an opposite enqueue reports conflict.  When a list is temporarily removed
+for traversal, restore all unprocessed references before returning a conflict;
+they must not disappear because the scan was interrupted.  Detach every watch
+reference when an unlocked learned clause is deleted, or retain an explicit
+inactive mark tested before access.  The mathematical procedure assumes exact
+live membership, not dangling references.
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p12-cdcl-uip-watch-correct}{proved=annex:p12-cdcl-uip-watch-correct}{Watched propagation and level-prefix backtracking}
+Under the initialization, attachment, queue and level-block conditions just
+stated, watched propagation terminates and performs exactly sound unit
+inferences.  If it finishes without conflict, no active clause is false or
+unit with an unassigned literal: it has reached the Boolean-propagation fixed
+point.  It detects every unit/conflict event required to reach that fixed
+point, though the order and chosen reasons may differ from a full scan.
+After cancellation of entire decision levels, watch positions need not be
+restored or moved.  This rollback claim is not for arbitrary assignment
+editing, arbitrary partial erasure within a level, or improperly attached
+clauses.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p12-cdcl-uip-watch-failure}{Why the second learned watch cannot be arbitrary}
+In this example \(u,p,q,r,s\) are propositional variables; \(u\) is not
+the earlier unassigned marker.  Consider input clauses
+\(\{\neg u,\neg p,r,s\}\),
+\(\{\neg u,\neg p,r,\neg s\}\), and \(\{\neg r,\neg q\}\).
+Decide \(p\) at level 1, \(q\) at level 2, obtaining \(\neg r\) at
+level 2, then decide \(u\) at level 3.  The first clause forces \(s\)
+and the second conflicts.  Resolving them on \(s\) learns
+\(\omega_L=\{\neg u,\neg p,r\}\), with first UIP \(u\) and
+backjump level 2.  The assertion is \(\neg u\).
+
+An incorrect attachment watches \(\neg u\) and the lower-level literal
+\(\neg p\), instead of the required level-2 literal \(r\).
+At the asserting state \(\neg u\) is true at level 2 while \(\neg p\)
+is false at level 1.  To test this attachment's claimed rollback property,
+cancel the level prefix to level 1, erasing \(\neg u,\neg r,q\) and
+retaining \(p\).  This is a rollback boundary check, not a claim that the
+three-clause search would spontaneously choose that cancellation.
+Deciding \(q\) again
+forces \(\neg r\), making the learned clause unit in \(\neg u\).
+No watched literal has newly become false: \(r\) is unwatched and
+\(\neg p\) was already false.  The defective data structure misses the
+required propagation.  With the correct second watch \(r\), its new
+falsification triggers the clause and enqueues \(\neg u\).  The source's
+constructor requirement is therefore a real side condition
+\cite[Fig.~8]{EenSorenssonMiniSatExtended12}; no claim that arbitrary
+backtracking makes any pair of watches safe is made.
+\end{hbexample}
+
+\section{A complete CDCL search and its actual liveness hypotheses}
+
+\begin{hbmethod}{def:p12-cdcl-uip-search}{General finite-CNF CDCL loop}
+Initialize root units and watches; run propagation.  Repeat:
+\begin{enumerate}
+ \item If there is a root conflict, return UNSAT.
+ \item If there is a positive-level conflict, perform the complete first-UIP
+       construction, cancel to its backjump level, attach the learned clause,
+       enqueue its assertion, and return to propagation.
+ \item If propagation is complete and all input variables are assigned,
+       return the total assignment as SAT.
+ \item Otherwise choose any unassigned variable and either value, make its
+       next-level decision, and return to propagation.
+\end{enumerate}
+Unlocked learned clauses may be forgotten and voluntary restarts may occur
+only under a separately declared policy.  The input clauses are retained.
+A clause currently serving as a reason is locked and may not be deleted until
+that reason is no longer needed, or until a correct replacement reason is
+installed.  Do not return SAT merely because a lazy status cache labels every
+clause unresolved rather than conflicting.  The explicit loop always
+propagates after a learned assertion, including after repeated conflicts.
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p12-cdcl-uip-search-correct}{proved=annex:p12-cdcl-uip-search-correct}{CDCL soundness and a terminating complete policy}
+Every SAT return of this loop satisfies the immutable input.  Every UNSAT
+return is justified by an entailed root refutation.  Learning, unlocked
+learned-clause deletion and restarts preserve the input model set, subject to
+the retained-reason and propagation conditions.
+
+If forgetting and voluntary restarts are disabled, this finite-CNF loop
+terminates for every choice of unassigned decision variable and polarity, and
+returns SAT exactly for satisfiable inputs.  More generally the same conclusion
+holds with retained learning and restarts only after completed nonroot
+conflicts, with no sequence of administrative steps delaying propagation or
+decisions indefinitely.  Each such conflict adds a previously absent
+non-tautological clause; there are only finitely many over the fixed variables.
+The claim is not termination under arbitrary restarting or forgetting.
+\end{hbtheorem}
+
+For a concrete failed liveness policy, take \(\{p,q\}\), choose \(p\),
+then voluntarily restart before choosing \(q\), and repeat forever.  Every
+operation is semantically sound, the input is SAT, no conflict or learning
+occurs, and the solver never returns a total model.  Another policy that
+forgets all learned information and repeats the same bounded search can lose
+the finite-clause progress argument.  A timeout is not UNSAT.
+
+\section{Branching, look-ahead, activity, and deletion are different mechanisms}
+
+\begin{hbdefinition}{def:p12-cdcl-uip-activity}{The separately attributed activity updates}
+Chaff's 2001 VSIDS has a counter for each literal polarity, initially zero;
+adding a clause increments each of its literal counters, decisions select a
+highest-counter unassigned variable/polarity, default ties are randomized, and
+periodically all counters are divided by a fixed constant
+\cite[Sec.~3]{MoskewiczEtAl2001ChaffV56}.  The older handbook's §4.5.3
+describes the corresponding clause/literal occurrence feedback.  This is not
+MiniSat's polarity-blind variable activity.
+
+In MiniSat extended~1.2, variables appearing in a recorded conflict clause are
+bumped, and a learned clause used in conflict analysis has its clause activity
+bumped.  Variable choice orders the unassigned variables by activity.  The
+implementation stores a bump increment \(\Delta\), increases it by the
+inverse decay factor after conflicts, and occasionally rescales both the
+scores and \(\Delta\) together; Fig.~14 uses threshold \(10^{100}\) and
+rescale factor \(10^{-100}\)
+\cite[Secs.~3, 4.6; Figs.~8, 14]{EenSorenssonMiniSatExtended12}.
+All these scores stand as search priorities, not truth values, clause
+entailments, or certificates.  Their numerical implementations require their
+own overflow/rounding and tie policies.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p12-cdcl-uip-activity-scale}{proved=annex:p12-cdcl-uip-activity-scale}{Ideal-real lazy decay preserves priority order}
+Fix \(0<\rho<1\) and the same sequence of bumps.  In exact real arithmetic,
+eagerly multiplying all scores by \(\rho\) after a conflict is equivalent
+for score ordering to leaving scores unchanged and dividing the next bump
+increment by \(\rho\), with simultaneous positive rescaling of every score
+and the increment.  This preserves rankings and exact ties, not a theorem
+about floating-point executions or solver performance.
+\end{hblemma}
+
+\begin{hbmethod}{def:p12-cdcl-uip-lookahead}{Look-ahead without confusing scores with inferences}
+For an unassigned variable \(x\), temporarily propagate each of \(x\)
+and \(\neg x\) from copies of the current assignment and database.
+Discard each temporary trail afterward; do not leak its decisions into the
+permanent state.  A branch conflict licenses the opposite assignment under
+the current retained prefix.  If both branches imply the same literal, that
+literal is implied under the prefix.  Counts of reductions or propagated
+literals can also be used to score a branch, but such a score licenses no
+logical assignment.  The method is the Boolean failed-literal/common-
+consequence core, not a reconstruction of the entire separately allocated
+2021 look-ahead or branching-heuristics chapters.
+\end{hbmethod}
+
+\begin{hblemma}{thm:p12-cdcl-uip-lookahead-sound}{proved=annex:p12-cdcl-uip-lookahead-sound}{Failed-literal and two-branch consequence soundness}
+For any consistent retained prefix, a unit conflict under temporary \(x\)
+shows that every extending model makes \(\neg x\) true.  If conflicts
+occur under both polarities, no model extends the prefix.  If both branches
+force the same literal \(l\), every extending model makes \(l\) true.
+These conclusions are relative to the prefix; a globally learned clause must
+include the negations of the prefix assumptions, unless a separate derivation
+discharges them.
+\end{hblemma}
+
+Restart schedules decide when to abandon a trail; activity decides which
+unassigned variable to choose; phase saving chooses a value; deletion decides
+which entailed clauses to retain.  They are not interchangeable.  Chaff's
+paper describes scheduled relevance-based lazy deletion and retained-clause
+restarts; MiniSat extended~1.2 uses clause activity and excludes locked reasons
+from removal.  The older handbook distinguishes bounded-size, relevance and
+activity/age policies \cite[Secs.~4.1--4.2]{MoskewiczEtAl2001ChaffV56}
+\cite[Secs.~4.5.2--4.5.4]{MarquesSilvaLynceMalik2008CDCLManuscript}
+\cite[Secs.~4.5, 4.7--4.8]{EenSorenssonMiniSatExtended12}.
+Those source-specific policies are not the no-forgetting theorem's hypotheses.
+Likewise the extended MiniSat constraint and incremental-assumption interfaces
+require reason-soundness and assumption-relative guarantees beyond the plain
+CNF loop proved here; they are not silently proved by a shared solver name.

@@ -1,0 +1,538 @@
+% P15-U3: posterior laws, prediction, sensitivity and interpretation.
+\chapter{Bayesian Updating and Prediction}
+\label{sec:p15-bayesian-updating-prediction}
+
+Bayesian inference starts with a probability model for observations
+conditional on an unknown quantity and a probability distribution for
+that quantity before those observations are used. Conditioning their
+joint law produces a posterior distribution. Integrating a future
+observation law against that posterior produces a prediction. Neither
+operation supplies the sampling model, prior, observation mechanism or
+decision losses: those are explicit inputs.
+
+The posterior and predictive construction below develops the probability
+identities used by Kass and Raftery
+\cite[secs.~3.1--3.2 and 6.1]{KassRaftery1995BayesFactors},
+using the measure and kernel foundations already established in
+\cref{sec:p15-observation-kernel}. The sensitivity and interpretation
+sections supply exact examples for the distinctions in their
+Sections~5 and 8.2. The constructions and proofs here are editorial
+developments; they do not purport to reproduce that article's separate
+application studies or numerical integration algorithms.
+
+\section{The joint model and its posterior}
+\label{sec:p15-bayes-joint-model}
+
+\begin{hbdefinition}{def:p15-bayes-experiment}{A dominated Bayesian experiment}
+Let \((\Theta,\mathcal T)\) be a nonempty measurable parameter space,
+\(\Pi\) a probability measure on it, and \((\mathcal X,\mathcal A,\nu)\)
+a sigma-finite observation measure space. A likelihood specification is
+a nonnegative, finite, jointly measurable function
+\((\theta,x)\mapsto f_\theta(x)\) such that
+\(\int_{\mathcal X}f_\theta(x)\,\nu(dx)=1\) for every \(\theta\).
+The sampling law at a fixed parameter is
+\(P_\theta(B)=\int_B f_\theta\,d\nu\).
+For a fixed observation \(x\), the function
+\(\theta\mapsto f_\theta(x)\) is its likelihood.
+
+The prior predictive density and its regular observation set are
+\[
+ m(x)=\int_\Theta f_\theta(x)\,\Pi(d\theta),
+ \qquad G=\{x:0<m(x)<\infty\}.
+\]
+The joint law \(Q\) of the parameter and data is
+\[
+ Q(A\times B)=\int_A P_\theta(B)\,\Pi(d\theta)
+                 \quad(A\in\mathcal T,\ B\in\mathcal A).
+\]
+The parameter coordinate is random under \(Q\); it is fixed under
+each sampling law \(P_\theta\). These are different probability spaces.
+The prior is an input describing this particular inference problem;
+the likelihood is not itself a probability distribution over \(\Theta\).
+\index{Bayesian inference!experiment}\index{likelihood!parameter function}
+\index{prior predictive distribution}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p15-bayes-posterior-kernel}{proved=annex:p15.bayes-posterior-kernel}{Normalization and a complete posterior kernel}
+The observation marginal of \(Q\) has density \(m\), integrates to one,
+and assigns probability one to \(G\). The formula
+\[
+ \Pi_x(A)=
+ \begin{cases}
+ \displaystyle\frac{\int_A f_\theta(x)\,\Pi(d\theta)}{m(x)},&x\in G,\\
+ \Pi(A),&x\notin G
+ \end{cases}
+\]
+defines a probability kernel from observations to parameters satisfying
+\[
+ Q(A\times B)=\int_B\Pi_x(A)m(x)\,\nu(dx).
+\]
+For \(x\in G\), \(\Pi_x\ll\Pi\) and its derivative is
+\(f_\theta(x)/m(x)\). For every nonnegative measurable \(h\),
+\[
+ \int h(\theta)\,\Pi_x(d\theta)
+   =\frac{\int h(\theta)f_\theta(x)\,\Pi(d\theta)}{m(x)}.
+\]
+The same identity holds for signed \(h\) when its posterior absolute
+integral is finite.
+\end{hbtheorem}
+
+Values assigned off \(G\) do not describe conditioning on an event
+of positive prior predictive probability. Even within \(G\), a
+continuous observation has a density, rather than a positive singleton
+probability. The displayed kernel supplies a version relative to the
+specified likelihoods. Arbitrary changes of densities on null sets
+cannot establish a uniquely compelled posterior at an exceptional
+point. The explicit null-observation examples in
+\cref{sec:p15-conditioning-coordinate-examples} explain this issue.
+
+\section{Odds, evidence and dependence}
+\label{sec:p15-bayes-odds}
+
+\begin{hbdefinition}{def:p15-bayes-event-odds}{Comparing an event with its complement}
+Fix \(H\in\mathcal T\) with \(p=\Pi(H)\in(0,1)\). At \(x\), define
+\[
+ \ell_H(x)=\frac1p\int_H f_\theta(x)\,\Pi(d\theta),\qquad
+ \ell_{H^c}(x)=\frac1{1-p}\int_{H^c}f_\theta(x)\,\Pi(d\theta).
+\]
+These are observation densities averaged over the conditional priors,
+not maximized likelihoods. When both are finite and positive, let
+\(B_H(x)=\ell_H(x)/\ell_{H^c}(x)\).
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p15-bayes-event-odds}{proved=annex:p15.bayes-event-odds}{The update multiplier and its endpoint cases}
+For \(x\in G\),
+\[
+ \Pi_x(H)=\frac{p\ell_H(x)}
+                 {p\ell_H(x)+(1-p)\ell_{H^c}(x)}.
+\]
+If both likelihoods are positive, then
+\[
+ \frac{\Pi_x(H)}{1-\Pi_x(H)}
+       =B_H(x)\frac p{1-p}.
+\]
+In this case \(\Pi_x(H)>p\) exactly when \(B_H(x)>1\).
+If just \(\ell_H\) vanishes the posterior is zero; if just
+\(\ell_{H^c}\) vanishes it is one. If both vanish, \(x\notin G\).
+A prior-null event remains posterior-null on \(G\).
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p15-bayes-flag-calculation}{proved=annex:p15.bayes-flag-calculation}{A flag, a second measurement and a duplicated report}
+Consider a stipulated two-state inspection model. State \(H\) has
+prior probability \(1/1000\). A positive flag \(+\) has probabilities
+\(99/100\) under \(H\) and \(1/100\) under \(H^c\).
+One positive flag has likelihood ratio \(99\), but
+\[
+ P(H\mid +)=\frac{11}{122}.
+\]
+Two flags conditionally independent given the state have
+\[
+ P(H\mid +,+)=\frac{363}{400}.
+\]
+If the second report is instead a copy of the first, observing
+\((+,+)\) leaves the posterior at \(11/122\).
+
+With the same one-flag likelihoods and prior \(p\in(0,1)\),
+\[
+                    P(H\mid +)=\frac{99p}{1+98p}.
+\]
+Over \(p\in[1/10000,1/100]\) this ranges from \(1/102\) to \(1/2\).
+The numerical values describe the supplied model, not a measured
+inspection system.
+\end{hbtheorem}
+
+An observation can increase the probability of a claim while leaving
+it unlikely. That probability can be high without being one, and a
+probability-one conclusion within a model is not a logical consequence
+across all models. The distinction between logical probability and
+theory systematization is developed in
+\cref{sec:p15-systematic-power}.
+
+\section{Sequential updating}
+\label{sec:p15-bayes-sequential}
+
+\begin{hbdefinition}{def:p15-bayes-sequential-model}{Conditional sampling densities}
+For a finite sequence \(x_{1:n}=(x_1,\ldots,x_n)\), let
+\(f_i(x_i\mid\theta,x_{1:i-1})\) be a jointly measurable
+sampling density relative to a sigma-finite measure \(\nu_i\),
+normalized for every parameter and preceding history. Write
+\[
+ L_n(\theta)=\prod_{i=1}^n f_i(x_i\mid\theta,x_{1:i-1}),
+ \qquad m_n(x_{1:n})=\int L_n(\theta)\,\Pi(d\theta),
+ \qquad L_0=m_0=1.
+\]
+Assume the likelihood factors are finite. A regular observed path
+is one for which \(0<m_i(x_{1:i})<\infty\) at every prefix.
+Define \(\Pi_i(d\theta)=L_i(\theta)\Pi(d\theta)/m_i\).
+All statements about a realized path below use this regularity.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p15-bayes-sequential-update}{proved=annex:p15.bayes-sequential-update}{Batch updating equals successive conditioning}
+On a regular path,
+\[
+ \begin{gathered}
+ r_i(x_i\mid x_{1:i-1})
+     =\int f_i(x_i\mid\theta,x_{1:i-1})\,\Pi_{i-1}(d\theta)
+     =\frac{m_i}{m_{i-1}},\\
+ \Pi_i(d\theta)=
+ \frac{f_i(x_i\mid\theta,x_{1:i-1})\,\Pi_{i-1}(d\theta)}
+      {r_i(x_i\mid x_{1:i-1})},\qquad
+ m_n=\prod_{i=1}^n r_i .
+ \end{gathered}
+\]
+Thus \(\log m_n=\sum_i\log r_i\). The factors are conditional
+predictive probabilities or densities. Replacing them by unconditional
+one-observation marginals is generally invalid.
+For conditionally independent observations under a fixed common
+sampling density, reordering the observations leaves the posterior
+unchanged. For history-dependent mechanisms such invariance is not asserted.
+\end{hbtheorem}
+
+\section{Prediction integrates parameter uncertainty}
+\label{sec:p15-bayes-prediction}
+
+\begin{hbdefinition}{def:p15-bayes-future-kernel}{A specified future observation law}
+Let \(R(\theta,x,\cdot)\) be a probability kernel from
+\(\Theta\times\mathcal X\) to a future measurable space
+\((\mathcal Y,\mathcal B)\). This is the future law conditional
+on the parameter and already observed data. Conditional independence
+of past and future given the parameter is the special case
+\(R(\theta,x,\cdot)=R_\theta(\cdot)\).
+Define
+\[
+                       \widehat P_x(B)
+                         =\int R(\theta,x,B)\,\Pi_x(d\theta).
+\]
+\index{posterior predictive distribution}\index{parameter uncertainty}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p15-bayes-predictive-kernel}{proved=annex:p15.bayes-predictive-kernel}{Prediction, conditional means and total variance}
+The formula above is a probability kernel and is the conditional
+future law in the joint model constructed from \(Q\) and \(R\).
+For a real future variable \(Y\) with finite posterior predictive
+second moment, put
+\[
+ a(\theta,x)=E(Y\mid\theta,x),\qquad
+ b(\theta,x)=\operatorname{Var}(Y\mid\theta,x).
+\]
+These conditional moments are needed only almost everywhere under
+\(\Pi_x\); assign zero on any exceptional set.
+Then
+\[
+ \begin{split}
+ E(Y\mid x)&=\int a(\theta,x)\,\Pi_x(d\theta),\\
+ \operatorname{Var}(Y\mid x)
+  &=\int b(\theta,x)\,\Pi_x(d\theta)
+       +\operatorname{Var}_{\Pi_x}(a(\theta,x)).
+ \end{split}
+\]
+For two future variables conditionally independent given \((\theta,x)\),
+their predictive covariance equals the posterior covariance of their
+conditional means whenever their second moments are finite.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p15-bayes-beta-calculation}{proved=annex:p15.bayes-beta-calculation}{Bernoulli learning and several future draws}
+Let \(\theta\sim\operatorname{beta}(\alpha,\beta)\), with
+\(\alpha,\beta>0\), and let \(X_1,\ldots,X_n\) be conditionally
+independent Bernoulli variables of success probability \(\theta\).
+Allow \(n=0\). For \(k=\sum_i x_i\), set
+\(a=\alpha+k,\ b=\beta+n-k,\ t=a+b\). Then
+\[
+ \Pi_{x_{1:n}}=\operatorname{beta}(a,b),\qquad
+ m_n(x_{1:n})=\frac{B(a,b)}{B(\alpha,\beta)}.
+\]
+For the count \(K_n\), rather than a particular binary word, the
+predictive probability is \(\binom nk B(a,b)/B(\alpha,\beta)\).
+Both observations give the same posterior when the sampling model
+records the same fixed sample size.
+
+For \(r\geq1\) further draws, with future count \(J_r\),
+\[
+ \begin{gathered}
+ P(J_r=j\mid x_{1:n})
+    =\binom rj\frac{B(a+j,b+r-j)}{B(a,b)},\quad 0\leq j\leq r,\\
+ E(J_r\mid x_{1:n})=\frac{ra}{t},\qquad
+ \operatorname{Var}(J_r\mid x_{1:n})
+     =\frac{rab(t+r)}{t^2(t+1)}.
+ \end{gathered}
+\]
+Under the uniform prior and \(k=8,n=10\), the posterior is
+\(\operatorname{beta}(9,3)\), with mean \(3/4\), variance \(3/208\),
+and mode \(4/5\). The probability that two new draws both succeed
+is \(15/26\), rather than the plug-in value \(9/16\).
+The earlier urn construction in
+\cref{thm:p15-polya-posterior-prediction} supplies the distinct
+reinforcement interpretation of this same beta mixture.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p15-bayes-normal-calculation}{proved=annex:p15.bayes-normal-calculation}{Normal learning with known observation variance}
+Let \(n\geq1,\ \sigma^2>0,\ \tau^2>0\).
+Given \(\theta\), take independent
+\(X_i\sim\operatorname{normal}(\theta,\sigma^2)\), and put
+\(\theta\sim\operatorname{normal}(\mu_0,\tau^2)\) before observing them.
+Write
+\[
+ \bar x=\frac1n\sum_i x_i,\quad
+ S=\sum_i(x_i-\bar x)^2,\quad s^2=\frac{\sigma^2}{n},\quad
+ v=(\tau^{-2}+s^{-2})^{-1},\quad
+ u=v(\mu_0\tau^{-2}+\bar x s^{-2}).
+\]
+The posterior is \(\operatorname{normal}(u,v)\). With
+\(\phi_V(z)=(2\pi V)^{-1/2}\exp(-z^2/(2V))\) for \(V>0\),
+the joint observation density is
+\[
+ m_n(x_{1:n})
+ =\frac{(2\pi\sigma^2)^{-(n-1)/2}}{\sqrt n}
+       \exp\!\left(-\frac{S}{2\sigma^2}\right)
+       \phi_{\tau^2+s^2}(\bar x-\mu_0).
+\]
+One future observation has law
+\(\operatorname{normal}(u,\sigma^2+v)\); the average of \(r\geq1\)
+new conditionally independent observations has law
+\(\operatorname{normal}(u,\sigma^2/r+v)\).
+Distinct future observations have posterior predictive covariance \(v\).
+
+For \(\mu_0=0,\tau^2=1,\sigma^2=4,n=4,\bar x=2\), the posterior
+is \(\operatorname{normal}(1,1/2)\), and the one-observation
+predictive law is \(\operatorname{normal}(1,9/2)\).
+Neither is the plug-in law obtained by setting \(\theta=\bar x\).
+\end{hbtheorem}
+
+\section{Reparameterization and prior sensitivity}
+\label{sec:p15-bayes-prior-sensitivity}
+
+\begin{hbtheorem}{thm:p15-bayes-transformation}{proved=annex:p15.bayes-transformation}{Transforming an inferred quantity and changing its prior}
+For any measurable map \(g:(\Theta,\mathcal T)\to(S,\mathcal S)\),
+the posterior law of \(g(\theta)\)
+is the pushforward \(g_\#\Pi_x\), that is
+\((g_\#\Pi_x)(A)=\Pi_x(g^{-1}(A))\).
+If \(g\) is a measurable bijection with measurable inverse and both
+the prior and sampling family are transported through it, the posterior
+and predictive probabilities are unchanged by this reparameterization.
+
+A uniform prior for \(\theta\in(0,1)\) induces for
+\(\eta=\theta^2\) the density \(1/(2\sqrt\eta)\).
+A uniform prior for \(\eta\) instead induces the density \(2\theta\)
+for \(\theta\). After one Bernoulli success, the respective posterior
+means of \(\theta\) are \(2/3\) and \(3/4\), and those of \(\eta\)
+are \(1/2\) and \(3/5\). Thus specifying uniformity separately in
+two coordinates generally changes the inference.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p15-bayes-reweighting}{proved=annex:p15.bayes-reweighting}{Exact sensitivity by reweighting and contamination}
+Let \(w:\Theta\to[0,\infty)\) be measurable with
+\(0<\Pi w<\infty\), where \(\Pi w=\int w\,d\Pi\), and set
+\(\Pi^w(d\theta)=w(\theta)\Pi(d\theta)/\Pi w\).
+At a regular observation with \(0<\Pi_xw<\infty\),
+\[
+ \Pi_x^w(d\theta)=\frac{w(\theta)\Pi_x(d\theta)}{\Pi_xw},
+ \qquad \frac{m^w(x)}{m(x)}=\frac{\Pi_xw}{\Pi w}.
+\]
+If \(0<a\leq w\leq b<\infty\) almost everywhere under \(\Pi\),
+then for any \(H\in\mathcal T\) and \(p_x=\Pi_x(H)\),
+\[
+ \frac{ap_x}{ap_x+b(1-p_x)}
+ \leq\Pi_x^w(H)\leq
+ \frac{bp_x}{bp_x+a(1-p_x)}.
+\]
+Both bounds can be attained by weights constant on \(H\) and \(H^c\).
+
+Alternatively, for \(\Pi^\varepsilon=(1-\varepsilon)\Pi+\varepsilon R\),
+\(0<\varepsilon<1\), suppose \(R\) is a probability prior with
+finite positive predictive density \(m_R(x)\). Then
+\[
+ \Pi_x^\varepsilon=(1-\lambda_x)\Pi_x+\lambda_x R_x,\qquad
+ \lambda_x=\frac{\varepsilon m_R(x)}
+                  {(1-\varepsilon)m(x)+\varepsilon m_R(x)}.
+\]
+Small prior contamination need not remain small after conditioning.
+\end{hbtheorem}
+
+\section{Credible sets and repeated sampling}
+\label{sec:p15-bayes-credible-sets}
+
+\begin{hbdefinition}{def:p15-bayes-credible-set}{Posterior content and coverage}
+Fix \(0<\alpha<1\). A measurable set-valued procedure \(C\)
+means that \(\{(\theta,x):\theta\in C(x)\}\) is product measurable.
+It has posterior content at least \(1-\alpha\) when
+\(\Pi_x(C(x))\geq1-\alpha\) for almost every observation under \(m\nu\).
+Its frequentist coverage at fixed \(\theta\) is
+\[
+                     c(\theta)=P_\theta\{\theta\in C(X)\}.
+\]
+A confidence guarantee at level \(1-\alpha\) requires
+\(c(\theta)\geq1-\alpha\) for every parameter in its stated scope.
+Posterior content concerns the conditional parameter law after
+observing data; coverage concerns the procedure under repeated data
+at a fixed parameter.
+\index{credible set}\index{confidence set!comparison with credibility}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p15-bayes-coverage}{proved=annex:p15.bayes-coverage}{Prior-average calibration and failure of uniform coverage}
+For any such \(C\),
+\[
+ \int_\Theta c(\theta)\,\Pi(d\theta)
+   =\int_{\mathcal X}\Pi_x(C(x))m(x)\,\nu(dx).
+\]
+Thus posterior content at least \(1-\alpha\) implies prior-average
+coverage at least \(1-\alpha\); exact content implies exact average.
+
+This does not imply a uniform fixed-parameter coverage bound.
+For one Bernoulli observation and a uniform prior, the equal-tail
+posterior intervals of content \(0.95\) are
+\[
+ \begin{split}
+ C(1)&=[\sqrt{0.025},\,\sqrt{0.975}],\\
+ C(0)&=[1-\sqrt{0.975},\,1-\sqrt{0.025}].
+ \end{split}
+\]
+At the fixed value \(\theta=0.99\), both intervals miss the parameter,
+so coverage is zero despite exact posterior content \(0.95\)
+for either observation.
+\end{hbtheorem}
+
+For the normal posterior above, let \(\Phi\) denote the standard
+normal CDF and \(z_{1-\alpha/2}\) its unique
+\((1-\alpha/2)\)-quantile. Then
+\([u-z_{1-\alpha/2}\sqrt v,u+z_{1-\alpha/2}\sqrt v]\)
+has posterior content \(1-\alpha\). The sampling coverage of this
+particular procedure must be calculated under its fixed-parameter law.
+The posterior normalization alone does not calculate it.
+
+\section{Decisions and predictive scores}
+\label{sec:p15-bayes-decisions}
+
+\begin{hbdefinition}{def:p15-bayes-loss}{Loss and posterior risk}
+For a finite nonempty action set \(\mathcal D\), let
+\(L(d,\theta)\) be a bounded nonnegative measurable loss.
+The posterior risk is
+\(\rho_x(d)=\int L(d,\theta)\,\Pi_x(d\theta)\).
+A Bayes action minimizes \(\rho_x\). An ordering of the finite
+action set resolves ties and makes the resulting rule measurable.
+The choice of a loss describes the consequences to be assessed;
+conditioning alone does not determine that choice.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p15-bayes-decision-rule}{proved=annex:p15.bayes-decision-rule}{Optimal actions and expected value of the observation}
+A posterior risk minimizer also minimizes the prior integrated
+expected loss among all measurable rules with values in \(\mathcal D\).
+Furthermore,
+\[
+ E\!\left[\min_{d\in\mathcal D}\rho_X(d)\right]
+       \leq \min_{d\in\mathcal D}\int L(d,\theta)\,\Pi(d\theta).
+\]
+For actions \emph{declare \(H\)} and \emph{declare \(H^c\)}, with
+loss \(c_{\rm FP}>0\) for the first action when \(H^c\) is true,
+loss \(c_{\rm FN}>0\) for the second when \(H\) is true, and zero
+otherwise, declaring \(H\) is optimal exactly when
+\[
+            \Pi_x(H)\geq\frac{c_{\rm FP}}{c_{\rm FP}+c_{\rm FN}}.
+\]
+For a real parameter and squared-error loss, if
+\(\int\theta^2\,\Pi_x(d\theta)<\infty\), the unique minimizing
+real action is its posterior mean.
+\end{hbtheorem}
+
+In the flag example, equal losses favor declaring \(H^c\) after one
+positive. If \(c_{\rm FN}=20\) and \(c_{\rm FP}=1\), the threshold
+is \(1/21\), below \(11/122\), and the optimal declaration changes.
+The posterior evidence has not changed; the consequences have.
+Preference conditions supporting expected-utility evaluation belong
+to \cref{sec:p17-finite-expected-utility}.
+
+\begin{hbtheorem}{thm:p15-bayes-log-score}{proved=annex:p15.bayes-log-score}{A finite predictive probability is optimal for its logarithmic score}
+On a finite outcome set let \(p\) be the specified predictive mass
+function. A report \(q\) is any probability mass function on that set.
+Define its expected logarithmic loss as
+\[
+              \mathcal L_p(q)=-\sum_{y:p(y)>0}p(y)\log q(y),
+\]
+with value \(+\infty\) if \(q(y)=0<p(y)\).
+Then
+\[
+ \mathcal L_p(q)-\mathcal L_p(p)
+       =\sum_{y:p(y)>0}p(y)\log\frac{p(y)}{q(y)}\geq0,
+\]
+and equality holds exactly when \(q=p\).
+For finite observation sequences with finite positive predictive
+probabilities at every observed prefix, the cumulative conditional
+logarithmic score is \(-\log m_n(x_{1:n})\).
+This optimality is relative to the stipulated predictive law \(p\);
+it does not prove that \(p\) describes the physical data source.
+\end{hbtheorem}
+
+\section{Stopping, selection and what was observed}
+\label{sec:p15-bayes-stopping-selection}
+
+\begin{hbtheorem}{thm:p15-bayes-stopping}{proved=annex:p15.bayes-stopping}{When an observation mechanism cancels, and when it does not}
+Suppose an observed finite record \(z\), including its length, has
+likelihood
+\[
+              P_\theta(Z=z)=c(z)L_z(\theta),
+                  \qquad 0<c(z)<\infty ,
+\]
+where \(L_z\) is nonnegative and measurable and \(c(z)\) does not
+depend on \(\theta\). When the posterior
+normalizer is finite and positive, the posterior is proportional
+to \(L_z(\theta)\Pi(d\theta)\). Such a common factor cancels.
+If the recording probability is instead \(c_\theta(z)\),
+that factor must be included.
+
+For independent Bernoulli trials stopped at their first success,
+a beta prior with positive shapes gives, after \(N=n\),
+\[
+                   \theta\mid N=n
+                     \sim\operatorname{beta}(\alpha+1,\beta+n-1).
+\]
+This equals the posterior from the same fixed-length word of
+\(n-1\) failures and one success. It also equals the posterior
+from a fixed-size count of one success in \(n\) trials, whose
+likelihood has the extra parameter-independent factor \(n\).
+
+For a different experiment that samples a Bernoulli outcome
+\emph{conditional on it being positive}, its reported value is
+always one for every \(\theta\in(0,1)\) and carries constant
+likelihood. With a uniform prior it leaves the prior unchanged.
+Observing a positive outcome from one predesignated, unselected
+trial instead gives the \(\operatorname{beta}(2,1)\) posterior.
+\end{hbtheorem}
+
+To use the cancellation result, specify the experiment and all recorded
+information. Recording that a predesignated trial was selected is
+different from receiving a value drawn from a selected-only population.
+The theorem concerns the posterior for the stated record; it supplies
+no unrestricted frequentist error guarantee under optional stopping.
+It also gives no permission to reuse data as a prior and then count
+them again in the likelihood.
+
+\section{A procedure for an inference problem}
+\label{sec:p15-bayes-reference-procedure}
+
+\begin{hbmethod}{def:p15-bayes-reference-procedure}{From assumptions to a posterior report}
+State the unknown quantity, observation mechanism, sampling law and
+prior. Identify whether the record is a complete sequence, a count,
+a stopped experiment or a selected observation. Form the joint
+likelihood with its dependence structure. Check that the posterior
+normalizing integral is positive and finite.
+
+Compute the posterior and the requested transformed quantities or
+future law. Use a joint predictive law for several future observations,
+rather than silently replacing a shared parameter by its estimate.
+Report posterior probability, a credible set, a prediction or a
+loss-based action with its corresponding meaning.
+
+Vary material prior weights and sampling assumptions using the
+reweighting identity or direct recalculation. Keep likelihood ratios,
+posterior probabilities, confidence coverage and decision thresholds
+explicitly distinguished. An impossible observation, an improper
+normalizer or an omitted observation mechanism requires a changed
+model before these formulas can be used.
+\end{hbmethod}
+
+For comparing several fully specified models and averaging their
+predictions, continue with \cref{sec:p15-bayesian-model-comparison}.
+For controlled sampling error, randomized tests and confidence-set
+construction, use \cref{sec:p15-hypothesis-tests-confidence}.
+Those methods require their own inputs and establish their stated
+conclusions; the posterior calculation is not a substitute for their
+sampling guarantees.

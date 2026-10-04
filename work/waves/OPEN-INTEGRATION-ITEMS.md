@@ -1,0 +1,22 @@
+# Open integration items carried outside the authoring waves
+
+Items found during Step 0 that are integration/correction work owed before the
+consolidated reviews. They are not manuscript-content units; each needs its own
+bounded task before W10 final checks.
+
+| ID | Found | Item | Evidence |
+|---|---|---|---|
+| OI-01 | 2026-10-03 | 10 restoration artifact byte-count mismatches (e.g. SRC-06792-06845: 2675 != 2453) block `audit_tables.py` regeneration and `check_inherited_restoration.py`. | spec/verification/edition-2026-contract-repin-2026-10-03.md; tmp/repin-contract/after/ |
+| OI-02 | 2026-10-03 | 5 missing stable labels from the retired graduate front matter (e.g. `sec:inherited-preface`) still demanded by restoration records and `build_source_unit_audit_crosswalk.py --write`. Needs a policy-consistent disposition (user retired that front matter on 2026-09-08). | same |
+| OI-03 | 2026-10-03 | Committed review shards in spec/provenance/reviewed-source-unit-shards/ pin version-1 history hashes; `build_open_source_unit_review_shard.py --write` refresh owed. | same |
+| OI-04 | 2026-10-03 | Terminal-readiness manifest pins 266 records and is stale; regenerate once OI-01..03 pass. | same |
+| OI-05 | 2026-10-03 | MiKTeX lacks Cyrillic encodings; all builds use TeX Live 2025 (`tools/texlive.latexmkrc`). | tmp/builds/w00 |
+| OI-07 | 2026-10-03 | completion-work-queue.jsonl lines 2289-2303: recorded sha256 values corrupted by inserted spaces and mojibake titles (Codex-era); held_sources refuses these pins. Needs a repair from the original acquisition records. | work/waves/tooling/latest-verdicts.json (held) |
+| OI-08 | 2026-10-03 | 33 page locators written p.N / pp.N without a tie (~); cosmetic, list in work/waves/fused-repair-review.md. | same |
+| OI-09 | 2026-10-03 | 280 symbol-registry role/notes cells had bare TeX specials (e.g. Bp_0, u_i, ND_CPL); escaped to keep the build green. Polish: render true subscripts as math. Adopt must escape incoming intake text cells. | work/waves/tooling/registry_specials.py |
+| OI-10 | 2026-10-03 | 241 symbol-registry glyph cells are not math-delimited (\vdash, H_q, ASCII aliases like theta_0, text like FOR). symbols2tex renders them safely; polish: normalize glyphs to the registry convention via the adopt path. | tools/symbols2tex.py glyph_cell |
+| OI-11 | 2026-10-04 | integrate_wave minors (verifier r3-4): annex heading-label bindings can spill over foreign heading-less annex files; collect falls back to files_written when a named packet JSON is missing (refuse instead); duplicate stems not refused; side-effect denylist incomplete for pdfTeX/page/global commands and not applied to role/notes cells. No current real input triggers them. | tmp/tooling-scratch/verify-integrate-r3-4/ |
+| OI-12 | 2026-10-04 | Per-topic bib keys (FrozenFormalLogic*) cite the internal frozen manuscript source/formal-logic-reference.tex in reader text; existing practice, but whether the public book should cite the internal inherited manuscript (vs. presenting it as the book's own text) is a consolidated-review/policy question. | handbook/bib/handbook.bib |
+| OI-13 | 2026-10-04 | integrate_wave collect drops a return's rule_sheets field (W0: p08-rational-closure, p18-erotetic-patterns calculus sheets); the lead added it to batch manifest 10 by hand. FIXED 2026-10-04: collect now carries rule_sheets (selftest ok). | spec/research/edition-2026-authoring-batch-intake-10.json |
+| OI-14 | 2026-10-04 | W0 classification proposes retiring 7 off-route files (three p06/p08 errata already in restoration captures; p08 group-operator convention, whose side remark on empty-group identities is not in the live text; two comment-only p06 annex placeholders; annex/p12/src-027-501.tex, contained in annex/p12/sources/). User decision; nothing moved. | work/waves/w00/unclassified-offroute.json |
+| OI-15 | 2026-10-04 | The kernel family member \ker h of the p10-hsp intake was registered as a typed override although its role equals the canonical kernel congruence (the tool cannot drop one member of a family row). Harmless duplicate; clean up when family rows can be split. | work/waves/w00/decisions-batch10.json |

@@ -1,0 +1,61 @@
+\section{Auditing source and rendered output}
+\label{sec:latex-style-source-render}
+
+An audit of rendered output includes verifying that every rendered glyph is
+the intended character; the normative catalogue of mathematical symbol
+characters is \cite{Unicode2025}.
+
+The following small example exhibits the whole path from semantic source to a
+rendered claim.  The source deliberately contains a typed signature, quantified
+semantic parameters, semantic macros, and a stable label:
+\begin{lstlisting}[language={[LaTeX]TeX},caption={Source for a semantic implication}]
+\begin{theorem}\label{thm:sample-semantic-implication}
+Let \(\Lang\) contain unary relation symbols \(P,Q\).
+For every \(\Lang\)-structure \(\mathcal M\) and assignment \(s\),
+if \(\mathcal M,s\entails P(x)\) and
+\(\mathcal M,s\entails\forall y(P(y)\to Q(y))\), then
+\(\mathcal M,s\entails Q(x)\).
+\end{theorem}
+\begin{proof}
+By the universal clause, if \(P^{\mathcal M}(s(x))\) then
+\(Q^{\mathcal M}(s(x))\).  The first hypothesis gives
+\(P^{\mathcal M}(s(x))\), so \(Q^{\mathcal M}(s(x))\), which is exactly
+\(\mathcal M,s\entails Q(x)\).
+\end{proof}
+\end{lstlisting}
+
+The rendered statement must visibly read as a claim about every
+\(\Lang\)-structure and assignment; both hypotheses must remain inside the
+conditional, and \(\entails\) must render as semantic satisfaction rather than
+derivability.  The rendered proof must expose the instance \(s(x)\), because
+that calculation is the bridge between the universal semantic clause and the
+conclusion.
+
+Audit this example in the following order.
+\begin{enumerate}
+  \item \emph{Source audit.}  Confirm that \(P,Q\) are relation symbols,
+        \(\mathcal M\) is a structure, \(s\) is an assignment, and \(x,y\) are
+        object-language variables.  Confirm that the label is unique and that
+        a later reference uses \verb|\cref| rather than a typed theorem number.
+  \item \emph{Formal-logical audit.}  Expand the satisfaction clauses.  The
+        hypotheses become \(P^{\mathcal M}(s(x))\) and
+        \(\forall a\in\abs{\mathcal M}
+        (P^{\mathcal M}(a)\to Q^{\mathcal M}(a))\); instantiation at \(s(x)\)
+        yields the conclusion.  This independently checks the prose proof.
+  \item \emph{Compilation audit.}  Compile enough times to resolve the label
+        and bibliography.  Reject undefined references, missing citations,
+        duplicate labels, malformed environments, and any overfull box that
+        obscures a symbol.
+  \item \emph{Rendered-page audit.}  Inspect the theorem number, line breaks,
+        subscripts, turnstile/model glyphs, proof-ending mark, and surrounding
+        page break.  Verify that no line makes the quantifier appear to govern
+        less text than the source says it governs.
+  \item \emph{Extraction audit.}  Extract text from the final PDF and check that
+        the theorem heading, label target, hypotheses, and conclusion remain
+        searchable.  Text extraction supplements visual inspection; it does
+        not replace it.
+\end{enumerate}
+Passing only the source or only the rendered page is insufficient: the audit
+requires agreement among the formal claim, the LaTeX source, compilation
+records, cross-reference target, and visible output.
+

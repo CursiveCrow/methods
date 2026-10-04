@@ -1,0 +1,736 @@
+%% toc: P2 22 22.1,22.2,22.3
+\section{Sort conventions and the one-sorted reduction in detail}
+\label{sec:p02-w02-p02-038-many-sorted-reduction}
+
+\Cref{sec:p02-many-sorted} fixes strict many-sorted signatures
+(\cref{def:p02-many-sorted-signature}), strict structures and satisfaction
+(\cref{def:p02-many-sorted-structure}), the guard translation
+\(\operatorname{tr}_{\mathrm{MS}}\) with the sort theory
+\(\mathsf{Ax}_{\mathrm{sort}}(\Lang_{\mathrm{MS}})\)
+(\cref{def:p02-many-sorted-translation}) and the assignment guard
+\(\mathsf{VarGuard}_{\mathrm{MS}}(\Lang_{\mathrm{MS}})\)
+(\cref{def:p02-ms-variable-guard}), and states the reduction of strict
+many-sorted consequence to one-sorted consequence
+(\cref{thm:p02-many-sorted-translation}).  This section does four things.
+It writes out the term-value and satisfaction clauses on which every proof
+below depends, for a class of sorted structures wide enough to contain the
+variants.  It states which sort conventions the reduction imposes, and in
+particular that it imposes no coverage condition, and it gives the coverage
+variant with its precondition.  It proves the satisfaction correspondence in
+both directions, case by case, for the restriction of a one-sorted model and
+for the tagged one-sorted structure built from a many-sorted one.  Finally it
+presents two alternatives to the strict convention, one admitting empty sorts
+and one admitting overlapping sorts, and shows how the reduction must change
+for each.
+
+\emph{Inputs.}  A strict many-sorted signature \(\Lang_{\mathrm{MS}}\) in the
+sense of \cref{def:p02-many-sorted-signature}, its one-sorted flattening
+\(\Lang_{\mathrm{MS}}^{\flat}\), and the one-sorted satisfaction relation of
+\cref{sec:fol-semantics-02}, whose connectives are \(\bottom\), \(\neg\),
+\(\land\), \(\lor\) and \(\to\).  Many-sorted formulas use the same
+connectives.  \emph{Conclusions.}  Exact consequence-preserving reductions to
+one-sorted first-order logic for the strict convention, for strict structures
+with an added coverage axiom when there are finitely many sorts, for
+structures with possibly empty sorts, and for structures with possibly
+overlapping sorts and cross-sort equality; a proof that coverage cannot be
+axiomatized when there are infinitely many sorts; and comparisons of each
+variant with the strict convention.  \emph{Ambient assumptions.}  The
+metatheory is ZFC.  The Axiom of Foundation is used to name fresh junk
+points.  The Axiom of Choice is used only where a statement says so.
+One-sorted structures have nonempty domains, as in
+\cref{sec:fol-semantics-02}.  As in \cref{def:p02-many-sorted-translation},
+each sorted variable is identified with its image under the fixed injection
+into the one-sorted variable supply; one-sorted variables outside that image
+never occur in a translated formula.  Such an injection exists exactly when
+the sorted variables are countable.
+\Cref{thm:p02-w02b-p02-033-variable-form} derives the strict correspondence
+and the coverage variant below
+(\cref{thm:p02-w02-p02-038-strict-correspondence,thm:p02-w02-p02-038-coverage-reduction})
+for function and relation symbols of every cardinality, and
+\cref{sec:p02-w02b-p02-033-any-cardinality} gives the reduction for
+uncountably many sorts, where no such injection exists
+(\cref{thm:p02-w02b-p02-033-no-renaming}).
+
+\subsection{Sorted structures, contexts and satisfaction}
+\label{sec:p02-w02-p02-038-clauses}
+
+Write \(\mathrm{Var}_{\mathrm{MS}}\) for the set of all sorted variables of
+\(\Lang_{\mathrm{MS}}\), and \(\FV(\varphi)\) for the set of sorted variables
+free in a many-sorted formula \(\varphi\), defined by the usual recursion.
+For each sort \(\mathsf s\), the variable written \(x^{\mathsf s}\) in
+\cref{def:p02-many-sorted-signature} is a fixed member of the stock of
+\(\mathsf s\); it is used below as the designated variable of that sort.
+
+\begin{hbdefinition}{def:p02-w02-p02-038-sorted-structure}{Sorted structures, contexts and contextual assignments}
+A \emph{sorted \(\Lang_{\mathrm{MS}}\)-structure} \(\mathcal M\) consists of
+a set \(M_{\mathsf s}\) for each \(\mathsf s\in\mathsf{Sort}\), possibly
+empty and not required to be disjoint from the others, together with
+\[
+\begin{gathered}
+ c^{\mathcal M}\in M_{\mathsf s}\quad(c:\longrightarrow\mathsf s),\\
+ f^{\mathcal M}:M_{\mathsf s_1}\times\cdots\times M_{\mathsf s_n}
+   \longrightarrow M_{\mathsf s},\qquad
+ P^{\mathcal M}\subseteq M_{\mathsf s_1}\times\cdots\times M_{\mathsf s_n},
+\end{gathered}
+\]
+for the declarations
+\(f:\mathsf s_1\times\cdots\times\mathsf s_n\longrightarrow\mathsf s\) with
+\(n\geq1\) and \(P:\mathsf s_1\times\cdots\times\mathsf s_n\).  When the
+product is empty, \(f^{\mathcal M}\) is the empty function.  The structure is
+\begin{itemize}
+\item \emph{strict} if every \(M_{\mathsf s}\) is nonempty and
+      \(M_{\mathsf s}\cap M_{\mathsf t}=\varnothing\) for
+      \(\mathsf s\ne\mathsf t\) (these are the structures of
+      \cref{def:p02-many-sorted-structure});
+\item an \emph{E-structure} if its carriers are pairwise disjoint, some
+      possibly empty;
+\item a \emph{\(\cup\)-structure} if every carrier is nonempty, the carriers
+      possibly overlapping.
+\end{itemize}
+A \emph{context} is a set \(\Delta\subseteq\mathrm{Var}_{\mathrm{MS}}\).  A
+\emph{\(\Delta\)-assignment} into \(\mathcal M\) is a function \(g\) on
+\(\Delta\) with \(g(v)\in M_{\mathsf s}\) for every \(v\in\Delta\) of sort
+\(\mathsf s\).  For \(v\) of sort \(\mathsf s\) and \(b\in M_{\mathsf s}\),
+\(g[v\mapsto b]\) is the \((\Delta\cup\{v\})\)-assignment that sends \(v\) to
+\(b\) and agrees with \(g\) elsewhere.  A
+\(\mathrm{Var}_{\mathrm{MS}}\)-assignment is a \emph{total} assignment; these
+are the assignments of \cref{def:p02-many-sorted-structure}.
+\index{many-sorted first-order logic!sorted structure}
+\index{assignment!contextual}
+\end{hbdefinition}
+
+A sort with no element has no total assignment, because its variable stock is
+nonempty.  Contexts are therefore what lets an empty sort carry any
+assignment at all.
+
+\begin{hbdefinition}{def:p02-w02-p02-038-satisfaction}{Term values and satisfaction in context}
+Let \(g\) be a \(\Delta\)-assignment into a sorted structure \(\mathcal M\).
+For a term \(t\) of sort \(\mathsf s\) whose variables lie in \(\Delta\), the
+value \(\llbracket t\rrbracket^{\mathcal M}_{g}\in M_{\mathsf s}\) is defined
+by recursion on \(t\):
+\[
+ \llbracket v\rrbracket^{\mathcal M}_{g}\defeq g(v),\qquad
+ \llbracket c\rrbracket^{\mathcal M}_{g}\defeq c^{\mathcal M},
+\]
+\[
+ \llbracket f(t_1,\ldots,t_n)\rrbracket^{\mathcal M}_{g}\defeq
+ f^{\mathcal M}\bigl(\llbracket t_1\rrbracket^{\mathcal M}_{g},\ldots,
+   \llbracket t_n\rrbracket^{\mathcal M}_{g}\bigr).
+\]
+The value lies in \(M_{\mathsf s}\) because each argument value lies in the
+carrier of its declared sort.  For a formula \(\varphi\) with
+\(\FV(\varphi)\subseteq\Delta\), the relation
+\(\mathcal M\entails\varphi[g]\) is defined by recursion on \(\varphi\):
+\[
+\begin{aligned}
+ \mathcal M\entails P(t_1,\ldots,t_n)[g]
+ &\quad\text{iff}\quad
+ (\llbracket t_1\rrbracket^{\mathcal M}_{g},\ldots,
+   \llbracket t_n\rrbracket^{\mathcal M}_{g})\in P^{\mathcal M},\\
+ \mathcal M\entails (t=u)[g]
+ &\quad\text{iff}\quad
+ \llbracket t\rrbracket^{\mathcal M}_{g}=\llbracket u\rrbracket^{\mathcal M}_{g},\\
+ \mathcal M\not\entails\bottom[g],&\\
+ \mathcal M\entails\neg\varphi[g]
+ &\quad\text{iff}\quad \mathcal M\not\entails\varphi[g],\\
+ \mathcal M\entails(\varphi\land\psi)[g]
+ &\quad\text{iff}\quad
+ \mathcal M\entails\varphi[g]\text{ and }\mathcal M\entails\psi[g],\\
+ \mathcal M\entails(\varphi\lor\psi)[g]
+ &\quad\text{iff}\quad
+ \mathcal M\entails\varphi[g]\text{ or }\mathcal M\entails\psi[g],\\
+ \mathcal M\entails(\varphi\to\psi)[g]
+ &\quad\text{iff}\quad
+ \mathcal M\not\entails\varphi[g]\text{ or }\mathcal M\entails\psi[g],\\
+ \mathcal M\entails\forall v\,\varphi[g]
+ &\quad\text{iff}\quad
+ \mathcal M\entails\varphi[g[v\mapsto b]]\text{ for every }b\in M_{\mathsf s},\\
+ \mathcal M\entails\exists v\,\varphi[g]
+ &\quad\text{iff}\quad
+ \mathcal M\entails\varphi[g[v\mapsto b]]\text{ for some }b\in M_{\mathsf s},
+\end{aligned}
+\]
+where \(v\) has sort \(\mathsf s\).  In the strict language the equality
+clause applies only to terms of one sort.  The \emph{cross-sort} language
+also admits \(t=u\) for terms of different sorts, with the same clause.  For
+a strict structure and a total assignment \(s\), \(\mathcal M\entails\varphi[s]\)
+is the relation \(\mathcal M,s\entails\varphi\) of
+\cref{def:p02-many-sorted-structure}, whose clauses are the ones displayed.
+\index{satisfaction!many-sorted, in context}
+\end{hbdefinition}
+
+When a sort \(\mathsf s\) has \(M_{\mathsf s}=\varnothing\), the clauses make
+\(\forall v\,\varphi\) true and \(\exists v\,\varphi\) false at every
+assignment, for every \(v\) of sort \(\mathsf s\).  This is the source of
+every difference between the empty-sort variant and the strict convention in
+\cref{sec:p02-w02-p02-038-empty}.
+
+\begin{hblemma}{thm:p02-w02-p02-038-coincidence}{proved=annex:p02-w02-p02-038-coincidence}{Coincidence for contextual assignments}
+Let \(\mathcal M\) be a sorted structure, let \(g\) be a \(\Delta\)-assignment
+and \(g'\) a \(\Delta'\)-assignment into \(\mathcal M\), and suppose they agree
+on a set containing every variable of a term \(t\) or every variable in
+\(\FV(\varphi)\).  Then
+\(\llbracket t\rrbracket^{\mathcal M}_{g}=\llbracket t\rrbracket^{\mathcal M}_{g'}\),
+and \(\mathcal M\entails\varphi[g]\) iff \(\mathcal M\entails\varphi[g']\).
+In particular, if \(\FV(\varphi)\subseteq\Delta\subseteq\Delta'\), then
+\(\mathcal M\entails\varphi[g']\) iff
+\(\mathcal M\entails\varphi[g'{\restriction}\Delta]\).
+\end{hblemma}
+
+\subsection{The sort conventions of the reduction, and coverage}
+\label{sec:p02-w02-p02-038-coverage}
+
+\begin{hbconvention}{def:p02-w02-p02-038-axiom-families}{The four sort-axiom families, and no coverage axiom}
+The theory \(\mathsf{Ax}_{\mathrm{sort}}(\Lang_{\mathrm{MS}})\) of
+\cref{def:p02-many-sorted-translation} consists of exactly four families,
+named here for reference:
+\[
+\begin{array}{ll}
+ (\mathrm{Ne}) & \exists x\,Q_{\mathsf s}(x)\quad(\mathsf s\in\mathsf{Sort}),\\[2pt]
+ (\mathrm{Ct}) & Q_{\mathsf s}(c)\quad(c:\longrightarrow\mathsf s),\\[2pt]
+ (\mathrm{Cl}) & \forall x_1\cdots\forall x_n
+   \bigl(\bigwedge_{i=1}^{n}Q_{\mathsf s_i}(x_i)\to
+   Q_{\mathsf s}(f(x_1,\ldots,x_n))\bigr)\\
+   & \qquad(f:\mathsf s_1\times\cdots\times\mathsf s_n\longrightarrow\mathsf s,\ n\geq1),\\[2pt]
+ (\mathrm{Dj}) & \forall x\,\neg\bigl(Q_{\mathsf s}(x)\land Q_{\mathsf t}(x)\bigr)
+   \quad(\mathsf s\ne\mathsf t).
+\end{array}
+\]
+These express nonemptiness, constant typing, function closure and
+disjointness.  \emph{The reduction contains no coverage axiom.}  A one-sorted
+model of
+\(\mathsf{Ax}_{\mathrm{sort}}(\Lang_{\mathrm{MS}})\cup
+\mathsf{VarGuard}_{\mathrm{MS}}(\Lang_{\mathrm{MS}})\) may contain elements
+that satisfy no \(Q_{\mathsf s}\), and the one-sorted structure built in the
+proof of \cref{thm:p02-many-sorted-translation} always contains one, the junk
+point.  Such elements are harmless: a translated formula quantifies only
+under a guard \(Q_{\mathsf s}\), and, under an assignment satisfying the
+guards, the value of every term lies in some \(Q_{\mathsf s}\)
+(\cref{thm:p02-w02-p02-038-restriction}).  Two subsets are used below:
+\[
+ \mathsf{Ax}^{\mathrm E}_{\mathrm{sort}}\defeq
+   (\mathrm{Ct})\cup(\mathrm{Cl})\cup(\mathrm{Dj}),
+ \qquad
+ \mathsf{Ax}^{\cup}_{\mathrm{sort}}\defeq
+   (\mathrm{Ne})\cup(\mathrm{Ct})\cup(\mathrm{Cl}).
+\]
+For a context \(\Delta\), the \emph{context guard} is
+\(\mathsf{Guard}(\Delta)\defeq\{Q_{\mathsf s}(v):v\in\Delta\text{ of sort }
+\mathsf s\}\); thus
+\(\mathsf{VarGuard}_{\mathrm{MS}}(\Lang_{\mathrm{MS}})=
+\mathsf{Guard}(\mathrm{Var}_{\mathrm{MS}})\).  A one-sorted assignment
+\(\sigma\) into \(\mathcal A\) satisfies \(\mathsf{Guard}(\Delta)\) exactly
+when \(\sigma(v)\in Q_{\mathsf s}^{\mathcal A}\) for every \(v\in\Delta\) of
+sort \(\mathsf s\).
+\index{sort axiom!coverage}
+\end{hbconvention}
+
+The nonemptiness family and the assignment guard both force every
+\(Q_{\mathsf s}\) to be inhabited, so in the presence of the guard the first
+family adds nothing.
+
+\begin{hblemma}{thm:p02-w02-p02-038-guard-nonempty}{proved=annex:p02-w02-p02-038-guard-nonempty}{The assignment guard implies the nonemptiness family}
+If a one-sorted structure \(\mathcal A\) and assignment \(\sigma\) satisfy
+\(\mathsf{VarGuard}_{\mathrm{MS}}(\Lang_{\mathrm{MS}})\), then
+\(\mathcal A\entails\exists x\,Q_{\mathsf s}(x)\) for every sort
+\(\mathsf s\).  Consequently, for every set \(X\) of
+\(\Lang_{\mathrm{MS}}^{\flat}\)-formulas and every formula \(\chi\),
+\(\mathsf{Ax}_{\mathrm{sort}}\cup\mathsf{VarGuard}_{\mathrm{MS}}\cup
+X\entails_{\mathrm{FOL}}\chi\) iff
+\(\mathsf{Ax}^{\mathrm E}_{\mathrm{sort}}\cup\mathsf{VarGuard}_{\mathrm{MS}}
+\cup X\entails_{\mathrm{FOL}}\chi\).
+\end{hblemma}
+
+\begin{hbdefinition}{def:p02-w02-p02-038-coverage}{The coverage variant}
+Suppose \(\mathsf{Sort}=\{\mathsf s_1,\ldots,\mathsf s_k\}\) is finite.  The
+\emph{coverage axiom} is the one-sorted sentence
+\[
+ \mathsf{Cov}(\Lang_{\mathrm{MS}})\defeq
+ \forall x\,\bigl(Q_{\mathsf s_1}(x)\lor\cdots\lor Q_{\mathsf s_k}(x)\bigr).
+\]
+The \emph{coverage variant} of the reduction adds
+\(\mathsf{Cov}(\Lang_{\mathrm{MS}})\) to the premises of
+\cref{thm:p02-many-sorted-translation}.  Finiteness of \(\mathsf{Sort}\) is
+a precondition: a first-order formula is a finite string, so the disjunction
+exists only for finitely many sorts, and by
+\cref{thm:p02-w02-p02-038-coverage-not-elementary} no set of first-order
+sentences can take its place when there are infinitely many sorts.
+\index{sort axiom!coverage}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p02-w02-p02-038-coverage-not-elementary}{proved=annex:p02-w02-p02-038-coverage-not-elementary}{Coverage is not first-order with infinitely many sorts}
+Assume the Axiom of Choice in the ambient set theory, and let
+\(\mathsf{Sort}\) be infinite.  There is no set \(T\) of
+\(\Lang_{\mathrm{MS}}^{\flat}\)-sentences such that, for every one-sorted
+model \(\mathcal A\) of \(\mathsf{Ax}_{\mathrm{sort}}(\Lang_{\mathrm{MS}})\),
+\(\mathcal A\entails T\) iff every element of \(\mathcal A\) lies in some
+\(Q_{\mathsf s}^{\mathcal A}\).
+\end{hbtheorem}
+
+\subsection{The satisfaction correspondence in both directions}
+\label{sec:p02-w02-p02-038-correspondence}
+
+Two constructions carry the reduction.  The first restricts a one-sorted model
+of the closure axioms to the sets cut out by the sort predicates.  The second
+transports a sorted structure into a one-sorted domain along injections, one
+per sort, and sends every ill-typed function input to a value chosen by a
+fixed rule.  The tagged structure of \cref{thm:p02-many-sorted-translation},
+its coverage modification, and the plain-union structure used for overlapping
+sorts are three instances of the second construction.
+
+\begin{hbdefinition}{def:p02-w02-p02-038-restriction}{Restriction of a one-sorted model}
+Let \(\mathcal A\) be an \(\Lang_{\mathrm{MS}}^{\flat}\)-structure satisfying
+\((\mathrm{Ct})\) and \((\mathrm{Cl})\).  Its \emph{restriction}
+\(\mathcal A^{\downarrow}\) is the sorted structure with
+\[
+ M_{\mathsf s}\defeq Q_{\mathsf s}^{\mathcal A},\qquad
+ c^{\mathcal A^{\downarrow}}\defeq c^{\mathcal A},
+\]
+\[
+ f^{\mathcal A^{\downarrow}}\defeq
+   f^{\mathcal A}{\restriction}(M_{\mathsf s_1}\times\cdots\times M_{\mathsf s_n}),
+\]
+\[
+ P^{\mathcal A^{\downarrow}}\defeq
+   P^{\mathcal A}\cap(M_{\mathsf s_1}\times\cdots\times M_{\mathsf s_n}).
+\]
+For a one-sorted assignment \(\sigma\) satisfying \(\mathsf{Guard}(\Delta)\),
+\(\sigma{\restriction}\Delta\) is a \(\Delta\)-assignment into
+\(\mathcal A^{\downarrow}\).
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p02-w02-p02-038-transport}{Transport along sort injections}
+Let \(\mathcal M\) be a sorted structure, \(D\) a nonempty set, and
+\(h=(h_{\mathsf s})_{\mathsf s\in\mathsf{Sort}}\) a family of injections
+\(h_{\mathsf s}:M_{\mathsf s}\to D\).  For each function symbol \(f\) of
+positive arity \(n\) let \(j_f:D^n\to D\) be a given \emph{fill} function.
+The one-sorted structure \(\mathcal M^{h}\) has domain \(D\) and
+\[
+\begin{aligned}
+ Q_{\mathsf s}^{\mathcal M^{h}}&\defeq h_{\mathsf s}[M_{\mathsf s}],\qquad
+ c^{\mathcal M^{h}}\defeq h_{\mathsf s}(c^{\mathcal M})\quad(c:\longrightarrow\mathsf s),\\
+ f^{\mathcal M^{h}}(d_1,\ldots,d_n)&\defeq
+ \begin{cases}
+ h_{\mathsf s}\bigl(f^{\mathcal M}(b_1,\ldots,b_n)\bigr)
+   & \text{if each }d_i=h_{\mathsf s_i}(b_i),\ b_i\in M_{\mathsf s_i},\\
+ j_f(d_1,\ldots,d_n) & \text{otherwise},
+ \end{cases}\\
+ P^{\mathcal M^{h}}&\defeq\bigl\{\bigl(h_{\mathsf s_1}(b_1),\ldots,
+   h_{\mathsf s_n}(b_n)\bigr):\\
+ &\qquad\qquad(b_1,\ldots,b_n)\in P^{\mathcal M}\bigr\},
+\end{aligned}
+\]
+for \(f:\mathsf s_1\times\cdots\times\mathsf s_n\longrightarrow\mathsf s\)
+and \(P:\mathsf s_1\times\cdots\times\mathsf s_n\).  The first case of
+\(f^{\mathcal M^{h}}\) is well defined because each \(h_{\mathsf s_i}\) is
+injective.  The family \(h\) is \emph{coherent} if
+\(h_{\mathsf s}(a)=h_{\mathsf t}(b)\) iff \(a=b\), for all sorts
+\(\mathsf s,\mathsf t\), \(a\in M_{\mathsf s}\) and \(b\in M_{\mathsf t}\).
+For a \(\Delta\)-assignment \(g\) into \(\mathcal M\), a one-sorted assignment
+\(\sigma\) into \(\mathcal M^{h}\) \emph{transports} \(g\) if
+\(\sigma(v)=h_{\mathsf s}(g(v))\) for every \(v\in\Delta\) of sort
+\(\mathsf s\).  The three instances used below are:
+\begin{enumerate}
+\item \emph{tagged with junk point}: \(D=\{(\mathsf s,a):\mathsf s\in
+      \mathsf{Sort},\ a\in M_{\mathsf s}\}\cup\{\star\}\) with
+      \(\star\defeq(\mathsf{Sort},\mathsf{Sort})\),
+      \(h_{\mathsf s}(a)=(\mathsf s,a)\), and every \(j_f\) constantly
+      \(\star\); the assignment sends variables outside \(\Delta\) to
+      \(\star\).  This structure is written \(\mathcal M^{\sharp}\);
+\item \emph{tagged with defaults}, for a strict \(\mathcal M\) with a total
+      assignment \(s\): the same \(D\) without \(\star\), the same
+      \(h\), and \(j_f\) constantly \(h_{\mathsf s}(s(x^{\mathsf s}))\) for
+      \(f\) of codomain \(\mathsf s\); one-sorted variables outside the
+      image of the variable injection go to one fixed element of \(D\).
+      This structure is written \(\mathcal M^{\sharp}_{s}\);
+\item \emph{plain union with junk point}: \(D=U\cup\{U\}\) with
+      \(U\defeq\bigcup_{\mathsf s}M_{\mathsf s}\), each \(h_{\mathsf s}\) the
+      inclusion, every \(j_f\) constantly \(U\), and variables outside
+      \(\Delta\) sent to \(U\).  This structure is written
+      \(\mathcal M^{\cup}\).
+\end{enumerate}
+By Foundation, \(\mathsf{Sort}\notin\mathsf{Sort}\) and \(U\notin U\), so
+\(\star\) is no tagged pair \((\mathsf s,a)\) with \(\mathsf s\in\mathsf{Sort}\)
+and \(U\notin U\); both junk points are fresh without any choice.
+\index{many-sorted first-order logic!tagged structure}
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p02-w02-p02-038-restriction}{proved=annex:p02-w02-p02-038-restriction}{Restriction lemma}
+Let \(\mathcal A\) satisfy \((\mathrm{Ct})\) and \((\mathrm{Cl})\), let
+\(\Delta\) be a context, and let \(\sigma\) be a one-sorted assignment into
+\(\mathcal A\) satisfying \(\mathsf{Guard}(\Delta)\).  Then:
+\begin{enumerate}
+\item \(\mathcal A^{\downarrow}\) is a sorted structure; it is an E-structure
+      if \(\mathcal A\entails(\mathrm{Dj})\), a \(\cup\)-structure if
+      \(\mathcal A\entails(\mathrm{Ne})\), and strict if
+      \(\mathcal A\entails\mathsf{Ax}_{\mathrm{sort}}\);
+\item for every term \(t\) of sort \(\mathsf s\) with variables in
+      \(\Delta\),
+      \(\llbracket t\rrbracket^{\mathcal A}_{\sigma}=
+      \llbracket t\rrbracket^{\mathcal A^{\downarrow}}_{\sigma\restriction\Delta}
+      \in Q_{\mathsf s}^{\mathcal A}\);
+\item for every formula \(\varphi\) of the cross-sort language with
+      \(\FV(\varphi)\subseteq\Delta\),
+      \(\mathcal A,\sigma\entails\operatorname{tr}_{\mathrm{MS}}(\varphi)\)
+      iff
+      \(\mathcal A^{\downarrow}\entails\varphi[\sigma{\restriction}\Delta]\).
+\end{enumerate}
+Here \(\operatorname{tr}_{\mathrm{MS}}\) leaves every atom unchanged,
+including a cross-sort equality.
+\end{hblemma}
+
+\begin{hblemma}{thm:p02-w02-p02-038-transport}{proved=annex:p02-w02-p02-038-transport}{Transport lemma}
+Let \(\mathcal M^{h}\) be as in \cref{def:p02-w02-p02-038-transport}, let
+\(g\) be a \(\Delta\)-assignment into \(\mathcal M\), and let \(\sigma\)
+transport \(g\).  Then:
+\begin{enumerate}
+\item for every term \(t\) of sort \(\mathsf s\) with variables in
+      \(\Delta\),
+      \(\llbracket t\rrbracket^{\mathcal M^{h}}_{\sigma}=
+      h_{\mathsf s}\bigl(\llbracket t\rrbracket^{\mathcal M}_{g}\bigr)\);
+\item for every formula \(\varphi\) of the strict language with
+      \(\FV(\varphi)\subseteq\Delta\),
+      \(\mathcal M\entails\varphi[g]\) iff
+      \(\mathcal M^{h},\sigma\entails\operatorname{tr}_{\mathrm{MS}}(\varphi)\);
+      if \(h\) is coherent, the same holds for every formula of the
+      cross-sort language;
+\item \(\mathcal M^{h}\) satisfies \((\mathrm{Ct})\) and \((\mathrm{Cl})\)
+      whatever the fill functions are; it satisfies \((\mathrm{Ne})\) iff
+      every \(M_{\mathsf s}\) is nonempty; \((\mathrm{Dj})\) iff the images
+      \(h_{\mathsf s}[M_{\mathsf s}]\) are pairwise disjoint; and, for
+      finite \(\mathsf{Sort}\), \(\mathsf{Cov}\) iff these images cover
+      \(D\);
+\item \(\sigma\) satisfies \(\mathsf{Guard}(\Delta)\).
+\end{enumerate}
+\end{hblemma}
+
+The three instances have the following properties, each checked in
+\cref{annex:p02-w02-p02-038-transport}.  The tagged images are always
+pairwise disjoint, and the tagged family is coherent iff \(\mathcal M\) has
+pairwise disjoint carriers.  The plain-union family is always coherent, and
+its images are disjoint iff \(\mathcal M\) has pairwise disjoint carriers.
+The junk point lies in no \(Q_{\mathsf s}\), so, when \(\mathsf{Sort}\) is
+finite, neither junk structure satisfies \(\mathsf{Cov}\); the tagged
+structure with defaults always does.
+
+\begin{hbtheorem}{thm:p02-w02-p02-038-strict-correspondence}{proved=annex:p02-w02-p02-038-strict-correspondence}{Two-way satisfaction correspondence for the strict reduction}
+Let \(\Lang_{\mathrm{MS}}\) be a strict many-sorted signature.
+\begin{enumerate}
+\item \emph{Restriction.}  If \(\mathcal A\entails
+      \mathsf{Ax}_{\mathrm{sort}}(\Lang_{\mathrm{MS}})\) and \(\sigma\)
+      satisfies \(\mathsf{VarGuard}_{\mathrm{MS}}(\Lang_{\mathrm{MS}})\),
+      then \(\mathcal A^{\downarrow}\) is strict,
+      \(\sigma{\restriction}\mathrm{Var}_{\mathrm{MS}}\) is a total
+      assignment into it, and for every well-sorted \(\varphi\),
+      \(\mathcal A,\sigma\entails\operatorname{tr}_{\mathrm{MS}}(\varphi)\)
+      iff
+      \(\mathcal A^{\downarrow},\sigma{\restriction}\mathrm{Var}_{\mathrm{MS}}
+      \entails\varphi\).
+\item \emph{Tagging.}  If \(\mathcal M\) is strict and \(s\) is a total
+      assignment, let \(s^{\sharp}\) send each sorted variable \(v\) of sort
+      \(\mathsf s\) to \((\mathsf s,s(v))\) and every other one-sorted
+      variable to \(\star\).  Then \(\mathcal M^{\sharp}\entails
+      \mathsf{Ax}_{\mathrm{sort}}(\Lang_{\mathrm{MS}})\), \(s^{\sharp}\)
+      satisfies \(\mathsf{VarGuard}_{\mathrm{MS}}(\Lang_{\mathrm{MS}})\), and
+      for every well-sorted \(\varphi\),
+      \(\mathcal M,s\entails\varphi\) iff
+      \(\mathcal M^{\sharp},s^{\sharp}\entails
+      \operatorname{tr}_{\mathrm{MS}}(\varphi)\).
+\item \emph{Consequence.}  For every set \(\Gamma\cup\{\varphi\}\) of
+      well-sorted formulas, the equivalence of
+      \cref{thm:p02-many-sorted-translation} holds.
+\end{enumerate}
+\end{hbtheorem}
+
+Clause~3 is the reduction theorem of \cref{sec:p02-many-sorted}; the annex
+proof of this theorem writes out the induction cases and the axiom checks
+that the proof attached to \cref{thm:p02-many-sorted-translation} summarizes.
+
+\begin{hbtheorem}{thm:p02-w02-p02-038-coverage-reduction}{proved=annex:p02-w02-p02-038-coverage-reduction}{The coverage variant of the reduction}
+Let \(\mathsf{Sort}\) be finite, and let \(\Gamma\cup\{\varphi\}\) be a set
+of well-sorted formulas.  Then
+\[
+ \Gamma\entails_{\mathrm{MS}}\varphi
+ \quad\Longleftrightarrow\quad
+ \mathsf{Ax}_{\mathrm{sort}}\cup\{\mathsf{Cov}\}
+   \cup\mathsf{VarGuard}_{\mathrm{MS}}
+   \cup\operatorname{tr}_{\mathrm{MS}}[\Gamma]
+ \entails_{\mathrm{FOL}}\operatorname{tr}_{\mathrm{MS}}(\varphi).
+\]
+Hence adding \(\mathsf{Cov}\) does not change which translated formulas
+follow from translated premises.  In the converse construction the junk point
+is removed and every ill-typed input of a function symbol of codomain
+\(\mathsf s\) is sent to the tagged value of the designated variable
+\(x^{\mathsf s}\) under the given assignment.  The structure
+\(\mathcal M^{\sharp}\) of \cref{thm:p02-w02-p02-038-strict-correspondence}
+cannot be used, since \(\star\) violates \(\mathsf{Cov}\).
+\end{hbtheorem}
+
+\begin{hbexample}{def:p02-w02-p02-038-example}{Points and lines}
+Let \(\mathsf{Sort}=\{\mathsf p,\mathsf l\}\), with a relation symbol
+\(I:\mathsf p\times\mathsf l\) (incidence), a constant \(o:\longrightarrow
+\mathsf p\), and a function symbol \(m:\mathsf l\longrightarrow\mathsf p\)
+(a marked point on a line).  The well-sorted sentence
+\(\varphi\defeq\forall y^{\mathsf l}\,I(m(y^{\mathsf l}),y^{\mathsf l})\)
+translates to
+\(\forall y^{\mathsf l}\bigl(Q_{\mathsf l}(y^{\mathsf l})\to
+I(m(y^{\mathsf l}),y^{\mathsf l})\bigr)\), and
+\(\mathsf{Ax}_{\mathrm{sort}}\) consists of \(\exists x\,Q_{\mathsf p}(x)\),
+\(\exists x\,Q_{\mathsf l}(x)\), \(Q_{\mathsf p}(o)\),
+\(\forall x\,(Q_{\mathsf l}(x)\to Q_{\mathsf p}(m(x)))\) and the two
+disjointness axioms for the ordered pairs of distinct sorts.
+
+Take the strict structure \(M_{\mathsf p}=\{a\}\),
+\(M_{\mathsf l}=\{\ell\}\), \(o^{\mathcal M}=a\), \(m^{\mathcal M}(\ell)=a\),
+\(I^{\mathcal M}=\{(a,\ell)\}\).  Then \(\mathcal M\entails\varphi\).  The
+tagged structure has domain
+\(\{(\mathsf p,a),(\mathsf l,\ell),\star\}\), with
+\[
+ Q_{\mathsf p}=\{(\mathsf p,a)\},\quad Q_{\mathsf l}=\{(\mathsf l,\ell)\},\quad
+ o=(\mathsf p,a),\quad
+ I=\{((\mathsf p,a),(\mathsf l,\ell))\},
+\]
+and
+\[
+ m^{\mathcal M^{\sharp}}((\mathsf l,\ell))=(\mathsf p,a),\qquad
+ m^{\mathcal M^{\sharp}}((\mathsf p,a))=\star,\qquad
+ m^{\mathcal M^{\sharp}}(\star)=\star.
+\]
+The closure axiom for \(m\) holds because only \((\mathsf l,\ell)\)
+satisfies its antecedent; the two junk values occur where the antecedent
+fails.  The translated sentence holds, since its guard admits only
+\((\mathsf l,\ell)\).  The coverage axiom
+\(\forall x\,(Q_{\mathsf p}(x)\lor Q_{\mathsf l}(x))\) fails at \(\star\).
+In the structure with defaults the domain is
+\(\{(\mathsf p,a),(\mathsf l,\ell)\}\) and
+\(m((\mathsf p,a))=(\mathsf p,s(x^{\mathsf p}))=(\mathsf p,a)\); coverage
+holds and the translated sentence is still true.
+
+If instead \(M_{\mathsf l}\) were empty, which the strict convention forbids
+and the empty-sort variant below allows, \(\varphi\) would be vacuously true
+and \(\exists y^{\mathsf l}\,(y^{\mathsf l}=y^{\mathsf l})\) false.
+\end{hbexample}
+
+\subsection{A variant admitting empty sorts}
+\label{sec:p02-w02-p02-038-empty}
+
+\begin{hbdefinition}{def:p02-w02-p02-038-empty-semantics}{Empty-sort consequence}
+Let \(\Gamma\cup\{\varphi\}\) be a set of formulas of the strict language and
+\(\Delta\) a context with \(\FV(\gamma)\subseteq\Delta\) for every
+\(\gamma\in\Gamma\cup\{\varphi\}\).  Write
+\(\Gamma\entails^{\Delta}_{\mathrm E}\varphi\) iff, for every E-structure
+\(\mathcal M\) and every \(\Delta\)-assignment \(g\) into \(\mathcal M\), if
+\(\mathcal M\entails\gamma[g]\) for every \(\gamma\in\Gamma\) then
+\(\mathcal M\entails\varphi[g]\).  Write
+\(\Gamma\entails^{\mathrm{tot}}_{\mathrm E}\varphi\) for the same definition
+with total assignments in place of \(\Delta\)-assignments.  A sort
+\(\mathsf s\) is \emph{inhabited by the signature} if some term of sort
+\(\mathsf s\) contains no variable.
+\index{many-sorted first-order logic!empty sorts}
+\end{hbdefinition}
+
+The handling of assignments is the substance of this variant.  If
+assignments stay total, an empty sort admits none, and such structures drop
+out of the consequence relation altogether
+(\cref{thm:p02-w02-p02-038-total-collapse}).  Contexts let a structure with
+an empty sort count, at contexts that contain no variable of that sort.
+Consequence then depends on the context, which is the phenomenon Pitts
+illustrates for algebraic theories with a sort that may be empty
+\cite[Example~2.3.2, p.~11]{Pitts1995Draft}.  The contextual powerset
+interpretation of \cref{thm:p10-doctrine-tarski} keeps the context in the
+semantic judgment for the same reason.
+
+\begin{hblemma}{thm:p02-w02-p02-038-total-collapse}{proved=annex:p02-w02-p02-038-total-collapse}{Total assignments hide empty sorts}
+Every E-structure that has a total assignment is strict.  Consequently
+\(\Gamma\entails^{\mathrm{tot}}_{\mathrm E}\varphi\) iff
+\(\Gamma\entails_{\mathrm{MS}}\varphi\).
+\end{hblemma}
+
+\begin{hblemma}{thm:p02-w02-p02-038-inhabited}{proved=annex:p02-w02-p02-038-inhabited}{Sorts that can be empty}
+For each sort \(\mathsf s\), the following are equivalent: \(\mathsf s\) is
+not inhabited by the signature; some E-structure has
+\(M_{\mathsf s}=\varnothing\).  Moreover there is one E-structure
+\(\mathcal M_{0}\) in which exactly the sorts not inhabited by the signature
+are empty.
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p02-w02-p02-038-empty-reduction}{proved=annex:p02-w02-p02-038-empty-reduction}{Reduction for the empty-sort variant}
+Let \(\Gamma\cup\{\varphi\}\) be formulas of the strict language and
+\(\Delta\) a context containing all their free variables.  Then
+\[
+ \Gamma\entails^{\Delta}_{\mathrm E}\varphi
+ \quad\Longleftrightarrow\quad
+ \mathsf{Ax}^{\mathrm E}_{\mathrm{sort}}\cup\mathsf{Guard}(\Delta)
+   \cup\operatorname{tr}_{\mathrm{MS}}[\Gamma]
+ \entails_{\mathrm{FOL}}\operatorname{tr}_{\mathrm{MS}}(\varphi).
+\]
+\end{hbtheorem}
+
+Compared with \cref{thm:p02-many-sorted-translation}, three things change.
+The nonemptiness family is dropped: it would make
+\(\operatorname{tr}_{\mathrm{MS}}(\exists x^{\mathsf s}\,
+(x^{\mathsf s}=x^{\mathsf s}))\) a consequence of the sort axioms alone.  The
+total guard \(\mathsf{VarGuard}_{\mathrm{MS}}\) is replaced by the context
+guard \(\mathsf{Guard}(\Delta)\): by
+\cref{thm:p02-w02-p02-038-guard-nonempty}, the total guard would reinstate
+nonemptiness of every sort.  And the junk point is no longer only a home for
+ill-typed function values: when every carrier is empty, it is the only
+element of the one-sorted domain, which ordinary first-order semantics
+requires to be nonempty.
+
+\begin{hbtheorem}{thm:p02-w02-p02-038-empty-comparison}{proved=annex:p02-w02-p02-038-empty-comparison}{Empty-sort consequence compared with the strict convention}
+Let \(\Gamma\cup\{\varphi\}\) be formulas of the strict language and
+\(\Delta\) a context containing all their free variables.
+\begin{enumerate}
+\item If \(\Gamma\entails^{\Delta}_{\mathrm E}\varphi\), then
+      \(\Gamma\entails_{\mathrm{MS}}\varphi\).
+\item If \(\mathsf s\) is not inhabited by the signature, \(v\) is a variable
+      of sort \(\mathsf s\), and \(\FV(\psi)\subseteq\{v\}\), then
+      \(\forall v\,\psi\not\entails^{\varnothing}_{\mathrm E}\exists v\,\psi\),
+      although \(\forall v\,\psi\entails_{\mathrm{MS}}\exists v\,\psi\).
+      In particular \(\exists v\,(v=v)\) is valid in the strict sense but
+      not in the empty-sort sense.
+\item Enlarging the context is sound: if \(\Delta\subseteq\Delta'\) then
+      \(\Gamma\entails^{\Delta}_{\mathrm E}\varphi\) implies
+      \(\Gamma\entails^{\Delta'}_{\mathrm E}\varphi\).  Shrinking it is not:
+      for \(\mathsf s\) and \(v\) as in clause~2 and a further variable
+      \(w\) of sort \(\mathsf s\),
+      \(\varnothing\entails^{\{w\}}_{\mathrm E}\exists v\,(v=v)\) but
+      \(\varnothing\not\entails^{\varnothing}_{\mathrm E}\exists v\,(v=v)\).
+\item If every sort is inhabited by the signature, then every E-structure
+      is strict and \(\Gamma\entails^{\Delta}_{\mathrm E}\varphi\) iff
+      \(\Gamma\entails_{\mathrm{MS}}\varphi\).  This clause uses no choice:
+      it fixes one injection of the at most countable symbol set into the
+      natural numbers.
+\item Over strict structures only, contextual and total consequence agree:
+      \(\Gamma\entails_{\mathrm{MS}}\varphi\) iff the condition defining
+      \(\Gamma\entails^{\Delta}_{\mathrm E}\varphi\) holds for every strict
+      \(\mathcal M\) and every \(\Delta\)-assignment.  The right-to-left
+      half uses no choice.  The left-to-right half extends a
+      \(\Delta\)-assignment to a total one with a choice function on the
+      family of carriers; it needs the Axiom of Choice only when
+      \(\mathsf{Sort}\) is infinite.
+\end{enumerate}
+\end{hbtheorem}
+
+\begin{hbwarning}{def:p02-w02-p02-038-empty-warning}{Rules that need a nonempty sort}
+Clause~2 of \cref{thm:p02-w02-p02-038-empty-comparison} shows that the
+passage from \(\forall v\,\psi\) to \(\exists v\,\psi\), and every rule that
+yields it, such as instantiating a universal at a variable of sort
+\(\mathsf s\) that does not occur in the context and then generalizing
+existentially, is unsound under the empty-sort convention.  A calculus
+for that convention must record contexts and remove a variable from a
+context only when its sort is inhabited by the signature
+\cite[Example~2.3.2, p.~11]{Pitts1995Draft}.  An empty sort is also
+different from a nondenoting term: free logics
+(\cref{sec:p02-free-logic}) keep a nonempty inner domain and let a term
+fail to denote, whereas here every term still denotes and a sort may have no
+elements.
+\end{hbwarning}
+
+\subsection{A variant admitting overlapping sorts}
+\label{sec:p02-w02-p02-038-overlap}
+
+\Cref{sec:p02-many-sorted} adopts disjoint carriers and notes that
+overlapping carriers require a different reconstruction.  The reconstruction
+is as follows.
+
+\begin{hbdefinition}{def:p02-w02-p02-038-overlap-semantics}{Overlapping-sort semantics}
+The \emph{overlapping-sort} presentation keeps the signature of
+\cref{def:p02-many-sorted-signature}, with one declaration for each symbol,
+and uses the cross-sort language of \cref{def:p02-w02-p02-038-satisfaction}:
+an equation \(t=u\) is a formula for terms of any two sorts, and is true iff
+the two values are the same element.  Structures are the
+\(\cup\)-structures of \cref{def:p02-w02-p02-038-sorted-structure}: every
+carrier is nonempty, and carriers may share elements.  Write
+\(\Gamma\entails_{\cup}\varphi\) for consequence over all
+\(\cup\)-structures and total assignments.  The guard translation
+\(\operatorname{tr}_{\mathrm{MS}}\) is extended by leaving cross-sort
+equalities unchanged.
+\index{many-sorted first-order logic!overlapping sorts}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p02-w02-p02-038-overlap-reduction}{proved=annex:p02-w02-p02-038-overlap-reduction}{One-sorted reduction for overlapping sorts}
+For every set \(\Gamma\cup\{\varphi\}\) of formulas of the cross-sort
+language,
+\[
+ \Gamma\entails_{\cup}\varphi
+ \quad\Longleftrightarrow\quad
+ \mathsf{Ax}^{\cup}_{\mathrm{sort}}\cup\mathsf{VarGuard}_{\mathrm{MS}}
+   \cup\operatorname{tr}_{\mathrm{MS}}[\Gamma]
+ \entails_{\mathrm{FOL}}\operatorname{tr}_{\mathrm{MS}}(\varphi).
+\]
+The converse construction is the plain union \(\mathcal M^{\cup}\), not the
+tagged union.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p02-w02-p02-038-overlap-comparison}{proved=annex:p02-w02-p02-038-overlap-comparison}{Overlapping sorts compared with the strict convention}
+Let \(\mathsf s\ne\mathsf t\) be sorts.
+\begin{enumerate}
+\item For formulas of the strict language, \(\Gamma\entails_{\cup}\varphi\)
+      iff \(\Gamma\entails_{\mathrm{MS}}\varphi\).
+\item The cross-sort sentence
+      \(\theta\defeq\exists x^{\mathsf s}\,\exists x^{\mathsf t}\,
+      (x^{\mathsf s}=x^{\mathsf t})\) has a \(\cup\)-model, while
+      \(\mathsf{Ax}_{\mathrm{sort}}\entails_{\mathrm{FOL}}
+      \neg\operatorname{tr}_{\mathrm{MS}}(\theta)\).  So the disjointness
+      family must be dropped from the reduction for overlapping sorts.
+\item There is a \(\cup\)-structure \(\mathcal M\) with
+      \(\mathcal M\entails\theta\) and
+      \(\mathcal M^{\sharp}\not\entails\operatorname{tr}_{\mathrm{MS}}(\theta)\):
+      the tagged construction separates an element shared by two sorts and
+      so fails for cross-sort equality.
+\end{enumerate}
+\end{hbtheorem}
+
+Clause~1 says that disjointness is not visible in the strict language: with
+only same-sort equality, no formula distinguishes a structure from its tagged
+copy.  The difference between the two conventions appears exactly when
+cross-sort equality is part of the language.  This presentation does not treat a sort
+order with declared inclusions or a symbol with several declarations; each
+would add conditions on how the interpretations at different declarations
+fit together, and those conditions are not fixed here.
+
+\begin{longtable}{@{}p{.22\linewidth}p{.22\linewidth}p{.22\linewidth}p{.24\linewidth}@{}}
+\caption{The three conventions and their one-sorted reductions.}
+\label{tab:p02-w02-p02-038-conventions}\\
+\toprule
+Convention & Carriers and language & One-sorted premises & Converse construction \\ \midrule
+\endfirsthead
+\toprule
+Convention & Carriers and language & One-sorted premises & Converse construction \\ \midrule
+\endhead
+Strict (\cref{thm:p02-many-sorted-translation}) &
+nonempty, pairwise disjoint; same-sort equality; total assignments &
+\((\mathrm{Ne})\), \((\mathrm{Ct})\), \((\mathrm{Cl})\), \((\mathrm{Dj})\),
+\(\mathsf{VarGuard}_{\mathrm{MS}}\) &
+tagged union with junk point \\
+\addlinespace
+Strict with coverage, finitely many sorts
+(\cref{thm:p02-w02-p02-038-coverage-reduction}) &
+as strict &
+as strict, plus \(\mathsf{Cov}\) &
+tagged union, defaults from the assignment \\
+\addlinespace
+Empty sorts (\cref{thm:p02-w02-p02-038-empty-reduction}) &
+possibly empty, pairwise disjoint; same-sort equality; context \(\Delta\) &
+\((\mathrm{Ct})\), \((\mathrm{Cl})\), \((\mathrm{Dj})\),
+\(\mathsf{Guard}(\Delta)\) &
+tagged union with junk point, which may be the only element \\
+\addlinespace
+Overlapping sorts (\cref{thm:p02-w02-p02-038-overlap-reduction}) &
+nonempty, possibly overlapping; cross-sort equality; total assignments &
+\((\mathrm{Ne})\), \((\mathrm{Ct})\), \((\mathrm{Cl})\),
+\(\mathsf{VarGuard}_{\mathrm{MS}}\) &
+plain union with junk point \\
+\bottomrule
+\end{longtable}
+
+\emph{Relationships.}  The strict correspondence supplies the step-by-step
+proof behind \cref{thm:p02-many-sorted-translation}, and through it the
+semantic transfers stated after that theorem.  The same assignment guard
+\(\mathsf{VarGuard}_{\mathrm{MS}}\) is used by the matched second-order
+calculus of \cref{sec:p02-sol-matched-calculus}.  Empty sorts with
+contexts are the semantic setting of the contextual first-order logic of
+Part~10 (\cref{thm:p10-doctrine-tarski}).  No proof calculus for any of the
+variants is fixed here; each reduction concerns semantic consequence only.

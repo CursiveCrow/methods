@@ -1,0 +1,1480 @@
+%% toc: P2 23 23.1,23.2,23.3,23.4
+\section{Church's 1940 formulation of the simple theory of types}
+\label{sec:p02-w02-p02-040-church}
+
+The relational second-order language of
+\cref{sec:second-order-logic-01} quantifies over relations of individuals
+only, and the simple-type syntax of \cref{ch:simple-type-theory} fixes types
+and terms without choosing axioms or rules.  This section gives one complete
+typed higher-order calculus: the system of Church's paper of 1940
+\cite{Church1940}.  It is a Hilbert-style calculus whose terms are typed
+lambda-terms; comprehension is obtained from lambda-abstraction and
+conversion, choice and descriptions from a selection constant, and
+extensionality from an axiom schema.
+
+\emph{Inputs.}  Finite strings, induction on formulas and on proofs, and, for the
+semantic results, ZFC set theory as metatheory.
+\emph{Conclusions.}  The exact primitive symbols, formation rules,
+abbreviations, rules of inference and axioms of the system
+(\cref{def:p02-w02-p02-040-church-types,def:p02-w02-p02-040-church-wff,def:p02-w02-p02-040-church-abbrev,def:p02-w02-p02-040-church-rules,def:p02-w02-p02-040-church-axioms});
+the deduction theorem and the induction theorem; the quantifier, equality,
+comprehension and arithmetic theorems selected below; soundness for the
+standard interpretation, with consistency and the independence results
+the source states; and a term-by-term bridge to the host simple-type syntax.
+\emph{Standing.}  Notation in this section follows the source.  The
+source's informal interpretation is made precise here as the standard model
+of \cref{def:p02-w02-p02-040-church-standard}; that formalization is the
+handbook's, and the source gives no model theory of its own.
+
+\subsection{Types, symbols and well-formed formulas}
+
+\begin{hbdefinition}{def:p02-w02-p02-040-church-types}{Church's type symbols}
+The \emph{type symbols} form the least class of strings that contains
+\(\iota\) and \(o\) and contains \((\alpha\beta)\) whenever it contains
+\(\alpha\) and \(\beta\) \cite[\S1, p.~56]{Church1940}.  In the intended
+reading \(o\) is the type of propositions, \(\iota\) the type of
+individuals, and \((\alpha\beta)\) the type of one-argument functions whose
+arguments are of type \(\beta\) and whose values are of type \(\alpha\)
+\cite[\S1, pp.~56--57]{Church1940}.  Thus the \emph{value} type is written
+first.  Functions of several arguments are curried: \(o\iota\iota\) is the
+type of two-place propositional functions of individuals.
+
+Parentheses in type symbols are omitted with association to the left, so
+\(o\iota\) abbreviates \((o\iota)\), \(\iota\iota\iota\) abbreviates
+\(((\iota\iota)\iota)\), and \(\iota(\iota\iota)\) abbreviates
+\((\iota(\iota\iota))\).  Further,
+\[
+ \alpha'\ \text{abbreviates}\ ((\alpha\alpha)(\alpha\alpha)),\qquad
+ \alpha''\ \text{abbreviates}\ ((\alpha'\alpha')(\alpha'\alpha')),
+\]
+and so on \cite[\S1, p.~56]{Church1940}.  Greek letters
+\(\alpha,\beta,\gamma\) are metalinguistic variables over type symbols.
+Type symbols occur in the formal language only as subscripts on variables
+and constants.
+\index{simple theory of types!Church's type symbols}
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p02-w02-p02-040-church-wff}{Primitive symbols and well-formed formulas}
+The primitive symbols are
+\[
+ \lambda,\ (,\ ),\ N_{oo},\ A_{ooo},\ \Pi_{o(o\alpha)},\
+ \iota_{\alpha(o\alpha)},\ a_\alpha,\ b_\alpha,\ \ldots,\ z_\alpha,\
+ \bar a_\alpha,\ \bar b_\alpha,\ \ldots
+\]
+for every type symbol \(\alpha\) \cite[\S2, p.~57]{Church1940}.  The first
+three are \emph{improper}; the rest are \emph{proper}.  The proper symbols
+\(N_{oo}\), \(A_{ooo}\), \(\Pi_{o(o\alpha)}\) and \(\iota_{\alpha(o\alpha)}\)
+are \emph{constants}; for each \(\alpha\) there is one \(\Pi_{o(o\alpha)}\)
+and one \(\iota_{\alpha(o\alpha)}\).  All other proper symbols are
+\emph{variables}, infinitely many of each type.  The letter \(\iota\)
+therefore has two roles: the type symbol of individuals and the name of the
+selection constant, distinguished by position (a type symbol is always a
+subscript).
+
+A \emph{formula} is any finite sequence of primitive symbols.  The
+\emph{well-formed formulas} (wffs) and their types are given by three rules
+\cite[\S2, p.~57]{Church1940}:
+\begin{enumerate}
+ \item a single proper symbol is a wff whose type is its subscript;
+ \item if \(\mathbf x_\beta\) is a variable and \(\mathbf M_\alpha\) is a
+       wff of type \(\alpha\), then \((\lambda\mathbf x_\beta\mathbf M_\alpha)\)
+       is a wff of type \(\alpha\beta\);
+ \item if \(\mathbf F_{\alpha\beta}\) and \(\mathbf A_\beta\) are wffs of
+       types \(\alpha\beta\) and \(\beta\), then
+       \((\mathbf F_{\alpha\beta}\mathbf A_\beta)\) is a wff of type \(\alpha\).
+\end{enumerate}
+The wffs are the least class closed under these rules, and each wff has a
+unique type.  An occurrence of \(\mathbf x_\beta\) is \emph{bound} if it lies
+in a well-formed part of the form \((\lambda\mathbf x_\beta\mathbf M)\), and
+\emph{free} otherwise.  Bold capitals are syntactic variables for wffs and
+bold lower-case letters syntactic variables for variables, the subscript
+giving the type \cite[\S2, pp.~57--58]{Church1940}.
+
+Parentheses are omitted where no ambiguity results, restoring them by
+well-formedness and otherwise by association to the left; a type subscript
+\(o\) may be omitted, so an italic letter without subscript has type \(o\)
+\cite[\S2, p.~58]{Church1940}.
+\index{simple theory of types!Church's well-formed formulas}
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p02-w02-p02-040-church-abbrev}{Church's abbreviations}
+The following conventions of abbreviation are fixed, the arrow being read
+``stands for'' \cite[\S2, p.~58]{Church1940}:
+\[
+\begin{array}{r@{\ \longrightarrow\ }l}
+ [\sim\mathbf A_o] & N_{oo}\mathbf A_o,\\
+ {}[\mathbf A_o\vee\mathbf B_o] & A_{ooo}\mathbf A_o\mathbf B_o,\\
+ {}[\mathbf A_o\mathbf B_o] & [\sim[[\sim\mathbf A_o]\vee[\sim\mathbf B_o]]],\\
+ {}[\mathbf A_o\supset\mathbf B_o] & [[\sim\mathbf A_o]\vee\mathbf B_o],\\
+ {}[\mathbf A_o\equiv\mathbf B_o] & [[\mathbf A_o\supset\mathbf B_o][\mathbf B_o\supset\mathbf A_o]],\\
+ {}[(\mathbf x_\alpha)\mathbf A_o] & \Pi_{o(o\alpha)}(\lambda\mathbf x_\alpha\mathbf A_o),\\
+ {}[(\exists\mathbf x_\alpha)\mathbf A_o] & [\sim[(\mathbf x_\alpha)[\sim\mathbf A_o]]],\\
+ {}[(\text{\rotatebox[origin=c]{180}{\(\iota\)}}\mathbf x_\alpha)\mathbf A_o] & \iota_{\alpha(o\alpha)}(\lambda\mathbf x_\alpha\mathbf A_o),\\
+ Q_{o\alpha\alpha} & \lambda x_\alpha\lambda y_\alpha[(f_{o\alpha})[f_{o\alpha}x_\alpha\supset f_{o\alpha}y_\alpha]],\\
+ {}[\mathbf A_\alpha=\mathbf B_\alpha] & Q_{o\alpha\alpha}\mathbf A_\alpha\mathbf B_\alpha,\\
+ {}[\mathbf A_\alpha\neq\mathbf B_\alpha] & [\sim[\mathbf A_\alpha=\mathbf B_\alpha]],\\
+ I_{\alpha\alpha} & \lambda x_\alpha x_\alpha,\\
+ K_{\alpha\beta\alpha} & \lambda x_\alpha\lambda y_\beta x_\alpha,\\
+ 0_{\alpha'} & \lambda f_{\alpha\alpha}\lambda x_\alpha x_\alpha,\\
+ 1_{\alpha'} & \lambda f_{\alpha\alpha}\lambda x_\alpha(f_{\alpha\alpha}x_\alpha),\\
+ 2_{\alpha'} & \lambda f_{\alpha\alpha}\lambda x_\alpha(f_{\alpha\alpha}(f_{\alpha\alpha}x_\alpha)),\\
+ 3_{\alpha'} & \lambda f_{\alpha\alpha}\lambda x_\alpha(f_{\alpha\alpha}(f_{\alpha\alpha}(f_{\alpha\alpha}x_\alpha))),\ \text{etc.},\\
+ S_{\alpha'\alpha'} & \lambda n_{\alpha'}\lambda f_{\alpha\alpha}\lambda x_\alpha(f_{\alpha\alpha}(n_{\alpha'}f_{\alpha\alpha}x_\alpha)),\\
+ N_{o\alpha'} & \lambda n_{\alpha'}[(f_{o\alpha'})[f_{o\alpha'}0_{\alpha'}\supset[[(x_{\alpha'})[f_{o\alpha'}x_{\alpha'}\supset f_{o\alpha'}(S_{\alpha'\alpha'}x_{\alpha'})]]\supset f_{o\alpha'}n_{\alpha'}]]],\\
+ \omega_{\alpha''\alpha'\alpha'} & \lambda y_{\alpha'}\lambda z_{\alpha'}\lambda f_{\alpha'\alpha'}\lambda g_{\alpha'}\lambda h_{\alpha\alpha}\lambda x_\alpha(y_{\alpha'}(f_{\alpha'\alpha'}g_{\alpha'}h_{\alpha\alpha})(z_{\alpha'}(g_{\alpha'}h_{\alpha\alpha})x_\alpha)),\\
+ \langle\mathbf A_{\alpha'},\mathbf B_{\alpha'}\rangle & \omega_{\alpha''\alpha'\alpha'}\mathbf A_{\alpha'}\mathbf B_{\alpha'},\\
+ P_{\alpha'\alpha'''} & \lambda n_{\alpha'''}(n_{\alpha'''}(\lambda p_{\alpha''}\langle S_{\alpha'\alpha'}(p_{\alpha''}(K_{\alpha'\alpha'\alpha'}I_{\alpha'})0_{\alpha'}),\\
+ \multicolumn{2}{r}{p_{\alpha''}(K_{\alpha'\alpha'\alpha'}I_{\alpha'})0_{\alpha'}\rangle)\langle0_{\alpha'},0_{\alpha'}\rangle(K_{\alpha'\alpha'\alpha'}0_{\alpha'})I_{\alpha'}),}\\
+ T_{\alpha''\alpha'} & \lambda x_{\alpha'}[(\text{\rotatebox[origin=c]{180}{\(\iota\)}}x_{\alpha''})[(N_{o\alpha''}x_{\alpha''})[x_{\alpha''}S_{\alpha'\alpha'}0_{\alpha'}=x_{\alpha'}]]],\\
+ P_{\alpha'\alpha'} & \lambda x_{\alpha'}(P_{\alpha'\alpha'''}(T_{\alpha'''\alpha''}(T_{\alpha''\alpha'}x_{\alpha'}))).
+\end{array}
+\]
+Square brackets introduced by these abbreviations may be omitted when no
+ambiguity results.  A bold dot replacing an omitted opening bracket extends
+its scope as far forward as well-formedness permits; otherwise brackets are
+restored by association to the left, subject to a precedence among bracket
+kinds: those of \([\sim\mathbf A_o]\) and \([\mathbf A_o\mathbf B_o]\) have the
+lowest rank, then those of the quantifier, description, \(=\) and \(\neq\)
+forms, then those of \(\vee\), and those of \(\supset\) and \(\equiv\) have
+the highest rank; lower-ranked brackets receive the smaller scope
+\cite[\S2, pp.~58--59]{Church1940}.  Every abbreviation is eliminable, so
+statements about wffs apply to the formulas they abbreviate.  In
+particular \(=\) is not primitive: \([\mathbf A_\alpha=\mathbf B_\alpha]\)
+says that every propositional function true of \(\mathbf A_\alpha\) is true
+of \(\mathbf B_\alpha\).
+\index{simple theory of types!Church's abbreviations}
+\end{hbdefinition}
+
+The intended interpretation is given in words only
+\cite[\S2, p.~59]{Church1940}: \(\lambda\) is abstraction, juxtaposition is
+application, \(N_{oo}\) is negation, \(A_{ooo}\) disjunction,
+\(\Pi_{o(o\alpha)}\) the universal quantifier taken as a propositional
+function of propositional functions, and \(\iota_{\alpha(o\alpha)}\) a
+selection operator.  In each type \(\alpha'\) the formulas
+\(0_{\alpha'},1_{\alpha'},2_{\alpha'},\ldots\) are meant to denote the
+natural numbers, \(S_{\alpha'\alpha'}\) a function on all of \(\alpha'\)
+that acts as successor on natural numbers, and \(N_{o\alpha'}\) the property
+of being a natural number of type \(\alpha'\).  The formula
+\(T_{\alpha''\alpha'}\) carries a natural number of type \(\alpha'\) to the
+corresponding one of type \(\alpha''\); \(P_{\alpha'\alpha'''}\), adapted from
+Kleene, yields the predecessor of a number of type \(\alpha'''\) in type
+\(\alpha'\); and \(P_{\alpha'\alpha'}\) is the predecessor within one type.
+The source records that this same-type predecessor cannot be defined
+without the selection operator, deriving this from the independence of the
+axiom of infinity, which in its \S4 is Axioms~7 and~8 taken together
+\cite[\S2, p.~59; \S4, p.~61]{Church1940}; the claim is reported without
+proof (\cref{def:p02-w02-p02-041-church-predecessor}).  The source deliberately leaves the nature of
+the types \(o\) and \(\iota\) open and admits other interpretations
+\cite[\S1, p.~57]{Church1940}.
+
+\subsection{Rules of inference and axioms}
+
+\begin{hbdefinition}{def:p02-w02-p02-040-church-rules}{Church's rules of inference}
+The rules of inference are the following six \cite[\S3, p.~60]{Church1940}.
+\begin{enumerate}
+ \item[I.] (Alphabetic change of a bound variable.)  If
+   \(\mathbf x_\beta\) has no free occurrence in a part \(\mathbf M_\alpha\) and
+   \(\mathbf y_\beta\) has no occurrence in it, that part may be replaced by
+   the formula obtained from \(\mathbf M_\alpha\) by writing
+   \(\mathbf y_\beta\) at every occurrence of \(\mathbf x_\beta\).
+ \item[II.] (Reduction.)  A part
+   \(((\lambda\mathbf x_\beta\mathbf M_\alpha)\mathbf N_\beta)\) may be replaced
+   by the formula obtained from \(\mathbf M_\alpha\) by writing
+   \(\mathbf N_\beta\) at every occurrence of \(\mathbf x_\beta\), on the
+   condition that no bound variable of \(\mathbf M_\alpha\) is
+   \(\mathbf x_\beta\) or a free variable of \(\mathbf N_\beta\).
+ \item[III.] (Expansion.)  The converse of II: if \(\mathbf A_\alpha\) is
+   obtained from \(\mathbf M_\alpha\) by writing \(\mathbf N_\beta\) at every
+   occurrence of \(\mathbf x_\beta\), a part \(\mathbf A_\alpha\) may be
+   replaced by \(((\lambda\mathbf x_\beta\mathbf M_\alpha)\mathbf N_\beta)\),
+   on the same condition.
+ \item[IV.] From \(\mathbf F_{o\alpha}\mathbf x_\alpha\) infer
+   \(\mathbf F_{o\alpha}\mathbf A_\alpha\), provided \(\mathbf x_\alpha\) is not
+   a free variable of \(\mathbf F_{o\alpha}\).
+ \item[V.] From \(\mathbf A_o\supset\mathbf B_o\) and \(\mathbf A_o\) infer
+   \(\mathbf B_o\).
+ \item[VI.] From \(\mathbf F_{o\alpha}\mathbf x_\alpha\) infer
+   \(\Pi_{o(o\alpha)}\mathbf F_{o\alpha}\), provided \(\mathbf x_\alpha\) is
+   not a free variable of \(\mathbf F_{o\alpha}\).
+\end{enumerate}
+A \emph{part} of a formula is a consecutive well-formed part other than a
+variable immediately following an occurrence of \(\lambda\); when a part
+occurs several times, any one occurrence may be replaced; and substituting
+for a variable that does not occur leaves the formula unchanged
+\cite[\S3, p.~60]{Church1940}.  Rules I--III are the rules of
+\emph{\(\lambda\)-conversion}; a chain of their applications is a
+\emph{conversion}.  Rule IV is \emph{substitution}, V \emph{modus ponens},
+and VI \emph{generalization}.  The source states two derived rules
+\cite[\S3, p.~60]{Church1940}:
+\begin{enumerate}
+ \item[IV\('\).] From \(\mathbf M_o\), infer the formula obtained by putting
+   \(\mathbf A_\alpha\) in place of each free occurrence of
+   \(\mathbf x_\alpha\), on the condition that no bound variable of
+   \(\mathbf M_o\) other than \(\mathbf x_\alpha\) is free in
+   \(\mathbf A_\alpha\).
+ \item[VI\('\).] From \(\mathbf M_o\) infer \((\mathbf x_\alpha)\mathbf M_o\).
+\end{enumerate}
+The source obtains IV\('\) from conversion and IV, and VI\('\) from
+conversion and VI.  Here is that reduction.  For IV\('\), choose by Rule~I a
+variant of \(\mathbf M_o\) whose bound variables avoid \(\mathbf x_\alpha\);
+Rule~III turns \(\mathbf M_o\) into
+\((\lambda\mathbf x_\alpha\mathbf M_o)\mathbf x_\alpha\), in which
+\(\mathbf x_\alpha\) is not free in the functor; IV gives
+\((\lambda\mathbf x_\alpha\mathbf M_o)\mathbf A_\alpha\); and II, whose
+proviso is the stated one, gives the substitution instance.  For VI\('\),
+Rule~III gives \((\lambda\mathbf x_\alpha\mathbf M_o)\mathbf x_\alpha\), VI
+gives \(\Pi_{o(o\alpha)}(\lambda\mathbf x_\alpha\mathbf M_o)\), which is
+\((\mathbf x_\alpha)\mathbf M_o\).
+\index{simple theory of types!Church's rules of inference}
+\index{lambda-conversion!in Church's type theory}
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p02-w02-p02-040-church-axioms}{Church's formal axioms}
+The formal axioms are all formulas of the following infinite list, one
+instance of each superscripted schema for every choice of the type symbols
+\(\alpha,\beta\) \cite[\S4, pp.~60--61]{Church1940}:
+\[
+\begin{array}{rl}
+ 1. & p\vee p\supset p.\\
+ 2. & p\supset p\vee q.\\
+ 3. & p\vee q\supset q\vee p.\\
+ 4. & p\supset q\supset.\,r\vee p\supset r\vee q.\\
+ 5^\alpha. & \Pi_{o(o\alpha)}f_{o\alpha}\supset f_{o\alpha}x_\alpha.\\
+ 6^\alpha. & (x_\alpha)[p\vee f_{o\alpha}x_\alpha]\supset p\vee\Pi_{o(o\alpha)}f_{o\alpha}.\\
+ 7. & (\exists x_\iota)(\exists y_\iota)\,.\,x_\iota\neq y_\iota.\\
+ 8. & N_{o\iota'}x_{\iota'}\supset.\,N_{o\iota'}y_{\iota'}\supset.\,S_{\iota'\iota'}x_{\iota'}=S_{\iota'\iota'}y_{\iota'}\supset x_{\iota'}=y_{\iota'}.\\
+ 9^\alpha. & f_{o\alpha}x_\alpha\supset.\,(y_\alpha)[f_{o\alpha}y_\alpha\supset x_\alpha=y_\alpha]\supset f_{o\alpha}(\iota_{\alpha(o\alpha)}f_{o\alpha}).\\
+ 10^{\alpha\beta}. & (x_\beta)[f_{\alpha\beta}x_\beta=g_{\alpha\beta}x_\beta]\supset f_{\alpha\beta}=g_{\alpha\beta}.\\
+ 11^\alpha. & f_{o\alpha}x_\alpha\supset f_{o\alpha}(\iota_{\alpha(o\alpha)}f_{o\alpha}).
+\end{array}
+\]
+The \emph{theorems} are the formulas obtainable from the axioms by finitely
+many applications of the rules; a \emph{proof} is a finite sequence each of
+whose members is an axiom or follows from earlier members by a rule
+\cite[\S4, p.~61]{Church1940}.  A \emph{variant} of an axiom is a formula
+obtained from it by alphabetic changes of free and bound variables that
+keep types, keep equal variables equal and different variables different;
+variants are theorems by Rules I and IV\('\) \cite[\S5, p.~62]{Church1940}.
+
+A \emph{proof of \(\mathbf B_o\) on the assumptions
+\(\mathbf A^1_o,\ldots,\mathbf A^n_o\)} is a finite sequence ending in
+\(\mathbf B_o\) each member of which is an assumption, a variant of an axiom,
+or obtained from earlier members by a rule, subject to the condition that
+no variable free in any assumption is substituted for (Rule IV) or
+generalized upon (Rule VI).  Its existence is written
+\(\mathbf A^1_o,\ldots,\mathbf A^n_o\derives\mathbf B_o\); for \(n=0\),
+\(\derives\mathbf B_o\) says that \(\mathbf B_o\) is a theorem
+\cite[\S5, p.~62]{Church1940}.
+\index{simple theory of types!Church's axioms}
+\index{axiom of choice!Church's type theory}
+\index{extensionality!Church's type theory}
+\index{descriptions!Church's type theory}
+\end{hbdefinition}
+
+The source assigns the axioms their roles \cite[\S4, pp.~61--62]{Church1940}:
+Axioms~1--4 suffice for the propositional calculus, and Axioms~1--6\(^\alpha\)
+for the logical functional calculus; Axioms~7 and~8 together act as an axiom
+of infinity, and with 9\(^\alpha\) (axioms of \emph{descriptions}) they yield
+elementary number theory; 10\(^{\alpha\beta}\) (\emph{extensionality} for
+functions) and 11\(^\alpha\) (\emph{choice}) are needed for classical
+analysis.  The source qualifies every such necessity claim in its n.~8:
+contextual definitions, such as Russell's treatment of classes and
+descriptions, are deliberately not used, and ``necessary'' is to be read
+relative to that exclusion \cite[\S4, p.~61, n.~8]{Church1940}.
+
+Descriptions are kept although 9\(^\alpha\) follows from Axioms 1--4 and
+11\(^\alpha\) (\cref{thm:p02-w02-p02-040-church-9-from-11}), so that the
+consequences of 1--9\(^\alpha\) without 10 and 11 can be studied
+\cite[\S4, pp.~61--62]{Church1940}.  The source states that when 1--9\(^\alpha\)
+are the only axioms, each 9\(^\alpha\) is independent
+\cite[\S4, p.~62]{Church1940}; \cref{thm:p02-w02-p02-040-church-selection}
+proves this.  It also observes that once 10\(^{\alpha\beta}\) is present,
+only \(\iota_{o(oo)}\) and \(\iota_{\iota(o\iota)}\) need be primitive, the
+higher selection constants being introduced as abbreviations by the schema
+\[
+ \iota_{\alpha\beta(o(\alpha\beta))}\longrightarrow
+ \lambda h_{o(\alpha\beta)}\lambda x_\beta
+ (\text{\rotatebox[origin=c]{180}{\(\iota\)}}y_\alpha)(\exists f_{\alpha\beta})\,.\,
+ h_{o(\alpha\beta)}f_{\alpha\beta}\,.\,y_\alpha=f_{\alpha\beta}x_\beta,
+\]
+in such a way that the formulas 9\(^\alpha\), read through these
+abbreviations, become theorems of Axioms 1--8, 9\(^o\), 9\(^\iota\) and
+10\(^{\alpha\beta}\) \cite[\S4, p.~62]{Church1940}.  The source gives no proof;
+\cref{thm:p02-w02-p02-040-church-selection} supplies one.
+
+Axiom 10\(^{\alpha\beta}\) is weaker in some directions than other
+extensionality axioms, and the source argues that it is adequate because a
+class can be represented by a function into the numerals of type
+\(\iota'\): the class associated with the propositional function denoted by
+\(\mathbf F_{o\alpha}\) is denoted by
+\[
+ \lambda x_\alpha(\text{\rotatebox[origin=c]{180}{\(\iota\)}}y_{\iota'})\,.\,
+ (\mathbf F_{o\alpha}x_\alpha)[y_{\iota'}=0_{\iota'}]\vee
+ (\sim\mathbf F_{o\alpha}x_\alpha)[y_{\iota'}=1_{\iota'}]
+\]
+\cite[\S4, p.~61]{Church1940}, the juxtapositions inside the scope of the
+description being conjunctions.  The source also considers the further
+extensionality axiom \(p\equiv q\supset p=q\): it would leave only two
+propositions and, together with 10\(^{\alpha\beta}\), would allow classes to
+be identified with propositional functions \cite[\S4, p.~61]{Church1940}.
+
+\begin{hbconvention}{def:p02-w02-p02-040-church-prop}{The propositional input (P)}
+The source does not derive the theorems of the propositional calculus from
+Axioms~1--4: it states that their derivation by Rules IV\('\) and V is
+known and refers to Hilbert and Ackermann and to Bernays
+\cite[\S5, p.~62 and n.~9]{Church1940}.  The derivations below use the
+following fact, called \emph{(P)}: every substitution instance, by
+wffs of type \(o\), of a classical propositional tautology in
+\(\sim,\vee\) is a theorem.  The source's reference is recorded here; the
+handbook does not rely on it, because
+\cref{thm:p02-w02-p02-040-church-prop-complete} proves (P) from Axioms~1--4
+by Rules I, IV\('\) and V.
+\end{hbconvention}
+
+\begin{hbtheorem}{thm:p02-w02-p02-040-church-prop-complete}{proved=annex:p02-w02-p02-040-church-prop-complete}{Axioms 1--4 yield every tautology instance}
+Let \(\tau(p_1,\ldots,p_k)\) be a formula built from distinct variables
+\(p_1,\ldots,p_k\) of type \(o\) by \(\sim\) and \(\vee\) alone (with
+\(\supset\) read as its abbreviation), and suppose \(\tau\) takes the value
+true under every assignment of truth values to \(p_1,\ldots,p_k\).  Then for
+all wffs \(\mathbf B^1_o,\ldots,\mathbf B^k_o\),
+\(\derives\tau(\mathbf B^1_o,\ldots,\mathbf B^k_o)\), by a proof whose axioms
+are variants of Axioms~1--4 and whose rules are I, IV\('\) and V.
+\end{hbtheorem}
+
+\subsection{Selected derivations}
+
+The source states theorems 12\(^\alpha\)--20\(^\alpha\) and
+22\(^\alpha\)--24\(^\alpha\) as consequences of Axioms 1--6\(^\alpha\) and
+leaves their proofs to the reader \cite[\S5, p.~63; \S6, p.~64]{Church1940};
+the annex supplies them.
+
+\begin{hbtheorem}{thm:p02-w02-p02-040-church-deduction}{proved=annex:p02-w02-p02-040-church-deduction}{Deduction theorem (Church's VII)}
+If \(\mathbf A^1_o,\ldots,\mathbf A^n_o\derives\mathbf B_o\), then
+\(\mathbf A^1_o,\ldots,\mathbf A^{n-1}_o\derives\mathbf A^n_o\supset\mathbf B_o\),
+for \(n=1,2,3,\ldots\) \cite[\S5, pp.~62--63]{Church1940}.
+\end{hbtheorem}
+
+\begin{hblemma}{thm:p02-w02-p02-040-church-12-21}{proved=annex:p02-w02-p02-040-church-12-21}{Quantifier and equality theorems 12--21}
+For every type \(\alpha\) (and \(\beta\) where it occurs) the following are
+theorems; 12--20 use only Axioms 1--6\(^\alpha\), and 21 uses only
+Axioms 1--4 and 10\(^{\alpha\beta}\) \cite[\S5, p.~63]{Church1940}:
+\[
+\begin{array}{rl}
+ 12^\alpha. & (x_\alpha)f_{o\alpha}x_\alpha\supset f_{o\alpha}y_\alpha.\\
+ 13^\alpha. & f_{o\alpha}y_\alpha\supset(\exists x_\alpha)f_{o\alpha}x_\alpha.\\
+ 14^\alpha. & (x_\alpha)[p\supset f_{o\alpha}x_\alpha]\supset.\,p\supset(x_\alpha)f_{o\alpha}x_\alpha.\\
+ 15^\alpha. & (x_\alpha)[f_{o\alpha}x_\alpha\supset p]\supset.\,(\exists x_\alpha)f_{o\alpha}x_\alpha\supset p.\\
+ 16^\alpha. & x_\alpha=x_\alpha.\\
+ 17^\alpha. & x_\alpha=y_\alpha\supset.\,f_{o\alpha}x_\alpha\supset f_{o\alpha}y_\alpha.\\
+ 18^{\beta\alpha}. & x_\alpha=y_\alpha\supset f_{\beta\alpha}x_\alpha=f_{\beta\alpha}y_\alpha.\\
+ 19^\alpha. & x_\alpha=y_\alpha\supset y_\alpha=x_\alpha.\\
+ 20^\alpha. & x_\alpha=y_\alpha\supset.\,y_\alpha=z_\alpha\supset x_\alpha=z_\alpha.\\
+ 21^{\alpha\beta}. & f_{\alpha\beta}=\lambda x_\beta(f_{\alpha\beta}x_\beta).
+\end{array}
+\]
+\end{hblemma}
+
+Theorem 21\(^{\alpha\beta}\) is the \(\eta\)-equation.  It is not a rule of
+conversion in this system: Rules I--III are \(\alpha\)- and
+\(\beta\)-conversion only, and the \(\eta\)-equation is obtained as a
+theorem from extensionality.
+
+\begin{hbtheorem}{thm:p02-w02-p02-040-church-comprehension}{proved=annex:p02-w02-p02-040-church-comprehension}{Comprehension by abstraction}
+Let \(\mathbf A_o\) be any wff and \(\mathbf f_{o\alpha}\) a variable not
+free in \(\mathbf A_o\).  Then, using only Axioms 1--6\(^\alpha\) and the
+rules,
+\[
+ \derives(\exists\mathbf f_{o\alpha})(\mathbf x_\alpha)
+ [\mathbf f_{o\alpha}\mathbf x_\alpha\equiv\mathbf A_o].
+\]
+The witness is the abstract \(\lambda\mathbf x_\alpha\mathbf A_o\), and
+\(\mathbf A_o\) may contain quantifiers of any type, so the comprehension
+obtained is impredicative.
+\end{hbtheorem}
+
+This theorem is not numbered in the source; it records how the source's
+system supplies the comprehension that the relational calculus of
+\cref{def:p02-sol-derived-calculus} postulates as the schema family \(\mathsf{Comp}^n_\chi\) of \cref{def:p02-sol-matched-henkin}.  The source likewise introduces
+classes through abstracts, representing the class of \(F_{o\alpha}\) by an
+abstract with values among the numerals \(0_{\iota'}\) and \(1_{\iota'}\)
+\cite[\S4, p.~61]{Church1940}.
+
+\begin{hbtheorem}{thm:p02-w02-p02-040-church-induction}{proved=annex:p02-w02-p02-040-church-induction}{Peano theorems 22--24 and the induction theorem (Church's VIII)}
+For every type \(\alpha\), using only Axioms 1--6\(^\alpha\),
+\[
+\begin{array}{rl}
+ 22^\alpha. & N_{o\alpha'}0_{\alpha'}.\\
+ 23^\alpha. & N_{o\alpha'}x_{\alpha'}\supset N_{o\alpha'}(S_{\alpha'\alpha'}x_{\alpha'}).\\
+ 24^\alpha. & f_{o\alpha'}0_{\alpha'}\supset.\,(x_{\alpha'})[N_{o\alpha'}x_{\alpha'}\supset.\,f_{o\alpha'}x_{\alpha'}\supset f_{o\alpha'}(S_{\alpha'\alpha'}x_{\alpha'})]\supset.\,N_{o\alpha'}x_{\alpha'}\supset f_{o\alpha'}x_{\alpha'}
+\end{array}
+\]
+are theorems \cite[\S6, p.~64]{Church1940}.  Moreover (VIII): if
+\(\mathbf x_{\alpha'}\) is not free in
+\(\mathbf A^1_o,\ldots,\mathbf A^n_o,\mathbf F_{o\alpha'}\), if
+\(\mathbf A^1_o,\ldots,\mathbf A^n_o\derives\mathbf F_{o\alpha'}0_{\alpha'}\), and if
+\(\mathbf A^1_o,\ldots,\mathbf A^n_o,N_{o\alpha'}\mathbf x_{\alpha'},
+\mathbf F_{o\alpha'}\mathbf x_{\alpha'}\derives
+\mathbf F_{o\alpha'}(S_{\alpha'\alpha'}\mathbf x_{\alpha'})\), then
+\(\mathbf A^1_o,\ldots,\mathbf A^n_o\derives
+N_{o\alpha'}\mathbf x_{\alpha'}\supset\mathbf F_{o\alpha'}\mathbf x_{\alpha'}\)
+\cite[\S6, p.~64]{Church1940}.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p02-w02-p02-040-church-27-29}{proved=annex:p02-w02-p02-040-church-27-29}{Theorems 27, 28, 25 and 29}
+For every type \(\alpha\) the following are theorems
+\cite[\S6, pp.~64--65]{Church1940}:
+\[
+\begin{array}{rl}
+ 27^\alpha. & (\exists x_\alpha)(\exists y_\alpha)\,.\,x_\alpha\neq y_\alpha.\\
+ 28^\alpha. & S_{\alpha'\alpha'}x_{\alpha'}\neq0_{\alpha'}.\\
+ 25^\alpha. & N_{o\alpha'}x_{\alpha'}\supset S_{\alpha'\alpha'}x_{\alpha'}\neq0_{\alpha'}.\\
+ 29^\alpha. & N_{o\alpha''}n_{\alpha''}\supset N_{o\alpha'}(n_{\alpha''}S_{\alpha'\alpha'}0_{\alpha'}).
+\end{array}
+\]
+Axiom~7 enters only as the case 27\(^\iota\); every other case uses only
+Axioms 1--6\(^\alpha\) together with the earlier cases.
+\end{hbtheorem}
+
+Theorem 27\(^\alpha\) is proved by induction on types: 27\(^o\) is derived
+from the propositional calculus with 17\(^o\) and 13\(^o\), 27\(^\iota\)
+is Axiom~7, and 27\(^{\alpha\beta}\) is derived from 27\(^\alpha\).
+The source's own route, followed in the annex, derives 28\(^\alpha\) from
+27\(^\alpha\) through the constant functions \(K_{\alpha\alpha\alpha}z_\alpha\)
+\cite[\S6, p.~65]{Church1940}.
+
+\subsection{The successor axiom at higher types: theorems 26 and 30}
+
+Theorem 26\(^\alpha\) (displayed in \cref{thm:p02-w02-p02-040-church-soundness})
+is the Peano postulate that successor is one-to-one on the natural numbers
+of type \(\alpha'\).  The source states that 26\(^\iota\) is Axiom~8 and that
+26\(^{\iota'}\), 26\(^{\iota''}\), \ldots{} are theorems, ``consequences of
+1--6\(^\alpha\) and 8'' \cite[\S6, p.~64]{Church1940}, and it proves this
+through a companion formula \cite[\S6, p.~66]{Church1940}:
+\[
+ 30^\alpha.\quad N_{o\alpha''}m_{\alpha''}\supset.\,N_{o\alpha''}n_{\alpha''}\supset.\,
+ m_{\alpha''}S_{\alpha'\alpha'}0_{\alpha'}=n_{\alpha''}S_{\alpha'\alpha'}0_{\alpha'}
+ \supset m_{\alpha''}=n_{\alpha''}.
+\]
+Read through \(T_{\alpha''\alpha'}\), the formula
+\(m_{\alpha''}S_{\alpha'\alpha'}0_{\alpha'}\) is the number of type \(\alpha'\)
+corresponding to the number \(m_{\alpha''}\), so 30\(^\alpha\) says that this
+correspondence is one-to-one.  As with 26\(^\alpha\), not every 30\(^\alpha\)
+is a theorem \cite[\S6, p.~66]{Church1940};
+\cref{thm:p02-w02-p02-041-church-30} proves that 30\(^o\) is not a theorem.
+
+\begin{hbtheorem}{thm:p02-w02-p02-040-church-26-30}{proved=annex:p02-w02-p02-040-church-26-30}{Theorems 26 and 30 for the types \(\iota,\iota',\iota'',\ldots\)}
+For every type symbol \(\alpha\) \cite[\S6, pp.~66--67]{Church1940}:
+\begin{enumerate}
+ \item if \(\derives26^\alpha\) then \(\derives30^\alpha\);
+ \item if \(\derives26^\alpha\) and \(\derives30^\alpha\) then
+   \(\derives26^{\alpha'}\).
+\end{enumerate}
+Consequently 26\(^\alpha\) and 30\(^\alpha\) are theorems for
+\(\alpha=\iota,\iota',\iota'',\ldots\).  The derivations written in the annex
+use Axioms~1--8 only.
+\end{hbtheorem}
+
+The source's footnote 12 attaches three qualifications to these results
+\cite[\S6, p.~66, n.~12]{Church1940}.  First, it raises the question whether
+30\(^\iota\) could replace Axiom~8 as the second half of the axiom of infinity.
+Second, it reports two partial answers, neither proved in the paper: the
+author has a proof, using properties of \(P_{\iota'\iota'''}\), that 30\(^\iota\)
+and 30\(^{\iota'}\) together can replace Axiom~8 in the presence of
+1--6\(^\alpha\); and A.~M.~Turing has a proof that, in the presence of 1--7 and
+9\(^\alpha\), 30\(^\iota\) alone can replace it.  Third, whether Axiom~8 is
+independent of 1--7 together with 30\(^\iota\) is recorded as open, the usual
+methods of eliminating descriptions not applying.  The handbook proves none
+of these three statements.
+
+\begin{hbwarning}{def:p02-w02-p02-040-church-26-axiom-7}{Which axioms the derivation of 26 uses}
+The source's proof of clause~1 uses 28\(^\alpha\)
+\cite[\S6, pp.~66--67]{Church1940}, and for \(\alpha=\iota,\iota',\ldots\)
+the derivation of 28\(^\alpha\) in \cref{thm:p02-w02-p02-040-church-27-29}
+passes through 27\(^\iota\), which is Axiom~7.  So the derivation of
+26\(^{\iota'}\), 26\(^{\iota''}\), \ldots{} written here, which follows the
+source's, uses Axioms~1--8, not only 1--6\(^\alpha\) and 8 as the source's
+announcement on p.~64 says.  Whether Axiom~7 can be removed from it is not
+settled here.  Axiom~7 is not removable by an interpretation with one
+individual: there every type has one member, so 26\(^\alpha\) holds at every
+type.
+\end{hbwarning}
+
+\subsection{Properties of \(T_{\alpha''\alpha'}\): theorems 31--35}
+
+The formula \(T_{\alpha''\alpha'}\) of \cref{def:p02-w02-p02-040-church-abbrev}
+is defined by a description: \(T_{\alpha''\alpha'}x_{\alpha'}\) is the number
+\(x_{\alpha''}\) of type \(\alpha''\) with
+\(x_{\alpha''}S_{\alpha'\alpha'}0_{\alpha'}=x_{\alpha'}\).  Its expected
+properties need Axiom 9\(^{\alpha''}\) and, for uniqueness, 30\(^\alpha\);
+the existence half needs neither \cite[\S7, p.~67]{Church1940}.
+
+\begin{hbtheorem}{thm:p02-w02-p02-040-church-31-35}{proved=annex:p02-w02-p02-040-church-31-35}{Theorems 31--35 on \(T_{\alpha''\alpha'}\)}
+For every type \(\alpha\), using Axioms 1--6\(^\alpha\) only,
+\[
+ 33^\alpha.\quad N_{o\alpha'}x_{\alpha'}\supset(\exists x_{\alpha''})\,.\,
+ N_{o\alpha''}x_{\alpha''}\,.\,x_{\alpha''}S_{\alpha'\alpha'}0_{\alpha'}=x_{\alpha'}
+\]
+is a theorem.  If \(\alpha\) is a type for which \(\derives30^\alpha\), then,
+using in addition Axiom 9\(^{\alpha''}\), the following are theorems
+\cite[\S7, pp.~67--68]{Church1940}:
+\[
+\begin{array}{rl}
+ 31^\alpha. & N_{o\alpha'}x_{\alpha'}\supset N_{o\alpha''}(T_{\alpha''\alpha'}x_{\alpha'}).\\
+ 32^\alpha. & N_{o\alpha'}x_{\alpha'}\supset T_{\alpha''\alpha'}x_{\alpha'}S_{\alpha'\alpha'}0_{\alpha'}=x_{\alpha'}.\\
+ 34^\alpha. & N_{o\alpha'}x_{\alpha'}\supset T_{\alpha''\alpha'}(S_{\alpha'\alpha'}x_{\alpha'})=S_{\alpha''\alpha''}(T_{\alpha''\alpha'}x_{\alpha'}).\\
+ 35^\alpha. & T_{\alpha''\alpha'}0_{\alpha'}=0_{\alpha''}.
+\end{array}
+\]
+\end{hbtheorem}
+
+\subsection{Definition by primitive recursion: theorems 36--43}
+
+The source formalizes definition by primitive recursion as follows
+\cite[\S8, p.~68]{Church1940}: given \(\mathbf A_{\alpha'}\) and
+\(\mathbf B_{\alpha'\alpha'\alpha'}\), find \(\mathbf F_{\alpha'\alpha'}\) such
+that, with \(\mathbf x_{\alpha'}\) not free in \(\mathbf A_{\alpha'}\),
+\(\mathbf B_{\alpha'\alpha'\alpha'}\) or \(\mathbf F_{\alpha'\alpha'}\),
+\[
+ \derives\mathbf F_{\alpha'\alpha'}0_{\alpha'}=\mathbf A_{\alpha'},\qquad
+ \derives N_{o\alpha'}\mathbf x_{\alpha'}\supset
+ \mathbf F_{\alpha'\alpha'}(S_{\alpha'\alpha'}\mathbf x_{\alpha'})=
+ \mathbf B_{\alpha'\alpha'\alpha'}\mathbf x_{\alpha'}(\mathbf F_{\alpha'\alpha'}\mathbf x_{\alpha'}).
+\]
+
+\begin{hbdefinition}{def:p02-w02-p02-040-church-recursor}{Church's primitive-recursion formula}
+For \(\mathbf A_{\alpha'}\) and \(\mathbf B_{\alpha'\alpha'\alpha'}\) in which
+\(x_{\alpha'}\) and \(y_{\alpha''}\) are not free, the source takes
+\(\mathbf F_{\alpha'\alpha'}\) to be \cite[\S8, p.~68]{Church1940}
+\[
+\begin{aligned}
+ \lambda x_{\alpha'}\,.\,T_{\alpha'''\alpha''}(T_{\alpha''\alpha'}x_{\alpha'})
+ (\lambda y_{\alpha''}\langle S_{\alpha'\alpha'}(y_{\alpha''}(K_{\alpha'\alpha'\alpha'}I_{\alpha'})0_{\alpha'}),\,
+ &\mathbf B_{\alpha'\alpha'\alpha'}(y_{\alpha''}(K_{\alpha'\alpha'\alpha'}I_{\alpha'})0_{\alpha'})
+ (y_{\alpha''}(K_{\alpha'\alpha'\alpha'}0_{\alpha'})I_{\alpha'})\rangle)\\
+ &\langle0_{\alpha'},\mathbf A_{\alpha'}\rangle(K_{\alpha'\alpha'\alpha'}0_{\alpha'})I_{\alpha'}.
+\end{aligned}
+\]
+Here \(I_{\alpha'}\) is the identity abbreviation \(I_{\gamma\gamma}\) with
+\(\gamma=\alpha\alpha\), a wff of type \(\alpha'\).  A pair
+\(\langle\mathbf M_{\alpha'},\mathbf N_{\alpha'}\rangle\) has type \(\alpha''\);
+applied to \(K_{\alpha'\alpha'\alpha'}I_{\alpha'}\) and \(0_{\alpha'}\) it yields
+its first component, and applied to \(K_{\alpha'\alpha'\alpha'}0_{\alpha'}\) and
+\(I_{\alpha'}\) its second (theorems 37 and 38).  The formula iterates, a number
+of times read off from \(x_{\alpha'}\) at type \(\alpha'''\), the step that
+sends a pair (counter, value) to (successor of counter, \(\mathbf B\) of
+both), starting from \(\langle0_{\alpha'},\mathbf A_{\alpha'}\rangle\), and
+returns the second component.  The predecessor \(P_{\alpha'\alpha'}\) of
+\cref{def:p02-w02-p02-040-church-abbrev} is the case
+\(\mathbf A_{\alpha'}=0_{\alpha'}\), \(\mathbf B_{\alpha'\alpha'\alpha'}=K_{\alpha'\alpha'\alpha'}\),
+whose step returns the old counter \cite[\S8, p.~68]{Church1940}.
+\index{primitive recursion!in Church's type theory}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p02-w02-p02-040-church-36-43}{proved=annex:p02-w02-p02-040-church-36-43}{Theorems 36--43}
+For every type \(\alpha\), using Axioms 1--6\(^\alpha\) only, the following are
+theorems \cite[\S8, p.~68]{Church1940}:
+\[
+\begin{array}{rl}
+ 36^\alpha. & N_{o\alpha'}n_{\alpha'}\supset\lambda f_{\alpha\alpha}\lambda x_\alpha(n_{\alpha'}f_{\alpha\alpha}x_\alpha)=n_{\alpha'}.\\
+ 37^\alpha. & N_{o\alpha'}m_{\alpha'}\supset.\,N_{o\alpha'}n_{\alpha'}\supset\langle m_{\alpha'},n_{\alpha'}\rangle(K_{\alpha'\alpha'\alpha'}I_{\alpha'})0_{\alpha'}=m_{\alpha'}.\\
+ 38^\alpha. & N_{o\alpha'}m_{\alpha'}\supset.\,N_{o\alpha'}n_{\alpha'}\supset\langle m_{\alpha'},n_{\alpha'}\rangle(K_{\alpha'\alpha'\alpha'}0_{\alpha'})I_{\alpha'}=n_{\alpha'}.\\
+ 39^\alpha. & N_{o\alpha'''}n_{\alpha'''}\supset n_{\alpha'''}(\lambda p_{\alpha''}\langle S_{\alpha'\alpha'}(p_{\alpha''}(K_{\alpha'\alpha'\alpha'}I_{\alpha'})0_{\alpha'}),p_{\alpha''}(K_{\alpha'\alpha'\alpha'}I_{\alpha'})0_{\alpha'}\rangle)\\
+   & \qquad\langle0_{\alpha'},0_{\alpha'}\rangle(K_{\alpha'\alpha'\alpha'}I_{\alpha'})0_{\alpha'}
+   =n_{\alpha'''}S_{\alpha''\alpha''}0_{\alpha''}S_{\alpha'\alpha'}0_{\alpha'}.\\
+ 40^\alpha. & N_{o\alpha'''}n_{\alpha'''}\supset P_{\alpha'\alpha'''}(S_{\alpha'''\alpha'''}n_{\alpha'''})=n_{\alpha'''}S_{\alpha''\alpha''}0_{\alpha''}S_{\alpha'\alpha'}0_{\alpha'}.\\
+ 41^\alpha. & P_{\alpha'\alpha'''}0_{\alpha'''}=0_{\alpha'}.
+\end{array}
+\]
+If \(\derives30^\alpha\) and \(\derives30^{\alpha'}\), then, using in addition
+Axioms 9\(^{\alpha''}\) and 9\(^{\alpha'''}\), also
+\[
+\begin{array}{rl}
+ 42^\alpha. & P_{\alpha'\alpha'}0_{\alpha'}=0_{\alpha'}.\\
+ 43^\alpha. & N_{o\alpha'}n_{\alpha'}\supset P_{\alpha'\alpha'}(S_{\alpha'\alpha'}n_{\alpha'})=n_{\alpha'}.
+\end{array}
+\]
+\end{hbtheorem}
+
+The source states 36--43 with a parenthetical list of what each uses and no
+further proof; the annex writes each derivation out.  Theorem~36 is the
+\(\eta\)-equation restricted to natural numbers; it needs no extensionality
+axiom because every number is, up to conversion, an abstract
+\(\lambda f_{\alpha\alpha}\lambda x_\alpha(\cdots)\).
+
+\begin{hbtheorem}{thm:p02-w02-p02-040-church-recursion}{proved=annex:p02-w02-p02-040-church-recursion}{The recursion equations for Church's formula}
+Let \(\alpha\) be a type with \(\derives30^\alpha\) and \(\derives30^{\alpha'}\),
+let \(\mathbf F_{\alpha'\alpha'}\) be the formula of
+\cref{def:p02-w02-p02-040-church-recursor}, and let \(\mathbf x_{\alpha'}\) be
+a variable not free in \(\mathbf A_{\alpha'}\) or \(\mathbf B_{\alpha'\alpha'\alpha'}\).
+Suppose
+\[
+ \text{(H)}\qquad\derives N_{o\alpha'}\mathbf A_{\alpha'}\quad\text{and}\quad
+ \derives N_{o\alpha'}u_{\alpha'}\supset.\,N_{o\alpha'}v_{\alpha'}\supset
+ N_{o\alpha'}(\mathbf B_{\alpha'\alpha'\alpha'}u_{\alpha'}v_{\alpha'}),
+\]
+with \(u_{\alpha'},v_{\alpha'}\) not free in \(\mathbf B_{\alpha'\alpha'\alpha'}\).
+Then, using Axioms 1--6\(^\alpha\), 9\(^{\alpha''}\) and 9\(^{\alpha'''}\),
+\[
+ \derives\mathbf F_{\alpha'\alpha'}0_{\alpha'}=\mathbf A_{\alpha'},\qquad
+ \derives N_{o\alpha'}\mathbf x_{\alpha'}\supset
+ \mathbf F_{\alpha'\alpha'}(S_{\alpha'\alpha'}\mathbf x_{\alpha'})=
+ \mathbf B_{\alpha'\alpha'\alpha'}\mathbf x_{\alpha'}(\mathbf F_{\alpha'\alpha'}\mathbf x_{\alpha'}).
+\]
+\end{hbtheorem}
+
+\begin{hbwarning}{def:p02-w02-p02-040-church-recursion-hypothesis}{The recursion schema needs a hypothesis}
+The source asserts the two recursion equations for arbitrary
+\(\mathbf A_{\alpha'}\) and \(\mathbf B_{\alpha'\alpha'\alpha'}\)
+\cite[\S8, p.~68]{Church1940}.  For its formula they can fail without a
+hypothesis such as (H).  The first projection
+\(\langle\mathbf M,\mathbf N\rangle(K_{\alpha'\alpha'\alpha'}I_{\alpha'})0_{\alpha'}\)
+converts to \(\lambda h_{\alpha\alpha}\lambda x_\alpha(\mathbf M h_{\alpha\alpha}(\mathbf N I_{\alpha\alpha}x_\alpha))\),
+which returns \(\mathbf M\) only when \(\mathbf N I_{\alpha\alpha}x_\alpha\) behaves
+like \(x_\alpha\); a value of \(\mathbf B\) that is not a number can corrupt the
+counter.  The annex gives a standard model of
+\cref{def:p02-w02-p02-040-church-standard} in which, for
+\(\alpha=\iota\), \(\mathbf A_{\iota'}\) a closed formula denoting a constant
+functional and \(\mathbf B_{\iota'\iota'\iota'}=K_{\iota'\iota'\iota'}\), the
+second equation is false at \(\mathbf x_{\iota'}=0_{\iota'}\).  Since every
+theorem is valid there, that instance is not a theorem.
+\end{hbwarning}
+
+\begin{hbtheorem}{thm:p02-w02-p02-040-church-rosser}{proved=annex:p02-w02-p02-040-church-rosser}{Rosser's addition and multiplication}
+The source's n.~13 observes that the recursion formula involves
+descriptions through \(T_{\alpha'''\alpha''}\) and \(T_{\alpha''\alpha'}\), and
+that for addition and multiplication of non-negative integers the following
+definitions due to J.~B.~Rosser avoid them \cite[\S8, p.~68, n.~13]{Church1940}:
+\[
+\begin{array}{r@{\ \longrightarrow\ }l}
+ \mathfrak s_{\alpha'\alpha'\alpha'} & \lambda m_{\alpha'}\lambda n_{\alpha'}\lambda f_{\alpha\alpha}\lambda x_\alpha(m_{\alpha'}f_{\alpha\alpha}(n_{\alpha'}f_{\alpha\alpha}x_\alpha)),\\
+ \mathfrak B_{\alpha'\alpha'\alpha'} & \lambda m_{\alpha'}\lambda n_{\alpha'}\lambda f_{\alpha\alpha}(m_{\alpha'}(n_{\alpha'}f_{\alpha\alpha})),\\
+ {}[\mathbf A_{\alpha'}+\mathbf B_{\alpha'}] & \mathfrak s_{\alpha'\alpha'\alpha'}\mathbf A_{\alpha'}\mathbf B_{\alpha'},\\
+ {}[\mathbf A_{\alpha'}\times\mathbf B_{\alpha'}] & \mathfrak B_{\alpha'\alpha'\alpha'}\mathbf A_{\alpha'}\mathbf B_{\alpha'}.
+\end{array}
+\]
+For every type \(\alpha\), using Axioms 1--6\(^\alpha\) only, the following are
+theorems:
+\[
+\begin{array}{ll}
+ N_{o\alpha'}n_{\alpha'}\supset0_{\alpha'}+n_{\alpha'}=n_{\alpha'}, &
+ S_{\alpha'\alpha'}m_{\alpha'}+n_{\alpha'}=S_{\alpha'\alpha'}(m_{\alpha'}+n_{\alpha'}),\\
+ 0_{\alpha'}\times n_{\alpha'}=0_{\alpha'}, &
+ S_{\alpha'\alpha'}m_{\alpha'}\times n_{\alpha'}=n_{\alpha'}+(m_{\alpha'}\times n_{\alpha'}),\\
+ N_{o\alpha'}m_{\alpha'}\supset.\,N_{o\alpha'}n_{\alpha'}\supset N_{o\alpha'}(m_{\alpha'}+n_{\alpha'}), &
+ N_{o\alpha'}m_{\alpha'}\supset.\,N_{o\alpha'}n_{\alpha'}\supset N_{o\alpha'}(m_{\alpha'}\times n_{\alpha'}).
+\end{array}
+\]
+\end{hbtheorem}
+
+These are recursion equations in the first argument.  The source states the
+definitions only; the equations displayed are the handbook's justification
+that the abbreviations define addition and multiplication of natural numbers,
+and they hold at every type \(\alpha\), with no use of Axioms 7--11.
+
+\subsection{Interpretation, consistency and independence}
+
+\begin{hbdefinition}{def:p02-w02-p02-040-church-standard}{Standard interpretation of Church's system}
+Let \(D\) be a nonempty set.  Define sets \(\mathcal D_\gamma\) by recursion
+on type symbols: \(\mathcal D_\iota=D\), \(\mathcal D_o=\{\mathrm T,\mathrm F\}\)
+with \(\mathrm T\ne\mathrm F\), and \(\mathcal D_{\alpha\beta}\) the set of all
+functions from \(\mathcal D_\beta\) to \(\mathcal D_\alpha\).  Each
+\(\mathcal D_\gamma\) is nonempty.  Choose, for every type \(\alpha\), a
+function \(c_\alpha:\mathcal D_{o\alpha}\to\mathcal D_\alpha\) with
+\(g(c_\alpha(g))=\mathrm T\) whenever \(g(a)=\mathrm T\) for some
+\(a\in\mathcal D_\alpha\).  The \emph{standard model} \(\mathcal S(D,c)\)
+interprets \(N_{oo}\) as Boolean negation, \(A_{ooo}\) as the curried Boolean
+disjunction (\(A_{ooo}uv=\mathrm T\) iff \(u=\mathrm T\) or \(v=\mathrm T\)),
+\(\Pi_{o(o\alpha)}\) as the function sending \(g\in\mathcal D_{o\alpha}\) to
+\(\mathrm T\) iff \(g(a)=\mathrm T\) for all \(a\in\mathcal D_\alpha\), and
+\(\iota_{\alpha(o\alpha)}\) as \(c_\alpha\).  An assignment \(s\) maps each
+variable \(\mathbf x_\gamma\) into \(\mathcal D_\gamma\).  Denotation
+\(\sem{\mathbf M}_s\) is defined by
+\[
+ \sem{\mathbf x}_s=s(\mathbf x),\qquad
+ \sem{(\mathbf F\mathbf A)}_s=\sem{\mathbf F}_s(\sem{\mathbf A}_s),\qquad
+ \sem{(\lambda\mathbf x_\beta\mathbf M)}_s=
+ \bigl(a\mapsto\sem{\mathbf M}_{s[\mathbf x_\beta\mapsto a]}\bigr),
+\]
+with constants as above.  A wff \(\mathbf M_o\) is \emph{valid} in
+\(\mathcal S(D,c)\) iff \(\sem{\mathbf M_o}_s=\mathrm T\) for every \(s\).
+\index{simple theory of types!standard model}
+\end{hbdefinition}
+
+The choice of the family \((c_\alpha)\) uses the Axiom of Choice in the
+metatheory: one choice function on the nonempty subsets of each
+\(\mathcal D_\alpha\).  This formalizes the source's intended
+interpretation; the source itself proves no soundness or consistency
+theorem and states its non-theoremhood claims with ``consistency assumed''
+\cite[\S6, p.~64]{Church1940}.
+
+\begin{hbtheorem}{thm:p02-w02-p02-040-church-soundness}{proved=annex:p02-w02-p02-040-church-soundness}{Soundness, consistency and independence}
+Work in ZFC.
+\begin{enumerate}
+ \item In every standard model \(\mathcal S(D,c)\),
+   \([\mathbf A_\alpha=\mathbf B_\alpha]\) denotes \(\mathrm T\) under \(s\) iff
+   \(\sem{\mathbf A_\alpha}_s=\sem{\mathbf B_\alpha}_s\); Axioms 1--6\(^\alpha\),
+   9\(^\alpha\), 10\(^{\alpha\beta}\) and 11\(^\alpha\) are valid; Axiom~7 is
+   valid iff \(D\) has at least two members; Axiom~8 is valid if \(D\) is
+   infinite or has exactly one member, and is not valid if \(D\) is finite
+   with at least two members; and Rules I--VI carry formulas valid in
+   \(\mathcal S(D,c)\) to formulas valid in it.
+ \item Consequently, every theorem is valid in \(\mathcal S(\N,c)\), and
+   the system is consistent: the variable \(p\) is not a theorem.
+ \item Axiom~7 is not a theorem of the system whose axioms are all the
+   others, and Axiom~8 is not a theorem of the system whose axioms are all
+   the others \cite[\S4, p.~61]{Church1940}.
+ \item If \(\alpha\) is a type symbol in which \(\iota\) does not occur, then
+   \[
+    26^\alpha.\quad N_{o\alpha'}x_{\alpha'}\supset.\,N_{o\alpha'}y_{\alpha'}\supset.\,
+    S_{\alpha'\alpha'}x_{\alpha'}=S_{\alpha'\alpha'}y_{\alpha'}\supset x_{\alpha'}=y_{\alpha'}
+   \]
+   is not a theorem \cite[\S6, p.~64]{Church1940}.
+\end{enumerate}
+\end{hbtheorem}
+
+The source states clauses 3 and 4: the independence of Axiom~7 by an
+interpretation with exactly one individual, that of Axiom~8 by one with
+finitely many individuals, more than one, and the non-theoremhood of
+26\(^\alpha\) for types consisting entirely of \(o\)'s
+\cite[\S4, p.~61; \S6, p.~64]{Church1940}.  The annex carries out these
+interpretations in standard models.
+
+\subsection{Descriptions and the selection constants}
+
+\begin{hbtheorem}{thm:p02-w02-p02-040-church-9-from-11}{proved=annex:p02-w02-p02-040-church-9-from-11}{Descriptions from choice}
+For every type \(\alpha\), 9\(^\alpha\) is derivable from Axioms 1--4 and
+11\(^\alpha\) by Rules I, IV\('\) and V.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p02-w02-p02-040-church-reduced}{The system with two primitive selection constants}
+The \emph{reduced language} has the primitive symbols of
+\cref{def:p02-w02-p02-040-church-wff} except that the only selection
+constants are \(\iota_{o(oo)}\) and \(\iota_{\iota(o\iota)}\).  For every other
+type \(\gamma\), which has the form \(\alpha\beta\), the expression
+\(\iota_{\alpha\beta(o(\alpha\beta))}\) abbreviates the formula of the schema
+of p.~62 displayed above, in which \(\iota_{\alpha(o\alpha)}\) (inside the
+description) is primitive or is itself an abbreviation of lower rank; by
+recursion on type symbols every \(\iota_{\gamma(o\gamma)}\) thus abbreviates a
+closed wff of the reduced language of type \(\gamma(o\gamma)\).  The
+\emph{reduced system} has as axioms 1--8, 9\(^o\), 9\(^\iota\) and every
+10\(^{\alpha\beta}\), read in the reduced language, and Rules I--VI.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p02-w02-p02-040-church-selection}{proved=annex:p02-w02-p02-040-church-selection}{The defined selection constants satisfy 9; independence of 9}
+\begin{enumerate}
+ \item In the reduced system every formula 9\(^\gamma\), read through the
+   abbreviations of \cref{def:p02-w02-p02-040-church-reduced}, is a theorem.
+   Its derivation from 9\(^\alpha\) to 9\(^{\alpha\beta}\) uses Axioms
+   1--6\(^\gamma\) and 10\(^{\alpha\beta}\) only.
+ \item In the full system, for every type \(\alpha\), Axiom 9\(^\alpha\) is not
+   derivable from the remaining axioms among 1--8, 9\(^\beta\) (\(\beta\neq\alpha\))
+   and 10\(^{\beta\gamma}\); in particular each 9\(^\alpha\) is independent when
+   1--9 are the only axioms \cite[\S4, p.~62]{Church1940}.
+\end{enumerate}
+\end{hbtheorem}
+
+Clause~1 is the claim of the source on p.~62 with a proof; the proof uses
+Axiom~10 at every compound type, which is why the source makes the
+reduction conditional on the extensionality axioms.  Clause~2 also shows the
+sense of the source's remark that the 9\(^\alpha\) for compound \(\alpha\),
+``although independent, are superfluous'' once 10 is present: they cannot be
+dropped as axioms about primitive constants, but they become theorems when
+the constants are defined.
+
+\subsection{Bridge to the host simple-type syntax}
+
+\begin{hbdefinition}{def:p02-w02-p02-040-church-bridge}{Translation of Church's notation into the host syntax}
+Define a map \(\gamma\mapsto\gamma^\circ\) from Church's type symbols to the
+host simple types of \cref{sec:simple-type-theory-01} by
+\[
+ \iota^\circ=\iota,\qquad o^\circ=o,\qquad
+ (\alpha\beta)^\circ=\beta^\circ\to\alpha^\circ.
+\]
+The order is reversed: Church writes the value type first, the host writes
+the argument type first.  Thus \(o\iota\iota\) becomes
+\(\iota\to\iota\to o\) (with \(\to\) associating to the right), and
+\(\alpha'\) becomes \((\alpha^\circ\to\alpha^\circ)\to(\alpha^\circ\to\alpha^\circ)\).
+Extend the host signature by one nonlogical constant
+\(\varepsilon_\alpha:(\alpha^\circ\to o)\to\alpha^\circ\) for each Church type
+\(\alpha\).  Translate wffs by
+\[
+\begin{aligned}
+ (\mathbf x_\alpha)^\circ&=\mathbf x{:}\alpha^\circ,
+ &(\lambda\mathbf x_\beta\mathbf M)^\circ&=\lambda\mathbf x{:}\beta^\circ.\,\mathbf M^\circ,
+ &(\mathbf F\mathbf A)^\circ&=\mathbf F^\circ\mathbf A^\circ,\\
+ N_{oo}^\circ&=\neg,
+ &A_{ooo}^\circ&=\lor,
+ &\Pi_{o(o\alpha)}^\circ&=\forall_{\alpha^\circ},
+ \qquad\iota_{\alpha(o\alpha)}^\circ=\varepsilon_\alpha,
+\end{aligned}
+\]
+with \(\neg,\lor\) the constants of \cref{def:p02-stt-boolean-constants} and
+\(\forall_{\alpha^\circ}\) the host quantifier constant.
+\index{simple theory of types!Church-to-host bridge}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p02-w02-p02-040-church-bridge}{proved=annex:p02-w02-p02-040-church-bridge}{The bridge preserves types and denotations}
+The type map is a bijection between Church's type symbols and the host
+simple types.  For every Church wff \(\mathbf M\) of type \(\gamma\),
+\(\mathbf M^\circ\) is a well-typed host term of type \(\gamma^\circ\), and
+free and bound variables correspond.  Let \(\mathcal M\) be a host standard
+type structure with \(D_\iota=D\) in which each \(\varepsilon_\alpha\)
+denotes a function \(c_\alpha\) as in
+\cref{def:p02-w02-p02-040-church-standard}, the truth values \(1,0\) of the
+host playing the roles of \(\mathrm T,\mathrm F\).  Then for every
+assignment \(s\),
+\(\sem{\mathbf M^\circ}^{\mathcal M}_s=\sem{\mathbf M}_s\) computed in
+\(\mathcal S(D,c)\).  In particular, the translation of Church's defined
+equality \([\mathbf A_\alpha=\mathbf B_\alpha]\) has the same denotation as
+the host term \(\mathbf A^\circ=_{\alpha^\circ}\mathbf B^\circ\), and the
+translations of Church's defined \(\supset\), conjunction and \(\exists\)
+have the same denotations as the host \(\to\), \(\land\) and
+\(\exists_{\alpha^\circ}\).
+\end{hbtheorem}
+
+\begin{hbwarning}{def:p02-w02-p02-040-church-bridge-limits}{What the bridge does not identify}
+Three differences survive the translation.  First, the host lists
+\(=_\alpha\), \(\bottom\), \(\land\) and \(\to\) as primitive constants,
+whereas Church defines equality by the Leibniz formula \(Q_{o\alpha\alpha}\)
+and defines \(\supset\) and conjunction from \(N_{oo}\) and \(A_{ooo}\); the
+denotations agree in standard structures by
+\cref{thm:p02-w02-p02-040-church-soundness}.  They also agree in every host
+Henkin type structure, but for a host-specific reason: there the closure
+clause puts the denotation of \(\lambda y{:}\alpha.\,x=_\alpha y\) into
+\(D_{\alpha\to o}\), and instantiating the Leibniz formula at that predicate
+yields identity.  Church's language has no primitive identity, so the
+same argument is not available for a selected-domain reading of his
+system; the general models of \cref{def:p02-w02-p02-040-church-general}
+impose the separation condition (G5) instead, which makes Leibniz equality
+identity (\cref{thm:p02-w02-p02-040-church-general-soundness}), and
+\cref{thm:p02-w02-p02-040-church-general-completeness} shows that every
+consistent set has such a model.  Second, the host treats \(\eta\)-conversion as a
+typed operation, whereas Church's conversion rules are \(\alpha\) and
+\(\beta\) only and the \(\eta\)-equation is the theorem
+21\(^{\alpha\beta}\), which depends on Axiom 10\(^{\alpha\beta}\).  Third,
+Church's selection constant is logical and governed by Axioms 9 and 11,
+while its image \(\varepsilon_\alpha\) is a nonlogical host constant: a host
+standard structure may interpret it by a function that is not a choice
+function, and then the translation of 11\(^\alpha\) is false there.
+\end{hbwarning}
+
+\begin{hbexample}{def:p02-w02-p02-040-church-bridge-example}{Translating the choice axiom and the numerals}
+Axiom 11\(^\alpha\), \(f_{o\alpha}x_\alpha\supset f_{o\alpha}(\iota_{\alpha(o\alpha)}f_{o\alpha})\),
+abbreviates \(A_{ooo}(N_{oo}(f_{o\alpha}x_\alpha))(f_{o\alpha}(\iota_{\alpha(o\alpha)}f_{o\alpha}))\).
+With \(\alpha=\iota\) its translation is
+\[
+ \lor\bigl(\neg(f\,x)\bigr)\bigl(f(\varepsilon_\iota f)\bigr),
+ \qquad f:\iota\to o,\ x:\iota,
+\]
+which is true under every assignment exactly when \(\varepsilon_\iota\)
+denotes a choice function on the nonempty sets of individuals.  The numeral
+\(2_{\iota'}\) is \(\lambda f_{\iota\iota}\lambda x_\iota(f_{\iota\iota}(f_{\iota\iota}x_\iota))\);
+its translation
+\(\lambda f{:}\iota\to\iota.\,\lambda x{:}\iota.\,f(f\,x)\) has type
+\((\iota\to\iota)\to(\iota\to\iota)\), the image of \(\iota'\).  The
+successor \(S_{\iota'\iota'}\) translates to
+\(\lambda n.\,\lambda f.\,\lambda x.\,f(n\,f\,x)\) of type
+\(\iota'^\circ\to\iota'^\circ\).
+\end{hbexample}
+
+\begin{hbexample}{def:p02-w02-p02-040-church-bridge-arith}{The arithmetic theorems in host notation}
+Write \(\nu=\alpha^\circ\), so that \(\alpha'^\circ=(\nu\to\nu)\to(\nu\to\nu)\).
+The translation of \(N_{o\alpha'}\) is the host term
+\(\lambda n.\,\forall_{\alpha'^\circ\to o}(\lambda f.\,\lor(\neg(f\,\bar0))(\lor(\neg\forall(\lambda x.\,\lor(\neg(f\,x))(f(\mathsf s\,x))))(f\,n)))\),
+with \(\bar0\) and \(\mathsf s\) the translations of \(0_{\alpha'}\) and
+\(S_{\alpha'\alpha'}\); in a host standard structure it denotes the set of
+Church numerals \(\varphi\mapsto\varphi^n\) over \(D_\nu\), by
+\cref{thm:p02-w02-p02-040-church-bridge} and the numeral clause in the proof
+of \cref{thm:p02-w02-p02-040-church-soundness}.  Hence the translation of
+26\(^\alpha\) says that \(\mathsf s\) is injective on these numerals, that of
+30\(^\alpha\) that \(m\mapsto m\,\mathsf s\,\bar0\) is injective on the numerals
+of type \(\alpha''^\circ\), that of 32\(^\alpha\) that the translated
+\(T_{\alpha''\alpha'}\) inverts this map on numerals, and those of 43\(^\alpha\)
+and of Rosser's equations that the translated \(P_{\alpha'\alpha'}\),
+\(\mathfrak s\) and \(\mathfrak B\) act on numerals as predecessor, addition
+and multiplication.  Because every theorem is valid in \(\mathcal S(\N,c)\),
+each statement of \cref{thm:p02-w02-p02-040-church-26-30,thm:p02-w02-p02-040-church-31-35,thm:p02-w02-p02-040-church-36-43,thm:p02-w02-p02-040-church-rosser}
+holds, under this reading, in every host standard structure with
+\(D_\iota=\N\) whose constants \(\varepsilon_\gamma\) denote choice functions,
+for the types \(\alpha\) at which it was derived.  The bridge transfers truth
+in standard structures, not derivability: the host fixes no calculus for
+which these translations are claimed to be theorems.
+\end{hbexample}
+
+\begin{hbwarning}{def:p02-w02-p02-040-church-boundaries}{Language boundaries of the source}
+The object language has no type variables: a superscripted schema such as
+5\(^\alpha\) stands for infinitely many axioms, and a proof of a schema is
+a uniform recipe for proofs of its instances, the device the source calls
+typical ambiguity \cite[\S5, p.~63, n.~10]{Church1940}.  Types are not
+cumulative: the natural numbers of type \(\alpha'\) and of type
+\(\alpha''\) are different objects, connected by \(T_{\alpha''\alpha'}\).
+A complete incorporation of the calculus of \(\lambda\)-conversion is
+impossible while \(\lambda\) and juxtaposition keep their meanings, so the
+incorporation is partial \cite[p.~56]{Church1940}.  Which types satisfy
+26\(^\alpha\) is delicate: it is a theorem for \(\alpha=\iota,\iota',\iota'',\ldots\)
+(\cref{thm:p02-w02-p02-040-church-26-30}) and not for types built from \(o\)
+alone (\cref{thm:p02-w02-p02-040-church-soundness}), and theorems 31--35 and
+42--43 are therefore available only at types for which 30 has been proved.
+\end{hbwarning}
+
+\subsection{The system read as a typed higher-order calculus}
+
+Read as a higher-order calculus, the system has the following components,
+each displayed above.  The language is that of
+\cref{def:p02-w02-p02-040-church-wff}, with variables of every type and so
+quantification over functions and propositional functions of every finite
+type.  Derivability is the theorem relation of
+\cref{def:p02-w02-p02-040-church-axioms}, and derivability from assumptions
+is the restricted relation defined there, for which the deduction theorem
+holds.  Conversion is \(\alpha\)- and \(\beta\)-conversion, Rules I--III.
+Comprehension is not an axiom: it is the theorem
+\cref{thm:p02-w02-p02-040-church-comprehension}, obtained from abstraction,
+conversion and 13, and it holds for every wff, quantifiers of every type
+included.  Choice is Axiom 11\(^\alpha\), a selection operator at every type;
+descriptions, Axiom 9\(^\alpha\), are its special case for propositional
+functions true of exactly one object.  Extensionality is Axiom
+10\(^{\alpha\beta}\) for functions; the \(\eta\)-equation is its consequence
+21\(^{\alpha\beta}\); and extensionality for propositions is not assumed.
+Equality is the defined Leibniz relation, whose reflexivity, substitutivity,
+congruence, symmetry and transitivity are 16--20.  Axioms 7 and 8 assert
+infinity.
+
+The relational calculus of \cref{def:p02-sol-derived-calculus}, with
+the schema families of \cref{def:p02-sol-matched-henkin}, differs on
+each of these points: it has relation variables only, no abstraction, a
+comprehension schema postulated outright, graph choice in place of a
+selection operator, and primitive object equality.  The standard model of
+\cref{def:p02-w02-p02-040-church-standard} is the full semantics of the
+typed language: every function type ranges over all set-theoretic
+functions.  The general models of the next subsection are the matching
+selected-domain semantics, and the calculus is sound and complete for them
+(\cref{thm:p02-w02-p02-040-church-general-soundness,thm:p02-w02-p02-040-church-general-completeness}).
+
+\subsection{General models, the first-order encoding and completeness}
+\label{sec:p02-w02-p02-040-church-general}
+
+\emph{Purpose.}  The standard models of
+\cref{def:p02-w02-p02-040-church-standard} let every function type range
+over all functions.  This subsection widens the class of models so that
+function types range over selected sets of functions, closed enough that
+every wff denotes, and proves that Church's calculus, exactly as displayed
+in \cref{def:p02-w02-p02-040-church-rules,def:p02-w02-p02-040-church-axioms},
+is sound and complete for the wider class.  The completeness proof passes
+through an exact many-sorted first-order encoding: general models and
+models of one first-order theory are carried into each other by an encoding
+and a decoding that preserve truth.
+\emph{Inputs.}  The rules and axioms of Church's system; the deduction
+theorem (\cref{thm:p02-w02-p02-040-church-deduction}); strict many-sorted
+first-order logic (\cref{def:p02-many-sorted-signature}); ZF set theory as
+metatheory.
+\emph{Conclusions.}  Soundness
+(\cref{thm:p02-w02-p02-040-church-general-soundness}); the encoding and
+decoding theorem (\cref{thm:p02-w02-p02-040-church-encoding}); and strong
+completeness with compactness
+(\cref{thm:p02-w02-p02-040-church-general-completeness}).
+\emph{Standing.}  The source contains no model theory of its system; the
+definitions, theorems and proofs of this subsection are the handbook's.
+
+\begin{hbdefinition}{def:p02-w02-p02-040-church-general}{General models of Church's system}
+A \emph{general model} \(\mathcal M\) consists of the following data.
+\begin{enumerate}
+ \item[(G1)] For every type symbol \(\gamma\) a nonempty set
+   \(\mathcal D_\gamma\), such that every member of \(\mathcal D_{\alpha\beta}\)
+   is a function from \(\mathcal D_\beta\) to \(\mathcal D_\alpha\).
+ \item[(G2)] A set \(\mathcal T\subseteq\mathcal D_o\), the \emph{true}
+   propositions.
+ \item[(G3)] Members \(n\in\mathcal D_{oo}\), \(a\in\mathcal D_{ooo}\),
+   \(\pi_\alpha\in\mathcal D_{o(o\alpha)}\) and
+   \(c_\alpha\in\mathcal D_{\alpha(o\alpha)}\) for every \(\alpha\), such that
+   for all \(u,v\in\mathcal D_o\) and \(g\in\mathcal D_{o\alpha}\):
+   \(n(u)\in\mathcal T\) iff \(u\notin\mathcal T\);
+   \(a(u)(v)\in\mathcal T\) iff \(u\in\mathcal T\) or \(v\in\mathcal T\);
+   \(\pi_\alpha(g)\in\mathcal T\) iff \(g(e)\in\mathcal T\) for every
+   \(e\in\mathcal D_\alpha\); and \(g(c_\alpha(g))\in\mathcal T\) whenever
+   \(g(e)\in\mathcal T\) for some \(e\in\mathcal D_\alpha\).
+ \item[(G4)] (\emph{Closure.})  For every wff \(\mathbf M_\gamma\) and every
+   assignment \(s\), that is, every map sending each variable
+   \(\mathbf x_\delta\) into \(\mathcal D_\delta\), the three denotation
+   clauses of \cref{def:p02-w02-p02-040-church-standard}, with
+   \(N_{oo}\), \(A_{ooo}\), \(\Pi_{o(o\alpha)}\) and \(\iota_{\alpha(o\alpha)}\)
+   denoting \(n\), \(a\), \(\pi_\alpha\) and \(c_\alpha\), define a member
+   \(\sem{\mathbf M_\gamma}_s\) of \(\mathcal D_\gamma\): at every abstraction
+   \((\lambda\mathbf x_\beta\mathbf M_\alpha)\) the function
+   \(e\mapsto\sem{\mathbf M_\alpha}_{s[\mathbf x_\beta\mapsto e]}\) belongs to
+   \(\mathcal D_{\alpha\beta}\).
+ \item[(G5)] (\emph{Separation.})  For every \(\alpha\) and all distinct
+   \(e,e'\in\mathcal D_\alpha\) there is \(h\in\mathcal D_{o\alpha}\) with
+   \(h(e)\in\mathcal T\) and \(h(e')\notin\mathcal T\).
+\end{enumerate}
+Write \(\mathcal M,s\entails\mathbf A_o\) when
+\(\sem{\mathbf A_o}_s\in\mathcal T\); \(\mathbf A_o\) is \emph{valid} in
+\(\mathcal M\) when this holds for every assignment \(s\).  For a set
+\(\Gamma\) of wffs of type \(o\), write \(\Gamma\entails_{\mathrm G}\mathbf B_o\)
+when for every general model \(\mathcal M\) in which Axioms 7 and 8 are valid
+and every assignment \(s\) with \(\mathcal M,s\entails\mathbf A_o\) for all
+\(\mathbf A_o\in\Gamma\), also \(\mathcal M,s\entails\mathbf B_o\).
+\index{simple theory of types!general model}
+\index{Henkin semantics!for Church's type theory}
+\end{hbdefinition}
+
+Every standard model \(\mathcal S(D,c)\) is a general model with
+\(\mathcal T=\{\mathrm T\}\): (G4) holds because each
+\(\mathcal D_{\alpha\beta}\) contains every function, and (G5) because the
+characteristic function of \(\{e\}\) lies in \(\mathcal D_{o\alpha}\).  Three
+features of the definition carry the requirements of the calculus.
+\emph{Nonempty domains} (G1) are needed for Axiom~5\(^\alpha\) and Rule~IV,
+which instantiate a variable; in the encoding below they become the nonempty
+sorts of many-sorted first-order logic.  \emph{Extensionality} for
+functions, Axiom~10\(^{\alpha\beta}\), is matched by two things together:
+members of \(\mathcal D_{\alpha\beta}\) are functions, so two of them that
+agree everywhere are identical, and (G5) makes Church's defined Leibniz
+equality denote identity.  \emph{Extensionality for propositions} is not
+imposed: \(\mathcal D_o\) may have more than two members, several of them
+true.  If \(\mathcal D_o\) has exactly two members, \(p\equiv q\supset p=q\)
+is valid, and the source treats that formula as a possible further axiom,
+not as one of its axioms \cite[\S4, p.~61]{Church1940}.
+
+\begin{hbdefinition}{def:p02-w02-p02-040-church-encoding}{The first-order encoding of Church's system}
+Fix an enumeration of the variables of Church's language.  The strict
+many-sorted signature \(\Sigma_{\mathrm C}\) (in the sense of
+\cref{def:p02-many-sorted-signature}) has one sort \(\mathsf s_\gamma\) for each type
+symbol \(\gamma\) and the following symbols:
+\begin{itemize}
+ \item for all \(\alpha,\beta\) a function symbol
+   \(\mathsf{ap}_{\alpha\beta}:\mathsf s_{\alpha\beta}\times\mathsf s_\beta\to\mathsf s_\alpha\),
+   written \(\mathsf{ap}\) when the sorts are evident;
+ \item constants \(\widehat N:\mathsf s_{oo}\), \(\widehat A:\mathsf s_{ooo}\),
+   \(\widehat\Pi_\alpha:\mathsf s_{o(o\alpha)}\) and
+   \(\widehat\iota_\alpha:\mathsf s_{\alpha(o\alpha)}\) for every \(\alpha\);
+ \item for every wff \(\mathbf L=(\lambda\mathbf x_\beta\mathbf M_\alpha)\) of the
+   primitive notation, with free variables
+   \(\mathbf y^1_{\delta_1},\ldots,\mathbf y^k_{\delta_k}\) listed in the order of
+   the enumeration, a function symbol
+   \(\ell_{\mathbf L}:\mathsf s_{\delta_1}\times\cdots\times\mathsf s_{\delta_k}\to\mathsf s_{\alpha\beta}\),
+   a constant when \(k=0\);
+ \item a unary predicate symbol \(\mathsf{True}\) on \(\mathsf s_o\).
+\end{itemize}
+Each Church variable \(\mathbf x_\gamma\) also serves as a variable of sort
+\(\mathsf s_\gamma\).  The \emph{encoding} \(\mathbf M\mapsto\mathbf M^\dagger\),
+applied after all abbreviations are eliminated, sends wffs to
+\(\Sigma_{\mathrm C}\)-terms:
+\[
+ \mathbf x^\dagger=\mathbf x,\quad
+ N_{oo}^\dagger=\widehat N,\quad A_{ooo}^\dagger=\widehat A,\quad
+ \Pi_{o(o\alpha)}^\dagger=\widehat\Pi_\alpha,\quad
+ \iota_{\alpha(o\alpha)}^\dagger=\widehat\iota_\alpha,\quad
+ (\mathbf F\mathbf A)^\dagger=\mathsf{ap}(\mathbf F^\dagger,\mathbf A^\dagger),\quad
+ \mathbf L^\dagger=\ell_{\mathbf L}(\mathbf y^1,\ldots,\mathbf y^k).
+\]
+Thus \(\mathbf M_\gamma^\dagger\) has sort \(\mathsf s_\gamma\) and the same free
+variables as \(\mathbf M_\gamma\).  For each \(\gamma\) let
+\[
+ \mathsf{Lb}_\gamma(u,v)\defeq\forall h{:}\mathsf s_{o\gamma}\,
+ \bigl(\mathsf{True}(\mathsf{ap}(h,u))\to\mathsf{True}(\mathsf{ap}(h,v))\bigr).
+\]
+The theory \(\mathsf{Enc}\) consists of the universal closures of the
+following formulas, for all type symbols \(\alpha,\beta\) and all abstracts
+\(\mathbf L=(\lambda\mathbf x_\beta\mathbf M_\alpha)\):
+\[
+\begin{array}{rl}
+ (\mathrm E_N) & \mathsf{True}(\mathsf{ap}(\widehat N,p))\leftrightarrow\neg\mathsf{True}(p),\\
+ (\mathrm E_A) & \mathsf{True}(\mathsf{ap}(\mathsf{ap}(\widehat A,p),q))\leftrightarrow(\mathsf{True}(p)\lor\mathsf{True}(q)),\\
+ (\mathrm E_\Pi^\alpha) & \mathsf{True}(\mathsf{ap}(\widehat\Pi_\alpha,f))\leftrightarrow\forall x{:}\mathsf s_\alpha\,\mathsf{True}(\mathsf{ap}(f,x)),\\
+ (\mathrm E_\iota^\alpha) & \mathsf{True}(\mathsf{ap}(f,x))\to\mathsf{True}(\mathsf{ap}(f,\mathsf{ap}(\widehat\iota_\alpha,f))),\\
+ (\mathrm E_\beta^{\mathbf L}) & \mathsf{ap}(\ell_{\mathbf L}(\mathbf y^1,\ldots,\mathbf y^k),\mathbf x_\beta)=\mathbf M_\alpha^\dagger,\\
+ (\mathrm E_{\mathrm{ext}}^{\alpha\beta}) & \forall x{:}\mathsf s_\beta\,\mathsf{Lb}_\alpha(\mathsf{ap}(f,x),\mathsf{ap}(g,x))\to\mathsf{Lb}_{\alpha\beta}(f,g),\\
+ (\mathrm E_7),\ (\mathrm E_8) & \mathsf{True}(7^\dagger),\quad\mathsf{True}(8^\dagger),
+\end{array}
+\]
+where \(p,q\) have sort \(\mathsf s_o\), \(x\) sort \(\mathsf s_\alpha\) in
+\((\mathrm E_\Pi^\alpha)\) and \((\mathrm E_\iota^\alpha)\), \(f,g\) the evident
+function sorts, and \(7^\dagger,8^\dagger\) are the encodings of Axioms 7 and
+8.
+\index{simple theory of types!first-order encoding}
+\end{hbdefinition}
+
+Each component of the encoding has one job.  The symbols \(\ell_{\mathbf L}\)
+with \((\mathrm E_\beta^{\mathbf L})\) are the first-order form of closure
+(G4): every abstract, with any values of its parameters, names an element,
+and applying that element computes the body.  Comprehension
+(\cref{thm:p02-w02-p02-040-church-comprehension}) is therefore built into
+the signature rather than postulated as a schema.  The axioms
+\((\mathrm E_N)\), \((\mathrm E_A)\), \((\mathrm E_\Pi^\alpha)\) are (G3) for the
+logical constants, \((\mathrm E_\iota^\alpha)\) is the choice condition, and
+\((\mathrm E_{\mathrm{ext}}^{\alpha\beta})\) is extensionality stated with the
+first-order Leibniz formula \(\mathsf{Lb}\).  Church's defined equality is
+encoded faithfully: in every model of \(\mathsf{Enc}\),
+\(\mathsf{True}([\mathbf A_\alpha=\mathbf B_\alpha]^\dagger)\) holds exactly when
+\(\mathsf{Lb}_\alpha(\mathbf A^\dagger,\mathbf B^\dagger)\) does (shown in the
+proof of \cref{thm:p02-w02-p02-040-church-encoding}).
+
+\begin{hbtheorem}{thm:p02-w02-p02-040-church-general-soundness}{proved=annex:p02-w02-p02-040-church-general-soundness}{Soundness for general models}
+In every general model, \([\mathbf A_\alpha=\mathbf B_\alpha]\) is true under
+\(s\) iff \(\sem{\mathbf A_\alpha}_s=\sem{\mathbf B_\alpha}_s\), and Axioms
+1--6\(^\alpha\), 9\(^\alpha\), 10\(^{\alpha\beta}\) and 11\(^\alpha\) are valid.  If
+\(\mathbf A^1_o,\ldots,\mathbf A^n_o\derives\mathbf B_o\), then
+\(\{\mathbf A^1_o,\ldots,\mathbf A^n_o\}\entails_{\mathrm G}\mathbf B_o\).  In
+particular every theorem is valid in every general model in which Axioms 7
+and 8 are valid.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p02-w02-p02-040-church-encoding}{proved=annex:p02-w02-p02-040-church-encoding}{Encoding and decoding}
+\begin{enumerate}
+ \item (Encoding.)  Let \(\mathcal M\) be a general model in which Axioms 7
+   and 8 are valid, and fix an assignment \(s_0\).  Let \(\mathcal M^\dagger\)
+   interpret \(\mathsf s_\gamma\) as \(\mathcal D_\gamma\), \(\mathsf{ap}\) as
+   application, \(\widehat N,\widehat A,\widehat\Pi_\alpha,\widehat\iota_\alpha\) as
+   \(n,a,\pi_\alpha,c_\alpha\), \(\ell_{\mathbf L}(e_1,\ldots,e_k)\) as
+   \(\sem{\mathbf L}_{s_0[\mathbf y^1\mapsto e_1,\ldots,\mathbf y^k\mapsto e_k]}\),
+   \(\mathsf{True}\) as \(\mathcal T\), and \(=\) as identity.  Then
+   \(\mathcal M^\dagger\) is a model of \(\mathsf{Enc}\), and for every wff
+   \(\mathbf M\) and assignment \(s\) the value of \(\mathbf M^\dagger\) under
+   \(s\) is \(\sem{\mathbf M}_s\).  Hence
+   \(\mathcal M,s\entails\mathbf A_o\) iff
+   \(\mathcal M^\dagger,s\entails\mathsf{True}(\mathbf A_o^\dagger)\).
+ \item (Decoding.)  Let \(\mathfrak A\) be a model of \(\mathsf{Enc}\) and
+   \(t_0\) an \(\mathfrak A\)-assignment.  There are a general model
+   \(\mathfrak A^\natural\), in which Axioms 7 and 8 are valid, and
+   surjections \(d_\gamma\) from the domain of \(\mathsf s_\gamma\) in
+   \(\mathfrak A\) onto the domain \(\mathcal D_\gamma\) of
+   \(\mathfrak A^\natural\), such that \(d_\gamma(u)=d_\gamma(v)\) iff
+   \(\mathfrak A\entails\mathsf{Lb}_\gamma(u,v)\), and such that for every wff
+   \(\mathbf M\) and every \(\mathfrak A\)-assignment \(t\),
+   \(\sem{\mathbf M}_{d\circ t}\) is \(d\) applied to the value of
+   \(\mathbf M^\dagger\) under \(t\).  Hence
+   \(\mathfrak A,t\entails\mathsf{True}(\mathbf A_o^\dagger)\) iff
+   \(\mathfrak A^\natural,d\circ t\entails\mathbf A_o\).
+ \item (Exactness.)  For \(\mathcal M\) as in clause~1, the maps
+   \(d_\gamma\) of clause~2 for \(\mathfrak A=\mathcal M^\dagger\) are
+   bijections that commute with application and carry \(n,a,\pi_\alpha,c_\alpha\)
+   and \(\mathcal T\) to their counterparts, so the decoding of
+   \(\mathcal M^\dagger\) is isomorphic to \(\mathcal M\).
+\end{enumerate}
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p02-w02-p02-040-church-general-completeness}{proved=annex:p02-w02-p02-040-church-general-completeness}{Strong completeness for general models}
+For every set \(\Gamma\) of wffs of type \(o\) and every wff \(\mathbf B_o\),
+the following are equivalent.
+\begin{enumerate}
+ \item \(\mathbf A^1_o,\ldots,\mathbf A^n_o\derives\mathbf B_o\) for some
+   \(n\geq0\) and some \(\mathbf A^1_o,\ldots,\mathbf A^n_o\in\Gamma\).
+ \item \(\Gamma\entails_{\mathrm G}\mathbf B_o\).
+ \item For every model \(\mathfrak A\) of \(\mathsf{Enc}\) and every
+   \(\mathfrak A\)-assignment \(t\), if
+   \(\mathfrak A,t\entails\mathsf{True}(\mathbf A_o^\dagger)\) for every
+   \(\mathbf A_o\in\Gamma\), then
+   \(\mathfrak A,t\entails\mathsf{True}(\mathbf B_o^\dagger)\).
+\end{enumerate}
+The proof that 3 implies 1 uses no form of the Axiom of Choice: the
+countermodel is built from the wffs of the language.  Consequently the
+theorems of Church's system are exactly the wffs of type \(o\) valid in every
+general model in which Axioms 7 and 8 are valid, and \(\entails_{\mathrm G}\)
+is compact.
+\end{hbtheorem}
+
+The relation in clause~1 is Church's derivability on assumptions, with its
+restriction that no variable free in an assumption is substituted for or
+generalized upon; the semantic relation \(\entails_{\mathrm G}\) matches it by
+holding the values of those variables fixed in one assignment \(s\).
+
+\begin{hbexample}{def:p02-w02-p02-040-church-general-example}{Encoding choice and one comprehension instance}
+Axiom 11\(^\iota\) abbreviates
+\(A_{ooo}(N_{oo}(f_{o\iota}x_\iota))(f_{o\iota}(\iota_{\iota(o\iota)}f_{o\iota}))\).
+Its encoding is
+\(\mathsf{True}(\mathsf{ap}(\mathsf{ap}(\widehat A,\mathsf{ap}(\widehat N,\mathsf{ap}(f,x))),\mathsf{ap}(f,\mathsf{ap}(\widehat\iota_\iota,f))))\),
+which by \((\mathrm E_A)\) and \((\mathrm E_N)\) is equivalent in every model of
+\(\mathsf{Enc}\) to
+\(\neg\mathsf{True}(\mathsf{ap}(f,x))\lor\mathsf{True}(\mathsf{ap}(f,\mathsf{ap}(\widehat\iota_\iota,f)))\),
+the axiom \((\mathrm E_\iota^\iota)\).  For comprehension, take
+\(\mathbf L=\lambda x_\iota(N_{oo}(g_{o\iota}x_\iota))\), whose only free
+variable is \(g_{o\iota}\).  Then \(\mathbf L^\dagger=\ell_{\mathbf L}(g)\), and
+\((\mathrm E_\beta^{\mathbf L})\) is
+\(\mathsf{ap}(\ell_{\mathbf L}(g),x)=\mathsf{ap}(\widehat N,\mathsf{ap}(g,x))\).
+With \((\mathrm E_N)\) it gives
+\(\forall g\,\forall x\,(\mathsf{True}(\mathsf{ap}(\ell_{\mathbf L}(g),x))\leftrightarrow\neg\mathsf{True}(\mathsf{ap}(g,x)))\):
+every propositional function of individuals has a complement among the
+elements of sort \(\mathsf s_{o\iota}\).  In the decoding, \(\ell_{\mathbf L}(g)\)
+becomes the member of \(\mathcal D_{o\iota}\) true exactly where the decoded
+\(g\) is not, the witness of the comprehension instance
+\((\exists f_{o\iota})(x_\iota)[f_{o\iota}x_\iota\equiv\,\sim g_{o\iota}x_\iota]\).
+\end{hbexample}
+
+\begin{hbwarning}{def:p02-w02-p02-040-church-general-limits}{What general-model completeness does not give}
+First, the restriction on proofs on assumptions cannot be dropped: from the
+assumption \(p\) the formula \((p)p\) does not follow.  In the standard model
+\(\mathcal S(\N,c)\), a general model in which Axioms 7 and 8 are valid
+(\cref{thm:p02-w02-p02-040-church-soundness}), an assignment with
+\(s(p)=\mathrm T\) makes \(p\) true and \((p)p\) false, so
+\(\{p\}\not\entails_{\mathrm G}(p)p\).  Second, the theorem characterizes the
+theorems by truth in all general models; it says nothing about which wffs
+are true in all standard models, where the domains are full function spaces.
+Third, \(\mathsf{Enc}\) has one function symbol and one axiom
+\((\mathrm E_\beta^{\mathbf L})\) for each of infinitely many abstracts; no
+finite part of it encodes the whole system.
+\end{hbwarning}
+
+\section{The relational second-order sheet as a native calculus}
+\label{sec:p02-w02-p02-040-sol-native}
+
+\emph{Purpose.}  \Cref{def:p02-sol-derived-calculus} defines derivability for
+the relational second-order language by translation into many-sorted
+first-order logic, and \cref{thm:p02-sol-derived-adequacy} proves that
+relation sound and strongly complete for matched Henkin models; its
+boundary statement \cref{def:p02-sol-native-boundary} records that the
+rules displayed on \texttt{sheet:sol}, used as an
+independent generator list, need a converse deductive correspondence.
+This section proves that correspondence by proving the displayed rules
+complete on their own.
+\emph{Inputs.}  The relational language of
+\cref{sec:second-order-logic-01} over an at most countable nonlogical
+signature; the initial sequents and rules of
+\texttt{sheet:lk-eq}; relation substitution
+(\cref{def:p02-sol-relation-substitution}); matched Henkin models
+(\cref{def:p02-sol-matched-henkin}).
+\emph{Conclusions.}  Native soundness and completeness for finite sequents,
+without the Axiom of Choice
+(\cref{thm:p02-w02-p02-040-sol-native}); and, with the Axiom of Choice as in
+\cref{thm:p02-sol-derived-adequacy}, coincidence of native and
+translation-defined derivability
+(\cref{thm:p02-w02-p02-040-sol-correspondence}).
+
+\begin{hbdefinition}{def:p02-w02-p02-040-sol-native}{Native derivability on the relational sheet}
+A sequent \(\Sigma\Rightarrow\Pi\), with \(\Sigma\) and \(\Pi\) finite multisets
+of relational second-order formulas, is \emph{natively derivable} if it is
+the root of a finite tree whose leaves are initial sequents of
+\texttt{sheet:lk-eq} or sequents
+\(\Rightarrow\sigma\) with \(\sigma\) an eligible instance of Comp or Choice
+from \texttt{sheet:sol}, and each of whose other nodes
+follows from its children by a rule of \texttt{sheet:lk-eq} or by one of
+\(\forall^2L\), \(\forall^2R\), \(\exists^2L\), \(\exists^2R\).  The rules of
+\texttt{sheet:lk-eq} are read over relational second-order formulas: their
+formula letters range over all such formulas, their term letters over
+object terms, their eigenvariables are object variables, and \([t/x]\) is
+capture-avoiding substitution of an object term for an object variable,
+which renames object binders when needed and passes through relation
+binders unchanged.  For a set \(\Gamma\) of formulas,
+\(\Gamma\derives_{\mathrm{nat}}\varphi\) means that \(\Sigma\Rightarrow\varphi\) is
+natively derivable for some finite multiset \(\Sigma\) of members of
+\(\Gamma\).  A sequent is \emph{\(\mathsf H_{\mathsf{CC}}\)-valid} if every
+\(\mathsf H_{\mathsf{CC}}\)-model and matching assignment that satisfy every
+member of \(\Sigma\) satisfy some member of \(\Pi\).
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p02-w02-p02-040-sol-native}{proved=annex:p02-w02-p02-040-sol-native}{Soundness and completeness of the native relational calculus}
+Let the nonlogical signature be at most countable.  A sequent
+\(\Sigma\Rightarrow\Pi\) is natively derivable iff it is
+\(\mathsf H_{\mathsf{CC}}\)-valid.  The proof uses no form of the Axiom of
+Choice.
+\end{hbtheorem}
+
+\begin{hbcorollary}{thm:p02-w02-p02-040-sol-correspondence}{proved=annex:p02-w02-p02-040-sol-correspondence}{Native and translation-defined derivability coincide}
+Assume the Axiom of Choice in the ambient set theory, and let the
+nonlogical signature be at most countable.  For every set \(\Gamma\) of
+formulas and every formula \(\varphi\),
+\[
+ \Gamma\derives_{\mathrm{nat}}\varphi
+ \quad\Longleftrightarrow\quad
+ \Gamma\derives_{\mathsf{SOL}_{\mathrm H}^{\mathsf{CC}}}\varphi
+ \quad\Longleftrightarrow\quad
+ \Gamma\entails_{\mathrm H}^{\mathsf{CC}}\varphi ,
+\]
+and a finite sequent \(\Sigma\Rightarrow\Pi\) is natively derivable iff it is
+derivable on the linked sheet in the translation-defined sense of
+\cref{def:p02-sol-derived-calculus}.
+\end{hbcorollary}
+
+So the four relation-quantifier rules, Comp and Choice, added to
+\texttt{sheet:lk-eq}, generate exactly the translation-defined relation; the
+converse deductive correspondence that
+\cref{def:p02-sol-native-boundary} names as missing is the first equivalence
+of the corollary.
+
+\begin{hbexample}{def:p02-w02-p02-040-sol-native-example}{A native derivation that needs Comp}
+Read \(\varphi\leftrightarrow\psi\) as \((\varphi\to\psi)\land(\psi\to\varphi)\).
+The sequent \(\Rightarrow\exists X^1\forall x\,X^1(x)\) is natively derivable:
+\[
+\begin{array}{rll}
+ 1. & \Rightarrow y=y,\ Z(y) & {=}I,\ W_R\\
+ 2. & Z(y)\Rightarrow Z(y) & \mathrm{id}\\
+ 3. & y=y\to Z(y)\Rightarrow Z(y) & {\to}L\ \text{from 1, 2}\\
+ 4. & (Z(y)\to y=y)\land(y=y\to Z(y))\Rightarrow Z(y) & W_L,\ {\land}L\\
+ 5. & \forall x\,(Z(x)\leftrightarrow x=x)\Rightarrow Z(y) & \forall L,\ t:=y\\
+ 6. & \forall x\,(Z(x)\leftrightarrow x=x)\Rightarrow\forall x\,Z(x) & \forall R,\ \text{eigenvariable }y\\
+ 7. & \forall x\,(Z(x)\leftrightarrow x=x)\Rightarrow\exists X^1\forall x\,X^1(x) & \exists^2R,\ U:=Z\\
+ 8. & \exists X^1\forall x\,(X^1(x)\leftrightarrow x=x)\Rightarrow\exists X^1\forall x\,X^1(x) & \exists^2L,\ \text{eigenvariable }Z\\
+ 9. & \Rightarrow\exists X^1\forall x\,(X^1(x)\leftrightarrow x=x) & \text{Comp},\ \chi(x):=x=x\\
+ 10. & \Rightarrow\exists X^1\forall x\,X^1(x) & \text{Cut, 9 and 8}
+\end{array}
+\]
+Here \(Z\) is a unary relation variable and \(y\) an object variable; the
+eigenvariable conditions hold because \(y\) is not free in line~6's
+other formulas and \(Z\) is not free in line~8.  The Comp leaf is
+essential: a derivation whose leaves are all initial sequents of
+\texttt{sheet:lk-eq} preserves truth in every Henkin structure of
+\cref{sec:second-order-logic-05}, since the soundness argument in the proof
+of \cref{thm:p02-w02-p02-040-sol-native} uses the matched closure conditions
+only at Comp and Choice leaves, and the Henkin structure with \(M=\{0\}\)
+and \(\mathcal R_n=\{\varnothing\}\) for every \(n\) makes
+\(\exists X^1\forall x\,X^1(x)\) false.  So every derivation of this sequent
+has a Comp or Choice leaf.
+\end{hbexample}
+
+\begin{hbwarning}{def:p02-w02-p02-040-sol-native-limits}{Limits of the native completeness theorem}
+The theorem is completeness for matched Henkin models, not for full
+semantics: no sound effective calculus is complete for full second-order
+validity (\cref{thm:p02-w02-p02-040-no-effective-calculus}).  The completeness
+proof uses Cut, and Cut cannot be dropped from the equality calculus even at
+first order: \cref{thm:p07-eqlk-cut-failure} gives a valid first-order
+sequent \(a=b\Rightarrow b=a\) with no Cut/Mix-free derivation on
+\texttt{sheet:lk-eq}.  Its backward invariant (only the atoms \(a=b\),
+\(a=a\) and \(b=a\) occur) survives the added rules, because the four
+relation-quantifier rules have a quantified principal formula in their
+conclusion and every Comp or Choice leaf contains a quantified formula; so
+that sequent has no Cut/Mix-free native derivation either.
+The countability hypothesis is used to enumerate the
+formulas without choice; the corollary inherits the Axiom of Choice only
+from \cref{thm:p02-sol-derived-adequacy}.
+\end{hbwarning}
+
+\section{Full second-order categoricity with addition, multiplication and completeness}
+\label{sec:p02-w02-p02-040-categoricity}
+
+This section proves the two categoricity theorems used in
+\cref{sec:second-order-logic-04}: the arithmetic one for the full signature
+\(\{0,S,+,\times\}\) of \cref{def:p02-pa2}, and the one for the second-order
+ordered field.  \emph{Inputs.}  Full semantics
+(\cref{sec:second-order-logic-02}); the successor categoricity proof of
+\cref{sec:second-order-logic-03}; ZF set theory with the natural numbers,
+integers and rationals as metatheory.  \emph{Conclusions.}
+\Cref{thm:p02-w02-p02-040-pa2-categorical,thm:p02-w02-p02-040-reals-categorical}.
+Both conclusions depend on full semantics: the proofs apply a second-order
+axiom to subsets of the domain that a Henkin structure need not contain.
+
+\begin{hbtheorem}{thm:p02-w02-p02-040-pa2-categorical}{proved=annex:p02-w02-p02-040-pa2-categorical}{Full categoricity of \(\mathsf{PA}_2\) with addition and multiplication}
+The structure \(\mathcal N=(\N,0,n\mapsto n+1,+,\times)\) satisfies
+\(\mathsf{PA}_2\) of \cref{def:p02-pa2} under full semantics.  If
+\(\mathcal M=(M,0^{\mathcal M},S^{\mathcal M},+^{\mathcal M},\times^{\mathcal M})\)
+satisfies \(\mathsf{PA}_2\) under full semantics, the map
+\(f:\N\to M\) with \(f(0)=0^{\mathcal M}\) and
+\(f(n+1)=S^{\mathcal M}(f(n))\) is an isomorphism from \(\mathcal N\) onto
+\(\mathcal M\): it is a bijection preserving \(0\) and \(S\), and for all
+\(m,n\in\N\),
+\[
+ f(m+n)=f(m)+^{\mathcal M}f(n),\qquad
+ f(m\times n)=f(m)\times^{\mathcal M}f(n).
+\]
+Hence any two full models of \(\mathsf{PA}_2\) are isomorphic.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p02-w02-p02-040-ordered-field}{The ordered-field axioms}
+In the signature \(\Lang_{\mathsf R}=\{0,1,+,\times,<\}\) write \(xy\) for
+\(x\times y\).  The \emph{ordered-field axioms} are the universal closures
+of the following fifteen first-order formulas:
+\[
+\begin{array}{ll}
+ \text{(F1)}\ x+(y+z)=(x+y)+z, & \text{(F2)}\ x+y=y+x,\\
+ \text{(F3)}\ x+0=x, & \text{(F4)}\ \exists y\,(x+y=0),\\
+ \text{(F5)}\ x(yz)=(xy)z, & \text{(F6)}\ xy=yx,\\
+ \text{(F7)}\ x1=x, & \text{(F8)}\ x\neq0\to\exists y\,(xy=1),\\
+ \text{(F9)}\ x(y+z)=xy+xz, & \text{(F10)}\ 0\neq1,\\
+ \text{(O1)}\ \neg(x<x), & \text{(O2)}\ (x<y\land y<z)\to x<z,\\
+ \text{(O3)}\ x<y\lor x=y\lor y<x, & \text{(O4)}\ x<y\to x+z<y+z,\\
+ \text{(O5)}\ (0<x\land0<y)\to0<xy. &
+\end{array}
+\]
+The \emph{full second-order ordered-field theory} adds the completeness
+sentence displayed in \cref{thm:second-order-reals-categorical}, with
+\(u\le v\) abbreviating \(u<v\lor u=v\).  A structure satisfying these
+sixteen sentences under full semantics is a \emph{complete ordered field}.
+\index{ordered field!axioms}
+\index{complete ordered field!second-order}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p02-w02-p02-040-reals-categorical}{proved=annex:p02-w02-p02-040-reals-categorical}{Full categoricity and uncountability of complete ordered fields}
+Let \(\mathcal F\) and \(\mathcal G\) be complete ordered fields in the
+sense of \cref{def:p02-w02-p02-040-ordered-field}.  For \(x\in F\) put
+\(L_{\mathcal F}(x)=\{q\in\mathbb Q:q_{\mathcal F}<x\}\), where
+\(q\mapsto q_{\mathcal F}\) is the embedding of the rationals into
+\(\mathcal F\) constructed in the annex.  Then
+\[
+ h(x)=\sup\nolimits_{\mathcal G}\{q_{\mathcal G}:q\in L_{\mathcal F}(x)\}
+\]
+defines an isomorphism of \(\Lang_{\mathsf R}\)-structures from
+\(\mathcal F\) onto \(\mathcal G\), the unique map with
+\(L_{\mathcal G}(h(x))=L_{\mathcal F}(x)\) for every \(x\).  Moreover the
+domain of every complete ordered field is uncountable.
+\end{hbtheorem}
+
+This theorem supplies the proof of
+\cref{thm:second-order-reals-categorical}: the map is the cut map described
+there, the axioms abbreviated there are those of
+\cref{def:p02-w02-p02-040-ordered-field}, and the uncountability is proved
+directly from the completeness sentence.  The clause there identifying
+every model with \(\mathbb R\) presupposes that the ambient real field is a
+complete ordered field; given any one complete ordered field, the theorem
+makes every other isomorphic to it.
+
+\section{The nonaxiomatizability of full second-order validity}
+\label{sec:p02-w02-p02-040-nonaxiomatizable}
+
+\emph{Inputs.}  \Cref{thm:p02-w02-p02-040-pa2-categorical}; the G\"odel
+numbering of \cref{sec:arithmetic-coding-04}; computably enumerable sets
+as domains of partial computable functions (\cref{sec:turing-machines-03});
+\cref{thm:p04-ce-sigma-one}; and \cref{thm:tarski-undefinability}.
+\emph{Conclusion.}  \Cref{thm:p02-w02-p02-040-no-effective-calculus}, which
+is the theorem stated in \cref{sec:second-order-logic-04} with its
+reduction and effectiveness proved.
+
+\begin{hbdefinition}{def:p02-w02-p02-040-so-coding}{Codes of second-order arithmetic formulas}
+Extend the tree coding of \cref{sec:arithmetic-coding-04}, with its
+constructor \(N_k(a_0,\ldots,a_{r-1})=C(k,[a_0,\ldots,a_{r-1}])\), to the
+relational second-order language over \(\{0,S,+,\times\}\) by four new
+tags: the relation variable \(X^n_i\) has code \(N_{15}(n,i)\); the atom
+\(X^n_i(t_1,\ldots,t_n)\) has code
+\(N_{16}(N_{15}(n,i),[\ulcorner t_1\urcorner,\ldots,\ulcorner t_n\urcorner])\);
+and \(\forall X^n_i\varphi\), \(\exists X^n_i\varphi\) have codes
+\(N_{17}(n,i,\ulcorner\varphi\urcorner)\), \(N_{18}(n,i,\ulcorner\varphi\urcorner)\).
+All first-order terms and formulas keep the codes given in
+\cref{sec:arithmetic-coding-04}.  Write
+\(\mathrm{Val}_2=\{\ulcorner\varphi\urcorner:\varphi\text{ a second-order sentence and }\entails_{\mathrm{full}}\varphi\}\)
+and \(\mathrm{TA}=\{\ulcorner\sigma\urcorner:\sigma\text{ a first-order }\Lang_A\text{-sentence and }\mathcal N\entails\sigma\}\).
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p02-w02-p02-040-no-effective-calculus}{proved=annex:p02-w02-p02-040-no-effective-calculus}{No effective complete calculus for full second-order validity}
+\begin{enumerate}
+ \item The function \(r(c)=N_{10}(\ulcorner\mathsf{PA}_2\urcorner,c)\), which
+   sends the code of \(\sigma\) to the code of \(\mathsf{PA}_2\to\sigma\), is
+   primitive recursive, and the set of codes of first-order
+   \(\Lang_A\)-sentences is decidable.
+ \item For every first-order \(\Lang_A\)-sentence \(\sigma\),
+   \(\entails_{\mathrm{full}}(\mathsf{PA}_2\to\sigma)\) iff
+   \(\mathcal N\entails\sigma\).
+ \item \(\mathrm{TA}\) is not computably enumerable.
+ \item \(\mathrm{Val}_2\) is not computably enumerable.
+ \item There is no calculus \(\mathsf D\) whose set of theorems (as codes) is
+   computably enumerable and which satisfies
+   \(\mathsf D\derives\sigma\Leftrightarrow\entails_{\mathrm{full}}\sigma\) for
+   every second-order sentence \(\sigma\) of this signature.
+\end{enumerate}
+\end{hbtheorem}
+
+The proof of clause 3 runs through \cref{thm:p04-ce-sigma-one}: a computably
+enumerable set is \(\Sigma^0_1\)-definable in \(\mathcal N\), so a
+computably enumerable \(\mathrm{TA}\) would have an arithmetical truth
+definition, which \cref{thm:tarski-undefinability} excludes; this is the
+corollary that follows that theorem.  Clause 5 concerns effectiveness only:
+the set of all full validities, taken as axioms with no rules, is a
+complete calculus whose theorem set is not computably enumerable.
+Henkin-type completeness, as in \cref{thm:p02-sol-derived-adequacy}, is
+completeness for a different consequence relation and is not affected.
+
+\begin{hbexample}{def:p02-w02-p02-040-reduction-example}{One instance of the reduction}
+For \(\sigma\defeq\forall x\,\forall y\,(x+y=y+x)\), clause 2 of
+\cref{thm:p02-w02-p02-040-no-effective-calculus} gives
+\(\entails_{\mathrm{full}}(\mathsf{PA}_2\to\sigma)\), because addition on
+\(\N\) is commutative.  A single instance shows only how the reduction
+acts; the separation comes from clause 3: by \cref{thm:tarski-undefinability} no
+computably enumerable set of first-order sentences contains exactly the
+true ones, so for every sound effective calculus some true \(\sigma\) gives
+a full validity \(\mathsf{PA}_2\to\sigma\) that the calculus does not derive.
+\end{hbexample}

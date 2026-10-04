@@ -1,0 +1,40 @@
+# Baldwin--Lachlan 1971: exact-source acquisition gap and bounded geometry bridge
+
+Unit: `ED26-REQ-N-a-006-02`. Governing records read: `spec/EDITION-2026-CONTRACT.md`, `handbook/CONVENTIONS.md`, `spec/research/edition-2026-authoring-resumption-2026-09-09.md`, the literal unit row of `spec/coverage/edition-2026/completion-work-queue.jsonl`, canonical `BaldwinLachlan1971` bibliography identity, and the actual current categoricity/strongly-minimal passages in Part 3. The allocation is the complete original article, printed pages 79--96, not a modern textbook treatment. Mapped components are MAP-03 (pregeometry), MAP-04 (hard existence and prime-over-basis), MAP-05 (original countable-model consequences), and MAP-06 (fixed-characteristic field illustration/source distinctions).
+
+## Exact identity and current acquisition result
+
+The [publisher record](https://www.cambridge.org/core/journals/journal-of-symbolic-logic/article/abs/on-strongly-minimal-sets/393A3AEC617C29FC6AB9C6BCF3C21ABE) identifies J. T. Baldwin and A. H. Lachlan, *On Strongly Minimal Sets*, *The Journal of Symbolic Logic* 36(1), March 1971, 79--96, DOI `10.2307/2271517`. The 12 March 2014 online posting is not a second original publication. The [author's institutional bibliography](https://homepages.math.uic.edu/~jbaldwin/pmodel.html), item 1, corroborates this original identity. The existing canonical entry is correct and has not been edited.
+
+No readable original body was acquired in this block. The publisher PDF URL was extracted from its actual `citation_pdf_url` metadata, not guessed. It returned HTTP 200 with content type `text/html; charset=utf-8`, redirecting to the abstract/access page. Its 770,763 bytes are not an 18-page PDF. JSTOR's ordinary stable PDF endpoint returned a 3,038-byte HTML challenge shell. Neither HTTP success code establishes acquisition. No login, payment, external author message, or access-control bypass was attempted.
+
+The author's [public paper directory](https://homepages.math.uic.edu/~jbaldwin/pub/) and [current institutional paper list](https://homepages.math.uic.edu/~jbaldwin/model11.html) were inspected without finding a linked original 1971 body. The [Berkeley seminar listing](https://math.berkeley.edu/~scanlon/mts/mtsf02.html) points to JSTOR rather than an institutional copy. The [ResearchGate original-paper record](https://www.researchgate.net/publication/220316183_On_strongly_minimal_sets) reports no full text. A Semantic Scholar DOI locator response lists the original identity but has `openAccessPdf.status: CLOSED` and an empty URL; it is a locator aid, not primary body evidence. Ordinary DBLP access returned bot protection. Legacy Euclid candidates did not resolve to the article. Local filename holdings checks found no prior exact original copy.
+
+The five retained responses and their exact byte counts, URLs, SHA-256 hashes, and non-body standing are in `source/references/p03-baldwin-lachlan1971/acquisition-receipt.json`. The initially downloaded publisher HTML was renamed from a misleading `.pdf` filename to `cambridge-pdf-endpoint-response.html`; no original source PDF exists in this directory. Required body-page count and body hash remain null. Source-page inspection/full-extent reading is not claimed. These facts do not prove that no authorized copy exists; they establish only the present missing-body condition after the routes actually tested.
+
+The publisher extract gives the article's broad four-section roles. It does not supply the theorem statements, internal definitions, numbered-lemma hypotheses, proof continuations, or the fourth-section example. Those cannot be reconstructed as the source's actual route from the extract alone. Later lectures, surveys, field examples, and the geometric bridge authored here are not substitutes for that missing original.
+
+## Saved reader-facing work and mathematical standing
+
+`handbook/parts/p03/presentations/n-a-006-02.tex` and `handbook/annex/p03/n-a-006-02.tex` supply a bounded **independently proved bridge**, with six reciprocal body/annex results:
+
+- Uniform finite/cofinite bounds by compactness, retaining the elementary-extension condition.
+- Extensivity, monotonicity, finite character, algebraic transitivity/idempotence, and the bounded-fibre exchange proof, with arbitrary additional base parameters.
+- Basis existence, spanning, finite replacement, finite and infinite basis-cardinality invariance, and the countable-language closure-cardinality bound.
+- Unique generic one-type and elementary maps between independent sets, including a finite minimal-dependence justification of the sequential independence criterion.
+- Isomorphism by bases, prime/minimal-over-basis, existence of dimensions, and the countable-spectrum dichotomy **only under the stronger whole-universe strongly-minimal hypothesis**. Algebraic finite candidate sets, not an unstated saturation assumption, extend base maps. The Tarski--Vaught test is supplied for infinite algebraically closed subsets.
+- A fixed-characteristic algebraically closed field illustration. The one-variable finite/cofinite and closure-identification steps are proved from the already explicitly cited Part-3 quantifier-elimination theorem `thm:p03-acfp-qe`; existence of algebraic closures remains the ordinary cited algebraic theorem (`Steinitz1910`). This is not original-article §4 credit.
+
+The saved theorem identities are `thm:p03-bl-uniform`, `thm:p03-bl-pregeometry`, `thm:p03-bl-dimension`, `thm:p03-bl-independent-types`, `thm:p03-bl-whole-models`, and `thm:p03-bl-acf-geometry`.
+
+The two-cell pure-set counterexample makes the model-control gap visible: a strongly minimal definable subset can have the same dimension while the complement has different uncountable sizes. The reader-facing boundary explicitly excludes general existence/coordinatization, primeness for arbitrary categorical theories, the original §3 argument, and the original §4 example. Rank, degree, cardinality, and basis dimension are distinguished. Morley's original presentation is not rewritten as this bridge.
+
+Intakes are `handbook/bib/intake-p03-baldwin-lachlan.bib` and `handbook/registry/symbols-intake-p03-baldwin-lachlan.csv`. The bibliography intake confirms the already-existing identity; it must be deduplicated by the lead and conveys no body acquisition. Shared drivers, canonical bibliography, source-allocation queues, symbol registry, and existing theorem statuses were not edited.
+
+## Completion boundary and continuation
+
+MAP-03 has a complete local editorial derivation at the stated parameter scope, but its source-native treatment is not qualified. MAP-06 has the local fixed-characteristic field illustration and method distinction, not the original §4 example. MAP-04 and MAP-05 remain incomplete for the assigned original source. The stronger whole-universe theorem does not discharge them for arbitrary uncountably categorical theories.
+
+Next decisive action: obtain an authorized readable scan of the exact 18 printed pages, verify the first/last pages and any corrections, record the PDF hash, read the whole paper, and build a source-native lemma/definition/argument crosswalk before promoting any source-specific completion. In particular inspect the strongly-minimal existence/principal-extension construction, the model-control and prime/minimal-over-basis arguments, the full countable-model proof, and the actual final example. Then integrate that reconstruction with the already proved geometric bridge without duplicating or weakening the original hard steps.
+
+Authoring verification is a full read-through of the saved body/annex and targeted logical checks of the finite-fibre contradiction, minimal dependence, empty/finite/infinite basis cases, finite algebraic candidate extension, and Tarski--Vaught closure step. No independent acceptance, consolidated review, manuscript build, render, prose test suite, or publication credit is claimed. This unit remains **partial: original-body acquisition and source-native proof reconstruction required**.

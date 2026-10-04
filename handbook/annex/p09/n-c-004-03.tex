@@ -1,0 +1,364 @@
+% Reciprocal proof completion for ED26-REQ-N-c-004-03.
+
+\section{Immerman's ordered fixed-point capture}
+\label{sec:annex-p09-n-c-004-03}
+
+\begin{annexitem}{annex:p9.n-c-004.3.evaluation}{thm:p09-immerman1986-evaluation}{Positivity, the iteration bound, and the fixed input axis}
+\begin{proof}
+Put a first-order matrix in negation-normal form.  If \(R\) is positive,
+enlarging its interpretation preserves truth at its positive atoms, and
+conjunction, disjunction and both quantifiers preserve this implication.
+The other atoms are unchanged.  To cover nested fixed points and
+intervening negations, prove both polarities together by induction on
+syntax: a positive free relation parameter is covariant, and a negative
+one is contravariant.  Negation interchanges these two implications;
+the Boolean operations and quantifiers preserve them.  At an inner
+\(\mu S\) constructor, its operator is monotone in its own bound
+\(S\).  If the free parameter \(R\) is positive in the defining
+matrix and \(R\subseteq R'\), the syntax induction gives
+\(F_R(A)\subseteq F_{R'}(A)\) for every candidate \(A\).
+Starting both iterations at the empty relation, induction gives
+\(F_R^i(\varnothing)\subseteq F_{R'}^i(\varnothing)\): use
+pointwise operator inclusion and then monotonicity in \(S\).
+Their stable unions have the same inclusion.  For a negative parameter
+the pointwise operator inclusion and the stage inclusion are reversed.
+Consequently the binder preserves the matrix's parameter polarity, and
+any surrounding negation flips it.  This also covers a parameter
+negative inside an inner induction but positive after a surrounding
+negation.  Thus the admitted formula is monotone in its bound relation.
+
+From \(I_0=\varnothing\subseteq I_1\) and monotonicity, induction
+gives \(I_i\subseteq I_{i+1}\).  This ascending chain does not require
+the operator to be inflationary on \emph{every} arbitrary relation.
+If two successive stages are equal, applying the same operator makes
+all later stages equal.  Otherwise at least one new tuple enters.
+There are only \(n^r\) tuples, so the chain stabilizes after at
+most \(n^r\) strict increases.  Its stable value \(I\) is a
+fixed point.  If \(J\) is any fixed point, induction gives
+\(I_i\subseteq J\), starting from the empty set and applying
+monotonicity; hence \(I\subseteq J\).  It is the least fixed point.
+
+For polynomial evaluation, induct on the fixed query's syntax.  Atomic
+lookups and truth tables cost polynomial time on explicit relation tables.
+Quantifiers enumerate at most \(n\) values per variable.  At a
+fixed-point constructor, at most \(n^r\) stages each evaluate the
+fixed defining formula on at most \(n^r\) candidate tuples; the
+syntax induction bounds each such evaluation polynomially, including its
+nested fixed points and fixed parameter tuple.  Products of these finitely
+many fixed polynomials remain polynomial.  Enumerating the entire output
+relation costs a further factor \(n^d\), with \(d\) fixed.
+The exponent depends on the query's variable counts, arities and nesting;
+letting the formula vary does not preserve this fixed exponent.
+
+For the family example, induction on stages gives paths of length at
+most \(i-1\) at stage \(i\geq1\): the diagonal supplies length
+zero, and prepending one parent edge supplies the next length bound.
+Conversely every generated pair has such a path by the same induction.
+The stable value is therefore exactly reflexive transitive closure,
+not strict ancestry.  This completes the source's iteration argument
+and fixes the meaning of its displayed example \cite[secs.~1--2]{Immerman1986}.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p9.n-c-004.3.initial}{thm:p09-immerman1986-initial}{The printed binary row and the fixed-type characteristic-table extension}
+\begin{proof}
+In the source's binary case the first clause of \(M_0\) applies only
+at the first position and picks code \(4\) if \(E(0,0)\) holds
+and code \(3\) otherwise.  The second applies exactly to the other
+positions with \(p_1=0\), and uniquely picks code \(1\) or
+\(0\) according to \(E(p_2,p_3)\).  The third applies at
+all remaining positions and uniquely supplies blank.  These position
+cases are disjoint and exhaustive.  There are \(n^2\) positions
+with \(p_1=0\), so the stated bit-block and blank-block lengths
+follow.  Each numbered code can be defined by a first-order formula
+saying that it is the corresponding fixed-rank element of the order:
+the least element has rank zero, and a fixed finite chain of immediate
+successors defines each subsequent code.  These are definable elements,
+not new input constants.  Each displayed equality with a code is eliminated
+by the corresponding first-order code predicate.  If the code rank
+does not exist, that predicate is false, rather than denoting a partial
+term.  Their existence for the working alphabet needs the stated cutoff.
+
+Here is a fully specified generalization of the source's table-decoding
+step.  It is an editorial padded-block completion of Lemma~3.1, not a
+claim that the paper printed this layout.  Make a fixed list of tables:
+all \(R_i\), the available order if it is part of the query's input,
+and the unary singleton tables \(x=c_i\).  Let \(r\geq1\)
+be at least every table arity and choose \(k\geq r+2\).
+Reserve finitely many distinct fixed-rank position elements as block
+tags.  Use a \(k\)-tuple address of the form
+\[
+ (\underbrace{0,\ldots,0}_{k-r-1},b,u_1,\ldots,u_r).
+\]
+For a table \(T\) of arity \(a\leq r\) at tag \(b\), its
+active positions have \(u_1=\cdots=u_{r-a}=0\), and its bit is
+the truth value of \(T(u_{r-a+1},\ldots,u_r)\).
+This is a finite conjunction of coordinate equalities and one input
+atom, or its negation for bit zero.  A singleton table uses the atom
+\(u_r=c_i\).  Every other position in that block is blank.
+Different tags make the active blocks disjoint.  Positions beyond the
+finitely many tags, or outside the displayed zero prefix, are also blank.
+Thus all letter cases are first-order and exhaustive.
+
+To make the domain size decodable even for low-arity or all-empty input
+tables, reserve tag zero for a block whose first \(n\) positions
+are bit one and whose remaining positions are blank: the active condition
+is \(u_1=\cdots=u_{r-1}=0\), with \(u_r\) unrestricted.
+Reserve tag one entirely blank.  Hence the first run of nonblank input
+bits has length exactly \(n\), including when \(r=1\).  All
+actual tables use tags starting at two.  This is an explicit unary-size
+header for the completed layout, not an assumption that a machine can
+infer the universe from a relation's positive tuples.  From that header
+the machine computes the fixed block addresses and recovers every dense
+table and constant value in polynomial time.  Conversely, constructing
+this padded encoding from a dense explicit database takes polynomial
+time.  The active blocks fit within \(O(n^r)\) tape positions since
+their number is fixed.  Padding to \(n^k\) leaves polynomial room
+for the computation.  The coding is not exponentially succinct.
+
+At the first address replace its ordinary initial bit by the matching
+start-state/head letter, exactly as the source replaces its first \(E\)
+bit by code \(3\) or \(4\).  All other bits remain ordinary
+letters.  The finite alphabet's alternative coding, including a specified
+\(c_0\) code for acceptance, merely replaces the finite letter-equality
+tests by the corresponding definable code tests.  There is still exactly
+one initial letter at each position and exactly one head marker.
+For each finite output arity, additional tested-tuple coordinates are
+represented by singleton tables \(u_r=x_i\); these are first-order
+parameter atoms, not extra quantified certificate relations.
+
+All tags, letter tests, arities and coordinate constraints are fixed by
+the machine and type.  A fixed larger cutoff provides the finitely many
+distinct elements needed for them.  Databases below this cutoff have
+only finitely many ordered isomorphism types and will be handled by
+finite diagrams in the capture proof.  This supplies the general-type
+claim that follows the source's printed binary formula without appealing
+to a different descriptive-complexity theorem \cite[lem.~3.1]{Immerman1986}.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p9.n-c-004.3.tableau}{thm:p09-immerman1986-tableau}{Local deterministic transitions and exactness of every induction row}
+\begin{proof}
+A deterministic one-tape transition \((q,b)\mapsto(q',b',d)\)
+has \(d\in\{-1,0,1\}\).  At the current head cell it writes
+\(b'\), carrying marker \(q'\) there if \(d=0\).
+If the head moves right, the cell to its right gains marker \(q'\)
+on that cell's previous tape symbol; if it moves left, the cell to its
+left gains the marker.  Every other cell retains its previous ordinary
+symbol.  Thus the new letter at a cell is determined by the old letters
+at it and its two neighbors.  Inspect the finite set of triples to
+produce the finite table \(\delta_M\).  On triples consistent with
+a legal configuration its output is unique.  The normalized machine's
+absorbing accepting and rejecting configurations use the stationary
+rules.  Choices for impossible multiple-head triples are immaterial,
+because the induction below never generates them.
+
+At position zero the left neighbor is \(\#\) and the machine's
+fixed left-end rules prohibit moving left of zero.  At the last position
+the right neighbor is \(\#\); by the time/space normalization the
+head never reaches that position.  The last ordinary cells therefore
+remain blank, and the local table has the corresponding unchanged-blank
+rules.  These clauses define the endpoints rather than silently applying
+an undefined \(\bar p-1\) or \(\bar p+1\).  Every interior
+cell has exactly one immediate predecessor and successor in the
+lexicographic position order, as given by \(\operatorname{Succ}_k^p\).
+Every nonfirst time has exactly one predecessor in the time order.
+
+Let \(J_i\) be the \(i\)-th iterate of \(\varphi_M\) from
+the empty relation.  Prove that \(J_i\), for \(i\leq n^k\),
+contains exactly all tape-letter facts of times \(0,\ldots,i-1\).
+For \(i=0\) it is empty.  At the first application, the base clause
+supplies precisely the initial row by \(M_0\); the successor
+clause cannot use a center-cell \(R\)-fact, since none exists.
+Suppose the claim holds at stage \(i\).  The base clause regenerates
+the initial row.  For time \(t>0\), the successor clause requires
+the complete, uniquely coded neighborhood at time \(t-1\), with
+the indicated exterior letter where needed.  If \(t-1<i\), all
+these facts are available, the unique local table entry gives exactly
+the correct new letter, and no other letter can be generated.
+If \(t-1\geq i\), the center-cell fact is missing, so no
+fact for time \(t\) is generated.  This proves that stage
+\(i+1\) contains exactly rows through time \(i\), with one
+letter per cell and no extras.  It also proves persistence of earlier
+rows without adding an inflationary \(R\lor\varphi_M\) clause
+that the source does not use.
+
+After \(n^k\) applications all times are present.  The next application
+regenerates precisely those rows: there is no time successor beyond the
+last time.  The relation is a fixed point, and positivity plus iteration
+from the empty set makes it the least one.  The final time lies after
+halting by normalization; its stationary first-position letter is
+\(q_f\) exactly for an accepting input.  This establishes the actual
+cell/time/letter readout of the source's section~3 \cite[thm.~1]{Immerman1986}.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p9.n-c-004.3.capture}{thm:p09-immerman1986-capture}{The source's constant anchor, finite exceptions, and return to queries}
+\begin{proof}
+The evaluation lemma proves \(\mathcal L_\mu(\leq)\subseteq
+\mathrm{QPTIME}\), since lookup of a given order relation is
+polynomial on the same explicit inputs.  A one-fixed-point formula is
+an \(\mathcal L_\mu\) formula, so it remains to construct that
+normal form for every polynomial-time query.
+
+Fix a Boolean query and its deterministic polynomial-time machine on
+explicit database encodings.  A standard one-tape simulation has only
+polynomial slowdown: encode the finitely many old tapes as delimited
+tracks on one tape, scan the at-most-polynomially-many visited cells
+to locate their head markers and symbols, and scan again to perform
+one old transition.  A polynomial number of transitions times a
+polynomial scan length remains polynomial.  In an initial setup step,
+the head creates a permanent origin flag alongside the first cell's
+data; it knows that cell because it starts there.  The flag is a finite
+alphabet component, its data are preserved under subsequent writes,
+and the simulation can then recognize the first cell on return.  The
+initial \(M_0\) still has the source's start-state letter at that
+cell; this flag is created by a transition, not by silently changing
+the printed initial row.  Returning to the first cell after acceptance
+or rejection costs at most the visited tape length.
+Writing its designated terminal letter and then remaining stationary
+completes the normalization.  The decoder from the initial-row lemma
+has polynomial cost as well.  Choose \(k\) larger than these fixed
+degrees and enlarge the fixed cutoff so that their total time and space
+are below \(n^k-2\).  No resources depend on a formula supplied
+later as input.
+
+Here are explicit orders implementing the source's footnote~3.  From
+the given strict order \(<\), define the position order
+\[
+ x<_p y\ \Longleftrightarrow\
+ (x=c_0\land y\ne c_0)\lor
+ (x\ne c_0\land y\ne c_0\land x<y),
+\]
+and the time order
+\[
+ x<_t y\ \Longleftrightarrow\
+ (x\ne c_0\land y=c_0)\lor
+ (x\ne c_0\land y\ne c_0\land x<y).
+\]
+Both are total orders: they move the distinguished element to the first
+or last place and leave the other elements in their original order.
+Their tuple orders, successors, and extrema are first-order by substitution
+in the formulas already displayed.  Thus the first position is
+\(\bar c_0\) and the last time is \(\bar c_0\), while their
+successor meanings are different.  Assign the accepting-letter code to
+\(c_0\) and assign every other member of the fixed alphabet to a
+distinct fixed-rank non-\(c_0\) element in the original order.
+These code tests are also first-order for large enough domains.
+
+This recoding does not discard the input order: its characteristic
+table is available to the decoder for an order-sensitive query.
+A machine can recover the original order and recode the database to
+its chosen dense representation in polynomial time.  Equivalently it
+can compute the fixed query directly from all decoded relations.
+The position/time orders only determine tableau addresses; they do
+not replace the distinguished input order in the query being decided.
+The initial-row lemma and the tableau lemma now give
+\[
+ (\bar c_0,\bar c_0,c_0:\mu R(\bar p,\bar t,a))\varphi_M
+ \quad\Longleftrightarrow\quad M\hbox{ accepts }B
+\]
+on all databases above the fixed cutoff.  This is exactly one
+fixed-point expression with a first-order positive defining matrix.
+
+For the omitted small sizes, enumerate their finitely many ordered
+isomorphism types that satisfy the fixed query.  A complete diagram
+for a type of size \(m\) existentially names \(m\) distinct
+points, asserts that every point equals one of them, states the truth
+or falsity of each relation on each tuple of them, and states which
+named point interprets each constant.  The disjunction of the accepting
+diagrams is a first-order sentence \(\operatorname{SmallYes}\).
+Let \(\operatorname{Large}\) say there are more points than the
+fixed cutoff.  Replace the defining matrix by
+\[
+\begin{split}
+ \widehat\varphi_M(R)[\bar p,\bar t,a]\defeq{}&
+  (\operatorname{SmallYes}\land\bar p=\bar c_0
+     \land\bar t=\bar c_0\land a=c_0)\\
+ &{}\lor(\operatorname{Large}\land\varphi_M(R)[\bar p,\bar t,a]).
+\end{split}
+\]
+It remains positive in \(R\).  On a small accepting database it
+generates the readout tuple in its first stage; on a small rejecting
+database it generates nothing; on a large database it is the actual
+tableau operator.  Thus the single readout expression works at every
+positive size, including one-element structures.  The diagram sentence
+does not pretend to supply missing distinct alphabet codes.
+
+For a fixed \(d\)-ary query \(Q\), run the membership machine on
+\((B,\bar x)\) and include the unary singleton tables \(u=x_i\)
+in the decoder, as in the initial-row lemma.  The parameters \(\bar x\)
+remain free in the operator; they are not part of the recursively bound
+tuple and do not change during iteration.  Complete small diagrams also
+record those parameters.  The same one-fixed-point expression then
+defines membership for every \(\bar x\).  This proves the return
+from the source's Boolean simplification to the asserted fixed-arity
+query equality.
+
+If no constant exists, use one free variable \(z\) as the anchor in
+the position, time and alphabet coding.  The resulting readout has the
+same truth value for every choice of \(z\): it decodes the same
+database with a different address/code bijection.  Nonemptiness provides
+an anchor, and one final \(\exists z\) closes the Boolean query.
+This is the stated source modification, not a claim that a closed
+positive-arity fixed-point atom has ground arguments without terms.
+We have proved \(\mathrm{QPTIME}\subseteq\Sigma_\omega(\leq)\)
+with the appropriate constant proviso and completed both inclusions
+\cite[thm.~1 and its footnote~3]{Immerman1986}.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p9.n-c-004.3.unordered}{thm:p09-immerman1986-unordered}{The equality-pattern obstruction to female parity}
+\begin{proof}
+Counting the \(F\)-entries in an explicit unary table and reducing
+the count modulo two is polynomial time.  Suppose a fixed
+\(\mathcal L_\mu\) sentence defined that query.  Restrict to
+\(B_n\) with \(\lvert U\rvert=n\), \(F=U\),
+\(P=H=\varnothing\), and one distinguished \(c_0\).
+Rename bound variables and relation variables apart in the fixed finite
+syntax, and choose \(v\) larger than the total number of individual
+variables appearing in it and its fixed-point argument tuples.
+Take \(n,m>v+1\).
+
+Assignments on these two structures have the same equality pattern
+when exactly the same variables coincide and exactly the same variables
+equal the distinguished constant.  Each atomic input formula then
+agrees: equality agrees, \(F\) is always true, and \(P,H\)
+are always false.  Any existential witness extends a matching pattern
+on the other side: if it equals an assigned point or \(c_0\),
+use that image; otherwise choose a fresh point, available because the
+assignment uses at most \(v\) points and the domain has more than
+\(v+1\).  This works in both directions.  Boolean operations and
+quantifiers therefore preserve truth determined by such patterns.
+
+For the syntax induction, allow any interpretations of free relation
+variables that agree on matching tuple patterns, relative to the held
+external parameters.  This strengthened assertion supplies the induction
+hypothesis when an outer fixed-point stage is passed to an inner binder;
+it does not assume that the recursive relation is an input predicate.
+To include a fixed-point constructor, hold its external parameter
+pattern fixed.  At stage zero its recursively defined relation is empty
+on both structures.  Suppose at stage \(i\) corresponding tuples
+have matching membership, determined by their equality pattern together
+with those parameters and \(c_0\).  The structural argument just
+given, applied to the defining matrix with these recursive atoms as
+additional pattern-invariant atoms, gives matching membership at stage
+\(i+1\).  Nested fixed points are handled by the same induction
+on their smaller syntax.  The finitely many possible equality patterns
+are the same in both domains, since both have enough fresh elements
+to realize every pattern used by the fixed formula.  Thus the stage
+operators on that finite set of patterns are identical.  Their
+ascending iterations stabilize at the same pattern set, and least
+fixed-point membership agrees.  This proves the structural claim
+for arbitrary nesting, not just for first-order formulas or one
+particular number of induction rounds.
+
+A sentence has no assigned free variables.  The claim shows its truth
+is the same in all \(B_n\) beyond this bound.  But in these
+structures \(\lvert F\rvert=n\), and parity differs for
+arbitrarily large successive sizes.  The putative defining sentence
+cannot exist.  This proves the explicit example of the source's
+imported Fact~2.2 without dropping its constant or adding an order
+\cite[sec.~2]{Immerman1986}.
+\end{proof}
+\end{annexitem}

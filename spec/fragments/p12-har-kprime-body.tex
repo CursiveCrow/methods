@@ -1,0 +1,234 @@
+\subsection{The actual autarkic primality program}
+
+\begin{hbdefinition}{def:p12-har-kprime-regime}{The exact predicate and computation regime}
+The chapter requires a represented KPrime with
+\(\mathrm{Prime}(n)\leftrightarrow\mathrm{KPrime}(n)=1\) and a
+zero/one range proof. Instantiate that obligation at its explicitly
+defined historical predicate \(\mathsf{prime}\) from
+\cref{def:p12-har-prime-arithmetic}. The divisor characterization below
+justifies the connection with ordinary natural-number primality, rather
+than identifying predicates by capitalization alone.
+
+The regime is still \(\mathsf{nat}:\mathsf{Set}\), with the source
+primitive data recursion, induction into Prop and propositional equality
+of \cref{def:p12-har-prime-regime}. Reuse the actual eqb/choose programs
+and their specifications from \cref{def:p12-har-autarkic-eqb,thm:p12-har-autarkic-eqb},
+and the proved bounded proper-divisor characterization of
+\cref{thm:p12-har-autarkic-prime-bound}. All recursion targets below
+are nat or nat-to-nat. DN is not used. This direct bounded-search
+reconstruction is neither the cited generic primitive-recursive compiler
+nor the separate Pocklington/Fermat algorithm; no modern kernel or
+beta-only HOL implementation is substituted
+\cite[pp.~1221--1223]{BarendregtGeuvers2001}.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p12-har-kprime-bits}{The complete data-level boolean operations}
+For natural-number data define
+\[
+\begin{aligned}
+ \mathsf{Bit}(a)&:=(a=O)\vee(a=\mathsf{one}),\\
+ \mathsf{andb}&:=\lambda a,b:\mathsf{nat}.
+                      \mathsf{choose}\ a\ b\ O,\\
+ \mathsf{orb}&:=\lambda a,b:\mathsf{nat}.
+                      \mathsf{choose}\ a\ \mathsf{one}\ b,\\
+ \mathsf{notb}&:=\lambda a:\mathsf{nat}.
+                      \mathsf{choose}\ a\ O\ \mathsf{one}.
+\end{aligned}
+\]
+Bit is a proposition about a previously computed datum; it is not the
+datatype from which these functions extract their inputs. The operations
+have respectively types nat-to-nat-to-nat, nat-to-nat-to-nat and
+nat-to-nat, whether or not their inputs satisfy Bit.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p12-har-kprime-bits}{proved=annex:p12.har.kprime-bits}{Both boolean truth values, with the exact range premises}
+For Bit a, notb a satisfies Bit. For Bit a and Bit b, andb/orb
+also satisfy Bit. At these exact respective premises,
+\[
+\begin{aligned}
+ \mathsf{andb}\ a\ b=\mathsf{one}&\leftrightarrow
+          (a=\mathsf{one})\wedge(b=\mathsf{one}),\\
+ \mathsf{andb}\ a\ b=O&\leftrightarrow
+          (a=O)\vee(b=O),\\
+ \mathsf{orb}\ a\ b=\mathsf{one}&\leftrightarrow
+          (a=\mathsf{one})\vee(b=\mathsf{one}),\\
+ \mathsf{orb}\ a\ b=O&\leftrightarrow(a=O)\wedge(b=O),\\
+ \mathsf{notb}\ a=\mathsf{one}&\leftrightarrow a=O,\qquad
+ \mathsf{notb}\ a=O\leftrightarrow a=\mathsf{one}.
+\end{aligned}
+\]
+For a Bit datum, \(a=O\leftrightarrow\neg(a=\mathsf{one})\)
+and \(a=\mathsf{one}\leftrightarrow\neg(a=O)\), constructively.
+\end{hblemma}
+
+\begin{hbdefinition}{def:p12-har-kprime-order}{The actual weak- and strict-order programs}
+Put
+\[
+\begin{aligned}
+ l_0&:=\lambda m:\mathsf{nat}.\mathsf{one},\\
+ l_S&:=\lambda n:\mathsf{nat}.\lambda q:\mathsf{nat}\to\mathsf{nat}.
+  \lambda m:\mathsf{nat}.
+    \mathsf{nat\_rec}\ O
+      (\lambda j:\mathsf{nat}.\lambda r:\mathsf{nat}.q j)\ m,\\
+ \mathsf{leb}&:=\mathsf{nat\_rec}\ l_0\ l_S,\\
+ \mathsf{ltb}&:=\lambda n,m:\mathsf{nat}.\mathsf{leb}\ (S n)\ m.
+\end{aligned}
+\]
+The outer recursion target is nat-to-nat, the inner target nat.
+Both resulting functions have type nat-to-nat-to-nat. Their computation
+clauses are leb O m to one, leb(S n)O to O, and
+leb(S n)(S m) to leb n m; ltb expands the source definition of strict order.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p12-har-kprime-order}{proved=annex:p12.har.kprime-order}{The complete weak/strict comparison specifications}
+For all n,m:nat the two codes satisfy Bit, and
+\[
+\begin{aligned}
+ \mathsf{leb}\ n\ m=\mathsf{one}&\leftrightarrow n\le m,&
+ \mathsf{leb}\ n\ m=O&\leftrightarrow\neg(n\le m),\\
+ \mathsf{ltb}\ n\ m=\mathsf{one}&\leftrightarrow n<m,&
+ \mathsf{ltb}\ n\ m=O&\leftrightarrow\neg(n<m).
+\end{aligned}
+\]
+These compare the actual source leseq/lthan relations, not an imported
+order implementation or classical decision oracle.
+\end{hblemma}
+
+\begin{hbdefinition}{def:p12-har-kprime-any}{The inclusive bounded existential fold}
+For \(p:\mathsf{nat}\to\mathsf{nat}\), define
+\[
+ \mathsf{Any}:=\lambda N:\mathsf{nat}.\lambda p:\mathsf{nat}\to\mathsf{nat}.
+    \mathsf{nat\_rec}\ (p O)
+       (\lambda k:\mathsf{nat}.\lambda r:\mathsf{nat}.
+           \mathsf{orb}\ r\ (p(S k)))\ N.
+\]
+It has type nat-to-(nat-to-nat)-to-nat and actually scans every input
+from O through N, \emph{including both endpoints}. Its seed and step
+have target nat; it consumes the data function p, not a Prop existential.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-har-kprime-any}{proved=annex:p12.har.kprime-any}{The complete bounded-fold positive and negative proofs}
+For each fixed p with \(\Pi i:\mathsf{nat}.\mathsf{Bit}(p i)\),
+the result satisfies Bit, and for every N:nat,
+\[
+\begin{aligned}
+ \mathsf{Any}\ N\ p=\mathsf{one}&\leftrightarrow
+             \exists i:\mathsf{nat}.(i\le N)\wedge(p i=\mathsf{one}),\\
+ \mathsf{Any}\ N\ p=O&\leftrightarrow
+             \Pi i:\mathsf{nat}.(i\le N)\to(p i=O),\\
+ \mathsf{Any}\ N\ p=O&\leftrightarrow
+             \neg\exists i:\mathsf{nat}.(i\le N)\wedge(p i=\mathsf{one}).
+\end{aligned}
+\]
+Only a code-range premise on the independently supplied function is
+assumed. The fold's existential and universal semantic specifications
+are proved, not included among its premises.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p12-har-kprime-program}{The complete nested coefficient/divisor search and KPrime term}
+The actual composed terms are
+\[
+\begin{aligned}
+ \mathsf{Coeff}&:=\lambda d,n:\mathsf{nat}.
+   \mathsf{Any}\ n\ (\lambda x:\mathsf{nat}.
+                \mathsf{eqb}\ (\mathsf{times}\ x\ d)\ n),\\
+ \mathsf{Proper}&:=\lambda d,n:\mathsf{nat}.
+   \mathsf{andb}\ (\mathsf{ltb}\ \mathsf{one}\ d)
+    (\mathsf{andb}\ (\mathsf{ltb}\ d\ n)(\mathsf{Coeff}\ d\ n)),\\
+ \mathsf{HasProper}&:=\lambda n:\mathsf{nat}.
+        \mathsf{Any}\ n\ (\lambda d:\mathsf{nat}.\mathsf{Proper}\ d\ n),\\
+ \mathsf{KPrime}&:=\lambda n:\mathsf{nat}.
+   \mathsf{andb}\ (\mathsf{ltb}\ \mathsf{one}\ n)
+             (\mathsf{notb}(\mathsf{HasProper}\ n)).
+\end{aligned}
+\]
+Coeff and Proper have type nat-to-nat-to-nat; HasProper and KPrime
+have type nat-to-nat. The coefficient is on the \emph{left} of times,
+matching the source div d n definition. The two inclusive scans use the
+same bound n, justified by the proved bounded-divisor characterization;
+strict properness is still computed, not assumed from the loop bounds.
+No data witness is extracted from the characterization's Prop existentials.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p12-har-kprime-proper}{proved=annex:p12.har.kprime-proper}{Every nested search code and both proper-divisor directions}
+All Coeff/Proper/HasProper outputs satisfy Bit. Coeff d n=one exactly
+when \(\exists x.(x\le n)\wedge(xd=n)\). Proper d n=one exactly
+when \(\mathsf{propdiv}\ d\ n\); its O output is equivalent to
+the negation of that proposition. HasProper n=one exactly when
+\(\exists d.\mathsf{propdiv}\ d\ n\); its O output is equivalent
+to the negation of that existential. In the reverse Proper direction,
+the coefficient bound is used only after the premise one<d has established
+one<=d; no invalid cancellation/bound for a zero divisor is used.
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p12-har-kprime-correct}{proved=annex:p12.har.kprime-correct}{The reusable source primality characteristic, range and negative decision proof}
+The actual program proves all of
+\[
+\begin{aligned}
+ &\Pi n:\mathsf{nat}.\mathsf{Bit}(\mathsf{KPrime}\ n),\\
+ &\Pi n:\mathsf{nat}.\quad
+       \mathsf{prime}\ n\leftrightarrow\mathsf{KPrime}\ n=\mathsf{one},\\
+ &\Pi n:\mathsf{nat}.\quad
+       \neg\mathsf{prime}\ n\leftrightarrow\mathsf{KPrime}\ n=O.
+\end{aligned}
+\]
+In particular prime is decidable constructively. Actual constructor
+computations give \(\mathsf{KPrime}\ O\twoheadrightarrow O\) and
+\(\mathsf{KPrime}\ \mathsf{one}\twoheadrightarrow O\);
+both zero and one are refuted as primes. These statements include the
+source's two obligations and do not depend on DN
+\cite[p.~1221]{BarendregtGeuvers2001}.
+As a worked negative search, the actual coefficient/divisor hits at
+\(x=d=\overline2,n=\overline4\) give
+\(\mathsf{KPrime}\,\overline4\twoheadrightarrow O\) and
+\(\neg\mathsf{prime}\,\overline4\), where the bars denote unary
+constructor numerals, not primitive decimal constants.
+\end{hbtheorem}
+
+\begin{hblemma}{thm:p12-har-kprime-divisor-characterization}{proved=annex:p12.har.kprime-divisor-characterization}{The ordinary divisor characterization proved at the source definitions}
+The source predicate prime n is equivalent to
+\[
+ (\mathsf{one}<n)\wedge
+       \Pi d:\mathsf{nat}.\mathsf{div}\ d\ n\to
+                       ((d=\mathsf{one})\vee(d=n)).
+\]
+The forward proof supplies the zero-divisor and positive-coefficient
+cases rather than assuming every divisor is automatically bounded by n.
+\end{hblemma}
+
+\begin{hblemma}{thm:p12-har-kprime-small-factor}{proved=annex:p12.har.kprime-small-factor}{The actual small-factor and no-multiple certificate lemmas}
+For all natural data, \(a\le b\) implies \(ac\le bc\).
+If \(qd<n<(S q)d\), then \(\neg\mathsf{div}\ d\ n\).
+If one<n and \(n<(S b)(S b)\), then
+\[
+ (\exists d.\mathsf{propdiv}\ d\ n)\to
+        \exists e.(e\le b)\wedge\mathsf{propdiv}\ e\ n.
+\]
+The factor may be the original divisor or its coefficient; both branches
+are constructed inside Prop, without assuming a factorization algorithm.
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p12-har-kprime-61}{proved=annex:p12.har.kprime-61}{The printed Prime(61) example, with proof and literal computation}
+Let \(\overline{k}:=S^k O\) denote the actual source unary numeral in this
+local statement. Then \(\mathsf{prime}\,\overline{61}\) is proved,
+and the explicit program admits a finite beta/iota/delta reduction
+\[
+ \mathsf{KPrime}\,\overline{61}\twoheadrightarrow\mathsf{one}.
+\]
+The annex supplies the small-factor certificate, all six literal product
+intervals, and the inclusive-loop reduction argument. This is not an
+executed Coq computation. The printed
+1223334444555554444333221 example has a distinct Pocklington/Fermat
+attribution; no value of KPrime at that input or certificate for it is
+claimed here \cite[pp.~1220,1223]{BarendregtGeuvers2001}.
+\end{hbtheorem}
+
+\begin{proofboundary}{def:p12-har-kprime-residual}{Exact variant and remaining source obligations}
+The direct bounded-search primality component now has its actual term,
+both range/characteristic directions, negative decision and the printed61
+example. The source-cited generic primitive-recursive compiler and its
+universal compilation theorem, the Pocklington/Fermat algorithm and large
+certificates, G's polynomial transformer/open-valuation correctness,
+differentiation/simplification/continuity extensions, arithmetic coding
+and global extension metatheory remain separate obligations.
+\end{proofboundary}

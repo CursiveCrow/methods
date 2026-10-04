@@ -1,0 +1,1952 @@
+\section{Barendregt--Geuvers: proof checking and dependent types}
+\label{sec:p12-har-types}
+
+This presentation follows the author-hosted 2001 chapter, whose published
+extent is pp.~1149--1238. Its \(\lambda\mathrm{HOL}\), pure type systems,
+extensions, and historical assistants have their own standing; they are not
+identified with the current Rocq or Lean kernels. The following proof-checking
+development follows the chapter's proof-checking systems, historical
+theory development and dated assistant comparison, retaining their
+source-specific notation and assumptions
+\cite[pp.~1151--1230]{BarendregtGeuvers2001}.
+
+\subsection{What is checked}
+
+\begin{hbdefinition}{def:p12-har-checking}{Formal theory, proof checker, and proof assistant}
+A formalized theory supplies primitive notions, well-formed definitions,
+axioms, and proofs in a declared logic. Proof checking verifies the
+well-formedness of its definitions and the correctness of its supplied
+proofs. In the chapter's type-theoretic approach, an interactive
+proof-development system constructs a term, and a separate checker verifies
+its type. Their combination is a proof assistant. Proof generation and proof
+verification remain different tasks even when automation is available in the
+development system.
+
+The formal assertion is \(\Gamma\vdash_T p:A\): the context, proof term,
+and proposition represented as a type are explicit linguistic objects.
+If a logic \(L\) and a type theory \(T\) have a justified
+propositions-as-types translation \([\ ]\), its intended correspondence is
+\[
+ \Gamma\vdash_L A\text{ using }p
+ \quad\longleftrightarrow\quad
+ [\Gamma]\vdash_T[p]:[A].
+\]
+The biconditional is a calculus-relative adequacy obligation, not a
+consequence of writing brackets. Definitions and the implementation of the
+checker are part of the trust boundary. A set-theoretic encoding of
+computation may be possible without being feasible as a checking mechanism;
+type-theoretic reduction is intended to make this mechanism explicit
+\cite[pp.~1151--1154]{BarendregtGeuvers2001}.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p12-har-three-problems}{TCP, TSP, and TIP}
+For a fixed type theory and well-formed context, the chapter distinguishes
+\[
+\begin{array}{lll}
+ \Gamma\vdash_T M:A?&\mathrm{TCP}&\text{type checking},\\
+ \Gamma\vdash_T M:?&\mathrm{TSP}&\text{type synthesis},\\
+ \Gamma\vdash_T ?:A&\mathrm{TIP}&\text{type inhabitation}.
+\end{array}
+\]
+TCP asks whether the alleged proof proves the stated proposition; TSP asks
+whether the given term has a type; TIP asks for a proof of a given
+proposition. Decidability of TCP and TSP depends on the exact system,
+conversion relation, and annotations carried by terms. It does not follow
+that TIP is decidable. A faithful effective embedding of a logic with
+undecidable theoremhood makes inhabitation undecidable for its image.
+
+The chapter's de Bruijn criterion asks for explicit proof objects checkable
+by an easy algorithm. A small inspectable checker can provide a strong
+reliability argument, but not absolute assurance against implementation or
+hardware failure. Large proof objects and a small checker are compatible;
+the checker follows local steps rather than discovering the proof
+\cite[pp.~1154--1156]{BarendregtGeuvers2001}.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p12-har-propositions-types}{The constructive reading of the source type formers}
+For the direct interpretation, the chapter reads an implication proof as a
+method taking a proof of its antecedent to a proof of its consequent, a
+conjunction proof as a pair, and a disjunction proof as a tagged alternative.
+There is no proof of falsehood. A universal proof is a method with a proof
+for every argument; an existential proof supplies a witness and its proof.
+Using the chapter's logical symbols and type-former symbols,
+\[
+\begin{array}{rcl@{\qquad}rcl}
+ [A\supset B]&=&[A]\to[B]&[A\mathbin{\&}B]&=&[A]\times[B],\\
+ {}[A\lor B]&=&[A]\cup[B]&[\bot]&=&\varnothing,\\
+ {}[\forall x\in X.A_x]&=&\Pi x:X.[A_x]&
+ [\exists x\in X.A_x]&=&\Sigma x:X.[A_x].
+\end{array}
+\]
+Here \(\cup\) is the source's disjoint-union type, not untagged set union;
+its inhabitants are \(\langle0,p\rangle\) with \(p:P\), or
+\(\langle1,q\rangle\) with \(q:Q\). The empty-type symbol denotes
+the absence of constructors. Negation is \(A\supset\bot\).
+The dependent product has functions whose value at \(a:A\) has type
+\(P a\), while the dependent sum has pairs \(\langle a,p\rangle\)
+with \(p:P a\). These are the constructive intuitions; whether existential
+propositions actually permit extraction into data depends on the chosen
+sorts and elimination rules \cite[pp.~1156--1157]{BarendregtGeuvers2001}.
+\end{hbdefinition}
+
+\subsection{A proof term and its entire application chain}
+
+\begin{hbdefinition}{def:p12-har-relation-terms}{The source relation operators}
+The chapter uses \(\mathrm{Set}\) for domains and
+\(\mathrm{Prop}\) for propositions. With these local sort roles, define
+\[
+\begin{aligned}
+ \mathrm{Rel}&:=\lambda X:\mathrm{Set}.X\to X\to\mathrm{Prop},\\
+ \mathrm{AntiSym}&:=\lambda X:\mathrm{Set}.\lambda R:\mathrm{Rel}\,X.
+       \Pi x,y:X.(Rxy)\to(Ryx)\to\bot,\\
+ \mathrm{Irrefl}&:=\lambda X:\mathrm{Set}.\lambda R:\mathrm{Rel}\,X.
+       \Pi x:X.(Rxx)\to\bot.
+\end{aligned}
+\]
+The identifier \(\mathrm{AntiSym}\) is retained from the source, but its
+formula is \emph{asymmetry}, not ordinary antisymmetry. Ordinary
+antisymmetry allows \(Rxx\), for example when \(R\) is equality, and
+does not imply irreflexivity. Unfolding a definition is \(\delta\)-reduction;
+applying an abstraction is \(\beta\)-reduction. Thus
+\(\mathrm{Rel}\,X\to_\delta
+(\lambda X:\mathrm{Set}.X\to X\to\mathrm{Prop})X
+\to_\beta X\to X\to\mathrm{Prop}\).
+The product in the type of \(\mathrm{AntiSym}\) depends on its domain:
+\[
+ \mathrm{AntiSym}:\Pi X:\mathrm{Set}.
+       (X\to X\to\mathrm{Prop})\to\mathrm{Prop}.
+\]
+The abstract product/application surface used in this development is
+\hyperref[sheet:p12-har-types]{the source-rule sheet}
+\cite[pp.~1157--1158]{BarendregtGeuvers2001}.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-har-asymmetry}{proved=annex:p12.har.asymmetry}{Checking the source asymmetry proof}
+In the source's direct dependent-product setting, the term
+\[
+ \lambda X:\mathrm{Set}.\lambda R:\mathrm{Rel}\,X.
+ \lambda h:\mathrm{AntiSym}\,X R.\lambda x:X.\lambda q:Rxx.hxxqq
+\]
+has type
+\[
+ \Pi X:\mathrm{Set}.\Pi R:\mathrm{Rel}\,X.
+       (\mathrm{AntiSym}\,X R)\to(\mathrm{Irrefl}\,X R).
+\]
+Every application uses the same \(x\) and the same proof \(q\); no
+equality premise or excluded-middle principle is used.
+\end{hbtheorem}
+
+\begin{hbmethod}{def:p12-har-synthesis}{Synthesis followed by comparison}
+For an annotated abstraction \(\lambda x:X.M\), synthesize the body type
+\(B\) under the added declaration \(x:X\), then return \(\Pi x:X.B\).
+For \(F N\), synthesize \(A\) for \(N\) and \(C\) for \(F\);
+expose a product \(\Pi x:D.B\) by permitted conversion of \(C\),
+compare \(D\) with \(A\), and return \(B[N/x]\) only if they are
+convertible. The product-formation and context checks must also succeed.
+An application-domain failure is not repaired by comparing \(D\) with
+the whole function type \(C\).
+
+To solve TCP by this TSP procedure and a final comparison requires
+uniqueness of types up to the same conversion relation, sound and complete
+synthesis, and a decidable conversion test. Computing a normal form is a
+possible conversion method under the hypotheses below, not always a good
+implementation strategy. The source emphasizes reduction only as needed,
+with definitions unfolded sparingly: definitions can conceal most relevant
+\(\beta\)-redexes even when proof terms appear \(\beta\)-normal
+\cite[pp.~1158--1160]{BarendregtGeuvers2001}.
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p12-har-normal-form-test}{proved=annex:p12.har.normal-form-test}{The conditional normal-form conversion test}
+Let a finitely branching effective reduction on well-typed terms have
+decidable normal-form recognition, preserve well-typedness, be confluent,
+and give every well-typed term a normal form. Suppose alpha-equivalence of
+normal forms is decidable. Breadth-first reduction search computes a normal
+form, and two well-typed terms are convertible exactly when their computed
+normal forms are alpha-equivalent. Hence conversion is decidable in this
+regime. This statement proves neither normalization nor confluence of an
+arbitrary dependent type theory or PTS specification.
+\end{hbtheorem}
+
+\subsection{Three framework signatures, not three direct interpretations}
+
+\begin{hbdefinition}{def:p12-har-framework}{The chapter's logical-framework encoding}
+In a direct interpretation, logical connectives and their rules are mirrored
+by type formers and type-theoretic rules. In the chapter's other approach,
+called its \emph{logical-framework} or \emph{shallow} encoding, a signature
+declares the object logic inside a host type theory. This published use of
+``shallow'' is retained locally; it must not be silently identified with an
+alternative modern deep/shallow taxonomy.
+
+Object proposition names have type \(\mathrm{prop}\); they are not
+themselves host types to be inhabited. A family
+\(T:\mathrm{prop}\to\mathrm{type}\) assigns each name its proof type.
+Binding and substitution use the host's binding discipline, while logical
+rules become declared constants. Adequacy and faithfulness must be checked
+for each signature; a framework's flexibility is not a universal encoding
+theorem \cite[pp.~1160--1163]{BarendregtGeuvers2001}.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p12-har-prop-signature}{The minimal implication signature}
+For the \(\{\supset\}\)-fragment of minimal propositional logic, the
+source signature \(\Sigma_{\mathrm{PROP}}\) is
+\[
+\begin{aligned}
+ \mathrm{prop}&:\mathrm{type},&
+ \mathrm{imp}&:\mathrm{prop}\to\mathrm{prop}\to\mathrm{prop},\\
+ T&:\mathrm{prop}\to\mathrm{type},\\
+ \mathrm{imp\_intr}&:\Pi p,q:\mathrm{prop}.(Tp\to Tq)\to T(\mathrm{imp}\,p q),\\
+ \mathrm{imp\_el}&:\Pi p,q:\mathrm{prop}.
+             T(\mathrm{imp}\,p q)\to Tp\to Tq.
+\end{aligned}
+\]
+Declare each atomic proposition symbol as a variable of type
+\(\mathrm{prop}\), and set
+\([A\supset B]=\mathrm{imp}[A][B]\). For instance,
+\[
+ \mathrm{imp\_intr}[A][A](\lambda x:T[A].x)
+       :T(\mathrm{imp}[A][A]).
+\]
+The type of an object proposition's proof is \(T[A]\), not
+\([A]\) itself \cite[p.~1161]{BarendregtGeuvers2001}.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p12-har-pred-signature}{The minimal predicate signature}
+For the one-sorted \(\{\supset,\forall\}\)-fragment, extend the
+propositional declarations (including \(T\)) with
+\[
+\begin{aligned}
+ A&:\mathrm{type},&c&:A,&f&:A\to A,&R&:A\to A\to\mathrm{prop},\\
+ \mathrm{forall}&:(A\to\mathrm{prop})\to\mathrm{prop},\\
+ \mathrm{forall\_intr}&:\Pi P:A\to\mathrm{prop}.
+             (\Pi x:A.T(Px))\to T(\mathrm{forall}\,P),\\
+ \mathrm{forall\_elim}&:\Pi P:A\to\mathrm{prop}.
+             T(\mathrm{forall}\,P)\to\Pi x:A.T(Px).
+\end{aligned}
+\]
+The source's constant \(c\), unary function \(f\), and binary
+predicate \(R\) constitute the chosen object signature. Translation
+preserves them and sets
+\([\forall x:A.Px]=\mathrm{forall}(\lambda x:A.[Px])\).
+Object free variables are declared with type \(A\).
+
+For the complete instantiation of the source example, let
+\(U=\mathrm{forall}(\lambda x:A.
+\mathrm{forall}(\lambda y:A.Rxy))\). Then
+\[
+\begin{aligned}
+ &\mathrm{forall\_intr}\,(\lambda z:A.\mathrm{imp}\,U(Rzz))\\
+ &\quad(\lambda z:A.\mathrm{imp\_intr}\,U(Rzz)
+   (\lambda h:T U.
+     \mathrm{forall\_elim}\,(\lambda y:A.Rzy)
+      (\mathrm{forall\_elim}\,(\lambda x:A.
+          \mathrm{forall}(\lambda y:A.Rxy))\,h\,z)\,z))
+\end{aligned}
+\]
+has type \(T(\mathrm{forall}(\lambda z:A.
+\mathrm{imp}\,U(Rzz)))\). Thus it represents
+\(\forall z:A.((\forall x,y:A.Rxy)\supset Rzz)\), with every
+implicit product argument in the chapter's abbreviated display now given
+\cite[p.~1162]{BarendregtGeuvers2001}.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p12-har-lambda-signature}{The framework signature for untyped beta-equality}
+The source's third signature \(\Sigma_{\mathrm{lambda}}\) declares
+\[
+\begin{aligned}
+ D&:\mathrm{type},&\mathrm{app}&:D\to D\to D,&
+ \mathrm{abs}&:(D\to D)\to D,\\
+ \mathrm{eq}&:D\to D\to\mathrm{type},\\
+ \mathrm{refl}&:\Pi x:D.\mathrm{eq}\,x x,\\
+ \mathrm{sym}&:\Pi x,y:D.\mathrm{eq}\,x y\to\mathrm{eq}\,y x,\\
+ \mathrm{trans}&:\Pi x,y,z:D.
+       \mathrm{eq}\,x y\to\mathrm{eq}\,y z\to\mathrm{eq}\,x z,\\
+ \mathrm{mon}&:\Pi x,x',z,z':D.
+       \mathrm{eq}\,x x'\to\mathrm{eq}\,z z'
+           \to\mathrm{eq}(\mathrm{app}\,z x)(\mathrm{app}\,z'x'),\\
+ \mathrm{xi}&:\Pi F,G:D\to D.
+       (\Pi x:D.\mathrm{eq}(Fx)(Gx))
+           \to\mathrm{eq}(\mathrm{abs}\,F)(\mathrm{abs}\,G),\\
+ \mathrm{beta}&:\Pi F:D\to D.\Pi x:D.
+       \mathrm{eq}(\mathrm{app}(\mathrm{abs}\,F)x)(Fx).
+\end{aligned}
+\]
+Its translation is \([x]=x\),
+\([P Q]=\mathrm{app}[P][Q]\), and
+\([\lambda x.P]=\mathrm{abs}(\lambda x:D.[P])\). Free variables are
+declared of type \(D\). Object \(\beta\)-equality is represented by
+\(\mathrm{eq}[P][Q]\); it is not host definitional equality.
+For example, \(\mathrm{beta}(\lambda x:D.x)y\) checks as
+\(\mathrm{eq}(\mathrm{app}(\mathrm{abs}(\lambda x:D.x))y)y\).
+No object \(\eta\)-axiom is included
+\cite[p.~1163]{BarendregtGeuvers2001}.
+\end{hbdefinition}
+
+\input{parts/p12/presentations/har2001-c18-framework-host}
+
+\begin{hbtheorem}{thm:p12-har-framework-forward}{proved=annex:p12.har.framework-forward}{The three forward encoding constructions}
+At the beta-only LF host of \cref{def:p12-har-fw-host},
+every natural-deduction derivation in minimal implication logic translates
+to a term of \(T[A]\) over \(\Sigma_{\mathrm{PROP}}\), with
+its hypotheses translated to variables of their proof types. The same holds
+for the displayed one-sorted minimal predicate logic over
+\(\Sigma_{\mathrm{PRED}}\). Every derivation of untyped
+\(\beta\)-equality translates to a term of
+\(\mathrm{eq}[P][Q]\) over \(\Sigma_{\mathrm{lambda}}\).
+The translation respects capture-avoiding object substitution by host
+substitution.
+\end{hbtheorem}
+
+\begin{proofboundary}{def:p12-har-framework-inverse}{Faithfulness is a separate direction}
+The converse for each of these exact signatures and admissible open contexts
+is proved at \cref{thm:p12-har-fw-faithfulness}, using typed normalization,
+normal-head inversion and source reification. Induction on an object
+derivation alone proves only the forward direction. The converse does not
+extend merely by writing the same constants in a host with additional
+axioms, equality reflection or eliminators
+\cite[pp.~1161--1163]{BarendregtGeuvers2001}.
+\end{proofboundary}
+
+\input{parts/p12/presentations/har2001-c18-framework-faithfulness}
+
+\subsection{Algorithms, graphs, and computation inside proof checking}
+
+\begin{hbdefinition}{def:p12-har-functions}{Algorithms and functional relations}
+A term \(f:A\to B\) is an algorithm in the source's operational reading.
+It may be axiomatically declared, constructed by abstraction, or obtained by
+primitive recursion. An axiomatically declared \(f\) is an unknown
+algorithm, not an executable definition. For \(b:B\) and
+\(f:\mathrm{nat}\to B\to B\), the recursor has type
+\(\mathrm{Rec}\,b f:\mathrm{nat}\to B\) and the computation
+clauses on the source-rule sheet.
+
+A relation \(R:A\to B\to\mathrm{Prop}\) with a proof of
+\(\forall x:A.\exists!y:B.Rxy\) is a function \emph{graph}.
+This assertion alone does not name the image of \(a\), supply an
+algorithm, or make its existential elimination into data permissible.
+In Church's selected description-operator regime, for
+\(P:A\to\mathrm{Prop}\) the term \(\iota P:A\) has the axiom
+\(\Pi P:A\to\mathrm{Prop}.(\exists!x:A.Px)\to P(\iota P)\).
+It chooses an element satisfying a uniquely inhabited predicate;
+otherwise it denotes an unspecified element. Such a
+constant can create closed natural-number terms that are not constructor
+numerals. It is not the recursor's \(\iota\)-reduction despite the shared
+Greek letter in the two uses.
+
+The constructive existence property for a closed proof of
+\(\forall x:A.\exists y:B.Rxy\) is a metatheoretic claim about the
+chosen theory. It need not be an internal extraction operation. Interpreting
+the existential as a dependent sum internalizes a particular extraction
+operation as follows \cite[pp.~1164--1165]{BarendregtGeuvers2001}.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-har-sigma-extraction}{proved=annex:p12.har.sigma-extraction}{The dependent-sum extraction pair}
+Suppose dependent-sum projections into data and proofs are allowed and
+\(p:\Pi x:A.\Sigma y:B.Rxy\). Then
+\[
+ f:=\lambda x:A.\pi_1(px):A\to B,\qquad
+ q:=\lambda x:A.\pi_2(px):\Pi x:A.Rx(fx).
+\]
+If \(p\) reduces to \(\lambda x:A.\langle t,u\rangle\), the
+extracted function reduces to \(\lambda x:A.t\). The assertion does not
+permit a \(\mathrm{Prop}\)-existential to be eliminated into data in a
+system that forbids that elimination.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p12-har-subject-reduction}{Subject reduction and a proof detour}
+For a specified reduction relation, subject reduction says that
+\(\Gamma\vdash M:A\) and \(M\twoheadrightarrow N\) imply
+\(\Gamma\vdash N:A\). For data this preserves type under evaluation;
+for proof terms it preserves the proved proposition under detour removal.
+The source's implication example is
+\[
+ (\lambda h:A\to A\to B.\lambda z:A.hzz)q
+       \to_\beta\lambda z:A.qzz
+ \qquad(q:A\to A\to B).
+\]
+Both terms have type \(A\to B\): applying \(q\) to \(z\)
+gives \(A\to B\), applying again gives \(B\), and abstracting
+gives the displayed type. This local verification is not a general
+subject-reduction proof for arbitrary PTS or inductive extensions.
+
+In developments, a proved term may be named by a definition and made opaque
+to prevent automatic unfolding. The source's \(\mathrm{lemma1}\) names
+\(\lambda h:A\to A\to B.\lambda z:A.hzz\); using the name
+does not require repeatedly reducing its proof. A reduction detour need not
+literally shorten the written term \cite[p.~1166]{BarendregtGeuvers2001}.
+\end{hbdefinition}
+
+\begin{hbexample}{def:p12-har-plus-conversion}{The source addition and conversion calculation}
+Write \(\overline n\) for the numeral \((S^+)^n0\), not a
+metalevel natural number. The chapter defines
+\(\mathrm{plus}:=\lambda x,y:\mathrm{nat}.
+\mathrm{Rec}\,x(\lambda z:\mathrm{nat}.S^+)y\). Thus
+\[
+\begin{aligned}
+ \mathrm{plus}\,\overline1\,\overline0
+ &\to_\delta
+ (\lambda x,y:\mathrm{nat}.
+   \mathrm{Rec}\,x(\lambda z:\mathrm{nat}.S^+)y)
+       \overline1\,\overline0\\
+ &\to_\beta(\lambda y:\mathrm{nat}.
+   \mathrm{Rec}\,\overline1(\lambda z:\mathrm{nat}.S^+)y)\overline0\\
+ &\to_\beta\mathrm{Rec}\,\overline1
+             (\lambda z:\mathrm{nat}.S^+)\overline0
+ \to_\iota\overline1.
+\end{aligned}
+\]
+Given
+\(p:\Pi x,y,z:\mathrm{nat}.(x>\mathrm{plus}\,y z)\to(x>z)\)
+and \(q:\overline2>\overline1\), first obtain
+\(p\overline2\overline1\overline0:
+(\overline2>\mathrm{plus}\,\overline1\overline0)
+\to(\overline2>\overline0)\). Conversion changes this type to
+\((\overline2>\overline1)\to(\overline2>\overline0)\), leaving
+the term unchanged. Application to \(q\) gives
+\(p\overline2\overline1\overline0q:\overline2>\overline0\).
+No arithmetic-order theorem is being inferred from reduction alone: the
+given \(p\) supplies the implication and \(q\) its premise
+\cite[pp.~1166--1167]{BarendregtGeuvers2001}.
+\end{hbexample}
+
+\begin{hbdefinition}{def:p12-har-conversion}{Conversion and the source Poincare principle}
+The chapter uses the conversion relation \(=_{\beta\iota\delta}\)
+generated by beta reduction, admitted constructor/recursor computation, and
+definition unfolding. Its conversion rule changes a type to a convertible
+type without changing the proof term. Decidability of this relation is an
+explicit premise of the implicit comparison mechanism. A richer equality
+that is not decidable needs additional evidence or another checking design;
+this is not licensed simply by adding a side condition to the same algorithm.
+
+The source's Poincare principle separates proof from computation:
+computationally equal expressions require no new user proof of the
+computation. The conversion checker still executes the computation; the
+principle does not trust an external answer or remove the need for a sound
+internal decision procedure \cite[pp.~1167--1168]{BarendregtGeuvers2001}.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-har-reflection}{proved=annex:p12.har.reflection}{The source two-level reflection term}
+Assume a type \(\mathrm{Class\!\mbox{-}\!of\!\mbox{-}\!Form}\),
+terms \(\mathrm{Dec},\mathrm{Check}:
+\mathrm{Class\!\mbox{-}\!of\!\mbox{-}\!Form}\to\mathrm{Prop}\),
+and a checked soundness term
+\[
+ \mathrm{ok}:\Pi t:\mathrm{Class\!\mbox{-}\!of\!\mbox{-}\!Form}.
+                    (\mathrm{Check}\,t)\to(\mathrm{Dec}\,t).
+\]
+If \(\mathrm{Dec}\,t=_{\beta\iota\delta}T\),
+\(\mathrm{Check}\,t=_{\beta\iota\delta}\top\), and
+\(\mathrm{true}:\top\), then
+\(\mathrm{ok}\,t\,\mathrm{true}:T\).
+The construction uses the soundness implication, not a completeness claim
+that every true formula makes the checker return \(\top\).
+\end{hbtheorem}
+
+\subsection{Definitional equality, book equality, and setoid constructions}
+
+\begin{hbdefinition}{def:p12-har-equalities}{Two standings of equality}
+Definitional equality is the underlying equality used by the type system:
+it can be a judgment \(\Gamma\vdash M=N:A\), or a conversion side
+condition on pseudoterms. Book equality is a proposition/type
+\(M=_A N\), with a proof term sought inside the theory. An external
+statement that two functions compute the same values does not make them
+definitionally equal in an intensional system.
+
+The source's baseline conversion omits \(\eta\). For annotated raw
+terms, \(\lambda x:A.(\lambda y:B.y)x\) can beta-reduce to
+\(\lambda x:A.x\), or eta-reduce to \(\lambda y:B.y\); their
+annotations need not have a common reduct unless the domains do. Typed
+beta/eta metatheory therefore requires its own hypotheses, not the untyped
+confluence argument. The example is a warning about annotated raw terms,
+not a well-typed counterexample to a correctly restricted system.
+
+An extensional reflection rule that promotes a proof of pointwise book
+equality to definitional function equality changes the conversion problem:
+it can require discovering an inhabitant of
+\(\Pi x:A.Mx=_B Nx\). Merely adding function extensionality as a
+\emph{book-equality axiom} is a different operation and need not add such
+reflection to conversion \cite[pp.~1168--1172]{BarendregtGeuvers2001}.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p12-har-book-equality}{The three equality presentations}
+The chapter distinguishes the following choices, keeping their sort roles.
+\begin{enumerate}
+ \item In its impredicative higher-order setting, Leibniz equality is
+ \(t=_A q:=\Pi P:A\to\mathrm{Prop}.Pt\to Pq\).
+ Quantification over all proposition-valued predicates is part of the
+ allowed type theory, not a predicative abbreviation.
+ \item Inductive equality \(\mathrm{Eq}_A:A\to A\to\mathrm{Prop}\)
+ is generated by the sole constructor
+ \(\mathrm{Refl}:\Pi x:A.\mathrm{Eq}_A x x\), together with the
+ specified induction/elimination principle. A constructor declaration
+ alone does not supply that principle.
+ \item The Martin--Lof presentation uses
+ \(\mathrm{Id}_A a b:\mathrm{Set}\), reflexivity, and identity
+ elimination. The chapter displays transport from
+ \(P:A\to\mathrm{Set}\), \(q:Pa\), and
+ \(e:\mathrm{Id}_A a b\) to a term of \(Pb\).
+ It does not give the full dependent identity eliminator there.
+\end{enumerate}
+Leibniz equality transports proposition-valued predicates. To transport
+\(t:\mathrm{Fin}\,n\) along \(e:n=_{\mathrm{nat}}m\) to
+\(\mathrm{Fin}\,m\), elimination into the relevant data sort is
+needed. That property depends on the exact equality and elimination
+restriction; it is not established by the word ``inductive'' or by a
+modern assistant's name \cite[pp.~1170--1171]{BarendregtGeuvers2001}.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-har-leibniz}{proved=annex:p12.har.leibniz}{Leibniz equality and proposition transport}
+In the displayed impredicative setting, \(=_A\) is reflexive,
+symmetric and transitive. If \(e:a=_A b\), \(P:A\to\mathrm{Prop}\)
+and \(u:Pa\), then \(e P u:Pb\). These terms transport only within
+the admitted predicate class; they do not provide arbitrary data-valued
+dependent transport.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p12-har-setoids}{Setoids and their function space}
+A setoid is a carrier \(A:\mathrm{Set}\) with an equivalence relation
+\(=_A:A\to A\to\mathrm{Prop}\), including proofs of its laws.
+The source's \([A,=_A]\) is a structured object, not itself the
+carrier type \(A\). Given setoids \([A,=_A]\), \([B,=_B]\),
+its function-space carrier and equality are
+\[
+\begin{aligned}
+ A\to^s B&:=\Sigma f:A\to B.
+      \Pi x,y:A.(x=_A y)\to(fx=_B fy),\\
+ f=_{A\to^s B}g&:=\Pi x:A.(\pi_1f)x=_B(\pi_1g)x.
+\end{aligned}
+\]
+The carrier contains a map \emph{and} its preservation proof. The equality
+ignores that proof component. In particular
+\(\langle f,p\rangle=_{A\to^s B}\langle f,q\rangle\) for any
+two preservation proofs. This is a chosen book equality, not a declaration
+that all host proof terms are definitionally equal.
+
+For an equivalence relation \(Q\) on \(A\) with \(=_A\subseteq Q\),
+the quotient setoid is \([A,Q]\), retaining the same carrier.
+For \(P:A\to\mathrm{Prop}\), the subsetoid has carrier
+\(\Sigma x:A.Px\) and equality
+\(q(=_A\vert P)r:=(\pi_1q)=_A(\pi_1r)\).
+The source does \emph{not} require \(P\) to respect \(=_A\).
+It may retain only some representatives of a class
+\cite[pp.~1172--1173]{BarendregtGeuvers2001}.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-har-setoid-constructions}{proved=annex:p12.har.setoid-constructions}{The three displayed setoid constructions}
+The function-space equality and subsetoid equality are equivalence
+relations. For equality-preserving \(f,g\), pointwise equality is
+equivalent to
+\(\Pi x,y:A.(x=_A y)\to fx=_B gy\).
+If a map \(f:A\to B\) preserves \(Q\), it induces a
+setoid map \([A,Q]\to[B,=_B]\) with the same underlying function.
+These assertions need no definitional equality of preservation proofs.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p12-har-rational-setoid}{Rational representatives and the noninvariant predicate}
+For \(A=\mathrm{int}\times\mathrm{nat}\), set
+\[
+ \langle x,p\rangle=_A\langle y,q\rangle
+       \quad\text{when}\quad x(q+1)=y(p+1),\qquad
+ P\langle x,p\rangle\quad\text{when}\quad
+       \gcd(x,p+1)=1.
+\]
+The encoded denominator is always positive. The subsetoid keeps the reduced
+representative of each rational class, although \(P\) is not invariant:
+\(\langle1,1\rangle=_A\langle2,3\rangle\), but only the first
+pair satisfies \(P\). The reduced representative of zero is
+\(\langle0,0\rangle\). This example illustrates the source's
+reason for not demanding predicate invariance
+\cite[p.~1173]{BarendregtGeuvers2001}.
+\end{hbexample}
+
+\input{parts/p12/presentations/har2001-c18-setoid-universal}
+
+\subsection{Coercions and the logical interpretation boundary}
+
+\begin{hbdefinition}{def:p12-har-coercions}{Source coercions are explicit terms inserted by elaboration}
+If a setoid is represented as
+\(\Sigma A:\mathrm{Set}.\Sigma R:A\to A\to\mathrm{Prop}.
+\mathrm{Is\_eq\_rel}\,A R\), it is not a type suitable as an
+unexpanded variable annotation. Likewise,
+\(\mathrm{Eq\_Rel}_A:=\Sigma R:A\to A\to\mathrm{Prop}.
+\mathrm{Is\_eq\_rel}\,A R\) is a pair type, so an element
+\(R:\mathrm{Eq\_Rel}_A\) cannot be applied directly as a relation.
+A subsetoid element \(\langle a,p\rangle\) is not literally a
+carrier element \(a\). The needed projections are real terms.
+
+The chapter's coercion notation \(c:A\subseteq B\) marks a map for
+implicit insertion, not a new ordinary subtype judgment. It has three uses:
+a map to \(\mathrm{Set}\) or \(\mathrm{Prop}\) expands a
+variable's structured annotation; a map to a function type expands a
+structured term used in function position; a map to an argument's required
+type expands the argument. For maps \(c_1:A\to B\),
+\(c_2:B\to C\), composition is the term
+\(\lambda x:A.c_2(c_1x)\). The source requires a unique declared
+coercion path and no self-coercion, with a declaration-time graph check.
+These are elaboration/coherence conditions, not an assertion that an
+arbitrary graph with these names is coherent. The resulting expanded term
+still must pass the underlying checker
+\cite[pp.~1173--1175]{BarendregtGeuvers2001}.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p12-har-interpretation}{Soundness, completeness, and strong completeness}
+The chapter separates meaning in a chosen model from correspondence with
+derivability in a chosen logic. For an appropriate source logic \(L\)
+and its selected type theory \(S(L)\), soundness sends a
+natural-deduction derivation \(\Delta\) of \(\varphi\) to a
+typed proof term \([\Delta]\). Completeness requires that inhabitation
+of the translated \(\varphi\) imply a derivation in \(L\).
+Strong completeness additionally requires a translation of the given proof
+term back into a derivation. These are three different obligations.
+
+The distinction between domains, terms, formulas and derivations in
+ordinary staged logic makes proof-dependent objects problematic for a
+literal inverse translation. In a presentation with only one universe
+\(\mathrm{Set}\), the context
+\[
+ A:\mathrm{Set},\ a:A,\ P:A\to\mathrm{Set},\ h:Pa,
+ \ Q:(Pa)\to\mathrm{Set},\ f:(Pa)\to A
+\]
+can treat \(Pa\) as either a domain or a proposition; \(Q\) and
+\(f\) then depend on proofs if \(h\) is read as a logical assumption.
+A first-order logic does not automatically interpret such dependencies.
+The chapter attributes weaker completeness and higher-order failure results
+to specific cited presentations, not to all type theories with a shared
+family name. Its discussion of higher-order sum interpretations and
+impredicative existential encodings does not supply their full metatheoretic
+proofs here \cite[pp.~1175--1178]{BarendregtGeuvers2001}.
+\end{hbdefinition}
+
+\begin{hbexample}{def:p12-har-proof-dependent-field}{The reciprocal and absolute-value examples}
+An everywhere typed \(\mathrm{recip}:A\to A\) leaves
+\(\mathrm{recip}\,0\) unspecified even if its reciprocal law is
+restricted to nonzero arguments. Instead the source considers
+\(\mathrm{recip}:(\Sigma x:A.x\ne0)\to A\).
+To make this independent of the nonzero proof, choose a field setoid and
+require \(\mathrm{recip}\) to preserve the subsetoid equality. Then
+\[
+ a=_A a',\quad p:a\ne_A0,\quad q:a'\ne_A0
+ \quad\Longrightarrow\quad
+ \mathrm{recip}\langle a,p\rangle=_A
+ \mathrm{recip}\langle a',q\rangle.
+\]
+Taking \(a=a'\) demonstrates proof independence in the declared setoid
+equality. It does not force equality of the proof components themselves.
+
+In an ordered field, for
+\(p:\Pi x:F.(x\ge0\lor x\le0)\), define
+\(\mathrm{abs}_p x\) by the \(\mathrm{inl}\) branch \(x\)
+and the \(\mathrm{inr}\) branch \(-x\). A second proof \(q\)
+can choose a different branch at zero. The substantive independence claim
+is \(\Pi x,x':F.(x=_F x')\to
+\mathrm{abs}_p x=_F\mathrm{abs}_q x'\), not definitional equality
+of the two functions \cite[pp.~1178--1180]{BarendregtGeuvers2001}.
+\end{hbexample}
+
+\begin{hbtheorem}{thm:p12-har-field-independence}{proved=annex:p12.har.field-independence}{The proof-independent field constructions}
+For a reciprocal that preserves the source subsetoid equality, changing
+the nonzero proof does not change its value up to \(=_A\).
+In a linearly ordered field setoid whose order and operations respect
+\(=_F\), with the displayed disjunction-to-data case elimination
+admitted, the two absolute-value definitions above agree on equal
+arguments for every pair of sign proofs \(p,q\).
+\end{hbtheorem}
+
+\begin{proofboundary}{def:p12-har-premise-bridge}{Interfaces and nonidentifications}
+The abstract reduction and normalization terminology is specified at
+\cref{def:p12-klop1987-ars,def:p12-klop1987-properties}; the arrow-only
+example has the restricted interface of
+\cref{def:p07-stlc-meta-setting,def:p07-curry-howard}. Neither interface
+supplies the source's higher-order dependent \(\lambda\mathrm{HOL}\)
+rules or its metatheory. The family specification in
+\cref{def:p12-pts-lambda-cube} and the trust distinctions in
+\cref{def:p12-computational-reflection} are compatible navigation points,
+not proofs of source-specific adequacy, reduction, normalization, or
+elimination claims. The source's logical-framework terminology and historical
+assistant comparison must retain their own context and date.
+\end{proofboundary}
+
+\subsection{The chapter's constructive higher-order predicate logic}
+
+\begin{hbdefinition}{def:p12-har-hol-language}{HOL domains, terms, and formulas (source Definition 3.1)}
+The chapter's \(\mathrm{HOL}\) has domains
+\(D::=B\mid\Omega\mid D\to D\), where the basic domains \(B\)
+form a countable collection and \(\Omega\) is the domain of propositions.
+For each \(\sigma\in D\), there are constants \(c_i^\sigma\)
+and variables \(x_i^\sigma\). The typed term sets have the following
+formation clauses: constants and variables of domain \(\sigma\) are
+in \(\mathrm{Term}_\sigma\); for \(\varphi,\psi:\Omega\),
+\(\forall x^\sigma.\varphi:\Omega\) and
+\((\varphi\Rightarrow\psi):\Omega\); application takes
+\(M:\sigma\to\tau\), \(N:\sigma\) to \(MN:\tau\);
+abstraction takes \(M:\tau\) to
+\(\lambda x^\sigma.M:\sigma\to\tau\).
+Set \(\mathrm{Term}=\bigcup_{\sigma\in D}\mathrm{Term}_\sigma\)
+and \(\mathrm{form}=\mathrm{Term}_\Omega\).
+Substitution is capture avoiding, and beta conversion includes the
+typed abstractions in this language.
+
+Domains associate to the right, application to the left; application binds
+more tightly than the logical implication \(\Rightarrow\).
+There is no primitive product domain. A binary relation on \(A\) has
+domain \(A\to A\to\Omega\), by currying. The source natural
+deduction rules, including the eigenvariable condition and beta-conversion
+rule, are on the registered sheet. They define provability from a finite
+set of formulas, not classical higher-order logic with excluded middle
+\cite[pp.~1181--1183, Fig.~1]{BarendregtGeuvers2001}.
+\end{hbdefinition}
+
+\begin{hbexample}{def:p12-har-hol-expressions}{All five source HOL language examples}
+Take domains \(\mathbb N,A\), constants
+\(>:\mathbb N\to\mathbb N\to\Omega\),
+\(0:\mathbb N\), \(S:\mathbb N\to\mathbb N\), and
+variables \(R,Q:A\to A\to\Omega\). The source expressions are:
+\[
+\begin{aligned}
+ &\lambda x^{\mathbb N}.x>0:\mathbb N\to\Omega,\\
+ \mathsf{ind}&:=\forall P^{\mathbb N\to\Omega}.
+   P0\Rightarrow(\forall x^{\mathbb N}.Px\Rightarrow P(Sx))
+       \Rightarrow\forall x^{\mathbb N}.Px,\\
+ \mathsf{trans}(R)&:=\forall x^Ay^Az^A.
+       Rxy\Rightarrow Ryz\Rightarrow Rxz,\\
+ R\subseteq Q&:=\forall x^Ay^A.Rxy\Rightarrow Qxy,\\
+ &\lambda x^Ay^A.\forall Q^{A\to A\to\Omega}.
+      \mathsf{trans}(Q)\Rightarrow(R\subseteq Q)\Rightarrow Qxy
+       :A\to A\to\Omega.
+\end{aligned}
+\]
+The last expression is the source transitive-closure predicate: it
+intersects all transitive relations containing \(R\). It does not add
+reflexive closure. \(\mathsf{ind}\) is a formula expressing induction,
+not a theorem inferred merely from the domain named \(\mathbb N\).
+The sans-serif names are abbreviations, whereas \(Rab\) is always
+successive application \((Ra)b\)
+\cite[p.~1182, Example~3.3]{BarendregtGeuvers2001}.
+\end{hbexample}
+
+\begin{hbdefinition}{def:p12-har-hol-connectives}{The source impredicative logical encodings}
+For \(\varphi,\psi:\Omega\), with quantified variables fresh,
+\[
+\begin{aligned}
+ \varphi\mathbin{\&}\psi&:=\forall z^\Omega.
+       (\varphi\Rightarrow\psi\Rightarrow z)\Rightarrow z,\\
+ \varphi\lor\psi&:=\forall z^\Omega.
+       (\varphi\Rightarrow z)\Rightarrow(\psi\Rightarrow z)\Rightarrow z,\\
+ \bot&:=\forall z^\Omega.z,\qquad
+ \neg\varphi:=\varphi\Rightarrow\bot,\\
+ \exists x^\sigma.\varphi&:=\forall z^\Omega.
+       (\forall x^\sigma.\varphi\Rightarrow z)\Rightarrow z,\\
+ t=_A t'&:=\forall P^{A\to\Omega}.Pt\Rightarrow Pt'.
+\end{aligned}
+\]
+These quantify over propositions or predicates at the same order as the
+defined expression and are impredicative. The source calls its logic
+constructive because it lacks double-negation elimination and has
+disjunction/existence properties at its stated regime; it does not claim
+that these encodings are predicative constructions. Their introduction and
+elimination terms below give the local rule justification. The global
+disjunction/existence-property proofs require the relevant normalization
+and canonical-form analysis, not the formulas alone
+\cite[pp.~1183--1185, Example~3.6]{BarendregtGeuvers2001}.
+\end{hbdefinition}
+
+\subsection{The actual three-sort system \(\lambda\mathrm{HOL}\)}
+
+\begin{hbdefinition}{def:p12-har-lambda-hol}{Pseudo terms and the source Figure 2 calculus}
+The source's \(\lambda\mathrm{HOL}\) has three sorts
+\(\mathcal S=\{\mathrm{Prop},\mathrm{Type},\mathrm{Type}'\}\)
+and pseudo terms
+\[
+ \mathcal T::=\mathrm{Prop}\mid\mathrm{Type}\mid\mathrm{Type}'
+    \mid V\mid\Pi V:\mathcal T.\mathcal T
+    \mid\lambda V:\mathcal T.\mathcal T\mid\mathcal T\mathcal T.
+\]
+Its axioms are \(\mathrm{Prop}:\mathrm{Type}\) and
+\(\mathrm{Type}:\mathrm{Type}'\), with no type for
+\(\mathrm{Type}'\). Product-sort pairs are exactly
+\[
+ (\mathrm{Type},\mathrm{Type}),\quad
+ (\mathrm{Prop},\mathrm{Prop}),\quad
+ (\mathrm{Type},\mathrm{Prop}).
+\]
+The complete seven-rule Figure~2 surface is on the source sheet. Contexts
+are finite declarations of distinct variables; a new variable is fresh.
+Conversion is \emph{beta equality of pseudo terms}, not the
+beta/iota/delta combination of the earlier informal discussion. Definitions
+and their delta rule are expressly omitted from this formal calculus.
+A pseudo term is well typed if it occurs either to the left or to the
+right of the colon in a derivable judgment. A context is well formed if
+it occurs in some derivable judgment.
+
+The three product pairs respectively form data-function domains,
+implications, and universal propositions. In this specific system the
+first two are nondependent; the last can depend on its bound data variable.
+The absence of \((\mathrm{Prop},\mathrm{Type})\) prevents
+data/functions or formulas from depending on proof arguments. The absence
+of a product with domain sort \(\mathrm{Type}'\) prevents
+abstraction over arbitrary data-type variables. These are system-specific
+facts, not properties of every dependent type theory
+\cite[pp.~1185--1187, Definition~3.7; Fig.~2]{BarendregtGeuvers2001}.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p12-har-hol-translation}{An explicit direct HOL translation}
+Following the source's direct interpretation, send a basic domain \(B\)
+to a fresh declared \(B:\mathrm{Type}\), \(\Omega\) to
+\(\mathrm{Prop}\), and domain arrows to type arrows. Translate
+object constants and variables to declarations of their translated domain,
+application homomorphically, and
+\(\lambda x^\sigma.M\) to \(\lambda x:[\sigma].[M]\).
+Translate a logical implication to \([\varphi]\to[\psi]\)
+and a quantifier to \(\Pi x:[\sigma].[\varphi]\).
+For a derivation \(\Delta\), put all domains, constants and free
+object variables into \(\Gamma_\Delta\); an undischarged assumption
+\(\varphi_i\) becomes a fresh \(z_i:[\varphi_i]\).
+Logical proof abstraction/application, distinct from object
+abstraction/application, encode hypothesis discharge and logical
+elimination. The source pp.~1187--1190 motivates rather than defines these
+maps; the explicit clauses here make the reconstruction unambiguous.
+\end{hbdefinition}
+
+\begin{hbexample}{def:p12-har-lambda-hol-judgments}{The source Example 3.10 judgments}
+The following are the chapter's concrete formal-system instances, with
+the indicated declarations supplying their contexts:
+\begin{enumerate}
+ \item \(\mathbb N:\mathrm{Type},0:\mathbb N,
+ >:\mathbb N\to\mathbb N\to\mathrm{Prop}\) gives
+ \(\lambda x:\mathbb N.x>0:\mathbb N\to\mathrm{Prop}\).
+ \item \(\mathbb N:\mathrm{Type},0:\mathbb N,
+ S:\mathbb N\to\mathbb N\) gives the formula
+ \[
+ \Pi P:\mathbb N\to\mathrm{Prop}.
+ P0\to(\Pi x:\mathbb N.Px\to P(Sx))
+       \to\Pi x:\mathbb N.Px:\mathrm{Prop}.
+ \]
+ \item \(A:\mathrm{Type},R:A\to A\to\mathrm{Prop}\) gives
+ \(\Pi x,y,z:A.Rxy\to Ryz\to Rxz:\mathrm{Prop}\).
+ \item \(A:\mathrm{Type}\) gives
+ \[
+ \lambda R,Q:A\to A\to\mathrm{Prop}.
+       \Pi x,y:A.Rxy\to Qxy
+       :(A\to A\to\mathrm{Prop})\to
+        (A\to A\to\mathrm{Prop})\to\mathrm{Prop}.
+ \]
+ \item \(A:\mathrm{Type}\) gives
+ \(\lambda x,y:A.\Pi P:A\to\mathrm{Prop}.Px\to Py
+       :A\to A\to\mathrm{Prop}\), the equality relation.
+ \item \(A:\mathrm{Type},x:A,y:A\) gives the equality-symmetry
+ term in \cref{def:p12-har-encoded-proof-terms}, at type
+ \((x=_A y)\to(y=_A x)\).
+\end{enumerate}
+For the source derivation of irreflexivity, the formal context is
+\(A:\mathrm{Type},R:A\to A\to\mathrm{Prop},
+z:\Pi x,y:A.Rxy\to Ryx\to\bot\), and the checked term is
+\(\lambda x:A.\lambda q:Rxx.zxxqq:
+\Pi x:A.Rxx\to\bot\). It specializes the application chain of
+\cref{thm:p12-har-asymmetry}; it does \emph{not} abstract over
+\(A:\mathrm{Type}\) inside \(\lambda\mathrm{HOL}\), which
+has no permitted product with domain sort \(\mathrm{Type}'\).
+Thus the earlier five-binder informal Set-based term and this concrete
+formal judgment keep different quantification regimes
+\cite[pp.~1187--1189, Example~3.10]{BarendregtGeuvers2001}.
+\end{hbexample}
+
+\begin{hbtheorem}{thm:p12-har-hol-forward}{proved=annex:p12.har.hol-forward}{The direct HOL embedding, with conversion}
+Every HOL object term \(t:\sigma\) translates to a term of
+\([\sigma]\); every HOL formula translates to a term of
+\(\mathrm{Prop}\). Every derivation of \(\varphi\) from
+\(\varphi_1,\ldots,\varphi_n\) translates to a derivation
+\[
+ \Gamma_\Delta,z_1:[\varphi_1],\ldots,z_n:[\varphi_n]
+       \vdash_{\lambda\mathrm{HOL}}[\Delta]:[\varphi].
+\]
+The translation commutes with capture-avoiding substitution and preserves
+beta conversion. No classical axiom is added.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p12-har-encoded-proof-terms}{Connective terms and the source equality-symmetry term}
+In \(\lambda\mathrm{HOL}\), replace source HOL quantification by
+\(\Pi\) and implication by \(\to\) in the impredicative encodings.
+Thus \(\varphi\mathbin{\&}\psi=
+\Pi\alpha:\mathrm{Prop}.(\varphi\to\psi\to\alpha)\to\alpha\).
+The source's complete conjunction terms are
+\[
+\begin{aligned}
+ \pi_1&:=\lambda p:(\varphi\mathbin{\&}\psi).
+       p\varphi(\lambda x:\varphi.\lambda y:\psi.x),\\
+ \pi_2&:=\lambda p:(\varphi\mathbin{\&}\psi).
+       p\psi(\lambda x:\varphi.\lambda y:\psi.y),\\
+ \langle-,-\rangle&:=\lambda x:\varphi.\lambda y:\psi.
+       \lambda\alpha:\mathrm{Prop}.
+       \lambda h:\varphi\to\psi\to\alpha.hxy.
+\end{aligned}
+\]
+These are proposition-level encodings, not primitive data products.
+For disjunction the two introductions choose the corresponding supplied
+branch; its eliminator at \(\chi:\mathrm{Prop}\) is
+\(\lambda p.\lambda f:\varphi\to\chi.
+\lambda g:\psi\to\chi.p\chi f g\), with \(p\) annotated
+by the encoded disjunction. Falsehood elimination at \(\chi\) is
+\(\lambda p:\bot.p\chi\). Existential introduction from
+\(t:A\), \(u:\varphi[t/x]\) is
+\(\lambda\alpha:\mathrm{Prop}.
+\lambda h:(\Pi x:A.\varphi\to\alpha).htu\);
+elimination at \(\chi\), with \(x\) absent from \(\chi\), is
+\(\lambda p:(\exists x:A.\varphi).
+\lambda h:(\Pi x:A.\varphi\to\chi).p\chi h\).
+
+For source Leibniz equality, its second, explicitly displayed symmetry
+term is
+\[
+ \lambda r:(x=_A y).\lambda P:A\to\mathrm{Prop}.
+   r(\lambda z:A.Pz\to Px)(\lambda q:Px.q)
+       :(x=_A y)\to(y=_A x).
+\]
+It instantiates the predicate with \(Pz\to Px\), different from
+the also valid equality-valued predicate used in
+\cref{thm:p12-har-leibniz}; the two constructions are not conflated
+\cite[pp.~1187--1189, Examples~3.10 and connective discussion]{BarendregtGeuvers2001}.
+\end{hbexample}
+
+\begin{hbtheorem}{thm:p12-har-connective-checks}{proved=annex:p12.har.connective-checks}{Typing and beta computations for the impredicative encodings}
+The conjunction terms have types
+\((\varphi\mathbin{\&}\psi)\to\varphi\),
+\((\varphi\mathbin{\&}\psi)\to\psi\), and
+\(\varphi\to\psi\to(\varphi\mathbin{\&}\psi)\).
+Their projections of an encoded pair beta-reduce to its corresponding
+component. The displayed disjunction, falsehood and existential terms
+give the introduction/elimination rules at proposition-valued conclusions,
+with the usual existential eigenvariable restriction. The displayed
+source symmetry term has exactly its stated equality type.
+\end{hbtheorem}
+
+\begin{hblemma}{thm:p12-har-hol-contexts}{proved=annex:p12.har.hol-contexts}{Valid contexts, projection, and thinning for the exact source system}
+A context is valid when it is empty, or extends a valid prefix by a
+fresh \(x:A\) with an annotation judgment \(A:s\). This is
+equivalent to occurring in a source \(\lambda\mathrm{HOL}\)
+judgment. Every declaration has its projection judgment in the complete
+context. A judgment remains derivable in any valid context containing
+all its original literal declarations. Bound variables may be
+consistently alpha-renamed fresh for the enlarged context.
+\end{hblemma}
+
+\begin{hblemma}{thm:p12-har-hol-generation}{proved=annex:p12.har.hol-generation}{Generation and beta-product injectivity}
+Removing terminal conversion and weakening from a source typing judgment
+recovers the premises of its subject's constructor rule, at a generated
+type beta-equal to its given type. This covers variables, both typed
+sorts, products, abstractions and applications; \(\mathrm{Type}'\)
+has no subject typing judgment. Beta-equal products have beta-equal
+domains and bodies under the same fresh binder. Distinct sorts, and a
+sort versus a product, are not beta-equal.
+\end{hblemma}
+
+\begin{hblemma}{thm:p12-har-hol-type-correctness}{proved=annex:p12.har.hol-type-correctness}{Type correctness}
+If \(\Gamma\vdash M:A\) in the source system, either \(A\)
+is a sort or \(\Gamma\vdash A:s\) for a source sort \(s\).
+The application case uses product generation and the actual-argument
+substitution theorem, not subject reduction or normalization.
+\end{hblemma}
+
+\begin{hblemma}{thm:p12-har-hol-context-conversion}{proved=annex:p12.har.hol-context-conversion}{Replacing a typed annotation by a convertible typed annotation}
+If \(\Gamma,x:B,\Theta\) is valid,
+\(\Gamma\vdash B':s'\), and \(B=_\beta B'\), then every
+judgment in that context is derivable in
+\(\Gamma,x:B',\Theta\), with its subject, type and later raw
+annotations unchanged. The new context is valid. Both annotation
+judgments are required; an untyped raw beta-equivalent expression is
+not sufficient.
+\end{hblemma}
+
+\begin{hblemma}{thm:p12-har-disambiguation}{proved=annex:p12.har.disambiguation}{Source Lemma 3.11: the three context strata}
+A well-formed \(\lambda\mathrm{HOL}\) context can be permuted to
+\(\Gamma_D,\Gamma_L,\Gamma_P\), preserving judgments, where
+\(\Gamma_D\) declares domain variables \(A:\mathrm{Type}\),
+\(\Gamma_L\) declares object variables of types formed in
+\(\Gamma_D\), and \(\Gamma_P\) declares proofs of formulas
+formed in \(\Gamma_D,\Gamma_L\). Data types are simple arrows
+ending in a declared domain variable or \(\mathrm{Prop}\); data
+terms require no proof declarations. If a product of sort
+\(\mathrm{Prop}\) has a proposition-sorted domain, its codomain
+does not depend on that proof variable. The annex supplies the full
+domain/object grammar classification, beta-stable separation and
+smaller-context reconstruction; it does not assume a general
+strengthening principle to obtain this result.
+\end{hblemma}
+
+\begin{hblemma}{thm:p12-har-hol-uniqueness}{proved=annex:p12.har.hol-uniqueness}{Uniqueness of source lambdaHOL types}
+For the exact source specification, if
+\(\Gamma\vdash M:A\) and \(\Gamma\vdash M:B\), then
+\(A=_\beta B\). The proof uses generation, product injectivity
+and the functional sort rules, independently of checker completeness.
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p12-har-hol-decoder}{proved=annex:p12.har.hol-decoder}{The inverse direct HOL proof construction}
+Using the proved disambiguation, generation and type correctness,
+over a translated HOL domain/object signature,
+every derivation \(\Gamma\vdash M:\varphi\), with
+\(\Gamma\vdash\varphi:\mathrm{Prop}\), can be decoded to a
+HOL natural deduction of the decoded formula from the formulas in
+\(\Gamma_P\). The decoding handles each typing rule and conversion;
+it is not an assertion of faithfulness for the separate framework
+signatures of \cref{def:p12-har-framework}.
+\end{hbtheorem}
+
+\subsection{The checker and its actual proof dependencies}
+
+\begin{hbtheorem}{thm:p12-har-pseudo-confluence}{proved=annex:p12.har.pseudo-confluence}{Beta confluence on the source pseudo terms}
+For the source grammar over any fixed alphabet of sort atoms, with
+variables, annotated abstraction,
+dependent product and application, compatible beta reduction is confluent
+on all pseudo terms: if \(M\twoheadrightarrow_\beta N_1\) and
+\(M\twoheadrightarrow_\beta N_2\), there is \(P\) with
+\(N_1\twoheadrightarrow_\beta P\) and
+\(N_2\twoheadrightarrow_\beta P\). No normalization, typing,
+eta rule, inductive computation, or definition-unfolding rule is used.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p12-har-hol-subject-reduction}{proved=annex:p12.har.hol-subject-reduction}{Beta subject reduction for exact source lambdaHOL}
+If \(\Gamma\vdash M:T\) and
+\(M\twoheadrightarrow_\beta M'\), then
+\(\Gamma\vdash M':T\). Reduction in annotations and dependent
+product bodies is included. Combined with raw confluence, any two
+reduction paths from a typed term have a common reduct of the same type.
+No normalization or checker premise is used.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p12-har-metatheory-premises}{The separate source metatheory results}
+The source asserts beta confluence on \emph{all pseudo terms}
+(Proposition~3.12), subject reduction for typed terms (3.13), confluence
+with a typed common reduct (3.14), and strong normalization of typed terms
+(3.15). Its discussion points outside the chapter for the involved
+normalization proof. These assertions have distinct uses: confluence
+compares conversion paths; subject reduction keeps reductions in the
+typed regime; normalization terminates the checker comparisons. They do
+not follow from soundness of a checker that has assumed those comparisons.
+Raw confluence, typed preservation and the structural classification
+are now proved in
+\cref{thm:p12-har-pseudo-confluence,thm:p12-har-hol-subject-reduction,thm:p12-har-disambiguation}.
+Strong normalization is supplied by the complete exact-CC argument
+and separately proved transport in
+\cref{thm:p12-har-cc-normalization,thm:p12-har-hol-cc-transport,thm:p12-har-hol-normalization}.
+The checker uses these results, rather than deriving them from its own
+claimed termination
+\cite[pp.~1191--1192, Propositions~3.12--3.15]{BarendregtGeuvers2001}.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p12-har-type-algorithm}{Source Definition 3.16 and the corrected terminating guard}
+Let \(\mathrm{false}\) mean failure, not a term. The source mutual
+functions are \(\mathrm{Ok}(\Gamma)\) and
+\(\mathrm{Type}_\Gamma(M)\), with these clauses. All context
+extensions require freshness, and unsuccessful tests return failure.
+\begin{enumerate}
+ \item \(\mathrm{Ok}(\langle\rangle)=\mathrm{true}\);
+ \(\mathrm{Ok}(\Gamma,x:A)\) tests
+ \(\mathrm{Type}_\Gamma(A)\in\mathcal S\).
+ \item A variable returns its declared type if
+ \(\mathrm{Ok}(\Gamma)\) and its declaration is present.
+ \(\mathrm{Prop}\) returns \(\mathrm{Type}\), and
+ \(\mathrm{Type}\) returns \(\mathrm{Type}'\), each only in an
+ accepted context. \(\mathrm{Type}'\) always fails.
+ \item For \(MN\), compute \(C=\mathrm{Type}_\Gamma(M)\)
+ and \(D=\mathrm{Type}_\Gamma(N)\). Expose
+ \(\Pi x:A.B\) by weak-head normalization of \(C\), test
+ \(A=_\beta D\), and return \(B[N/x]\).
+ \item For \(\Pi x:A.B\), compute
+ \(s_1=\mathrm{Type}_\Gamma(A)\),
+ \(s_2=\mathrm{Type}_{\Gamma,x:A}(B)\). Return \(s_2\)
+ exactly when both are sorts and their pair is one of the three allowed
+ pairs.
+ \item For \(\lambda x:A.M\), first compute
+ \(B=\mathrm{Type}_{\Gamma,x:A}(M)\). The first source version
+ then recursively checks \(\mathrm{Type}_\Gamma(\Pi x:A.B)\)
+ and returns \(\Pi x:A.B\) if its result is a sort.
+\end{enumerate}
+The last recursive input can exceed the original term's size; its
+termination is not established by the source's proposed size measure.
+The source Definition~3.20 replaces that input by a syntactic guard.
+For the corrected version, call \(B\) a data-type shape if it is a
+simple arrow type ending in \(\mathrm{Prop}\) or a variable declared
+\(z:\mathrm{Type}\) in \(\Gamma\). On a successfully typed
+body, use the following guard instead:
+\begin{enumerate}
+ \item If \(B\) has that data-type shape, require
+ \(\mathrm{Type}_\Gamma(A)=\mathrm{Type}\).
+ \item Otherwise, if \(B\) is neither \(\mathrm{Type}\) nor
+ \(\mathrm{Type}'\), require
+ \(\mathrm{Type}_\Gamma(A)\in\{\mathrm{Prop},\mathrm{Type}\}\).
+ \item Otherwise fail.
+\end{enumerate}
+The second branch keeps \emph{both} allowed product pairs with
+proposition-valued codomain. The published guard retains only
+\(\mathrm{Prop}\) there, which would reject universal-proof
+abstraction; it is not the active algorithm used here. The classification
+requires the disambiguation and type-correctness premises, not a guess
+about an arbitrary pseudo term's sort
+\cite[pp.~1192--1195, Definitions~3.16, 3.20; Lemma~3.19]{BarendregtGeuvers2001}.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-har-guard-counterexample}{proved=annex:p12.har.guard-counterexample}{A valid universal abstraction rejected by the printed guard}
+In \(\Gamma=A:\mathrm{Type},P:A\to\mathrm{Prop},
+h:\Pi x:A.Px\), the term \(\lambda x:A.hx\) has type
+\(\Pi x:A.Px\). Its body type \(Px\) is not a data-type
+shape, and the printed second guard would demand
+\(\mathrm{Type}_\Gamma(A)=\mathrm{Prop}\), though the result
+is \(\mathrm{Type}\). Hence the source's printed modification
+is incomplete. The corrected second branch accepts this case.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p12-har-checker-conditional}{proved=annex:p12.har.checker-conditional}{Corrected type synthesis and checking for exact source lambdaHOL}
+With the proved strong normalization, confluence, subject
+reduction, type correctness, generation, substitution, context conversion,
+uniqueness and disambiguation results, the corrected mutual algorithm
+terminates on all pseudo-term/context inputs, accepts exactly the
+well-formed contexts, synthesizes a type exactly for typable terms, and
+returns a type beta-equal to every derivable type of that term. Therefore
+comparison with that synthesized type decides TCP. The theorem is
+specific to the declared beta-only system and corrected guard. It does
+not establish checking for the warned or inductive extensions.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p12-har-syntax-directed}{The source modified judgment surface}
+Source Definition~3.22 introduces \(\Gamma\vdash^{\mathrm{tc}}M:A\)
+and \(\Gamma\vdash^{\mathrm{tc}}\mathrm{ok}\). It removes
+the ordinary axiom, weakening, variable and conversion rules; adds empty
+context, context extension, projection and sort rules; retains product
+and abstraction; and replaces application by a weak-head product exposure
+and beta comparison. Its complete rules are on the sheet. For completeness
+of these modified rules the meaningful statement is
+\[
+ \Gamma\vdash M:A\ \Longrightarrow\
+ \exists A'.\bigl(A'=_\beta A\text{ and }
+       \Gamma\vdash^{\mathrm{tc}}M:A'\bigr),
+\]
+with the modified turnstile in the consequent. This supplies a
+syntax-directed intermediate obligation rather than assuming that
+reversing any derivation's last rule automatically reverses conversion
+and weakening \cite[pp.~1195--1196, Definition~3.22; Proposition~3.23]{BarendregtGeuvers2001}.
+\end{hbdefinition}
+
+\subsection{The source PTS specifications and genuine maps}
+
+\begin{hbdefinition}{def:p12-har-pts-specifications}{Source Definition 3.24 and its four distinct specifications}
+A source PTS \(\lambda(\mathcal S,\mathcal A,\mathcal R)\)
+has sort axioms \(\mathcal A\subseteq\mathcal S^2\) and product
+triples \(\mathcal R\subseteq\mathcal S^3\), with the full
+Figure~3 rules on the sheet. The pair \((s_1,s_2)\) abbreviates
+\((s_1,s_2,s_2)\), not an arbitrary result-sort choice.
+Besides the already specified \(\lambda\mathrm{HOL}\), the chapter
+gives these distinct systems:
+\begin{enumerate}
+ \item \(\lambda\mathrm{PRED}\):
+ \(\mathcal S=\{\mathrm{Set},\mathrm{Type}^s,
+ \mathrm{Prop},\mathrm{Type}\}\),
+ \(\mathcal A=\{\mathrm{Set}:\mathrm{Type}^s,
+ \mathrm{Prop}:\mathrm{Type}\}\), and
+ \[
+ \mathcal R=\{(\mathrm{Set},\mathrm{Set}),
+ (\mathrm{Set},\mathrm{Type}),(\mathrm{Prop},\mathrm{Prop}),
+ (\mathrm{Set},\mathrm{Prop})\}.
+ \]
+ \item \(\lambda\mathrm{PRED}\omega\) has the same sorts and
+ axioms, and extends those pairs by
+ \((\mathrm{Type},\mathrm{Type})\),
+ \((\mathrm{Type},\mathrm{Prop})\).
+ \item \(\mathrm{CC}\): \(\mathcal S=\{\ast,\Box\}\),
+ \(\mathcal A=\{\ast:\Box\}\), and
+ \(\mathcal R=\{(\ast,\ast),(\ast,\Box),
+ (\Box,\ast),(\Box,\Box)\}\).
+ \item \(\lambda\ast\): \(\mathcal S=\{\ast\}\),
+ \(\mathcal A=\{\ast:\ast\}\),
+ \(\mathcal R=\{(\ast,\ast)\}\).
+\end{enumerate}
+\(\lambda\mathrm{PRED}\) is minimal first-order predicate logic
+\emph{with higher-order function domains}; it forbids quantification
+over predicate domains, not every higher-order function. The ordinary
+connectives are not recovered there by quantifying over propositions.
+\(\lambda\mathrm{PRED}\omega\) adds the stated predicate-domain
+formation/quantification. The two-sort \(\mathrm{CC}\) is the source
+Calculus of Constructions, not an inductive extension. \(\lambda\ast\)
+is inconsistent in the source's stated logical sense and is not even
+weakly normalizing: the actual typed witness, transport and normal-head
+obstruction are supplied in
+\cref{thm:p12-har-hurkens-bottom,thm:p12-har-star-inconsistency,thm:p12-har-star-no-normal-form}
+\cite[pp.~1196--1202]{BarendregtGeuvers2001}.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p12-har-pts-premises}{General and restricted source PTS properties}
+The source separates general PTS thinning, substitution, strengthening
+and subject reduction (Propositions~3.25--3.28) from uniqueness of types
+(3.30), which it states for functional specifications. Functionality
+requires each sort-axiom source to have at most one target and each fixed
+pair of product input sorts to have at most one result sort. General
+strengthening removes \(x:B\) only when \(x\) is absent from
+the later context, term and type; it is not proved by substituting an
+inhabitant of \(B\), which need not exist.
+
+The chapter points to separate metatheoretic sources for these proofs.
+It also states strong normalization of \(\mathrm{CC}\), then transfers
+it to specified mapped systems. None of these assertions establishes
+normalization for arbitrary PTSs; the displayed \(\lambda\ast\)
+is its explicit contrary case \cite[pp.~1199--1201]{BarendregtGeuvers2001}.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-har-pts-substitution}{proved=annex:p12.har.pts-substitution}{Source Proposition 3.26: substitution with the entire later context}
+In the exact Figure~3 PTS calculus, if
+\(\Gamma_1,x:B,\Gamma_2\vdash M:A\) and
+\(\Gamma_1\vdash N:B\), then
+\[
+ \Gamma_1,\Gamma_2[N/x]\vdash M[N/x]:A[N/x].
+\]
+Substitution acts on every later declaration's type as well as the
+term and its type. Bound variables are freshened before substitution.
+This theorem requires no inhabitant of a type unrelated to the given
+\(B\), no strengthening premise, and no normalization theorem.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p12-har-pts-morphism}{PTS morphisms and the actual comparison map}
+A PTS morphism \(f\) maps sorts to sorts and preserves every sort
+axiom and product triple. Extend it to terms and contexts homomorphically,
+fixing variables and preserving abstraction, product and application.
+The source map from \(\lambda\mathrm{PRED}\omega\) to
+\(\lambda\mathrm{HOL}\) is
+\[
+ f(\mathrm{Prop})=\mathrm{Prop},\quad
+ f(\mathrm{Set})=f(\mathrm{Type})=\mathrm{Type},\quad
+ f(\mathrm{Type}^s)=\mathrm{Type}'.
+\]
+It identifies two source sorts but does not identify the systems'
+published primitive syntax. A morphism to \(\mathrm{CC}\) sends
+\(\mathrm{Set},\mathrm{Prop}\) to \(\ast\), and
+\(\mathrm{Type}^s,\mathrm{Type}\) to \(\Box\).
+Each contracted beta-redex maps to a contracted beta-redex at the same
+position. Noninjective sort maps need not reflect the relation between
+\emph{arbitrary chosen preimages}; that stronger claim is unnecessary
+for transfer of an infinite reduction path
+\cite[pp.~1200--1202, Definition~3.31; Proposition~3.32]{BarendregtGeuvers2001}.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-har-pts-morphism}{proved=annex:p12.har.pts-morphism}{Judgment and reduction transport along a PTS morphism}
+For any sort-axiom/triple-preserving PTS morphism,
+\(\Gamma\vdash_T M:A\) implies
+\(f(\Gamma)\vdash_{T'}f(M):f(A)\). Every specified beta
+contraction is preserved. Consequently, if the target PTS is strongly
+normalizing, every well-typed source term is strongly normalizing.
+This is a transfer theorem with a target-normalization premise.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p12-har-inverse-counterexample}{proved=annex:p12.har.inverse-counterexample}{Failure of the source's printed reverse comparison}
+In source \(\lambda\mathrm{HOL}\),
+\[
+ A:\mathrm{Type}\vdash(A\to\mathrm{Prop})\to A:\mathrm{Type}.
+\]
+The printed reverse clauses send the context to
+\(A:\mathrm{Set}\), the domain \(A\to\mathrm{Prop}\)
+has sort \(\mathrm{Type}\) in source
+\(\lambda\mathrm{PRED}\omega\), and the codomain \(A\)
+has sort \(\mathrm{Set}\). The required outer product pair
+\((\mathrm{Type},\mathrm{Set})\) is absent. Thus this proposed
+reverse translation does not preserve that judgment; it cannot justify
+normalization transfer by the claimed equivalence.
+\end{hbtheorem}
+
+\begin{proofboundary}{def:p12-har-pts-inverse}{The printed reverse comparison is not a completed equivalence}
+The source's reverse map uses
+\(g(\mathrm{Prop})=\mathrm{Prop}\),
+\(g(\mathrm{Type})=\mathrm{Set}\),
+\(g(\mathrm{Type}')=\mathrm{Type}^s\), but overrides the
+result sort of \(M:\mathrm{Type}\) according to its data-type
+shape: a chain ending in a domain variable receives \(\mathrm{Set}\),
+while one ending in \(\mathrm{Prop}\) receives \(\mathrm{Type}\).
+It is not an ordinary inverse sort-map morphism, and the stated
+judgment-dependent clauses also fail on
+\cref{thm:p12-har-inverse-counterexample}. The valid forward morphism
+does not supply an inverse. The source attributes HOL normalization
+transfer to this comparison. The valid replacement is the separately
+proved judgment-dependent direct CC bridge and its exact normalization
+argument in
+\cref{thm:p12-har-hol-cc-transport,thm:p12-har-cc-normalization,thm:p12-har-hol-normalization}.
+It is not the unmodified source \(\lambda\mathrm{PRED}\omega\)
+\cite[pp.~1201--1202]{BarendregtGeuvers2001}.
+\end{proofboundary}
+
+\begin{hbtheorem}{thm:p12-har-hol-cc-transport}{proved=annex:p12.har.hol-cc-transport}{A valid judgment-dependent lambdaHOL-to-CC bridge}
+Define \(h(\mathrm{Prop})=h(\mathrm{Type})=\ast\),
+\(h(\mathrm{Type}')=\Box\), and extend homomorphically on
+raw syntax, fixing variables. For a domain expression \(D\), let
+\(\sigma(D)=\ast\) when its rightmost atom is a declared domain
+variable, and \(\sigma(D)=\Box\) when that atom is
+\(\mathrm{Prop}\). Valid contexts map annotation-wise, and
+source judgments map by these classified clauses:
+\[
+\begin{array}{rcl}
+ \mathrm{Type}:\mathrm{Type}'&\mapsto&\ast:\Box,\\
+ D:\mathrm{Type}&\mapsto&hD:\sigma(D),\\
+ O:D&\mapsto&hO:hD,\\
+ p:F&\mapsto&hp:hF.
+\end{array}
+\]
+Here \(O\) is an object expression, \(F\) a proposition, and
+\(p\) a proof term in the proved stratification.
+Each mapped judgment is derivable in exact source CC, and each designated
+beta contraction is preserved. Thus a separately proved strong-normalization
+theorem for that exact CC entails source lambdaHOL strong normalization.
+This is an editorial replacement for the failed printed inverse, not a
+PTS sort morphism and not a proof of target CC normalization.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p12-har-cc-normalization-method}{The separate 1994 primary proof and its candidate adaptation}
+For exact two-sort CC, Geuvers's December~1994 Computing Science
+Report~94/50 gives a direct two-interpretation normalization proof.
+The held report is distinct from the 1995 LNCS publication cited by
+the chapter. The selected base argument is sections~2--3, printed
+pp.~2--10; later report extensions are not imported here
+\cite[pp.~2--10]{Geuvers1994Report9450}.
+
+The report's \(\mathsf{SAT}\) consists of sets of untyped lambda
+terms contained in \(\mathsf{SN}\), containing its base terms
+(variables or inert \(d\), closed under application to SN arguments),
+and closed under its specified key-redex expansion when the expanded
+term is SN. The key redex is a redex itself, or the inherited key redex
+of an application's left child. The proof below explicitly uses the
+alternative reduction-closed neutral-expansion candidates:
+\(R\subseteq\mathsf{SN}\), closure under contraction, and
+membership of a neutral term when all its immediate reducts belong
+to \(R\). Variables, \(d\), and applications are neutral;
+lambdas are not. This is a declared proof-method adaptation, not an
+identification of the definitions. Every closure, controlled expansion,
+evaluation/substitution and valuation property used is proved in the annex.
+
+Kinds \(A:\Box\) have finite shape \(\kappa(A)\), with
+\(\kappa(\ast)=\mathbf b\), object-domain products taking the
+codomain shape, and constructor-domain products taking the arrow of
+their domain and codomain shapes. If \(\mathcal C\) is the set of
+these candidates, define
+\(V(\mathbf b)=\mathcal C\) and
+\(V(k\to\ell)=V(\ell)^{V(k)}\). These are ordinary finite
+iterated function sets, not an impredicative universe assumed to contain
+itself. Constructor valuation \(\xi\) and raw-term valuation
+\(\rho\) are distinct. The latter interpretation retains annotations:
+\[
+\begin{aligned}
+ E(\ast)&=d,&E(v)&=v,&E(MN)&=E(M)E(N),\\
+ E(\lambda v:A.M)&=\mathrm K(\lambda v.E(M))E(A),\\
+ E(\Pi v:A.B)&=dE(A)(\lambda v.E(B)),&
+ \mathrm K&=\lambda p.\lambda q.p.
+\end{aligned}
+\]
+The report writes its raw interpretation as \((M)_\rho\),
+with equivalent syntactic code in Fact~3.12; here that code is
+\(E(M)\) and \(E_\rho(M)=E(M)\rho\). The constructor/kind
+interpretation \([\cdot]_\xi\) follows the same two-level
+architecture over the declared candidate variant. Each source beta
+contraction has a positive target path, including annotation steps
+\cite[Definitions~3.1--3.12; Theorems~3.14--3.15]{Geuvers1994Report9450}.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-har-cc-normalization}{proved=annex:p12.har.cc-normalization}{Strong normalization for exact source CC}
+For \(\mathcal S=\{\ast,\Box\}\),
+\(\mathcal A=\{\ast:\Box\}\), and all four product triples
+\((\ast,\ast,\ast),(\ast,\Box,\Box),
+(\Box,\ast,\ast),(\Box,\Box,\Box)\), with Figure~3 typing
+and full compatible annotated beta reduction, every pseudo term on
+either side of a derivable judgment has no infinite beta-reduction path.
+Open valid contexts, reductions beneath binders, and reductions in
+types/annotations are included. No CC normalization, checker correctness
+or inhabited-context premise is assumed in the proof.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p12-har-hol-normalization}{proved=annex:p12.har.hol-normalization}{Strong normalization for the exact beta-only lambdaHOL}
+Every pseudo term well typed in the exact three-sort lambdaHOL of
+\cref{def:p12-har-lambda-hol} is strongly normalizing for full compatible
+annotated beta reduction. The proof uses the proved judgment-dependent
+CC transport and exact CC normalization, not the failed printed PRED-omega
+inverse. Definitions/delta, primitive recursor/iota, strong-sum and
+inductive extensions are outside this conclusion.
+\end{hbtheorem}
+
+\input{parts/p12/presentations/har2001-c18-lambda-star}
+
+\subsection{Products, sums, and the source strong-sum variants}
+
+\begin{hbdefinition}{def:p12-har-product-sum-extensions}{Source Figures 4--5 and their polymorphic realizations}
+The source desired product and sum rules are on the registered sheet.
+Primitive \(A_1\times A_2\) has pairing/projections; primitive
+\(A_1+A_2\) has two injections and a case operator. In a polymorphic
+sort the chapter realizes these operations by encodings. For source
+lambdaHOL this construction is available at \(\mathrm{Prop}\), not
+at arbitrary data sort \(\mathrm{Type}\):
+\[
+\begin{aligned}
+ A_1\times A_2&:=\Pi\alpha:\mathrm{Prop}.
+                  (A_1\to A_2\to\alpha)\to\alpha,\\
+ A_1+A_2&:=\Pi\alpha:\mathrm{Prop}.
+                  (A_1\to\alpha)\to(A_2\to\alpha)\to\alpha,\\
+ \mathrm{in}_1&:=\lambda p:A_1.\lambda\alpha:\mathrm{Prop}.
+     \lambda h_1:A_1\to\alpha.\lambda h_2:A_2\to\alpha.h_1p,\\
+ \mathrm{in}_2&:=\lambda p:A_2.\lambda\alpha:\mathrm{Prop}.
+     \lambda h_1:A_1\to\alpha.\lambda h_2:A_2\to\alpha.h_2p,\\
+ \mathrm{case}(f_1,f_2)&:=\lambda x:(A_1+A_2).x C f_1f_2.
+\end{aligned}
+\]
+Here \(A_1,A_2,C:\mathrm{Prop}\), \(f_i:A_i\to C\).
+The product projections and pairing are the full terms of
+\cref{def:p12-har-encoded-proof-terms}, with
+\(\varphi=A_1,\psi=A_2\). Expanding those abbreviations gives
+exactly the source Figure~4 operations, not a new primitive data product.
+The plus sign is a sum-type former here, not arithmetic addition.
+Plain PTS encodings do not supply an induction principle for their
+encoded data merely because a recursion term can be written
+\cite[pp.~1202--1204, Figs.~4--5]{BarendregtGeuvers2001}.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-har-sum-checks}{proved=annex:p12.har.sum-checks}{The source encoded sum computations}
+At the stated proposition sort,
+\(\mathrm{in}_i:A_i\to(A_1+A_2)\) and
+\(\mathrm{case}(f_1,f_2):(A_1+A_2)\to C\).
+For \(p:A_i\), expanding abbreviations and beta-reducing gives
+\(\mathrm{case}(f_1,f_2)(\mathrm{in}_i p)
+\twoheadrightarrow_\beta f_i p\). The corresponding product
+projection computations are supplied in
+\cref{thm:p12-har-connective-checks}; neither claim adds data-level
+polymorphism to the source lambdaHOL specification.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p12-har-strong-sums}{The actual Figure 6 strong sum and its warned variants}
+The displayed source strong sum has a data domain and propositional
+fiber: from \(A:\mathrm{Type}\) and
+\(x:A\vdash\varphi:\mathrm{Prop}\), form
+\(\Sigma x:A.\varphi:\mathrm{Type}\), with pairing and
+both projections. The second projection has the dependent type
+\(\varphi[\pi_1t/x]\). Its two primitive projection computations
+are included on the sheet; they are not beta contractions of an encoded
+existential. The extended conversion relation must admit these declared
+projection computations to check dependent projections.
+
+The chapter considers two different changes. A sum over
+\(A:\mathrm{Type}'\) with Type-valued fiber is displayed with
+a Type-valued result, then explicitly warned against: in particular
+\(\Sigma x:\mathrm{Type}.B\) must have the higher result sort
+\(\mathrm{Type}'\), not \(\mathrm{Type}\), in its proposed
+universe discipline. Separately, giving the strong sum with Type domain
+and Prop fiber a Prop result is proposed as an existential interpretation,
+but the source states this addition is inconsistent for its lambdaHOL.
+Both warned rule surfaces are recorded as separate variants on the sheet,
+not as baseline rules or as proved consistency claims. Their paradox and
+consistency qualifications require their own complete metatheoretic
+arguments; they are not supplied by the ordinary beta-only theorem
+\cite[pp.~1204--1206, Fig.~6]{BarendregtGeuvers2001}.
+\end{hbdefinition}
+
+\begin{hbexample}{def:p12-har-group-record}{The full source group-record construction and its formation boundary}
+For \(A:\mathrm{Type}\), write the operation \(\circ:A\to A\to A\),
+unit \(e:A\), and inverse \(\mathrm{inv}:A\to A\). The three
+listed source axioms are
+\[
+\begin{aligned}
+ \mathrm{Assoc}&:=\Pi x,y,z:A.(x\circ y)\circ z=_A x\circ(y\circ z),\\
+ \mathrm{Unit}&:=\Pi x:A.e\circ x=_A x,\\
+ \mathrm{Inverse}&:=\Pi x:A.(\mathrm{inv}\,x)\circ x=_A e.
+\end{aligned}
+\]
+Its group-structure type is
+\(\mathrm{Group\!\mbox{-}\!Str}(A)=
+(A\to A\to A)\times(A\times(A\to A))\).
+Writing \(\Phi=\mathrm{Assoc}\land
+(\mathrm{Unit}\land\mathrm{Inverse})\), its intended full record is
+\[
+ \mathrm{Group}(A):=
+ \Sigma\circ:A\to A\to A.\Sigma e:A.
+       \Sigma\mathrm{inv}:A\to A.\Phi.
+\]
+The outer two sums have data-valued fibers. Thus this nested expression
+needs data/data strong-sum formation in addition to the data/Prop rule
+actually displayed in Figure~6; that figure alone does not type it.
+When these stated record formations are admitted, witnesses
+\(f,a,h,p_1,p_2,p_3\) give the record
+\[
+ \langle f,\langle a,\langle h,
+       \langle p_1,\langle p_2,p_3\rangle\rangle
+       \rangle\rangle\rangle.
+\]
+There are three axiom proofs, matching the three listed axioms, not a
+fourth unspecified proof field. For \(t:\mathrm{Group}(A)\), its
+operation, unit and inverse are \(\pi_1t\),
+\(\pi_1(\pi_2t)\), and \(\pi_1(\pi_2(\pi_2t))\).
+The axiom package is \(\pi_2(\pi_2(\pi_2t))\); its first
+projection gives associativity for that extracted operation.
+Abstracting also over the carrier gives the intended
+\(\mathrm{Group}:=\Sigma A:\mathrm{Type}.\mathrm{Group}(A)\),
+at the higher result sort specified by the source's universe warning.
+This is a record schema with explicit formation requirements, not a
+derivable baseline lambdaHOL type
+\cite[pp.~1204--1205]{BarendregtGeuvers2001}.
+\end{hbexample}
+
+\subsection{The source inductive mechanisms and their worked computations}
+
+\begin{hbdefinition}{def:p12-har-inductive-scheme}{The chapter's strictly positive constructor scheme}
+The source inductive declaration is
+\[
+\begin{aligned}
+ &\mathrm{Inductive}\ \mu:\mathrm{Type}:=\\
+ &\quad\mathrm{constr}_i:
+    \sigma_1^i(\mu)\to\cdots\to\sigma_{m_i}^i(\mu)\to\mu
+          \quad(1\le i\le n).
+\end{aligned}
+\]
+Each argument scheme is \(A_1\to\cdots\to A_k\to X\),
+with \(\mu\) absent from every \(A_j\), and either
+\(X=\mu\) or \(\mu\) absent from \(X\). This is the
+chapter's stated strictly positive regime; a negative occurrence such as
+\(\mu\to D\) in a constructor argument does not satisfy it.
+The declaration generates constructors, data recursion, proposition-valued
+induction and constructor computation. These additions change conversion
+to admit their \(\iota\)-steps; the beta-only structural proofs above
+do not automatically become beta/iota proofs for this extension.
+The chapter sets aside the alternative W-type route in its intensional
+presentation and refers to a separate extensional treatment. Its
+generated constructor recursors are not silently identified with that
+other presentation.
+
+For an argument ending in \(\mu\), data recursion supplies a recursive
+value family of type \(A_1\to\cdots\to A_k\to C\).
+Induction for \(P:\mu\to\mathrm{Prop}\) supplies the family
+\(\Pi u_1:A_1\cdots u_k:A_k.P(a_j u_1\cdots u_k)\).
+The branch receives every original constructor argument and then these
+recursive families in their constructor-argument order. At a constructor,
+its recursive family is built by
+\(\lambda u_1:A_1\cdots u_k:A_k.
+\mathrm{Rec}_\mu\vec f(a_j u_1\cdots u_k)\).
+An argument not containing \(\mu\) gets no recursive family. Write
+\(\mathcal B_i(C)\) for the type quantifying over all those original
+arguments and recursive value families and returning \(C\);
+\(\mathcal B_i(P)\) quantifies over the original arguments and
+their indexed induction hypotheses and returns
+\(P(\mathrm{constr}_i\vec a)\). These metalevel branch-type names
+make the generated rule construction explicit; they are not new object
+type formers. These
+clauses give the actual construction behind the nat, List and Tree rules,
+rather than merely naming a generated eliminator
+\cite[pp.~1206--1209]{BarendregtGeuvers2001}.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p12-har-nat-list-tree}{The three fixed inductive types}
+The source declarations, each with its complete recursion/induction and
+computation rules on the sheet, are
+\[
+\begin{aligned}
+ \mathrm{nat}&:\mathrm{Type},&
+ 0&:\mathrm{nat},&S&:\mathrm{nat}\to\mathrm{nat},\\
+ \mathrm{List}&:\mathrm{Type},&
+ \mathrm{Nil}&:\mathrm{List},&
+ \mathrm{Cons}&:D\to\mathrm{List}\to\mathrm{List},\\
+ \mathrm{Tree}&:\mathrm{Type},&
+ \mathrm{Leaf}&:D\to\mathrm{Tree},&
+ \mathrm{Join}&:D\to(\mathrm{nat}\to\mathrm{Tree})\to\mathrm{Tree}.
+\end{aligned}
+\]
+Here \(D:\mathrm{Type}\) is fixed for List and Tree. Tree is
+constructor-generated and well founded, but every Join has countably many
+children; it is not a datatype of infinite non-well-founded branches.
+Its data branch receives
+\(d:D,t:\mathrm{nat}\to\mathrm{Tree},
+r:\mathrm{nat}\to C\). Its induction branch instead receives
+\(\Pi n:\mathrm{nat}.P(tn)\). Replacing that family by one
+unindexed induction hypothesis would change the source rule.
+The recursor notation is schematic at the selected target type/predicate;
+no forbidden polymorphic type \(\Pi C:\mathrm{Type}.\cdots\)
+is silently assigned to it inside the base calculus
+\cite[pp.~1206--1209]{BarendregtGeuvers2001}.
+\end{hbdefinition}
+
+\begin{hbexample}{def:p12-har-double-map}{Double, evenness, and the full List map term}
+The source terms are
+\[
+\begin{aligned}
+ d&:=\mathrm{Rec}_{\mathrm{nat}}\,0
+       (\lambda x:\mathrm{nat}.\lambda y:\mathrm{nat}.S(Sy)),\\
+ \mathrm{even}&:=\mathrm{Rec}_{\mathrm{nat}}\,\top
+       (\lambda x:\mathrm{nat}.\lambda\alpha:\mathrm{Prop}.\neg\alpha),\\
+ \mathrm{map}&:=\lambda f:D\to D.\lambda l:\mathrm{List}.
+       \mathrm{Rec}_{\mathrm{List}}\,\mathrm{Nil}
+       (\lambda a:D.\lambda k:\mathrm{List}.
+          \lambda h:\mathrm{List}.\mathrm{Cons}(fa)h)\,l.
+\end{aligned}
+\]
+The final \(l\) is the actual argument to the recursor. It is needed
+for the displayed \((D\to D)\to\mathrm{List}\to\mathrm{List}\)
+type; leaving it out under an extra \(\lambda l\) would return a
+function instead of the asserted list. Abbreviations expand before
+beta/iota computation. Thus \(d0\twoheadrightarrow0\),
+\(d(Sx)\twoheadrightarrow S(S(dx))\),
+\(\mathrm{even}(0)\twoheadrightarrow\top\), and
+\(\mathrm{even}(Sx)\twoheadrightarrow\neg\mathrm{even}(x)\).
+With \(\mathrm{true}:\top\), the source induction term is
+\[
+ \mathrm{Rec}_{\mathrm{nat}}\,\mathrm{true}
+ (\lambda x:\mathrm{nat}.\lambda h:\mathrm{even}(dx).
+    \lambda z:\neg\mathrm{even}(dx).zh).
+\]
+It proves \(\Pi x:\mathrm{nat}.\mathrm{even}(dx)\) using
+double-negation introduction, not double-negation elimination
+\cite[pp.~1207--1208]{BarendregtGeuvers2001}.
+\end{hbexample}
+
+\begin{hbtheorem}{thm:p12-har-inductive-checks}{proved=annex:p12.har.inductive-checks}{The actual constructor branches and worked induction term}
+For the stated nat/List/Tree recursor surfaces, each displayed constructor
+\(\iota\)-contractum has the same prescribed target type as its redex,
+for data recursion and for proposition-valued induction. The generated
+recursive families have the explicit types in
+\cref{def:p12-har-inductive-scheme}. The evenness term has type
+\(\Pi x:\mathrm{nat}.\mathrm{even}(dx)\), and
+\(\mathrm{map}\,f(\mathrm{Cons}\,a t)
+\twoheadrightarrow_{\beta\iota}
+\mathrm{Cons}(fa)(\mathrm{map}\,f t)\), with
+\(\mathrm{map}\,f\,\mathrm{Nil}\twoheadrightarrow\mathrm{Nil}\).
+These are branch typing/computation results for the declared extension,
+not a global consistency or beta/iota normalization theorem.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p12-har-tree-operations}{The two source Tree tasks made explicit}
+For a fixed \(a:D\) and \(n:\mathrm{nat}\), the nth-subtree
+operation is the data recursion with branches
+\(\lambda d:D.\mathrm{Leaf}\,a\) and
+\(\lambda d:D.\lambda t:\mathrm{nat}\to\mathrm{Tree}.
+\lambda r:\mathrm{nat}\to\mathrm{Tree}.tn\).
+It returns \(tn\) on \(\mathrm{Join}\,d t\) and the stated
+default \(\mathrm{Leaf}\,a\) on a leaf. To distinguish a Join
+from a single leaf, use target \(\mathrm{Prop}:\mathrm{Type}\),
+leaf branch \(\lambda d:D.\bot\), and join branch
+\(\lambda d:D.\lambda t:\mathrm{nat}\to\mathrm{Tree}.
+\lambda r:\mathrm{nat}\to\mathrm{Prop}.\top\).
+The output computes to \(\bot\) or \(\top\) on those
+constructors. In the source's phrase ``infinite or just a single leaf,''
+infinite means infinitely many nodes supplied by a Join, not an infinite
+descending branch in this well-founded inductive type
+\cite[p.~1209]{BarendregtGeuvers2001}.
+\end{hbexample}
+
+\begin{hbdefinition}{def:p12-har-inductive-propositions}{Inductive conjunction and equality}
+For \(\varphi,\psi:\mathrm{Prop}\), the source primitive
+inductive conjunction has
+\(\mathrm{Pair}:\varphi\to\psi\to(\varphi\land\psi)\).
+Its recursor eliminates only to a fixed \(P:\mathrm{Prop}\),
+with branch \(\varphi\to\psi\to P\). A family depending
+on a conjunction proof would require the absent Prop/Type pair to form
+its type. Taking the branches \(\lambda x:\varphi.\lambda y:\psi.x\)
+or \(\lambda x:\varphi.\lambda y:\psi.y\) gives projections.
+This is a primitive inductive presentation, distinct from the previous
+impredicative conjunction encoding.
+
+For \(D:\mathrm{Type}\), source equality is the inductive predicate
+\(\mathrm{Eq}:D\to D\to\mathrm{Prop}\), with
+\(\mathrm{Refl}:\Pi x:D.\mathrm{Eq}\,x x\).
+Its eliminator uses \(P:D\to D\to\mathrm{Prop}\) and
+\(f_1:\Pi x:D.Pxx\) to prove
+\(\Pi x,y:D.(\mathrm{Eq}\,xy)\to Pxy\).
+The source computation display makes its two indices explicit as
+\(\mathrm{Rec}_{\mathrm{Eq}}\,x x f_1(\mathrm{Refl}\,x)
+\to_\iota f_1x\). Its conclusion predicate depends on the endpoints,
+not on their equality proof. This is not the full proof-dependent identity
+eliminator of another type theory
+\cite[pp.~1209--1211]{BarendregtGeuvers2001}.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p12-har-dependent-inductives}{The proposed parametric and dependent-constructor extensions}
+The source parametric-list scheme is
+\(\mathrm{List}:\mathrm{Type}\to\mathrm{Type}\),
+\(\mathrm{Nil}:\Pi D:\mathrm{Type}.\mathrm{List}\,D\), and
+\(\mathrm{Cons}:\Pi D:\mathrm{Type}.
+D\to\mathrm{List}\,D\to\mathrm{List}\,D\).
+For each fixed \(D\), the sheet retains its exact recursion/induction
+and constructor computations. The constructor quantification requires
+the separately proposed Type'/Type product pair; the base system does
+not even form the displayed Type-to-Type family kind. The source warns
+that its proposed enlargement of lambdaHOL is inconsistent and instead
+discusses separately permitting type parameters in a PRED-style setting.
+Neither additional product pairs nor a modern universe hierarchy are
+silently inserted into the base specification.
+
+In a different extension explicitly adding Prop/Type, the source uses
+\(B:\mathrm{Type}\), \(Q:B\to\mathrm{Prop}\), and
+\(\mathrm{In}:\Pi z:B.(Qz)\to\mu\), for
+\(\mu:\mathrm{Type}\). This yields the strong-sum projections
+\[
+ \pi_1:=\mathrm{Rec}_\mu(\lambda z:B.\lambda y:Qz.z),
+ \qquad
+ \pi_2:=\mathrm{Rec}_\mu(\lambda z:B.\lambda y:Qz.y),
+\]
+where the second recursor uses predicate
+\(\lambda x:\mu.Q(\pi_1x)\). Its branch type is checked by
+the first projection computation. The predicate domain must be \(B\),
+matching the constructor's \(z:B\); a declaration \(Q:A\to\mathrm{Prop}\)
+with unrelated \(A\) does not type \(Qz\).
+These projections make data depend on proof arguments, so the
+disambiguation result for the unchanged base lambdaHOL does not apply
+to this extension \cite[pp.~1210--1211]{BarendregtGeuvers2001}.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-har-inductive-projections}{proved=annex:p12.har.inductive-projections}{The dependent-constructor projections and nondependent predicate elimination}
+In the stated Prop/Type extension,
+\(\pi_1:\mu\to B\) and
+\(\pi_2:\Pi x:\mu.Q(\pi_1x)\), with
+\(\pi_1(\mathrm{In}\,b q)\twoheadrightarrow b\) and
+\(\pi_2(\mathrm{In}\,b q)\twoheadrightarrow q\).
+For the stated primitive conjunction and Eq rules, their constructor
+recursor computations have the asserted proposition type; neither one
+supplies an eliminator into arbitrary data or one depending on a proof.
+\end{hbtheorem}
+
+\begin{proofboundary}{def:p12-har-extension-metatheory}{What the extension arguments do and do not establish}
+Constructor-root checks establish the declared computations' local
+type preservation. On a supplied well-founded constructor tree, recursion
+is constructed by assigning the already obtained child values to each
+branch and then applying that branch; induction follows the same
+well-founded argument with child proof families. A full formal extension
+still needs its exact admissible-signature and formation rules, global
+beta/iota subject reduction/confluence/normalization and the stated
+universe-consistency or inconsistency arguments. In particular a positive
+constructor name does not by itself prove those results, and the partial
+group-record formation or warned parametric/sum variants cannot be
+discharged by the beta-only base metatheory.
+\end{proofboundary}
+
+\subsection{The historical proof-development workflow}
+
+\begin{hbdefinition}{def:p12-har-tactic-workflow}{Source tactics and their term-construction meaning}
+The chapter's Figure~7 separates a current context/goal, the
+proof-development system receiving tactics, its constructed proof object,
+and the proof checker producing a certified statement. Its Coq examples
+use historical syntax: \texttt{(x:A)B} denotes \(\Pi x:A.B\),
+and \texttt{[x:A]M} denotes \(\lambda x:A.M\). In that input
+syntax abstraction and \texttt{->} bind more strongly than application,
+so parentheses around \texttt{(P x)} are substantive. This syntax and
+the source's version~6.3 theory development are not current Rocq scripts
+or a direct implementation of the three-sort beta-only lambdaHOL checker.
+
+For goal \(\Pi x:A.Px\to Qx\), \texttt{Intros} introduces
+fresh \(x:A,H:Px\) and leaves goal \(Qx\). A completed term
+\(q:Qx\) produces \(\lambda x:A.\lambda H:Px.q\).
+For goal \(Qa\) and
+\(p:\Pi x:A.Px\to Qx\), \texttt{Apply p} matches the
+conclusion with \(Qa\), instantiates \(x=a\), and leaves
+the proof hole \(pa\,?\) with goal \(Pa\). Matching alone
+does not complete that missing proof.
+
+For \(n:\mathrm{nat}\), \texttt{Elim n} at goal \(Qn\)
+creates \(Q0\) and \(\Pi k:\mathrm{nat}.Qk\to Q(Sk)\);
+the corresponding term is \(\mathrm{nat\_ind}\,Q f_0 f_S n\).
+The source \(\mathrm{nat\_rec}\) separately computes at zero
+and successor by its declared constructor reductions. Once every goal is
+filled and the term is checked, \texttt{Save fst\_lemma} records its
+definition under that name. A transcript or success message without the
+completed checking bridge is not itself a proof
+\cite[pp.~1211--1214, Fig.~7]{BarendregtGeuvers2001}.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p12-har-prime-development}{The historical theory-development entry}
+The chapter's version~6.3 development uses
+\(\mathsf{nat}:\mathsf{Set}\), with source constructor O and successor S,
+and inductive conjunction, truth \(\mathsf{TT}\), falsehood
+\(\mathsf{FF}\), disjunction and existence in \(\mathsf{Prop}\).
+Its \(\mathsf{not}(a)=a\to\mathsf{FF}\) and
+\(\mathsf{iff}(a,b)=(a\to b)\land(b\to a)\).
+For \(A:\mathsf{Set},P:A\to\mathsf{Prop}\), the existential constructor is
+\(\mathsf{ex\_intro}:\Pi x:A.Px\to\mathsf{ex}\,A P\).
+The source explicitly declares
+\(\mathsf{DN}:\Pi a:\mathsf{Prop}.\neg\neg a\to a\);
+that classical assumption remains part of this proof environment.
+
+The full constructor/equality/elimination regime is specified in
+\cref{def:p12-har-prime-regime}. Its natural-number constants,
+\(\mathsf{Is\_suc}\) cases, inductive leseq/lthan/before definitions, both recursive
+arithmetic functions and coefficient-left
+div/propdiv/prime/primediv/HPD definitions are given in
+\cref{def:p12-har-prime-arithmetic}, together with the additional explicit
+subtraction and factorial recursions required for the Euclid continuation.
+They retain the historical identifiers and argument order.
+The source's abstract \(\mathsf{nat}:\mathsf{Type}\) presentation from
+section~3.8, the beta-only lambdaHOL proof-checker, and this Set-based
+classical library are different regimes, not aliases for the same rule set.
+
+The chapter itself omits most objects for its listed logical/arithmetic
+library and prime-divisor end theorem. Here the corresponding constructions
+are supplied in
+\cref{thm:p12-har-prime-logical,thm:p12-har-prime-equality,thm:p12-har-prime-order,thm:p12-har-prime-semiring,thm:p12-har-prime-divisibility,thm:p12-har-prime-divisor,thm:p12-har-prime-euclid}.
+In particular \(\mathsf{cv\_ind}\) is derived from ordinary \(\mathsf{nat\_ind}\), numerical
+definitions are not treated as their arithmetic theorems, and DN is
+visible in the prime-divisor proof. The two objects actually printed
+by the source remain separately attributed in
+\cref{thm:p12-har-development-objects}
+\cite[pp.~1215--1220]{BarendregtGeuvers2001}.
+\end{hbdefinition}
+
+\input{parts/p12/presentations/har2001-c18-prime-development}
+
+\begin{hbtheorem}{thm:p12-har-development-objects}{proved=annex:p12.har.development-objects}{The two explicitly supplied source proof objects}
+These are the two proof objects actually printed in the chapter, rather
+than an assertion that it prints all the library derivations. Their
+historical Set/Prop regime is the one of
+\cref{def:p12-har-prime-regime}; the additional source-omitted library
+proofs are constructed in \cref{thm:p12-har-prime-logical}.
+The source \(\mathrm{non\_or}\) term constructs
+\(\neg(a\lor b)\to(\neg a\land\neg b)\)
+by pairing the functions \(q:a\mapsto p(\mathrm{or\_inl}\,a b q)\)
+and \(q:b\mapsto p(\mathrm{or\_inr}\,a b q)\).
+For the source existential presentation, its \(\mathrm{ex\_c}\)
+term proves
+\[
+ (\exists x:A.Px)\ \longleftrightarrow\
+       \neg\Pi x:A.\neg Px.
+\]
+The forward implication eliminates the existential into FF; the reverse
+constructs double negation of that existential and applies the explicitly
+declared DN axiom. Its dependence on DN remains in the proof term.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p12-har-autarkic}{The source interfaces and their actual reconstructions}
+The chapter distinguishes numerical computation, predicate decision, and
+symbolic computation. For square root it proposes a represented function
+\(F\) with a reusable proof obligation
+\(\Pi n.(Fn)^2\le n<(Fn+1)^2\). The concrete computation
+\(F\overline{45}\twoheadrightarrow\overline6\), together with
+reflexivity and conversion, proves its numeral equation only after that
+function's representation is declared; it does not by itself prove the
+universal square-root specification.
+The actual fixed-target program, universal bound and literal 45 reduction
+are supplied in \cref{def:p12-har-autarkic-square-root,thm:p12-har-autarkic-square-root},
+under the explicitly historical nat:Set regime.
+
+For primality, \(\mathrm{KPrime}\) represents a characteristic
+function with the two obligations
+\(\Pi n.\mathrm{Prime}(n)\leftrightarrow
+\mathrm{KPrime}(n)=\overline1\) and
+\(\Pi n.\mathrm{KPrime}(n)=\overline0\lor
+\mathrm{KPrime}(n)=\overline1\). A successful computation is usable
+through that checked equivalence. The source notes the expense of its
+generic primitive-recursion translation and unary numerals, and separately
+mentions the Pocklington/Fermat-based primality work, including the stated
+number \(1223334444555554444333221\). Those are attributed examples,
+not a large-number certificate supplied by this chapter or newly checked
+here. The direct bounded-search reconstruction in
+\cref{def:p12-har-kprime-program,thm:p12-har-kprime-correct,thm:p12-har-kprime-61}
+supplies the historical prime predicate's full positive/negative/range
+specification, 0/1 boundary cases and the printed 61 example. It is not
+the generic compiler or Pocklington/Fermat algorithm.
+
+For symbolic normalization, source \(G:\mathrm{term}(\mathrm{Nat})
+\to\mathrm{term}(\mathrm{Nat})\) acts on represented syntax and
+source \(E\) interprets it. The chapter's desired quoted example is
+\[
+ G\bigl(\text{`}(x+1)(x+1)\text{'}\bigr)
+       \twoheadrightarrow_\iota
+       \text{`}x^2+2x+1\text{'}.
+\]
+For free variables, an explicit valuation \(\nu\) belongs in the
+interpreter: \(E_\nu:\mathrm{term}(\mathrm{Nat})\to\mathrm{Nat}\).
+The real reusable obligation is
+\(\Pi\nu.\Pi t.E_\nu(Gt)=E_\nu(t)\). Instantiating it
+at the quoted input and using the two evaluation computations yields
+the polynomial identity. The chapter expressly omits its free-variable
+bookkeeping; an adequate formal encoding must supply it rather than
+identify syntax with values. This source \(E\) is an object-language
+interpreter, distinct from the CC proof's metalevel raw interpretation.
+The actual typed five-constructor interpreter and finite/open valuation
+construction are supplied in
+\cref{def:p12-har-autarkic-syntax,def:p12-har-autarkic-interpreter,thm:p12-har-autarkic-interpreter,thm:p12-har-autarkic-substitution}.
+The actual sparse polynomial program, normal-form/retraction results and
+universal preservation are supplied in
+\cref{def:p12-har-poly-normalizer,def:p12-har-poly-quotation,thm:p12-har-poly-normalization,thm:p12-har-poly-preservation,thm:p12-har-poly-retraction}.
+Its right-associated x-squared+(2x+1) output and explicit association
+bridge to the alternate source parsing are given in
+\cref{thm:p12-har-poly-example}; literal AST identity between those
+parses is not asserted. Arbitrary fixed carriers require the stated
+commutative-semiring laws, not just typed operations.
+The same two-level interface supports encoded differentiation,
+simplification and continuity arguments, with separate soundness proofs
+\cite[pp.~1220--1223]{BarendregtGeuvers2001}.
+The following treatments supply the particular F/KPrime/G/interpreter
+constructions and, separately, the internal formula compiler and universal
+correctness proof of
+\cref{thm:p12-har-prcompiler-ok,thm:p12-har-prcompiler-predicate}.
+The latter distinguishes actual internal formula computation from external
+primitive-recursive prescription templates and from an automatic inverse
+on arbitrary propositions. Pocklington/Fermat/large certificates,
+differentiation and continuity extensions remain separate. Likewise the proved finite-family avoidance fold in
+\cref{thm:p12-har-prime-euclid} is not an arithmetic sequence-coding
+bridge. None of these obligations is discharged by the beta-only
+normalization theorem or by the historical prime-divisor proof.
+\end{hbdefinition}
+
+\input{parts/p12/presentations/har2001-c18-autarkic}
+\input{parts/p12/presentations/har2001-c18-kprime}
+\input{parts/p12/presentations/har2001-c18-polynomial-normalizer}
+\input{parts/p12/presentations/har2001-c18-primitive-recursive-compiler}
+
+\subsection{The chapter's dated assistant comparison}
+
+The following retains the 2001 source's comparison, not current products
+or a recommendation. The authors explicitly describe the ratings as
+intuitive and not to be taken too seriously. Here \(\mathrm{n.s.}\)
+means non-standard proof objects/scripts. The historical PP codes are
+\(R_1\): a separately chosen reduction notion; \(R_2\): structurally
+well-founded recursion; \(R_3\): arbitrary provable equality;
+\(R_4\): \(\varepsilon_0\)-recursion. The surrounding text adds
+normalization/proof conditions to the chosen reduction mechanism;
+the bare code \(R_1\) does not license every unverified rewrite
+\cite[pp.~1224--1228]{BarendregtGeuvers2001}.
+
+\begin{longtable}{@{}lcccccccc@{}}
+\caption{The source's historical assistant table and ratings.}
+\label{tab:p12-har-assistants}\\
+\toprule
+Assistant & Objects & Rating & PP & Logic & Dep. & Ind. & Auto. & Users\\
+\midrule
+\endfirsthead
+\caption[]{The source's historical assistant table and ratings (continued)}\\
+\toprule
+Assistant & Objects & Rating & PP & Logic & Dep. & Ind. & Auto. & Users\\
+\midrule
+\endhead
+\midrule\multicolumn{9}{r}{\emph{continued on next page}}\\
+\endfoot
+\endlastfoot
+Agda & yes & +++ & \(\beta\delta\iota R_1\) & int./pred. & yes & yes & none\textsuperscript{8} & -\\
+Coq & yes & ++ & \(\beta\delta\iota R_2\) & int. & yes & yes & + & ++\\
+Lego & yes & ++ & \(\beta\delta\iota R_1\) & int. & yes & yes & + & +\\
+Nuprl & n.s. & ++ & \(\beta\delta\iota R_3\) & int. & yes & yes & + & ++\\
+HOL & n.s. & ++ & none & cl. & no & yes & ++ & ++\\
+Isabelle & n.s. & ++ & none & t.b.s. & no & no & ++ & ++\\
+Mizar & none & + & none & cl. & yes & no & + & ++\\
+ACL2 & none & + & \(R_4\) & pra & no & yes\textsuperscript{9} & +++ & +++\\
+PVS & none & - & none & cl. & no & no & +++ & +++\\
+\bottomrule
+\end{longtable}
+
+The source abbreviations are intuitionistic (int.), predicative (pred.),
+classical (cl.), object logic chosen by the user (t.b.s.), and its
+primitive-recursive arithmetic description (pra). Source note~8 records
+Agda's limited higher-order-unification automation; note~9 records ACL2's
+coding of induction in its basic inductive type. These columns classify
+the source's historical presentations, not contemporary kernel features.
+
+Coq/Lego/Agda are the source's stored-object group. Nuprl's original
+extensional judgment is distinguished from its expanded evidence that
+records equality proofs. HOL/Isabelle scripts are discussed as replayable
+non-standard evidence, with computation handled by explicit rewriting,
+not silently by the source's conversion principle. Isabelle's meta-logic
+and its internally declared object logics are separate. Mizar, ACL2 and
+PVS are the source's no-stored-object group; its PVS discussion includes
+predicate-subtype obligations. No row implies current portable-object
+support or absence merely from a product name.
+
+Finally the chapter contrasts its pragmatic verification approach with a
+small-checker fundamental approach, while keeping logical strength and
+computational strength as separate parameters. Its proposed ``universal''
+assistant is foundationally broad, not a complete algorithm for all
+mathematical truth. Its anticipated research/refereeing/teaching and
+program-extraction benefits remain historical projections. Proof-dependent
+quotient/subset/partial-function representations require their actual
+typing and checking regime, and classical DN in the prime development
+does not automatically yield a constructive witness-extraction algorithm
+\cite[pp.~1228--1230]{BarendregtGeuvers2001}.
+
+\showcalculus{p12-har-types}

@@ -1,0 +1,365 @@
+% P15-U3: exact assumptions for the computation methods in Kass--Raftery Sec. 4.
+\chapter{Computing Bayes Factors}
+\label{sec:p15-bayes-factor-computation}
+
+A marginal likelihood is an integral, and its numerical approximation is
+a further operation with its own error conditions. This chapter develops
+the Laplace, Schwarz/BIC, direct Monte Carlo, importance and harmonic-mean
+methods described by Kass and Raftery
+\cite[Sec.~4, pp.~777--781]{KassRaftery1995BayesFactors}.
+The model and data-measure conventions are those of
+\cref{def:p15-model-comparison-experiment}. Likelihood normalizing constants
+remain part of every expression unless a common cancellation is proved.
+
+The sample-information index \(n\), the parameter dimension \(d\), and the
+simulation count \(M\) have different roles. Increasing \(M\) does not repair
+an invalid large-\(n\) approximation. Increasing \(n\) does not make an
+arbitrary simulation scheme converge to its intended distribution.
+
+\section{A Laplace theorem with explicit local and tail conditions}
+\label{sec:p15-laplace-hypotheses}
+
+\begin{hbdefinition}{def:p15-laplace-family}{A uniformly controlled interior mode}
+Fix an integer \(d\geq1\). For each \(n\geq1\), let
+\(\Theta_n\subseteq\mathbb R^d\) be measurable and contain the ball
+\(B(\theta_n,\rho)\), for a fixed \(\rho>0\). Consider
+\[
+ I_n=\int_{\Theta_n}e^{nh_n(\theta)}a_n(\theta)\,d\theta .
+\]
+Here \(h_n\) is measurable with values in \(\mathbb R\cup\{-\infty\}\),
+and \(a_n\) is finite, nonnegative and measurable. On the stated ball,
+\(h_n\) is real and \(C^4\), \(a_n\) is \(C^2\), and the following
+constants are independent of \(n\):
+\begin{enumerate}
+\item \(\nabla h_n(\theta_n)=0\), and
+\(J_n=-D^2h_n(\theta_n)\) has all eigenvalues in \([c,C]\), with
+\(0<c\leq C<\infty\).
+\item The operator norms of \(D^3h_n,D^4h_n,Da_n,D^2a_n\) on the ball
+are at most \(A<\infty\), and
+\(0<a_-\leq a_n(\theta_n)\leq a_+<\infty\).
+\item For every \(v\) with \(\|v\|<\rho\),
+\(h_n(\theta_n+v)-h_n(\theta_n)\leq-c_0\|v\|^2\), where \(c_0>0\).
+\item For constants \(A_T,\eta>0\),
+\[
+ \int_{\Theta_n\setminus B(\theta_n,\rho)}
+ e^{n(h_n(\theta)-h_n(\theta_n))}a_n(\theta)\,d\theta
+ \leq A_Te^{-\eta n}.
+\]
+\end{enumerate}
+The norm is Euclidean, derivative norms are its induced multilinear norms,
+and \(d\theta\) is \(d\)-dimensional Lebesgue measure. The last condition
+controls all mass outside the local mode, including other modes and tails.
+These are deterministic conditions on the sequence being approximated.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p15-laplace-relative-error}{proved=annex:p15.laplace-relative-error}{Relative Laplace accuracy under explicit hypotheses}
+Under \cref{def:p15-laplace-family},
+\[
+ \widehat I_n=e^{nh_n(\theta_n)}a_n(\theta_n)
+                  (2\pi/n)^{d/2}(\det J_n)^{-1/2}
+\]
+satisfies \(I_n/\widehat I_n=1+O(n^{-1})\).
+The implied constant depends only on the displayed uniform bounds and
+fixed dimension, not on \(n\). In particular \(I_n\) is positive and finite.
+For two such marginal integrals,
+\(B_{10}=I_{1,n}/I_{0,n}\) and
+\(\widehat B_{10}=\widehat I_{1,n}/\widehat I_{0,n}\) satisfy
+\(B_{10}/\widehat B_{10}=1+O(n^{-1})\) and
+\(\log B_{10}-\log\widehat B_{10}=O(n^{-1})\).
+\end{hbtheorem}
+
+This theorem does not claim the hypotheses for every statistical model or
+for dimensions increasing with \(n\). To apply it to random data, one must
+establish the stated bounds along the data sequences in question. A label
+such as regular model is not a substitute for the local and tail premises.
+
+\section{Posterior-mode and likelihood-mode constructions}
+\label{sec:p15-laplace-mode-variants}
+
+For an observed data set write \(L_n(\theta)\) for its full likelihood,
+\(\pi(\theta)\) for a proper prior density, and
+\(I_n=\int L_n(\theta)\pi(\theta)d\theta\). Logs below are taken only in
+the positive local neighborhood of the specified mode.
+
+\begin{hbcorollary}{thm:p15-laplace-mode-variants}{proved=annex:p15.laplace-mode-variants}{Two expansions of the same integral}
+For the posterior-mode construction let
+\[
+ q_n=\log(L_n\pi),\quad \widetilde\theta_n\in\arg\max q_n,\quad
+ H_n=-D^2q_n(\widetilde\theta_n).
+\]
+If \(h_n=q_n/n,a_n=1,\theta_n=\widetilde\theta_n\) satisfy the explicit
+Laplace hypotheses, then
+\[
+ \widehat I_{\rm post}
+ =(2\pi)^{d/2}(\det H_n)^{-1/2}
+                L_n(\widetilde\theta_n)\pi(\widetilde\theta_n)
+\]
+has relative error \(O(n^{-1})\).
+
+For the likelihood-mode construction let
+\[
+ \ell_n=\log L_n,\quad \widehat\theta_n\in\arg\max\ell_n,\quad
+ F_n=-D^2\ell_n(\widehat\theta_n).
+\]
+If \(h_n=\ell_n/n,a_n=\pi,\theta_n=\widehat\theta_n\) satisfy those
+hypotheses, then
+\[
+ \widehat I_{\rm MLE}
+ =(2\pi)^{d/2}(\det F_n)^{-1/2}
+                  L_n(\widehat\theta_n)\pi(\widehat\theta_n)
+\]
+also has relative error \(O(n^{-1})\). These are separate applications
+with separate hypothesis checks.
+\end{hbcorollary}
+
+The first expansion absorbs the prior into the exponent and uses posterior
+curvature; the second leaves it as an amplitude and uses likelihood
+curvature. A strongly varying prior can make the second less accurate at a
+given finite sample size \cite[Secs.~4.1.1--4.1.2]{KassRaftery1995BayesFactors}.
+
+\begin{hblemma}{thm:p15-laplace-curvature-replacement}{proved=annex:p15.laplace-curvature-replacement}{Replacing an information matrix}
+Suppose \(F_n=nJ_n\), where \(J_n\) is symmetric with all eigenvalues
+at least \(c>0\).
+Replace it by \(\widetilde F_n=n\widetilde J_n\), where
+\(\widetilde J_n\) is symmetric and
+\(\|\widetilde J_n-J_n\|\leq\delta_n<c/2\). Holding the mode, likelihood
+and prior ordinate fixed, the changed approximation satisfies
+\[
+ \left|\log\frac{\widehat I(\widetilde F_n)}
+                         {\widehat I(F_n)}\right|
+ \leq d\delta_n/c.
+\]
+Thus a bound \(\delta_n=O(n^{-1/2})\) gives relative error
+\(O(n^{-1/2})\), and \(O(n^{-1})\) preserves that smaller error order.
+An expected-information matrix may be substituted under such a proved
+comparison; the name expected information alone does not supply the bound.
+\end{hblemma}
+
+\section{The precise fixed-dimensional BIC consequence}
+\label{sec:p15-bic-consequence}
+
+\begin{hbtheorem}{thm:p15-bic-leading-order}{proved=annex:p15.bic-leading-order}{Log evidence and discarded constant-order terms}
+Consider two models of fixed dimensions \(d_0,d_1\) satisfying the MLE
+Laplace hypotheses with \(F_{k,n}=nJ_{k,n}\) and proper prior densities
+\(\pi_k\). Define
+\[
+ c_{k,n}=\frac{d_k}{2}\log(2\pi)+\log\pi_k(\widehat\theta_{k,n})
+                         -\frac12\log\det J_{k,n}.
+\]
+Then \(c_{k,n}=O(1)\) and
+\[
+ \log I_{k,n}
+ =\ell_{k,n}(\widehat\theta_{k,n})-\frac{d_k}{2}\log n
+                +c_{k,n}+O(n^{-1}).
+\]
+A parameter-free model with positive finite likelihood uses
+\(I_{k,n}=L_{k,n}\), \(d_k=0,c_{k,n}=0\).
+With
+\(\mathrm{BIC}_k=-2\ell_{k,n}(\widehat\theta_{k,n})+d_k\log n\),
+\[
+ \log B_{10}
+ =-\tfrac12(\mathrm{BIC}_1-\mathrm{BIC}_0)
+                     +c_{1,n}-c_{0,n}+O(n^{-1}).
+\]
+Discarding the \(c\)-terms gives an \(O(1)\) error in log evidence,
+not a relative \(O(n^{-1})\) approximation to the factor. If
+\(c_{1,n}-c_{0,n}\to c_*\), the ratio of the BIC-based factor to
+the exact factor tends to \(e^{-c_*}\). A relatively negligible error on
+the log scale follows if \(|\log B_{10}|\to\infty\); it is not asserted
+when the log factor remains bounded.
+\end{hbtheorem}
+
+Before discarding terms, the two-model MLE formula contains
+\[
+\begin{split}
+2\log B_{10}={}&2(\ell_1(\widehat\theta_1)-\ell_0(\widehat\theta_0))
+ +(d_1-d_0)\log(2\pi)-\log\det F_1+\log\det F_0\\
+ &+2\log\pi_1(\widehat\theta_1)-2\log\pi_0(\widehat\theta_0)+O(n^{-1}).
+\end{split}
+\]
+In particular both prior-log terms have coefficient two. The information
+growth \(F_n=nJ_n\), rather than a convenient count of rows in a table,
+determines the role of \(n\). Different blockwise information rates, singular
+curvature, boundary modes and increasing dimension require other results
+\cite[Sec.~4.1.3]{KassRaftery1995BayesFactors}.
+
+\begin{hbtheorem}{thm:p15-laplace-normal-example}{proved=annex:p15.laplace-normal-example}{An exact normal calculation and three failure boundaries}
+For \(X_n\mid\theta\sim\operatorname{normal}(\theta,\sigma^2/n)\),
+\(\theta\sim\operatorname{normal}(\mu,\tau^2)\), with fixed positive
+\(\sigma,\tau\), the posterior-mode Laplace calculation is exact.
+Writing \(s^2=\sigma^2/n\), the MLE approximation is \(\pi(x_n)\) and
+\[
+ \frac{\widehat I_{\rm MLE}}{I_n}
+ =\sqrt{1+s^2/\tau^2}\,
+   \exp\!\left\{-\frac{s^2(x_n-\mu)^2}{2\tau^2(s^2+\tau^2)}\right\}.
+\]
+For a bounded sequence \(x_n\), the stated hypotheses hold for both
+variants and this ratio is \(1+O(n^{-1})\).
+
+For \(x_n=\mu=0,\sigma^2=1,\tau^2=4\), against the point-null model
+\(\theta=0\), exact, posterior-Laplace, MLE-Laplace and BIC factors
+\(B_{10}\) are respectively
+\[
+ (1+4n)^{-1/2},\quad(1+4n)^{-1/2},\quad(2\sqrt n)^{-1},\quad n^{-1/2}.
+\]
+The BIC-to-exact ratio tends to two.
+
+The following proper-prior likelihood examples show why hypotheses matter.
+For a uniform prior on \([0,1]\) and likelihood \(e^{-n\theta^2/2}\),
+the boundary-mode integral is asymptotic to one half of
+\(\sqrt{2\pi/n}\). For a uniform prior on
+\((-2,-1/2)\cup(1/2,2)\) and likelihood
+\(e^{-n(|\theta|-1)^2/2}\), the two-mode integral is asymptotic to
+\((2/3)\sqrt{2\pi/n}\), twice one mode's contribution.
+For a uniform prior on \([-1,1]\) and likelihood \(e^{-n\theta^4}\),
+the integral is asymptotic to
+\(n^{-1/4}\int_0^\infty e^{-u^4}du\), not a dimension-one
+\(n^{-1/2}\) rate.
+\end{hbtheorem}
+
+These likelihoods can arise from \(n\) successes in Bernoulli experiments
+whose success probabilities are the corresponding exponentials with \(n=1\).
+They are not unnormalized parameter priors. In the examples, respectively,
+the interior-ball, one-mode tail, and positive-curvature premises fail.
+
+\section{Direct simulation and importance sampling}
+\label{sec:p15-evidence-monte-carlo}
+
+Fix observed data and suppress their symbol. Let \(\Pi\) be a proper prior,
+\(L(\theta)\) the finite nonnegative full likelihood, and
+\(I=\int L\,d\Pi\in(0,\infty)\). Put \(T(d\theta)=L(\theta)\Pi(d\theta)\)
+and posterior \(P=T/I\). Simulation count is \(M\), not sample-information
+index \(n\).
+
+\begin{hbtheorem}{thm:p15-direct-evidence-mc}{proved=annex:p15.direct-evidence-mc}{Independent prior simulation}
+For i.i.d. \(\theta_i\sim\Pi\),
+\[
+ \widehat I_M=M^{-1}\sum_{i=1}^M L(\theta_i)
+\]
+is unbiased and converges almost surely to \(I\).
+If \(\int L^2d\Pi<\infty\), its variance is
+\(\{\int L^2d\Pi-I^2\}/M\). Integrability of \(L\), rather than a
+finite second moment, suffices for the strong-law conclusion.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p15-importance-evidence}{proved=annex:p15.importance-evidence}{Ordinary and self-normalized importance are different}
+Let \(Q\) be a proposal probability and suppose \(T\ll Q\).
+For i.i.d. \(\theta_i\sim Q\), choose a finite almost-everywhere version
+\(V=dT/dQ\). Then \(M^{-1}\sum_iV(\theta_i)\) is unbiased, converges
+almost surely to \(I\), and has variance
+\(\{\int V^2dQ-I^2\}/M\) when that second moment is finite.
+
+For the source's self-normalized form assume the stronger
+\(\Pi\ll Q\), let \(W=d\Pi/dQ\), and use
+\[
+ \widetilde I_M=
+ \frac{\sum_iW(\theta_i)L(\theta_i)}{\sum_iW(\theta_i)}
+\]
+when its denominator is positive. It is eventually defined almost surely
+and converges to \(I\). It need not be unbiased for finite \(M\).
+If both measures have densities, \(W=\pi/q\) on \(q>0\);
+support domination is essential.
+\end{hbtheorem}
+
+Kass and Raftery's equation (10) is the self-normalized ratio. An ordinary
+importance mean divides by \(M\), not by the random sum of weights.
+A proposal improving concentration can worsen tail behavior; no claim of
+improvement follows merely from calling a proposal an importance distribution
+\cite[Sec.~4.2]{KassRaftery1995BayesFactors}.
+
+\section{Posterior harmonic means and their support}
+\label{sec:p15-harmonic-evidence}
+
+\begin{hbtheorem}{thm:p15-harmonic-evidence}{proved=annex:p15.harmonic-evidence}{Reciprocal identities and independent-simulation convergence}
+Let \(G\) be a probability measure with \(G\ll T\), and set
+\(H=dG/dT\), with a finite version on the posterior support. Then
+\[
+ E_P H=1/I,\qquad
+ E_P H^2=\frac1I\int H^2\,dT.
+\]
+For i.i.d. \(\theta_i\sim P\), the mean
+\(A_M=M^{-1}\sum_iH(\theta_i)\) is unbiased for \(1/I\) and
+converges to \(1/I\) almost surely. Its inverse, when positive, is
+eventually defined and converges to \(I\); it is not generally unbiased.
+
+The classical harmonic mean takes \(G=\Pi\). It requires
+\(L>0\) \(\Pi\)-almost everywhere, gives \(H=1/L\), and has finite
+reciprocal-weight variance exactly when \(\int L^{-1}d\Pi<\infty\).
+If \(\Pi(L>0)=s<1\), the same posterior average of \(1/L\) instead
+converges to \(s/I\), so its inverse converges to \(I/s\).
+For density \(g\) of \(G\) and \(h=L\pi\) of \(T\),
+the generalized weight is \(g/h\), and its second-moment requirement
+is \(\int_{\{h>0\}}g^2/h<\infty\), with \(g=0\) almost everywhere
+where \(h=0\).
+\end{hbtheorem}
+
+The average \(g/(L\pi)\) estimates the reciprocal evidence. Inverting
+this average estimates evidence consistently under the stated sampling
+assumptions, but inversion does not preserve unbiasedness. The distinction
+is necessary when reading the printed equation (12) and its description
+\cite[Sec.~4.3]{KassRaftery1995BayesFactors}.
+
+\begin{hbtheorem}{thm:p15-evidence-mc-clt}{proved=annex:p15.evidence-mc-clt}{Normal limits with the necessary second moments}
+For the independent sampling schemes above, the following limits hold,
+where variance zero denotes point mass at zero.
+An ordinary mean of weights \(Z\) with mean \(I\) and variance
+\(v<\infty\) satisfies
+\(\sqrt M(\widehat I_M-I)\Rightarrow\operatorname{normal}(0,v)\).
+For self-normalized importance, if
+\(v_{\rm SN}=E_Q[W^2(L-I)^2]<\infty\), then
+\[
+ \sqrt M(\widetilde I_M-I)\Rightarrow\operatorname{normal}(0,v_{\rm SN}).
+\]
+For a generalized harmonic mean, if \(v_H=\operatorname{Var}_P(H)<\infty\),
+\[
+ \sqrt M(A_M^{-1}-I)\Rightarrow\operatorname{normal}(0,I^4v_H).
+\]
+Assign any fixed finite default when a finite-sample denominator is zero;
+those events disappear in probability under the stated strong laws.
+No corresponding normal limit is asserted when these moment premises fail.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p15-mc-evidence-boundaries}{proved=annex:p15.mc-evidence-boundaries}{Calculated support, bias, variance and dependence failures}
+The following examples use proper priors and finite likelihoods.
+\begin{enumerate}
+\item On two parameter values, let \(\Pi=(\varepsilon,1-\varepsilon)\),
+\(0<\varepsilon<1\), and \(L=(1,0)\). Then \(I=\varepsilon\).
+Direct simulation has relative variance
+\((1-\varepsilon)/(M\varepsilon)\) and probability
+\((1-\varepsilon)^M\) of returning zero. The posterior is concentrated
+on the first value, so the classical harmonic estimate equals one,
+not \(\varepsilon\). Proposal \(Q=(1,0)\) gives a valid zero-variance
+ordinary importance estimate \(\varepsilon\), but the attempted
+self-normalized estimate equals one.
+\item With prior \((1/2,1/2)\), likelihood \((1,3)\), proposal
+\((3/4,1/4)\), and \(M=1\), evidence is 2. Ordinary importance is
+unbiased with variance \(16/3\); self-normalized importance has expectation
+\(3/2\). The classical posterior harmonic estimate with one draw has
+expectation \(5/2\), despite its reciprocal being unbiased for \(1/2\).
+Likelihood values exceeding one are allowed for data densities.
+\item Let \(\Pi=\operatorname{normal}(0,1)\), \(L=1\), and
+\(Q=\operatorname{normal}(0,1/4)\). Ordinary importance has full support
+and mean one but infinite variance.
+\item For likelihood \(L(\theta)=\phi_{\theta,s^2}(x)\) and prior
+\(\operatorname{normal}(0,\tau^2)\), the classical harmonic reciprocal
+weight has infinite variance whenever \(\tau^2\geq s^2\), although
+its expectation is finite and the i.i.d. strong law still applies.
+\item For prior \((1/2,1/2)\), likelihood \((1/4,3/4)\), the evidence
+is \(1/2\) and posterior is \((1/4,3/4)\). Initialize a chain in that
+posterior and keep its state fixed forever. Every marginal is posterior,
+but the harmonic estimate is forever \(1/4\) or \(3/4\), never \(1/2\).
+\end{enumerate}
+\end{hbtheorem}
+
+All simulation convergence statements above use the integrable i.i.d.
+strong law, not an unstated MCMC theorem. For dependent output one needs
+a theorem giving the required ergodic averages, with its actual hypotheses.
+Approximate posterior draws also need an approximation-error argument.
+Stationarity alone is insufficient, as the last example proves.
+
+This component does not supply adaptive Gaussian-quadrature error bounds,
+the one-Newton-step implementation, prior/posterior mixture iteration,
+Laplace--Metropolis mode estimation, Savage--Dickey or latent-data ratios,
+bridge-sampling optimization, or general Gibbs/Metropolis convergence.
+These are distinct developments mentioned in Section 4; the identities and
+theorem here do not silently discharge them.

@@ -1,0 +1,354 @@
+% Full local proofs for the finite-prefix normalization and Gold I.9.
+
+\begin{annexitem}{annex:p15-pr-learning-coding}{thm:p15-pr-learning-coding}{Finite configurations, histories and bounded simulation}
+\begin{proof}
+One concrete finite-sequence coding uses the pairing function
+\[
+ \pi(u,v)=\frac{(u+v)(u+v+1)}2+v
+\]
+and codes the empty sequence by \(0\) and the sequence with first
+entry \(u\) and remaining-sequence code \(v\) by
+\(\pi(u,v)+1\). The two inverse pairing projections are
+primitive recursive: search the finite square
+\(0\leq u,v\leq z\) for the unique pair with \(\pi(u,v)=z\).
+Every bounded search is implemented by primitive recursion,
+with a default on an empty search.
+The tail of a nonzero sequence code is strictly smaller than
+that code. Iterating the tail at most the original code many
+times therefore finds its length and entries by bounded
+recursion. Sequence validity, truncation, appending and
+prefix construction are primitive recursive too: extract
+the boundedly many relevant entries and rebuild by the
+same constructor. These operations need not have small
+complexity bounds; their membership in the primitive-recursive
+class is the point.
+
+For deterministic finite-program machines, code a configuration
+by its state and two finite stacks of tape symbols, with the
+currently scanned symbol at the top of the right stack.
+Use a fixed finite tape alphabet with blank \(0\) and a base \(B\)
+larger than every symbol code. A stack is coded by its base-\(B\)
+digits, with its top digit least significant. Reading and
+popping use remainder and quotient by \(B\); pushing a
+symbol \(d\) onto a stack \(s\) uses \(d+Bs\).
+Popping the empty stack returns blank \(0\) and empty stack \(0\).
+Leading blanks can be omitted because they represent the same
+infinite blank tail. More explicitly, write the stacks as
+\(l,r\), and put \(r_{\mathrm{tail}}=\lfloor r/B\rfloor\).
+If the transition table on the scanned symbol \(r\bmod B\)
+prescribes written symbol \(w\) and a move right, the new
+stacks are \(w+Bl,r_{\mathrm{tail}}\).
+For a move left they are
+\[
+ \left\lfloor l/B\right\rfloor,\qquad
+ (l\bmod B)+B\bigl(w+B r_{\mathrm{tail}}\bigr).
+\]
+The new state is the table entry's prescribed state.
+These formulas also cover an empty blank stack and keep
+the head's newly scanned symbol at the right stack's top.
+Finite state/symbol transition-table lookup is a bounded
+search through the finite program description.
+Quotients, remainders, finite tuple projections and those
+bounded searches are primitive recursive. Thus initialization,
+one transition and the halting-state predicate are primitive
+recursive, uniformly on finite program descriptions.
+Malformed descriptions or configurations receive a fixed
+default transition; that total extension does not certify
+them as valid histories.
+
+Fix binary numerical input and output conventions, with
+tape digits \(1,2\) for binary symbols \(0,1\), and digit
+\(3\) for a delimiter; a base at least \(4\) suffices.
+At input or numerical halting output, the head scans the
+first digit of a nonempty finite digit block, followed
+to the right by the delimiter. Use least-significant
+binary digit first, and represent numerical \(0\) by
+one binary-zero symbol. The output extractor verifies
+this finite format and evaluates its binary digits;
+trailing tape content beyond the delimiter is irrelevant.
+Producing the finite input for \(x\) uses repeated
+division by \(2\) for at most \(x+1\) rounds. It is primitive recursive.
+Reading a halting configuration's finite output uses bounded
+digit extraction and finite polynomial evaluation.
+Arbitrary finite alphabet machines can use this fixed
+alphabet by finite block coding; the interpretation \(Z_a\)
+and its input/output convention are fixed once, rather
+than changed during the diagonal.
+
+Let \(y\) code a nonempty sequence of configurations.
+Define \(T(a,x,y)\) to say that the description of \(a\)
+is well formed, the first configuration is its initialization
+on \(x\), each adjacent pair is a legal nonhalting transition,
+and the last configuration is halted with a well-formed
+numerical output. All checks range over the finite sequence
+decoded from \(y\); bounded conjunction of primitive-recursive
+conditions is primitive recursive. Define \(U(y)\) to extract
+that final output, and give it value \(0\) on malformed codes.
+Every actual finite halting computation has such a code.
+Conversely a verified history follows the deterministic
+machine from exactly the specified initialization, so its
+last output equals \(Z_a(x)\). This proves (PR.1).
+If two verified histories have different lengths because
+of an alternative harmless stopping-code convention, they
+still have the same numerical output.
+
+Finally, if \(c_0=\operatorname{Init}(a,x)\) and
+\(c_{s+1}=\operatorname{Step}(a,c_s)\), then
+\((a,x,s)\mapsto c_s\) is primitive recursive by the
+primitive-recursion clause itself. Halting configurations
+may be made stationary for this bounded simulator.
+Unbounded search for a halting stage is not part of this
+construction and is not asserted to be total.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p15-pr-learning-normalization}{thm:p15-pr-learning-normalization}{Serial completion preserves both convergence directions}
+\begin{proof}
+For fixed input \(\sigma\), code the simulator's state as
+the tuple containing next-prefix number \(m\), active/inactive
+flag, simulated machine configuration and retained answer.
+The update at one tick uses only the operations in
+\cref{thm:p15-pr-learning-coding}. Initialize an inactive call
+on the extracted prefix, apply one transition, and check
+whether the result is halted. If it is halted, record its
+answer, increase \(m\) and reset the flag; otherwise retain
+the active configuration. An initially halted computation
+uses the stationary transition and still emits only one
+answer on that tick. The initial state has \(m=1\).
+Induction on \(r\) shows \(m\leq r\) immediately before
+tick \(r\): at most one call completed at each earlier
+tick. Thus every extraction at ticks \(r\leq n\)
+asks for an available prefix.
+This finite-state update is primitive recursive in
+the input code and the old state. Iteration for
+\(n=\operatorname{length}(\sigma)\) ticks and final
+answer projection are primitive recursive.
+On invalid sequence codes use a fixed default answer.
+This proves total primitive recursiveness on all numerical
+inputs as well as the asserted valid-prefix behavior.
+
+Fix an infinite sequence \(i\). Running the procedure
+on its prefix of length \(n+1\) agrees with the length-\(n\)
+procedure on its first \(n\) ticks: at tick \(r\leq n\)
+only a prefix of length \(m\leq r\) is requested, and
+those entries are identical. The initial states and
+deterministic transitions agree. Therefore the answers
+\(\widehat G(i_1,\ldots,i_n)\) are successive retained
+outputs of one compatible infinite serial simulation,
+not unrelated computations on unrelated initial data.
+
+Write \(a_m=G_0(i_1,\ldots,i_m)\).
+Because \(G_0\) is total, its first prefix computation
+halts after finitely many ticks. Once the \((m-1)\)-st
+call has completed, the \(m\)-th is initialized on
+its correct prefix and also halts after finitely many
+further ticks. Induction gives a completion tick
+\(s_m<\infty\) for every \(m\).
+Since at most one call completes per tick,
+\(s_1<s_2<\cdots\); in particular these ticks tend
+to infinity. The retained output equals \(a_m\)
+at tick \(s_m\) and until the next completion.
+No \(a_m\) is omitted or replaced by an answer from
+a later prefix.
+
+If \(a_m=a\) for all \(m\geq M\), then after tick
+\(s_M\) the retained output is always \(a\).
+This is the forward implication in (PR.2).
+Conversely suppose retained outputs equal \(a\)
+at every tick \(n\geq N\).
+Every sufficiently large completion tick \(s_m\)
+lies beyond \(N\), and the output there is exactly
+\(a_m\). Hence \(a_m=a\) for all sufficiently large
+\(m\). This is the reverse implication.
+It proves preservation of nonstabilization too.
+No alteration of \(i\), no semantic equivalence check
+between hypotheses, and no known bound on any
+completion time have been used.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p15-pr-learning-range}{thm:p15-pr-learning-range}{Witness enumeration with a fixed positive default}
+\begin{proof}
+Choose a fixed word number \(a_L\in L\), which exists
+by nonemptiness. Let \(e\) be a recognizer that halts
+with numerical output \(1\) exactly on the word numbers
+in \(L\). Such a recognizer exists by computable
+enumerability; on other inputs it may diverge.
+The fixed history predicate
+\[
+ R(x,y)\quad\Longleftrightarrow\quad
+ x>0\ \land\ T(e,x,y)\ \land\ U(y)=1
+\]
+is primitive recursive, and
+\(x\in L\) iff some \(y\) satisfies \(R(x,y)\).
+Decode \(n-1\) by the primitive-recursive inverse
+of \(\pi\), writing the result as \((x_n,y_n)\).
+Define
+\[
+ f(n)=
+ \begin{cases}
+ x_n,&R(x_n,y_n),\\
+ a_L,&\text{otherwise},
+ \end{cases}
+ \qquad n\geq1.
+ \tag{PR.4}
+\]
+Both branch values and the branch test are primitive
+recursive. Every output belongs to \(L\), including
+the default. For each \(x\in L\), some finite
+accepting-history code \(y\) exists, and the pair
+\((x,y)\) occurs in the decoding of
+\(n=\pi(x,y)+1\). At that position \(f(n)=x\).
+Therefore its range is exactly \(L\).
+If primitive recursion is defined on all of \(\mathbb N\),
+set \(f(0)=a_L\); the displayed positive-index map is the
+restriction of that total primitive-recursive extension.
+
+The fixed default may depend on \(L\); there is no
+claim of an algorithm finding it for every possible
+recognizer index, including empty targets.
+This is the nonempty range construction used in
+the source's choice of \(f\), not a uniform list
+of total decision algorithms for all recursive languages.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p15-pr-learning-obstruction}{thm:p15-pr-learning-obstruction}{Gold I.9 with its normalization interface and all cases}
+\begin{proof}
+Suppose \(G_0\) identifies the declared class
+\(\mathcal C\) from every primitive-recursive pure text
+with correct tester names. If its infinite member \(L\)
+were nonrecursive, no correct total tester could be
+the final hypothesis. Thus we may assume \(L\)
+recursive, fix \(f\) as in
+\cref{thm:p15-pr-learning-range}, and normalize \(G_0\)
+by \cref{thm:p15-pr-learning-normalization}.
+The resulting primitive-recursive rule \(G\)
+has exactly the same stabilized hypothesis on
+every presentation on which either rule stabilizes.
+If it fails on a permitted text, \(G_0\) fails there too.
+
+Construct \(X_t,i_t,g_t,P_t,Q_t\) by (PR.3).
+The prefix and \(X_t\) are already available when
+\(g_t\) is computed; \(P_t\) is a bounded disjunction
+over that prefix, and \(Q_t\) a bounded existential
+search through history numbers \(0,\ldots,t\).
+Both are primitive recursive.
+For an explicit recursion, maintain the state
+\((X_t,s_t)\), where \(s_t\) codes
+\((i_1,\ldots,i_t)\).
+Compute \(g_t=G(s_t)\), the two predicates,
+\(X_{t+1}\) and \(i_{t+1}\); then append
+\(i_{t+1}\) to obtain \(s_{t+1}\).
+This is ordinary primitive recursion on a coded
+pair of numbers. Extracting the last entry shows
+that \(t\mapsto i_t\) is primitive recursive.
+Equivalently recurse from the initial state at offset \(t-1\);
+an unused value \(i_0=f(1)\) gives a total extension to
+\(\mathbb N\) when that domain convention is required.
+There is no unbounded search for a rejecting computation.
+By induction, each \(i_t\in L\):
+the initial value is \(f(1)\), and a subsequent
+value either repeats its predecessor or is \(f(X_t)\).
+In particular the content is nonempty.
+
+\emph{Case I: \(\neg P_t\) holds only finitely often.}
+Choose \(\alpha\) such that \(P_t\) holds for all
+\(t\geq\alpha\).
+The recursion then gives
+\[
+ X_t=X_\alpha+t-\alpha,\qquad
+ i_t=i_\alpha\quad(t\geq\alpha).
+\]
+The entire text range is the finite set
+\(F=\{i_1,\ldots,i_\alpha\}\).
+Since \(P_t\) holds, every \(f(X_t)\) for
+\(t\geq\alpha\) belongs to \(F\).
+These \(X_t\) exhaust the integers at least \(X_\alpha\).
+Only finitely many earlier values of \(f\) remain;
+its range would be finite, contrary to its range \(L\).
+Thus this case cannot occur, and \(\neg P_t\)
+holds infinitely often.
+
+\emph{Case II: \(Q_t\) holds only finitely often.}
+Choose \(\alpha\) such that \(Q_t\) is false for
+all \(t\geq\alpha\). The update of \(i\) then
+repeats \(i_\alpha\) forever, so the text range
+is the finite nonempty language
+\(F=\{i_1,\ldots,i_\alpha\}\in\mathcal C\).
+If \(g_t\) does not stabilize, identification fails.
+Otherwise let its eventual value be \(a\).
+Because \(\neg P_t\) occurs infinitely often,
+choose \(\beta\geq\alpha\) beyond stabilization
+with \(\neg P_\beta\). Set \(x=f(X_\beta)\).
+It is absent from \(F\).
+From stage \(\beta\) onward the content remains
+\(F\), \(X_t=X_\beta\) and \(P_t\) stays false:
+this follows by induction from the fixed content
+and the update rule for \(X\).
+Since \(Q_t\) is false for every such \(t\),
+\[
+ \neg(\exists y\leq t)
+ [T(a,x,y)\land U(y)=0]\quad(t\geq\beta).
+\]
+If \(Z_a(x)\) halted with output \(0\), (PR.1)
+would supply one finite history number \(y_0\);
+taking \(t\geq\max(\beta,y_0)\) contradicts this
+display. Thus \(a\) does not reject \(x\):
+it may diverge, return \(1\), or return another value.
+Every correct tester for \(F\) must reject
+the word \(x\notin F\) with output \(0\).
+The stabilized hypothesis is therefore not correct.
+
+\emph{Case III: \(Q_t\) holds infinitely often.}
+We first prove that the text range is exactly \(L\).
+The inclusion in \(L\) was already proved.
+The sequence \(X_t\) starts at \(1\), is nondecreasing,
+and increases only by \(1\). Suppose it is eventually
+constant at \(X\). Then \(P_t\) must be false
+at every sufficiently late stage, since a true
+\(P_t\) would increase it. Choose a later stage
+\(\beta\) with \(Q_\beta\). Then the insertion
+rule puts \(i_{\beta+1}=f(X)\).
+Consequently \(P_{\beta+1}\) is true and
+\(X_{\beta+2}=X+1\), a contradiction.
+Thus \(X_t\) is unbounded and visits every positive
+integer \(k\). At its last stage \(t\) with
+\(X_t=k\), it advances to \(k+1\); the advancement
+rule forces \(P_t\), so \(f(k)\) has already
+appeared in the text. Every value of \(f\)
+therefore appears. This also makes explicit the
+source's bounded/constant and passing subcases:
+a missing \(f(k)\) can neither be held at forever
+nor be passed without first having been observed.
+The text is fair for \(L\), even though repetitions
+and delays may be arbitrarily long.
+
+If \(g_t\) fails to stabilize, the conclusion
+again follows. If \(g_t=a\) for all
+\(t\geq\alpha\), choose \(\beta\geq\alpha\)
+with \(Q_\beta\). By its definition there is
+a witnessed computation
+\[
+ T[a,f(X_\beta),y]\land U(y)=0
+ \quad\text{for some }y\leq\beta.
+\]
+Hence \(Z_a(f(X_\beta))=0\) by (PR.1).
+But \(f(X_\beta)\in L\), the text's full range.
+A correct tester for \(L\) must answer \(1\) there.
+The stabilized hypothesis is wrong.
+It is immaterial whether \(P_\beta\) is true:
+this last contradiction uses a rejection of
+a word in \(L\), not necessarily a new insertion
+at that particular stage.
+
+The cases exhaust all possibilities. In each
+possible case the construction is a primitive-recursive
+text of a target in \(\mathcal C\) on which
+the normalized learner fails. By (PR.2), its
+original total computable learner fails too.
+This proves the asserted tester obstruction,
+without a semantic hypothesis-comparison oracle
+or a totality test for intermediate program guesses.
+\end{proof}
+\end{annexitem}

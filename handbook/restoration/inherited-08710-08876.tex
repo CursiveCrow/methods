@@ -1,0 +1,1104 @@
+\begin{definition}[Bounded tagged entries]
+\label{def:p04-tagged-history-entry}
+The following are eliminable abbreviations for arithmetic formulas:
+\[
+\begin{aligned}
+ \mathsf E(s,t,j,v)&\defeq
+   \exists i<S(t+j)\times S(t+j)\,
+   \bigl(\mathsf P(t,j,i)\land\mathsf B(s,i,v)\bigr),\\
+ \mathsf E^{(2)}(s,t,a,b,v)&\defeq
+   \exists j<S(a+b)\times S(a+b)\,
+   \bigl(\mathsf P(a,b,j)\land\mathsf E(s,t,j,v)\bigr).
+\end{aligned}
+\]
+In each expansion the displayed bound variables, and those internal to
+\(\mathsf B\), are renamed to fresh variables before substitution of
+the argument terms.  Thus a bound never contains the variable it binds.
+All quantifiers are marked bounded; neither pairing nor an array-access
+function is added to \(\Lang_A\).  In numerical descriptions below,
+write \(s[t,j]=\beta(s,\operatorname{pair}_{\N}(t,j))\) and
+\(s[t,a,b]=\beta(s,\operatorname{pair}_{\N}
+ (t,\operatorname{pair}_{\N}(a,b)))\).
+These bracket expressions denote natural numbers in the metatheory;
+their use inside an arithmetic formula is replaced by a fresh value
+variable and the corresponding \(\mathsf E\) or \(\mathsf E^{(2)}\)
+conjunct.
+\end{definition}
+
+\begin{lemma}[Tagged extraction and finite packing]
+\label{lem:p04-tagged-history-extraction}
+Both formulas in Definition~\ref{def:p04-tagged-history-entry} are
+bounded.  In \(\mathcal N\), for each choice of their other numerical
+arguments they hold of exactly one value \(v\), respectively
+\(s[t,j]\) and \(s[t,a,b]\), and this value is at most \(s\).
+Fix for each family tag whether its positions are one- or two-dimensional.
+Any finite assignment of numerical values to distinct positions of these
+tagged families is realized by some \(s\).  The paired indices themselves are not
+required to be at most \(s\).
+\textit{Status: complete proof.}
+\end{lemma}
+
+\begin{proof}
+For \(a,b\in\N\), put \(u=a+b\).  The numerical pairing satisfies
+\[
+ \operatorname{pair}_{\N}(a,b)
+ =\frac{u(u+1)}2+b
+ \leq u(u+1)+u
+ =u^2+2u<(u+1)^2.
+\]
+The inequality also holds when \(u=0\).  Consequently the bound in
+\(\mathsf E\) includes the unique value
+\(i=\operatorname{pair}_{\N}(t,j)\); the graph formula
+\(\mathsf P\) excludes all other values.  Lemma~\ref{lem:goedel-beta}(a)
+then gives exactly the value \(\beta(s,i)\), bounded by \(s\).
+Applying the same pairing bound first to \((a,b)\), and then applying
+the just-proved assertion about \(\mathsf E\), proves the claim for
+\(\mathsf E^{(2)}\).  Every displayed bound is an arithmetic term,
+and substituting the already bounded formulas \(\mathsf P,\mathsf B\)
+after fresh renaming introduces only bounded quantifiers.
+
+For finite packing, flatten each two-dimensional position by the inner
+pairing, then pair its position with its family tag.  Each tag has one
+fixed positional arity.  Within a one-dimensional family distinct positions
+are distinct integers; within a two-dimensional family injectivity of the
+inner pairing preserves distinctness.  The outer pairing separates the
+families, so distinct tagged positions give distinct indices.  If there are no
+assigned positions, any \(s\) realizes the empty assignment.  Otherwise
+let \(I\) be one more than the greatest resulting index.  Form the
+finite sequence of length \(I\) having the assigned value at each
+specified index and zero at every other index.  Lemma~\ref{lem:goedel-beta}(b)
+gives an \(s\) realizing this sequence.  Its part (a) automatically
+bounds every assigned value by \(s\).  The indices were computed from
+the finite assignment before choosing \(s\), so this construction
+does not make the indices depend on the code subsequently obtained.
+\end{proof}
+
+\begin{definition}[History coding]
+\label{def:history-coding}
+Use the tagged-entry convention of
+Definition~\ref{def:p04-tagged-history-entry}, with the following fixed
+family tags.  A two-dimensional family uses the paired position \((a,b)\)
+in the order displayed; all other families use one position.
+\[
+\begin{array}{c|l|l}
+ \text{tag}&\text{stored values}&\text{positions}\\ \hline
+ 0&\text{header }(k,c_0,n,b,A,L,T,H,W,\ell,y)&0,\ldots,10\\
+ 1&\text{description entries }r_i&i<k\\
+ 2&\text{description decoding tails }c_i&i<k\\
+ 3&\text{input-alphabet bitmap digits }\eta_j&j<b\\
+ 4&\text{bitmap tail values }B_j&j\leq b\\
+ 5&\text{canonical input digits }d_j&j<L\\
+ 6&\text{input prefix values }v_j&j<L\\
+ 7&\text{configuration states }q_t&t\leq T\\
+ 8&\text{shifted head positions }h_t&t\leq T\\
+ 9&\text{tape symbols }a_{t,j}&(t,j),\ t\leq T,\ j<W\\
+ 10&\text{tape prefix values }u_{t,j}&(t,j),\ t\leq T,\ j<W\\
+ 11&\text{complete fixed-width tape codes }z_t&t\leq T\\
+ 12&\text{canonical output digits }o_j&j<\ell\\
+ 13&\text{output prefix values }w_j&j<\ell
+\end{array}
+\]
+Here \(n,b,A\) have the meanings fixed by the serialized program;
+\(L\geq1\) is the input length, \(T\) the number of transitions,
+\(H=T\) the tape origin, and \(W=L+2T+1\) its fixed width.
+Column \(j<W\) represents physical cell \(j-H\).  Bitmap tails
+satisfy \(B_b=0\), \(B_j=2B_{j+1}+\eta_j\) for \(j<b\),
+and \(B_0=A\); this fixes exactly the bitmap of the stated width.
+Each tape expansion runs left to right:
+\(u_{t,0}=a_{t,0}\),
+\(u_{t,j+1}=b\,u_{t,j}+a_{t,j+1}\) for \(j+1<W\), and
+\(z_t=u_{t,W-1}\), with \(a_{t,j}<b\).
+The output length \(\ell\geq1\) and value \(y\) refer to the
+canonical prefix at physical cells \(0,\ldots,\ell-1\), ending
+at the first blank cell \(\ell\), so \(H+\ell<W\).
+For that prefix \(w_0=o_0\), \(w_{j+1}=2w_j+o_{j+1}\), and
+\(w_{\ell-1}=y\).  Both input and output words use the earlier
+canonical binary convention, including the single digit for zero and
+the absence of leading zeros for positive values.
+
+These are numerical descriptions of the stored data.  Every lookup has
+the bounded relational expansion just proved; an index such as
+\(\operatorname{pair}_{\N}(t,j)\) is never an extra arithmetic
+function symbol.  A number \(s\) is a
+\emph{history code} for the pair \((e,x)\) iff its entries comprise, under
+this scheme:
+\begin{enumerate}[label=(h\arabic*)]
+\item the binary digits \(d_0,\ldots,d_{L-1}\) of \(x\), most significant
+      digit first, with certified expansion values
+      \(v_0,\ldots,v_{L-1}\) satisfying \(v_0=d_0\),
+      \(v_{j+1}=2v_j+d_{j+1}\) for \(j+1<L\), and \(v_{L-1}=x\), together
+      with the certificates \(v_j\leq x\) and \(d_j\leq1\) for all
+      \(j<L\);
+\item the exact serialized description of \(e\) from
+      Definition~\ref{def:p04-program-serialization}: a decoding chain consisting of
+      \(\mathsf P(k,c_0,e)\), \(\mathsf P(r_i,c_{i+1},c_i)\) for
+      \(i<k-1\), and \(r_{k-1}=c_{k-1}\), unpacking the description tuple of
+      length \(k\) into its entries \(r_0,\ldots,r_{k-1}\), each entry
+      interpreted as the state count, tape-alphabet size, input-alphabet
+      bitmap, and then the lexicographically ordered five-field row codes.
+      Each row is unpacked by four \(\mathsf P\)-steps; the bitmap is
+      accompanied by binary expansion certificates.  These data include
+      all length, range, alphabet and full-table validity checks of the fixed numbering under its
+      designated-slot normalization;
+\item configurations \(C_0,\ldots,C_T\) of the decoded machine, each tape
+      coded in the tape-alphabet base with certified expansions as in
+      (h1), the configuration \(C_0\) initial for the input word certified
+      by (h1), and each successor configuration matching its predecessor
+      and the decoded table by bounded digit comparisons; and
+\item a final configuration whose state is the accepting state and whose
+      tape prefix before the first blank is a valid binary numeral in the
+      sense of the fixed output convention.
+\end{enumerate}
+Every stored datum in these clauses is an entry of \(s\), unique and
+at most \(s\) by \cref{lem:goedel-beta}(a).  Row projections are
+bounded by their stored row code using \cref{lem:pairing-graph}.
+The tagged-entry indices have the separate bounds of
+\cref{lem:p04-tagged-history-extraction}; the formulas below give
+explicit bounds for derived lengths and last-position witnesses.
+\end{definition}
+
+\begin{definition}[Bounded input and table formulas]
+\label{def:p04-input-table-formulas}
+The formulas below give the complete arithmetic checks for clauses
+(h1) and (h2) of Definition~\ref{def:history-coding}.  Each displayed
+name is an eliminable formula abbreviation, with bound variables renamed
+fresh before its arguments are substituted.  Fixed numerical constants
+other than \(0\) are written as their numeral terms.  In particular,
+neither a tuple constructor nor an entry-access function is added to
+\(\Lang_A\).  Use the following bounded comparison and digit formulas:
+\[
+\begin{aligned}
+ \mathsf{Lt}(u,v)&\defeq\exists z<v\,(u+Sz=v),\\
+ \mathsf{Le}(u,v)&\defeq\exists z\leq v\,(z+u=v),\\
+ \mathsf{Bit}(d)&\defeq(d=0\lor d=\bar1).
+\end{aligned}
+\]
+In \(\mathcal N\), the first two formulas express respectively
+\(u<v\) and \(u\leq v\), including when \(v=0\).  These formulas
+are used for comparisons inside matrices; all quantifier bounds below
+have the marked syntax of Definition~\ref{def:language-arithmetic}
+and its following conventions.
+
+For input cells and successive input prefixes, put
+\[
+\begin{aligned}
+ \mathsf I(x,s,L)\defeq{}&
+  \forall j<L\,\exists d\leq s\,\exists v\leq s\,
+   \bigl(\mathsf E(s,\bar5,j,d)\land
+         \mathsf E(s,\bar6,j,v)\land
+         \mathsf{Bit}(d)\land\mathsf{Le}(v,x)\bigr),\\
+ \mathsf J(s,\lambda)\defeq{}&
+  \forall j<\lambda\,\exists v\leq s\,\exists w\leq s\,
+  \exists d\leq s\,
+   \bigl(\mathsf E(s,\bar6,j,v)\land
+         \mathsf E(s,\bar6,Sj,w)\land
+         \mathsf E(s,\bar5,Sj,d)\land
+         w=\bar2\times v+d\bigr).
+\end{aligned}
+\]
+The variable \(\lambda\) denotes the last input position in this
+formula; it is unrelated to the output length \(\ell\) stored in
+the history header.  Define
+\[
+\begin{aligned}
+ \mathsf H_1(x,s)\defeq{}&
+  \exists L\leq s\,\exists\lambda\leq s\,\exists d\leq s\,
+  \bigl[\mathsf E(s,0,\bar5,L)\land L=S\lambda\\
+ &\quad\land\mathsf E(s,\bar5,0,d)
+       \land\mathsf E(s,\bar6,0,d)
+       \land\mathsf E(s,\bar6,\lambda,x)\\
+ &\quad\land\bigl((x=0\land L=\bar1\land d=0)
+              \lor(\neg(x=0)\land d=\bar1)\bigr)\\
+ &\quad\land\mathsf I(x,s,L)\land\mathsf J(s,\lambda)\bigr].
+\end{aligned}
+\]
+
+The following graph unpacks a five-field row using exactly the
+right-nested tuple convention of
+Definition~\ref{def:p04-program-serialization}:
+\[
+\begin{aligned}
+ \mathsf P_5(q,a,q',a',d,\rho)\defeq{}&
+  \exists v_1\leq\rho\,\exists v_2\leq\rho\,
+  \exists v_3\leq\rho\,\bigl[
+       \mathsf P(q,v_1,\rho)\land
+       \mathsf P(a,v_2,v_1)\\
+ &\hspace{35mm}\land\mathsf P(q',v_3,v_2)
+       \land\mathsf P(a',d,v_3)\bigr],\\
+ \mathsf R_5(s,i,q,a,q',a',d)\defeq{}&
+  \exists\rho\leq s\,
+   \bigl[\mathsf E(s,\bar1,\bar3+i,\rho)
+           \land\mathsf P_5(q,a,q',a',d,\rho)\bigr].
+\end{aligned}
+\]
+Thus \(i\) is the zero-based row number, while \(\bar3+i\) is
+its position in the full description.  The row fields need no new
+stored family.  The three internal pairing tails are bounded by
+\(\rho\); the four pairing equations also force every row field
+to be at most \(\rho\).  By itself \(\mathsf R_5\) imposes
+neither table membership nor the machine-field ranges: the full check
+below applies it only to row numbers \(i<m\) and supplies those ranges.
+
+For a description whose last position is \(\lambda\), let
+\[
+\begin{aligned}
+ \mathsf D(s,\lambda)\defeq{}&
+  \bigl[\forall i<\lambda\,\exists r\leq s\,
+    \exists c\leq s\,\exists c'\leq s\,
+    \bigl(\mathsf E(s,\bar1,i,r)\land
+          \mathsf E(s,\bar2,i,c)\\
+ &\hspace{32mm}\land\mathsf E(s,\bar2,Si,c')
+          \land\mathsf P(r,c',c)\bigr)\bigr]\\
+ &\quad\land\exists v\leq s\,
+    \bigl(\mathsf E(s,\bar1,\lambda,v)
+          \land\mathsf E(s,\bar2,\lambda,v)\bigr).
+\end{aligned}
+\]
+The last conjunct implements the identity coding of a one-entry tail;
+there is no extra zero terminator.  The bitmap check is
+\[
+\begin{aligned}
+ \mathsf M(s,b,A)\defeq{}&
+  \mathsf E(s,\bar4,0,A)\land\mathsf E(s,\bar4,b,0)\\
+ &\land\mathsf E(s,\bar3,0,0)
+       \land\mathsf E(s,\bar3,\bar1,\bar1)
+       \land\mathsf E(s,\bar3,\bar2,\bar1)\\
+ &\land\forall j<b\,\exists d\leq s\,\exists v\leq s\,
+      \exists w\leq s\,
+      \bigl[\mathsf E(s,\bar3,j,d)\land
+            \mathsf E(s,\bar4,j,v)\\
+ &\hspace{30mm}\land\mathsf E(s,\bar4,Sj,w)
+            \land\mathsf{Bit}(d)\land v=\bar2\times w+d\bigr].
+\end{aligned}
+\]
+For \(\nu\) nonhalting states, the complete ordered table check is
+\[
+\begin{aligned}
+ \mathsf K(s,n,b,\nu)\defeq{}&
+  \forall u<\nu\,\forall a<b\,
+  \exists q\leq s\,\exists q'\leq s\,
+  \exists a'\leq s\,\exists d\leq s\,\bigl[\\
+ &\quad\bigl((u=0\land q=0)
+           \lor(\neg(u=0)\land q=u+\bar2)\bigr)\\
+ &\quad\land\mathsf R_5(s,u\times b+a,q,a,q',a',d)\\
+ &\quad\land\mathsf{Lt}(q,n)
+           \land\neg(q=\bar1)\land\neg(q=\bar2)\\
+ &\quad\land\mathsf{Lt}(q',n)
+           \land\mathsf{Lt}(a',b)\land\mathsf{Bit}(d)\bigr].
+\end{aligned}
+\]
+Here \(d=0\) denotes a left move and \(d=\bar1\) a right
+move.  The ordered blocks have states \(0,3,4,\ldots,n-1\), with
+the tape symbols in increasing order within each block.  Finally set
+\[
+\begin{aligned}
+ \mathsf H_2(e,s)\defeq{}&
+  \exists k\leq s\,\exists c\leq s\,\exists n\leq s\,
+  \exists b\leq s\,\exists A\leq s\,\exists\nu\leq s\,
+  \exists m\leq s\,\exists\lambda\leq s\,\bigl[\\
+ &\quad\mathsf E(s,0,0,k)\land\mathsf E(s,0,\bar1,c)
+        \land\mathsf E(s,0,\bar2,n)\\
+ &\quad\land\mathsf E(s,0,\bar3,b)
+        \land\mathsf E(s,0,\bar4,A)\\
+ &\quad\land n=\nu+\bar2\land\neg(\nu=0)
+        \land\mathsf{Le}(\bar3,b)\\
+ &\quad\land m=\nu\times b\land k=\bar3+m
+        \land k=S\lambda\land\mathsf P(k,c,e)\\
+ &\quad\land\mathsf E(s,\bar2,0,c)
+        \land\mathsf E(s,\bar1,0,n)
+        \land\mathsf E(s,\bar1,\bar1,b)
+        \land\mathsf E(s,\bar1,\bar2,A)\\
+ &\quad\land\mathsf D(s,\lambda)
+        \land\mathsf M(s,b,A)\land\mathsf K(s,n,b,\nu)\bigr].
+\end{aligned}
+\]
+The two occurrences of \(\lambda\) in \(\mathsf H_1\) and
+\(\mathsf H_2\) are separately bound and are renamed apart on
+expansion.  The checks concern the exact raw program encoded by \(e\).
+They neither change its transition table to an output-cleaning wrapper
+nor assert that it accepts the input.  These explicit formulas and their
+proofs below are the handbook's construction for its fixed numbering.
+\end{definition}
+
+\begin{lemma}[Correctness of the input formula]
+\label{lem:p04-input-formula}
+The formula \(\mathsf H_1\) is bounded.  For every \(x,s\in\N\),
+\(\mathcal N\entails\mathsf H_1(\bar x,\bar s)\) if and only if
+the header input length and tagged input digits and prefixes satisfy
+exactly clause (h1), with the canonical binary convention of
+Definition~\ref{def:history-coding}.  No condition on the other tagged
+families is imposed by this equivalence.
+\textit{Status: complete proof.}
+\end{lemma}
+
+\begin{proof}
+Expanding \(\mathsf I,\mathsf J,\mathsf{Bit},\mathsf{Le}\), and
+then \(\mathsf E\), introduces only marked bounded quantifiers and
+atomic formulas of \(\Lang_A\), combined by Boolean connectives.
+Fresh renaming ensures that no bound contains the variable it binds.
+This proves boundedness in the stated syntactic convention.
+
+Suppose first that \(\mathsf H_1(x,s)\) holds in \(\mathcal N\).
+The unique-extraction lemma identifies the witnesses \(L\) and \(d\)
+with the header length and the first stored input digit.  The equation
+\(L=S\lambda\) makes the length positive.  Write \(d_j=s[5,j]\)
+and \(v_j=s[6,j]\) in the metatheory.  Uniqueness of extraction in
+the universal clauses gives, for every indicated position,
+\[
+ d_j\in\{0,1\},\qquad v_j\leq x,\qquad
+ v_0=d_0,\qquad v_{j+1}=2v_j+d_{j+1},\qquad v_{L-1}=x.
+\]
+If \(x=0\), the explicit first disjunct forces \(L=1\) and
+\(d_0=0\); the other disjunct is false.  If \(x>0\), the second
+disjunct forces \(d_0=1\).  The prefix recurrence says precisely
+that the word has numerical value \(x\), and the first digit excludes
+leading zeros.  For completeness, this characterizes the usual binary
+word uniquely: if a word has at least two digits, its last recurrence
+is the Euclidean decomposition of its value into twice the preceding
+prefix plus a remainder in \(\{0,1\}\).  The preceding prefix is
+positive and strictly smaller than the value.  A one-digit positive
+word has value \(1\), whereas any longer word starting with \(1\)
+has value at least \(2\).  Induction on the positive value, using
+uniqueness of quotient and remainder on division by \(2\), therefore
+recovers all the digits and the length.  Together with the zero case,
+these are exactly the canonical words fixed earlier.  This proves (h1).
+
+Conversely suppose the header length and families 5 and 6 have the
+data required by (h1).  Set \(\lambda=L-1\) in the metatheory and
+take \(d=d_0\).  Every stored value is at most \(s\) by
+Lemma~\ref{lem:p04-tagged-history-extraction}; also
+\(\lambda<L\leq s\).  Thus all displayed existential bounds
+admit these witnesses.  The canonical zero word satisfies the first
+disjunct, and every positive canonical word satisfies the second.
+The prefix conditions give every conjunct of \(\mathsf J\) and the
+last-prefix equation.  The digit and prefix bounds give \(\mathsf I\).
+The bounded comparison witnesses exist because their numerical
+inequalities hold.  This proves \(\mathsf H_1(x,s)\).
+\end{proof}
+
+\begin{lemma}[Correctness of the serialized-table formula]
+\label{lem:p04-table-formula}
+The formula \(\mathsf H_2\) is bounded.  For every \(e,s\in\N\),
+\(\mathcal N\entails\mathsf H_2(\bar e,\bar s)\) if and only if
+the header positions \(0,\ldots,4\) and tagged families
+\(1,2,3,4\) certify exactly the valid serialized program \(e\)
+specified in clause (h2).  In particular, an invalid program index
+satisfies \(\mathsf H_2(e,s)\) for no \(s\).  For a certified
+table and \(i<m=(n-2)b\), the row relation \(\mathsf R_5\)
+extracts the five fields of row \(i\); it is available for subsequent
+transition checks with this row bound.
+\textit{Status: complete proof.}
+\end{lemma}
+
+\begin{proof}
+Each helper in Definition~\ref{def:p04-input-table-formulas} has
+only marked bounded quantifiers, arithmetic-term bounds, and Boolean
+combinations of previously bounded formulas.  In particular,
+\(u\times b+a\) and \(\bar3+i\) are legitimate argument terms
+for \(\mathsf E\).  Its internal paired indices have their own
+polynomial bounds from Lemma~\ref{lem:p04-tagged-history-extraction};
+they need not be at most \(s\).  After fresh renaming and expansion,
+\(\mathsf H_2\) is therefore bounded in \(\Lang_A\).
+
+First consider \(\mathsf P_5\) in the standard structure.
+The pairing-graph lemma makes its four equations equivalent to
+\[
+ \rho=\operatorname{pair}_{\N}
+  \bigl(q,\operatorname{pair}_{\N}
+   (a,\operatorname{pair}_{\N}
+    (q',\operatorname{pair}_{\N}(a',d)))\bigr).
+\]
+This is exactly \(\operatorname{code}_5(q,a,q',a',d)\).
+Successive pairing projections are unique, so all five fields are
+unique.  Conversely, the three internal tails of any such tuple are
+at most \(\rho\), by applying the component bounds successively;
+hence their witnesses meet the displayed bounds.  The same bounds
+put each field at most \(\rho\).  Together with unique tagged
+extraction, this proves the stated meaning of \(\mathsf R_5\)
+without an extra row-certificate array.
+
+Suppose \(\mathsf H_2(e,s)\) holds.  Its header witnesses are the
+unique stored header values.  The equations
+\(n=\nu+2\), \(\nu\ne0\), and \(3\leq b\) give
+\(n,b\geq3\), and then
+\[
+ m=(n-2)b\geq3,\qquad k=3+m\geq6,\qquad \lambda=k-1.
+\]
+Write \(r_i=s[1,i]\) and \(c_i=s[2,i]\) in the metatheory.
+The initial-tail conjunct gives \(c_0=c\).  Unique extraction in
+\(\mathsf D\) gives
+\[
+ c_i=\operatorname{pair}_{\N}(r_i,c_{i+1})\quad(i<k-1),
+ \qquad c_{k-1}=r_{k-1}.
+\]
+Backward induction on \(i\) identifies \(c_i\) with the
+right-nested code of \((r_i,\ldots,r_{k-1})\), starting with the
+identity code of the last entry.  Thus
+\(c=\operatorname{code}_k(r_0,\ldots,r_{k-1})\), and the outer
+pairing equation is exactly the required code \(e\).  The other
+entry conjuncts give \((r_0,r_1,r_2)=(n,b,A)\).  This also excludes
+short descriptions, wrong outer lengths, and extra counted rows:
+the specified tuple has exactly \(3+(n-2)b\) entries.  Tagged values
+at positions outside the prescribed ranges are irrelevant.
+
+Put \(\eta_j=s[3,j]\) and \(B_j=s[4,j]\).  The bitmap formula
+gives \(B_b=0\), \(B_0=A\), and
+\(B_j=2B_{j+1}+\eta_j\), with each \(\eta_j\) a bit.
+Backward induction gives the numerical identity
+\[
+ B_j=\sum_{a=j}^{b-1}\eta_a2^{a-j}\quad(0\leq j\leq b),
+\]
+where the sum is empty for \(j=b\).  This displayed sum and its
+powers are metatheoretic statements in the correctness proof, not
+terms of the arithmetic formula.  Hence \(A\) has precisely the
+width-\(b\) bitmap required by the serialization, with no higher
+bits.  The three specified digits exclude the blank symbol and include
+both binary input symbols.  They are positions within this bitmap
+because \(b\geq3\).
+
+It remains to verify the complete table, rather than just the ranges
+of individual rows.  Since \(b>0\), division by \(b\) writes every
+integer \(i<m=\nu b\) uniquely as \(i=ub+a\), with
+\(u<\nu\) and \(a<b\).  For \(u=0\), the formula \(\mathsf K\)
+forces the source state \(q=0\); for \(0<u<\nu=n-2\), it forces
+\(q=u+2\).  These states are exactly \(0,3,\ldots,n-1\), in
+that order, including the case \(n=3\) when there is just the
+state-\(0\) block.  Within each block \(a\) runs once through
+\(0,\ldots,b-1\).  The row relation at position \(3+ub+a\)
+therefore forces the prescribed lexicographic key, and its remaining
+conjuncts force a next state below \(n\), a written symbol below
+\(b\), and one of the two directions.  The source state is neither
+accepting nor rejecting.  Since pairing projections are unique, each
+key has exactly one decoded transition.  Every nonhalting key occurs
+and there are no additional rows in the tuple.  The described table
+is consequently a total transition function on precisely the required
+nonhalting keys.  This proves all of clause (h2).
+
+Conversely, suppose the indicated tags certify the valid serialized
+program \(e\).  Take its actual \(k,c_0,n,b,A\) as header
+witnesses, and set \(\nu=n-2\), \(m=(n-2)b=k-3\), and
+\(\lambda=k-1\) in the metatheory.  The first five witnesses are
+stored values, hence at most \(s\).  Also
+\(\nu\leq n\leq s\), \(m\leq k\leq s\), and
+\(\lambda\leq k\leq s\); no subtraction function is needed in
+the formula, whose equations express these relationships.
+The actual decoding tails and entries satisfy \(\mathsf D\)
+and its bounds by tagged extraction.  The bitmap digits and tail
+values satisfy \(\mathsf M\), including its terminal zero and
+three distinguished digits.  For each pair \((u,a)\) in the table
+check, use the five fields of its actual row.  Its code is an entry
+\(\rho\leq s\), and all fields and internal tails are at most
+\(\rho\), as proved above.  Thus every existential witness in
+\(\mathsf K\) and \(\mathsf P_5\) is admitted by its bound.
+The source key, field ranges, and direction satisfy the remaining
+conjuncts by validity of the serialization.  All header and outer
+pairing conjuncts hold as well, proving \(\mathsf H_2(e,s)\).
+The forward implication already shows that no invalid index can
+have such a certificate.
+\end{proof}
+
+\begin{lemma}[Simultaneous input and table certificates]
+\label{lem:p04-input-table-packing}
+For every valid program index \(e\) and every \(x\in\N\),
+there is an \(s\) such that
+\(\mathcal N\entails\mathsf H_1(\bar x,\bar s)
+ \land\mathsf H_2(\bar e,\bar s)\).
+More generally, any finite assignment agreeing with these certificates
+at every shared tagged position can be packed together with them.
+\textit{Status: complete proof.}
+\end{lemma}
+
+\begin{proof}
+Write the canonical word for \(x\) and form its successive numerical
+prefixes.  They satisfy the binary recurrence.  Their values are
+nondecreasing, since \(2v+d\geq v\) for \(v\geq0\) and a bit
+\(d\); thus every prefix is at most the final value \(x\).
+Take the actual finite serialized description of \(e\), its right-nested
+decoding tails, and its bitmap digits.  Define the bitmap tails backward
+from \(B_b=0\) by \(B_j=2B_{j+1}+\eta_j\); the serialization
+identity gives \(B_0=A\).  Assign these finitely many values to the
+specified header positions and families \(1,\ldots,6\).
+The repeated descriptions of a header value or first or last prefix
+agree by construction.  The input and table families are otherwise
+disjoint.  Add any further finite assignments that agree at overlapping
+positions.  Lemma~\ref{lem:p04-tagged-history-extraction} supplies
+one \(s\) realizing the assignment, and automatically bounds all its
+assigned values by \(s\).  The two preceding correctness lemmas give
+the asserted formulas.  This construction does not require an accepting
+run: input and table certificates also exist when the program rejects
+or diverges.  Clauses (h3) and (h4) are still needed for a computation
+certificate.
+\end{proof}
+
+\begin{definition}[Bounded configuration, transition and output checks]
+\label{def:p04-computation-formula}
+Continue the fresh-variable and eliminable-abbreviation conventions of
+Definition~\ref{def:p04-input-table-formulas}.  For a time \(t\), tape
+width \(W\), and last column \(\mu\), define
+\[
+\begin{aligned}
+ \mathsf{Cfg}(s,t,n,b,W,\mu)\defeq{}&
+ \bigl[\exists q\leq s\,\exists h\leq s\,
+  (\mathsf E(s,\bar7,t,q)\land\mathsf E(s,\bar8,t,h)
+       \land\mathsf{Lt}(q,n)\land\mathsf{Lt}(h,W))\bigr]\\
+ &\land\bigl[\forall j<W\,\exists a\leq s\,
+    (\mathsf E^{(2)}(s,\bar9,t,j,a)\land\mathsf{Lt}(a,b))\bigr]\\
+ &\land\bigl[\exists a\leq s\,
+    (\mathsf E^{(2)}(s,\bar9,t,0,a)
+       \land\mathsf E^{(2)}(s,\overline{10},t,0,a))\bigr]\\
+ &\land\bigl[\forall j<\mu\,\exists u\leq s\,\exists v\leq s\,
+       \exists a\leq s\,(
+       \mathsf E^{(2)}(s,\overline{10},t,j,u)\\
+ &\hspace{24mm}\land\mathsf E^{(2)}(s,\overline{10},t,Sj,v)
+       \land\mathsf E^{(2)}(s,\bar9,t,Sj,a)
+       \land v=b\times u+a)\bigr]\\
+ &\land\exists z\leq s\,
+   (\mathsf E(s,\overline{11},t,z)
+       \land\mathsf E^{(2)}(s,\overline{10},t,\mu,z)).
+\end{aligned}
+\]
+The initial-tape check converts numerical bits \(0,1\) to their
+normalized tape-symbol numbers \(1,2\):
+\[
+\begin{aligned}
+ \mathsf{Init}(s,L,H,W)\defeq{}&
+   \mathsf E(s,\bar7,0,0)\land\mathsf E(s,\bar8,0,H)\\
+ &\land\bigl[\forall i<L\,\exists d\leq s\,
+   (\mathsf E(s,\bar5,i,d)
+       \land\mathsf E^{(2)}(s,\bar9,0,H+i,Sd))\bigr]\\
+ &\land\forall j<W\,
+   \bigl[(\mathsf{Lt}(j,H)\lor\mathsf{Le}(H+L,j))
+           \to\mathsf E^{(2)}(s,\bar9,0,j,0)\bigr].
+\end{aligned}
+\]
+For one transition use the following bounded formula:
+\[
+\begin{aligned}
+ \mathsf{Step}(s,t,m,W)\defeq{}&
+  \exists q\leq s\,\exists q'\leq s\,
+  \exists h\leq s\,\exists h'\leq s\,
+  \exists a\leq s\,\exists a'\leq s\,
+  \exists d\leq s\,\exists i<m\,\bigl[\\
+ &\quad\mathsf E(s,\bar7,t,q)\land\mathsf E(s,\bar7,St,q')
+       \land\mathsf E(s,\bar8,t,h)\land\mathsf E(s,\bar8,St,h')\\
+ &\quad\land\mathsf E^{(2)}(s,\bar9,t,h,a)
+       \land\mathsf R_5(s,i,q,a,q',a',d)
+       \land\neg(q=\bar1)\land\neg(q=\bar2)\\
+ &\quad\land\bigl((d=0\land h=Sh')
+                    \lor(d=\bar1\land h'=Sh)\bigr)
+       \land\mathsf E^{(2)}(s,\bar9,St,h,a')\\
+ &\quad\land\forall j<W\,
+    \bigl[\neg(j=h)\to
+      \exists v\leq s\,
+       (\mathsf E^{(2)}(s,\bar9,t,j,v)
+          \land\mathsf E^{(2)}(s,\bar9,St,j,v))\bigr]\bigr].
+\end{aligned}
+\]
+In particular, the selected row satisfies \(i<m\); an arbitrary
+five-field value in the padding of family 1 cannot serve as a transition.
+The left-move equation is \(h=Sh'\), so it cannot move left from shifted
+column \(0\).  Set
+\[
+\begin{aligned}
+ \mathsf H_3(s)\defeq{}&
+  \exists k\leq s\,\exists n\leq s\,\exists b\leq s\,
+  \exists L\leq s\,\exists T\leq s\,\exists H\leq s\,
+  \exists W\leq s\,\exists m\leq s\,\exists\mu\leq s\,\bigl[\\
+ &\quad\mathsf E(s,0,0,k)\land\mathsf E(s,0,\bar2,n)
+       \land\mathsf E(s,0,\bar3,b)\land\mathsf E(s,0,\bar5,L)\\
+ &\quad\land\mathsf E(s,0,\bar6,T)\land\mathsf E(s,0,\bar7,H)
+       \land\mathsf E(s,0,\bar8,W)\\
+ &\quad\land\mathsf{Le}(\bar1,L)\land H=T
+       \land W=(L+\bar2\times T)+\bar1
+       \land k=\bar3+m\land W=S\mu\\
+ &\quad\land\bigl[\forall t\leq T\,\mathsf{Cfg}(s,t,n,b,W,\mu)\bigr]\\
+ &\quad\land\mathsf{Init}(s,L,H,W)
+       \land\forall t<T\,\mathsf{Step}(s,t,m,W)\bigr].
+\end{aligned}
+\]
+
+For the output bits, their values and their occurrence on the final tape,
+let
+\[
+\begin{aligned}
+ \mathsf{OutCells}(s,T,H,\ell,y)\defeq{}&
+  \forall i<\ell\,\exists d\leq s\,\exists v\leq s\,\bigl[
+     \mathsf E(s,\overline{12},i,d)
+      \land\mathsf E(s,\overline{13},i,v)\\
+ &\hspace{24mm}\land\mathsf{Bit}(d)\land\mathsf{Le}(v,y)
+      \land\mathsf E^{(2)}(s,\bar9,T,H+i,Sd)\bigr],\\
+ \mathsf{OutNext}(s,\lambda)\defeq{}&
+  \forall i<\lambda\,\exists u\leq s\,\exists v\leq s\,
+    \exists d\leq s\,\bigl[
+      \mathsf E(s,\overline{13},i,u)
+        \land\mathsf E(s,\overline{13},Si,v)\\
+ &\hspace{24mm}\land\mathsf E(s,\overline{12},Si,d)
+        \land v=\bar2\times u+d\bigr].
+\end{aligned}
+\]
+The final check is
+\[
+\begin{aligned}
+ \mathsf H_4(s)\defeq{}&
+  \exists T\leq s\,\exists H\leq s\,\exists W\leq s\,
+  \exists\ell\leq s\,\exists y\leq s\,
+  \exists\lambda\leq s\,\exists d\leq s\,\bigl[\\
+ &\quad\mathsf E(s,0,\bar6,T)\land\mathsf E(s,0,\bar7,H)
+       \land\mathsf E(s,0,\bar8,W)
+       \land\mathsf E(s,0,\bar9,\ell)
+       \land\mathsf E(s,0,\overline{10},y)\\
+ &\quad\land\ell=S\lambda\land\mathsf{Lt}(H+\ell,W)
+       \land\mathsf E(s,\bar7,T,\bar1)
+       \land\mathsf E^{(2)}(s,\bar9,T,H+\ell,0)\\
+ &\quad\land\mathsf E(s,\overline{12},0,d)
+       \land\mathsf E(s,\overline{13},0,d)
+       \land\mathsf E(s,\overline{13},\lambda,y)\\
+ &\quad\land\bigl((y=0\land\ell=\bar1\land d=0)
+                    \lor(\neg(y=0)\land d=\bar1)\bigr)\\
+ &\quad\land\mathsf{OutCells}(s,T,H,\ell,y)
+       \land\mathsf{OutNext}(s,\lambda)\bigr].
+\end{aligned}
+\]
+Only the output prefix and its first following blank are constrained
+by this final check.  The final head position, negative physical cells,
+and cells beyond that blank impose no further output condition.
+Define the promised computation formula by literal substitution of
+the displayed abbreviations:
+\[
+ \mathsf{Comp}(e,x,s)\defeq
+   \mathsf H_1(x,s)\land\mathsf H_2(e,s)
+                   \land\mathsf H_3(s)\land\mathsf H_4(s).
+\]
+All occurrences of brackets denoting numerical entries in the proofs
+below remain metatheoretic.  Every lookup inside the formulas above
+is an \(\mathsf E\), \(\mathsf E^{(2)}\), or previously defined
+\(\mathsf R_5\) abbreviation, with its displayed relational expansion.
+\end{definition}
+
+\begin{lemma}[Correctness of the configuration and output checks]
+\label{lem:p04-configuration-output-formulas}
+The formulas \(\mathsf H_3,\mathsf H_4\), and hence
+\(\mathsf{Comp}\), are bounded arithmetic formulas.
+Fix \(e,x,s\in\N\) satisfying \(\mathsf H_1(x,s)\land\mathsf H_2(e,s)\)
+in \(\mathcal N\).  Then \(\mathsf H_3(s)\) holds if and only if the
+header and tagged configuration families satisfy clause (h3), with
+the fixed window of Definition~\ref{def:history-coding}, and describe
+an initial segment of length \(T\) transitions of the raw decoded
+machine on \(\operatorname{bin}(x)\).
+If these conditions hold, \(\mathsf H_4(s)\) holds if and only if
+the final configuration satisfies clause (h4) and the stored output
+length, digits, prefixes and value are its canonical numerical output.
+\textit{Status: complete proof.}
+\end{lemma}
+
+\begin{proof}
+Boundedness follows by expansion.  Every quantifier in the new
+definitions is marked bounded, every bound is a term of \(\Lang_A\),
+and every comparison within a matrix is expressed by
+\(\mathsf{Lt}\), \(\mathsf{Le}\), or an atomic equality and Boolean
+connectives.  In particular, \(St\), \(Sj\), \(H+i\), and \(Sd\)
+are terms, and both levels of each \(\mathsf E^{(2)}\) lookup have
+the previously proved arithmetic bounds.  Fresh renaming before
+substitution prevents capture.  No subtraction, division, power,
+tuple constructor or tape-access function occurs in the expanded
+formula.
+
+By the H1 and H2 correctness lemmas, \(e\) decodes to the specified
+valid machine, the input data are its canonical binary word, and
+the header values \(k,n,b,L\) are fixed uniquely.  All further
+header or configuration witnesses are likewise unique extracted
+values.  If H3 holds, its equations give
+\[
+ H=T,\qquad W=L+2T+1,\qquad m=k-3=(n-2)b,\qquad \mu=W-1,
+ \qquad L\geq1.
+\]
+Consequently every input column \(H+i\), \(i<L\), is below \(W\).
+
+Write \(q_t=s[7,t]\), \(h_t=s[8,t]\), and
+\(a_{t,j}=s[9,t,j]\) in the metatheory.  The formula Cfg gives
+\(q_t<n\), \(h_t<W\), and \(a_{t,j}<b\) at every prescribed time
+and column.  Its remaining conjuncts state the first-prefix value,
+each base-\(b\) prefix recurrence, and equality of the last prefix
+with \(s[11,t]\).  Induction over the columns therefore identifies
+all stored tape prefixes and the complete fixed-width tape code.
+These prefixes are nondecreasing because \(b\geq3\) and their
+digits are nonnegative; each is at most the final tape code.
+Leading zero tape digits are allowed, as the width is specified
+separately.
+
+Define a full tape in the metatheory by
+\[
+ \tau_t(z)=
+ \begin{cases}
+    a_{t,z+H},&-H\leq z<W-H,\\
+    0,&\text{otherwise},
+ \end{cases}
+ \qquad z\in\Z,
+\]
+where \(0\) is the normalized blank symbol, and define its physical
+head to be \(h_t-H\).  Its nonblank support is finite.
+Init gives \(q_0=0\) and physical head \(0\).  It sets the columns
+\(H+i\) to \(Sd_i\), the correct symbols for the input bits.
+Every other column is blank: for \(j<W\), failure of
+\(j<H\) and \(H+L\leq j\) is exactly \(j=H+i\) for a unique
+\(i<L\).  Extending by blank outside the window therefore gives
+precisely the original initial tape.
+
+For \(t<T\), Step selects \(i<m\).  The certified-table lemma
+therefore identifies its R5 tuple with an actual row of the decoded
+transition table; padding rows are unavailable.  Its read symbol
+is \(a_{t,h_t}\), its source state is \(q_t\), and its next state
+is \(q_{t+1}\).  The explicit inequalities in Cfg put both heads
+inside the window.  The two head equations give exactly a left
+or right physical move.  The scanned column receives the row's
+written symbol; the universal conjunct preserves every other
+column.  Outside the window both full tapes are blank and the
+scanned cell is inside, so those cells are unchanged as well.
+Thus the full configurations have precisely the machine's
+one-step relation.  Neither halting state occurs before time \(T\).
+Induction on \(t\) proves that this is the actual initial run
+segment, using determinism of the decoded table.
+
+Conversely, suppose the tagged configurations and header have the
+data in clause (h3), including the stated fixed-width certificates,
+and describe that run segment.  Choose the actual stored header,
+state, head, symbol and prefix values as witnesses.  They are at
+most \(s\).  The auxiliary witnesses satisfy
+\[
+ m=k-3\leq k\leq s,\qquad \mu=W-1<W\leq s.
+\]
+Cfg and Init now follow from the stated ranges, recurrences and
+initial tape.  At each transition the actual table row has a
+unique index \(i<m\).  Its code is a stored description entry,
+so the row fields and all auxiliary pairing tails are at most
+that code, and hence at most \(s\).  These supply every Step
+witness.  Its head equation, written-cell equation and unchanged-cell
+conjuncts hold by the actual transition.  This proves H3.
+
+Assume now these equivalent H3 conditions.  If H4 holds, its unique
+header values are the same \(T,H,W\).  Put \(o_i=s[12,i]\) and
+\(w_i=s[13,i]\).  The output clauses assert
+\[
+ \ell\geq1,\quad H+\ell<W,\quad q_T=1,\quad
+ a_{T,H+\ell}=0,\quad a_{T,H+i}=So_i\quad(i<\ell).
+\]
+Thus all cells from physical \(0\) through \(\ell-1\) are
+nonblank binary symbols and physical cell \(\ell\) is blank.
+It is the first nonnegative blank.  The remaining clauses give
+\(w_0=o_0\), \(w_{i+1}=2w_i+o_{i+1}\), \(w_{\ell-1}=y\),
+with bits \(o_i\) and \(w_i\leq y\).  The same quotient/remainder
+argument used for H1, with the explicit zero and first-bit clauses,
+identifies this word as exactly \(\operatorname{bin}(y)\).
+This proves (h4) and the output-certificate assertion.
+
+Conversely suppose the final configuration and the stored output
+data have those properties.  Every stored header, bit and prefix
+is at most \(s\); the witness \(\lambda=\ell-1\) is at most
+\(\ell\leq s\).  All OutCells and OutNext conjuncts hold from
+the binary word and its prefixes, whose values are nondecreasing
+and at most \(y\).  The first following blank and accepting state
+give the other conjuncts of H4.  This proves the reverse direction.
+The argument imposes no condition on cells outside the output prefix
+except its first following blank, or on the final head.
+\end{proof}
+
+\begin{theorem}[Bounded verification of computations]
+\label{thm:bounded-verification}
+There is a bounded \(\Lang_A\)-formula \(\mathsf{Comp}(e,x,s)\) such that:
+\begin{enumerate}[label=(\alph*)]
+\item for all \(e,x,s\in\N\),
+      \(\mathcal N\entails\mathsf{Comp}(\bar e,\bar x,\bar s)\) iff
+      \(s\) is a history code for \((e,x)\), so that \(s\) codes a valid
+      accepting computation of program \(e\) on input \(x\) in the fixed
+      machine numbering whose final tape has a valid numerical output;
+      and
+\item \(\varphi_e(x)\) is defined iff
+      \(\mathcal N\entails\exists s\,\mathsf{Comp}(\bar e,\bar x,s)\).
+\end{enumerate}
+The symbol \(\mathsf{Comp}\) stands
+for this arithmetic formula, not for the metalinguistic relation it defines;
+the distinction is used in the theorem and exercises immediately below.
+\textit{Status: complete proof.}
+\end{theorem}
+
+\begin{proof}
+Use exactly the formula of Definition~\ref{def:p04-computation-formula}.
+Its boundedness was proved in the preceding lemma.  For (a), the H1
+and H2 lemmas identify the input and program certificates with clauses
+(h1) and (h2).  Under those conditions,
+Lemma~\ref{lem:p04-configuration-output-formulas} identifies H3 and
+H4 with (h3) and (h4), including the actual decoded transition
+function and numerical-output convention.  All uses of a header
+position agree by uniqueness of tagged extraction.  Thus the four
+conjuncts hold exactly for the history codes in the statement.
+If \(e\) is invalid, H2 has no witness, which also agrees with
+the definition of a history code.
+
+One direction of (b) now follows immediately from (a): a satisfying
+code supplies a finite accepting computation of the raw decoded
+machine with numerical output, so \(\varphi_e(x)\) is defined by
+the fixed numbering.  For the converse, suppose \(\varphi_e(x)\)
+is defined, with output \(y\).  Then \(e\) is valid and its raw
+machine has a finite accepting computation, say of \(T\) transitions,
+on the canonical word for \(x\).  Let \(L\geq1\) be the input length
+and choose the numerical header values
+\[
+ H=T,\qquad W=L+2T+1.
+\]
+Write \(p_t\) for the physical head position at time \(t\).
+Induction on \(t\), starting with \(p_0=0\) and using the two
+possible moves, gives \(-t\leq p_t\leq t\).
+Only the initial input cells \(0,\ldots,L-1\) and cells scanned
+before time \(T\) can be nonblank at a time at most \(T\).
+Their positions all lie in
+\[
+ [-T,\max(T,L-1)].
+\]
+The chosen columns \(0,\ldots,W-1\) represent the physical
+interval \([-T,L+T]\), which contains this support and every
+head position.  Moreover the rightmost physical cell \(L+T\)
+is blank throughout: it is strictly larger than both \(T\)
+and \(L-1\).  Set \(h_t=p_t+H\).  Then
+\(0\leq h_t\leq2T<W\).  Both heads of each transition are
+inside the window; a left move before time \(T\) cannot leave
+it, since \(h_t\geq T-t>0\) for \(t<T\).
+
+Store the actual states, shifted heads and tape symbols in the
+prescribed families.  For every row of tape symbols, form its
+successive base-\(b\) values, and store the last as its tag-11
+complete tape code.  These are finite natural numbers, even
+though their magnitudes need not have a polynomial bound in the
+run length.  The last blank observation also bounds the first
+nonnegative blank \(\ell\) of the final tape by \(L+T\).
+Since the accepted output is canonical, \(\ell\geq1\), and
+\[
+ H+\ell\leq L+2T=W-1<W.
+\]
+Store its bits, numerical prefixes, length and value \(y\).
+The binary prefix values are at most \(y\), by the same
+monotonicity argument as for H1.
+
+Take the finite input and table assignment from
+Lemma~\ref{lem:p04-input-table-packing} and add these header,
+configuration and output entries.  Shared header values agree,
+and the family tags have the fixed positional arities of the
+history definition, so the assignment is consistent.  Its
+finitely many indices are computed from the actual run before
+choosing \(s\).  The finite-packing lemma now supplies one \(s\)
+realizing them all and bounds every stored value by \(s\).
+All remaining existential witnesses meet their bounds:
+\(m=k-3\leq k\leq s\), \(\mu=W-1<W\leq s\), and
+the last output position is below \(\ell\leq s\);
+the input last position was treated in the H1 proof.
+Each transition uses an actual row \(i<m\), whose fields and
+pairing tails are bounded by its stored row code.  The E and E2
+formulas supply the bounds for their paired indices independently
+of whether those indices are at most \(s\).
+The two input/table lemmas and the configuration/output lemma
+therefore give all four conjuncts of \(\mathsf{Comp}(e,x,s)\).
+This proves the other direction of (b).
+
+The argument includes the empty step range \(T=0\) for H3:
+it describes just the initial configuration.  In the normalized
+numbering the start state is \(0\), distinct from accepting state
+\(1\), so H4 cannot hold for that zero-step segment.  Rejecting
+halts and accepting halts with noncanonical output likewise fail
+the specified final conjuncts.
+\end{proof}
+
+The formulas and proofs above concern the handbook's exact numerical
+serialization and tagged history layout.  For other standard coding
+constructions see \cite{Shoenfield1967,BoolosBurgessJeffrey2007}.
+The result proved here is a truth equivalence in \(\mathcal N\);
+numeralwise representation in \(\mathsf Q\) and the internal
+proof transformations used for provability predicates require their
+separate arguments in the incompleteness part.
+
+\begin{example}[A one-step numerical identity computation]
+Take \(n=b=3\), input-alphabet bitmap \(A=6\), and the three rows
+\[
+ \delta(0,a)=(1,a,R),\qquad
+ \rho_a=\operatorname{code}_5(0,a,1,a,1)\quad(a=0,1,2).
+\]
+Put \(c_0=\operatorname{code}_6(3,3,6,\rho_0,\rho_1,\rho_2)\)
+and \(e=\operatorname{pair}_{\N}(6,c_0)\).  This is a valid
+description with \(m=3\) and \(k=6\): every nonhalting key occurs,
+each transition preserves the scanned symbol and accepts after
+one right move, and both binary symbols belong to the input alphabet.
+For \(x=2\), the input bits are \((1,0)\), with prefixes \((1,2)\).
+Use header
+\[
+ (k,c_0,n,b,A,L,T,H,W,\ell,y)
+       =(6,c_0,3,3,6,2,1,1,5,2,2).
+\]
+The bitmap bits are \((0,1,1)\), with tails \((6,3,1,0)\).
+At both times \(0\) and \(1\), the five tape symbols are
+\[
+ (0,2,1,0,0),
+\]
+whose base-three prefixes are \((0,2,7,21,63)\); both complete
+tape codes are \(63\).  The states are \((0,1)\) and the shifted
+heads are \((1,2)\).  The step reads symbol \(2\) at column \(1\)
+and uses row \(i=2<m\), leaving that symbol unchanged.
+The output bits and prefixes are again \((1,0)\) and \((1,2)\),
+with the first following blank at column \(H+\ell=3<5\).
+Together with the unique program-decoding tails, these data form
+a compatible finite assignment.  Beta packing supplies an \(s\)
+for which \(\mathsf{Comp}(e,2,s)\) holds.  Printing the large
+decimal value of that packing code is unnecessary for the exact check.
+
+For a failure case, the word \((0,1)\), with prefixes \((0,1)\),
+has value \(1\) and satisfies the digit recurrence and prefix bounds.
+It nevertheless fails H1 for \(x=1\), because its first digit is
+zero.  Thus the recurrence alone would accept a noncanonical input.
+Similarly, the bitmap \((1,1,1)\), with value \(7\), fails H2:
+its bit at the normalized blank symbol must be zero.
+\end{example}
+
+\begin{theorem}
+\label{thm:p04-ce-sigma-one}
+A set is computably enumerable iff it belongs to
+\(\boldsymbol{\Sigma}^0_1\).  A set is decidable iff it belongs to
+\(\boldsymbol{\Delta}^0_1\).
+\textit{Status: complete proof.}
+\end{theorem}
+
+\begin{proof}
+First suppose \(A\) is computably enumerable.  Its defining
+domain characterization in Section~\ref{sec:turing-machines-03}
+gives a partial computable function with domain \(A\).
+Theorem~\ref{thm:enumeration} supplies an index \(e\) for that function
+in this exact numbering.  Bounded verification now gives
+\[
+ x\in A\quad\Longleftrightarrow\quad
+ \mathcal N\entails\exists s\,\mathsf{Comp}(\bar e,\bar x,s).
+\]
+Substituting the fixed numeral \(\bar e\) does not change
+boundedness of the matrix.  Its fixed negation-normal-form
+conversion remains bounded, so the displayed formula is
+\(\Sigma^0_1\) in the declared syntactic convention.  This proves
+\(A\in\boldsymbol{\Sigma}^0_1\).
+
+For the converse, first verify that the truth of each fixed bounded
+arithmetic formula on a supplied finite tuple of numbers is decidable.
+Evaluate terms recursively: \(0\), variables and successor are
+immediate, addition is repeated increment, and multiplication is
+repeated addition.  Return false for \(\bottom\).  Compare term values
+for an atomic equality, and evaluate Boolean connectives by their
+truth tables.  For a marked bounded quantifier, evaluate its bound
+under the current assignment and then evaluate its matrix on each
+number in the finite specified range.  The quantified variable does
+not occur in that bound, so the range is fixed for this loop.
+An existential returns true when a matrix value is true, and
+otherwise false after exhaustion; a universal returns false on
+the first false value, and otherwise true.  This also gives the
+correct false/true answers for an empty existential/universal range.
+Structural induction on the formula proves termination and correctness
+of this evaluator, since every recursive call concerns a proper
+subformula and each loop has finitely many iterations.
+
+This is a machine procedure on finite numerical words: retain the
+assignment and loop counters in delimited blocks, evaluate a fixed
+term or subformula in scratch blocks, and use scans, copying and
+binary increment for the indicated arithmetic loops and comparisons.
+The formula is fixed, so its finite syntax and the return points
+for its nested loops are part of finite control; the counters and
+intermediate values occupy finite, extendible tape blocks.
+Each scan or increment terminates on its delimited finite block,
+and the structural-induction argument proves that the complete
+procedure halts.  To return its truth value, put the corresponding
+single binary digit at physical cell \(0\), put a blank at cell \(1\),
+and enter the accepting state; later scratch cells are immaterial to
+the output convention.  This computes the required characteristic function.
+The construction
+uses neither arithmetical representability nor the theorem being proved.
+
+Now let a \(\Sigma^0_1\) formula define \(A\).
+Theorem~\ref{thm:prefix-normal-form} gives an \(\mathcal N\)-equivalent
+formula
+\[
+ \exists z_1\cdots\exists z_r\,\theta(x,z_1,\ldots,z_r),
+\]
+with bounded \(\theta\).  A vacuous existential can be added if
+needed, since \(\N\) is nonempty.  On input \(x\), for stages
+\(v=0,1,2,\ldots\), enumerate all \(r\)-tuples with every coordinate
+at most \(v\), using finite nested counters, and apply the total
+bounded-formula evaluator to each tuple.  If any value is true,
+write the canonical output \(0\) and accept.  Each stage terminates,
+and every possible witness tuple appears at a finite stage.
+Thus this machine computes the partial function equal to \(0\)
+on \(A\) and undefined elsewhere.  If there is no witness it
+continues through infinitely many stages, so it does not halt
+with an unintended output.  The domain definition proves that
+\(A\) is computably enumerable, including when \(A\) is empty.
+
+Finally, negation interchanges the \(\Sigma^0_1\) and
+\(\Pi^0_1\) definability classes: in prefix form,
+the negation of \(\forall\bar z\,\theta\) is
+\(\exists\bar z\,\neg\theta\), with bounded matrix, and conversely.
+Consequently \(A\in\boldsymbol{\Delta}^0_1\) if and only if
+both \(A\) and its complement are \(\Sigma^0_1\)-definable.
+By the first assertion this holds exactly when both sets are
+computably enumerable, which is the earlier characterization
+of decidability in Section~\ref{sec:turing-machines-03}.
+This proves the second assertion.
+\end{proof}
+
+\begin{definition}[Many-one hardness and completeness for a class]
+Let \(\mathcal C\) be a class of subsets of \(\N\).  A set \(B\) is
+\emph{\(\mathcal C\)-hard under many-one reductions} iff
+\(A\leq_m B\) for every \(A\in\mathcal C\).  It is
+\emph{\(\mathcal C\)-complete under many-one reductions} iff, in addition,
+\(B\in\mathcal C\).  This term is required to distinguish an upper-bound
+classification from the uniform lower bound used in the next theorem.  It is
+a property of a set relative to \(\mathcal C\) and \(\leq_m\), and is not
+semantic completeness, deductive completeness, or the status of a proof.
+The theorem and the following exercise use exactly this distinction.
+\end{definition}
+
+\begin{theorem}[Hierarchy classifications of program domains and totality]
+The set \(K\) is \(\boldsymbol{\Sigma}^0_1\)-complete under many-one
+reductions, and its complement is \(\boldsymbol{\Pi}^0_1\)-complete under
+many-one reductions.  The totality set
+\[
+  \mathsf{TOT}=\set{e:\forall x\,\exists k\,
+  \text{program }e\text{ accepts on }x\text{ with a valid numerical output}
+  \text{ within }k\text{ steps}}
+\]
+is \(\boldsymbol{\Pi}^0_2\)-complete under many-one reductions.
+\textit{Status: cited theorem.}
+\end{theorem}
+
+See \cite{Shoenfield1967} for complete proofs.  The displayed prefix gives
+the upper bound for \(\mathsf{TOT}\), read into the closure classes by
+\cref{thm:prefix-normal-form}; the completeness conclusion additionally
+requires a uniform many-one reduction.  The cited completeness proofs
+classify relations by prefix-form formulas, and
+\cref{thm:prefix-normal-form} licenses their transfer to the classes
+fixed here.
+
+\begin{theorem}[Strictness of the arithmetical hierarchy]
+For every \(n\geq1\),
+\[
+  \boldsymbol{\Delta}^0_n\subsetneq\boldsymbol{\Sigma}^0_n,
+  \qquad
+  \boldsymbol{\Delta}^0_n\subsetneq\boldsymbol{\Pi}^0_n,
+  \qquad
+  \boldsymbol{\Sigma}^0_n\neq\boldsymbol{\Pi}^0_n,
+\]
+and
+\(\boldsymbol{\Sigma}^0_n\cup\boldsymbol{\Pi}^0_n
+\subsetneq\boldsymbol{\Delta}^0_{n+1}\), for unary relations.
+\textit{Status: cited theorem.}
+\end{theorem}
+
+See \cite{Shoenfield1967} for a complete proof.  The cited proof works
+with prefix-form classes; \cref{thm:prefix-normal-form} transfers the
+statement to the closure classes fixed here.
+
+\begin{warning}[Syntactic prefix versus semantic class]
+The syntactic classification of a displayed formula supplies an upper bound
+on the definability class of the relation it defines.  A completeness
+reduction or a nondefinability argument is needed to show that the relation
+does not lie in a lower boldface class.
+\end{warning}

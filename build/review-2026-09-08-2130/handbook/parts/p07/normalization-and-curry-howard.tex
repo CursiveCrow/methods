@@ -1,0 +1,368 @@
+%% parts/p07/normalization-and-curry-howard.tex --- Phase-4 P7.3
+%% Migrated source: v1.1 lines 11961--12128 and 12218--12247.
+%% Apparatus A-072/A-151/A-152.
+
+\chapter{Normalization and Curry--Howard}
+\label{sec:p07-normalization-and-curry-howard}
+\chaptermark{Normalization and Curry--Howard}
+
+Natural-deduction normalization and sequent cut elimination are related proof
+transformations, not one theorem.  The former concerns a reduction relation
+on derivation trees; the latter removes a primitive sequent rule.  The exact
+natural-deduction calculus here is
+\hyperref[sheet:nj]{\texttt{sheet:nj}}, and the exact typed term calculus is
+\hyperref[sheet:stlc]{\texttt{sheet:stlc}}.  The normalization treatment
+originates with \cite{Prawitz1965}; see also
+\cite{TroelstraSchwichtenberg2000}.
+
+\section{Reduction and natural-deduction normalization}
+
+\begin{hbdefinition}{def:p07-abstract-reduction}{Abstract reduction relation and normalization}
+An \emph{abstract reduction relation} is a binary relation
+\(\longrightarrow\) on a set \(X\).  An element is \emph{normal} iff it has no
+\(\longrightarrow\)-successor; it is \emph{weakly normalizing} iff some
+finite reduction from it ends at a normal element, and \emph{strongly
+normalizing} iff no infinite reduction sequence starts from it.  The relation
+is weakly or strongly normalizing iff every element has the corresponding
+property.  This terminology classifies elements and relations, not formulas
+or semantic consequence.  The strong notion is nonredundant because one
+terminating route does not exclude another infinite route; it is used by
+Theorem~\ref{thm:p07-stlc-strong-normalization}.
+\index{abstract reduction relation}
+\index{normal form}
+\index{weak normalization}
+\index{strong normalization}
+\end{hbdefinition}
+
+\begin{hbexample}{def:p07-weak-not-strong}{Weak normalization need not be strong}
+On \(X=\{a,b\}\), let \(a\longrightarrow a\) and
+\(a\longrightarrow b\), with no successor of \(b\).  Both elements have a
+finite route to a normal element, but the infinite constant sequence at
+\(a\) witnesses failure of strong normalization.  Thus the two predicates
+in Definition~\ref{def:p07-abstract-reduction} cannot be interchanged.
+\end{hbexample}
+
+\begin{hbdefinition}{def:p07-nj-normality}{NJ detours, reduction, and normal derivations}
+In a \texttt{sheet:nj} derivation, the \emph{major premise} of an elimination
+is the premise exhibiting the connective or quantifier eliminated.  A
+\emph{detour} is a segment in which a formula is introduced and immediately
+used as that major premise.  Let
+\(\longrightarrow_{\mathsf{NJ}}\) be the compatible closure of the principal
+reductions for matching introduction--elimination pairs and the permutation
+conversions that move later eliminations above \(\lor E\) and \(\exists E\),
+with bound variables alpha-renamed to preserve the sheet's discharge and
+eigenvariable conditions.  A derivation is \emph{normal} iff it has no detour
+and satisfies those two permutation conditions.
+
+This relation is needed to make \emph{reduces} in the theorem exact.  It is a
+metalinguistic relation on finite derivation trees and differs from term
+substitution inside formulas: implication reduction substitutes a derivation
+for the assumption occurrences carrying one discharge label.
+\index{detour!natural deduction}
+\index{major premise}
+\index{normal derivation}
+\end{hbdefinition}
+
+\begin{hbmethod}{def:p07-normalization-method}{Normalization method}
+\par\noindent
+Reduce detours, then permute eliminations upward across disjunction and
+existential eliminations.  Control the process by a
+lexicographic measure whose first coordinate is the greatest rank of a
+maximal formula and whose later coordinates record the lengths of maximal
+segments.  A mere count of formula occurrences is inadequate because a
+principal reduction can duplicate a subderivation.  The method names this
+specific transformation of \(\mathsf{NJ}\) derivations; the annex enumerates
+the missing calculus-specific cases.
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p07-normalization}{sketched=annex:p7.norm.1}{Normalization for intuitionistic natural deduction}
+\par\noindent
+Every derivation on \texttt{sheet:nj} reduces by
+\(\longrightarrow_{\mathsf{NJ}}\) to a normal derivation with the same
+conclusion and no undischarged assumption formula not already undischarged in
+the original derivation.  Equivalently, modulo alpha-equivalence, the set of
+undischarged assumption formulas in the result is a subset of the original
+set.
+\end{hbtheorem}
+
+\begin{proofboundary}{def:p07-normalization-proof-boundary}{Scope of the normalization sketch}
+The calculus has exactly the finite-tree rules
+\(\land,\lor,\to,\bot,\forall,\exists\) on \texttt{sheet:nj}, defined
+negation, total capture-avoiding formula substitution, and the displayed
+nonvacuous-discharge and eigenvariable conditions.  It excludes RAA,
+primitive-negation rules, equality, and induction.  The sketch omits the full
+principal-reduction table, the \(\lor E/\exists E\) permutation table, and
+the proof that the chosen maximal-formula/maximal-segment measure decreases.
+\end{proofboundary}
+
+\section{The simply typed lambda calculus}
+
+\begin{hbdefinition}{def:p07-stlc}{Arrow-only simply typed lambda calculus}
+Fix a set \(\mathsf{Base}\) of base types.  With type metavariables
+\(\alpha,\beta\), term metavariables \(M,N\), and a finite typing context
+\(\Theta_{\mathrm{ty}}\) assigning distinct term variables to types, the
+types form the least set containing every \(\mathsf b\in\mathsf{Base}\) and
+closed under \((\alpha,\beta)\mapsto
+\alpha\mathbin{\to_{\mathrm{ty}}}\beta\).  Terms form the least set containing
+every variable and closed under typed abstraction
+\(\lambda x{:}\alpha.M\) and application \(MN\).
+The judgment
+\(\Theta_{\mathrm{ty}}\derives_{\mathsf{STLC}}M{:}\alpha\), its variable,
+abstraction, and application rules, and capture-avoiding beta contraction are
+exactly those on \hyperref[sheet:stlc]{\texttt{sheet:stlc}}.  The registered
+type arrow \(\to_{\mathrm{ty}}\) is a metalinguistic type former, not the
+object-language implication \(\to\).  This entry defines an arrow-only
+calculus: products, sums, polymorphism, and dependent types are absent.
+\index{simply typed lambda calculus}
+\index{type!arrow}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p07-stlc-subject-reduction}{sketched=annex:p7.norm.2}{Subject reduction for STLC}
+\par\noindent
+If \(\Theta_{\mathrm{ty}}\derives_{\mathsf{STLC}}M{:}\alpha\) and
+\(M\longrightarrow_\beta N\), then
+\(\Theta_{\mathrm{ty}}\derives_{\mathsf{STLC}}N{:}\alpha\).
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p07-stlc-strong-normalization}{sketched=annex:p7.norm.3}{Strong normalization for STLC}
+Every term typable on \texttt{sheet:stlc} is strongly normalizing for
+compatible beta reduction: no infinite beta-reduction sequence begins at a
+well-typed term.
+\end{hbtheorem}
+
+\begin{hbwarning}{def:p07-normalization-distinctions}{Four properties that must remain separate}
+Natural-deduction normalization concerns derivation trees; STLC subject
+reduction preserves a type across one term-reduction step; strong
+normalization excludes infinite term reductions; confluence compares
+divergent reductions.  None of these predicates defines or implies all the
+others merely because beta reduction participates in their statements.
+\end{hbwarning}
+
+\begin{hbexample}{def:p07-k-term-weakening}{The typed K term and weakening}
+For types \(\alpha,\beta\), the term
+\(\lambda x{:}\alpha.\lambda y{:}\beta.x\) has type
+\(\alpha\mathbin{\to_{\mathrm{ty}}}
+(\beta\mathbin{\to_{\mathrm{ty}}}\alpha)\).  Under Curry--Howard, the unused
+variable \(y\) records antecedent weakening in the corresponding derivation
+of \(\alpha\to(\beta\to\alpha)\); it is not a hidden beta reduction.
+\end{hbexample}
+
+\section{Curry--Howard and categorical semantics}
+
+\begin{hbdefinition}{def:p07-curry-howard}{Curry--Howard setting and categorical standing}
+The \emph{Curry--Howard correspondence} used here is the structural
+translation between a fixed intuitionistic natural-deduction calculus and a
+fixed typed term calculus: formulas map to types, assumption occurrences to
+typed variables, derivations to typing derivations, discharge to abstraction,
+elimination to application, and normalization to computation.  It compares
+specified formal objects; it does not identify every proof with a program
+without a term assignment and conversion relation.
+
+For the third column of Table~\ref{tab:p07-curry-howard}, a
+\emph{bicartesian closed category} means a category with finite products
+(hence a terminal object), finite coproducts (hence an initial object), and,
+for each object \(X\), a right adjoint to \(-\times X\) (hence
+exponentials).  This hypothesis is necessary because products, sums, truth,
+falsity, and implication have no uniform readings in an arbitrary category.
+For this paragraph, \emph{beta--eta equivalence} is the least congruence on
+well-typed terms containing the symmetric closure of the registered beta
+contraction and the typed eta equation that identifies
+\(\lambda x{:}\alpha.Mx\) with \(M\) when \(M\) has a function type with
+domain \(\alpha\) and \(x\) is not free in \(M\).
+It is a metalinguistic quotient used only for the categorical dictionary,
+not an additional directed reduction rule on \texttt{sheet:stlc}.  The
+selected syntactic category quotients terms by this equivalence; that
+quotient is what makes substitution correspond to composition.  More
+exactly, its objects are the selected types and a
+morphism from \(\alpha\) to \(\beta\) is a beta--eta equivalence class of
+judgments
+\(x{:}\alpha\derives_{\mathsf{STLC}}M{:}\beta\); the variable judgment is
+the identity and capture-avoiding substitution is composition.  Conversely,
+the \emph{internal-language construction} used in the figure represents each
+object of a chosen bicartesian closed category by a type and each morphism
+from \(X\) to \(Y\) by a typed unary operation named \(f\), with the chosen
+products, coproducts, and exponentials supplying the corresponding
+constructors.  Both
+are metalinguistic constructions relative to fixed data: the syntactic
+category sends syntax to a category, whereas the internal language sends a
+chosen category to syntax.  The distinction is used on the two directions of
+the categorical edge in the figure.  These definitions also distinguish
+term assignment from categorical semantics and are used by the table and
+Figure~\ref{fig:p07-curry-howard-triangle}.
+\index{Curry--Howard correspondence}
+\index{bicartesian closed category}
+\end{hbdefinition}
+
+\begingroup\small
+\begin{longtable}{@{}p{.24\textwidth}p{.29\textwidth}p{.38\textwidth}@{}}
+\caption{Logic, type theory, and category dictionary (apparatus A-072).}
+\label{tab:p07-curry-howard}\\
+\toprule
+Intuitionistic logic & Typed lambda calculus & Chosen bicartesian closed
+category \\
+\midrule
+\endfirsthead
+\toprule
+Intuitionistic logic & Typed lambda calculus & Chosen bicartesian closed
+category \\
+\midrule
+\endhead
+Formula & Type & Object \\
+Assumption context & Typed context, represented by a product of types &
+Context object, represented by the corresponding categorical product \\
+Derivation of \(\varphi\) from \(\Gamma\) & Term \(M\) of type \(\alpha\)
+in a typed context \(\Theta_{\mathrm{ty}}\) & Morphism from the context object
+to the object interpreting \(\varphi\) \\
+Implication \(\varphi\to\psi\) & Function type
+\(\alpha\mathbin{\to_{\mathrm{ty}}}\beta\) & Exponential \(Y^X\), where
+\(X,Y\) interpret \(\varphi,\psi\) \\
+Conjunction & Product type & Categorical product \\
+Truth & Unit type & Terminal object \\
+Disjunction & Sum type & Categorical coproduct \\
+Falsity & Empty type & Initial object \\
+Proof substitution / Cut & Capture-avoiding term substitution & Morphism
+composition \\
+Beta--eta conversion & Term equality after the declared conversions &
+Equality of denoted morphisms \\
+\bottomrule
+\end{longtable}
+\endgroup
+
+The product, sum, unit, and empty-type rows describe the standard extension
+of arrow-only \texttt{sheet:stlc}; they do not silently add constructors or
+reduction rules to that sheet.  Categorical details are citation-supported by
+\cite{GirardLafontTaylor1989,LambekScott1986} and receive full treatment in
+the later categorical-logic part.
+
+\begin{figure}[!htbp]
+\centering
+\resizebox{.9\linewidth}{!}{%
+\begin{tikzpicture}[font=\small,>=Latex]
+  \node[draw,rounded corners,align=center] (logic) at (0,2.8)
+    {intuitionistic logic\\formulas and derivations};
+  \node[draw,rounded corners,align=center] (types) at (-4.2,0)
+    {typed lambda calculus\\types and terms modulo conversions};
+  \node[draw,rounded corners,align=center] (cats) at (4.2,0)
+    {bicartesian closed category\\objects and morphisms};
+  \draw[<->] (logic) -- node[above left,align=center]
+    {Curry--Howard\\term assignment} (types);
+  \draw[<->] (types) -- node[below,align=center]
+    {categorical semantics} (cats);
+  \draw[<->] (cats) -- node[above right,align=center]
+    {internal language /\\syntactic category} (logic);
+\end{tikzpicture}
+}
+\caption{The Curry--Howard--categorical triangle (apparatus A-151).  Each edge
+is a specified construction, not an equality sign; the categorical vertex
+has the hypotheses of Definition~\ref{def:p07-curry-howard}.}
+\label{fig:p07-curry-howard-triangle}
+\end{figure}
+
+\clearpage
+\begin{landscape}
+\begin{figure}[p]
+\centering
+\begin{minipage}[t]{.49\linewidth}
+\centering\scriptsize
+\textbf{STLC typing instance}\\[4pt]
+\begin{tikzpicture}[font=\scriptsize,>=Latex,every node/.style={align=center}]
+  \node (f) at (-2.1,4.2)
+    {\(\Theta_{\mathrm{ty}}\derives_{\mathsf{STLC}}f{:}
+      \beta\mathbin{\to_{\mathrm{ty}}}\gamma\)};
+  \node (g) at (.2,4.2)
+    {\(\Theta_{\mathrm{ty}}\derives_{\mathsf{STLC}}g{:}
+      \alpha\mathbin{\to_{\mathrm{ty}}}\beta\)};
+  \node (x) at (2.2,4.2)
+    {\(\Theta_{\mathrm{ty}}\derives_{\mathsf{STLC}}x{:}\alpha\)};
+  \node (gx) at (1.2,3.25)
+    {\(\Theta_{\mathrm{ty}}\derives_{\mathsf{STLC}}gx{:}\beta\)};
+  \node (fgx) at (0,2.3)
+    {\(\Theta_{\mathrm{ty}}\derives_{\mathsf{STLC}}f(gx){:}\gamma\)};
+  \node (lx) at (0,1.45)
+    {\(f{:}\beta\mathbin{\to_{\mathrm{ty}}}\gamma,\,
+      g{:}\alpha\mathbin{\to_{\mathrm{ty}}}\beta
+      \derives_{\mathsf{STLC}}\lambda x{:}\alpha.f(gx){:}
+      \alpha\mathbin{\to_{\mathrm{ty}}}\gamma\)};
+  \node (lg) at (0,.65)
+    {\(f{:}\beta\mathbin{\to_{\mathrm{ty}}}\gamma
+      \derives_{\mathsf{STLC}}
+      \lambda g{:}\alpha\mathbin{\to_{\mathrm{ty}}}\beta.
+      \lambda x{:}\alpha.f(gx){:}
+      (\alpha\mathbin{\to_{\mathrm{ty}}}\beta)
+      \mathbin{\to_{\mathrm{ty}}}
+      (\alpha\mathbin{\to_{\mathrm{ty}}}\gamma)\)};
+  \node (lf) at (0,-.25)
+    {\(\varnothing\derives_{\mathsf{STLC}}
+      \lambda f{:}\beta\mathbin{\to_{\mathrm{ty}}}\gamma.
+      \lambda g{:}\alpha\mathbin{\to_{\mathrm{ty}}}\beta.
+      \lambda x{:}\alpha.f(gx){:}
+      (\beta\mathbin{\to_{\mathrm{ty}}}\gamma)
+      \mathbin{\to_{\mathrm{ty}}}
+      ((\alpha\mathbin{\to_{\mathrm{ty}}}\beta)
+      \mathbin{\to_{\mathrm{ty}}}
+      (\alpha\mathbin{\to_{\mathrm{ty}}}\gamma))\)};
+  \draw[->] (g) -- (gx);
+  \draw[->] (x) -- node[right]
+    {\hyperref[rule:stlc-app]{\(\to_{\mathrm{ty}}E\)}} (gx);
+  \draw[->] (f) -- (fgx);
+  \draw[->] (gx) -- node[right]
+    {\hyperref[rule:stlc-app]{\(\to_{\mathrm{ty}}E\)}} (fgx);
+  \draw[->] (fgx) -- node[right]
+    {\hyperref[rule:stlc-abs]{\(\to_{\mathrm{ty}}I\)}} (lx);
+  \draw[->] (lx) -- node[right]
+    {\hyperref[rule:stlc-abs]{\(\to_{\mathrm{ty}}I\)}} (lg);
+  \draw[->] (lg) -- node[right]
+    {\hyperref[rule:stlc-abs]{\(\to_{\mathrm{ty}}I\)}} (lf);
+\end{tikzpicture}
+\end{minipage}\hfill
+\begin{minipage}[t]{.49\linewidth}
+\centering\scriptsize
+\textbf{Intuitionistic ND instance}\\[4pt]
+\begin{tikzpicture}[font=\scriptsize,>=Latex,every node/.style={align=center}]
+  \node (f) at (-2.1,4.2) {\([\psi\to\chi]^1\)};
+  \node (g) at (.2,4.2) {\([\varphi\to\psi]^2\)};
+  \node (x) at (2.2,4.2) {\([\varphi]^3\)};
+  \node (b) at (1.2,3.25) {\(\psi\)};
+  \node (c) at (0,2.3) {\(\chi\)};
+  \node (ac) at (0,1.45) {\(\varphi\to\chi\)};
+  \node (gb) at (0,.65)
+    {\((\varphi\to\psi)\to(\varphi\to\chi)\)};
+  \node (all) at (0,-.25)
+    {\((\psi\to\chi)\to
+      ((\varphi\to\psi)\to(\varphi\to\chi))\)};
+  \draw[->] (g) -- (b);
+  \draw[->] (x) -- node[right]
+    {\hyperref[rule:nj-imp-e]{\(\to E\)}} (b);
+  \draw[->] (f) -- (c);
+  \draw[->] (b) -- node[right]
+    {\hyperref[rule:nj-imp-e]{\(\to E\)}} (c);
+  \draw[->] (c) -- node[right]
+    {\hyperref[rule:nj-imp-i]{\(\to I,3\)}} (ac);
+  \draw[->] (ac) -- node[right]
+    {\hyperref[rule:nj-imp-i]{\(\to I,2\)}} (gb);
+  \draw[->] (gb) -- node[right]
+    {\hyperref[rule:nj-imp-i]{\(\to I,1\)}} (all);
+\end{tikzpicture}
+\end{minipage}
+\caption{Composition as one complete STLC typing instance beside its
+intuitionistic natural-deduction instance (apparatus A-152).  Generic rules
+remain on \texttt{sheet:stlc} and \texttt{sheet:nj}; arrow labels point to
+their registered rows.  Here
+\(\Theta_{\mathrm{ty}}=
+f{:}\beta\mathbin{\to_{\mathrm{ty}}}\gamma,\,
+g{:}\alpha\mathbin{\to_{\mathrm{ty}}}\beta,\,x{:}\alpha\).}
+\label{fig:p07-stlc-nd-derivation}
+\end{figure}
+\end{landscape}
+\clearpage
+
+\paragraph{Source disposition.}
+The source composition example is retained and expanded into
+Figure~\ref{fig:p07-stlc-nd-derivation}.  Its typed-K exercise is retired as
+an exercise but its weakening distinction survives in
+Example~\ref{def:p07-k-term-weakening}.  The outermost-beta subject-reduction
+exercise is retired with the exact typing-substitution and capture-avoidance
+obligations listed in Annex~\ref{annex:p7.norm.2}.  The weak-versus-strong
+normalization exercise is retired with both predicates and a separating
+example supplied before either theorem.  No exercise solution is relabeled
+as a proof.

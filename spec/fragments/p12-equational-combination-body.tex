@@ -1,0 +1,413 @@
+\subsection{Disjoint-Theory Combination with Linear Constant Restrictions}
+\label{sec:p12-equational-combination}
+
+The combination method in source \S6 is the Baader--Schulz method:
+purification, identification of shared variables, signature labels, and a
+linear order inducing constant restrictions. Its hypotheses are nontrivial
+component theories over pairwise disjoint signatures and solvers for
+\emph{linear-constant-restricted} problems. Neither regularity nor
+collapse-freeness is assumed. The source gives the ordered assembly
+argument and a normalization-based completeness sketch. The full
+completeness proof below instead constructs the combined free algebra;
+it is an explicit equational specialization of the alternative algebraic
+route identified by the chapter, not a transcription of the source's
+ordered-completion proof or of the quasi-free-structure fibering algorithm.
+\cite[\S6, pp.~513--519]{BaaderSnyder2001}
+\cite[author manuscript \S\S4.2--4.4, pp.~26--35]{BaaderSchulz1998Combination}
+
+\begin{hbwarning}{def:p12-comb-source-context}{The source's disjointness and historical-algorithm boundaries}
+The source's applications include distinct AC operations and combinations
+of ACI set union with associative list append, for example sets of
+lists. Separate unifiers and separate decision procedures are two
+different combination tasks. One-symbol algorithms do not themselves
+handle those mixed inputs.
+
+Disjointness cannot be removed from the general theorem. In the source's
+notation, \(D^l_{f,g}\) is
+\(f(x,g(y,z))\approx g(f(x,y),f(x,z))\),
+\(D^r_{f,g}\) is
+\(f(g(y,z),x)\approx g(f(y,x),f(z,x))\), and
+\(D_{f,g}=D^l_{f,g}\cup D^r_{f,g}\).
+For problems with constants, both one-sided theories are reported
+unitary, whereas their union is reported infinitary; their signatures
+overlap. Similarly, the source reports decidability with constants for
+\(D_{f,g}\) and for associative \(A_g\), but undecidability with
+constants for \(D_{f,g}\cup A_g\). These historical results
+are source-reported counterexamples to unqualified nondisjoint
+combination, not full distributivity/undecidability proofs in this entry.
+Special nondisjoint methods require additional conditions.
+\cite[\S3.4 and p.~513]{BaaderSnyder2001}
+
+Earlier source-listed methods imposed collapse-freeness or regularity:
+collapse-free excludes an identity between a variable and a nonvariable
+term; regular requires the same variable set on both sides. The source
+distinguishes Schmidt--Schau\ss's 1989 method, requiring finitary
+unification with constants and finitary constant elimination, and
+Boudet's 1993 efficiency refinement with the same requirements.
+Their actual constant-elimination constructions are separate obligations,
+not supplied by naming them. The Baader--Schulz LCR interface combines
+the two needs into one restricted local problem and can also combine
+decision procedures without enumerating unifiers.
+\cite[p.~514]{BaaderSnyder2001}
+\end{hbwarning}
+
+\begin{hbdefinition}{def:p12-comb-domain}{Disjoint signatures and the component interface}
+Fix \(n\geq1\) theories \(E_1,\ldots,E_n\), with pairwise disjoint
+signatures \(\Sigma_1,\ldots,\Sigma_n\), and put \(E=\bigcup_i E_i\).
+All operations have finite arity; terms and substitutions are finite.
+Nontrivial means that \(E_i\) does not imply the identity \(u\approx v\)
+for distinct variables. Thus its free algebra on two or more generators
+keeps these generators distinct. Constants belonging to \(\Sigma_i\)
+belong only to that signature. Additional free constants, when required,
+may be placed in a separate empty-equational-theory signature; constants
+shared as interpreted symbols are outside this theorem.
+
+For a component problem with variables \(V_i\), free constants \(K_i\),
+and a strict linear order, an LCR answer \(\mu_i\) fixes \(K_i\), solves
+every equation modulo \(E_i\), and obeys
+\(x<c\Rightarrow c\notin\operatorname{VarConst}(x\mu_i)\).
+Here \(\operatorname{VarConst}(t)\) is the set of variable and
+designated-free-constant names occurring in t. The occurrence test treats
+the designated free constants as atoms,
+not as substitutable variables. A complete answer set covers every
+permitted solution by \(E_i\)-instantiation on \(V_i\), with the
+factor substitutions fixing \(K_i\). This is the local version of
+Definition~\ref{def:p12-eu-lcr} and the problem-variable comparison of
+Definition~\ref{def:p12-eu-generality}; it is not comparison on all
+variables of the infinite variable supply.
+\end{hbdefinition}
+
+\begin{hbmethod}{def:p12-comb-purification}{Purification and the reconstruction map}
+An equation with different-signature nonvariable roots is replaced by
+\(a=^{?}s,\ a=^{?}t\), for fresh a. In each equation with root signature
+\(\Sigma_i\), replace a maximal subterm with root in another signature
+by a fresh variable b and add \(b=^{?}u\). Repeat on the new defining
+equations. Variable--variable equations are eliminated by identifying
+their variables, retaining the resulting substitution \(\lambda\) for
+reconstruction. Equations with a variable on one side are assigned to
+the signature of the other side. A pure problem is obtained:
+\(\Gamma=\Gamma_1\cup\cdots\cup\Gamma_n\), where every term in
+\(\Gamma_i\) uses \(\Sigma_i\) and variables only.
+
+A polynomial implementation can name every original nonvariable term
+node, bottom-up. For a node \(f(t_1,\ldots,t_m)\), add
+\(a_t=^{?}f(a_{t_1},\ldots,a_{t_m})\), using the original variable
+itself when a child is a variable. Identify the names of the two roots
+of each original equation. For a nullary node c use \(a_c=^{?}c\).
+This more fully flattened presentation is an editorial implementation
+of the same purification, not a different unification theory. It uses
+at most one auxiliary per original term node. Store the quotient of
+the variable identifications and the original-variable reconstruction
+\(\lambda\); no cyclic term substitution is needed to represent it.
+If a representative of an original variable disappears from all
+remaining equations, retain it as an unconstrained variable by adding
+the tautology \(r=^{?}r\) to one chosen component. This harmless
+scope retention makes the original-variable reconstruction literal
+even for an input consisting only of variable equations.
+\end{hbmethod}
+
+\begin{hblemma}{thm:p12-comb-purification}{proved=annex:p12.comb.purification}{Purification preserves all solutions on the original variables}
+Every solution of the original problem extends to a solution of its
+purified problem. Conversely, every purified solution, composed with
+\(\lambda\) and restricted to the original variables, solves the
+original problem. The extension/restriction also preserves coverage:
+a complete family for the purified problem reconstructs a complete
+family for the original problem. Fully flattened purification has
+polynomial size and terminates.
+\end{hblemma}
+
+\begin{hbmethod}{def:p12-comb-branch}{The finite branch data and local problems}
+Let X be the variables occurring in at least two pure blocks. Enumerate
+all partitions \(\Pi\) of X, choose one representative for each block,
+and let \(\sigma_\Pi\) replace each shared variable by its representative.
+Write \(X_\Pi\) for the representatives. Enumerate every label function
+\(L:X_\Pi\longrightarrow\{1,\ldots,n\}\) and every strict linear order
+\(<\) on \(X_\Pi\). In component i, representatives with label different
+from i are \emph{distinct free constants}; the remaining representatives
+are variables. Nonshared variables of \(\Gamma_i\) belong to i and
+are placed after all shared representatives. Their relative order is
+immaterial since there are no nonshared free constants. The induced
+restrictions therefore say: a foreign shared constant y may occur
+in an own shared variable x's image only if \(y<x\).
+
+The local problem is \(\langle\Gamma_i\sigma_\Pi,L,<\rangle\).
+Labels may be assigned to a representative even if it does not occur
+in its labelled block: add the tautology \(x=^{?}x\) to that local
+problem, so its complete-answer comparison includes x as an
+unconstrained input variable. This matters when \(n>2\).
+The identity on an unconstrained variable is a solution; freshening its
+range gives a fresh parameter. Ignore a branch when any local answer
+set is empty. If X is empty there is one empty partition/order/label
+choice, not zero branches.
+\cite[pp.~515--517, including footnote~21]{BaaderSnyder2001}
+\end{hbmethod}
+
+\begin{hbmethod}{def:p12-comb-merge}{Fresh ranges and the actual ordered merge}
+For a chosen local answer, rename every substitutable variable appearing
+in its range to a fresh parameter. Fix the foreign shared constants.
+Choose mutually disjoint parameter sets \(P_i\), also disjoint from all
+input variables. This post-renaming is a bijective renaming of variables
+in the local term language, so it preserves the equations and LCR tests;
+its inverse shows that it does not change local generality. The local
+input scope includes the unconstrained owned representatives just
+specified; freshening therefore covers their images as well.
+Let the resulting answers be \(\mu_i\).
+
+Process shared representatives in increasing order. For x with label i,
+start with \(x\mu_i\) and replace every foreign shared constant y in
+that image by the already constructed term \(y\sigma\). Keep \(P_i\)
+fixed. After all shared variables, do the same for each nonshared
+variable using its unique owner's answer. The resulting finite
+substitution is denoted
+\(\operatorname{Merge}_{L,<}(\mu_1,\ldots,\mu_n)\).
+Reconstruct an original answer as
+\(\lambda\sigma_\Pi\operatorname{Merge}_{L,<}(\mu_1,\ldots,\mu_n)\),
+restricted to the original input variables. The source's notation
+\(\sigma_1\cdots\sigma_n\) for a combined answer denotes this
+assembly; arbitrary substitution composition is not a replacement
+for it. Output a DAG if term sharing is desired; expanded trees remain
+finite but can be exponentially larger.
+\cite[pp.~517--518]{BaaderSnyder2001}
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p12-comb-soundness}{proved=annex:p12.comb.soundness}{Ordered merge is well defined, terminating and sound}
+Every tuple of LCR solutions in a branch has a finite ordered merge.
+The merge solves \(\Gamma\sigma_\Pi\) modulo E, and the reconstructed
+answer solves the original problem. This assertion requires neither
+acyclicity of arbitrary target substitutions nor normalization of their
+written images: the finite branch's LCR conditions establish the actual
+merge dependency order.
+\end{hbtheorem}
+
+\begin{hbmethod}{def:p12-comb-source-witness}{The original normalization-based completeness sketch}
+The source's \S6.2 proposes the following branch from a normalized
+combined solution \(\tau\): identify x,y exactly when
+\(x\tau=_Ey\tau\); assign the signature label of the root of
+\(x\tau\), with label1 for a variable image; and extend the strict
+subterm relation between distinct image terms to a linear order.
+For component i, replace alien subterms by new parameters consistently,
+using the same parameter for E-equivalent aliens. With an arbitrary
+unnormalized solution this abstraction need not solve the pure block,
+so these three choices alone are not a completeness proof.
+
+The original proposed normalization is by the ordered system obtained
+from unfailing completion of the union. That system may be infinite,
+and its normal forms need not be computable; the source uses their
+existence for a mathematical completeness argument, not for the
+decision algorithm. It also identifies layer-reduced forms, applying
+collapse equations as far as possible, as an effective alternative.
+The chapter expressly sketches this argument and refers to the
+1996 primary for the full completion details, and to
+Schmidt--Schau\ss/Kirchner--Ringeissen for layer reduction.
+Those exact constructions are not identified with the tower below.
+\cite[pp.~518--519]{BaaderSnyder2001}
+\end{hbmethod}
+
+\begin{hbdefinition}{def:p12-comb-tower}{An explicit equational free-product construction}
+For the completeness proof, take a countably infinite generator set Z.
+Write \(F_i(S)=T(\Sigma_i,S)/{=_{E_i}}\) for the pure free algebra on
+a nonempty set S of named generators. Generators here are algebraic
+atoms; they are not assumed to be nullary symbols in \(\Sigma_i\).
+Define increasing sets of nodes of each colour i as follows:
+\[
+ S_i^0=Z,\qquad
+ N_i^0=F_i(Z)\setminus Z,\qquad
+ S_i^{k+1}=Z\cup\bigcup_{j\ne i}N_j^k,\qquad
+ N_i^{k+1}=F_i(S_i^{k+1})\setminus S_i^{k+1}.
+\]
+In this display a free algebra's named generators are identified with
+their generator classes. Nongenerator classes are tagged with their
+colour, and older nodes are identified with their images under the
+natural free-algebra inclusions. The next lemma proves that these
+inclusions are injective and that old nongenerators remain nongenerators;
+the displayed construction does not assume these facts.
+
+Put \(S_i^\infty=Z\cup\bigcup_{j\ne i}\bigcup_kN_j^k\) and
+\(D=Z\cup\bigcup_i\bigcup_kN_i^k\). There is a bijection
+\(e_i:D\longrightarrow F_i(S_i^\infty)\): a node of colour i is
+its pure class; any other node and any z in Z is a generator class.
+Transport the \(\Sigma_i\)-operations along \(e_i\) to D.
+Write \(\nu(t)\) for evaluation of a mixed term t in D under the
+generator assignment. A generator has rank0; a node first appearing
+in \(N_i^k\) has rank \(k+1\). Each node admits a pure i-term
+representative with foreign-colour atoms of strictly smaller rank.
+The ranks are mathematical proof data, not an asserted effective
+normalization algorithm.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p12-comb-free-product}{proved=annex:p12.comb.free-product}{The tower is the combined free algebra, including collapsing theories}
+The tower construction is well defined. With its transported operations,
+D is free on Z in the variety of E. In particular,
+\(\nu(s)=\nu(t)\) iff \(s=_Et\), each reduct is the indicated pure
+free algebra, and every element has a finite mixed-term representative.
+Pure abstraction to distinct atoms reflects \(E_i\)-equality. These
+statements remain valid for irregular and collapsing identities; no
+minimum-support or syntactic-root preservation assumption is used.
+\end{hblemma}
+
+\begin{hbmethod}{def:p12-comb-witness}{Constructing the successful branch from an arbitrary solution}
+Let \(\tau\) solve the purified problem; its finite image variables
+are included in Z. Evaluate its images in the proved free algebra D.
+Partition shared variables by equality of these values. Label a
+representative by its value's colour; values in Z receive label1.
+Choose an order extending increasing rank, breaking ties arbitrarily.
+
+For component i, each foreign shared value is a distinct generator
+of \(F_i(S_i^\infty)\). Name it by its fixed representative constant.
+Choose a pure representative of each own shared value at its first
+tower level. For nonshared variables choose any pure representative
+of \(e_i(\nu(x\tau))\). Replace every remaining atom in these finitely
+many representatives by a fresh local parameter, consistently and
+injectively, and retain the foreign shared constants. The resulting
+substitution \(\theta_i\) is a local LCR solution: the next lemma proves
+both the equations and every restriction. In particular, a written
+root of an unnormalized target image is not used as a signature label.
+\end{hbmethod}
+
+\begin{hblemma}{thm:p12-comb-projection}{proved=annex:p12.comb.projection}{Actual normalized projection and the constant restrictions}
+Every combined solution \(\tau\) yields the branch and local solutions
+\(\theta_i\) just constructed. The abstraction solves
+\(\Gamma_i\sigma_\Pi\) modulo \(E_i\), and no forbidden foreign shared
+constant appears. Hence combined solvability implies local solvability
+in at least one enumerated branch.
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p12-comb-completeness}{proved=annex:p12.comb.completeness}{Complete local families give a complete combined family}
+In each branch let \(C_i\) be complete for its component LCR problem,
+and use disjoint fresh ranges as above. The union, over all branches,
+of all ordered merges of tuples from \(C_1\times\cdots\times C_n\),
+with identification and purification reconstruction, is complete modulo E
+on the original problem variables. In particular, if all component LCR
+problems have finite complete sets, every elementary E-problem has a
+finite complete set. The proof supplies an actual global factor
+substitution, not a claim that separate local factors are compatible.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p12-comb-decision}{proved=annex:p12.comb.decision}{Decision, finite generation, and the free-symbol extension}
+If each component LCR decision procedure terminates and is correct,
+the finite branch search decides elementary E-unifiability. If these
+problems are in NP, so is elementary E-unifiability for this fixed
+finite collection of theories. If component procedures terminate with
+finite complete sets, finite combined-set generation terminates.
+This implies at-most-finitary type, but the returned union need not
+already be minimal. Under these terminating finite-set algorithms,
+minimalization is also effective: to test whether one answer covers
+another on the original scope, rename the first answer's range variables
+fresh, freeze the second answer's range variables as distinct new
+free constants, and decide the resulting finite image equations by
+the same combination decision procedure. Quotient by mutual coverage
+and retain only the most-general classes of the finite output.
+This comparison is a new finite solvability call, not a requirement
+to solve the word problem by computing the infinite tower.
+
+For a finite input containing additional uninterpreted function symbols,
+add the empty theory over precisely those symbols as one disjoint
+component. Its LCR solver computes a syntactic MGU, freshens its range,
+and checks forbidden-constant occurrences. A failed check excludes every
+syntactic unifier; a successful MGU is a complete singleton LCR family.
+Thus the same construction handles general E-unification under the
+same component LCR hypotheses. This use of the syntactic interface
+does not replace any equational component solver.
+\cite[Proposition~6.1 and Theorems~6.2--6.3, pp.~516--517]{BaaderSnyder2001}
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p12-comb-ac-lcr}{proved=annex:p12.comb.ac-lcr}{The positive pure-AC construction supplies the missing LCR interface}
+For a pure unit-free AC component with designated free constants,
+run the finite algorithm of Theorem~\ref{thm:p12-ac-coverage}, then
+discard each answer containing a forbidden constant in an input
+variable's image. This yields a finite complete AC-LCR family and
+terminates. Thus the proved combination construction computes finite
+complete sets for arbitrary finite nested terms over finitely many
+pairwise distinct AC symbols and additional free symbols/constants.
+No empty AC term or unit is introduced. This supplies a new explicit
+algorithm for that general domain; it does not identify it with
+Stickel's historical recursive reconciliation algorithm.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p12-comb-cycle}{Identification is not enough: the source's cyclic failure}
+Let f be associative with no unit and g be free unary. The source
+problem is
+\[
+g(f(y,y))=^{?}g(x),\qquad g(x)=^{?}g(y),\qquad x=^{?}f(y,y).
+\]
+Purification gives the f-block \(z=^{?}f(y,y),\ x=^{?}f(y,y)\)
+and the g-block \(g(z)=^{?}g(x),\ g(x)=^{?}g(y)\).
+Label x,z with f and y with g. Distinct fixed x,z make the g-block fail.
+Identifying z with x removes that failure, but the local substitutions
+\(x\mapsto f(y,y)\) and \(y\mapsto x\) form a cycle. If \(x<y\),
+the f-substitution violates LCR; if \(y<x\), the g-substitution does.
+Neither ordering admits this tuple. Indeed g's injectivity forces
+\(x=_Ey\), while the f-equation would require an associative word to
+equal its own double, impossible for a nonempty word. This is a genuine
+unsatisfiable case, not a reason to discard the ordering stage.
+\cite[pp.~514--515]{BaaderSnyder2001}
+\end{hbexample}
+
+\begin{hbexample}{def:p12-comb-success}{A successful merge with a nested alien term}
+Combine unit-free AC on f with free unary g and free constant a.
+For \(f(x,g(a))=^{?}f(g(a),g(y))\), one purification has
+\(u=^{?}g(a),\ v=^{?}g(y)\) in the free block and
+\(f(x,u)=^{?}f(u,v)\) in the AC block. Take the singleton partition
+of u,v, label both free, and choose \(u<v\). The free answer is
+\(u\mapsto g(a),\ v\mapsto g(p),\ y\mapsto p\).
+The AC answer, treating u,v as distinct constants, is \(x\mapsto v\).
+The ordered merge is
+\(u\mapsto g(a),\ v\mapsto g(p),\ x\mapsto g(p),\ y\mapsto p\).
+Its reconstruction solves the original equation by AC. Cancellation
+of the common g(a) bag atom shows that every original solution has
+\(x=_{AC}g(y)\), so this displayed answer also covers every solution
+of this particular problem. The preceding theorem, not this example,
+establishes completeness for all finite nested AC inputs.
+\end{hbexample}
+
+\begin{hbexample}{def:p12-comb-collapse}{Why root labels and empty-support shortcuts are unsafe}
+Take \(E_1=\{f(x)\approx x\}\) and free g in \(\Sigma_2\).
+The written image \(f(g(z))\) has root colour1 but denotes the same
+combined element as \(g(z)\), of colour2. Tower evaluation records that
+collapse before assigning an owner. As an irregular example,
+\(E_1=\{h(x)\approx h(y)\}\) has a nongenerator class represented
+by h(z), independent of which generator z is chosen, even if there
+are no nullary symbols at all. The tower keeps this class as a node;
+it does not demand a ground representative or assume equality of
+subalgebra intersections over an empty set. Both theories are
+nontrivial and are admitted by the construction.
+\end{hbexample}
+
+\begin{hbexample}{def:p12-comb-ag-filter-failure}{The AC filter is not a generic equational LCR solver}
+Use additive AG notation, with identity0, inverse -, and a fixed free
+constant c. The equation \(x+c=^{?}y\) has the ordinary AG-MGU
+\(x\mapsto p,\ y\mapsto p+c\). With order \(y<c<x\), its written
+y-image contains the forbidden constant c, whereas x may contain c.
+The instance \(p\mapsto -c\) gives the permitted unifier
+\(x\mapsto -c,\ y\mapsto0\). Thus discarding this ordinary AG-MGU loses a permitted
+target. A correct AG-LCR solver must construct a different permitted
+family; fixed-atom persistence cannot be assumed for signed counts.
+Here0 denotes the group identity e, not an extra signature constant.
+\end{hbexample}
+
+\begin{proofboundary}{def:p12-comb-boundaries}{What the combination theorem does and does not supply}
+The full proofs here establish the chapter's elementary/general
+disjoint-theory combination results through an explicit equational
+free-product route. They do not identify this tower with the exact
+1992/1996 ordered-completion construction or reproduce the full
+quasi-free-structure algorithm of the 1998 primary. Predicate constraints,
+disunification, shared interpreted signatures, and the source's
+optimization/complexity examples require their own arguments.
+Specifically, the source reports polynomial ACUI-LCR decision versus
+NP-complete general ACUI decision to demonstrate an inherent cost of
+combination. It reports a polynomial deterministic method for regular,
+collapse-free theories with polynomial MGU computation, and practical
+optimizations by Kepser--Richts. These hypotheses and source claims
+are retained, but their complexity lower bounds and optimizing
+algorithms are not proved by the finite-branch NP argument above.
+\cite[pp.~516--517]{BaaderSnyder2001}
+
+The AC-LCR bridge above uses the proved persistence of fixed atoms in
+nonnegative AC multiplicities. It cannot silently be reused for AG:
+signed occurrences can cancel after parameter instantiation. It supplies
+neither the other monoidal source theorems, arbitrary-theory hereditary
+transport, nor a historical manifestation comparison. Finite branch search
+does not make a nonterminating component enumeration terminate, and
+the mathematical tower is not an algorithm for the word problem in
+arbitrary undecidable theories.
+\end{proofboundary}

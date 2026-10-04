@@ -1,0 +1,327 @@
+% Source presentations for register row N-c-024.
+
+\subsection{Canonical databases, containment, and recursive Datalog}
+\label{sec:p09-presentation-n-c-024}
+
+\subsubsection{The Chandra--Merlin homomorphism proof}
+
+An equality-free conjunctive query has a tuple of distinguished variables and
+an existentially quantified conjunction of relational atoms:
+\[
+ q(\bar x)=\exists\bar y\,
+   \bigwedge_{j=1}^{m}R_j(\bar z_j).
+\]
+Its result on a finite database \(D\) is the set of tuples \(\bar a\) for which
+some assignment sends \(\bar x\) to \(\bar a\) and makes every displayed atom
+a fact of \(D\).  When \(\bar x\) is empty, the query is Boolean and its result
+is truth or falsity rather than a tuple relation.
+
+For example, the Boolean query
+\[
+ b()=\exists x\,y\,z\,
+   (E(x,y)\land E(y,z)\land Red(z))
+\]
+has a canonical database with elements \(x,y,z\) and facts
+\(E(x,y),E(y,z),Red(z)\), with no distinguished tuple.  The non-Boolean query
+\[
+ r(x)=\exists y\,(E(x,y)\land Red(y))
+\]
+has canonical facts \(E(x,y),Red(y)\) and distinguished one-tuple \((x)\).
+Declared constants, when present, are elements that every homomorphism must
+fix.
+
+In general, the canonical database \(D_q\) makes each query variable an
+element, includes exactly the relational atoms of the body as facts, and
+remembers the distinguished tuple \(\bar x\).  This finite structure is not the
+query syntax and not an input database; it is the typed bridge between them.
+An assignment witnessing \(\bar a\in q(D)\) preserves every query atom and is
+therefore exactly a homomorphism
+\[
+ h:D_q\longrightarrow D,
+ \qquad h(\bar x)=\bar a.
+\]
+Conversely, such a homomorphism is the required assignment.  This proves the
+evaluation clause of Theorem~\ref{thm:p09-chandra-merlin}
+\cite[pp.~78--82]{ChandraMerlin1977}.
+
+The containment direction is contravariant:
+\[
+ q_1\subseteq q_2
+ \quad\Longleftrightarrow\quad
+ D_{q_2}\longrightarrow D_{q_1}.
+\]
+Suppose first that \(h:D_{q_2}\to D_{q_1}\) respects the distinguished tuples.
+If \(\bar a\in q_1(D)\), a witness gives
+\(g:D_{q_1}\to D\).  Then \(g\circ h:D_{q_2}\to D\) witnesses
+\(\bar a\in q_2(D)\).  Conversely, assume \(q_1\subseteq q_2\).  The identity
+map witnesses that the distinguished tuple of \(D_{q_1}\) belongs to
+\(q_1(D_{q_1})\); containment places it in \(q_2(D_{q_1})\), and that query
+witness is exactly a head-respecting homomorphism
+\(D_{q_2}\to D_{q_1}\).  The canonical-instance step is what forces the reverse
+arrow \cite[pp.~82--85]{ChandraMerlin1977}.
+
+The reverse arrow can be checked on the smallest path example.  Let
+\[
+ e()=\exists x\,y\,E(x,y),
+ \qquad
+ p_2()=\exists x\,y\,z\,(E(x,y)\land E(y,z)).
+\]
+Every database satisfying \(p_2\) satisfies \(e\), so
+\(p_2\subseteq e\).  Correspondingly, an edge of \(D_e\) maps to either edge
+of \(D_{p_2}\): the homomorphism goes from the canonical database of the
+right-hand query \(e\) to that of the left-hand query \(p_2\).  The reverse
+containment is false on the database consisting of one directed edge, and no
+homomorphism sends the two-edge directed path \(D_{p_2}\) into that database.
+
+The same theorem controls minimization.  A head-preserving retraction of
+\(D_q\) is a homomorphism \(r:D_q\to C\) onto a substructure
+\(C\subseteq D_q\) that fixes every element of \(C\) and preserves the
+distinguished tuple.  The inclusion \(C\hookrightarrow D_q\) and \(r\) are
+homomorphisms in both directions, so the query represented by \(C\) is
+equivalent to \(q\).  A finite canonical database with no proper such retract
+is called a \emph{core}.  This name stands for a finite structure with a
+distinguished tuple, not for another query language; it differs from an
+arbitrary canonical database precisely by the absence of a proper
+head-preserving retract and is used to state the unique minimal form.
+For a finite structure, this is equivalent to saying that every
+head-preserving endomorphism is an automorphism: a nonbijective endomorphism
+has a power that retracts onto its proper eventual image.
+
+For a concrete fold, compare
+\[
+\begin{aligned}
+ q(x)&=\exists y\,z\,(E(x,y)\land E(x,z)),\\
+ q'(x)&=\exists y\,E(x,y).
+\end{aligned}
+\]
+The map identifying \(y\) and \(z\) sends \(D_q\) to \(D_{q'}\), while the
+obvious inclusion sends \(D_{q'}\) to \(D_q\).  Hence the queries are equivalent
+and \(q'\) is the smaller form.  Repeating proper retractions terminates because
+the canonical database is finite.  If cores \(C,C'\) are homomorphically
+equivalent, choose head-preserving maps \(f:C\to C'\) and \(g:C'\to C\).
+The composites \(g\circ f\) and \(f\circ g\) are endomorphisms of cores and
+hence automorphisms.  It follows that \(f\) and \(g\) are inverse up to those
+automorphisms and therefore that \(C\cong C'\).  Thus the core query is the
+unique minimal equivalent form up to variable renaming.  The fold depends on
+the equality-free language: adding \(y\ne z\) would prevent the identification
+and changes the theorem's scope
+\cite[pp.~81--85]{ChandraMerlin1977}.
+
+\subsubsection{Three input measures, one evaluation relation}
+
+Let
+\[
+ \operatorname{Eval}(q,D,\bar a)
+ \quad\Longleftrightarrow\quad
+ \bar a\in q(D).
+\]
+Vardi's distinctions concern which arguments of this metalinguistic relation
+are input, not three different query semantics \cite[pp.~137--139]{Vardi1982}.
+
+\begin{table}[htbp]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}l X X@{}}
+\toprule
+Measure & Fixed component & Varying encoded input \\
+\midrule
+data complexity & \(q\) & \(D,\bar a\) \\
+expression complexity & \(D\) & \(q,\bar a\) \\
+combined complexity & none of \(q,D\) & \(q,D,\bar a\) \\
+\bottomrule
+\end{tabularx}
+\caption{Vardi's three evaluation input conventions.}
+\label{tab:p09-query-input-measures}
+\end{table}
+
+For conjunctive queries, each fixed query has
+\(\mathsf{AC}^{0}\) data evaluation, whereas Boolean combined evaluation is
+\(\mathsf{NP}\)-complete.  Containment is a third, query-to-query problem and is
+\(\mathsf{NP}\)-complete.  These statements are separated in
+Theorems~\ref{thm:p09-cq-data-evaluation}--\ref{thm:p09-cq-containment};
+the class label is never stated without what is fixed.
+
+The upper bounds expose why the input convention matters.  Fix a conjunctive
+query with \(k\) existential variables and \(m\) body atoms.  For a database of
+size \(n\), membership of an output tuple is an OR over the \(n^k\) possible
+witness assignments, each feeding an AND of the \(m\) required database bits.
+Because \(k\) and \(m\) are constants, these are polynomial-size,
+constant-depth, unbounded-fan-in circuits.  This proves the fixed-query
+\(\mathsf{AC}^{0}\) data upper bound; the wiring is uniform because the query
+is fixed.  When the query varies, guessing the
+homomorphism \(D_q\to D\) gives the combined \(\mathsf{NP}\) upper bound.
+
+For hardness, encode a finite graph \(G\) as the Boolean query \(q_G\) having
+one variable \(x_v\) per vertex and one \(E(x_u,x_v)\) atom per represented
+edge.  Evaluate it on the fixed irreflexive three-clique \(K_3\).  A witness is
+exactly a graph homomorphism \(G\to K_3\), hence exactly a proper
+three-coloring.  Thus even expression complexity for Boolean conjunctive
+queries is \(\mathsf{NP}\)-hard, and combined evaluation is
+\(\mathsf{NP}\)-complete.
+
+Containment membership guesses and verifies the reverse homomorphism
+\(D_{q_2}\to D_{q_1}\).  The same graph construction proves hardness without
+confusing containment with evaluation:
+\[
+ q_{K_3}\subseteq q_G
+ \quad\Longleftrightarrow\quad
+ D_{q_G}\longrightarrow D_{q_{K_3}}
+ \quad\Longleftrightarrow\quad
+ G\text{ is three-colorable}.
+\]
+This completes the local proof of the three CQ complexity statements
+\cite[pp.~80--85]{ChandraMerlin1977}.
+
+\subsubsection{Datalog saturation and semantic coincidence}
+
+A Datalog rule is a function-free definite clause whose head variables occur
+in its positive body.  An \emph{extensional} predicate has no program rule with
+that predicate in the head; its ground facts are supplied by the varying
+database \(D\).  An \emph{intensional} predicate occurs in a rule head and
+is derived by the fixed program.  This split is nonredundant with logical
+truth: both kinds of atom belong to the same least model, but only extensional
+facts vary as stored input, while intensional facts are the output of closure.
+
+The active domain is the finite set of constants occurring in \(P\cup D\).
+Ground every rule over that domain, regard the facts of \(D\) as unit clauses,
+and reuse the definite-program operator from
+Definition~\ref{def:p09-definite-program}:
+\[
+ J_0=\varnothing,
+ \qquad
+ J_{i+1}=T_{P\cup D}(J_i),
+ \qquad
+ J_\infty=\bigcup_{i<\omega}J_i.
+\]
+Function-freedom makes the active ground base finite.  The safety condition on
+head variables ensures that every output component is bound by a positive body
+match; the output cannot vary merely because the ambient domain contains an
+element unmentioned by the matched data.
+
+For a complete calculation, let the extensional database contain
+\[
+ E(a,b),\qquad E(b,c),\qquad E(c,d)
+\]
+and let the fixed Datalog program be
+\[
+\begin{aligned}
+ Path(X,Y)&\leftarrow E(X,Y),\\
+ Path(X,Z)&\leftarrow E(X,Y),Path(Y,Z).
+\end{aligned}
+\]
+The stages are
+\[
+\begin{array}{c|l}
+1 & D\\
+2 & D\cup\{Path(a,b),Path(b,c),Path(c,d)\}\\
+3 & J_2\cup\{Path(a,c),Path(b,d)\}\\
+4 & J_3\cup\{Path(a,d)\}\\
+5 & J_4.
+\end{array}
+\]
+Thus the recursive relation is transitive closure on this finite instance.
+It is not expressible by one ordinary conjunctive query over arbitrary finite
+graphs.  To see the obstruction, suppose a fixed query with \(m\) edge atoms
+defined reachability.  Its distinguished source and target must lie in the
+same connected component of its canonical database; otherwise it would accept
+some pair with no connecting path.  Any homomorphism of that component into a
+directed path can separate the two distinguished images by at most \(m\)
+edges.  But the endpoints of a directed path of length \(m+1\) are reachable.
+No fixed conjunctive query therefore defines all finite transitive closures.
+
+The semantic coincidence follows from four short arguments
+\cite[chs.~12--13]{AbiteboulHullVianu1995}.
+
+\begin{enumerate}
+\item The immediate-consequence operator is monotone: enlarging an
+interpretation cannot invalidate a positive rule body.
+\item There are only finitely many ground intensional facts over the active
+domain, so the increasing sequence reaches a fixed point after finitely many
+strict additions.
+\item The fixed point is a model because every satisfied rule body has already
+added its head.  Every model containing the extensional database contains the
+first stage and, inductively, every later stage; hence the fixed point is the
+least model.
+\item Induction on proof-tree height shows that each finite proof yields
+membership at some stage.  Conversely, induction on the first stage at which a
+fact appears builds a finite proof tree from the rule which added it.
+\end{enumerate}
+
+Thus bottom-up saturation, finite proof trees, the least fixed point, and the
+least model agree.  This proof uses positivity and the finite active domain.
+It is not the candidate-dependent stable-model semantics of
+Definition~\ref{def:p09-stable-model}.
+
+The fixed-program polynomial data upper bound is now immediate.  If the largest
+predicate arity and the largest number of variables in a rule are the constants
+\(r\) and \(v\), a database with active-domain size \(n\) has only
+\(O(n^r)\) possible ground facts and \(O(n^v)\) ground instances of each fixed
+rule.  Saturation adds each fact at most once and is therefore polynomial in
+the data size.
+
+A single fixed program already gives the matching \(\mathsf P\)-hardness.  An
+input database can encode a monotone Boolean circuit using facts
+\(One(x)\), \(And(x,y,z)\), \(Or(x,y,z)\), and \(Output(x)\), where the first
+argument of a gate fact names its output and the other two name its inputs.  Use
+the fixed Datalog rules
+\[
+\begin{aligned}
+ True(X)&\leftarrow One(X),\\
+ True(X)&\leftarrow Or(X,Y,Z),True(Y),\\
+ True(X)&\leftarrow Or(X,Y,Z),True(Z),\\
+ True(X)&\leftarrow And(X,Y,Z),True(Y),True(Z),\\
+ Accept&\leftarrow Output(X),True(X).
+\end{aligned}
+\]
+Induction along the acyclic circuit shows that \(True(g)\) is derived exactly
+for gates evaluating to one; hence \(Accept\) is derived exactly when the output
+gate is true.  Monotone circuit value is \(\mathsf P\)-complete under logspace
+many-one reductions, so this one fixed query proves \(\mathsf P\)-complete data
+evaluation.
+
+When the program, query, and database all vary, predicate arities and rule
+variable counts are no longer fixed.  The active ground base can then be
+exponential in the source input, giving the explicit saturation upper bound.
+The matching reduction encodes acceptance for an alternating
+polynomial-space machine, using recursive intensional predicates to propagate
+the existential and universal configuration conditions; since
+\(\mathsf{APSPACE}=\mathsf{EXPTIME}\), it yields
+\(\mathsf{EXPTIME}\)-hardness.  General Datalog-query containment is
+undecidable, unlike conjunctive-query containment.  These two long reductions
+remain source-attributed rather than being replaced by the local fixed-program
+argument
+\cite[chs.~12--16]{AbiteboulHullVianu1995}
+\cite{DantsinEiterGottlobVoronkov2001}.
+
+\begin{table}[htbp]
+\centering\scriptsize
+\begin{tabularx}{\textwidth}{@{}l X l X@{}}
+\toprule
+Language and task & Varying input & Status & Reason or boundary \\
+\midrule
+fixed CQ evaluation & database and output tuple & \(\mathsf{AC}^{0}\) &
+fixed existential witnesses give constant-depth circuits \\
+CQ evaluation & query, database, tuple & \(\mathsf{NP}\)-complete &
+guess \(D_q\to D\); three-coloring already holds with \(D=K_3\) \\
+CQ containment & two queries & \(\mathsf{NP}\)-complete &
+guess the contravariant canonical-database homomorphism \\
+fixed Datalog evaluation & extensional database & in \(\mathsf P\), and
+\(\mathsf P\)-complete for some fixed program & finite saturation; one fixed
+program evaluates monotone circuits \\
+Datalog evaluation & program, database, query &
+\(\mathsf{EXPTIME}\)-complete & combined grounding may be exponential \\
+Datalog containment & two recursive queries & undecidable &
+the CQ homomorphism test does not extend through unrestricted recursion \\
+\bottomrule
+\end{tabularx}
+\caption{Evaluation and containment boundaries for conjunctive queries and
+Datalog.}
+\label{tab:p09-cq-datalog-boundaries}
+\end{table}
+
+Abiteboul, Hull, and Vianu supply complete definitions and the semantic proof
+spines, while marking some long arguments as a \emph{crux}.  The local
+monotonicity, finite-convergence, model/fixed-point, proof-tree, fixed-data
+upper-bound, and fixed-program circuit arguments have been reproduced here.
+The combined \(\mathsf{EXPTIME}\)-hardness and undecidable-containment
+constructions remain cited at their declared source boundary; neither is
+silently promoted from a sketch to a reproduced proof.

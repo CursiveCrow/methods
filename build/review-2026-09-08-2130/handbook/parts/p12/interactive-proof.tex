@@ -1,0 +1,418 @@
+%% parts/p12/interactive-proof.tex --- Part 12.5
+\chapter{Interactive and Mechanized Proof}
+\label{sec:p12-interactive-proof}
+
+\noindent\emph{Reader note.}
+This chapter is a separately authored editorial survey after the exact
+inherited Mechanized Proof Checking chapter.  Its house taxonomy, product
+landscape, and landmark tables retain their own labels and OPEN evidence
+standing; they neither replace nor alter the source definitions, audit lists,
+example, warning, or exercises.
+
+\section{Checking, search, and trust are different layers}
+
+\begin{hbdefinition}{def:p12-mechanization-layers}{Proof object, proof term, proof script, and checking layers}
+A \emph{proof object} is finite formal data whose declared checker can verify
+against a stated judgment.  A \emph{kernel} is the implementation component
+that checks or constructs only judgments licensed by one declared foundation.
+An \emph{elaborator} translates surface syntax, implicit arguments, notation,
+and constraints into kernel input.  A \emph{tactic} is a search program that
+constructs a candidate proof object or invokes trusted primitive constructors.
+In a calculus with proof terms, a \emph{proof term} is a term whose typing
+judgment certifies the represented proposition.  A \emph{proof script} is a
+source-level sequence of commands interpreted by elaboration or tactic
+machinery to construct or check a proof object; the script need not itself be
+the object accepted by the kernel.  Thus a proof term is formal syntactic data
+of the calculus, whereas a proof script is an instruction artifact.
+The \emph{trusted base} of a reported result is the exact set of axioms,
+definitions, checker components, imported artifacts, external oracles, and
+hardware/software assumptions on which acceptance of that result depends.
+
+These names are necessary because the surface script, the search that found
+it, the explicit object, the final checker, and the assumptions trusted by a
+particular run can differ.  Proof objects are formal data, and proof terms are
+the term-shaped subclass licensed by a typing judgment; proof scripts are
+instruction artifacts; kernels, elaborators, and tactics are implementation
+components with different checking or construction roles; and a trusted base
+is a result-relative dependency set.  The distinctions are used in the
+landscape, mechanized-result, landmark, and release-audit tables below
+\cite{Harrison2009,Pollack1998}.
+\index{proof object}\index{kernel}\index{elaborator}\index{tactic}
+\index{proof term}\index{proof script}\index{trusted base}
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p12-deep-shallow-embedding}{Deep and shallow embeddings}
+A \emph{deep embedding} represents the object language by explicit host-level
+syntax and defines its judgments over that representation.  A
+\emph{shallow embedding} maps object expressions directly to host-language
+operations or propositions.  These names are necessary to distinguish retained
+object syntax from reused host semantics; both are representation strategies,
+not claims of adequacy.  A deep embedding exposes syntax induction but requires
+an interpretation, whereas a shallow embedding inherits host behavior but
+requires a separate correspondence argument showing that the intended object
+distinctions were preserved.  The distinction is used in the encoding audit.
+\index{deep embedding}\index{shallow embedding}
+\end{hbdefinition}
+
+\begin{hbexample}{def:p12-deep-shallow-conjunction}{Deep and shallow conjunction obligations}
+For a source fragment containing propositional conjunction, the two
+representations impose different adequacy obligations:
+\begin{center}
+\small
+\begin{tabular}{@{}p{.16\textwidth}p{.31\textwidth}p{.43\textwidth}@{}}
+\toprule
+Embedding & Representation & Owed adequacy obligation \\ \midrule
+Deep & An explicit formula datatype with a conjunction constructor & For
+every source formula and source valuation, the deep evaluator returns true on
+that formula's explicit representation if and only if the valuation satisfies
+the source formula; the representation must also preserve every binding and
+syntactic distinction used by the source fragment. \\
+Shallow & A direct map from object formulas to host propositions, taking
+object conjunction to host conjunction & For every source formula and source
+valuation, the resulting host proposition holds if and only if that valuation
+satisfies the source formula; host equality or reduction must not identify
+object distinctions required later. \\
+\bottomrule
+\end{tabular}
+\end{center}
+These quantified biconditionals are owed correspondence statements, not
+adequacy theorems established by the notation itself.  The encoding audit
+below records which obligation a mechanization actually discharges.
+\end{hbexample}
+
+\begin{hbdefinition}{def:p12-lcf-architecture}{LCF architecture}
+An \emph{LCF architecture} is the programming discipline in which values of an
+abstract theorem type can be constructed only by a small set of trusted
+primitive inference functions, while untrusted tactics compose those
+functions.  The identifier \(\mathsf{LCF}\) is necessary to name that
+constructor boundary, stands for an implementation architecture rather than a
+logic, and is not synonymous with exporting a portable proof object.  The
+distinction is used in Theorem~\ref{thm:p12-lcf-boundary} and
+Table~\ref{tab:p12-assistant-landscape}
+\cite{GordonMilnerWadsworth1979}.
+\index{LCF architecture}
+\end{hbdefinition}
+
+In Table~\ref{tab:p12-assistant-landscape}, the final column reports whether a
+particular result can be reduced to a fully explicit object accepted by a
+small checker for the declared formal system, with that checker independently
+inspectable or independently implementable.  This is an editorial checklist
+field, not a technical criterion attributed to de Bruijn and not a theorem or
+property inferred from an LCF product label \cite{DeBruijn1970,Pollack1998}.
+
+\begin{hbtheorem}{thm:p12-lcf-boundary}{cited=GordonMilnerWadsworth1979}{Conditional LCF soundness boundary}
+If an implementation preserves the abstraction boundary of its theorem type,
+and every trusted primitive constructor realizes a sound rule of the declared
+calculus, then every theorem value produced by any composition of those
+constructors is derivable in that calculus.  The statement does not prove the
+primitive implementation correct, identify the whole trusted base, or imply
+that a portable certificate is exported.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p12-propositions-as-types-example}{A checked propositions-as-types instance}
+In the arrow-only calculus of Section~\ref{sec:normalization-curry-howard-02}, let
+\(\Theta_{\mathrm{ty}}\) contain \(f{:}\alpha\to_{\mathrm{ty}}\beta\) and
+\(x{:}\alpha\).  The concrete judgment
+\[
+ \Theta_{\mathrm{ty}}\derives_{\mathsf{STLC}}fx{:}\beta
+\]
+is checked using \hyperref[sheet:stlc]{\texttt{sheet:stlc}}.  Under the
+calculus-relative Curry--Howard correspondence of
+Definition~\ref{def:p07-curry-howard}, the term records use of an implication
+from \(\alpha\) to \(\beta\).  This is one typed example, not a displayed rule
+schema and not a blanket identification of all proofs with all programs.
+\end{hbexample}
+
+\section{Pure type systems and inductive foundations}
+
+\begin{hbdefinition}{def:p12-pts-lambda-cube}{Pure type system and lambda cube}
+A \emph{pure type system} has Barendregt's specification
+\(S=(\mathcal S,\mathcal A,\mathcal R)\), where \(\mathcal S\) is a set of
+sorts, \(\mathcal A\subseteq\mathcal S\mathbin{\times}\mathcal S\) is a set
+of sort-typing axioms \(s_1{:}s_2\), and
+\(\mathcal R\subseteq\mathcal S\mathbin{\times}\mathcal S
+\mathbin{\times}\mathcal S\) is a set of triples declaring which
+dependent-product sorts may be formed: \((s_1,s_2,s_3)\in\mathcal R\)
+licenses a dependent product of sort \(s_3\) when its domain has sort \(s_1\)
+and its codomain, under the bound variable, has sort \(s_2\).  Its calculus is
+denoted
+\(\lambda S=\lambda(\mathcal S,\mathcal A,\mathcal R)\).  The identifier
+\(\mathsf{PTS}\) names this parameterized family, not one theorem prover.
+
+For the \emph{lambda cube}, fix
+\(\mathcal S=\{\ast,\Box\}\),
+\(\mathcal A=\{\ast{:}\Box\}\), and the base product pair
+\((\ast,\ast)\), where Barendregt abbreviates
+\((s_1,s_2,s_2)\) by \((s_1,s_2)\).  The eight vertices arise by adjoining
+any subset of \((\ast,\Box)\), \((\Box,\ast)\), and
+\((\Box,\Box)\).  These axes respectively permit types to depend on terms,
+terms to depend on types, and types to depend on types.  Their standing as
+independent formation choices distinguishes the cube from a linear strength
+ordering and is used in Table~\ref{tab:p12-lambda-cube}.  Barendregt's
+strongest-corner identifier is \(\lambda\mathrm P\omega=\lambda\mathrm C\),
+the Calculus of Constructions; it is not CIC
+\cite{Barendregt1992,CoquandHuet1988}.
+\index{pure type system}\index{lambda cube}\index{Calculus of Constructions}
+\end{hbdefinition}
+
+\begin{longtable}{@{}p{.23\textwidth}p{.32\textwidth}p{.35\textwidth}@{}}
+\caption{The eight lambda-cube specifications.}
+\label{tab:p12-lambda-cube}\\
+\toprule
+Source identifier & Enabled axes & Boundary \\ \midrule
+\endfirsthead
+\toprule
+Source identifier & Enabled axes & Boundary \\ \midrule
+\endhead
+\(\lambda{\to}\) & none & Simply typed base corner \\
+\(\lambda\mathrm P\) & types on terms & Dependent types \\
+\(\lambda 2\) & terms on types & System-F corner \\
+\(\lambda\underline{\omega}\) & types on types & Weak \(\lambda\omega\) corner \\
+\(\lambda\mathrm P2\) & types on terms; terms on types & Dependent polymorphism \\
+\(\lambda\mathrm P\underline{\omega}\) & types on terms; types on types &
+Dependent type operators \\
+\(\lambda\omega\) & terms on types; types on types & System \(\mathrm F_\omega\) corner \\
+\(\lambda\mathrm P\omega=\lambda\mathrm C\) & types on terms; terms on types;
+types on types & Calculus of Constructions \\
+\bottomrule
+\end{longtable}
+
+\begin{hbtheorem}{thm:p12-lambda-cube-classification}{cited=Barendregt1992}{Lambda-cube classification}
+For the two-sort PTS convention fixed in
+Definition~\ref{def:p12-pts-lambda-cube}, the independent three formation axes
+give exactly the eight vertices in Table~\ref{tab:p12-lambda-cube};
+\(\lambda\mathrm C=\lambda\mathrm P\omega\) is the vertex permitting all
+three.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p12-inductive-type-boundaries}{Universes, inductives, W-types, and two equalities}
+A \emph{universe} is a type whose elements code types admitted at a declared
+level; a hierarchy and its cumulativity relation must be stated rather than
+inferred from the word.  An \emph{inductive type} is introduced by a
+constructor specification admitted by the formal system's own explicitly
+stated inductive-definition or positivity criterion, together with that
+system's associated elimination principles; a report must name the actual
+criterion rather than importing a generic one.  A \emph{W-type} is the
+well-founded-tree type
+generated by a family of node labels and arities; an assistant may encode such
+trees through a general inductive facility instead of exposing W-types as a
+primitive.  \emph{Definitional equality} is the kernel conversion relation
+used during checking, whereas \emph{propositional equality} is represented by
+an inhabitant of a declared identity/equality type.
+
+These names are needed to prevent broad dependent-type-theory family labels
+and CIC from hiding
+different universe, positivity, elimination, and equality choices.  They stand
+for type formers or judgmental/propositional relations, not for interchangeable
+marketing categories, and the distinctions control the foundation cells of
+Table~\ref{tab:p12-assistant-landscape}.
+\index{universe}\index{inductive type}\index{W-type}
+\index{definitional equality}\index{propositional equality}
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p12-cic-boundary}{CIC and pCIC survey boundary}
+The \emph{Calculus of Inductive Constructions} (\(\mathsf{CIC}\)) denotes
+CoC extended by a precisely declared universe/cumulativity discipline,
+strictly controlled inductive definitions, and their elimination principles;
+\emph{pCIC} additionally records the polymorphic cumulative presentation used
+by current Rocq documentation.  The identifiers are necessary to distinguish
+these extensions from the CoC cube corner, stand for source-defined calculus
+families rather than every dependent type theory, and are not names for Lean's
+exact kernel theory.  They are used only to classify the landscape; formal
+calculus surfaces remain in Part~7 or in version-specific manuals
+\cite{PaulinMohring1993,PaulinMohring2015,RocqManual2026}.
+\index{Calculus of Inductive Constructions}\index{pCIC}
+\end{hbdefinition}
+
+No blanket normalization, decidability, or consistency theorem is asserted
+for dependent-type-theory families or CIC as a whole.  Those conclusions
+depend on the exact constructors, universe rules, conversion relation, and
+enabled extensions.
+
+\begin{hbdefinition}{def:p12-computational-reflection}{Computational reflection in mechanized proof}
+A mechanized proof step uses \emph{computational reflection} for a declared
+formula fragment when it represents formulas of that fragment inside the
+prover, runs a procedure on those representations, and applies a previously
+kernel-checked soundness theorem connecting a successful computation to the
+represented proposition.  The term therefore names a proof method, not a
+primitive logical rule, a synonym for tactic execution, or permission to trust
+an unchecked oracle.  Its nonredundant feature is the reusable internal
+soundness theorem together with a checked evaluation path.  This distinction
+is required by the mechanized-result report, which records the representation
+and interpretation, the soundness theorem, and whether evaluation is kernel
+reduction, proof-producing code, or an externally trusted path
+\cite{Harrison1995Reflection}.
+\index{computational reflection}\index{reflection!computational}
+\end{hbdefinition}
+
+\section{Proof-assistant landscape}
+
+\begin{landscape}
+\thispagestyle{plain}
+\begingroup\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{longtable}{@{}p{1.00in}p{1.85in}p{2.10in}p{2.15in}@{}}
+\caption{Proof-assistant and verifier landscape.  The final
+column records the editorial small-checker question stated above; it is not a
+product-quality score or an attributed source criterion.}
+\label{tab:p12-assistant-landscape}\\
+\toprule
+Tool/version & Declared foundation & Checking and automation/trust path &
+Independent small-checker path \\ \midrule
+\endfirsthead
+\toprule
+Tool/version & Declared foundation & Checking and automation/trust path &
+Independent small-checker path \\ \midrule
+\endhead
+Lean 4.32.1 & Dependent type theory with universes, inductives, quotients, and
+documented proof irrelevance features & Elaborator and tactics produce terms
+for the kernel; imported axioms, code-backed decisions, and external artifacts
+must be reported & Qualified for ordinary kernel-checked terms; the exact axiom
+surface and any native/oracle path remain result-specific
+\cite{LeanManual2026,DeMouraUllrich2021} \\ \addlinespace
+Rocq 9.1.1 & Polymorphic cumulative calculus of inductive constructions &
+Tactics elaborate proof terms checked by the kernel; plugins, axioms, and
+extraction are separate trust questions & Qualified for exported kernel terms
+relative to the declared environment; extraction is not itself a proof
+certificate \cite{RocqManual2026,PaulinMohring2015} \\ \addlinespace
+Isabelle2025-2 & Generic logical framework; Isabelle/HOL instantiates it with
+classical higher-order logic as an object logic & LCF-family trusted inference kernel with proof
+methods and external automation reconstructed or otherwise reported &
+Session theorem values have an LCF trust path; a portable independently
+checkable object depends on the actually used export/reconstruction path
+\cite{Isabelle2025} \\ \addlinespace
+Agda 2.8.0 & Baseline dependent type theory with
+\texttt{--no-sized-types}; neither \texttt{--cubical} nor
+\texttt{--rewriting} is enabled in this row & Elaborator/type checker verifies
+definitions; reflection and enabled language options belong in the report &
+Configuration-dependent: this baseline names its disabled optional extensions;
+any other result must record its exact options and postulates before claiming
+an independent small-checker path \cite{AgdaReference2026} \\ \addlinespace
+HOL Light & Classical simple type theory & Small OCaml LCF kernel; derived
+rules and automation construct protected theorem values & LCF discipline is
+explicit, but portability of a complete proof object is a separate export
+claim \cite{HOLLightSite2026} \\ \addlinespace
+HOL4 Trindemossen-2 & Classical higher-order logic & LCF-family kernel and
+derived proof tools; external components must be reported & LCF trust path is
+documented; independent portable-object status depends on the chosen workflow
+\cite{HOL4Site2026} \\ \addlinespace
+PVS 7.1 & Higher-order logic with dependent predicate subtypes & Type checking,
+proof commands, decision procedures, and integrated automation cooperate &
+Not established merely by the product description; report any exported proof
+and its independent checker \cite{PVS71Documentation} \\ \addlinespace
+Mizar 8.1.15 / MML 5.94.1493 & First-order set theory over
+Tarski--Grothendieck set theory & Verifier checks elaborated articles relative
+to the declared MML environment & Relative to the verifier and exact imported
+environment; no LCF theorem datatype is inferred
+\cite{MizarLibrary2026} \\ \addlinespace
+ACL2 8.7 & First-order logic of total recursive functions in an executable
+applicative Lisp setting & Integrated prover uses rewriting, induction, and
+verified or trusted extensions recorded by the event history & An exported
+small-checker proof object is not established by the cited portal; report the
+actual certification path \cite{ACL2Documentation2026} \\ \addlinespace
+Metamath, retrieved 2026-08-11 & The database itself declares constants,
+variables, axioms, and rules & A small verifier checks explicit substitutions
+and proof steps; the system is not intrinsically tied to ZFC & Meets the
+operational pattern relative to the exact database and verifier, whose hash or
+version must accompany the result \cite{MetamathSite2026} \\
+\bottomrule
+\end{longtable}
+\endgroup
+\end{landscape}
+
+\section{Landmark formalizations}
+
+\begin{landscape}
+\thispagestyle{plain}
+\begingroup\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{longtable}{@{}p{1.05in}p{1.20in}p{2.10in}p{2.75in}@{}}
+\caption{Landmark formalizations and exact claim boundaries.}
+\label{tab:p12-landmark-formalizations}\\
+\toprule
+Result & Assistant/foundation & Formal result & Trust and scope boundary \\
+\midrule
+\endfirsthead
+\toprule
+Result & Assistant/foundation & Formal result & Trust and scope boundary \\
+\midrule
+\endhead
+Four-color theorem & Coq/Rocq, CIC-family development & A machine-checked
+formalization of the four-color theorem & Does not claim that every historical
+paper proof was checked; imports and the kernel version remain part of the
+report \cite{Gonthier2008} \\ \addlinespace
+Odd-order theorem & Coq/Rocq, constructive type theory & A machine-checked
+formalization of the Feit--Thompson odd-order theorem & Claim is relative to the
+declared development and libraries, not to all group-theory presentations
+\cite{GonthierEtAl2013} \\ \addlinespace
+Flyspeck & HOL Light and Isabelle components, classical HOL & A formal proof of
+the Kepler conjecture & Both assistants and the correspondence between checked
+components must be reported; no single product label erases that boundary
+\cite{HalesEtAl2017} \\ \addlinespace
+CompCert & Coq/Rocq, CIC-family development & Semantic-preservation theorems
+for the stated compiler passes, source languages, and targets & Does not assert
+that every C program, compiler option, assembler, or hardware behavior is
+bug-free \cite{Leroy2009} \\ \addlinespace
+seL4 & Isabelle/HOL & Functional correctness from the stated abstract
+specification to the verified C implementation & Relies on the cited compiler,
+assembler, hardware, and model assumptions and does not establish every
+security or timing property \cite{KleinEtAl2009} \\
+\bottomrule
+\end{longtable}
+\endgroup
+\end{landscape}
+
+For the historical placement of these developments, see the completed
+chronology and capsules in Chapter~\ref{sec:p13-chronology-and-biography}.
+
+\begin{proofboundary}{def:p12-hott-pointer}{HoTT and univalence pointer}
+The formal surface meant here is intensional Martin--L\"of type theory with
+dependent products, dependent sums, identity types, and a cumulative universe
+discipline, extended in the cited presentation by the univalence axiom and
+higher inductive types \cite{HoTTBook2013}. Its exact type-forming and equality
+rules are not interchangeable with the narrower simply typed or System-F
+sheets. The calculus and notation boundary is recorded in
+Definition~\ref{def:p07-mltt-boundary} and
+\ref{def:p07-hott-cubical-boundary}; this pointer asserts no normalization or
+canonicity theorem for the extension.
+\end{proofboundary}
+
+\begin{hbdefinition}{def:p12-program-extraction}{Program extraction boundary}
+For the Coq-style pipeline considered here, the source is a well-typed term of
+the Calculus of Inductive Constructions. Extraction erases terms whose types
+live in proof-irrelevant \(\mathsf{Prop}\), removes type information not needed
+at run time, and translates the remaining computational term to a declared
+functional target such as OCaml. The name is necessary to distinguish erasure
+and translation from synthesis of a new algorithm. It stands as a compiler
+pass with a source/target relation, differs because proof components may be
+removed only under the calculus's elimination restrictions, and is used in the
+correspondence and trust record \cite{Letouzey2008}.
+\index{program extraction}\index{proof erasure}
+\end{hbdefinition}
+
+The correspondence claim is conditional: evaluation of the extracted target
+must simulate the computational content of the well-typed source under the
+specified erasure theorem. A complete evidence record names the kernel and
+library assumptions used to type-check the source, extraction implementation
+and version, target compiler, runtime, foreign primitives, and the exact input
+and output. Kernel checking of the source theorem does not verify an unproved
+compiler optimization or external runtime.
+
+\begin{hbdefinition}{def:p12-hammer-pipeline}{Hammer and proof reconstruction}
+A proof-assistant hammer performs four distinct stages: premise selection from
+the local library; translation of the goal and selected facts to an external
+logic; search by one or more automated provers; and reconstruction or replay
+of returned evidence in the assistant's kernel. The name is needed because an
+external prover's success token and a kernel theorem have different trust
+standing. It denotes a metalinguistic automation pipeline, differs from an
+internal tactic by crossing a translation/trust boundary, and is used to state
+the acceptance rule: only successful kernel reconstruction closes the proof
+\cite{BlanchetteEtAl2016Hammering}.
+\index{hammer!proof assistant}\index{proof reconstruction}\index{premise selection}
+\end{hbdefinition}
+
+When reconstruction fails, the external search result remains diagnostic
+evidence rather than a theorem. A reproducible hammer record therefore keeps
+the translated problem, selected premise identities, prover and limits,
+returned proof or core, reconstruction command, assistant version, imports,
+and final kernel result.

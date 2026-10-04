@@ -1,0 +1,313 @@
+% Source presentations for register row N-c-020.
+
+\subsection{Local heap reasoning, framing, and bi-abduction}
+\label{sec:p09-presentation-n-c-020}
+
+\subsubsection{Exact spatial satisfaction}
+
+Let a stack \(s\) assign values to program variables and let a heap \(h\) be a
+finite partial map from addresses to values.  In addition to ordinary
+first-order assertions about \(s\), use the following spatial assertions:
+\[
+\begin{aligned}
+ (s,h)\models\mathsf{emp}
+ &\Longleftrightarrow \operatorname{dom}(h)=\varnothing,\\
+ (s,h)\models e\mapsto e'
+ &\Longleftrightarrow
+   \operatorname{dom}(h)=\{\llbracket e\rrbracket_s\}
+   \text{ and }
+   h(\llbracket e\rrbracket_s)=\llbracket e'\rrbracket_s,\\
+ (s,h)\models P*Q
+ &\Longleftrightarrow
+   \exists h_1,h_2\,
+   [h=h_1\uplus h_2\land h_1\perp h_2\land
+    (s,h_1)\models P\land(s,h_2)\models Q],\\
+ (s,h)\models P\mathbin{-\!*}Q
+ &\Longleftrightarrow
+   \forall h'\perp h\,
+   ((s,h')\models P\to(s,h\uplus h')\models Q).
+\end{aligned}
+\]
+Here \(\mathsf{emp}\), points-to, separating conjunction, and separating
+implication are assertion constructors.  They are needed because ordinary
+conjunction evaluates both conjuncts on the same entire heap and cannot state
+that two owned cells are disjoint.  Their standing is semantic rather than
+operational, they differ by their exact heap-splitting or heap-extension
+clauses, and the first three are used in the local update and frame derivation
+below \cite[\S\S2--3]{OHearnReynoldsYang2001}
+\cite[pp.~55--61]{ReynoldsSeparation2002}.
+
+Two eliminable abbreviations make the four primitive axioms legible:
+\[
+ e\mapsto-\ \equiv\ \exists w\,(e\mapsto w),
+ \qquad
+ e\mapsto(v_1)\ \equiv\ e\mapsto v_1,
+ \qquad
+ e\mapsto(v_1,\ldots,v_m)
+ \ \equiv\
+ (e\mapsto v_1)*((e+1)\mapsto v_2)*
+ \cdots*((e+m-1)\mapsto v_m)\quad(m\geq2).
+\]
+The first asserts ownership of one cell with unspecified contents.  The
+second asserts ownership of \(m\) consecutive cells with the displayed
+contents; it is not a new heap constructor, and differs from singleton
+points-to only by expanding to the displayed finite separating conjunction.
+Both abbreviations are needed and used in the primitive rules and list proof
+below.
+
+For \(m\geq1\), the following local triples are valid:
+\[
+\begin{array}{rcll}
+ \{e\mapsto u\}
+   &x:=[e]&
+ \{x=u\land e\mapsto u\},
+ &x\notin\operatorname{FV}(e),\\[2pt]
+ \{e\mapsto-\}
+   &[e]:=v&
+ \{e\mapsto v\},&\\[2pt]
+ \{\mathsf{emp}\}
+   &x:=\mathsf{cons}(v_1,\ldots,v_m)&
+ \{x\mapsto(v_1,\ldots,v_m)\},
+ &x\notin\bigcup_{j=1}^{m}\operatorname{FV}(v_j),\\[2pt]
+ \{e\mapsto-\}
+   &\mathsf{dispose}\ e&
+ \{\mathsf{emp}\}.&
+\end{array}
+\]
+The parameter \(u\) is a rigid logical value: it is supplied when the
+assertion is evaluated, is not a stack or heap component, is unchanged by the
+command, and the triple is uniform in its value.  This standing is needed so
+lookup can relate the new stack value of \(x\) to the unchanged heap cell
+without treating \(u\) as an assignable program variable.  The side condition
+on lookup keeps the address expression unchanged when \(x\) is assigned; the allocation
+condition keeps the initializing expressions independent of the newly chosen
+address.  These are fault-avoiding partial-correctness triples.  In the first,
+second, and fourth rows the singleton precondition makes the accessed address
+active, so the operational command cannot fault and its one transition gives
+the displayed postcondition.  In the allocation row, the operational rule
+chooses a fresh consecutive block, initializes it with the old values of the
+\(v_j\), and stores its first address in \(x\).  The frame rule, rather than a
+larger primitive axiom, reattaches any disjoint heap
+\cite[pp.~61--63]{ReynoldsSeparation2002}.  The displayed lookup row is the
+source-valid specialization in which the assigned variable is absent from the
+address expression.  Reynolds also prints a more general auxiliary-variable
+schema which retains the old value of \(x\); that schema is not silently
+identified with this restricted row.
+
+\subsubsection{Frame soundness and one symbolic update}
+
+The registered frame rule is
+\[
+ \frac{\{P\}\ C\ \{Q\}}
+      {\{P*R\}\ C\ \{Q*R\}}.
+\]
+Its side condition is that no stack variable modified by \(C\) occurs free in
+\(R\).  Its proof uses command locality from
+Definition~\ref{def:p09-separation-logic}.  Split the initial heap as
+\(h=h_P\uplus h_R\).  Safety monotonicity permits execution in the larger heap;
+the frame property explains every terminating result as
+\(h'_P\uplus h_R\), with the framed heap unchanged.  The premise gives \(Q\) on
+\(h'_P\), while the free-variable side condition preserves the stack facts used
+by \(R\).  Hence the result satisfies \(Q*R\).  Disjointness without locality or
+the variable side condition is insufficient \cite[\S\S3--5]{OHearnReynoldsYang2001}.
+
+The stack-variable side condition has its own one-line counterexample.  The
+local heap triple
+\[
+ \{\mathsf{emp}\}\ x:=0\ \{\mathsf{emp}\}
+\]
+is valid.  If the frame rule admitted
+\(R\equiv x=1\land\mathsf{emp}\), it would infer
+\[
+ \{\mathsf{emp}*R\}\ x:=0\ \{\mathsf{emp}*R\}.
+\]
+An empty-heap state with \(x=1\) satisfies the precondition by splitting the
+heap into two empty parts, but the final stack has \(x=0\) and falsifies the
+postcondition.  Heap locality therefore does not make a framed assertion
+independent of modified stack variables.
+
+For a concrete symbolic step, suppose \(x,y,z\) denote values with distinct
+addresses for \(x\) and \(y\).  The small axiom and frame rule derive
+\[
+ \{x\mapsto y * y\mapsto0\}\ [x]:=z\quad
+ \{x\mapsto z * y\mapsto0\}.
+\]
+The update consumes and re-establishes the \(x\)-cell; \(y\mapsto0\) is carried
+unchanged.  If \(x=y\), the precondition itself is false because one singleton
+heap cannot be split into two disjoint cells at the same address.  This is the
+shortest explicit aliasing boundary: an ordinary conjunction would not supply
+the separation required by the proof.
+
+Reynolds's 2002 article gives the stack--heap interpretation, points-to,
+separating conjunction and implication, the frame rule, and list-manipulation
+derivations.  It is a semantic and proof-calculus source; it does not prove that
+an automatic analyzer discovers every valid specification
+\cite{ReynoldsSeparation2002}.
+
+\subsubsection{A complete local list-reversal step}
+
+Let \(\mathsf{nil}\) be a distinguished value which is not an address, let
+\(\epsilon\) be the empty finite sequence, let \(a\cdot\alpha\) prefix \(a\)
+to \(\alpha\), and let \(\alpha^\dagger\) reverse \(\alpha\).  Define the
+assertion family
+\[
+\begin{aligned}
+ \operatorname{list}_{\epsilon}(i,j)
+   &\equiv \mathsf{emp}\land i=j,\\
+ \operatorname{list}_{a\cdot\alpha}(i,k)
+   &\equiv
+   \exists j\,
+   \bigl(i\mapsto(a,j)*
+         \operatorname{list}_{\alpha}(j,k)\bigr).
+\end{aligned}
+\]
+This family is needed to describe an unbounded linked segment while retaining
+its abstract sequence of data.  It stands as a recursively defined family of
+heap assertions, not as a command or a second heap model.  It differs from one
+points-to assertion by owning every record in the segment, and from bare
+reachability by recording the sequence and enforcing disjoint ownership.  It
+is used in the following proof.
+
+Starting from \(\operatorname{list}_{\alpha_0}(i,\mathsf{nil})\), consider
+\[
+\begin{split}
+ j&:=\mathsf{nil};\\
+ \mathbf{while}\ i\neq\mathsf{nil}\ \mathbf{do}\quad
+   k:=[i+1];\ [i+1]:=j;\ j:=i;\ i:=k .
+\end{split}
+\]
+The loop assertion is
+\[
+ \mathcal I\equiv
+ \exists\alpha,\beta\,
+ \left[
+  \left(
+   \operatorname{list}_{\alpha}(i,\mathsf{nil})*
+   \operatorname{list}_{\beta}(j,\mathsf{nil})
+  \right)
+  \land
+  \alpha_0^\dagger=\alpha^\dagger\cdot\beta
+ \right].
+\]
+It is established after \(j:=\mathsf{nil}\) by taking
+\(\alpha=\alpha_0\) and \(\beta=\epsilon\).
+
+For preservation, \(\mathcal I\land i\neq\mathsf{nil}\) permits the first list
+to be unfolded with \(\alpha=a\cdot\gamma\).  After the lookup, the owned heap
+and pure sequence equation have the form
+\[
+ \exists a,\gamma,\beta\,
+ \left[
+  i\mapsto(a,k)*
+  \operatorname{list}_{\gamma}(k,\mathsf{nil})*
+  \operatorname{list}_{\beta}(j,\mathsf{nil})
+  \ \land\
+  \alpha_0^\dagger=\gamma^\dagger\cdot a\cdot\beta
+ \right].
+\]
+The mutation \([i+1]:=j\) changes only the second cell of the \(i\)-record:
+\[
+ \exists a,\gamma,\beta\,
+ \left[
+  i\mapsto(a,j)*
+  \operatorname{list}_{\gamma}(k,\mathsf{nil})*
+  \operatorname{list}_{\beta}(j,\mathsf{nil})
+  \ \land\
+  \alpha_0^\dagger=\gamma^\dagger\cdot a\cdot\beta
+ \right].
+\]
+Folding the first and third factors gives
+\[
+ \exists a,\gamma,\beta\,
+ \left[
+  \operatorname{list}_{\gamma}(k,\mathsf{nil})*
+  \operatorname{list}_{a\cdot\beta}(i,\mathsf{nil})
+  \ \land\
+  \alpha_0^\dagger=\gamma^\dagger\cdot(a\cdot\beta)
+ \right].
+\]
+The assignments \(j:=i;i:=k\) therefore re-establish \(\mathcal I\), now with
+\(\gamma\) as the unreversed segment and \(a\cdot\beta\) as the reversed
+segment.  On exit \(i=\mathsf{nil}\).  Since \(\mathsf{nil}\) is not an
+address, the first list assertion can then use only its empty-sequence clause;
+hence \(\alpha=\epsilon\), \(\beta=\alpha_0^\dagger\), and
+\[
+ \operatorname{list}_{\alpha_0^\dagger}(j,\mathsf{nil})
+\]
+holds.  In full, the derivation proves
+\[
+ \{\operatorname{list}_{\alpha_0}(i,\mathsf{nil})\}\,
+ j:=\mathsf{nil};
+ \mathbf{while}\ i\neq\mathsf{nil}\ \mathbf{do}\quad
+   (k:=[i+1];[i+1]:=j;j:=i;i:=k)\,
+ \{\operatorname{list}_{\alpha_0^\dagger}(j,\mathsf{nil})\}.
+\]
+Each heap step used one small axiom plus framing of the other two
+disjoint factors \cite[pp.~63--65]{ReynoldsSeparation2002}.  A further list
+rooted at an unmodified stack variable can be framed around the whole proof;
+no pairwise reachability side conditions need be re-proved.  The displayed
+triple is fault-avoiding partial correctness.  A total-correctness proof would
+add the length of the unreversed sequence \(\alpha\) as a separate decreasing
+variant.
+
+\subsubsection{Bi-abduction and its conditional guarantee}
+
+Calcagno et al. ask for assertions \(M\) and \(F\) satisfying
+\[
+ A*M\ \vdash\ G*F.
+\]
+The unknown \(M\) is the missing precondition or anti-frame; \(F\) is the
+residual frame.  These names are necessary because one assertion is added to
+make a desired symbolic step possible while the other records resources left
+over.  Both stand as assertions solved for in one entailment problem, differ by
+which side of the entailment they occupy, and are used by compositional summary
+inference \cite[\S\S2--3]{CalcagnoDistefanoOHearnYang2011}.
+
+For instance, let
+\[
+ A=(x\mapsto y)*(z\mapsto0),
+ \qquad
+ G=(x\mapsto y)*(y\mapsto0),
+\]
+under the explicit assumption that the three displayed addresses are pairwise
+distinct.  One solution is
+\[
+ M=y\mapsto0,
+ \qquad
+ F=z\mapsto0,
+\]
+because associativity and commutativity of disjoint heap union make
+\(A*M\) and \(G*F\) denote the same three-cell heaps.  The example explains the
+two inferred roles but does not assert uniqueness or completeness of the
+solver.
+
+The same sequent becomes a path summary rather than remaining a static heap
+puzzle.  Put \(C\equiv[y]:=1\) and
+\(G'\equiv(x\mapsto y)*(y\mapsto1)\).  The small mutation axiom, framed by the
+\(x\)-cell, proves \(\{G\}\,C\,\{G'\}\).  Framing once more gives
+\(\{G*F\}\,C\,\{G'*F\}\), while the solved entailment supplies
+\(A*M\vdash G*F\).  Consequence therefore yields the inferred one-path
+summary
+\[
+ \{A*M\}\ C\ \{G'*F\}.
+\]
+Thus \(M=y\mapsto0\) is accumulated into the required entry heap and
+\(F=z\mapsto0\) is propagated unchanged to the exit heap.  This derivation
+states what a sound bi-abduction answer licenses; it does not prescribe a
+search algorithm for finding \(M,F\)
+\cite[\S\S3--4]{CalcagnoDistefanoOHearnYang2011}.
+
+The program-analysis soundness result is conditional on termination of the
+inference procedure and soundness of the primitive rules: an inferred summary
+denotes a true fault-avoiding triple.  The source does not claim that every true
+summary is inferred, and its final analysis theorem delegates operational-
+semantics details to the cited framework
+\cite[thm.~4.14]{CalcagnoDistefanoOHearnYang2011}.
+
+\paragraph{Historical and tools boundary.}
+O'Hearn's 2019 retrospective traces the path from small footprints and framing
+to bi-abductive compositional analysis and deployed tools.  It supports that
+historical and engineering account, not a replacement formal semantics or a
+new completeness theorem \cite{OHearn2019}.  Successful deployment is evidence
+of scalability on the reported programs; it is not evidence that every heap
+error is found.

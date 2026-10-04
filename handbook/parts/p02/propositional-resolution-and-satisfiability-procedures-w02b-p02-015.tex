@@ -1,0 +1,267 @@
+%% toc: P2 15 15.5,15.6,15.7
+\section{Horn closure as a least fixed point, and the proof route for Cook--Levin}
+\label{sec:p02-w02b-p02-015-links}
+
+This section makes two connections that the satisfiability procedures of
+\cref{sec:p02-w02-p02-019-sat-procedures} need beyond Part~2.  The first
+identifies the forward closure of a Horn list
+(Definition~\ref{def:p02-w02-p02-019-forward-closure}) with the least fixed
+point \(M_P\) of the immediate-consequence operator \(T_P\) of Part~9
+(Definition~\ref{def:p09-definite-program}), for the propositional definite
+program read off the list.  Its inputs are a Horn list and its definite
+clauses; its conclusions are the equality of the two least objects, the least
+Herbrand model property for the variable-free case, and the Horn-SAT test
+restated as a goal test against \(M_P\).  The second supplies the written
+proof of the Cook--Levin Theorem~\ref{thm:p04-cook-levin} under the machine,
+reduction and class conventions of Part~4
+(Convention~\ref{def:p04-complexity-convention},
+Definition~\ref{def:p04-resource-classes}).  Its inputs are those conventions
+and the Part~2 results on certificates and tableau formulas; its conclusion is
+that \(\mathsf{SAT}\) is \(\mathsf{NP}\)-complete in the sense fixed in
+Part~4.
+
+\subsection{Horn lists as propositional definite programs}
+\label{sec:p02-w02b-p02-015-horn-programs}
+
+\begin{hbdefinition}{def:p02-w02b-p02-015-horn-program}{The definite program of a Horn list}
+Let \(S\) be a Horn list (Definition~\ref{def:p02-tractable-classes}) with
+variable set \(A_S\), and use the body \(B(C)\), the head
+\(\operatorname{hd}(C)\) and the split into definite and negative clauses of
+Definition~\ref{def:p02-w02-p02-019-horn-parts}.  Read every variable of
+\(A_S\) as a nullary relation symbol of a first-order signature whose relation
+symbols are exactly the members of \(A_S\).  By
+Definition~\ref{def:p02-herbrand-universe-base} a nullary relation symbol
+contributes its own atom and no other, so the Herbrand base over this
+signature is \(A_S\).  The \emph{definite program of \(S\)}, written
+\(P_S\), contains, for each definite clause \(C\) of \(S\) with
+\(B(C)=\{q_1,\ldots,q_k\}\), listed in increasing order of index, and
+\(\operatorname{hd}(C)=r\), the definite clause
+\[
+ r\leftarrow q_1,\ldots,q_k
+\]
+of Definition~\ref{def:p09-definite-program}; a positive unit clause
+\(\{r\}\) gives the clause \(r\leftarrow{}\) with empty body.  A negative
+clause \(C\) of \(S\) with \(B(C)=\{q_1,\ldots,q_k\}\) gives no program
+clause.  It is read as the \emph{goal} \(\leftarrow q_1,\ldots,q_k\), which is
+violated exactly when all of \(q_1,\ldots,q_k\) are true; the empty clause is
+the goal with empty body, violated by every valuation.
+
+No clause of \(P_S\) contains a first-order variable, so the empty
+substitution is the only ground substitution that matters, and adding a fresh
+constant under the convention of Definition~\ref{def:p09-definite-program}
+adds no atom to the base.  Accordingly \(\mathit{HB}_{P_S}=A_S\), and
+\(T_{P_S}\) and \(M_{P_S}\) are the operator and least fixed point of that
+definition for the program \(P_S\).  For a set \(I\subseteq A_S\), \(v_I\) is
+the valuation of Definition~\ref{def:p02-w02-p02-019-horn-parts}, which makes
+exactly the members of \(I\) true; it is the propositional form of the
+Herbrand interpretation \(I\).
+\index{definite program!of a Horn list}\index{Horn clause!as program clause}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p02-w02b-p02-015-horn-lfp}{proved=annex:p02-w02b-p02-015-horn-lfp}{Forward closure is the least model of the definite program}
+Let \(S\) be a Horn list, \(T=T_{P_S}\) on subsets of \(A_S\), and
+\(F=\operatorname{Fwd}(S)\).
+\begin{enumerate}
+  \item For every \(I\subseteq A_S\),
+        \(T(I)=\{\operatorname{hd}(C): C\text{ a definite clause of }S,\
+        B(C)\subseteq I\}\), and \(T\) is monotone.
+  \item A set \(X\subseteq A_S\) is closed under \(S\) iff
+        \(T(X)\subseteq X\).
+  \item \(T^k(\varnothing)\subseteq T^{k+1}(\varnothing)\) for every
+        \(k\in\N\); \(T(F)=F\); \(F\subseteq X\) for every \(X\subseteq A_S\)
+        with \(T(X)\subseteq X\); and
+        \[
+         F=\bigcup_{k<\omega}T^k(\varnothing)=M_{P_S}=T^k(\varnothing)
+         \qquad\text{for every }k\geq|A_S|.
+        \]
+  \item For every \(I\subseteq A_S\), \(v_I\) satisfies every definite clause
+        of \(S\) iff \(T(I)\subseteq I\).  Hence \(M_{P_S}\) is the least
+        Herbrand model of \(P_S\), and an atom \(a\in A_S\) is true under every
+        valuation satisfying all definite clauses of \(S\) iff
+        \(a\in M_{P_S}\).
+  \item \(S\) is unsatisfiable iff some negative clause \(C\) of \(S\) has
+        \(B(C)\subseteq M_{P_S}\), that is, iff the least model of \(P_S\)
+        violates one of the goals of \(S\).  If \(S\) is satisfiable,
+        \(v_{M_{P_S}}\) satisfies \(S\) and is its least model.
+\end{enumerate}
+\end{hbtheorem}
+
+Clause~4 is the variable-free case of the least-model
+Theorem~\ref{thm:p09-definite-fixpoint}, which Part~9 states with a citation
+to \textcite{VanEmdenKowalski1976}; the annex proof above is complete for
+programs all of whose relation symbols are nullary.  Clause~3 says that
+\(\operatorname{Fwd}(S)\), defined in Part~2 as the least set closed under
+the definite clauses, is the same set as the iterate
+\(\bigcup_kT_P^k(\varnothing)\) that Part~9 uses to connect model semantics
+with Datalog evaluation and SLD resolution
+(\cref{sec:p09-logic-programming}).  The two characterizations of the least
+model in clause~4 of Theorem~\ref{thm:p02-w02-p02-019-horn-closure} and
+clause~5 above are therefore one statement.  By
+Theorem~\ref{thm:p02-w02-p02-019-horn-procedure}, the marked set of
+Method~\ref{def:p02-w02-p02-019-horn-method} after its propagation step is
+\(\operatorname{Fwd}(S)\), so that method computes \(M_{P_S}\) within
+\(O(N)\) steps: each atom leaves the queue once, and each body occurrence
+lowers one counter once, whereas the iterates \(T^k(\varnothing)\) are each
+defined from the whole previous stage.  The order in which atoms leave the
+queue does not affect the result, since the result is the least fixed point.
+
+\begin{hbexample}{def:p02-w02b-p02-015-horn-program-example}{Iterating \(T_P\) on the lists of the forward-chaining example}
+Take the list \(S=(C_1,C_2,C_3,C_4)\) of
+Example~\ref{def:p02-w02-p02-019-horn-example}, with
+\(C_1=\{p_1\}\), \(C_2=\{\neg p_1,p_2\}\),
+\(C_3=\{\neg p_2,\neg p_4,p_3\}\) and \(C_4=\{\neg p_1,\neg p_3\}\).  Then
+\(A_S=\{p_1,p_2,p_3,p_4\}\), the program \(P_S\) is
+\[
+ p_1\leftarrow{},\qquad p_2\leftarrow p_1,\qquad p_3\leftarrow p_2,p_4,
+\]
+and \(C_4\) is the goal \(\leftarrow p_1,p_3\).  The iterates are
+\(T(\varnothing)=\{p_1\}\), \(T^2(\varnothing)=\{p_1,p_2\}\) and
+\(T^3(\varnothing)=\{p_1,p_2\}\): the third clause needs \(p_4\), which is the
+head of no clause.  So \(M_{P_S}=\{p_1,p_2\}\), the same set that forward
+chaining marked in the example.  The goal body \(\{p_1,p_3\}\) is not
+contained in it, so by clause~5 \(S\) is satisfiable, and
+\(v_{\{p_1,p_2\}}\) is its least model.
+
+Appending \(C_5=\{p_4\}\) adds the program clause \(p_4\leftarrow{}\).  Now
+\(T(\varnothing)=\{p_1,p_4\}\), \(T^2(\varnothing)=\{p_1,p_2,p_4\}\),
+\(T^3(\varnothing)=\{p_1,p_2,p_3,p_4\}\), and \(T^4(\varnothing)\) is the same
+set, reached within \(|A_S|=4\) rounds as clause~3 guarantees.  The goal body
+\(\{p_1,p_3\}\) now lies in the least model, and the extended list is
+unsatisfiable, as step~(4) of the method found.
+\end{hbexample}
+
+\begin{hbwarning}{def:p02-w02b-p02-015-two-sat-programs}{2-CNF clauses that are not program clauses}
+The program reading needs every clause to have at most one positive literal.
+The 2-CNF clause \(\{p_1,p_2\}\) has two; it is neither a definite clause nor
+a goal, \(T_P\) of Definition~\ref{def:p09-definite-program} is not defined
+for it, and the list consisting of it alone has no least model
+(Warning~\ref{def:p02-w02-p02-019-horn-limit}).  Satisfiability of such lists
+is decided by the implication graph instead
+(Theorem~\ref{thm:p02-w02-p02-019-two-sat}).  The valuation \(v_S\) that
+Method~\ref{def:p02-w02-p02-019-two-sat-method} extracts is chosen by the
+numbering of strong components, not as a least fixed point.  When a 2-CNF list
+\(S\) is also Horn and satisfiable, \(v_S\) satisfies \(S\), so by clause~2 of
+Theorem~\ref{thm:p02-w02-p02-019-horn-closure} it makes every atom of
+\(M_{P_S}\) true; the two procedures then agree on satisfiability, and the
+least model is the one that forward chaining returns.
+\end{hbwarning}
+
+\subsection{The Part~4 conventions and the proof of the Cook--Levin theorem}
+\label{sec:p02-w02b-p02-015-cook-levin}
+
+Theorem~\ref{thm:p04-cook-levin} is stated under the conventions of Part~4:
+\(\mathsf{NP}\) is \(\bigcup_k\mathsf{NTIME}(n^k)\) for nondeterministic
+machines with a read-only input tape
+(Definition~\ref{def:p04-resource-classes}), and reductions are computed by
+deterministic machines of that kind
+(Convention~\ref{def:p04-complexity-convention}).  The Part~2 results that
+carry the combinatorial work use certificates and machines that may write on
+their input tape: Convention~\ref{def:p02-complexity-standing},
+Convention~\ref{def:p02-w02-p02-018-verifier},
+Theorem~\ref{thm:p02-w02-p02-018-membership} and the tableau construction of
+Theorem~\ref{thm:p02-w02-p02-018-cook-levin}.  The convention and lemma below
+connect the two settings, and the annex proof of
+Theorem~\ref{thm:p04-cook-levin} combines them.
+
+\begin{hbconvention}{def:p02-w02b-p02-015-machine-reading}{Reading the Part~4 machines}
+A machine of Convention~\ref{def:p04-complexity-convention} is read in the
+format fixed at the start of the proof in
+Annex~\ref{annex:p02-w02-p02-018-cook-levin}: tapes \(1,\ldots,\kappa\) with
+cells \(0,1,2,\ldots\); the input in cells \(0,\ldots,n-1\) of tape~\(1\)
+and blanks elsewhere; every head on cell \(0\) at the start; a left move at
+cell \(0\) leaving the head there; and halting states \(q_{\mathrm a}\) and
+\(q_{\mathrm r}\).  Tape~\(1\) is read-only, that is, the symbol written there
+is always the one scanned.  A \emph{nondeterministic} machine replaces
+\(\delta\) by a finite relation that gives, for each nonhalting state \(s\)
+and tuple \(\vec a\) of scanned symbols, a finite and possibly empty set
+\(\Delta(s,\vec a)\) of triples \((s',\vec b,\vec d)\).  A \emph{branch} on
+input \(x\) is a finite or infinite sequence of configurations that starts in
+the initial configuration, passes from each configuration to one obtained by
+a triple of \(\Delta\), and is finite exactly when it ends in a configuration
+with a halting state or with an empty \(\Delta(s,\vec a)\); the second kind
+of end counts as rejection.  A machine computes a map \(f\) when it halts on
+each \(x\) with \(f(x)\) in cells \(0,\ldots,\operatorname{len}(f(x))-1\) of a
+designated output tape other than tape~\(1\), followed by blanks.  The same
+output format is used for the polynomial-time maps of
+Convention~\ref{def:p02-complexity-standing}.  This reading is an assumption
+of Lemma~\ref{thm:p02-w02b-p02-015-bridge}; Part~4 does not fix these
+details.
+\index{nondeterministic machine!branch}
+\end{hbconvention}
+
+\begin{hblemma}{thm:p02-w02b-p02-015-bridge}{proved=annex:p02-w02b-p02-015-bridge}{Part~2 and Part~4 conventions for maps, reductions and \(\mathsf{NP}\)}
+Read machines as in Convention~\ref{def:p02-w02b-p02-015-machine-reading}.
+\begin{enumerate}
+  \item A map \(f:\{0,1\}^*\to\{0,1\}^*\) is computable within a polynomial
+        number of steps by a deterministic multitape machine whose input tape
+        may be written iff it is so computable by one whose input tape is
+        read-only.  The same holds for deciding a language.  Hence the
+        polynomial-time many-one reductions of
+        Convention~\ref{def:p02-complexity-standing} and the relation
+        \(\leq_m^p\) of Convention~\ref{def:p04-complexity-convention} are the
+        same relation, and the two definitions of \(\mathsf P\) give the same
+        class.
+  \item If \(L\in\mathsf{NP}\) in the sense of
+        Definition~\ref{def:p04-resource-classes}, then \(L\in\mathsf{NP}\)
+        in the sense of Convention~\ref{def:p02-complexity-standing}, with
+        the predicate read as in
+        Convention~\ref{def:p02-w02-p02-018-verifier}.
+  \item If a polynomial-time predicate \(R\), in the sense of
+        Convention~\ref{def:p02-w02-p02-018-verifier}, satisfies, for every
+        bit string \(x\) of length \(n\),
+        \[
+         x\in L\quad\text{iff}\quad\text{some }y\text{ with }
+         \operatorname{len}(y)\leq n\text{ satisfies }R(x,y),
+        \]
+        then \(L\in\mathsf{NP}\) in the sense of
+        Definition~\ref{def:p04-resource-classes}.
+\end{enumerate}
+\end{hblemma}
+
+Clause~3 is the case of certificate bound \(q(n)=n\), which is the bound of
+Theorem~\ref{thm:p02-w02-p02-018-membership}; it is all that the proof of
+Theorem~\ref{thm:p04-cook-levin} needs.  The equality of the two classes for
+an arbitrary polynomial bound, which also requires the machine to lay out
+\(q(n)\) cells before guessing, is \cite[thm.~2.6]{AroraBarak2009}.
+
+\begin{hbexample}{def:p02-w02b-p02-015-choice-code}{Choices coded as a certificate}
+Suppose that in some configuration a machine has three applicable triples,
+listed in a fixed order as \(O_0,O_1,O_2\), and that no set
+\(\Delta(s,\vec a)\) has more than three members.  The proof of clause~2
+codes each choice by a block of \(\beta=2\) bits.  The blocks \(00\), \(01\)
+and \(10\) select \(O_0\), \(O_1\) and \(O_2\).  The block \(11\) has value
+\(3\), and \(3\bmod 3=0\) selects \(O_0\) again.  So every bit string
+determines a branch, and every branch of length \(T'\) is determined by a
+string of length \(2T'\).  This is the certificate that clause~2 hands to the
+tableau construction of Theorem~\ref{thm:p02-w02-p02-018-cook-levin}.
+\end{hbexample}
+
+With Lemma~\ref{thm:p02-w02b-p02-015-bridge}, membership of \(\mathsf{SAT}\)
+in \(\mathsf{NP}\) under Definition~\ref{def:p04-resource-classes} follows
+from the certificate check of
+Theorem~\ref{thm:p02-w02-p02-018-membership} by clause~3.  Hardness follows
+from clause~2, the tableau formula of
+Theorem~\ref{thm:p02-w02-p02-018-cook-levin}, and clause~1.  The language is
+the \(\mathsf{SAT}\) of Definition~\ref{def:p02-sat-taut}, which Part~4 uses
+(\cref{sec:p04-complexity-complete-problems}); its code table is the one
+fixed in Convention~\ref{def:p02-w02-p02-018-input}.  The full argument is
+Annex~\ref{annex:p02-w02b-p02-015-cook-levin}.  Part~9 presents the same
+tableau method in the form of Cook's paper and records how Cook's
+query-machine reducibility differs from the many-one reduction proved here
+(\cref{sec:p09-presentation-n-c-026}).
+
+\begin{hbwarning}{def:p02-w02b-p02-015-cook-levin-scope}{What this proof route does and does not establish}
+The proof establishes \(\mathsf{NP}\)-completeness of the language of all
+satisfiable encoded formulas under polynomial-time many-one reductions.  It
+does not prove completeness of \(3\mathsf{SAT}\), which
+Table~\ref{tab:p04-completeness-catalog} cites, and it does not prove the
+logspace form of the reduction.  It also does not establish Cook's own
+statement: \textcite{Cook1971} uses polynomial-time query-machine
+reducibility to the tautologies in disjunctive normal form, a different
+reduction notion (\cref{sec:p09-presentation-n-c-026}).  The equality of the
+two \(\mathsf{NP}\) definitions is used only in the directions of clauses~2
+and~3 of Lemma~\ref{thm:p02-w02b-p02-015-bridge}.  The lemma also depends on
+the machine format of
+Convention~\ref{def:p02-w02b-p02-015-machine-reading}; a different format for
+Part~4 machines would need its own simulation argument.
+\end{hbwarning}

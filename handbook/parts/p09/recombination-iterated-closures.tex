@@ -1,0 +1,222 @@
+% Separate source-specific continuation; the first packet is frozen.
+\subsection{Finite-Rule Iterated Splicing: History Nests and Radius}
+\label{sec:p09-recombination-iterated-closures}
+
+One-step closure is insufficient to establish closure under arbitrarily many
+splicings. The union of increasing regular languages need not be regular.
+Head, P\u{a}un, and Pixton prove the stronger finite-rule theorem through
+a history language and a separate regular-control construction
+\cite[Lemma~3.14 and Remark~3.1, pp.~307--313]{HeadPaunPixton1997RecombinationIntake}.
+The construction below makes its neutral quotient boundaries and both
+directions of its history-language equality explicit.
+
+Let \(\sigma=(V,R)\) have the oriented relation of
+Definition~\ref{def:p09-recombination-splicing}, with \(R\) finite.
+The source writes \(\lambda\) for the empty word and \(|w|\) for word length;
+these source-local roles are retained here. For
+\(r=u_1\#u_2\$u_3\#u_4\), put
+\(\alpha_r=u_1u_2\), \(\gamma_r=u_3u_4\), and \(\beta_r=u_1u_4\).
+The iterative set semantics are
+\[
+ \sigma^0(L)=L,\qquad
+ \sigma^{n+1}(L)=\sigma^n(L)\cup\sigma(\sigma^n(L)),\qquad
+ \sigma^*(L)=\bigcup_{n\geq0}\sigma^n(L).
+\]
+Inputs remain available; equality here is literal, including the empty word,
+rather than the chapter's convention of ignoring empty-word differences.
+
+\begin{hbtheorem}{thm:p09-recombination-full-afl-iteration}{proved=annex:p09.recombination-full-afl-iteration}{Finite-rule iterated closure}
+Suppose a family \(FA\), over finite alphabets, contains every regular
+language, is closed under left and right quotient by regular languages,
+and is closed under substitution of its languages into a regular language.
+For \(L\in FA\) and any finite H scheme \(\sigma=(V,R)\),
+\(\sigma^*(L)\in FA\). In particular, the conclusion applies to a full
+abstract family of languages with these properties.
+\end{hbtheorem}
+
+The hypothesis is exactly the three closure properties used in the source,
+not a claim about arbitrary language families. Finiteness concerns the
+rule set, not the axiom language. No consuming-multiset or circular variant
+is included in this statement.
+
+\paragraph{Recorded histories and their erasure.}
+For each rule, the source adds four bracket tokens:
+\(\mathopen{(\!(}_r,\mathclose{)\!)}_r,[_r,]_r\).
+A left nest has the form
+\(\mathopen{(\!(}_r\,x\,]_r\), and a right nest has the form
+\([_r\,x\,\mathclose{)\!)}_r\), with recursively well-nested contents.
+Thus these are not ordinary round-to-round or square-to-square matching.
+Let \(N\) consist of words in which every bracket lies in such a nest.
+The map \(E:N\to V^*\) deletes each complete maximal nest, including all
+of its contents. It does not merely erase the bracket tokens.
+For \(x,y\in N\), \(E(xy)=E(x)E(y)\).
+
+\begin{hblemma}{thm:p09-recombination-nest-domain}{proved=annex:p09.recombination-nest-domain}{The history domain is not finite-state nesting}
+For finite \(R\), the well-nested domain \(N\) is context-free.
+If \(R\ne\varnothing\), it is not regular; if \(R=\varnothing\),
+it is simply \(V^*\).
+\end{hblemma}
+
+The formulas and proof retain these four published bracket glyphs.
+Their matching types and rule subscripts are part of the history alphabet.
+If \(x=x_1vx_2\), \(y=y_1wy_2\), all six factors lie in \(N\), and
+\(E(v)=\alpha_r,E(w)=\gamma_r\), justified splicing produces
+\[
+ z=x_1\mathopen{(\!(}_rvx_2]_r\beta_r[_ry_1w\mathclose{)\!)}_ry_2.
+\]
+Its erasure is \(E(x_1)\beta_rE(y_2)\).
+Let \(J\) be the least language containing \(L\) and closed under this
+history operation. Lifting cuts through erased nests proves
+\(E(J)=\sigma^*(L)\); this is established in the annex, not assumed.
+There is no assertion that \(J\) itself belongs to \(FA\).
+
+For example, take \(L=\{aab,bba\}\) and
+\(r=a\#b\$b\#a\). The sites are \(\alpha_r=ab,\gamma_r=ba\),
+and \(\beta_r=aa\). The history
+\(a\mathopen{(\!(}_rab]_raa[_rbba\mathclose{)\!)}_r\) erases to \(aaa\).
+Both discarded sites and their enclosing histories disappear under \(E\).
+Erasing the tokens alone would instead retain the discarded material.
+
+\paragraph{Finite descriptors, not unbounded history in finite control.}
+Unused rules can be removed for this existence proof: retain exactly rules
+that occur in some finite history construction. For every retained rule,
+both sites occur in erased histories. This is a semantic selection; it is
+not claimed to be an already implemented terminating test for activity.
+
+Use \(\$\) also as the source's dummy index, distinct from every rule word,
+and put \(L_\$=L\), \(L_r=\{\beta_r\}\).
+For \(r\in R\cup\{\$\}\) and \(s,t\in R\), define
+\[
+ F_r(s,t)=\{q\in V^*:|q|<|\alpha_s|,
+                    \ \mathopen{(\!(}_sq\mathopen{(\!(}_t\text{ occurs in a word of }J\}.
+\]
+The terminal sets are
+\[
+\begin{aligned}
+ F_\$(s,\$)&=\alpha_sV^*,\\
+ F_r(s,\$)&=\alpha_sV^*\cup
+   \{q\in V^*:|q|<|\alpha_s|,
+                    \ \mathopen{(\!(}_sq[_r\text{ occurs in a word of }J\}
+                    &&(r\in R).
+\end{aligned}
+\]
+Every nonterminal set is finite. Every terminal set is a regular language
+plus a finite set. Empty recognition sites are included: the short part is
+then empty and \(\alpha_sV^*=V^*\).
+
+Define \(S_r(s)\) as the union of the concatenations
+\(q_1\cdots q_n\), \(n\geq1\), with
+\(q_i\in F_r(s_i,t_i)\), \(s_1=s,t_n=\$\), and
+\(t_i=s_{i+1}\) for \(i<n\).
+These are labels of paths on the finite rule-index graph terminating at
+the dummy index. Define \(S_r(\$)=\{\lambda\}\).
+Prefix sets \(P_r(s)\) are the exact left/right reversals of these suffix
+sets; in particular \(P_r(\$)=\{\lambda\}\).
+The annex specifies the reversal of letters, bracket tokens, and rule
+handles, so this definition has no unspecified dual operation.
+
+If the scheme has radius \(k\), then
+\(|\alpha_r|,|\gamma_r|\leq2k\). All exceptional fragments in these
+finite descriptors have length below \(2k\). This bounded-fragment fact,
+rather than a bound on the number of splicing generations, is what
+permits regular control. Membership in the semantic occurrence tables
+is a separate effectiveness question; mere finiteness does not decide it.
+
+\paragraph{The language in the target family.}
+For the left quotient \(A\backslash B=\{y:\exists p\in A,\ py\in B\}\)
+and right quotient \(B/A=\{y:\exists q\in A,\ yq\in B\}\), put
+\[
+ L_r(s,t)=P_r(s)\backslash L_r/S_r(t)
+        =\{y:\exists p\in P_r(s),q\in S_r(t),\ pyq\in L_r\}.
+\]
+The dummy singleton makes \(L_\$(\$,\$)=L\) and
+\(L_r(\$,\$)=\{\beta_r\}\). An empty quotient language would not have
+this neutral role.
+
+Let \(K\) be the union of \(y_1\cdots y_n\), \(n\geq1\), with
+\(y_i\in L_{r_i}(s_i,t_i)\), subject to
+\[
+ r_1=s_1=\$,\qquad r_n=t_n=\$,
+\]
+and, for each \(i<n\), one of the following two alternatives:
+\[
+ t_i=r_{i+1}\ne\$,\,s_{i+1}=\$,
+ \qquad\text{or}\qquad
+ t_i=\$,\,r_i=s_{i+1}\ne\$.
+\]
+These alternatives join consecutive visible pieces across a left or right
+maximal nest. They are finite-state adjacency conditions.
+Regularity of \(P_r,S_r\), quotient closure, and regular-control substitution
+give \(K\in FA\).
+The substantive remaining equality is
+\[
+ K=E(J)=\sigma^*(L).
+\]
+The annex supplies the maximal-nest facts, bounded-fragment tracing,
+both one-sided trimming constructions, their two-sided combination,
+and the final compatible-piece assembly. Defining \(K\) without those
+inclusions would not prove the closure theorem.
+
+\begin{hbcorollary}{thm:p09-recombination-regular-iteration}{proved=annex:p09.recombination-regular-iteration}{Regular input under finite iteration}
+For regular \(L\) and finite \(R\), \(\sigma^*(L)\) is regular.
+Consequently \(H(REG,FIN)=REG\), where \(H\) denotes the source's
+families of iterated splicing languages.
+\end{hbcorollary}
+
+This follows from the finite-iteration construction, not from one-step
+regularity. Allowing an infinite regular rule language changes the theorem's
+regime; no corresponding general iterated-regularity assertion is made here.
+
+\paragraph{The strict radius hierarchy for finite seeds.}
+For a finite scheme,
+\(\operatorname{rad}(\sigma)=\max\{|u_i|:1\leq i\leq4,\,
+u_1\#u_2\$u_3\#u_4\in R\}\), with empty-rule radius zero.
+Let \(H(FIN,k)\) use finite seeds and radius at most \(k\).
+
+\begin{hbtheorem}{thm:p09-recombination-radius-hierarchy}{proved=annex:p09.recombination-radius-hierarchy}{Finite-seed radius separation}
+For \(k\geq1\), the source witness
+\[
+ L_k=\{a^{2k}b^{2k}a^nb^{2k}a^{2k}:n\geq2k+1\}
+\]
+lies in \(H(FIN,k+1)\) but not in \(H(FIN,k)\). Moreover,
+\[
+ FIN\subsetneq H(FIN,1)\subsetneq H(FIN,2)\subsetneq\cdots
+ \subsetneq H(FIN,FIN)\subsetneq REG.
+\]
+\end{hbtheorem}
+
+The witness uses the single seed
+\(a^{2k}b^{2k}a^{2k+2}b^{2k}a^{2k}\) and rule
+\(a^{k+1}\#a^k\$a^{k+1}\#a^k\)
+\cite[Theorem~3.4, p.~317]{HeadPaunPixton1997RecombinationIntake}.
+Its sites can only occur in the central \(a\)-block. The annex proves exact
+generation and expands the source's parasitic-output argument for each
+possible short-site form. For the final strict inclusion it uses the
+source's wrapper construction from Lemma~3.16 with \(L=a^+\), giving
+the regular language
+\[
+ W=(dc)^*a^+(dc)^*\cup c(dc)^*a^+(dc)^*d.
+\]
+This particular endpoint proof does not silently claim the complete general
+Lemma~3.16 or the full classification table.
+
+\paragraph{The consuming-multiset boundary.}
+The source's next section changes both supply and output convention.
+A multiset \(M:V^*\to\mathbb N\cup\{\infty\}\) has support
+\(\{x:M(x)>0\}\). Its transition requires one occurrence of \(x\)
+and one further occurrence of \(y\); when \(x=y\), at least two copies
+are necessary. With the same site factorizations, it consumes those
+occurrences and releases \emph{both}
+\(z=x_1u_1u_4y_2\) and \(w=y_1u_3u_2x_2\), counting twice if \(z=w\)
+\cite[p.~319]{HeadPaunPixton1997RecombinationIntake}.
+This is not the oriented one-output set operation of the theorem.
+Even an unbounded supply does not erase the output-convention distinction:
+the complementary product would require the term-swapped rule in an
+oriented set scheme.
+
+For the earlier example, a multiset with one copy each of \(aab,bba\)
+can release \(aaa\) and \(bbb\); a multiset containing only one copy
+of a required repeated input cannot perform a two-copy event.
+The least set closure keeps inputs and does not record conservation or
+population trajectories. No full-AFL/regularity result for this consuming
+variant is inferred from the theorem proved here.

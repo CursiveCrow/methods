@@ -1,0 +1,189 @@
+\section{Capture-avoiding substitution}
+\label{sec:fol-syntax-semantics-04}
+
+\begin{definition}[Substitution in a term]
+For terms \(r,t\) and a variable \(x\), the term \(r[t/x]\) is defined by
+\[
+ x[t/x]=t,\qquad y[t/x]=y\ (y\ne x),
+\]
+and
+\[
+ f(r_1,\ldots,r_n)[t/x]
+ =f(r_1[t/x],\ldots,r_n[t/x]).
+\]
+Only occurrences of \(x\) are replaced.
+\end{definition}
+
+Fix the order \(x_0,x_1,\ldots\) on \(\Var\).  This order makes every choice
+of a fresh variable below deterministic.
+
+\begin{definition}[Capture-avoiding substitution in a formula]
+For a formula \(\varphi\), term \(t\), and variable \(x\), the formula
+\(\varphi[t/x]\) is defined by recursion on formula complexity.  In atomic
+formulas, substitute in every term.  Substitution commutes with
+\(\bottom,\neg,\land,\lor,\to\).  For
+\(Q\in\set{\forall,\exists}\), define
+\[
+(Qy\,\psi)[t/x]=
+\begin{cases}
+ Qy\,\psi,&y=x,\\
+ Qy\,(\psi[t/x]),&y\ne x\text{ and }y\notin\operatorname{Var}(t),\\
+ Qz\,((\psi[z/y])[t/x]),&y\ne x\text{ and }y\in\operatorname{Var}(t),
+\end{cases}
+\]
+where in the last clause \(z\) is the least variable not in
+\[
+ \operatorname{Var}(\psi)\cup\operatorname{Var}(t)\cup\set{x,y}.
+\]
+The recursion is on complexity, and it is well founded by a simultaneous
+strong induction on complexity: the calls on \(\psi\) concern a formula of
+lower complexity than \(Qy\,\psi\), and variable-for-variable
+substitution preserves complexity---each clause preserves the outer
+constructor---so in the last clause \(c(\psi[z/y])=c(\psi)<c(Qy\,\psi)\)
+and the outer call is also at lower complexity.  Complexity preservation
+for substitution by an arbitrary term is recorded as
+\cref{lem:substitution-complexity} below.
+\end{definition}
+
+The last clause first renames the binder and then substitutes.  Its purpose is
+not stylistic: it prevents a free variable of \(t\) from becoming bound.
+
+\begin{lemma}[Substitution preserves formula complexity]
+\label{lem:substitution-complexity}
+For every formula \(\varphi\), term \(t\), and variable \(x\),
+\[
+  c(\varphi[t/x])=c(\varphi).
+\]
+\end{lemma}
+\begin{proof}
+Induct on \(c(\varphi)\).  Term substitution changes no logical constructor
+in an atomic formula.  The connective clauses preserve the displayed outer
+constructor and use the induction hypotheses.  At a quantifier, substitution
+either stops, commutes with the quantifier, or renames its bound variable
+before recurring on the matrix.  Bound-variable renaming changes no logical
+constructor, so every quantifier case also preserves complexity.
+\end{proof}
+
+\begin{definition}[Alpha-equivalence]
+The relation of \emph{alpha-equivalence}, written \(\equiv_\alpha\), is the
+least equivalence relation on formulas that is a congruence for every formula
+constructor and contains
+\[
+ Qx\,\varphi\equiv_\alpha Qy\,(\varphi[y/x])
+\]
+for \(Q\in\set{\forall,\exists}\) whenever
+\(y\notin\operatorname{Var}(\varphi)\).  Thus a generating step renames one
+bound variable and exactly the occurrences governed by its quantifier.
+\end{definition}
+
+Alpha-equivalence is syntactic and is not literal identity of strings.  It
+will be shown below to preserve satisfaction.
+
+\begin{example}[Avoiding capture]
+Let \(\varphi=\forall y\,R(x,y)\) and substitute the term \(y\) for \(x\).
+Direct textual replacement would produce \(\forall y\,R(y,y)\), incorrectly
+binding the inserted occurrence.  If \(z\) is the least permitted fresh
+variable, the defined result is
+\[
+  \varphi[y/x]=\forall z\,R(y,z).
+\]
+The free occurrence introduced by substitution remains free.
+\end{example}
+
+\begin{lemma}[Free variables under substitution]
+\label{lem:substitution-fv}
+For all terms \(r,t\) and every variable \(x\): if
+\(x\notin\operatorname{Var}(r)\), then \(r[t/x]=r\); and
+\[
+ \operatorname{Var}(r[t/x])\subseteq
+ (\operatorname{Var}(r)\setminus\set{x})\cup\operatorname{Var}(t).
+\]
+For every formula \(\varphi\), term \(t\), and variables \(x,y\):
+\begin{enumerate}
+  \item \(\FV(\varphi[t/x])\subseteq
+        (\FV(\varphi)\setminus\set{x})\cup\operatorname{Var}(t)\); and
+  \item if \(y\notin\operatorname{Var}(\varphi)\), then
+        \(\FV(\varphi[y/x])=(\FV(\varphi)\setminus\set{x})\cup\set{y}\)
+        when \(x\in\FV(\varphi)\), and
+        \(\FV(\varphi[y/x])=\FV(\varphi)\) when
+        \(x\notin\FV(\varphi)\).
+\end{enumerate}
+A term's variables are measured by \(\operatorname{Var}\), exactly as in
+the \(\FV\) clauses for atomic formulas; no separate free-variable
+operator on terms is defined in this document.
+\textit{Status: complete proof.}
+\end{lemma}
+\begin{proof}
+For the term claims, induct on \(r\).  A variable other than \(x\) is
+unchanged, the variable \(x\) itself is replaced by \(t\), and the compound
+clause applies the induction hypotheses argumentwise.
+
+For the formula claims, proceed by strong induction on formula complexity
+\(c\).  The atomic cases follow from the term claims and the \(\FV\)
+clauses for atomic formulas; the \(\bottom\) case is immediate, and the
+connective cases combine the induction hypotheses through the \(\FV\)
+clauses.
+
+For clause 2, the renaming clause of the substitution definition never
+fires: every binder \(w\) of a subformula of \(\varphi\) lies in
+\(\operatorname{Var}(\varphi)\), so \(w\ne y\), and the substitution is
+textual replacement of the free occurrences of \(x\) by \(y\).  At a
+quantifier \(Qw\,\psi\): if \(w=x\), substitution stops, \(x\) is not free,
+and both sides equal \(\FV(Qw\,\psi)\); if \(w\ne x\), the substitution
+commutes with the quantifier, and the induction hypothesis for \(\psi\)
+passes through the clause
+\(\FV(Qw\,(\psi[y/x]))=\FV(\psi[y/x])\setminus\set{w}\), using
+\(w\ne y\) and the fact that \(x\in\FV(Qw\,\psi)\) iff
+\(x\in\FV(\psi)\).
+
+For clause 1 at a quantifier \(Qy\,\psi\): if \(y=x\), substitution stops
+and \(x\notin\FV(Qy\,\psi)\); if \(y\ne x\) and
+\(y\notin\operatorname{Var}(t)\), apply the induction hypothesis to
+\(\psi\) and remove \(y\).  In the renaming case
+\((Qy\,\psi)[t/x]=Qz\,((\psi[z/y])[t/x])\), apply the induction hypothesis
+to \(\psi\) with \([z/y]\)---clause 2---and to \(\psi[z/y]\) with
+\([t/x]\); the latter application is at the equal complexity
+\(c(\psi[z/y])=c(\psi)<c(Qy\,\psi)\), licensed by
+\cref{lem:substitution-complexity}.  Since
+\(z\notin\operatorname{Var}(t)\cup\set{x}\), computing with the \(\FV\)
+clauses gives
+\[
+ \FV\bigl(Qz\,((\psi[z/y])[t/x])\bigr)\subseteq
+ (\FV(Qy\,\psi)\setminus\set{x})\cup\operatorname{Var}(t).
+ \qedhere
+\]
+\end{proof}
+
+\begin{lemma}
+If \(x\notin\FV(\varphi)\), then
+\(\varphi[t/x]\equiv_\alpha\varphi\).
+\textit{Status: complete proof.}
+\end{lemma}
+\begin{proof}
+Proceed by strong induction on formula complexity \(c\).  In the atomic
+case, \(x\) occurs in no term of \(\varphi\), so every term is unchanged by
+the term clause of \cref{lem:substitution-fv} and
+\(\varphi[t/x]=\varphi\); the \(\bottom\) case is likewise immediate.  In
+the connective cases, \(x\) is free in no immediate subformula; the
+induction hypotheses and the congruence property of \(\equiv_\alpha\)
+conclude.
+
+At a quantifier \(Qy\,\psi\) with \(y=x\), substitution stops, and
+reflexivity concludes.  If \(y\ne x\) and
+\(y\notin\operatorname{Var}(t)\), then \(x\notin\FV(\psi)\); the induction
+hypothesis gives \(\psi[t/x]\equiv_\alpha\psi\), and the quantifier
+congruence concludes.  If \(y\ne x\) and \(y\in\operatorname{Var}(t)\),
+the definition returns \(Qz\,((\psi[z/y])[t/x])\), where \(z\) is the
+least variable outside
+\(\operatorname{Var}(\psi)\cup\operatorname{Var}(t)\cup\set{x,y}\).  By
+\cref{lem:substitution-fv}(2), \(x\notin\FV(\psi[z/y])\), because
+\(x\notin\FV(\psi)\) and \(x\ne z\).  By
+\cref{lem:substitution-complexity},
+\(c(\psi[z/y])=c(\psi)<c(Qy\,\psi)\), so the strong induction hypothesis
+applies to \(\psi[z/y]\) and gives
+\((\psi[z/y])[t/x]\equiv_\alpha\psi[z/y]\).  The quantifier congruence
+gives \(Qz\,((\psi[z/y])[t/x])\equiv_\alpha Qz\,(\psi[z/y])\); the
+generating clause, licensed by \(z\notin\operatorname{Var}(\psi)\), gives
+\(Qz\,(\psi[z/y])\equiv_\alpha Qy\,\psi\); transitivity concludes.
+\end{proof}
+

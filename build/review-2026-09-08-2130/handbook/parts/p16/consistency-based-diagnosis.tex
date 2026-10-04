@@ -1,0 +1,548 @@
+% P16.17: consistency diagnosis, corrected hitting-set search and measurements.
+\chapter{Consistency-Based Diagnosis}
+\label{sec:p16-consistency-based-diagnosis}
+
+A system model specifies how components behave when they function
+normally. An observation can contradict the conjunction of those
+normality assumptions. Diagnosis asks which assumptions must be
+withdrawn to make the model and observation jointly possible.
+The input fixes the component list and the system description.
+An omitted component, a faulty observation or an incorrect system
+description therefore changes the diagnostic problem.
+
+We develop Reiter's model, its conflict characterization, measurement
+theory and default-logic correspondence
+\cite{Reiter1987Diagnosis}. The search construction includes the
+shared-node and relabeling rules of Greiner, Smith and Wilkerson
+\cite[secs.~3--4, author version]{GreinerSmithWilkerson1989Correction}.
+All uses of minimality below mean inclusion minimality unless a
+cardinality or probability criterion is explicitly stated.
+
+\section{Normality, exact fault assignments and withdrawal}
+\label{sec:p16-diagnosis-semantics}
+
+\begin{hbdefinition}{def:p16-diagnosis-input}{A diagnosis problem}
+Fix a language with a class of structures and bivalent satisfaction
+for its sentences. Negation, conjunction and disjunction have their
+classical truth conditions. A theory is \emph{consistent} when it
+has a structure in that class; semantic consequence is written
+\(\entails\).
+
+Let \(C\) be a finite set of component names and let
+\(a_c\), for \(c\in C\), be designated abnormality sentences.
+In Reiter's first-order presentation \(a_c\) is
+\(\mathrm{AB}(c)\). Let \(S\) be the system description and \(O\)
+the observations, both sets of sentences, and put \(W=S\cup O\).
+For \(N,\Delta\subseteq C\), define
+\[
+\begin{split}
+ \mathsf{Normal}(N)&=\{\neg a_c:c\in N\},\\
+ W^-_\Delta&=W\cup\mathsf{Normal}(C\setminus\Delta),\\
+ W^=_\Delta&=W^-_\Delta\cup\{a_c:c\in\Delta\}.
+\end{split}
+\]
+A \emph{withdrawal set} is a \(\Delta\) for which \(W^-_\Delta\)
+is consistent. An \emph{exact fault assignment} is a \(\Delta\)
+for which \(W^=_\Delta\) is consistent. A \emph{diagnosis} is
+an inclusion-minimal exact fault assignment. Write
+\(\mathsf D(W)\) for the diagnosis family.
+No independence, probability or prescribed behavior of faulty
+components is part of this definition. The theory may relate
+abnormalities, for example by \(a_c\to a_d\).
+\index{diagnosis!consistency based}\index{diagnosis!normality assumption}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p16-diag-semantics}{proved=annex:p16.diag-semantics}{The withdrawal characterization and all empty cases}
+For the preceding input:
+\begin{enumerate}
+\item The diagnoses are precisely the inclusion-minimal withdrawal
+      sets. For every diagnosis \(\Delta\),
+      \(W^-_\Delta\entails a_c\) for each \(c\in\Delta\);
+      consequently \(W^-_\Delta\) and \(W^=_\Delta\) have the
+      same structures.
+\item A diagnosis exists exactly when \(W\) is consistent.
+      The empty set is a diagnosis exactly when
+      \(W\cup\mathsf{Normal}(C)\) is consistent; in that case
+      it is the sole diagnosis.
+\item Withdrawal sets are closed under enlargement, and every
+      withdrawal set contains a diagnosis. Exact fault assignments
+      need not be closed under enlargement.
+\item To test that a withdrawal set \(\Delta\) is minimal, it is
+      sufficient and necessary to test that
+      \(W^-_{\Delta\setminus\{c\}}\) is inconsistent for every
+      \(c\in\Delta\).
+\end{enumerate}
+These statements include \(C=\varnothing\) and inconsistent \(W\).
+\end{hbtheorem}
+
+For example, with \(C=\{c,d\}\) and \(W=\{a_c\to a_d\}\),
+\(\varnothing\) is the sole diagnosis. Withdrawing \(c\)'s normality
+is consistent, but declaring exactly \(c\) abnormal is inconsistent.
+The equivalence in the theorem concerns the minimal sets.
+
+\section{Conflicts and hitting sets}
+\label{sec:p16-diagnosis-conflicts}
+
+\begin{hbdefinition}{def:p16-diagnosis-conflicts}{Conflicts and transversals}
+A \emph{conflict} is a \(K\subseteq C\) such that
+\(W\cup\mathsf{Normal}(K)\) is inconsistent. Let
+\(\mathcal K(W)\) be all conflicts and
+\(\mathcal K_{\min}(W)\) its inclusion-minimal members.
+For any family \(\mathcal F\subseteq\mathcal P(C)\), a
+\emph{hitting set} is an \(H\subseteq C\) satisfying
+\(H\cap K\ne\varnothing\) for every \(K\in\mathcal F\).
+Let \(\mathsf{Tr}(\mathcal F)\) be its minimal hitting sets.
+The empty family has the single minimal hitting set \(\varnothing\).
+A family containing \(\varnothing\) has no hitting set.
+\index{diagnosis!conflict}\index{hitting set!minimal}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p16-diag-conflicts}{proved=annex:p16.diag-conflicts}{Conflict duality}
+Conflicts are closed under enlargement and
+\[
+\begin{split}
+ W^-_\Delta\text{ is consistent}
+   &\quad\Longleftrightarrow\quad
+        \Delta\text{ hits every member of }\mathcal K(W),\\
+ \mathsf D(W)
+   &=\mathsf{Tr}(\mathcal K(W))
+     =\mathsf{Tr}(\mathcal K_{\min}(W)).
+\end{split}
+\]
+Minimality of a hitting set \(H\) is equivalent to the existence,
+for every \(c\in H\), of a conflict \(K_c\) with
+\(K_c\cap H=\{c\}\).
+For every finite family \(\mathcal F\subseteq\mathcal P(C)\),
+\[
+ \mathsf{Tr}(\mathsf{Tr}(\mathcal F))
+       =\min_{\subseteq}\mathcal F.
+\]
+Here \(\min_{\subseteq}\) denotes the family of inclusion-minimal
+members. Both exceptional empty-family cases obey this identity.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p16-diag-singletons}{proved=annex:p16.diag-singletons}{Single faults and partial conflict information}
+Suppose at least one conflict exists. Then
+\[
+ \{c\}\in\mathsf D(W)
+   \quad\Longleftrightarrow\quad
+ c\in\bigcap\mathcal K(W)
+   \quad\Longleftrightarrow\quad
+ c\in\bigcap\mathcal K_{\min}(W).
+\]
+If \(K_1,\ldots,K_r\), \(r\ge1\), are any known conflicts, then
+\[
+ \{c\}\in\mathsf D(W)
+ \quad\Longleftrightarrow\quad
+ c\in\bigcap_{i=1}^rK_i
+ \quad\hbox{and}\quad W^-_{\{c\}}\text{ is consistent}.
+\]
+Without a conflict, the empty diagnosis is already the sole
+diagnosis. Intersecting an empty collection of conflicts must not
+be used to declare every component a single fault.
+\end{hbtheorem}
+
+\section{Complete search with explicit consistency access}
+\label{sec:p16-diagnosis-search}
+
+\begin{hbdefinition}{def:p16-diagnosis-hs-tree}{An unpruned hitting-set tree}
+Let \(C\) be finite and \(\mathcal F\subseteq\mathcal P(C)\).
+Each node carries the set \(H\) of edge labels on its root path.
+The root has \(H=\varnothing\). At a node, choose a
+\(K\in\mathcal F\) disjoint from \(H\), if one exists.
+Label the node \(K\), and create an edge labeled \(c\) to a child
+with path set \(H\cup\{c\}\), for each \(c\in K\).
+If no such \(K\) exists, label the node \(\checkmark\) and give
+it no children. A node labeled by the empty conflict has no
+children and is not a success node.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p16-diag-hs-tree}{proved=annex:p16.diag-hs-tree}{Completeness of the basic tree}
+Every branch has length at most \(|C|\). Every success path
+is a hitting set, and every minimal hitting set is a success
+path set. Success path sets can be nonminimal; taking their
+inclusion-minimal members returns exactly
+\(\mathsf{Tr}(\mathcal F)\).
+The conclusion does not require minimal conflicts or a special
+choice order for the disjoint conflicts.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p16-diagnosis-hs-dag}{A corrected shared-node search}
+The following finite procedure works with an explicitly listed
+family \(\mathcal F\). The oracle construction below supplies
+its implicit diagnostic version.
+\begin{enumerate}
+\item Store a directed acyclic graph with a unique active node
+      for each represented set \(H\subseteq C\). The root is
+      \(\varnothing\). Process active unprocessed nodes in
+      increasing order of \(|H|\), breaking ties by a fixed order.
+\item If a success node \(J\) satisfies \(J\subsetneq H\),
+      close \(H\), without a label query or successors.
+      Otherwise find a member \(K\) of the current family
+      disjoint from \(H\). If there is none, mark \(H\)
+      successful. Otherwise label it \(K\).
+\item For every \(c\in K\), connect \(H\) to the node
+      \(H\cup\{c\}\). Reuse that node if it already exists.
+      Preserve all of its incoming edges; do not replace a
+      second incoming edge by an unconnected closed copy.
+\item When a newly used conflict \(K\) is a proper subset of
+      an earlier label \(K'\), relabel every such node by \(K\).
+      At that node remove precisely the outgoing edges whose
+      labels belong to \(K'\setminus K\). Delete a node only
+      if it is no longer reachable from the root. A surviving
+      node with another incoming path keeps its descendants.
+      If this operation removes the node being processed,
+      discontinue processing that node.
+\item Remove each superseded \(K'\) from the stored family.
+      Repeat the preceding relabeling for all superseded
+      labels, then continue processing reachable nodes.
+      Return the success sets when no unprocessed node remains.
+\end{enumerate}
+Removing a superseded set implements its redundancy in the
+family. The source also describes placing its subset ahead of
+it in the ordered conflict list; that gives the same available
+disjoint-conflict test. Graph shapes and the order of equally
+large answers can differ.
+\index{diagnosis!hitting-set DAG}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p16-diag-hs-dag}{proved=annex:p16.diag-hs-dag}{Correctness of shared-node closing and pruning}
+The procedure terminates and returns exactly
+\(\mathsf{Tr}(\mathcal F)\), in nondecreasing cardinality.
+Every active edge adds one element to its source set, so
+all paths to a shared node have the same set and length.
+The graph has at most \(2^{|C|}\) active nodes and
+\(|C|2^{|C|}\) active edges.
+The relabeling operation preserves the disjoint-conflict
+condition and every successor required by the smaller label.
+Both node sharing and retention of nodes reachable through
+another parent are required for the stated pruning procedure.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p16-diagnosis-oracle}{The diagnostic consistency oracle}
+A \emph{total diagnostic oracle} takes \(N\subseteq C\) and
+returns either a conflict \(K\subseteq N\), or
+\(\checkmark\) certifying that \(W\cup\mathsf{Normal}(N)\)
+is consistent. It must always terminate, and every answer must
+have its stated meaning. A conflict need not be minimal.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p16-diag-oracle}{proved=annex:p16.diag-oracle}{Implicit conflict search and its computational premise}
+In the shared-node procedure, keep a cache of previously
+returned conflicts. Before calling the oracle at \(H\), reuse
+any cached conflict disjoint from \(H\). If none exists, call
+the oracle with \(C\setminus H\). Apply the same relabeling,
+node-sharing and closing operations to each new conflict.
+When a cached conflict is removed as redundant, retain its
+smaller replacing conflict in the cache.
+
+This procedure terminates and returns all and only the
+diagnoses. No two oracle calls return the same conflict;
+a later returned conflict never contains an earlier returned
+conflict. Stopping after all nodes of cardinality at most
+\(k\) have been processed supplies all diagnoses of
+cardinality at most \(k\).
+
+For a finite propositional theory \(W\) whose sentences and
+designated \(a_c\)'s use a total of \(v\) atoms, a total
+oracle exists: enumerate the \(2^v\) valuations. If no
+valuation satisfies the current normality assumptions,
+return the whole queried set \(N\); otherwise return
+\(\checkmark\). At most \(|N|\) further consistency tests
+suffice to shrink a returned conflict to a minimal one.
+For an arbitrary first-order theory the total-oracle premise
+is additional; a refutation procedure alone need not terminate
+on a consistent query.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p16-diag-pruning-calculations}{proved=annex:p16.diag-pruning-calculations}{Worked hitting sets and retained paths}
+\begin{enumerate}
+\item For
+ \[
+ \mathcal F=\{\{2,4,5\},\{1,2,3\},\{1,3,5\},
+                 \{2,4,6\},\{2,4\},\{2,3,5\},\{1,6\}\},
+ \]
+ the minimal hitting sets are exactly
+ \[
+ \{1,2\},\quad\{2,3,6\},\quad\{2,5,6\},\quad
+ \{1,3,4\},\quad\{1,4,5\},\quad\{3,4,6\}.
+ \]
+\item For
+ \(\mathcal G=\{\{a,b\},\{b,c\},\{a,c\},\{b,d\},\{b\}\}\),
+ the answers are \(\{a,b\}\) and \(\{b,c\}\).
+ After the root is relabeled \(\{b\}\), the shared node
+ \(\{a,b\}\) remains reachable through the root's \(b\)-edge
+ and then the \(a\)-edge. Deleting its other incoming branch
+ therefore preserves that answer.
+\item For \(\{\{a,b\},\{a\},\{b\}\}\), the sole answer is
+ \(\{a,b\}\). Relabeling by \(\{b\}\) removes the root's
+ \(a\)-edge but does not subsequently license deletion of
+ its \(b\)-edge on comparison with the incomparable
+ conflict \(\{a\}\).
+\end{enumerate}
+\end{hbtheorem}
+
+\section{Two fully specified circuit calculations}
+\label{sec:p16-diagnosis-circuits}
+
+\begin{hbdefinition}{def:p16-diagnosis-circuit-inputs}{Circuit variables and guarded equations}
+For a Boolean full adder, let
+\[
+ C=\{X_1,X_2,A_1,A_2,O_1\},\qquad x,u,v,y,z\in\{0,1\}.
+\]
+The inputs are \(1,0,1\); the observed outputs are \(y=1,z=0\).
+The system requires the following equations when the named
+component is normal:
+\[
+\begin{array}{c|ccccc}
+ \text{component}&X_1&A_1&A_2&X_2&O_1\\ \hline
+ \text{normal equation}&x=1&u=0&v=x&y=1-x&z=u\lor v .
+\end{array}
+\]
+The symbol \(\lor\) in the last equation is Boolean disjunction.
+All wire values remain Boolean even when a component is faulty.
+
+For the multiplier-adder network let
+\[
+ C=\{M_1,M_2,M_3,A_1,A_2\},\qquad x_1,x_2,x_3\in\mathbb Z .
+\]
+Each multiplier has inputs \(3,2\), and the observed adder
+outputs are \(10,12\). Normal \(M_i\) requires \(x_i=6\);
+normal \(A_1\) requires \(x_1+x_2=10\); normal \(A_2\)
+requires \(x_2+x_3=12\). An abnormal component contributes
+no additional equation. These are stipulated mathematical
+systems, with observations already incorporated in \(W\).
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p16-diag-circuits}{proved=annex:p16.diag-circuits}{All diagnoses of the two circuits}
+The Boolean adder has precisely two minimal conflicts,
+\[
+             \{X_1,X_2\},\qquad \{X_1,A_2,O_1\},
+\]
+and precisely three diagnoses,
+\[
+                 \{X_1\},\qquad\{X_2,A_2\},\qquad\{X_2,O_1\}.
+\]
+It has ten conflicts in total.
+The multiplier-adder network has precisely two minimal conflicts,
+\[
+           \{M_1,M_2,A_1\},\qquad\{M_1,M_3,A_1,A_2\},
+\]
+and precisely four diagnoses,
+\[
+                 \{M_1\},\quad\{A_1\},\quad
+                 \{M_2,M_3\},\quad\{M_2,A_2\}.
+\]
+Each listed diagnosis has an explicit consistent wire assignment.
+\end{hbtheorem}
+
+\section{What new measurements change}
+\label{sec:p16-diagnosis-measurements}
+
+\begin{hbdefinition}{def:p16-diagnosis-prediction}{Prediction and a measurement update}
+A diagnosis \(\Delta\) \emph{predicts} a sentence \(\pi\)
+when \(W^=_\Delta\entails\pi\), equivalently
+\(W^-_\Delta\entails\pi\). A measurement update adds a
+sentence \(\pi\), producing \(W'=W\cup\{\pi\}\).
+A finite conjunction represents several new measurements.
+Failure to predict \(\pi\) does not imply prediction of
+\(\neg\pi\).
+\index{diagnosis!measurement}\index{diagnosis!prediction}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p16-diag-measurements}{proved=annex:p16.diag-measurements}{Persistence, rejection and new minimal diagnoses}
+\begin{enumerate}
+\item An old diagnosis \(\Delta\) remains a diagnosis after
+      measuring \(\pi\) exactly when it does not predict
+      \(\neg\pi\). In particular confirming measurements
+      preserve it, and disconfirming measurements reject it.
+\item Every new diagnosis contains an old diagnosis.
+      If it is not itself old, every old diagnosis that
+      it contains is a proper subset and predicts
+      \(\neg\pi\).
+\item If no old diagnosis predicts \(\neg\pi\), the two
+      diagnosis families are identical.
+\item If the empty set was not an old diagnosis, every
+      diagnosis that is new has at least two components.
+      Hence new single-fault diagnoses cannot arise.
+      If every old diagnosis decides \(\pi\), the surviving
+      single faults are precisely those predicting \(\pi\).
+\end{enumerate}
+The first three statements also cover an inconsistent initial
+or updated theory. A measurement can change predictions even
+when it leaves the diagnosis family fixed.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p16-diag-measurement-calculations}{proved=annex:p16.diag-measurement-calculations}{Complete measurement updates for the multiplier network}
+In the multiplier-adder network:
+\begin{enumerate}
+\item Diagnoses \(\{M_1\}\) and \(\{A_1\}\) predict \(x_2=6\).
+      Diagnoses \(\{M_2,M_3\}\) and \(\{M_2,A_2\}\)
+      predict \(x_2=4\).
+\item After measuring \(x_2=5\), the diagnoses are precisely
+ \[
+ \{M_1,M_2,M_3\},\quad\{M_1,M_2,A_2\},\quad
+ \{A_1,M_2,M_3\},\quad\{A_1,M_2,A_2\}.
+ \]
+      Every old diagnosis is rejected.
+\item After measuring \(x_1=6\) instead, the diagnoses are
+      precisely \(\{A_1\},\{M_2,M_3\},\{M_2,A_2\}\).
+      Thus \(\{A_1\}\) is the only remaining single fault,
+      although multiple-fault diagnoses remain.
+\end{enumerate}
+\end{hbtheorem}
+
+\section{Defaults, covering models and explanatory entailment}
+\label{sec:p16-diagnosis-defaults}
+
+\begin{hbdefinition}{def:p16-diagnosis-defaults}{Normality defaults}
+In classical first-order logic, let \(\operatorname{Th}\)
+denote deductive closure and form the closed default theory
+\[
+       \mathcal T_W=
+       \left(\left\{\frac{\top:\neg a_c}{\neg a_c}:c\in C\right\},W\right).
+\]
+Use Reiter extensions as defined in
+\cref{def:p18-default-closure}. For this prerequisite-free
+theory the operator on a closed candidate \(E\) is
+\[
+ \Gamma(E)=\operatorname{Th}
+       \bigl(W\cup\{\neg a_c:c\in C,\ a_c\notin E\}\bigr).
+\]
+An extension satisfies \(E=\Gamma(E)\).
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p16-diag-defaults}{proved=annex:p16.diag-defaults}{The complete default correspondence and its consistency condition}
+If \(W\) is consistent, the map
+\[
+       \Delta\longmapsto\operatorname{Th}(W^-_\Delta)
+\]
+is a bijection from diagnoses to Reiter extensions of
+\(\mathcal T_W\). Its inverse is
+\(E\mapsto\{c\in C:a_c\in E\}\). Each extension consists
+exactly of the sentences predicted by its diagnosis.
+
+More generally, for finitely many closed sentences
+\(\alpha_i\) and consistent \(W\), the extensions of
+the default theory \((\{\top:\alpha_i/\alpha_i\},W)\) are exactly
+\(\operatorname{Th}(W\cup A)\), where \(A\) is a maximal
+consistent-with-\(W\) subset of \(\{\alpha_i\}\).
+If \(W\) is inconsistent, the normality default theory
+has the sole inconsistent extension, the whole sentence
+language, while the diagnosis family is empty.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p16-diagnosis-cover-model}{A covering input and its logical representation}
+Let \(D\) be a finite disorder set, \(M\) a finite manifestation
+set, \(R\subseteq D\times M\), and \(M^+\subseteq M\).
+Put \(R_m=\{d\in D:(d,m)\in R\}\). A cover is
+\(\Delta\subseteq D\) such that \(\Delta\cap R_m\ne\varnothing\)
+for every \(m\in M^+\).
+
+Introduce separate indexed atoms \(a_d,p_d,o_m\).
+Take \(C=D\) and the theory
+\[
+ S=\{\neg a_d\to\neg p_d:d\in D\}
+       \cup\{o_m\to\bigvee_{d\in R_m}p_d:m\in M\},
+       \qquad O=\{o_m:m\in M^+\}.
+\]
+An empty disjunction is false. Indexing keeps the three
+atom families disjoint even if \(D\) and \(M\) overlap
+as underlying sets. The interpretation of \(R\) as
+possible causal production is supplied by an application;
+the displayed theory itself is a Boolean constraint model.
+
+Its named first-order version uses distinct indexed names for
+disorders and manifestations and unary predicates
+\(\mathrm{Dis},\mathrm{Present},\mathrm{Observed},\mathrm{AB}\).
+The system axioms are \(\mathrm{Dis}(d)\) for \(d\in D\),
+\[
+ \mathrm{Observed}(m)\to
+       \bigvee_{d\in R_m}\mathrm{Present}(d)\quad(m\in M),
+ \qquad
+ \forall x\,(\mathrm{Dis}(x)\land\neg\mathrm{AB}(x)
+                         \to\neg\mathrm{Present}(x)).
+\]
+The observations are \(\mathrm{Observed}(m)\) for
+\(m\in M^+\), and \(a_d=\mathrm{AB}(d)\).
+The annex gives structures in both directions, including
+empty disorder or manifestation sets.
+\index{diagnosis!set covering}\index{diagnosis!default logic}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p16-diag-set-cover}{proved=annex:p16.diag-set-cover}{Covering and diagnosis}
+For this representation, withdrawal sets are precisely
+the covers of \(M^+\), and diagnoses are precisely its
+inclusion-minimal covers. The minimal conflicts are
+the inclusion-minimal members of
+\(\{R_m:m\in M^+\}\).
+If an observed manifestation has \(R_m=\varnothing\),
+there is no diagnosis. If \(M^+=\varnothing\), the sole
+diagnosis is empty.
+
+Minimum-cardinality covers form a subfamily of the diagnoses,
+and the inclusion can be strict. For
+\[
+ R_{m_1}=\{a,b\},\qquad R_{m_2}=\{a,c\},\qquad
+                 M^+=\{m_1,m_2\},
+\]
+the diagnoses are \(\{a\}\) and \(\{b,c\}\), while only
+\(\{a\}\) has minimum cardinality.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p16-diag-abduction-boundaries}{proved=annex:p16.diag-abduction-boundaries}{Consistency, entailment and declared fault modes}
+\begin{enumerate}
+\item With one component, atom \(o\), system
+      \(S=\{\neg a_c\to\neg o\}\), and observation \(o\),
+      the sole diagnosis is \(\{c\}\). Nevertheless
+      \(S\cup\{a_c\}\not\entails o\).
+\item Replacing \(S\) by \(S\cup\{a_c\to o\}\) preserves
+      that diagnosis and makes \(S\cup\{a_c\}\entails o\)
+      for the augmented \(S\).
+      The extra fault-mode implication supplies the
+      explanatory entailment.
+\item With \(C=\{c,d\}\) and
+      \(W=\{a_c\lor a_d,\neg(a_c\land a_d)\}\),
+      the diagnoses are \(\{c\}\) and \(\{d\}\).
+      One has \(W\not\entails a_c\) and \(W\not\entails a_d\).
+      The superset \(\{c,d\}\) is a withdrawal
+      set but not an exact fault assignment.
+\end{enumerate}
+Thus the consistency requirement of diagnosis and the
+observation-entailment requirement of
+\cref{def:p16-abduction-models} impose different conditions.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p16-diag-probability-boundary}{proved=annex:p16.diag-probability-boundary}{What an independent fault prior ranks}
+Let independent fault indicators have probabilities
+\(0<p_c<1\). Write \(P(\Delta)\) for the probability of
+the event that exactly the indicators indexed by
+\(\Delta\subseteq C\) equal one. Then
+\[
+ P(\Delta)=
+   \prod_{c\in\Delta}p_c\prod_{c\notin\Delta}(1-p_c)
+   =\left(\prod_{c\in C}(1-p_c)\right)
+        \prod_{c\in\Delta}\frac{p_c}{1-p_c}.
+\]
+Every added component lowers this probability if all
+\(p_c<1/2\), but among incomparable fault sets fewer
+components need not mean higher probability.
+For \(p_a=1/10000\) and \(p_b=p_c=1/10\),
+the two-fault set \(\{b,c\}\) is more probable than
+the singleton \(\{a\}\).
+If all probabilities equal one common \(p<1/2\),
+probability decreases strictly with cardinality.
+
+For an observed event \(E\) with positive probability, posterior
+comparison also multiplies each prior by its likelihood
+\(P(E\mid\Delta)\). Logical consistency alone does not
+specify those likelihoods.
+\end{hbtheorem}
+
+The results concern the stated finite component universe,
+including simultaneous faults and interactions represented in
+the theory. They do not locate failures outside that universe
+or justify a probability model for a physical system.
+The separate original accounts of probabilistic diagnosis,
+fault-mode abduction and protected-premise counterfactual
+diagnosis require their own input semantics and derivations.

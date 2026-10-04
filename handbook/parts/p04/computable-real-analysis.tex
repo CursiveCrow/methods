@@ -1,0 +1,239 @@
+\section{Function information, derivative constructions and certified roots}
+\label{sec:p04-computable-real-analysis}
+
+The distinction between a value oracle and a uniform function name is
+essential in numerical reasoning. The representations and all-name
+realizer convention are those of
+\cref{sec:p04-represented-spaces,sec:p04-function-operators}.
+In this section \(\delta_{\mathrm C}\) still names scalar reals by
+pointwise-error Cauchy approximations, and \(\gamma_{\mathrm P}\)
+names members of \(C[0,1]\) by rational polygons with uniform error
+at most \(2^{-n}\). Neither representation is replaced by an
+uncontrolled convergent sequence.
+The modulus and operator constructions extend the explicitly represented
+procedures in \cite[Theorems 6.4, 6.7, 6.9 and 7.7]{Weihrauch1995IntroductionRS}.
+The differentiability construction is a corrected reconstruction of the bump presentation in
+\cite[\S8.2, pp.\ 50--53]{Bournez2024ComputableAnalysisAuthor},
+with the explicit parameters and full error estimates below.
+
+\subsection{Rational samples and the information supplied by a modulus}
+\label{sec:p04-ca-samples}
+
+\begin{hbdefinition}{def:p04-ca-sample-name}{A sampled-value representation}
+Fix an effective enumeration \((q_i)_{i\in\mathbb N}\) of all
+rationals in \([0,1]\), and an effective enumeration of pairs
+\((i,n)\in\mathbb N^2\). A \(\sigma_{\mathrm S}\)-name of
+\(f\in C[0,1]\) gives a rational \(r_{i,n}\) at the position
+for \((i,n)\), with
+\[
+ |r_{i,n}-f(q_i)|\leq2^{-n}.
+\]
+The entries use the rational coding of \cref{def:p04-rs-rational-code}.
+The continuity promise makes the named function unique, since two
+continuous functions agreeing on all rational arguments agree everywhere.
+A modulus is a function \(\mu:\mathbb N\to\mathbb N\) with
+\[
+ |x-y|\leq2^{-\mu(n)}\ \Longrightarrow\
+ |f(x)-f(y)|\leq2^{-n}\qquad(x,y\in[0,1]).
+\]
+A sample-and-modulus name consists of the sample table and a stream
+giving the integer values of such a modulus. The promise applies to
+the same function in both components.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p04-ca-sample-modulus}{proved=annex:p04-ca-sample-modulus}{Uniform names and sample tables with a supplied modulus}
+Uniform polygon names are computably equivalent to sample-and-modulus
+names. In the direction from samples to a polygon of output precision
+\(n\), use a dyadic partition of mesh
+\(2^{-\mu(n+2)}\), approximate the values at its vertices within
+\(2^{-n-2}\), and interpolate those rational values linearly.
+The resulting uniform error is at most \(2^{-n-1}\).
+The converse computes the table and a modulus from the polygon name.
+\end{hbtheorem}
+
+This equivalence is between kinds of input information. Merely knowing
+that a continuous function has a modulus does not supply the integer
+values of a computable modulus or compute them from a weak name.
+
+\begin{hbtheorem}{thm:p04-ca-sample-obstruction}{proved=annex:p04-ca-sample-obstruction}{Samples alone do not uniformly determine area or a uniform name}
+On all of \(C[0,1]\), the scalar operation
+\(f\mapsto\int_0^1 f(x)\,dx\) has no continuous
+\((\sigma_{\mathrm S},\delta_{\mathrm C})\)-realizer.
+Consequently there is no continuous translator from sampled-value names
+to uniform polygon names, and no computable translator of that kind.
+The assertion still fails when each queried rational value is supplied
+exactly for a rational polygon: finitely many samples can miss a narrow,
+high tent with area one.
+\end{hbtheorem}
+
+The positive integration result in \cref{thm:p04-fo-integration} is not
+in conflict with this obstruction: its input controls the whole function
+uniformly. A supplied height bound together with an appropriate modulus
+changes the available information; neither is silently included in a
+sample table.
+
+\subsection{A computable function with a noncomputable continuous derivative}
+\label{sec:p04-ca-bumps}
+
+\begin{hbdefinition}{def:p04-ca-bump}{A differentiable bump and its scales}
+Define, on \(\mathbb R\),
+\[
+ \theta(x)=
+ \begin{cases}x(x^2-1)^2,&-1\leq x\leq1,\\
+ 0,&|x|>1,\end{cases}
+ \qquad \lambda=\frac{16}{25\sqrt5},\qquad
+ \theta_{\alpha\beta}(x)=\frac{\beta}{\lambda}
+                         \theta(x/\alpha),
+\]
+where \(\alpha,\beta>0\). Here \(\lambda\) is the maximum
+of \(|\theta|\); \(\alpha\) is a half-width and \(\beta\)
+an amplitude, not derivative bounds. The basic bump is odd,
+vanishes at \(-1,0,1\), and has zero derivative at \(-1,1\)
+and derivative one at zero. Its minimum and maximum occur at
+\(-1/\sqrt5\) and \(1/\sqrt5\). In particular,
+\[
+ \lVert\theta_{\alpha\beta}\rVert_\infty=\beta,
+ \qquad \theta'_{\alpha\beta}(0)=\frac{\beta}{\lambda\alpha},
+ \qquad |\theta'_{\alpha\beta}(x)|\leq
+                         \frac{\beta}{\lambda\alpha}.
+\]
+The derivative at each support endpoint is zero.
+\end{hbdefinition}
+
+The function is computable without deciding whether an arbitrary real
+argument equals a support endpoint. Indeed, with
+\(c(x)=\min(1,\max(-1,x))\), one has
+\(\theta(x)=c(x)(c(x)^2-1)^2\). Clamping, polynomial arithmetic,
+and the positive computable constant \(\lambda\) give a uniform
+value algorithm.
+
+\begin{hbdefinition}{def:p04-ca-coding-function}{Widths, heights and an injective enumeration}
+Let \(A\subseteq\mathbb N\) be computably enumerable but undecidable.
+Fix a total computable injective enumeration
+\(h:\mathbb N\to\mathbb N\) with range \(A\).
+Such a set is infinite, and waiting for the next previously unseen member
+of an enumeration constructs \(h\).
+For \(n=h(k)\), define
+\[
+ \alpha_n=2^{-k-2n-2},\qquad
+ \beta_n=2^{-k-3n-2},\qquad
+ \frac{\beta_n}{\alpha_n}=2^{-n}.
+\]
+These symbols are defined for \(n\in A\); finding its enumeration
+position is not an operation promised for an arbitrary \(n\).
+Define, for \(x\in[0,1]\),
+\[
+ f(x)=\sum_{k=0}^{\infty}
+   \theta_{\alpha_{h(k)}\beta_{h(k)}}(x-2^{-h(k)}),
+ \qquad
+ g_M(x)=\sum_{k=0}^{M}
+   \theta_{\alpha_{h(k)}\beta_{h(k)}}(x-2^{-h(k)}).
+\]
+The supports are disjoint, so at each point at most one summand is
+nonzero. The notation is a series, but its pointwise value is not an
+uncontrolled infinite accumulation of nonzero terms.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p04-ca-computable-c1}{proved=annex:p04-ca-computable-c1}{A full uniform name for the bump construction}
+The function just defined is computable in the uniform polygon
+representation and belongs to \(C^1[0,1]\).
+Its derivative is continuous at the accumulating endpoint, with
+\(f'(0)=0\). The function \(f\) is Lipschitz with constant four.
+Its second right derivative at zero does not exist.
+The finite partial sums satisfy
+\[
+ \lVert f-g_M\rVert_\infty\leq2^{-M-3}.
+\]
+For every \(n\),
+\[
+ f'(2^{-n})=
+ \begin{cases}2^{-n}/\lambda,&n\in A,\\0,&n\notin A.
+ \end{cases}
+\]
+Endpoint derivatives are one-sided on the closed interval.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p04-ca-noncomputable-derivative}{proved=annex:p04-ca-noncomputable-derivative}{One function, not only a noncomputable operator}
+The continuous derivative of this computable \(C^1\) function has no
+computable uniform polygon name. It has no computable modulus of
+continuity. Computing the derivative uniformly at the rational centres
+\(2^{-n}\) would decide \(A\), using the separated values in the
+preceding theorem.
+\end{hbtheorem}
+
+This is stronger than the uniform differentiation obstruction in
+\cref{thm:p04-fo-differentiation}: it exhibits one computable input whose
+derivative is not a computable function. Each specified centre value is
+nevertheless individually a computable scalar, either zero or
+\(2^{-n}/\lambda\). There is no uniform procedure selecting the correct
+alternative from \(n\). Function computability is not the assertion that
+each value separately has some program.
+In contrast, \(f(2^{-n})=0\) in both cases. The nearby function heights
+depend on the enumeration time \(k\) and can be arbitrarily small;
+the derivative separation does not imply a corresponding decidable
+test on the original function's values.
+
+\subsection{Additional differentiability and additional input information}
+\label{sec:p04-ca-higher-derivatives}
+
+\begin{hbtheorem}{thm:p04-ca-derivative-modulus}{proved=annex:p04-ca-derivative-modulus}{The modulus criterion and its individual \(C^2\) consequence}
+For a fixed computable \(f\in C^1[0,1]\), its derivative is
+computable if and only if its derivative has a computable modulus.
+For a fixed computable \(f\in C^2[0,1]\), the derivative is therefore
+computable. More explicitly, if a positive integer bound \(K\) on
+\(\lVert f''\rVert_\infty\) is supplied, choose \(\ell\) with
+\(K\leq2^\ell\); then \(\mu'(n)=n+\ell\) is a computable
+derivative modulus and computes \(f'\) uniformly from \(f\)'s name
+and that bound. Every derivative of one fixed computable \(C^\infty\)
+function is individually computable.
+\end{hbtheorem}
+
+The first clause completes the exercise stated as Theorem 8.6 in
+\cite[pp.\ 50--51]{Bournez2024ComputableAnalysisAuthor}; the remaining
+clauses make the information in its Corollaries 8.1--8.2 explicit.
+Compactness supplies existence of a bound on a continuous second
+derivative, not a procedure that computes that bound from an ordinary
+name of \(f\). The individual \(C^2\) conclusion permits the existing
+integer bound to be fixed in a program for this one function.
+It does not supply a uniform realizer on all ordinary names of
+\(C^2\) functions. Likewise, separate computability for each derivative
+order does not supply one program that accepts the order as input and
+produces all the derivative names.
+
+\subsection{Turning a small residual into a certified root location}
+\label{sec:p04-ca-root-certificates}
+
+\begin{hbdefinition}{def:p04-ca-root-bound}{A lower-slope promise}
+Let \(f\in C^1[0,1]\), let \(m>0\) be supplied rational data,
+and promise \(f'(x)\geq m\) on \([0,1]\) and
+\(f(0)\leq0\leq f(1)\). There is then exactly one zero \(z\).
+The lower-slope condition is not established by observing finitely
+many samples, nor by the bare fact that the zero is unique.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p04-ca-root-certificate}{proved=annex:p04-ca-root-certificate}{Residual-to-location and perturbation bounds}
+Under the lower-slope promise, every \(x\in[0,1]\) satisfies
+\[
+ |x-z|\leq |f(x)|/m.
+\]
+From a uniform polygon name \((P_k)\) and output precision \(n\),
+search for rational \(s\in[0,1]\) and \(k\) with
+\[
+ |P_k(s)|+2^{-k}<m2^{-n}.
+\]
+The search terminates, and \(s\) is a root approximation with
+\(|s-z|<2^{-n}\). If a second continuous function \(g\) has
+a zero \(w\in[0,1]\) and
+\(\lVert f-g\rVert_\infty\leq\epsilon\), then
+\(|w-z|\leq\epsilon/m\).
+\end{hbtheorem}
+
+For \(f(x)=x-1/3\), take \(m=1\): the residual is exactly
+the location error. For \(f(x)=\eta(x-1/3)\), with small
+positive \(\eta\), the same location error has residual smaller by
+the factor \(\eta\), and the valid certificate uses \(m=\eta\).
+For \(f(x)=(x-1/2)^2\), uniqueness holds but no positive lower-slope
+bound does: near the root, distance is the square root of the residual,
+not the residual divided by a fixed positive constant. The unique-root
+algorithm in \cref{thm:p04-fo-unique-zero} still applies; its correctness
+does not depend on a nonexistent slope certificate.

@@ -1,0 +1,242 @@
+%% parts/p02/first-order-normal-forms-supplement.tex --- retained additions
+\section*{Editorial normal-form additions}
+\addcontentsline{toc}{section}{Editorial normal-form additions}
+The preceding normal-form definitions and proofs fix the formula language,
+capture-avoiding substitution, and nonempty-domain semantics used here.
+The quantifier-law table retrieves their side conditions.  The clause
+construction below supplies the matrix conversion and the composed
+expansion--reduct argument needed to pass from sentences to clause sets.
+
+\begin{hbtheorem}{thm:p02-fol-quantifier-equivalences}{proved=annex:p2.fol.clausal.quantifier-laws}{Quantifier equivalence laws}
+Every row of Table~\ref{tab:p02-quantifier-equivalences} is valid in the
+nonempty-domain first-order semantics.  A row carrying
+\(x\notin\FV(\chi)\) may be used only under that displayed side condition.
+\end{hbtheorem}
+
+\begingroup\small\setlength{\tabcolsep}{4pt}
+\begin{longtable}{@{}p{.32in}p{2.55in}p{1.88in}@{}}
+\caption{Quantifier equivalence laws with side conditions.}
+\label{tab:p02-quantifier-equivalences}\\
+\toprule
+Row & Equivalence & Side condition \\ \midrule
+\endfirsthead
+\caption[]{Quantifier equivalence laws with side conditions (continued)}\\
+\toprule Row & Equivalence & Side condition \\ \midrule
+\endhead
+\midrule\multicolumn{3}{r}{\emph{continued on next page}}\\
+\endfoot
+\endlastfoot
+Q1 & \(\neg\forall x\,\varphi\Leftrightarrow
+       \exists x\,\neg\varphi\) & none \\
+Q2 & \(\neg\exists x\,\varphi\Leftrightarrow
+       \forall x\,\neg\varphi\) & none \\
+Q3 & \((Qx\,\varphi)\land\chi\Leftrightarrow
+       Qx(\varphi\land\chi)\), \(Q\in\{\forall,\exists\}\) &
+       \(x\notin\FV(\chi)\) \\
+Q4 & \((Qx\,\varphi)\lor\chi\Leftrightarrow
+       Qx(\varphi\lor\chi)\), \(Q\in\{\forall,\exists\}\) &
+       \(x\notin\FV(\chi)\) \\
+Q5 & \((\forall x\,\varphi)\to\chi\Leftrightarrow
+       \exists x(\varphi\to\chi)\) & \(x\notin\FV(\chi)\) \\
+Q6 & \((\exists x\,\varphi)\to\chi\Leftrightarrow
+       \forall x(\varphi\to\chi)\) & \(x\notin\FV(\chi)\) \\
+Q7 & \(\chi\to(\forall x\,\varphi)\Leftrightarrow
+       \forall x(\chi\to\varphi)\) & \(x\notin\FV(\chi)\) \\
+Q8 & \(\chi\to(\exists x\,\varphi)\Leftrightarrow
+       \exists x(\chi\to\varphi)\) & \(x\notin\FV(\chi)\) \\
+Q9 & \(\forall x(\varphi\land\psi)\Leftrightarrow
+       (\forall x\varphi)\land(\forall x\psi)\) & none \\
+Q10 & \(\exists x(\varphi\lor\psi)\Leftrightarrow
+         (\exists x\varphi)\lor(\exists x\psi)\) & none \\
+Q11 & \(\forall x\,\varphi\Leftrightarrow\varphi\) &
+        \(x\notin\FV(\varphi)\) \\
+Q12 & \(\exists x\,\varphi\Leftrightarrow\varphi\) &
+        \(x\notin\FV(\varphi)\) \\
+\bottomrule
+\end{longtable}
+\endgroup
+
+The converses of the familiar one-way distribution laws omitted from the
+table are generally invalid; for example, two existential conjuncts need not
+share a witness.  The side conditions in Q3--Q8 are part of the law, not
+typographical annotations.
+
+
+\section{The clausal-form pipeline}
+\label{sec:p02-fol-clausal-pipeline}
+
+\begin{hbdefinition}{def:p02-clause-family-reading}{Clauses and their universal reading}
+A clause \(C\) is a finite set of first-order literals.  At a structure
+\(\mathcal N\) and assignment \(s\), it is true exactly when some
+\(L\in C\) is true.  Thus the empty clause is false.  A finite clause
+family \(S\) is true at \((\mathcal N,s)\) when every member is true;
+the empty family is true.  A structure is a model of \(S\) when each
+clause is true under every assignment to its free variables.  Equivalently,
+it satisfies the universal closure of each clause's disjunction.
+Duplicate literals and duplicate clauses do not affect these truth values.
+The constants \(\bottom\) and \(\neg\bottom\) are treated as truth
+units during conversion, not added to the first-order literal vocabulary.
+\end{hbdefinition}
+
+\begin{hbmethod}{def:p02-matrix-clause-construction}{Distributive clause construction}
+For a quantifier-free NNF matrix \(\theta\), define a finite clause
+family \(\operatorname{Cl}(\theta)\) by recursion:
+\[
+\begin{aligned}
+ \operatorname{Cl}(L)&=\{\{L\}\} &&\text{for a literal }L,\\
+ \operatorname{Cl}(\bottom)&=\{\varnothing\},&
+ \operatorname{Cl}(\neg\bottom)&=\varnothing,\\
+ \operatorname{Cl}(\alpha\land\beta)
+   &=\operatorname{Cl}(\alpha)\cup\operatorname{Cl}(\beta),\\
+ \operatorname{Cl}(\alpha\lor\beta)
+   &=\{C\cup D:C\in\operatorname{Cl}(\alpha),\
+                 D\in\operatorname{Cl}(\beta)\}.
+\end{aligned}
+\]
+Each call is on an immediate subformula.  The construction preserves
+literals as formula strings, including their terms and any equality
+atoms.  It does not replace first-order atoms by new predicate symbols.
+Repeated distribution can make the family exponentially large; no
+linear-size bound is claimed for this conversion.
+\end{hbmethod}
+
+\begin{hblemma}{thm:p02-matrix-clause-equivalence}{proved=annex:p2.fol.clausal.matrix}{Pointwise correctness of matrix conversion}
+For every nonempty-domain structure \(\mathcal N\), assignment \(s\),
+and quantifier-free NNF matrix \(\theta\),
+\[
+ \mathcal N,s\entails\theta
+ \quad\Longleftrightarrow\quad
+ \text{every }C\in\operatorname{Cl}(\theta)
+       \text{ contains an }L\text{ with }\mathcal N,s\entails L.
+\]
+The output is finite and introduces no variable or nonlogical symbol.
+The equivalence includes the empty clause and empty family conventions.
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p02-fol-clausal-form}{proved=annex:p2.fol.clausal.composition}{Clausal-form theorem}
+For every first-order \(\mathcal L\)-sentence \(\sigma\), there is a finite set \(S\) of
+universally read clauses in a finite expansion \(\mathcal L^*\) of its signature such that,
+assuming AC, \(\sigma\) is satisfiable iff \(S\) is satisfiable.  The reverse
+direction from an \(S\)-model to a model of \(\sigma\) uses only reducts and
+does not require choice.  The transformation is the composition in
+Table~\ref{tab:p02-fol-normal-form-pipeline}, following its CNF branch
+(step 6 is a comparison, not an additional pipeline stage); only the Skolem step weakens
+same-signature logical equivalence to expansion--reduct equisatisfiability.
+\end{hbtheorem}
+
+\begin{landscape}
+\begingroup\scriptsize\setlength{\tabcolsep}{3pt}
+\begin{longtable}{@{}p{.30in}p{1.05in}p{1.65in}p{1.90in}p{2.00in}@{}}
+\caption{First-order normal-form comparison and clausal pipeline.}
+\label{tab:p02-fol-normal-form-pipeline}\\
+\toprule
+Step & Output & Existence and scope & Preservation claim & Worst-case size and new data \\ \midrule
+\endfirsthead
+\caption[]{First-order normal-form comparison and clausal pipeline (continued)}\\
+\toprule Step & Output & Existence and scope & Preservation claim & Worst-case size and new data \\ \midrule
+\endhead
+\midrule\multicolumn{5}{r}{\emph{continued on next page}}\\
+\endfoot
+\endlastfoot
+1 & NNF & Exists for every formula in the same signature. & Formula
+equivalence; exactly the same free and all-variable sets. & Linear in the
+formula tree; no new symbols. \\
+2 & Rectified NNF & Exists because the variable supply is countably infinite;
+fresh binders are chosen outside a finite forbidden set. & Alpha-equivalence,
+hence formula equivalence; same constructor tree. & Linear apart from the
+encoding of fresh variable names; no new nonlogical symbols. \\
+3 & Prenex NNF & Exists for every rectified NNF formula by the side-conditioned
+laws in Table~\ref{tab:p02-quantifier-equivalences}. & Formula equivalence;
+same free and all-variable sets and the same quantifier occurrences. & Linear
+in the formula tree; only the prefix is rearranged. \\
+4 & Universal Skolem sentence & Exists for every rectified prenex sentence in a
+finite signature expansion; AC supplies witness functions in the forward
+model-expansion direction. & Expansion--reduct equisatisfiability under AC,
+not same-signature formula equivalence. & At most quadratic under literal term
+printing because a new Skolem term may list all preceding universal variables;
+new function symbols are introduced. \\
+5 & Matrix in CNF & Exists for every quantifier-free matrix by propositional
+distribution. & Formula equivalence in the expanded signature. & Direct
+distribution can be exponential; Tseitin conversion is only equisatisfiable
+and introduces symbols (see Part~2.1). \\
+6 & Matrix in DNF & Exists for every quantifier-free matrix by dual
+propositional distribution. & Formula equivalence in the expanded signature. &
+Direct distribution can be exponential; DNF is a comparison form, not the
+input used by resolution. \\
+7 & Clause set & Exists from a universal sentence whose matrix is in CNF. & The
+set and the universal closures of its clauses have exactly the same models as
+that universal sentence. & Linear once the CNF matrix is present; erases the
+written universal prefix and records a finite literal set per conjunct. \\
+\bottomrule
+\end{longtable}
+\endgroup
+\end{landscape}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  font=\small,
+  node distance=8mm,
+  box/.style={draw,rounded corners,align=center,inner sep=4pt,
+              minimum width=1.55in},
+  >=Stealth]
+  \node[box] (in) {sentence\\\(\sigma\)};
+  \node[box,below=of in] (nnf) {NNF};
+  \node[box,below=of nnf] (rect) {rectified NNF};
+  \node[box,below=of rect] (pren) {rectified prenex NNF};
+  \node[box,below=of pren] (sk) {universal Skolem sentence};
+  \node[box,below=of sk] (cnf) {universal sentence\\with CNF matrix};
+  \node[box,below=of cnf] (clauses) {clause set \(S\)};
+  \draw[->] (in) -- node[right=8mm,align=left,font=\footnotesize]
+    {formula equivalence} (nnf);
+  \draw[->] (nnf) -- node[right=8mm,align=left,font=\footnotesize]
+    {alpha-equivalence} (rect);
+  \draw[->] (rect) -- node[right=8mm,align=left,font=\footnotesize]
+    {formula equivalence} (pren);
+  \draw[->] (pren) -- node[right=8mm,align=left,font=\footnotesize]
+    {equisatisfiable\\expanded signature} (sk);
+  \draw[->] (sk) -- node[right=8mm,align=left,font=\footnotesize]
+    {matrix CNF\\formula equivalence} (cnf);
+  \draw[->] (cnf) -- node[right=8mm,align=left,font=\footnotesize]
+    {universal-closure convention} (clauses);
+\end{tikzpicture}
+\caption{Normal-form pipeline.  The Skolem arrow records
+expansion--reduct equisatisfiability rather than same-signature formula
+equivalence; the last arrow relates a sentence to a clause set through the
+universal closures of its members, not through formula-string equivalence.}
+\label{fig:p02-fol-normal-form-pipeline}
+\end{figure}
+
+The complete composition proof is
+Annex~\ref{annex:p2.fol.clausal.composition}; its matrix step is
+Annex~\ref{annex:p2.fol.clausal.matrix}.  Universal reading is essential:
+erasing quantifier symbols does not turn their bound variables into freely
+chosen witnesses.  Resolution operations on these clause objects are
+defined in the next chapter.  The table does not identify a finite clause
+set with a single formula string.
+
+\begin{hbexample}{def:p02-clausal-composition-example}{An alternating prefix and two clauses}
+For
+\[
+ \forall x\exists y\,\bigl(R(x,y)\lor(P(x)\land Q(y))\bigr),
+\]
+the existing prefix is rectified and the matrix is in NNF.
+Skolemization introduces one fresh unary \(f\).  Distribution gives
+the clause family
+\[
+ \bigl\{\{R(x,f(x)),P(x)\},\
+         \{R(x,f(x)),Q(f(x))\}\bigr\}.
+\]
+Both clauses are universally read in \(x\).  A model of the original
+sentence expands by choosing a witness \(f(a)\) for every domain element
+\(a\); a model of the clauses supplies that witness directly when
+recovering the existential sentence in the reduct.
+If the input is instead \(\neg\bottom\), the output is the empty
+family; if it is \(\bottom\), the output is a family containing the
+empty clause.  These two empty objects have opposite satisfiability
+statuses.  Applying the sentence theorem to an open formula requires
+first specifying its closure: \(P(x)\) read under a fixed assignment,
+\(\exists xP(x)\), and \(\forall xP(x)\) are different inputs.
+\end{hbexample}
+For the quantifier equivalences and the clause-conversion pipeline,
+respectively, see \cite{Enderton2001,BaazEglyLeitsch2001}.

@@ -1,0 +1,417 @@
+% Source-based reconstruction: HoTT book official public-release, 19 June 2013.
+% Source-derived material is attributed under the book's CC BY-SA 3.0 license.
+\chapter{Higher Inductive Types and Cubical Type Theory}
+\label{sec:p07-higher-inductive-types}
+
+Higher inductive types add generators in identity types as well as generators
+of points. Their induction principles belong to the type being generated;
+its identity types retain ordinary identity elimination, not a new rule saying
+that every path is a word in the displayed generators. This presentation
+follows the official June 2013 public-release of the HoTT book
+\cite[Chapter~6]{HoTT2013PublicReleaseFoundations}. It does not identify that source
+with a later corrected build or with a computational cubical theory.
+
+\section{Point and path constructors}
+
+\begin{hbconvention}{def:p07-hit-standing}{Ambient theory and computation standing}
+Work in intensional type theory with dependent products, dependent sums,
+identity elimination, universes, the empty and unit types, and ordinary
+inductive booleans, with judgmental function \(\eta\)-conversion as used
+in the source's point computations. Paths compose from left to right: \(p\cdot q\)
+traverses \(p\) and then \(q\). The notation \(=\) denotes an identity
+type; \(\equiv_{\mathrm j}\) denotes judgmental equality. Function
+extensionality is explicitly assumed for results asserting equalities of
+functions and equivalences of mapping types, as in
+\cref{def:p07-hott-funext,thm:p07-hott-function-paths}.
+The interval argument below does not use that assumption, but uses the
+ordinary judgmental function \(\eta\)-conversion.
+
+The higher-inductive declarations below are added formation, introduction,
+elimination and computation principles. They are not proofs of existence in
+ordinary MLTT. In the 2013 presentation, computation at point constructors
+is judgmental; computation at path and higher-path constructors is a specified
+propositional equality. Large elimination is allowed where indicated; the
+univalence example requires a larger universe containing the universe of its
+boolean fiber. No normalization or canonicity theorem is asserted.
+\end{hbconvention}
+
+\begin{hbdefinition}{def:p07-hit-dependent-paths}{Paths over paths and paths over 2-paths}
+For \(P:A\to\mathcal U\), \(p:x=_A y\), \(u:P(x)\), and
+\(v:P(y)\), write
+\[
+ \operatorname{DPath}_P(p;u,v)
+       :=\bigl(\operatorname{tr}_P(p,u)=_{P(y)}v\bigr).
+\]
+Here transport and dependent action have the types of
+\cref{def:p07-hott-transport,thm:p07-hott-transport-laws}:
+\(\operatorname{apd}_f(p):\operatorname{DPath}_P(p;f(x),f(y))\).
+For \(\alpha:p=q\), put
+\[
+ \operatorname{tr}^2_P(\alpha,u)
+ =\operatorname{ap}_{r\mapsto\operatorname{tr}_P(r,u)}(\alpha),\qquad
+ \operatorname{DPath}^2_P(\alpha;h,k)
+ :=\bigl(h=\operatorname{tr}^2_P(\alpha,u)\cdot k\bigr),
+\]
+where \(h:\operatorname{DPath}_P(p;u,v)\) and
+\(k:\operatorname{DPath}_P(q;u,v)\). Both sides of the latter equality
+are paths from \(\operatorname{tr}_P(p,u)\) to \(v\) in \(P(y)\).
+This is the transport-based dependent 2-path convention of \S6.4.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p07-hit-path-calculus}{proved=annex:p07-hit-path-calculus}{The transport comparisons needed by eliminators}
+In a constant family \(x\mapsto B\), there is a path
+\(c(p,u):\operatorname{tr}_{x\mapsto B}(p,u)=u\), and
+\[
+ \operatorname{apd}_f(p)=c(p,f(x))\cdot\operatorname{ap}_f(p).
+\]
+For \(f,g:A\to B\), transport in their equality family satisfies
+\[
+ \operatorname{tr}_{x\mapsto f(x)=g(x)}(p,r)
+       =\operatorname{ap}_f(p)^{-1}\cdot r\cdot\operatorname{ap}_g(p).
+\]
+For fixed \(b:B\), transport in \(x\mapsto x=b\) sends
+\(r:x=b\) to \(p^{-1}\cdot r\). A dependent function has an action
+\(\operatorname{apd}^2_f(\alpha)\) with the dependent 2-path type above.
+These are propositional comparisons, not additional judgmental conversions.
+Dependent paths compose by
+\[
+ h\star k:=\gamma_P(p,q,u)\cdot
+       \operatorname{ap}_{\operatorname{tr}_P(q,-)}(h)\cdot k,
+\]
+where \(h:\operatorname{DPath}_P(p;u,v)\),
+\(k:\operatorname{DPath}_P(q;v,w)\), and
+\(\gamma_P(p,q,u):\operatorname{tr}_P(p\cdot q,u)=
+\operatorname{tr}_P(q,\operatorname{tr}_P(p,u))\).
+There is a comparison
+\(\mu_f(p,q):\operatorname{apd}_f(p\cdot q)=
+\operatorname{apd}_f(p)\star\operatorname{apd}_f(q)\).
+\end{hblemma}
+
+\begin{hbdefinition}{def:p07-hit-circle}{Circle constructors and the dependent eliminator}
+The circle has a point \(\mathrm{base}:S^1\) and a path
+\(\mathrm{loop}:\mathrm{base}=_{S^1}\mathrm{base}\).
+For \(P:S^1\to\mathcal U\), data for induction are
+\[
+ b:P(\mathrm{base}),\qquad
+ \ell:\operatorname{DPath}_P(\mathrm{loop};b,b).
+\]
+They give \(f:\prod_{x:S^1}P(x)\), with
+\[
+ f(\mathrm{base})\equiv_{\mathrm j}b,\qquad
+ \beta_{\mathrm{loop}}:
+             \operatorname{apd}_f(\mathrm{loop})=\ell.
+\]
+The second argument is not merely \(b=b\) in the base fiber: it includes
+transport along the generating loop. The second computation clause is a path
+in the dependent-path type. It does not make the generating loop judgmentally
+reflexivity.
+\index{circle!higher inductive type}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p07-hit-circle-recursion}{proved=annex:p07-hit-circle-recursion}{Circle recursion with correctly converted path computation}
+For \(B:\mathcal U\), \(b:B\), and \(\ell:b=b\), circle induction
+gives \(r:S^1\to B\) with
+\(r(\mathrm{base})\equiv_{\mathrm j}b\) and a specified path
+\(\operatorname{ap}_r(\mathrm{loop})=\ell\).
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p07-hit-circle-universal}{proved=annex:p07-hit-circle-universal}{Uniqueness and the mapping property of the circle}
+For \(f,g:S^1\to B\), a path \(p:f(\mathrm{base})=g(\mathrm{base})\)
+and a coherence
+\[
+ \operatorname{ap}_f(\mathrm{loop})\cdot p
+            =p\cdot\operatorname{ap}_g(\mathrm{loop})
+\]
+give a homotopy \(f\sim g\), hence \(f=g\) under function extensionality.
+The evaluation map
+\[
+ (S^1\to B)\longrightarrow\sum_{b:B}(b=b),\qquad
+ f\longmapsto(f(\mathrm{base}),\operatorname{ap}_f(\mathrm{loop}))
+\]
+has an explicit two-sided homotopy inverse given by recursion and is an
+equivalence. Arbitrary point agreement without the displayed loop coherence
+does not suffice.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p07-hit-interval}{The higher-inductive interval}
+The type \(I\) has points \(0_I,1_I:I\) and
+\(\mathrm{seg}:0_I=1_I\). Induction into \(P:I\to\mathcal U\)
+requires \(u:P(0_I)\), \(v:P(1_I)\), and
+\(s:\operatorname{DPath}_P(\mathrm{seg};u,v)\); it gives a section
+with judgmental endpoint computation and propositional \(\operatorname{apd}\)
+computation at \(\mathrm{seg}\). In a constant family this gives recursion
+from two endpoints and a path between their values, with \(\operatorname{ap}\)
+computation. This \(I\) is a type with an identity constructor, not a
+cubical dimension object with face formulas or a composition operation.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p07-hit-interval-contractible}{proved=annex:p07-hit-interval-contractible}{The interval is contractible}
+There is a term \(\prod_{x:I}(x=1_I)\), with values \(\mathrm{seg}\)
+at \(0_I\) and \(\mathrm{refl}_{1_I}\) at \(1_I\). Thus \(I\)
+is contractible, although its endpoint declarations are not judgmentally the
+same point.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p07-hit-interval-extensionality}{proved=annex:p07-hit-interval-extensionality}{An interval supplies a function-equality witness}
+Without assuming function extensionality, if \(f,g:A\to B\) and
+\(h:\prod_{a:A}(f(a)=g(a))\), interval recursion and judgmental function
+\(\eta\) give a path \(f=g\). This is the displayed existence result of
+\S6.3, not a claim here about judgmental equality or the full computation
+laws of an inverse to \(\operatorname{happly}\).
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p07-hit-circle-nontrivial}{proved=annex:p07-hit-circle-nontrivial}{The loop is nontrivial under univalence}
+Assume a univalent universe containing booleans and circle elimination into
+that universe. Then \(\mathrm{loop}\ne\mathrm{refl}_{\mathrm{base}}\).
+The proof uses the boolean-swap equivalence as monodromy. No identification
+\(\Omega(S^1)\simeq\mathbb Z\) is inferred from this single nontriviality
+result.
+\end{hbtheorem}
+
+\section{Suspensions and homotopy pushouts}
+
+\begin{hbdefinition}{def:p07-hit-suspension}{Suspension constructors and eliminators}
+For \(A:\mathcal U\), its suspension \(\Sigma A\) has points
+\(\mathrm{north},\mathrm{south}\) and
+\(\mathrm{merid}:\prod_{a:A}(\mathrm{north}=\mathrm{south})\).
+Here \(\Sigma A\) is the source's suspension notation, distinct from a
+dependent-sum expression \(\sum_{x:A}P(x)\).
+For \(P:\Sigma A\to\mathcal U\), induction data are
+\[
+ n:P(\mathrm{north}),\quad s:P(\mathrm{south}),\quad
+ m:\prod_{a:A}\operatorname{DPath}_P(\mathrm{merid}(a);n,s).
+\]
+The section computes judgmentally at the two poles and propositionally by
+\(\operatorname{apd}\) on each meridian. Recursion into \(B\) takes
+\(n,s:B\) and \(m:A\to(n=s)\), with the corresponding \(\operatorname{ap}\)
+computation. The dependence on \(a\) also transmits paths and higher paths
+of \(A\); it is not a collection indexed only by the set of components.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p07-hit-suspension-circle}{proved=annex:p07-hit-suspension-circle}{Suspending booleans gives the circle}
+There is an equivalence \(\Sigma\mathbf2\simeq S^1\), with forward
+map sending both poles to \(\mathrm{base}\), the false meridian to
+\(\mathrm{loop}\), and the true meridian to reflexivity.
+Its inverse sends \(\mathrm{base}\) to \(\mathrm{north}\) and
+\(\mathrm{loop}\) to
+\(\mathrm{merid}(\mathrm{false})\cdot\mathrm{merid}(\mathrm{true})^{-1}\).
+The equivalence requires the two meridian coherences, not only the pole values.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p07-hit-spheres}{Spheres and the typed 2-dimensional clause}
+The suspension presentation is \(S^{-1}:=\mathbf0\),
+\(S^0:=\mathbf2\), and \(S^{n+1}:=\Sigma S^n\) for \(n\ge0\).
+The direct 2-sphere presentation has \(\mathrm{base}:S^2\) and
+\(\mathrm{surf}:\mathrm{refl}_{\mathrm{base}}=
+\mathrm{refl}_{\mathrm{base}}\) in its loop type.
+For \(P:S^2\to\mathcal U\), induction takes \(b:P(\mathrm{base})\)
+and \(s:\operatorname{DPath}^2_P(\mathrm{surf};\mathrm{refl}_b,
+\mathrm{refl}_b)\), computing judgmentally at the point and
+propositionally by \(\operatorname{apd}^2\) at \(\mathrm{surf}\).
+The direct and iterated-suspension presentations are not identified without
+the required comparison proof. Constructor dimension alone does not bound
+the dimensions of the identity types.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p07-hit-pushout}{The dependent pushout principle}
+For a span \(A\xleftarrow{u}C\xrightarrow{v}B\), the pushout \(W\)
+has \(\mathrm{inl}:A\to W\), \(\mathrm{inr}:B\to W\), and
+\(\mathrm{glue}(c):\mathrm{inl}(u(c))=\mathrm{inr}(v(c))\).
+For \(P:W\to\mathcal U\), induction requires
+\[
+ d_L:\prod_{a:A}P(\mathrm{inl}(a)),\quad
+ d_R:\prod_{b:B}P(\mathrm{inr}(b)),\quad
+ e:\prod_{c:C}\operatorname{DPath}_P
+      (\mathrm{glue}(c);d_L(u(c)),d_R(v(c))).
+\]
+The resulting section computes judgmentally on \(\mathrm{inl}\) and
+\(\mathrm{inr}\), and propositionally by \(\operatorname{apd}\) on
+\(\mathrm{glue}\). Recursion is the constant-family case.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p07-hit-pushout-universal}{proved=annex:p07-hit-pushout-universal}{Maps out of a pushout are coherent cocones}
+Under function extensionality, evaluation on the constructors is an equivalence
+\[
+ (W\to E)\simeq
+ \sum_{i:A\to E}\sum_{j:B\to E}
+                \prod_{c:C}(i(u(c))=j(v(c))).
+\]
+The homotopy pushout of \(\mathbf1\leftarrow A\to\mathbf1\) is a
+suspension presentation. In particular, a homotopy pushout of sets need not
+be a set: with middle type \(\mathbf2\), it is the preceding circle
+presentation, which is not a set under the stated univalence assumption.
+\end{hbtheorem}
+\section{Truncations and set quotients}
+
+\begin{hbdefinition}{def:p07-hit-truncations}{The recursive propositional and set-truncation declarations}
+The propositional truncation \(\|A\|\) has point constructor
+\(|-|:A\to\|A\|\) and path constructor
+\(\mathrm{squash}:\prod_{x,y:\|A\|}(x=y)\). For a family
+\(P:\|A\|\to\mathcal U\), its raw dependent elimination data are
+\(g:\prod_{a:A}P(|a|)\) and, for every \(x,y,u:P(x),v:P(y)\),
+a lift \(\operatorname{DPath}_P(\mathrm{squash}(x,y);u,v)\).
+The section satisfies \(f(|a|)\equiv_{\mathrm j}g(a)\) and the
+specified propositional action on \(\mathrm{squash}\).
+In particular a proposition-valued family supplies all those lifts: both
+transported and target elements lie in the same proposition.
+
+The set truncation \(\|A\|_0\) has \(|-|_0:A\to\|A\|_0\) and
+\[
+ \mathrm{trunc}:\prod_{x,y:\|A\|_0}\prod_{p,q:x=y}(p=q).
+\]
+For \(P:\|A\|_0\to\mathcal U\), raw elimination takes
+\(g:\prod_{a:A}P(|a|_0)\) and, for each such \(x,y,p,q\), each
+\(u:P(x),v:P(y)\), and lifts \(h:\operatorname{DPath}_P(p;u,v)\),
+\(k:\operatorname{DPath}_P(q;u,v)\), a term
+\(\operatorname{DPath}^2_P(\mathrm{trunc}(x,y,p,q);h,k)\).
+It has judgmental point computation and propositional computation on the
+2-path constructor. The 2013 text notes that identity-type inputs of this
+direct declaration fall outside its simpler strict-positive-input syntax;
+the hub-and-spoke construction below is its separate systematic alternative.
+\index{truncation!propositional}\index{truncation!set}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p07-hit-truncation-elimination}{proved=annex:p07-hit-truncation-elimination}{Restricted dependent elimination and universal properties}
+Propositional truncation eliminates into proposition-valued families from
+the point data alone. Set truncation eliminates into set-valued families
+from the point data alone, because their dependent 2-path coherence exists.
+Under function extensionality, precomposition with the point constructors
+gives equivalences
+\[
+ (\|A\|\to B)\simeq(A\to B)\quad\text{if }B\text{ is a proposition},
+ \qquad
+ (\|A\|_0\to B)\simeq(A\to B)\quad\text{if }B\text{ is a set}.
+\]
+The restrictions on \(B\) are part of the conclusions, not dispensable
+annotations.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p07-hit-truncation-boundaries}{proved=annex:p07-hit-truncation-boundaries}{Empty cases and failure of unrestricted witness extraction}
+\(\|\mathbf0\|\simeq\mathbf0\), while \(\|\mathbf1\|\) and
+\(\|\mathbf2\|\) are contractible. There is no map
+\(e:\|\mathbf2\|\to\mathbf2\) with \(e(|b|)=b\) for both boolean
+points. Thus the proposition merely asserting an inhabitant is not a
+choice of an arbitrary witness in a nonpropositional target.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p07-hit-set-quotient}{Set-quotient constructors and dependent elimination}
+Let \(A\) be a set and \(R:A\to A\to\mathrm{Prop}\) a mere relation,
+not necessarily an equivalence relation. The set-quotient \(Q=A/R\) has
+\[
+ q:A\to Q,\qquad
+ \mathrm{eq}:\prod_{a,b:A}(R(a,b)\to(q(a)=q(b))),\qquad
+ \mathrm{trunc}_Q:\prod_{x,y:Q}\prod_{p,s:x=y}(p=s).
+\]
+It is a set by its final constructor. Induction into a set-valued family
+\(P:Q\to\mathcal U\) takes \(d:\prod_aP(q(a))\) and
+\[
+ e:\prod_{a,b:A}\prod_{r:R(a,b)}
+             \operatorname{DPath}_P(\mathrm{eq}(r);d(a),d(b)).
+\]
+The 2-path lifts are supplied as for set truncation. Point computation is
+judgmental and \(\mathrm{eq}\)-computation is propositional.
+In a constant set \(B\), these data are a map \(g:A\to B\) and
+\(\rho:\prod_{a,b}R(a,b)\to(g(a)=g(b))\).
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p07-hit-quotient-universal}{proved=annex:p07-hit-quotient-universal}{Mere surjectivity and the set-quotient mapping property}
+The projection is merely surjective:
+\[
+ \prod_{x:Q}\left\|\sum_{a:A}(q(a)=x)\right\|.
+\]
+For any set \(B\), evaluation is an equivalence
+\[
+ (Q\to B)\simeq
+ \sum_{g:A\to B}\prod_{a,b:A}(R(a,b)\to(g(a)=g(b))).
+\]
+This gives no global representative selector. For arbitrary \(R\) it also
+does not give \(R(a,b)\simeq(q(a)=q(b))\): the identity type includes
+reflexivity, symmetry and composition, whereas \(R\) need not.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p07-hit-quotient-example}{proved=annex:p07-hit-quotient-example}{A directed relation can generate a one-class quotient}
+Let \(A=\mathbf2\) and let \(R(\mathrm{false},\mathrm{true})=\mathbf1\)
+with all three other boolean pairs assigned \(\mathbf0\).
+Then \(A/R\) is contractible, although \(R\) is neither reflexive nor
+symmetric. In particular, \(q(\mathrm{false})=q(\mathrm{false})\)
+is inhabited while \(R(\mathrm{false},\mathrm{false})\) is empty.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p07-hit-hub-truncation}{The original general hub-and-spoke declaration}
+For \(n\ge-1\), the general truncation construction of \S7.3 has
+\(\eta_n:A\to\|A\|_n\), and for every
+\(r:S^{n+1}\to\|A\|_n\) a point \(\mathrm{hub}(r)\) and paths
+\(\mathrm{spoke}_r(x):r(x)=\mathrm{hub}(r)\).
+For \(P:\|A\|_n\to\mathcal U\), its full raw dependent data are
+\[
+ g:\prod_aP(\eta_n(a)),\quad
+ H:\prod_r\prod_{r':\prod_xP(r(x))}P(\mathrm{hub}(r)),
+ \quad
+ S:\prod_r\prod_{r'}\prod_x
+       \operatorname{DPath}_P(\mathrm{spoke}_r(x);r'(x),H(r,r')).
+\]
+They supply a section \(f\), with judgmental point computation
+\(f(\eta_n(a))\equiv_{\mathrm j}g(a)\) and
+\(f(\mathrm{hub}(r))\equiv_{\mathrm j}H(r,f\circ r)\), and
+propositional computation
+\(\operatorname{apd}_f(\mathrm{spoke}_r(x))=S(r,f\circ r,x)\).
+The type \(\|A\|_{-2}\) is instead defined as \(\mathbf1\), not by
+this scheme. Removing the hub and connecting each \(r(x)\) directly to
+\(r(\mathrm{base})\) leaves an uncontrolled basepoint loop and is not
+silently substituted for the source construction.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p07-hit-hub-contraction}{proved=annex:p07-hit-hub-contraction}{The exact based-mapping contraction supplied by spokes}
+For \(X=\|A\|_n\), any pointed \(S^{n+1}\) with basepoint \(s_0\),
+and \(b:X\), the type
+\(\sum_{r:S^{n+1}\to X}(r(s_0)=b)\) is contractible.
+For \((r,p)\), the pointwise homotopy to the constant map at \(b\) is
+\[
+ x\longmapsto\mathrm{spoke}_r(x)\cdot
+                 \mathrm{spoke}_r(s_0)^{-1}\cdot p.
+\]
+The proof includes transport of the basepoint path, not only equality of the
+underlying maps.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p07-hit-hub-dependent}{proved=annex:p07-hit-hub-dependent}{Dependent induction from explicitly given fiber contractions}
+Suppose, for each fiber \(P(z)\), a function is given taking every
+\(t:S^{n+1}\to P(z)\) to a point \(u:P(z)\) and a homotopy
+\(\prod_x(t(x)=u)\). Then point data
+\(g:\prod_aP(\eta_n(a))\) extend to a section of \(P\) with its
+judgmental point computation. The supplied fiber-contraction function is a
+specific additional hypothesis; it is not an assertion that such a function
+has already been constructed for all \(n\)-types.
+\end{hbtheorem}
+
+\begin{proofboundary}{def:p07-hit-general-boundaries}{General truncation, homotopy groups, and source variants}
+The full conversion of the preceding based-sphere mapping contraction into
+\(n\)-truncatedness uses the \(\Omega^{n+1}\)-characterization of
+\(n\)-types and the sphere--loop adjunction, including its based-path
+coherences. Likewise deriving the restricted general \(n\)-type eliminator
+requires the corresponding chosen contractions of sphere maps into each
+fiber. Those dependencies must be supplied before calling this a completed
+general-truncation proof; the explicit low-dimensional truncation proofs above
+do not replace them.
+
+The calculation \(\Omega(S^1)\simeq\mathbb Z\) needs the actual code
+family, winding/transport calculation, both encode--decode composites and their
+coherence. The circle constructors or nontrivial-loop argument do not give
+that calculation. Higher sphere homotopy groups are not asserted here.
+
+The original source also has direct cell-complex and hub presentations,
+impredicative quotients, free/presented algebras, and the flattening lemma
+\cite[\S\S6.6--6.7, 6.10--6.13]{HoTT2013PublicReleaseFoundations}. They retain their
+own constructions and hypotheses. The exact coequalizer flattening theorem,
+its total-space constructors, and both inverse homotopies are supplied in
+Section~\ref{sec:p07-hott-identity-systems-and-flattening}.
+In particular its impredicative
+quotient of equivalence classes uses propositional univalence and raises a
+universe unless resizing is supplied. It is not identified with the HIT
+quotient by a title match. The 2013 text gives no complete general syntactic
+criterion or MLTT-only existence theorem for every proposed HIT: ordered
+constructors, positivity and naturality are conditions to be checked, not a
+license to add arbitrary polymorphic endpoints. Computational cubical
+composition and judgmental path computation belong to their separate source
+presentation.
+\end{proofboundary}

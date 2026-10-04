@@ -1,0 +1,263 @@
+% The explicit primitive-recursive strengthening of Kamp's constructive translation.
+
+\subsubsection{A primitive-recursive translation with explicit bounds}
+\label{sec:p09-kamp-primitive-recursive-translation}
+
+Chapter~II Theorem~2 asserts a primitive-recursive function
+\(\operatorname{Exp}\) from tense-defining formulas to temporal
+schemata. The preceding proof supplied the translation's logical
+correctness. We now specify finite codes, deterministic choices and
+primitive-recursive bounds for its construction. The source states the
+strengthening on printed p.~28; its formula and schema conventions
+are on pp.~21--23 \cite[ch.~II, pp.~21--23, 27--29]{Kamp1968}.
+
+\begin{hbdefinition}{def:p09-kamp-pr-codes}{Natural-number codes for finite syntax}
+Encode a finite list of natural-number tokens by
+\[
+ [\ ]^\#=0,\qquad
+ [a_0,\ldots,a_{r-1}]^\#
+       =2^{a_0}\bigl(2[a_1,\ldots,a_{r-1}]^\#+1\bigr).
+\]
+The decoded token list is written in prefix order. First-order tags are
+\[
+\begin{array}{c|l}
+ 0,i,j&P_i(t_j)\\
+ 1,i,j&t_i<t_j\\
+ 2&\neg\text{ followed by its formula}\\
+ 3,4,7,8&\land,\lor,\to,\leftrightarrow\text{ followed by two formulas}\\
+ 5,i\ ;\ 6,i&\exists t_i\ ;\ \forall t_i\text{ followed by a formula}.
+\end{array}
+\]
+Temporal tags are \(0,i\) for \(q_i\), tag 1 for negation,
+and tags \(2,3,4\) for conjunction, \(S,U\), followed by
+their two operands. Tag numbers are syntactic data, not new operators.
+Implication and biconditional are expanded before normal-form processing.
+The source language remains equality-free.
+
+For a decoded list \(a\), define its weight
+\[
+                  w(a)=1+\operatorname{length}(a)+\sum_j a_j.
+\]
+It bounds its token count and every name index. Intermediate finite
+records use tags 9 through 31 and length-delimited inline fields in
+the same flat-list coding. Formulas and construction histories are
+stored inline, not as unexplained oracle objects. The weight of data
+means the weight of this flattened serialization.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p09-kamp-pr-codes}{proved=annex:p9.kamp.pr.codes}{Primitive-recursive finite syntax operations}
+Encoding, decoding, parsing, free-variable tests, occurrence lists,
+lexicographic comparison, capture-avoiding renaming, finite substitution,
+and the finite enumerations used below are primitive recursive on these
+codes. A token list of weight \(s\) has code less than \(2^s\).
+Malformed codes or inputs with a free-variable set other than
+\(\{t_0\}\) receive the fixed default output \(q_0\).
+This makes the eventual numerical function total without extending
+its semantic assertion to invalid inputs.
+\end{hblemma}
+
+\begin{hbdefinition}{def:p09-kamp-pr-deterministic}{The deterministic implementation}
+Use the proved translation algorithms in the preceding sections with
+the following fixed choices. Scan input syntax left to right; list
+subformula occurrences in postorder. Associate new Boolean lists to
+the left. Sort finite families by their token lists and remove exact
+duplicates. Choose the first maximal-length member. List cuts in the
+already defined gap/point order, subsets by their binary masks, and
+tuples lexicographically. Enumerate ordered partitions and fusions by
+their finite relation matrices in binary order and retain exactly the
+matrices passing their finite defining checks.
+
+Fresh indices are the first indices above every index forbidden in
+the current operation. In a pure Lemma~8 child family the one fresh
+predicate is one above the maximum predicate index of its parent
+family. This choice is local to that child computation; its placeholder
+is eliminated before outputs from separate children are combined.
+Bound variables are freshened before insertion. Pure basic family
+members are stored as their orientation and predicate word, with
+canonical endpoint slots; At members retain their literal trees.
+Expansion to an actual basic formula uses its declared recursion.
+
+At a Lemma~8 node, compute each of its at most 33 regional-location
+types and each tuple of cut choices once, before distributing the
+products of their returned packages. Store the returned lists and copy
+them when forming those products; distribution does not launch new
+recursive calls. The other structural procedures visit only their
+original input nodes, never newly generated output as a new recursive
+input. Operation tags 9 through 20 mean, in order: input, standard
+form, interval negation, interval representation, Lemma~8, localization,
+assembly, primitive region, regional restoration, elementary translation,
+\(D\)-image and padding. Tags 21 and 22 mean return and halt.
+A frame is the flat record
+\[
+ (\text{tag},\text{phase},\text{input length},\text{input tokens},
+   \text{child count},\text{length-delimited children},
+   \text{next child},\text{length-delimited results}).
+\]
+Phase 0 constructs the ordered child list by that operation's stated
+recipe; phase 1 evaluates the next child and appends its result;
+phase 2 performs the operation's local combination and returns.
+An operation with no children goes directly from phase 0 to phase 2.
+The input frame schedules standard form, regional restoration,
+elementary translation, padding and the \(D\)-image in that order.
+Return stores both the temporal output and its image; \(\operatorname{Exp}\)
+projects the former. A halted state remains fixed. These rules fix
+the evaluation order of the previously specified constructions.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p09-kamp-pr-local-envelope}{A uniform finite-operation envelope}
+For a unary function \(f\), let
+\(f^{[0]}(s)=s\) and \(f^{[k+1]}(s)=f(f^{[k]}(s))\).
+Set
+\[
+ R(s)=2^{\,2^{\,2^{(s+16)^4}}},\qquad
+ A(s)=R^{[32(s+1)^2]}(s+16).
+\]
+These are explicit primitive-recursive functions. A construction step
+below is a finite-list operation or bounded loop instruction; arithmetic
+operations on its natural-number codes are themselves primitive recursive.
+The bounds concern this specified construction, not a practical estimate.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p09-kamp-pr-local-envelope}{proved=annex:p9.kamp.pr.local.envelope}{Bounds for all nonrecursive syntax phases}
+Starting with total data weight at most \(s\), each nonrecursive
+phase of the deterministic construction has output and temporary data
+weight at most \(A(s)\) and uses at most \(A(s)\)
+construction steps. The phases include Boolean distribution, finite
+relation enumeration, all word cuts, elementary-word assembly, proper
+substitution, freshening and construction of basic or limiting histories.
+They exclude recursive Lemma~8 calls and visits to original nodes of
+an outer structural recursion, which are bounded separately below.
+\end{hblemma}
+
+\begin{hbdefinition}{def:p09-kamp-pr-family-mass}{Family mass and the explicit Lemma 8 bounds}
+For a pure family record let
+\[
+ \mu(F)=1+\sum_{\theta\in F\cap\operatorname{At}}
+                      (1+\operatorname{nodes}(\theta))
+             +\sum_{\rho\in F\setminus\operatorname{At}}(1+\ell(\rho)).
+\]
+At-node count treats a unary literal as a leaf and retains its Boolean
+tree; basic length \(\ell\) is the original predicate-word length.
+Predicate indices do not contribute to this structural mass and are
+bounded separately. Let \(M\geq1\), \(s\geq1\) and \(p\geq0\)
+bound the initial maximum basic length, mass and predicate index.
+Define
+\[
+\begin{gathered}
+ b_0=s+1,\qquad b_{i+1}=(M+3)^{2(b_i+1)},\qquad B=b_{M+1},\\
+ h=(M+1)(B+1)+1,\qquad
+ c=34\,2^{M(B+1)}+1,\qquad z=(c+1)^{h+1},\\
+ s_*=64(B+h+p+M+16)^2,\qquad u_0=A(s_*),\\
+ u_{i+1}=A\bigl(A(s_*)+c(u_i+1)+16\bigr),\\
+ L_8(M,s,p)=(z+1)(u_h+s_*+h+c+16)^2.
+\end{gathered}
+\]
+Every recurrence is ordinary primitive recursion with its displayed
+parameters fixed. Finally put \(L(t)=L_8(t+1,t+1,t+1)\).
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p09-kamp-pr-lemma8}{proved=annex:p9.kamp.pr.lemma8}{A primitive-recursive bound for the entire Lemma 8 construction}
+Every child satisfies
+\[
+                    \mu(G)\leq(M+3)(\mu(F)+1).
+\]
+A branch finishes a current maximum-length level after at most its
+entry mass many edges, and never returns to a higher level. Consequently
+\(B\) bounds all branch masses, \(h\) bounds depth, \(c\)
+bounds immediate recursive branching, and \(z\) bounds the whole
+recursive tree. Predicate indices along a branch are at most \(p+h\).
+The function \(L_8\) bounds the output weight and the construction
+steps of the full deterministic Lemma~8 evaluator. In particular that
+evaluator is primitive recursive. This conclusion uses the growth bound
+and level analysis; lexicographic well-foundedness alone would not suffice.
+\end{hblemma}
+
+\begin{hbdefinition}{def:p09-kamp-pr-outer-bounds}{Bounds for the outer construction}
+Define fixed unary primitive-recursive functions
+\[
+\begin{aligned}
+ J(t)&=A\bigl(t+A(t)+L(A(t))+16\bigr),\\
+ S(t)&=J^{[4(t+1)^2]}(t+16),\\
+ C(t)&=S^{[6]}(t+16),\\
+ V(t)&=A\bigl(t+C(A(t))+16\bigr),\\
+ W(t)&=V^{[t+1]}(t+16).
+\end{aligned}
+\]
+For an input of weight \(n\), set
+\[
+\begin{gathered}
+ n_0=n,\quad n_1=A(n_0),\quad n_2=S(n_1),\quad n_3=W(n_2),\\
+ n_4=S(n_3),\quad n_5=A(n_4+n+16),\quad n_6=S(n_5),\\
+                       T(n)=2\sum_{i=0}^{6}(n_i+16).
+\end{gathered}
+\]
+The stages are respectively initial expansion, standard form, elementary
+regional construction, temporal construction, schema padding and the
+literal \(D\)-image. These functions are deliberately coarse.
+\end{hbdefinition}
+
+\begin{hbmethod}{def:p09-kamp-pr-exp}{The total numerical translation}
+Parse the input code and check its sole free variable. For a valid input,
+run the deterministic first-order-to-temporal construction, using the
+stated stack frames and local rules. An atomic input \(P_i(t_0)\)
+uses the fixed initial branch \(\eta=q_i\) and then proceeds to padding.
+For a nonempty unary signature set \(n=1+\max i\), where the maximum
+is over its predicate indices. On a source tense-defining formula this
+is its arity and all \(P_0,\ldots,P_{n-1}\) occur; the rule also
+defines the numerical extension on a gapped signature. After obtaining \(\eta\),
+append, in increasing index order, the conjunct
+\(\neg(q_i\land\neg q_i)\) for each permitted \(q_i\)
+that does not occur. This is true at every point and ensures that
+the result contains every required propositional letter and no others,
+as the source's schema definition requires. Return its temporal code.
+When applied to a formula rather than its numerical code,
+\(\operatorname{Exp}(\varphi)\) denotes the decoded temporal output.
+
+Malformed inputs receive the default code of \(q_0\). A one-free-variable
+input with no unary letters uses padding arity 1 and the same construction
+with the inessential letter \(q_0\); its output is a unary schema independent
+of that letter. It is not a variable-free temporal formula: the source
+\(\mathsf{TL}_1\) grammar has no such formula.
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p09-kamp-primitive-recursive-translation}{proved=annex:p9.kamp.primitive.recursive.translation}{Kamp's primitive-recursive translation and its exact schema scope}
+The numerical function just defined is primitive recursive. On each
+positive-arity tense-defining formula \(\varphi\), its output
+\(\operatorname{Exp}(\varphi)\) is an \(n\)-place schema of
+the original \(\mathsf{TL}_1\) and satisfies
+\[
+ \mathsf{Com}\models
+       \varphi\longleftrightarrow D(\operatorname{Exp}(\varphi)).
+\]
+The strict \(S,U\) convention and the literal \(D\)-image are
+unchanged. The stated list program has at most \(T(w(\varphi))\)
+construction steps, and its output code and \(D\)-image code are
+less than \(2^{T(w(\varphi))}\). Thus the assertion is uniform
+over all input formulas and all complete linear orders.
+
+The source's definitions require an \(n\)-place schema to contain
+all \(n\) designated letters. If their arity parameter is read as
+including zero, the literal zero-place assertion has a syntactic
+exception: no formula of \(\mathsf{TL}_1\) contains zero proposition
+letters. The explicit unary constant extension above supplies equivalent
+truth conditions for zero-predicate inputs without mislabelling its arity
+\cite[ch.~II, defs.~2,4 and thm.~2, pp.~21--23,28]{Kamp1968}.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p09-kamp-pr-example}{A concrete code and a length-level bound}
+The first-order token list for \(P_0(t_0)\) is \([0,0,0]\),
+with code 7 and weight 4. Its atomic translation is the temporal
+list \([0,0]\), with code 3 and weight 3. No padding is
+needed, and \(D(q_0)=P_0(t_0)\).
+
+For the Lemma~8 family with At atom \(P_0\) and basic word
+\((P_1,P_2,P_3)\), \(M=3\) and \(\mu(F)=1+2+4=7\).
+In its whole-interval localization after the maximal word is removed,
+the actual child is the two-atom family \(\{P_0,P_4\}\), of mass 5;
+\(P_4\) is its fresh placeholder. Every child in the general bound
+has mass at most \(6(7+1)=48\). The bound on a
+whole level beginning with mass 7 is \(6^{16}\); the actual
+maximal-word count here is only one, so that example leaves its
+maximal level after one edge. The general bound remains valid when
+many maximal words and all their shorter residuals are present.
+\end{hbexample}

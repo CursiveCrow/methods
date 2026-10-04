@@ -1,0 +1,379 @@
+%% parts/p07/proof-complexity.tex --- Phase-4 P7 new-content slice.
+%% Coverage: D-P8-007, N-c-027, A-075, and the P7 contributions to A-186/A-189.
+%% The chapter states cited lower bounds; it contains no body proof.
+
+\chapter{Propositional Proof Complexity}
+\label{sec:p07-proof-complexity}
+\chaptermark{Propositional Proof Complexity}
+
+\section{Cook--Reckhow proof systems}
+\label{sec:p07-cook-reckhow}
+
+\begin{hbdefinition}{def:p07-cook-reckhow}{Cook--Reckhow propositional proof system}
+Fix a self-delimiting binary encoding of propositional formulas, and let
+\(\mathsf{TAUT}\) be the set of codes of classical tautologies.  A
+\emph{Cook--Reckhow propositional proof system} is a polynomial-time
+computable surjection
+\[
+  \mathsf P_{\mathrm{pf}}:\{0,1\}^{*}\longrightarrow\mathsf{TAUT}.
+\]
+An equivalent verification presentation is a polynomial-time decidable relation
+\(\operatorname{Prf}_{\mathsf P_{\mathrm{pf}}}(\pi,\varphi)\) whose range is exactly
+\(\mathsf{TAUT}\). In the relation-to-map direction, encode both
+\(\varphi\) and \(\pi\) in the input proof: return \(\varphi\) when the
+relation accepts and a fixed tautology otherwise. Including the target
+formula bounds output length by input length; no search for an unbounded
+output formula is required. For any proof or formula object \(a\) used in this chapter,
+define \(\operatorname{size}(a)\) to be the bit length of its fixed encoding,
+not a cardinality.
+
+The name is necessary because efficient verification, rather than proof
+search or one particular calculus, is the comparison invariant.  Its standing
+is an abstract encoded proof system.  It differs from a calculus sheet by
+forgetting presentation details while retaining a polynomial-time verifier,
+and this nonredundancy is used in the boundedness theorem and simulation table
+below \cite{CookReckhow1979}.
+\index{Cook--Reckhow proof system}\index{proof size}
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p07-proof-simulation}{Boundedness and p-simulation}
+A Cook--Reckhow system \(\mathsf P_{\mathrm{pf}}\) is \emph{polynomially bounded} iff
+there is a polynomial \(q\) such that every tautology \(\varphi\) has a
+\(\mathsf P_{\mathrm{pf}}\)-proof \(\pi\) with
+\(\operatorname{size}(\pi)\leq q(\operatorname{size}(\varphi))\).
+The system \(\mathsf P_{\mathrm{pf}}\) \emph{p-simulates}
+\(\mathsf Q_{\mathrm{pf}}\) iff one polynomial-time transformation sends every
+\(\mathsf Q_{\mathrm{pf}}\)-proof of \(\varphi\) to a
+\(\mathsf P_{\mathrm{pf}}\)-proof of the same \(\varphi\), with
+polynomially bounded output size.
+
+These are metalinguistic properties of encoded proof systems.  A nonuniform
+comparison of shortest proof lengths supplies no effective translation and
+therefore is not p-simulation.  Table~\ref{tab:p07-proof-complexity-systems}
+uses only the uniform notion.  Polynomial boundedness is instead an internal
+short-proof-existence property of one system; p-simulation is a uniform
+translation between two systems, and the theorem below uses the former.
+\index{p-simulation}\index{polynomially bounded proof system}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p07-cook-reckhow-np-conp}{cited=CookReckhow1979}{Polynomially bounded proof systems and NP versus coNP}
+A polynomially bounded Cook--Reckhow propositional proof system exists if and
+only if \(\mathsf{NP}=\mathsf{coNP}\).  The theorem concerns existence of
+some encoded system; it does not say that resolution, Frege, or extended
+Frege is polynomially bounded \cite{CookReckhow1979,Krajicek2019}.
+\end{hbtheorem}
+
+\section{Resolution and the pigeonhole principle}
+\label{sec:p07-resolution-lower-bound}
+
+\begin{hbdefinition}{def:p07-pigeonhole-cnf}{The pigeonhole-principle CNFs}
+For \(n\geq1\), let \(x_{i,j}\) say that pigeon \(i\) occupies hole \(j\),
+where \(1\leq i\leq n+1\) and \(1\leq j\leq n\).  The clause set
+\(\mathsf{PHP}^{n}_{n+1}\) consists of
+\[
+  x_{i,1}\lor\cdots\lor x_{i,n}
+  \quad(1\leq i\leq n+1)
+\]
+and
+\[
+  \neg x_{i,j}\lor\neg x_{i',j}
+  \quad(1\leq i<i'\leq n+1,\ 1\leq j\leq n).
+\]
+No clauses forbidding one pigeon from occupying two holes are included; that
+stronger encoding must be named separately.  A resolution refutation uses
+\hyperref[sheet:resolution-cpl]{\texttt{sheet:resolution-cpl}}, and its size
+here is the number of clause occurrences in its derivation DAG, including
+inputs.  Fixing the encoding and measure is necessary because lower bounds
+for a different PHP presentation or proof-size measure are not literally the
+same theorem; the present convention is used immediately below.
+\index{pigeonhole principle!CNF}\index{resolution!proof size}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p07-haken-resolution-lower-bound}{sketched=annex:p7.complexity.1}{Exponential resolution lower bound for pigeonhole CNFs}
+There is a real constant \(c>1\) such that, for all sufficiently large
+\(n\), every resolution refutation of
+\(\mathsf{PHP}^{n}_{n+1}\) has at least \(c^n\) clause occurrences.  This is
+a lower bound for the fixed resolution system and encoding, not for Frege,
+extended Frege, or arbitrary unsatisfiable CNFs
+\cite{Haken1985,BeamePitassi1998}.
+\end{hbtheorem}
+
+\section{Frege and extension systems}
+\label{sec:p07-frege-systems}
+
+\begin{hbdefinition}{def:p07-frege-systems}{Frege and extended Frege systems}
+In this chapter, a \emph{Frege system} is a fixed finite collection of sound
+propositional axiom schemata and inference rules that is implicationally
+complete for classical propositional logic: whenever a finite set of
+hypotheses semantically entails a formula, the rules derive that formula
+from those hypotheses. Finite derivations are recognizable in polynomial
+time. The concrete handbook representative is
+\hyperref[sheet:hilbert-cpl]{\texttt{sheet:hilbert-cpl}}.
+
+An \emph{extended Frege system} is that representative together with the
+fresh, acyclic definitional declarations on the
+\hyperref[sheet:extended-frege-cpl]{extended-Frege sheet}.
+Every extension variable is absent from all hypotheses and the final
+conclusion; it may occur in internal proof lines and later declarations.
+An \emph{extended-resolution system} is propositional resolution together
+with the fresh, acyclic three-clause definitional packages on
+the \hyperref[sheet:extended-resolution-cpl]{extended-resolution sheet}.
+These names are needed to distinguish formula-line proofs from clause
+refutations and to distinguish mere abbreviation from unrestricted new
+axioms.  Their standing is system-level, not semantic.  Freshness and
+acyclicity make the extensions conservative abbreviations, so the extension
+systems are not redundant names for their unextended bases; the distinction
+is used in the simulation and open-problem cells of
+Table~\ref{tab:p07-proof-complexity-systems}.
+\index{Frege system}\index{extended Frege}\index{extended resolution}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p07-frege-lower-bound-boundary}{cited=Alekseev2026}{Frege lower bounds}
+No superpolynomial lower bound is known for arbitrary-depth Frege proofs, and
+none is known for extended Frege proofs.  Haken's resolution lower bound does
+not transfer to either system.  This 2026 status statement is cited rather
+than treated as a theorem of the handbook's formal development
+\cite{Krajicek2019,Alekseev2026}.
+\end{hbtheorem}
+
+The source roles are specific.  Kraj\'i\v{c}ek supplies the proof-system
+background and historical lower-bound boundary; Alekseev's 2026 introduction
+explicitly identifies a superpolynomial arbitrary-depth Frege lower bound as a
+major open problem and an extended-Frege lower bound as still harder.  The
+paper's algebraic lower bound is not asserted to be either of those two
+missing Boolean lower bounds.
+
+\begin{landscape}
+\thispagestyle{plain}
+\section{Proof-system comparison}
+\label{sec:p07-proof-system-comparison}
+\begingroup\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{longtable}{@{}p{.70in}p{1.70in}p{.80in}p{1.65in}p{1.80in}@{}}
+\caption{Proof-complexity systems.  Every simulation claim
+  uses Definition~\ref{def:p07-proof-simulation}; no shortest-proof-only
+  comparison is substituted.}
+\label{tab:p07-proof-complexity-systems}\\
+\toprule
+System & Proof objects and rule surface & Verification & Representative lower-bound status & Simulation statement \\
+\midrule
+\endfirsthead
+\caption[]{Proof-complexity systems.  Every simulation claim
+  uses Definition~\ref{def:p07-proof-simulation}; no shortest-proof-only
+  comparison is substituted (continued)}\\
+\toprule
+System & Proof objects and rule surface & Verification & Representative lower-bound status & Simulation statement \\
+\midrule
+\endhead
+\midrule\multicolumn{5}{r}{\emph{continued on next page}}\\
+\endfoot
+\endlastfoot
+Resolution & Clause DAGs using \texttt{sheet:resolution-cpl} & Polynomial time & Exponential for the fixed \(\mathsf{PHP}^{n}_{n+1}\) family, Theorem~\ref{thm:p07-haken-resolution-lower-bound} & Baseline; no converse simulation by resolution is asserted. \\
+\addlinespace
+Extended resolution & Resolution plus the acyclic extension packages on \texttt{sheet:extended-resolution-cpl} & Polynomial time & No general superpolynomial lower bound asserted here & P-simulates ordinary resolution by using no extension declarations. \\
+\addlinespace
+Frege & Formula-line derivations in the fixed finite basis \texttt{sheet:hilbert-cpl} & Polynomial time & No general superpolynomial lower bound known & The fixed representative p-simulates the displayed resolution calculus after the encodings above are fixed.  Any two fixed finite sound and complete Frege bases with polynomial-time recognizable instances p-simulate one another under the same encoding convention. \\
+\addlinespace
+Extended Frege & Frege derivations plus fresh acyclic extension declarations & Polynomial time & No general superpolynomial lower bound known & P-simulates its underlying Frege system; no converse is asserted in this table. \\
+\bottomrule
+\end{longtable}
+\endgroup
+\end{landscape}
+
+\section{Further reading and navigation}
+\label{sec:p07-further-reading}
+
+The following is the Part~7 annotated reading route:
+\begin{itemize}
+  \item Sequent calculi, normalization, and reductions.
+        \par\parencite{Gentzen1934a,Gentzen1935b}
+        \par\parencite{TroelstraSchwichtenberg2000}
+  \item Lambda calculus and types.
+        \par\parencite{Barendregt1984,GirardLafontTaylor1989}
+  \item Ordinal analysis. \par\parencite{Takeuti1987,Pohlers2009}
+  \item Functional interpretations.
+        \par\parencite{AvigadFeferman1998,Kohlenbach2008}
+  \item Proof complexity. \par\parencite{CookReckhow1979,Krajicek2019}
+\end{itemize}
+Each cited result in the preceding chapters retains its own status rather than
+inheriting authority from this list.
+
+\begingroup
+\pagestyle{plain}
+\begin{landscape}
+\thispagestyle{plain}
+\section{Body, sheet, and annex routes}
+\label{sec:p07-navigation}
+
+Table~\ref{tab:p07-body-annex-routes} routes every separately authored
+status-bearing Part-7 result and the inherited result families on which those
+additions depend.  Rule notation is read from the named registry sheet.  A
+cited result has no annex item.
+
+\begingroup\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{longtable}{@{}p{.82in}p{2.05in}p{4.95in}@{}}
+\caption{Part-7 body-to-sheet and body-to-annex routes.}
+\label{tab:p07-body-annex-routes}\\
+\toprule
+Body topic & Exact rule-sheet route & Status destinations for every theorem-class entry \\
+\midrule
+\endfirsthead
+\caption[]{Part-7 body-to-sheet and body-to-annex routes (continued)}\\
+\toprule
+Body topic & Exact rule-sheet route & Status destinations for every theorem-class entry \\
+\midrule
+\endhead
+\midrule\multicolumn{3}{r}{\emph{continued on next page}}\\
+\endfoot
+\endlastfoot
+Calculi and derivability &
+\texttt{sheet:lk}, \texttt{sheet:lk-defneg}, \texttt{sheet:lk-eq},
+\texttt{sheet:lj}, \texttt{sheet:nd-cpl}, \texttt{sheet:nd-fol}, and
+\texttt{sheet:nj} &
+\hyperref[thm:p07-lkd-soundness]{Defined-negation soundness}
+--- \hyperref[annex:p7.calculi.1]{sketch CALCULI.1};
+\hyperref[thm:p07-lk-presentation-equivalence]{presentation equivalence}
+--- \hyperref[annex:p7.calculi.2]{sketch CALCULI.2};
+\hyperref[thm:p07-lk-nd-equivalence]{LK--ND equivalence}
+--- \hyperref[annex:p7.calculi.3]{proof CALCULI.3};
+\hyperref[thm:p07-canonical-lk-completeness]{canonical-LK completeness}
+--- \hyperref[annex:p7.calculi.4]{proof CALCULI.4}. \\
+\addlinespace
+Cut elimination and interpolation &
+\texttt{sheet:lk-defneg} and \texttt{sheet:lj}; canonical LK and
+LK-with-equality are expressly outside the reduction theorem &
+\hyperref[lem:cut-mix-equipollence]{Cut/Mix equipollence}
+--- source complete proof;
+\hyperref[thm:p07-classical-cut-elimination]{classical cut elimination} and
+\hyperref[thm:p07-lj-exact-cut-elimination]{intuitionistic cut elimination}
+--- complete exact-sheet proofs;
+\hyperref[lem:cutfree-subformula]{cut-free subformula}
+--- source complete proof;
+\hyperref[thm:p07-classical-analytic]{classical analyticity and empty-sequent underivability},
+\hyperref[thm:p07-lj-analyticity]{intuitionistic analyticity}, and
+\hyperref[thm:p07-lj-existence-property]{term-witness extraction}
+--- complete proofs with the stated instance and ground-term conditions;
+\hyperref[thm:p07-midsequent]{midsequent} and
+\hyperref[thm:p07-herbrand-midsequent]{Herbrand route}
+--- \texttt{cited=Takeuti1987};
+\hyperref[thm:p07-maehara-partition]{Maehara partition}
+--- \hyperref[annex:p7.interp.1]{proof INTERP.1};
+\hyperref[thm:p07-relational-cut-free-completeness]{relational cut-free completeness}
+--- \hyperref[annex:p7.interp.2]{proof INTERP.2};
+\hyperref[thm:craig-interpolation]{Craig}
+--- \hyperref[annex:p7.interp.3]{proof INTERP.3}, including functions and equality;
+\hyperref[thm:beth]{Beth}
+--- \hyperref[annex:p7.interp.4]{proof INTERP.4}, including uniform finite support. \\
+\addlinespace
+Normalization and Curry--Howard &
+\(\mathsf{NJ}_{\mathrm v}\), defined in
+Section~\ref{sec:normalization-curry-howard-01}, and \texttt{sheet:stlc} &
+\hyperref[sec:normalization-curry-howard-01]{Normalization with empty discharge classes}
+--- \hyperref[annex:p7.nj.principal-permutation-normalization]{complete principal/permutation proof};
+\hyperref[thm:p07-nj-vacuous-normalization]{normalization including absurdity absorption}
+--- \hyperref[annex:p7.nj.vacuous-normalization]{complete proof};
+\hyperref[thm:p07-stlc-substitution]{STLC typing substitution}
+--- \hyperref[annex:p7.stlc.substitution]{complete proof};
+\hyperref[thm:p07-stlc-subject-reduction]{subject reduction}
+--- \hyperref[annex:p7.stlc.subject-reduction]{complete proof};
+\hyperref[thm:p07-stlc-strong-normalization]{strong normalization}
+--- \hyperref[annex:p7.stlc.strong-normalization]{complete proof};
+\hyperref[thm:p07-stlc-inert-constants]{inert constants}
+--- \hyperref[annex:p7.stlc.inert-constants]{complete proof}. \\
+\addlinespace
+Lambda calculi and type theories &
+\texttt{sheet:lambda-untyped}, \texttt{sheet:sk-combinatory}, and
+\texttt{sheet:system-f}; the broader MLTT rule surface is
+\texttt{sheet:mltt-intensional}, while the cited decision theorem covers only
+its stated dependent-function/one-universe subcalculus &
+\hyperref[thm:p07-church-rosser]{Church--Rosser}
+--- \hyperref[annex:p7.lambda.1]{proof LAMBDA.1};
+\hyperref[thm:p07-beta-normal-form-unique]{normal-form uniqueness}
+--- \hyperref[annex:p7.lambda.2]{proof LAMBDA.2};
+\hyperref[thm:p07-lambda-partial-recursive]{lambda/recursive equivalence}
+--- \texttt{cited=Kleene1936};
+\hyperref[thm:p07-bracket-abstraction]{bracket abstraction}
+--- \hyperref[annex:p07.combinatory.bracket-abstraction]{complete proof};
+\hyperref[thm:p07-system-f-confluence]{System-F confluence}
+--- \hyperref[annex:p7.system-f.confluence]{complete proof};
+\hyperref[thm:p07-system-f-strong-normalization]{System-F normalization}
+--- \hyperref[annex:p7.system-f.strong-normalization]{complete proof}, with
+\hyperref[sec:p07-system-f-normalization]{candidate and substitution lemmas};
+\hyperref[thm:p07-system-f-church-checking]{Church-style checking}
+--- \hyperref[annex:p7.system-f.church-checking]{complete proof};
+\hyperref[thm:p07-system-f-curry-undecidable]{Curry-style undecidability}
+--- \texttt{cited=Wells1999};
+\hyperref[thm:p07-mltt-normalization-decision]{matched MLTT decision result}
+--- \texttt{cited=AbelCoquandDybjer2007}, expressly not a theorem about the
+whole active sheet;
+\hyperref[thm:p07-coc-strong-normalization]{CoC normalization}
+--- \hyperref[annex:p7.ch88.full-normalization]{complete annotated/open proof},
+with the exact corrected indexed and target CC specifications. \\
+\addlinespace
+Arithmetic proof theory &
+\texttt{sheet:omega-arithmetic} for the infinitary presentation; the finite
+set-support presentation is derived from the propositional restriction of
+\texttt{sheet:lk-defneg}; the full arithmetic analysis remains source-relative &
+\hyperref[thm:p07-prop-cut-termination]{finite-set propositional Cut strategy}
+--- \hyperref[annex:p7.arithmetic.1]{proof ARITHMETIC.1};
+\hyperref[thm:p07-omega-cut-elimination]{omega-calculus cut elimination}
+--- source-cited theorem;
+\hyperref[sec:normalization-curry-howard-04]{Gentzen analysis}
+--- \texttt{cited=Gentzen1936};
+\hyperref[thm:p07-feferman-schuette]{Feferman--Schuette calibration}
+--- \texttt{cited=Feferman1964}. \\
+\addlinespace
+Functional interpretations &
+\texttt{sheet:system-t} and \texttt{sheet:lj}; the cited HA and
+realizability metatheorems do not acquire local rule sheets &
+\hyperref[thm:p07-dialectica-soundness]{Dialectica soundness} and
+\hyperref[thm:p07-dialectica-consistency]{its consistency corollary}
+--- \texttt{cited=AvigadFeferman1998};
+\hyperref[thm:p07-number-realizability-soundness]{number-realizability soundness}
+--- \texttt{cited=Kleene1945};
+\hyperref[thm:p07-ect-characterization]{ECT characterization}
+--- \texttt{cited=Troelstra1998};
+\hyperref[thm:p07-markov-realizability-boundary]{Markov boundary},
+\hyperref[thm:p07-ipc-disjunction-property]{IPC disjunction},
+\hyperref[thm:p07-ha-disjunction-property]{HA disjunction}, and
+\hyperref[thm:p07-ha-numerical-existence]{HA numerical existence}
+--- \texttt{cited=TroelstraVanDalen1988};
+\hyperref[thm:p07-lj-disjunction-last-rule]{cut-free LJ extraction}
+--- \hyperref[annex:p7.functional.1]{proof FUNCTIONAL.1}. \\
+\addlinespace
+Epsilon calculus and generalized frameworks &
+\texttt{sheet:epsilon}, \texttt{sheet:gs5-avron},
+\texttt{sheet:labelled-k-negri}, \texttt{sheet:display-k-wansing}, and
+\texttt{sheet:deep-s5-stouppa} &
+\hyperref[thm:p07-first-epsilon]{first epsilon},
+\hyperref[thm:p07-extended-first-epsilon]{extended first epsilon}, and
+\hyperref[thm:p07-second-epsilon]{second epsilon}
+--- \texttt{cited=MoserZach2006};
+\hyperref[thm:p07-gs5-adequacy]{GS5 adequacy}
+--- \texttt{cited=Avron1996};
+\hyperref[thm:p07-labelled-k-adequacy]{labelled-K adequacy}
+--- \texttt{cited=Negri2005};
+\hyperref[thm:p07-display-k-adequacy]{display-K adequacy}
+--- \texttt{cited=Wansing1994};
+\hyperref[thm:p07-deep-s5-adequacy]{deep-S5 adequacy}
+--- \texttt{cited=Stouppa2007}. \\
+\addlinespace
+Propositional proof complexity &
+\texttt{sheet:resolution-cpl}, \texttt{sheet:extended-resolution-cpl},
+\texttt{sheet:hilbert-cpl}, and \texttt{sheet:extended-frege-cpl} &
+\hyperref[thm:p07-cook-reckhow-np-conp]{Cook--Reckhow equivalence}
+--- \texttt{cited=CookReckhow1979};
+\hyperref[thm:p07-haken-resolution-lower-bound]{Haken lower bound}
+--- \hyperref[annex:p7.complexity.1]{sketch COMPLEXITY.1};
+\hyperref[thm:p07-frege-lower-bound-boundary]{Frege lower-bound boundary}
+--- \texttt{cited=Alekseev2026}. \\
+\bottomrule
+\end{longtable}
+\endgroup
+\end{landscape}
+\endgroup
+
+The resolution sheets connect forward to
+Chapter~\ref{sec:p12-first-order-automation}, where unification, refinements,
+equality handling, and practical search boundaries are treated explicitly.

@@ -1,0 +1,453 @@
+\chapter{Normalization and Assumption Discharge}
+\label{sec:p07-natural-deduction-normalization}
+
+Two natural-deduction presentations can derive the same consequences
+and behave differently under proof reduction. The nonvacuous presentation
+on Sheet~\ref{sheet:nj} requires each discharged label to mark at least
+one actual assumption occurrence. The standard presentation on
+Sheet~\ref{sheet:p07-nj-vacuous} permits an empty discharged class.
+This distinction is essential when a reduction deletes a branch.
+
+\section{The discharge distinction}
+
+\begin{hbdefinition}{def:p07-nj-presentations}{The two finite-tree calculi}
+Write \(\mathsf{NJ}_{\mathrm{nv}}\) for the exact calculus of
+Sheet~\ref{sheet:nj}, and \(\mathsf{NJ}_{\mathrm v}\) for
+Sheet~\ref{sheet:p07-nj-vacuous}. They have the same introduction
+and elimination rules for
+\(\bot,\land,\lor,\to,\forall,\exists\), with defined negation,
+total capture-avoiding term substitution, and the same eigenvariable
+conditions. They differ only in allowing empty discharge classes for
+\(\to I\), each minor derivation of \(\lor E\), and the minor
+derivation of \(\exists E\) in \(\mathsf{NJ}_{\mathrm v}\).
+
+Derivations are finite rooted trees. An open assumption is an actual
+undischarged leaf occurrence, not an unused member of a supporting
+context. Metalinguistic natural-number labels distinguish the classes discharged by particular rule
+applications. Bound individual variables and discharge labels can be
+renamed consistently; free individual variables remain fixed.
+Formulas and conclusions are compared up to bound-variable
+alpha-equivalence. Write \(\mathrm{OA}(\mathcal D)\) for the set
+of formulas at the open leaves of a derivation \(\mathcal D\).
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p07-nj-nonvacuous-obstruction}{proved=annex:p7.nj.nonvacuous-obstruction}{The nonvacuous restriction obstructs ordinary normalization}
+There is a closed \(\mathsf{NJ}_{\mathrm{nv}}\) derivation of
+\(A\to(B\to A)\), for distinct atomic \(A,B\), whose only
+principal introduction--elimination detour cannot be contracted
+within that calculus. It has no disjunction or existential
+permutation available. Thus ordinary compatible principal and
+\(\lor E/\exists E\) permutation conversions do not give a
+normalization theorem for \(\mathsf{NJ}_{\mathrm{nv}}\).
+The same derivation normalizes in \(\mathsf{NJ}_{\mathrm v}\).
+\end{hbtheorem}
+
+The issue is a rule condition, not the truth of the implication.
+The following bridge preserves consequence while distinguishing
+the permitted reduction behavior. The obstruction also appears in
+Read's discussion of nonvacuous discharge
+\cite[p.~18]{Read2014ProofTheoreticValidityManuscript}.
+
+\begin{hbtheorem}{thm:p07-nj-vacuous-consequence-bridge}{proved=annex:p7.nj.consequence-bridge}{The same consequences, with different reduction behavior}
+For every finite derivation in either presentation there is a
+derivation in the other with the same conclusion and the same
+open assumption occurrences, up to consistent bound-name and
+label renaming. In particular, for every finite supporting
+assumption set \(\Gamma\) and formula \(C\),
+\[
+ \Gamma\derives_{\mathsf{NJ}_{\mathrm{nv}}}C
+ \quad\Longleftrightarrow\quad
+ \Gamma\derives_{\mathsf{NJ}_{\mathrm v}}C.
+\]
+The translation into the nonvacuous system inserts a conjunction
+introduction followed by projection whenever an empty discharge
+class must be populated. It does not preserve normality.
+\end{hbtheorem}
+
+\section{Proof terms and the exact substitutions}
+
+\begin{hbdefinition}{def:p07-nj-proof-terms}{Annotations for the full first-order tree language}
+Use proof variables \(u,v,\ldots\) for labeled assumption classes,
+and separate individual variables \(x,y,\ldots\) in first-order
+terms and formula annotations. A proof term \(M:A\) records
+one derivation of formula \(A\). The constructors are as follows:
+\begin{enumerate}
+\item \(u:A\) is an assumption; \(\langle M,N\rangle:A\land B\)
+is conjunction introduction; \(\pi_1M:A\) and \(\pi_2M:B\)
+are its two eliminations when \(M:A\land B\).
+\item \(\iota_1^B M:A\lor B\) and \(\iota_2^A N:A\lor B\)
+are the injections. The term
+\(\mathsf{case}(M;u.N;v.P):C\) has \(M:A\lor B\),
+branches \(N:C\) under \(u:A\) and \(P:C\) under \(v:B\).
+The two proof variables are bound in their respective branches.
+\item \(\lambda u^A.M:A\to B\), where \(M:B\), binds
+the assumption class \(u\). Application \(MN:B\) has
+\(M:A\to B\) and \(N:A\).
+\item \(\mathsf{abort}_A(M):A\) has \(M:\bot\).
+There is no introduction constructor for \(\bot\).
+\item \(\Lambda x.M:\forall x A\) has \(M:A\) and
+the registered universal eigenvariable condition. Its elimination
+\(M[t]:A[t/x]\) has \(M:\forall x A\).
+\item \(\mathsf{pack}_{x.A}(t,M):\exists x A\) has
+\(M:A[t/x]\). The term
+\(\mathsf{unpack}(M;y,u.N):C\) has \(M:\exists x A\)
+and a branch \(N:C\) under \(u:A[y/x]\), with the registered
+existential eigenvariable condition. The names \(y,u\) are
+bound in this branch.
+\end{enumerate}
+The binding proof variables may have zero occurrences in
+\(\mathsf{NJ}_{\mathrm v}\). Formula annotations and witness
+terms are part of the syntax, even when an auxiliary termination
+translation later ignores their individual-term detail.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p07-nj-substitutions}{Proof substitution and individual substitution}
+\(M[N/u]\) replaces all free occurrences of the proof variable
+\(u\) by separately renamed copies of \(N\). Bound proof labels
+are first made fresh for the free labels of the inserted proof,
+and internal individual eigenvariables are made fresh for its
+individual variables and open assumptions. The operation is
+simultaneous: it does not substitute again inside an inserted copy.
+
+\(M[t/x]\) applies capture-avoiding individual-term substitution
+to every witness term and formula annotation, with consistent
+changes to the derivation's individual-variable occurrences.
+It does not replace proof assumptions by proofs. Internal
+\(\forall I\) and \(\exists E\) eigenvariables are first
+renamed away from \(x\) and the variables of \(t\).
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p07-nj-substitution}{proved=annex:p7.nj.substitution}{Substitution preserves the standard derivation conditions}
+Suppose \(M:C\) is a \(\mathsf{NJ}_{\mathrm v}\) derivation
+with an open class \(u:A\), and \(N:A\) is another such
+derivation. Then \(M[N/u]\) is a derivation of \(C\), with
+open assumptions contained in those of \(M\) other than class
+\(u\), together with the open assumptions of \(N\).
+No new assumption formula is introduced. Individual substitution
+produces a derivation of the correspondingly substituted formula
+from the correspondingly substituted open assumptions.
+Both assertions include all first-order quantifier cases and
+the possibility of zero, one or many inserted copies.
+\end{hblemma}
+
+\section{Principal conversions}
+
+\begin{hbdefinition}{def:p07-nj-principal-conversions}{The complete introduction--elimination table}
+With the constructor types and freshness conditions above, the
+principal conversions are
+\[
+\begin{aligned}
+ \pi_1\langle M,N\rangle&\longrightarrow M,&
+ \pi_2\langle M,N\rangle&\longrightarrow N,\\
+ (\lambda u^A.M)N&\longrightarrow M[N/u],\\
+ \mathsf{case}(\iota_1^B M;u.N;v.P)&\longrightarrow N[M/u],\\
+ \mathsf{case}(\iota_2^A M;u.N;v.P)&\longrightarrow P[M/v],\\
+ (\Lambda x.M)[t]&\longrightarrow M[t/x],\\
+ \mathsf{unpack}(\mathsf{pack}_{x.A}(t,M);y,u.N)
+       &\longrightarrow N[t/y][M/u].
+\end{aligned}
+\]
+In the last line, \(y\) is first fresh for \(t,M\), and
+the substituted class has formula \(A[t/x]\). There is no
+principal \(\bot I/\bot E\) pair, because the calculus has
+no \(\bot I\). The conversions operate on one selected
+occurrence inside a proof tree; compatible closure permits
+that occurrence at any proof-term position.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p07-nj-principal-preservation}{proved=annex:p7.nj.principal-preservation}{Every principal conversion preserves conclusion and allowed assumptions}
+Each displayed principal conversion takes a well-formed
+\(\mathsf{NJ}_{\mathrm v}\) derivation to one with the same
+conclusion and no new open assumption formula, including when
+the conversion occurs inside a larger derivation. The descendant
+discharge classes that become empty remain legal in this presentation.
+\end{hbtheorem}
+
+\section{Permutation and absurdity conversions}
+
+\begin{hbdefinition}{def:p07-nj-elimination-frames}{Every permitted following elimination}
+An elimination frame \(E[-]\) has its one hole in the major-premise
+position and consists of exactly one of the following seven forms.
+Its auxiliary proofs, witness term and final formula are fixed when
+the hole is filled:
+\[
+\begin{array}{c|l}
+\text{rule}&E[-]\\ \hline
+\land E_1&\pi_1[-]\\
+\land E_2&\pi_2[-]\\
+\to E&[-]L\\
+\lor E&\mathsf{case}([-];c.L;d.R)\\
+\forall E&[-][t]\\
+\exists E&\mathsf{unpack}([-];z,c.L)\\
+\bot E&\mathsf{abort}_B([-])
+\end{array}
+\]
+For each of these seven rows there are two permutation conversions:
+\[
+\begin{aligned}
+ E[\mathsf{case}(M;u.N;v.P)]
+ &\longrightarrow
+   \mathsf{case}(M;u.E_1[N];v.E_2[P]),\\
+ E[\mathsf{unpack}(M;y,u.N)]
+ &\longrightarrow
+   \mathsf{unpack}(M;y,u.E[N]).
+\end{aligned}
+\]
+Here \(E_1,E_2\) are separately freshened copies of the entire
+frame and its auxiliary derivations, not just copies of its last
+rule symbol. This specifies all fourteen permutations, including
+a case after a case, an unpacking after a case, a case after an
+unpacking, and nested unpackings.
+
+Before enlarging a branch scope, rename its \(u,v\), or \(y,u\),
+fresh for the following frame, its auxiliary proofs, every open
+assumption there, its individual terms and its final formula.
+For the universal-elimination row this includes the term \(t\).
+For the existential-elimination row the following eigenvariable
+\(z\) must also be fresh for the earlier branch assumptions,
+which were already discharged on the left and need not previously
+have belonged to its open context. The two case branches receive
+distinct copied \(z\)'s and bound proof labels. Nested unpackings
+use distinct eigenvariables and distinguished proof classes.
+Free external individual variables are not renamed by these operations.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p07-nj-bottom-conversions}{Absorption of an elimination after absurdity}
+For each of the seven frames above, if its major premise has
+formula \(A\) and its final conclusion formula \(B\), use
+\[
+                  E[\mathsf{abort}_A(M)]
+                   \longrightarrow \mathsf{abort}_B(M).
+\]
+Thus the two projections return an absurdity elimination to the
+selected conjunct; application returns one to the consequent;
+case and unpacking return one to their branch conclusion;
+universal elimination returns one to \(A_0[t/x]\) when its
+major formula is \(\forall x A_0\); and an absurdity elimination
+after \(\mathsf{abort}_\bot(M)\) returns the single final
+absurdity elimination. All auxiliary proofs of the following
+frame disappear. The retained \(M\) still concludes \(\bot\).
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p07-nj-permutation-preservation}{proved=annex:p7.nj.permutation-preservation}{All fourteen permutations and seven absorptions preserve the derivation}
+With the stated freshness and copying conditions, every displayed
+permutation and absurdity absorption preserves the conclusion
+and introduces no new open assumption formula. The conclusion
+and external free variables are retained, including the cases
+with quantified formulas, term instantiations and nested
+existential eliminations. The same holds in every proof context.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p07-nj-vacuous-normality}{The complete normality condition and reduction relation}
+Let \(\to_{\mathrm D}\), \(\to_{\mathrm P}\), and
+\(\to_{\mathrm B}\) be the compatible closures of the seven
+principal, fourteen permutation, and seven absurdity-absorption
+rules respectively. Alpha-renaming is equality of representations,
+not an extra directed step. A proof is \emph{normal} when no
+occurrence anywhere admits any of these three kinds of step.
+Equivalently, an elimination's major premise is not the result
+of its matching introduction, of a case/unpacking, or of an
+absurdity elimination. No eta expansion, permutation from a
+minor-premise position, or commuting introduction is included.
+\end{hbdefinition}
+
+\section{An explicit termination argument}
+
+The proof uses the continuation translation and arithmetic measure
+of de Groote's full first-order treatment, with all actual
+quantifier annotations retained on the derivation
+\cite[Definitions~3, 6--10, 13--16, 19--20]{DeGroote2002NJPermutation}.
+The auxiliary arrow-only normalization theorem used below is
+\cref{thm:p07-stlc-strong-normalization}, whose full proof includes
+open terms and finite beta-reduction heights.
+
+\begin{hbdefinition}{def:p07-nj-erasure}{Erasing individual detail only in the termination simulation}
+Write \(e(M)\) for the proof tree with formula annotations and
+individual terms erased. Propositional constructors and proof-variable
+binding remain. For the quantified constructors set
+\[
+\begin{aligned}
+e(\Lambda x.M)&=\mathsf{ai}(e(M)),&
+e(M[t])&=\mathsf{ae}(e(M)),\\
+e(\mathsf{pack}_{x.A}(t,M))&=\mathsf{pack}(e(M)),&
+e(\mathsf{unpack}(M;y,u.N))&=
+        \mathsf{unpack}(e(M);u.e(N)).
+\end{aligned}
+\]
+Also erase the formula subscript of \(\mathsf{abort}\) and the
+missing-summand annotation of an injection. This is a simulation
+map; it does not identify actual derivations with different witnesses.
+In particular, an actual universal principal step still erases
+to \(\mathsf{ae}(\mathsf{ai}(U))\to U\), removing two proof
+constructors. Write \(U,V,W\) for erased terms below.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p07-nj-cps-types}{Arrow-only types for the simulation}
+Fix distinct simple base types \(o,\iota\), and a base type
+\(p_P\) for each predicate symbol \(P\). Define value and
+computation types by \(A^{\mathrm c}=(A^{\mathrm v}\to o)\to o\)
+and the following recursion, with arrows associating to the right:
+\[
+\begin{array}{c|l}
+A&A^{\mathrm v}\\ \hline
+P(t_1,\ldots,t_n)&p_P\\
+\bot&o\\
+B\to C&B^{\mathrm c}\to C^{\mathrm c}\\
+B\land C&(B^{\mathrm c}\to C^{\mathrm c}\to o)\to o\\
+B\lor C&(B^{\mathrm c}\to o)\to(C^{\mathrm c}\to o)\to o\\
+\forall x B&\iota\to B^{\mathrm c}\\
+\exists x B&(\iota\to B^{\mathrm c}\to o)\to o
+\end{array}
+\]
+These arrows are simple-type constructors in the target calculus,
+not additional object-language implication rules. Individual
+substitution does not change either translated type. Translate
+each open proof variable \(u:A\) as \(u:A^{\mathrm c}\), and
+add a fresh target variable \(\star:\iota\). This variable
+is a marker in an open STLC context; it is not an individual
+witness postulated in the original logic.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p07-nj-modified-cps}{The complete modified continuation translation}
+Define \(\mathcal T(U)=\lambda k.\mathcal C(U,k)\), with
+\(k\) fresh. For a target continuation term \(K\), define
+\(\mathcal C\) by the following simultaneous structural recursion.
+Every displayed target binder is fresh for its operands; all
+target lambdas carry the simple type determined by the preceding
+type table and the typing theorem below.
+\[
+\begin{array}{c|l}
+U&\mathcal C(U,K)\\ \hline
+u&uK\\
+\lambda u.V&K(\lambda u.\mathcal T(V))\\
+VW&\mathcal C(V,\lambda f.f\mathcal T(W)K)\\
+\langle V,W\rangle&K(\lambda p.p\mathcal T(V)\mathcal T(W))\\
+\pi_1V&\mathcal C(V,\lambda p.p(\lambda u.\lambda v.uK))\\
+\pi_2V&\mathcal C(V,\lambda p.p(\lambda u.\lambda v.vK))\\
+\iota_1V&K(\lambda u.\lambda v.u\mathcal T(V))\\
+\iota_2V&K(\lambda u.\lambda v.v\mathcal T(V))\\
+\mathsf{case}(V;u.W;v.Z)&
+ \mathcal C(V,\lambda s.s(\lambda u.\mathcal C(W,K))
+                               (\lambda v.\mathcal C(Z,K)))\\
+\mathsf{ai}(V)&K(\lambda\xi.\mathcal T(V))\\
+\mathsf{ae}(V)&\mathcal C(V,\lambda f.f\star K)\\
+\mathsf{pack}(V)&K(\lambda p.p\star\mathcal T(V))\\
+\mathsf{unpack}(V;u.W)&
+ \mathcal C(V,\lambda s.s(\lambda\xi.\lambda u.\mathcal C(W,K)))\\
+\mathsf{abort}(V)&\mathcal C(V,(\lambda z.\lambda r.r)K)
+\end{array}
+\]
+The dummy \(\xi\)'s have type \(\iota\). In the last row
+\(z\) has the type of \(K\), and \(r:o\). Keep that
+administrative beta redex uncontracted in the definition: its
+argument preserves occurrences of \(K\) needed for strict
+simulation of reductions inside auxiliary derivations.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p07-nj-cps-simulation}{proved=annex:p7.nj.cps-simulation}{Typing and the two simulation properties}
+If \(M:A\) is a \(\mathsf{NJ}_{\mathrm v}\) derivation, then
+\(\mathcal T(e(M)):A^{\mathrm c}\) is an open arrow-only STLC
+term in its translated context with \(\star:\iota\).
+Every actual principal step \(M\to_{\mathrm D}N\) gives
+\[
+             \mathcal T(e(M))\to_\beta^+
+                          \mathcal T(e(N)),
+\]
+where \(+\) means at least one beta step. Every actual
+permutation \(M\to_{\mathrm P}N\) gives alpha-equivalent
+target terms. Both statements hold under all proof contexts,
+not only at the root.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p07-nj-permutation-measure}{A measure that accounts for copied branches}
+Define positive integers \(n(U),w(U)\) on erased proof terms:
+\[
+\begin{array}{c|c|l}
+U&n(U)&w(U)\\ \hline
+u&1&1\\
+\lambda u.V&1&w(V)\\
+VW&n(V)&w(V)+n(V)w(W)\\
+\langle V,W\rangle&1&w(V)+w(W)\\
+\pi_iV&n(V)&w(V)+n(V)\\
+\iota_iV&1&w(V)\\
+\mathsf{case}(V;u.W;v.Z)&2n(V)(n(W)+n(Z))&
+                 w(V)+n(V)(w(W)+w(Z))\\
+\mathsf{ai}(V)&1&w(V)\\
+\mathsf{ae}(V)&n(V)&w(V)+n(V)\\
+\mathsf{pack}(V)&1&w(V)\\
+\mathsf{unpack}(V;u.W)&2n(V)n(W)&w(V)+n(V)w(W)\\
+\mathsf{abort}(V)&n(V)&w(V)+n(V)
+\end{array}
+\qquad (i=1,2).
+\]
+For the erased version of each elimination frame there are
+positive integers \(a_E,b_E\), independent of the hole, given by
+\[
+\begin{array}{c|c|c}
+E[-]&a_E&b_E\\ \hline
+[-]L&w(L)&1\\
+\pi_1[-],\ \pi_2[-],\ \mathsf{ae}([-]),\ \mathsf{abort}([-])&1&1\\
+\mathsf{case}([-];c.L;d.R)&w(L)+w(R)&2(n(L)+n(R))\\
+\mathsf{unpack}([-];c.L)&w(L)&2n(L)
+\end{array}
+\]
+They satisfy \(w(E[U])=w(U)+n(U)a_E\) and
+\(n(E[U])=n(U)b_E\).
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p07-nj-permutation-decrease}{proved=annex:p7.nj.permutation-decrease}{Strict decrease for every permutation}
+Every compatible permutation preserves \(n\) and strictly
+decreases \(w\). At a case permutation the decrease is exactly
+\(n(M)(n(N)+n(P))a_E\); at an unpacking permutation it is
+\(n(M)n(N)a_E\), in the erased notation of their defining
+patterns. These quantities are positive even when the following
+elimination copies entire branch derivations.
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p07-nj-vacuous-normalization}{proved=annex:p7.nj.vacuous-normalization}{Full first-order normalization with empty discharge classes}
+Every finite \(\mathsf{NJ}_{\mathrm v}\) derivation admits a
+finite sequence of the declared principal, permutation and
+absurdity conversions ending at a normal derivation with the
+same conclusion and an open-assumption formula set contained
+in the original one, up to bound-variable alpha-equivalence.
+The theorem includes all six logical constructors and the
+exact discharge and eigenvariable conditions on its own sheet.
+
+A terminating strategy first contracts principal or permutation
+redexes until none remain, then contracts absurdity-absorption
+redexes until none remain. No claim about arbitrary interleavings
+of all three classes is required by this theorem.
+\end{hbtheorem}
+
+\begin{hbcorollary}{thm:p07-nj-principal-permutation-normalization}{proved=annex:p7.nj.principal-permutation-normalization}{Normalization using only principal and permutation conversions}
+Every finite \(\mathsf{NJ}_{\mathrm v}\) derivation has a
+derivation with the same conclusion and no new open assumption
+formula, reachable using only \(\to_{\mathrm D}\) and
+\(\to_{\mathrm P}\), which contains neither of those redex
+classes. This is the normality condition that excludes
+introduction--elimination detours and the specified
+\(\lor E/\exists E\) permutation detours but does not
+add a condition on absurdity-elimination chains.
+\end{hbcorollary}
+
+\begin{hbmethod}{def:p07-nj-normalization-use}{Which conclusion the normalization supplies}
+Use the formula-annotated proof tree and its original assumption
+ownership throughout the actual reductions. The erasure and
+continuation translation certify termination; they do not
+replace the quantified derivation that is returned. A proof
+from the nonvacuous presentation may first be regarded as a
+proof in \(\mathsf{NJ}_{\mathrm v}\) and normalized there.
+Translating it back with the consequence bridge can insert
+new detours, so it does not give a nonvacuous normal form.
+
+The classical maximal-formula/segment presentations in
+\cite{Prawitz1965,TroelstraSchwichtenberg2000} and the
+continuation proof used here are different proof routes.
+Theorem~\ref{thm:p07-nj-vacuous-normalization} supplies the
+full stated first-order result by the latter route. It does
+not identify a source's arrow-only strong-normalization proof
+with a proof for quantified disjunction and existential elimination.
+\index{normalization!empty discharge classes}
+\index{natural deduction!nonvacuous variant}
+\index{permutation conversion!quantified natural deduction}
+\end{hbmethod}

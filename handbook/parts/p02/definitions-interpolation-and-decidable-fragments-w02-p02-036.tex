@@ -1,0 +1,817 @@
+%% toc: P2 21 21.8
+\section{Finite versus unrestricted validity and countermodel classes}
+\label{sec:p02-w02-p02-036-finite-validity}
+
+\emph{Purpose.}  Unrestricted first-order validity is computably enumerable,
+because a sound and complete effective calculus lists the valid sentences
+(\cref{thm:fol-validity-enumerable}).  This section shows that nothing of the
+kind holds when truth is required only in the finite structures.  It sorts
+the sentences of a fixed finite relational signature into three
+countermodel classes, according to whether they have a finite model, only
+infinite models, or no model at all.  It proves Trakhtenbrot's theorem
+(\cref{thm:trakhtenbrot}) in full, by encoding the accepting computations of
+a Turing machine as finite structures, and then proves the stronger form in
+which Börger, Grädel and Gurevich state it: the three classes are pairwise
+recursively inseparable, so that no algorithm can even separate one class from
+another.  The same section records the positive side that motivates the
+question, namely that the finite model property yields a decision procedure,
+and the notion of a conservative reduction, which carries the inseparability
+to other formula classes.
+
+\emph{Inputs.}  A finite relational signature \(\Lang\), that is, a finite
+signature with relation symbols and no function or constant symbols;
+the fixed effective coding of first-order formulas used in
+\cref{sec:decision-hierarchy-01}, under which the set of codes of all
+formulas and, for each finite signature, the set of codes of its sentences
+are decidable; the deterministic single-tape Turing machines of
+\cref{sec:turing-machines-01}, with the program codes of
+\cref{sec:universal-reductions-01}; and the self-application domain set
+\(K\) of \cref{sec:universal-reductions-03}.  Structures have nonempty
+domains, and equality is interpreted as identity
+(\cref{sec:fol-semantics-01}).  ``Recursive'' in the source's terminology
+means ``decidable'' here.
+
+\emph{Conclusions.}  For every finite relational \(\Lang\) containing a binary
+relation symbol: the set of finitely satisfiable \(\Lang\)-sentences is
+computably enumerable but undecidable, and the set of finitely valid
+\(\Lang\)-sentences is co-computably enumerable but not computably enumerable
+(\cref{thm:p02-w02-p02-036-trakhtenbrot}); the class of sentences having only
+infinite models is nonempty and neither decidable nor computably enumerable,
+and so is the set of finitely valid sentences that are not valid
+(\cref{thm:p02-w02-p02-036-classes}); and the finitely satisfiable, the
+unsatisfiable and the only infinitely satisfiable sentences are pairwise
+recursively inseparable, both for \(\Lang\)-sentences and for all first-order
+formulas (\cref{thm:p02-w02-p02-036-inseparable}).  A decidable class with the
+finite model property has a decidable satisfiability problem
+(\cref{thm:p02-w02-p02-036-fmp}), and every conservative reduction class
+inherits the inseparability (\cref{thm:p02-w02-p02-036-conservative}).  All
+proofs are in the annex.
+
+\subsection{The three countermodel classes}
+\label{sec:p02-w02-p02-036-classes}
+
+\begin{hbdefinition}{def:p02-w02-p02-036-classes}{Satisfiability and countermodel classes}
+Let \(X\) be a class of formulas.  Following
+\cite[Sect.~2.1.2, Def.~2.1.27]{BorgerGradelGurevich1997}, write
+\begin{itemize}
+\item \(\mathrm{Sat}(X)\) for the set of \(\psi\in X\) that are satisfiable;
+\item \(\mathrm{Val}(X)\) for the set of logically valid \(\psi\in X\);
+\item \(\mathrm{Fin\text{-}sat}(X)\) for the set of \(\psi\in X\) that have a
+      finite model;
+\item \(\mathrm{Inf\text{-}axioms}(X)=\mathrm{Sat}(X)\setminus
+      \mathrm{Fin\text{-}sat}(X)\), the \emph{infinity axioms} of \(X\): the
+      satisfiable formulas all of whose models are infinite;
+\item \(\mathrm{Non\text{-}sat}(X)\) for the set of unsatisfiable
+      \(\psi\in X\).
+\end{itemize}
+A formula is satisfiable when some structure and some assignment satisfy it,
+and it has a finite model when such a structure can be chosen finite.  When
+\(X\) is the set \(\mathrm{FO}\) of all first-order formulas the argument is
+dropped: \(\mathrm{Sat}\), \(\mathrm{Fin\text{-}sat}\), and so on.  For a
+finite relational signature \(\Lang\), the main case below is
+\(X=\operatorname{Sent}(\Lang)\).  A sentence \(\varphi\) is \emph{finitely
+valid} when it is true in every finite structure for its signature.  A
+\emph{countermodel} of \(\varphi\) is a model of \(\neg\varphi\).  As sets of
+formulas these are sets of codes under the fixed effective coding of
+\cref{sec:decision-hierarchy-01}; ``decidable'' and ``computably enumerable''
+refer to those codes.
+\index{finite satisfiability}\index{finite validity}\index{infinity axiom}
+\end{hbdefinition}
+
+For a sentence \(\varphi\) of a signature \(\Lang\), whether it is
+satisfiable, or has a finite model, does not depend on the signature in which
+it is read: a model for a larger signature has a reduct to \(\Lang\) with the
+same domain that satisfies \(\varphi\), and an \(\Lang\)-model expands, with
+the same domain, to any larger signature (\cref{lem:reduct-invariance}).
+Hence \(\mathrm{Fin\text{-}sat}(\operatorname{Sent}(\Lang))=
+\mathrm{Fin\text{-}sat}\cap\operatorname{Sent}(\Lang)\), and likewise for the
+other classes.
+
+The three sets \(\mathrm{Fin\text{-}sat}(X)\), \(\mathrm{Inf\text{-}axioms}(X)\)
+and \(\mathrm{Non\text{-}sat}(X)\) partition \(X\): a formula either has a
+finite model, or has models but only infinite ones, or has no model.  Read
+through negation, the same partition classifies sentences by their
+countermodels.  For \(X=\operatorname{Sent}(\Lang)\), since \(\neg\varphi\)
+and \(\varphi\) have complementary classes of models,
+\begin{itemize}
+\item \(\varphi\) is valid exactly when \(\neg\varphi\in
+      \mathrm{Non\text{-}sat}(X)\);
+\item \(\varphi\) is finitely valid exactly when \(\neg\varphi\notin
+      \mathrm{Fin\text{-}sat}(X)\);
+\item \(\varphi\) is finitely valid but not valid exactly when
+      \(\neg\varphi\in\mathrm{Inf\text{-}axioms}(X)\), that is, when
+      \(\varphi\) has countermodels and every countermodel of \(\varphi\) is
+      infinite.
+\end{itemize}
+The gap between finite and unrestricted validity is therefore exactly the
+class of infinity axioms, read through negation.
+
+\begin{hbexample}{def:p02-w02-p02-036-infinity-axiom}{The infinity axiom of the source}
+Let \(K\) be a binary relation symbol.  The source's example of an infinity
+axiom \cite[Sect.~2.1.2, p.~33]{BorgerGradelGurevich1997} is
+\[
+ \prec_K\;\defeq\;\forall x\,\exists u\,\forall y\,
+ \bigl(\neg Kxx\land Kxu\land(Kyx\to Kyu)\bigr).
+\]
+Its intended model is the natural numbers with \(Kxu\) read as \(x<u\).  The
+prefix is \(\forall\exists\forall\), and the quantifier-free part is a
+conjunction of the clauses \(\neg Kxx\), \(Kxu\) and \(\neg Kyx\lor Kyu\).
+Each clause has at most two literals and at most one unnegated literal, so
+\(\prec_K\) lies in the class \([\forall\exists\forall]\cap\mathrm{KROM}\cap
+\mathrm{HORN}\) of prenex Krom and Horn sentences with that prefix
+\cite[Sect.~2.1.1, Def.~2.1.14]{BorgerGradelGurevich1997}.
+Lemma~\ref{thm:p02-w02-p02-036-infinity-axiom}, which is the source's
+Exercise~2.1.26, shows that
+\(\prec_K\in\mathrm{Inf\text{-}axioms}(\operatorname{Sent}(\{K\}))\).
+Consequently \(\neg\prec_K\) is finitely valid, is not valid, and each of its
+countermodels, for instance \((\mathbb N,<)\), is infinite.  Together with
+\(\exists x\,Kxx\in\mathrm{Fin\text{-}sat}\) and
+\(\exists x\,(Kxx\land\neg Kxx)\in\mathrm{Non\text{-}sat}\), this shows that all
+three classes are nonempty already for the signature \(\{K\}\).  The relation
+symbol \(K\) of this example is unrelated to the self-application set \(K\)
+of \cref{sec:universal-reductions-03}; each occurrence below is one or the
+other by context.
+\end{hbexample}
+
+\begin{hblemma}{thm:p02-w02-p02-036-infinity-axiom}{proved=annex:p02-w02-p02-036-infinity-axiom}{The sentence \(\prec_K\) has only infinite models}
+The structure \((\mathbb N,<)\), with \(<\) interpreting \(K\), is a model of
+\(\prec_K\), and \(\prec_K\) has no finite model.
+\end{hblemma}
+
+\subsection{Finite structures as finite data}
+\label{sec:p02-w02-p02-036-finite-data}
+
+\begin{hbconvention}{def:p02-w02-p02-036-finite-data}{Finite structures as machine inputs}
+Fix a finite relational signature \(\Lang\) with its relation symbols listed
+as \(R_1,\ldots,R_r\), where \(R_i\) has arity \(m_i\).  Every finite
+\(\Lang\)-structure is isomorphic to one whose domain is
+\(\{0,\ldots,n-1\}\) for some \(n\geq1\), and isomorphic structures satisfy
+the same sentences (\cref{lem:iso-invariance}).  A structure with domain
+\(\{0,\ldots,n-1\}\) is given to a machine as the number \(n\) together with,
+for each \(i\), the finite list of the \(m_i\)-tuples in \(R_i\), each relation
+being a subset of the finite set \(\{0,\ldots,n-1\}^{m_i}\).  This datum is a
+finite word over a fixed finite alphabet, and for each \(n\) there are only
+finitely many such data.  One concrete format, the one Fagin uses, writes \(n\)
+in binary followed by the characteristic words of the relations in
+lexicographic order; it is fixed in
+Convention~\ref{def:p02-w02-p02-036-fagin-encoding}.  Any format from which
+\(n\) and the relations are computably recoverable serves for the results of
+this section.  When the signature also has function and constant symbols, a
+function symbol of arity \(m\) is given by its table, the list of its \(n^m\)
+values, and a constant symbol by its value.
+\end{hbconvention}
+
+\begin{hblemma}{thm:p02-w02-p02-036-finsat-ce}{proved=annex:p02-w02-p02-036-finsat-ce}{Finite model checking and enumerability}
+Let \(\Lang\) be a finite relational signature and \(X=\operatorname{Sent}(\Lang)\).
+\begin{enumerate}
+\item There is an algorithm that, given a finite \(\Lang\)-structure with domain
+      \(\{0,\ldots,n-1\}\) in the format of
+      Convention~\ref{def:p02-w02-p02-036-finite-data} and a sentence
+      \(\varphi\in X\), decides whether the structure satisfies \(\varphi\).
+\item \(\mathrm{Fin\text{-}sat}(X)\) is computably enumerable.
+\item \(\mathrm{Non\text{-}sat}(X)\) is computably enumerable.
+\item The set of finitely valid sentences in \(X\) is co-computably enumerable:
+      its complement in \(X\) is computably enumerable.
+\end{enumerate}
+\end{hblemma}
+
+The enumeration in item~2 searches through finite structures; it halts on a
+sentence exactly when a finite model turns up.  It gives no information when
+the sentence has no finite model, which is the case Trakhtenbrot's theorem
+shows cannot be detected effectively.  The same two facts, enumerability of
+the finite structures up to isomorphism and decidability of finite model
+checking, are the source's ground for the following decision method
+\cite[Sect.~2.1.2, p.~33]{BorgerGradelGurevich1997}.  A class \(X\) of
+formulas has the \emph{finite model property} when every satisfiable member of
+\(X\) has a finite model, that is, when \(\mathrm{Sat}(X)=
+\mathrm{Fin\text{-}sat}(X)\).
+
+\begin{hbtheorem}{thm:p02-w02-p02-036-fmp}{proved=annex:p02-w02-p02-036-fmp}{The finite model property gives decidability}
+Let \(\Lang\) be a finite signature, possibly with function and constant
+symbols, and let \(X\) be a decidable set of \(\Lang\)-formulas with the
+finite model property.  Then \(\mathrm{Sat}(X)\) is decidable.
+\end{hbtheorem}
+
+The search through finite structures supplies one half of the decision
+procedure: it confirms the satisfiable members.  The other half, confirming
+the unsatisfiable members, comes from the completeness theorem, through the
+enumeration of the valid sentences.  The finite model property is what makes
+the two searches together cover every member of \(X\).  Trakhtenbrot's theorem
+shows that the first search alone cannot be completed to a decision procedure
+for all sentences of a signature with a binary relation symbol.
+
+\subsection{Accepting computations as finite structures}
+\label{sec:p02-w02-p02-036-run-sentence}
+
+Let \(\mathcal T=(Q,\mathcal A_{\mathrm{in}},\mathcal A_{\mathrm{tape}},
+\delta,q_0,q_{\mathrm{acc}},q_{\mathrm{rej}})\) be a Turing machine in the
+sense of \cref{sec:turing-machines-01}, with its two-way infinite tape.  The
+structure built below is a finite table whose rows are moments of time and whose
+columns are tape cells; one linear order serves for both.
+
+\begin{hbdefinition}{def:p02-w02-p02-036-run-sentence}{The run sentence of a machine and an input}
+The \emph{run signature} \(\Lang_{\mathcal T}\) consists of a binary relation
+symbol \(<\), a binary symbol \(\mathsf{Hd}\), a binary symbol
+\(\mathsf{Cl}_a\) for each \(a\in\mathcal A_{\mathrm{tape}}\), and a unary
+symbol \(\mathsf{St}_q\) for each \(q\in Q\).  The intended reading of
+\(\mathsf{St}_q(t)\) is ``at time \(t\) the state is \(q\)'', of
+\(\mathsf{Hd}(t,p)\) ``at time \(t\) the head scans cell \(p\)'', and of
+\(\mathsf{Cl}_a(t,p)\) ``at time \(t\) cell \(p\) holds \(a\)''.  Use the
+abbreviations
+\[
+ \mathsf{Nx}(x,y)\defeq x<y\land\neg\exists z\,(x<z\land z<y),
+ \qquad
+ \mathsf{Fst}(x)\defeq\neg\exists z\,z<x ,
+\]
+and \(\mathsf{Mv}_R(p,p')\defeq\mathsf{Nx}(p,p')\),
+\(\mathsf{Mv}_L(p,p')\defeq\mathsf{Nx}(p',p)\).  For an input word
+\(w=a_0a_1\cdots a_{k-1}\in\mathcal A_{\mathrm{in}}^*\) let
+\(\psi_{\mathcal T,w}\) be the conjunction of the following sentences.
+\begin{enumerate}
+\item \emph{Order.} \(\forall x\,\neg x<x\),
+  \(\forall x\,\forall y\,\forall z\,((x<y\land y<z)\to x<z)\) and
+  \(\forall x\,\forall y\,(x<y\lor x=y\lor y<x)\).
+\item \emph{Determinacy.} For every \(t\): exactly one \(q\in Q\) has
+  \(\mathsf{St}_q(t)\); exactly one \(p\) has \(\mathsf{Hd}(t,p)\); and for
+  every \(p\), exactly one \(a\in\mathcal A_{\mathrm{tape}}\) has
+  \(\mathsf{Cl}_a(t,p)\).  These are written with finite disjunctions over
+  \(Q\) and \(\mathcal A_{\mathrm{tape}}\), pairwise exclusions, and
+  \(\forall t\,\exists p\,\mathsf{Hd}(t,p)\land\forall t\,\forall p\,\forall p'\,
+  ((\mathsf{Hd}(t,p)\land\mathsf{Hd}(t,p'))\to p=p')\).
+\item \emph{Start.} \(\forall t\,(\mathsf{Fst}(t)\to\mathsf{St}_{q_0}(t))\) and
+  \(\forall t\,\forall p\,((\mathsf{Fst}(t)\land\mathsf{Hd}(t,p))\to
+  \mathsf{In}_w(t,p))\), where \(\mathsf{In}_w(t,p)\) is
+  \(\forall u\,\mathsf{Cl}_{\sqcup}(t,u)\) when \(k=0\) and otherwise
+  \[
+  \begin{aligned}
+   \exists y_0\cdots\exists y_{k-1}\Bigl(&y_0=p\land
+   \bigwedge_{i<k-1}\mathsf{Nx}(y_i,y_{i+1})\land
+   \bigwedge_{i<k}\mathsf{Cl}_{a_i}(t,y_i)\\
+   &\land\forall u\,\bigl(\textstyle\bigwedge_{i<k}u\neq y_i\to
+   \mathsf{Cl}_{\sqcup}(t,u)\bigr)\Bigr).
+  \end{aligned}
+  \]
+\item \emph{Steps.} For each \(q\notin\{q_{\mathrm{acc}},q_{\mathrm{rej}}\}\)
+  and \(a\in\mathcal A_{\mathrm{tape}}\) with \(\delta(q,a)=(q',b,d)\), the
+  sentence
+  \[
+  \begin{aligned}
+   \forall t\,\forall p\,\Bigl(&(\mathsf{St}_q(t)\land\mathsf{Hd}(t,p)\land
+     \mathsf{Cl}_a(t,p))\to
+     \exists t'\,\exists p'\,\bigl(\mathsf{Nx}(t,t')\land
+     \mathsf{Mv}_d(p,p')\\
+   &\land\mathsf{St}_{q'}(t')\land\mathsf{Hd}(t',p')\land\mathsf{Cl}_b(t',p)\\
+   &\land\forall u\,\bigl(u\neq p\to\textstyle\bigwedge_{c\in\mathcal A_{\mathrm{tape}}}
+     (\mathsf{Cl}_c(t,u)\to\mathsf{Cl}_c(t',u))\bigr)\bigr)\Bigr).
+  \end{aligned}
+  \]
+\item \emph{Acceptance.} \(\exists t\,\mathsf{St}_{q_{\mathrm{acc}}}(t)\land
+  \neg\exists t\,\mathsf{St}_{q_{\mathrm{rej}}}(t)\).
+\end{enumerate}
+\index{run sentence}
+\end{hbdefinition}
+
+The step clause forces a next moment and a neighbouring cell to exist
+whenever the machine is not halted, so a finite model can only describe a
+computation that halts inside it.  The acceptance clause forbids the rejecting
+state anywhere, so that the first halting moment must be accepting.  No
+clause says where the head starts: the tape is described relative to the
+initial head cell, and the step relation is the same at every cell.  The run
+sentence controls finite models only; it can have infinite models, for
+example orders without a least element, that describe no computation, so it
+does not by itself separate the unsatisfiable sentences.  That is the job of
+the refined formula of \cref{sec:p02-w02-p02-036-refined}.
+
+\begin{hblemma}{thm:p02-w02-p02-036-run-sentence}{proved=annex:p02-w02-p02-036-run-sentence}{Accepting runs and finite models}
+For every Turing machine \(\mathcal T\) and every
+\(w\in\mathcal A_{\mathrm{in}}^*\), the computation of \(\mathcal T\) on \(w\)
+reaches \(q_{\mathrm{acc}}\) if and only if \(\psi_{\mathcal T,w}\) has a finite
+model.  If that computation reaches \(q_{\mathrm{acc}}\) after \(s\) steps, then
+\(\psi_{\mathcal T,w}\) has a model with exactly \(2s+\lvert w\rvert+1\)
+elements.  For fixed \(\mathcal T\), the map \(w\mapsto\psi_{\mathcal T,w}\) is
+computable.
+\end{hblemma}
+
+\subsection{Reduction to one binary relation}
+\label{sec:p02-w02-p02-036-one-binary}
+
+The run signature has many symbols.  The next construction replaces them by a
+single binary relation \(E\): domain elements are the vertices with a loop,
+and each fact \(R_j(a,b)\) becomes a path of loop-free vertices from \(a\) to
+\(b\) whose length records the index \(j\).
+
+\begin{hbdefinition}{def:p02-w02-p02-036-gadget}{The path translation}
+Let \(\Lang\) consist of binary relation symbols \(R_1,\ldots,R_l\) and unary
+relation symbols \(P_1,\ldots,P_m\), and let \(E\) be a binary relation
+symbol.  Give \(R_j\) the index \(j\) and \(P_i\) the index \(l+i\).  For
+\(j\geq1\) and variables \(x,y\), let \(z_1,\ldots,z_j\) be the first \(j\)
+variables, in a fixed enumeration of the variables, that differ from \(x\) and
+\(y\), and put
+\[
+ \pi_j(x,y)\defeq\exists z_1\cdots\exists z_j\Bigl(Exz_1\land
+ \bigwedge_{1\leq i<j}Ez_iz_{i+1}\land Ez_jy\land
+ \bigwedge_{1\leq i\leq j}\neg Ez_iz_i\Bigr).
+\]
+The translation \(\varphi\mapsto\varphi^{I}\) from \(\Lang\)-formulas to
+\(\{E\}\)-formulas sends \(R_j(x,y)\) to \(\pi_j(x,y)\) and \(P_i(x)\) to
+\(\pi_{l+i}(x,x)\), leaves \(x=y\) and \(\bottom\) unchanged, commutes with
+\(\neg,\land,\lor,\to\), and relativizes quantifiers to looped vertices:
+\[
+ (\forall x\,\varphi)^{I}\defeq\forall x\,(Exx\to\varphi^{I}),\qquad
+ (\exists x\,\varphi)^{I}\defeq\exists x\,(Exx\land\varphi^{I}).
+\]
+For a sentence \(\varphi\) put
+\(\varphi^{\sharp}\defeq\exists x\,Exx\land\varphi^{I}\).
+
+For an \(\{E\}\)-structure \(\mathcal G\) in which some vertex has a loop, the
+\emph{decoded structure} \(D(\mathcal G)\) is the \(\Lang\)-structure whose
+domain is the set of looped vertices, with
+\(R_j^{D(\mathcal G)}=\{(a,b):\mathcal G\entails\pi_j[a,b]\}\) and
+\(P_i^{D(\mathcal G)}=\{a:\mathcal G\entails\pi_{l+i}[a,a]\}\), \(a,b\) ranging
+over looped vertices.  For an \(\Lang\)-structure \(\mathcal M\), the
+\emph{path graph} \(G(\mathcal M)\) has as vertices the elements of
+\(\operatorname{dom}\mathcal M\) and, for each \emph{fact}
+\(f=(a,b,j)\), meaning \((a,b)\in R_j^{\mathcal M}\) with \(j\leq l\) or
+\(a=b\in P_i^{\mathcal M}\) with \(j=l+i\), fresh vertices
+\(c^f_1,\ldots,c^f_j\).  Its edges are the loops \((a,a)\) for
+\(a\in\operatorname{dom}\mathcal M\) and, for each fact \(f=(a,b,j)\), the
+edges \(a\to c^f_1\), \(c^f_i\to c^f_{i+1}\) for \(1\leq i<j\), and
+\(c^f_j\to b\).
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p02-w02-p02-036-gadget}{proved=annex:p02-w02-p02-036-gadget}{One binary relation preserves satisfiability and finite satisfiability}
+In the setting of Definition~\ref{def:p02-w02-p02-036-gadget}:
+\begin{enumerate}
+\item For every \(\{E\}\)-structure \(\mathcal G\) with a looped vertex, every
+      \(\Lang\)-formula \(\varphi\) and every assignment \(s\) with values
+      among the looped vertices,
+      \(\mathcal G,s\entails\varphi^{I}\) if and only if
+      \(D(\mathcal G),s\entails\varphi\).
+\item For every \(\Lang\)-structure \(\mathcal M\), \(D(G(\mathcal M))=\mathcal M\);
+      and \(G(\mathcal M)\) is finite when \(\mathcal M\) is finite.
+\item For every \(\varphi\in\operatorname{Sent}(\Lang)\),
+      \(\varphi\in\mathrm{Fin\text{-}sat}(\operatorname{Sent}(\Lang))\) if and
+      only if \(\varphi^{\sharp}\in\mathrm{Fin\text{-}sat}
+      (\operatorname{Sent}(\{E\}))\), and \(\varphi\mapsto\varphi^{\sharp}\) is
+      computable.
+\item For every \(\varphi\in\operatorname{Sent}(\Lang)\), the sentence
+      \(\varphi\) is satisfiable if and only if \(\varphi^{\sharp}\) is
+      satisfiable.  Consequently \(\varphi\) and \(\varphi^{\sharp}\) lie in corresponding
+      classes among \(\mathrm{Fin\text{-}sat}\), \(\mathrm{Inf\text{-}axioms}\)
+      and \(\mathrm{Non\text{-}sat}\).
+\end{enumerate}
+\end{hblemma}
+
+\begin{hblemma}{thm:p02-w02-p02-036-transfer}{proved=annex:p02-w02-p02-036-transfer}{Transfer to any signature with a binary symbol}
+Let \(\Lang'\) be a finite relational signature containing a binary relation
+symbol \(R\).  For \(\chi\in\operatorname{Sent}(\{E\})\) let \(\chi[R/E]\) be
+the result of replacing every occurrence of \(E\) by \(R\).  Then
+\(\chi\in\mathrm{Fin\text{-}sat}(\operatorname{Sent}(\{E\}))\) if and only if
+\(\chi[R/E]\in\mathrm{Fin\text{-}sat}(\operatorname{Sent}(\Lang'))\), and
+\(\chi\in\mathrm{Sat}(\operatorname{Sent}(\{E\}))\) if and only if
+\(\chi[R/E]\in\mathrm{Sat}(\operatorname{Sent}(\Lang'))\).
+\end{hblemma}
+
+In the terminology of Definition~\ref{def:p02-w02-p02-036-conservative}
+below, \(\varphi\mapsto\varphi^{\sharp}\) and \(\chi\mapsto\chi[R/E]\) are
+conservative reductions: they preserve and reflect both satisfiability and
+finite satisfiability.
+
+\subsection{Trakhtenbrot's theorem and the classes}
+\label{sec:p02-w02-p02-036-conclusions}
+
+\begin{hbcorollary}{thm:p02-w02-p02-036-trakhtenbrot}{proved=annex:p02-w02-p02-036-trakhtenbrot}{Proof of Trakhtenbrot's theorem}
+Let \(\Lang\) be a finite relational signature containing a binary relation
+symbol and \(X=\operatorname{Sent}(\Lang)\).  Then
+\(\mathrm{Fin\text{-}sat}(X)\) is computably enumerable and not decidable, and
+the set of finitely valid sentences in \(X\) is co-computably enumerable and
+not computably enumerable.  This is the statement of
+\cref{thm:trakhtenbrot}.
+\end{hbcorollary}
+
+\begin{hbtheorem}{thm:p02-w02-p02-036-classes}{proved=annex:p02-w02-p02-036-classes}{Effective standing of the countermodel classes}
+Let \(\Lang\) be a finite relational signature containing a binary relation
+symbol and \(X=\operatorname{Sent}(\Lang)\).
+\begin{enumerate}
+\item \(\mathrm{Fin\text{-}sat}(X)\), \(\mathrm{Non\text{-}sat}(X)\) and their
+      union \(X\setminus\mathrm{Inf\text{-}axioms}(X)\) are computably
+      enumerable.
+\item \(\mathrm{Inf\text{-}axioms}(X)\) is nonempty, not decidable, and not
+      computably enumerable.
+\item The set of sentences in \(X\) that are finitely valid but not valid is
+      nonempty and not computably enumerable.  Each of its members has a
+      countermodel, and all of its countermodels are infinite.
+\end{enumerate}
+\end{hbtheorem}
+
+\subsection{Recursive inseparability and three halting problems}
+\label{sec:p02-w02-p02-036-inseparability}
+
+Undecidability of a set says that no algorithm draws its boundary exactly.
+The source's form of Trakhtenbrot's theorem says more: no algorithm draws
+any boundary that keeps two of the three classes apart.
+
+\begin{hbdefinition}{def:p02-w02-p02-036-inseparable}{Recursive inseparability}
+Two disjoint sets \(X,Y\subseteq\mathbb N\) are called \emph{recursively
+inseparable} if there is no recursive set \(R\) such that \(X\subseteq R\) and
+\(R\cap Y=\varnothing\) \cite[Sect.~2.1.2, Def.~2.1.28]{BorgerGradelGurevich1997}.
+A set \(R\) with these two properties \emph{separates} \(X\) from \(Y\).
+Sets of formulas are read as sets of codes.
+\index{recursive inseparability}
+\end{hbdefinition}
+
+If \(R\) separates \(X\) from \(Y\), then the decidable set
+\(\mathbb N\setminus R\) separates \(Y\) from \(X\); so the relation is
+symmetric.  If \(X\cup Y=\mathbb N\) and \(X\) is not decidable, then \(X\) and
+\(Y\) are recursively inseparable, since the only set separating \(X\) from
+\(Y\) is \(X\) itself.  Recursive inseparability of a pair therefore
+strengthens the undecidability of each member.
+
+The machines in the next definition are those of
+\cref{sec:turing-machines-01}, started on the empty input, and they are named
+by the program codes of \cref{sec:universal-reductions-01}: a number \(e\) is a
+\emph{valid code} when it codes a normalized machine description, and then
+\(M_e\) denotes the decoded machine.  The set \(V\) of valid codes is
+decidable (\cref{sec:universal-reductions-01}).
+
+\begin{hbdefinition}{def:p02-w02-p02-036-halting}{The halting problems \(H_1\), \(H_2\) and \(H_\infty\)}
+For a valid code \(e\), consider the computation of \(M_e\) on the empty
+input.  Put
+\[
+\begin{aligned}
+ H_1&\defeq\{e\in V:\text{the computation of }M_e\text{ on the empty input
+      reaches }q_{\mathrm{rej}}\},\\
+ H_2&\defeq\{e\in V:\text{the computation of }M_e\text{ on the empty input
+      reaches }q_{\mathrm{acc}}\},\\
+ H_\infty&\defeq\{e\in V:\text{the computation of }M_e\text{ on the empty
+      input never halts}\}.
+\end{aligned}
+\]
+These three sets partition \(V\).  The source defines \(H_1\), \(H_2\) and the
+non-halting set for its Turing machine programs with exactly two stop states
+\(1\) and \(2\), started in state \(0\) at the left end of the empty one-way
+infinite tape \cite[Sect.~2.1.2, p.~34]{BorgerGradelGurevich1997}.  Here the
+rejecting state plays the role of the source's stop state \(1\) and the
+accepting state the role of its stop state \(2\); the tape is the two-way tape
+of \cref{sec:turing-machines-01}.
+\index{halting problem!recursively inseparable}
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p02-w02-p02-036-halting}{proved=annex:p02-w02-p02-036-halting}{The three halting problems are pairwise recursively inseparable}
+The sets \(H_1\), \(H_2\) and \(H_\infty\) are pairwise recursively
+inseparable.
+\end{hblemma}
+
+The source takes this lemma from the recursion-theory literature and also
+records that the three sets are recursively enumerable
+\cite[Sect.~2.1.2, p.~34]{BorgerGradelGurevich1997}; enumerability plays no
+part in the arguments below, and the annex proves the inseparability from the
+definition of a decider.
+
+\subsection{The refined reduction formula}
+\label{sec:p02-w02-p02-036-refined}
+
+The source obtains Trakhtenbrot's theorem from the reduction formula \(\rho_M\)
+of its proof of the Church--Turing theorem.  That formula is the universal
+closure of a conjunction \(\mathrm{STEP}_M\land\mathrm{START}\land
+\mathrm{NONSTOP}\land\mathrm{ORDER}\), in which \(\mathrm{ORDER}\) makes \(K\)
+a strict linear order with successor relation \(S\) and also requires every
+element to have a successor, so that every model is infinite
+\cite[Sect.~2.1.1, pp.~20--22]{BorgerGradelGurevich1997}.  For the refined
+property the source replaces \(\mathrm{ORDER}\) by a relativization
+\(\prec_{K,M}\) of the infinity axiom \(\prec_K\) to the cells visited by the
+computation, so that a halting computation has a finite model while a
+non-halting one has only infinite models
+\cite[Sect.~2.1.2, pp.~34--35]{BorgerGradelGurevich1997}.  The definition below
+carries this out in a relational signature for the machines of
+\cref{sec:turing-machines-01}.
+
+\begin{hbdefinition}{def:p02-w02-p02-036-refined}{The refined reduction formula \(\rho_{M,\prec}\)}
+Let \(M=(Q,\mathcal A_{\mathrm{in}},\mathcal A_{\mathrm{tape}},\delta,q_0,
+q_{\mathrm{acc}},q_{\mathrm{rej}})\) be a Turing machine.  Its signature
+\(\Lang_M^{\prec}\) consists of the binary relation symbols \(K\), \(S\),
+\(H\) and \(T_a\) for \(a\in\mathcal A_{\mathrm{tape}}\), and the unary
+relation symbols \(Z\) and \(I_q\) for \(q\in Q\).  The intended readings,
+over the integers, are those of the source
+\cite[Sect.~2.1.1, p.~20]{BorgerGradelGurevich1997}: \(H(t,x)\), the head
+position at time \(t\) is cell \(x\); \(T_a(t,x)\), the tape at time \(t\)
+contains \(a\) in cell \(x\); \(I_q(t)\), at time \(t\) the machine is in state
+\(q\); \(S(t,t')\), \(t'\) is the successor of \(t\); \(K(x,y)\), \(x<y\); and
+\(Z(x)\), \(x=0\).  Write \(\mathrm{Act}(x)\) for the disjunction of the
+\(I_q(x)\) with \(q\notin\{q_{\mathrm{acc}},q_{\mathrm{rej}}\}\), that is,
+``at time \(x\) the machine is not halted''.  The sentence
+\(\rho_{M,\prec}\) is the conjunction of the following sentences.
+\begin{enumerate}
+\item \(\mathrm{ORDER}^{-}\): the source's \(\mathrm{ORDER}\) without its
+  successor-existence clause,
+  \[
+  \begin{gathered}
+   \forall x\,\neg K(x,x),\qquad
+   \forall x\,\forall y\,\bigl(K(x,y)\lor x=y\lor K(y,x)\bigr),\\
+   \forall x\,\forall y\,\forall z\,\bigl((K(x,y)\land K(y,z))\to K(x,z)\bigr),\\
+   \forall x\,\forall y\,\bigl(S(x,y)\leftrightarrow(K(x,y)\land
+   \neg\exists z\,(K(x,z)\land K(z,y)))\bigr),
+  \end{gathered}
+  \]
+  where \(\leftrightarrow\) abbreviates the conjunction of the two
+  implications.
+\item \(\mathrm{START}\): \(\exists x\,Z(x)\land\forall x\,\bigl(Z(x)\to
+  (I_{q_0}(x)\land H(x,x)\land\forall y\,T_{\sqcup}(x,y))\bigr)\).
+\item \(\mathrm{STEP}_M\), the universal closures of the following
+  implications.  For each \(q\notin\{q_{\mathrm{acc}},q_{\mathrm{rej}}\}\) and
+  \(a\in\mathcal A_{\mathrm{tape}}\) with \(\delta(q,a)=(q',b,R)\):
+  \[
+  \begin{aligned}
+   &\bigl(I_q(t)\land H(t,x)\land T_a(t,x)\land S(t,t')\land S(x,x')\bigr)\\
+   &\qquad\to\bigl(I_{q'}(t')\land H(t',x')\land T_b(t',x)\bigr);
+  \end{aligned}
+  \]
+  with \(\delta(q,a)=(q',b,L)\):
+  \[
+  \begin{aligned}
+   &\bigl(I_q(t)\land H(t,x')\land T_a(t,x')\land S(t,t')\land S(x,x')\bigr)\\
+   &\qquad\to\bigl(I_{q'}(t')\land H(t',x)\land T_b(t',x')\bigr);
+  \end{aligned}
+  \]
+  and, for each \(a\in\mathcal A_{\mathrm{tape}}\), no change outside the
+  head cell:
+  \[
+   \bigl(H(t,x)\land y\neq x\land T_a(t,y)\land S(t,t')\bigr)\to T_a(t',y).
+  \]
+\item \(\mathrm{NONSTOP}\): \(\forall t\,\neg I_{q_{\mathrm{rej}}}(t)\).
+\item \(\prec_{K,M}\), the relativized infinity axiom:
+  \[
+   \forall x\,\exists u\,\exists v\,\forall y\,
+   \Bigl(\bigl((H(y,x)\lor\mathrm{Act}(x))\to S(x,u)\bigr)\land
+   \bigl(H(y,x)\to S(v,x)\bigr)\Bigr).
+  \]
+\end{enumerate}
+Finally put \(\rho^{\infty}_{M}\defeq\rho_{M,\prec}\land
+\forall x\,\exists y\,S(x,y)\), which restores the unrestricted successor
+clause of \(\mathrm{ORDER}\).
+\index{reduction formula!refined}
+\end{hbdefinition}
+
+The step clauses are the source's formulas (2.1)--(2.3) for a deterministic
+machine \cite[Sect.~2.1.1, pp.~20--21]{BorgerGradelGurevich1997}, and
+\(\mathrm{START}\) and \(\mathrm{NONSTOP}\) are the source's, with the constant
+\(0\) replaced by the unary predicate \(Z\) and the halting state \(1\) by
+\(q_{\mathrm{rej}}\).  Like the source's, these formulas are frugal: they do
+not say that a moment has only one state or a cell only one letter.  The
+relativized axiom \(\prec_{K,M}\) asserts successors only where the
+computation needs them: a successor moment after every moment at which the
+machine is not halted, and both neighbours of every visited cell.  Together
+with \(\mathrm{ORDER}^{-}\), under which \(S\) is contained in \(K\), it
+yields for each such element a \(K\)-larger one, which is what the source's
+display \(\forall x\,\exists u\,\forall y\,(\neg Kxx\land(Hyx\to Kxu)\land
+(Kyx\to Kyu))\) asserts for visited cells
+\cite[Sect.~2.1.2, p.~35]{BorgerGradelGurevich1997}.  The source reads the
+successor as a function \(x'\), so that successors always exist; in the
+relational version they must be asserted, and the relativization asserts
+them for active moments as well as visited cells.  For the same reason the
+source's sharpening of the stop condition, by which a non-halting computation
+never repeats a configuration, is not needed here: the active moments of a
+non-halting computation already form an infinite \(K\)-chain.
+
+\begin{hblemma}{thm:p02-w02-p02-036-simulation}{proved=annex:p02-w02-p02-036-simulation}{Simulation lemma}
+Let \(M\) be a Turing machine, let \(c_0,c_1,\ldots\) be its computation on
+the empty input, with \(c_t=(q_t,B_t,h_t)\), and let \(\mathfrak A\) be a
+model of \(\rho_{M,\prec}\) with an element \(z\in Z^{\mathfrak A}\).  Then there
+are elements \(\tau_t\), one for each \(t\) such that \(c_t\) exists, and an
+injective map \(\sigma\) from an interval \(I\subseteq\mathbb Z\) containing
+\(0\) into the domain of \(\mathfrak A\), such that \(\tau_0=\sigma_0=z\),
+\(K^{\mathfrak A}(\tau_s,\tau_t)\) whenever \(s<t\), and for every \(t\) such
+that \(c_t\) exists:
+\begin{enumerate}
+\item \(\mathfrak A\entails I_{q_t}[\tau_t]\);
+\item \(h_t\in I\) and \(\mathfrak A\entails H[\tau_t,\sigma_{h_t}]\);
+\item \(\mathfrak A\entails T_{B_t(x)}[\tau_t,\sigma_x]\) for every \(x\in I\),
+      and \(\mathfrak A\entails T_{\sqcup}[\tau_t,y]\) for every element \(y\)
+      outside the image of \(\sigma\).
+\end{enumerate}
+In particular the elements \(\tau_t\) are pairwise distinct.
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p02-w02-p02-036-refined}{proved=annex:p02-w02-p02-036-refined}{Refined reduction property}
+For every Turing machine \(M\), started on the empty input:
+\begin{enumerate}
+\item the computation reaches \(q_{\mathrm{rej}}\) if and only if
+      \(\rho_{M,\prec}\) is contradictory;
+\item the computation reaches \(q_{\mathrm{acc}}\) if and only if
+      \(\rho_{M,\prec}\) is finitely satisfiable; if it does so after \(k\)
+      steps, \(\rho_{M,\prec}\) has a model with exactly \(2k+3\) elements;
+\item the computation never halts if and only if \(\rho_{M,\prec}\) is an
+      infinity axiom;
+\item the computation reaches \(q_{\mathrm{rej}}\) if and only if
+      \(\rho^{\infty}_{M}\) is contradictory, and otherwise
+      \(\rho^{\infty}_{M}\) is an infinity axiom.
+\end{enumerate}
+The maps \(M\mapsto\rho_{M,\prec}\) and \(M\mapsto\rho^{\infty}_{M}\) are
+computable from the transition table.
+\end{hbtheorem}
+
+Items 1 and~2 are the source's reduction property for \(\rho_{M,\prec}\), with
+\(H_1\) and \(H_2\) read as in
+Definition~\ref{def:p02-w02-p02-036-halting}
+\cite[Sect.~2.1.2, p.~34]{BorgerGradelGurevich1997}.  Item~4 is the reduction
+used for the source's Exercise~2.1.29.
+
+\subsection{Pairwise recursive inseparability}
+\label{sec:p02-w02-p02-036-trakhtenbrot-inseparable}
+
+\begin{hbtheorem}{thm:p02-w02-p02-036-inseparable}{proved=annex:p02-w02-p02-036-inseparable}{Trakhtenbrot's theorem, inseparable form}
+Let \(\Lang\) be a finite relational signature containing a binary relation
+symbol and \(X=\operatorname{Sent}(\Lang)\).  The sets
+\(\mathrm{Fin\text{-}sat}(X)\), \(\mathrm{Non\text{-}sat}(X)\) and
+\(\mathrm{Inf\text{-}axioms}(X)\) are pairwise recursively inseparable.
+Consequently the sets of all finitely satisfiable, all unsatisfiable and all
+only infinitely satisfiable first-order formulas, \(\mathrm{Fin\text{-}sat}\),
+\(\mathrm{Non\text{-}sat}\) and \(\mathrm{Inf\text{-}axioms}\), are pairwise
+recursively inseparable \cite[Sect.~2.1.2, Thm.~2.1.30]{BorgerGradelGurevich1997}.
+\end{hbtheorem}
+
+\begin{hbcorollary}{thm:p02-w02-p02-036-exercise-2-1-29}{proved=annex:p02-w02-p02-036-exercise-2-1-29}{Infinity axioms and unsatisfiable formulas}
+The classes \(\mathrm{Inf\text{-}axioms}\) and \(\mathrm{Non\text{-}sat}\) are
+recursively inseparable.  So are the two sets
+\(\mathrm{Inf\text{-}axioms}(X)\) and \(\mathrm{Non\text{-}sat}(X)\), for \(X\)
+as in
+Theorem~\ref{thm:p02-w02-p02-036-inseparable}
+\cite[Sect.~2.1.2, Exercise~2.1.29]{BorgerGradelGurevich1997}.
+\end{hbcorollary}
+
+This pair is one of the three pairs of
+Theorem~\ref{thm:p02-w02-p02-036-inseparable}; the annex proves it a second way,
+by the source's route through the formula \(\rho^{\infty}_{M}\), whose models
+are all infinite, and the undecidability of \(H_1\).
+
+Recursive inseparability contains the earlier conclusions:
+\begin{itemize}
+\item a decidable \(\mathrm{Fin\text{-}sat}(X)\) would separate itself from
+      \(\mathrm{Non\text{-}sat}(X)\);
+\item a decidable \(\mathrm{Inf\text{-}axioms}(X)\) would separate itself from
+      \(\mathrm{Non\text{-}sat}(X)\).
+\end{itemize}
+It adds that no decidable approximation of finite satisfiability can be correct on
+both the finitely satisfiable and the unsatisfiable sentences, whatever it
+does on the infinity axioms.
+
+\subsection{Conservative reductions}
+\label{sec:p02-w02-p02-036-conservative}
+
+\begin{hbdefinition}{def:p02-w02-p02-036-conservative}{Conservative reduction}
+Let \(X\) and \(Y\) be recursive classes of formulas.  A \emph{conservative
+reduction} from \(X\) to \(Y\) is a recursive function \(g:X\to Y\) such that
+for all \(\psi\in X\):
+\begin{enumerate}
+\item \(\psi\) is satisfiable if and only if \(g(\psi)\) is satisfiable;
+\item \(\psi\) is finitely satisfiable if and only if \(g(\psi)\) is finitely
+      satisfiable.
+\end{enumerate}
+A formula class \(X\) is a \emph{conservative reduction class} if there exists
+a conservative reduction from the set of all first-order formulas to \(X\)
+\cite[Sect.~2.1.2, Def.~2.1.35]{BorgerGradelGurevich1997}.  Here ``recursive
+function'' means a function on codes computed by a Turing machine that halts
+on every member of \(X\).
+\index{conservative reduction}
+\end{hbdefinition}
+
+A conservative reduction maps each of \(\mathrm{Fin\text{-}sat}(X)\),
+\(\mathrm{Inf\text{-}axioms}(X)\) and \(\mathrm{Non\text{-}sat}(X)\) into the
+corresponding class of \(Y\), and it maps no member of one class into another
+class, since the class of a formula is fixed by whether it is satisfiable and
+whether it is finitely satisfiable.
+
+\begin{hbtheorem}{thm:p02-w02-p02-036-conservative}{proved=annex:p02-w02-p02-036-conservative}{Conservative reduction classes inherit inseparability}
+Let \(X\) be a conservative reduction class.  Then the sets
+\(\mathrm{Non\text{-}sat}(X)\), \(\mathrm{Fin\text{-}sat}(X)\) and
+\(\mathrm{Inf\text{-}axioms}(X)\) are pairwise recursively inseparable
+\cite[Sect.~2.1.2, Exercise~2.1.36]{BorgerGradelGurevich1997}.
+\end{hbtheorem}
+
+The source motivates the definition by a sharpening of its register-machine
+reduction class, and lists two prefix classes of Krom and Horn formulas as
+conservative reduction classes in Exercise~2.1.37
+\cite[Sect.~2.1.2, pp.~36--37]{BorgerGradelGurevich1997}; neither of those
+results is proved in this section.
+
+\subsection{Examples and limits}
+\label{sec:p02-w02-p02-036-examples}
+
+\begin{hbexample}{def:p02-w02-p02-036-worked}{A run sentence, a path graph and the refined formula}
+\emph{A run sentence.}  Let \(\mathcal T\) have
+\(\delta(q_0,a)=(q_{\mathrm{acc}},1,R)\) for every tape symbol \(a\), and take
+the empty input.  The computation accepts after \(s=1\) step, so the proof of
+Lemma~\ref{thm:p02-w02-p02-036-run-sentence} builds a model of
+\(\psi_{\mathcal T,\varepsilon}\) on \(\{0,1,2\}\) with the usual order.
+Real cell \(i\) is element \(i+1\), so the head starts at element \(1\).
+The moments are \(0\), \(1\) and the padding moment \(2\), which repeats
+moment \(1\):
+\(\mathsf{St}_{q_0}=\{0\}\), \(\mathsf{St}_{q_{\mathrm{acc}}}=\{1,2\}\),
+\(\mathsf{Hd}=\{(0,1),(1,2),(2,2)\}\), \(\mathsf{Cl}_1=\{(1,1),(2,1)\}\), and
+\(\mathsf{Cl}_{\sqcup}\) holds at every other pair.  The only step clause with
+a true antecedent is the one for \((q_0,\sqcup)\) at \(t=0\), \(p=1\); it is
+witnessed by \(t'=1\), \(p'=2\).  If instead
+\(\delta(q_0,a)=(q_0,a,R)\) for every \(a\), the computation never halts, and by
+the lemma \(\psi_{\mathcal T,\varepsilon}\) has no finite model: in any finite
+model, the step clause would need a cell to the right of the last element.
+
+\emph{A path graph.}  Let \(\Lang=\{R_1,P_1\}\) with \(R_1\) binary and
+\(P_1\) unary, so \(l=m=1\) and \(P_1\) has index \(2\).  Let \(\mathcal M\)
+have domain \(\{a,b\}\), \(R_1^{\mathcal M}=\{(a,b)\}\) and
+\(P_1^{\mathcal M}=\{b\}\).  Then \(G(\mathcal M)\) has vertices
+\(a,b,c,d_1,d_2\) and edges \(a\to a\), \(b\to b\), \(a\to c\to b\) for the fact
+\((a,b,1)\), and \(b\to d_1\to d_2\to b\) for the fact \((b,b,2)\).  The looped
+vertices are \(a,b\).  \(\pi_1(a,b)\) holds through \(c\), and \(\pi_2(b,b)\)
+through \(d_1,d_2\).  \(\pi_1(b,a)\) fails: the only loop-free vertex reached
+from \(b\) is \(d_1\), whose only successor \(d_2\) is loop-free.
+
+\emph{The refined formula.}  Let \(M\) have \(\delta(q_0,a)=(q,a,R)\) for every
+tape symbol \(a\), with a target state \(q\) fixed in three variants.
+\begin{itemize}
+\item \(q=q_{\mathrm{acc}}\): the computation accepts after \(k=1\) step.  The
+  model of Theorem~\ref{thm:p02-w02-p02-036-refined}(2) has domain
+  \(\{-2,\ldots,2\}\) with \(K\) the usual order, \(S\) the successor pairs
+  \((x,x+1)\), \(Z=\{0\}\), \(I_{q_0}=\{0\}\), \(I_{q_{\mathrm{acc}}}=\{1,2\}\),
+  \(H=\{(0,0),(1,1),(2,1)\}\), and \(T_{\sqcup}\) holding at every pair
+  \((t,x)\) with \(t\in\{0,1,2\}\).  The moment \(2\) repeats moment \(1\).  The
+  only active moment is \(0\), whose successor is \(1\), and the visited cells
+  \(0\) and \(1\) have both neighbours in the domain.  It has \(2k+3=5\)
+  elements.
+\item \(q=q_{\mathrm{rej}}\): in any model, the element \(z\) with \(Z(z)\)
+  carries \(I_{q_0}\), so it is active and \(\prec_{K,M}\) gives a successor
+  moment \(t'\); the visited cell \(z\) gets a successor \(x'\).  The step
+  clause for \((q_0,\sqcup)\) then gives \(I_{q_{\mathrm{rej}}}(t')\), against
+  \(\mathrm{NONSTOP}\).  So \(\rho_{M,\prec}\) is contradictory.
+\item \(q=q_0\): the head moves right forever.  The integers, with every
+  moment \(t\geq0\) in state \(q_0\) and head at cell \(t\), form a model, and
+  by Lemma~\ref{thm:p02-w02-p02-036-simulation} every model contains the
+  pairwise distinct moments \(\tau_0,\tau_1,\ldots\).  So \(\rho_{M,\prec}\) is
+  an infinity axiom.
+\end{itemize}
+\end{hbexample}
+
+\begin{hbwarning}{def:p02-w02-p02-036-limits}{What the theorems do not give}
+\begin{enumerate}
+\item The binary relation symbol is used in an essential way: the path
+  translation needs it to code every relation of the run signature and of
+  \(\Lang_M^{\prec}\).  The hypothesis cannot be deleted.  If every relation
+  symbol of \(\Lang\) is unary, every \(\Lang\)-sentence lies in the class
+  \([\mathit{all},(\omega),(1)]_{=}\) of sentences with arbitrary prefix,
+  unary predicates, at most one unary function symbol and equality, in the
+  prefix-vocabulary notation of
+  \cite[Sect.~1.3, pp.~8--9]{BorgerGradelGurevich1997}.  Finite
+  satisfiability for that class is decidable
+  \cite[Thm.~6.0.2(6), p.~240]{BorgerGradelGurevich1997}.
+\item Finite validity is co-computably enumerable: a search for a finite
+  countermodel halts exactly on the sentences that are \emph{not} finitely
+  valid.  What fails is the converse direction.  No effective calculus is
+  sound and complete for truth in all finite \(\Lang\)-structures, since its
+  theorems would form a computably enumerable set equal to the finite
+  validities.
+\item The results concern one fixed signature, or all formulas, and the full
+  set of sentences.  They do not say that any particular sentence is hard to
+  classify, and they give no bound for the size of a finite model when one
+  exists.  By Corollary~\ref{thm:p02-w02-p02-036-trakhtenbrot} no computable
+  bound exists, since such a bound would decide \(\mathrm{Fin\text{-}sat}(X)\)
+  by a finite search through the structures of at most that size.
+\item The finite model property is a sufficient condition for decidability
+  of satisfiability, not a necessary one.  The one-element class
+  \(\{\prec_K\}\) is decidable, its satisfiability problem is decidable
+  because its only member is satisfiable, and it lacks the finite
+  model property by Lemma~\ref{thm:p02-w02-p02-036-infinity-axiom}.
+\item Unrestricted compactness does not transfer to finite structures
+  (\cref{def:p03-finite-compactness-failure}), and the first-order zero--one
+  law (\cref{thm:p03-fol-zero-one}) supplies asymptotic probabilities, not a
+  decision procedure for finite validity.
+\end{enumerate}
+\end{hbwarning}
+
+\emph{Relationships.}  The proofs use the machine model of
+\cref{sec:turing-machines-01}, the program codes of
+\cref{sec:universal-reductions-01}, the undecidability of \(K\)
+(\cref{thm:halting-undecidable}), and the complement criterion of
+\cref{sec:turing-machines-03}.  Unrestricted validity contrasts with them
+through \cref{thm:fol-validity-enumerable}.  The finite-model-theory survey
+uses the theorems in \cref{sec:p03-finite-unrestricted}.  Two reductions
+appear.  The run sentence of \cref{sec:p02-w02-p02-036-run-sentence} controls
+finite models only and yields Trakhtenbrot's theorem in its undecidability
+form.  The refined formula of \cref{sec:p02-w02-p02-036-refined}, the
+relational version of the source's \(\rho_{M,\prec}\), controls all models and
+yields the inseparable form.  The path translation and the renaming carry both
+to any finite relational signature with a binary symbol, and they are
+conservative reductions in the sense of
+Definition~\ref{def:p02-w02-p02-036-conservative}.
+
+\emph{Sources.}  The notation and the three classes are those of
+\cite[Sect.~2.1.2, Def.~2.1.27]{BorgerGradelGurevich1997}; the finite model
+property argument is on p.~33, the infinity axiom \(\prec_K\) and
+Exercise~2.1.26 on p.~33, Definition~2.1.28 and Exercise~2.1.29 on p.~33,
+Theorem~2.1.30 with its proof on pp.~34--35, and Definition~2.1.35 and
+Exercise~2.1.36 on p.~37; the Church--Turing reduction formula \(\rho_M\) and
+the step formulas (2.1)--(2.3) are in Sect.~2.1.1, pp.~20--22.  The result is
+due to Trakhtenbrot \cite{Trakhtenbrot1950}.  The proofs here are written for
+this handbook's machine model.  Where the source sketches a step, in
+particular the verification of the refined reduction property, the annex gives
+the full argument for the relational formula of
+Definition~\ref{def:p02-w02-p02-036-refined}, whose differences from the
+source's formula are stated after that definition.

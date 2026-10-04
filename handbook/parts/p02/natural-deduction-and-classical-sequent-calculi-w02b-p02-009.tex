@@ -1,0 +1,689 @@
+%% toc: P2 12 12.5,12.6
+\section{Cut, the subformula property, and translations between the calculi}
+\label{sec:p02-w02b-p02-009-cut-translations}
+
+This section completes the metatheory of the two classical propositional
+calculi of \cref{sec:prop-deduction-02} and of the natural-deduction calculus
+\(\mathsf{ND}_{\mathsf{CPL}}\) defined before it.  It has three purposes.
+First, it proves that the cut rule of \(\mathsf{LK}_{\mathsf{CPL}}\) is
+admissible: every derivable sequent has a derivation without Cut, and in fact
+one that uses only initial sequents and logical rules.  Second, it defines
+the subformula property and proves that every Cut-free derivation has it.
+Third, it gives two explicit translations of derivations, from
+\(\mathsf{ND}_{\mathsf{CPL}}\) to \(\mathsf{LK}_{\mathsf{CPL}}\) and back, rule
+by rule, with an exact account of which labelled assumption occurrences each
+rule discharges and of how weakening and contraction produce the
+multiplicities of the sequents.  The rule-by-rule soundness cases of both
+calculi, which the soundness theorems \cref{thm:prop-nd-soundness,thm:prop-lk-soundness}
+use, are stated here one rule at a time.
+
+\emph{Inputs.}  An \(\mathsf{LK}_{\mathsf{CPL}}\)-derivation, possibly with
+Cut; or a valid sequent; or an \(\mathsf{ND}_{\mathsf{CPL}}\)-derivation.
+\emph{Conclusions.}  A derivation of the same sequent using only initial
+sequents and logical rules; the subformula property of every Cut-free
+derivation; an \(\mathsf{LK}_{\mathsf{CPL}}\)-derivation of the sequent whose
+antecedent is the multiset of open assumption occurrences of a given
+natural-deduction derivation; and a natural-deduction derivation of
+\(\bottom\) from the antecedent formulas and the negated succedent formulas
+of a given derivable sequent.
+
+\subsection{Setting}
+
+\begin{hbconvention}{def:p02-w02b-p02-009-setting}{The two calculi}
+Formulas are the members of \(\mathsf{Fm}_{\mathsf{CPL}}\) defined in
+\cref{sec:prop-syntax-semantics-01}, with primitives
+\(p_n,\bottom,\neg,\land,\lor,\to\); \(c(\varphi)\) is the complexity and
+\(\operatorname{Sub}(\varphi)\) the subformula set defined there, and
+valuations and \(\entails\) are those of \cref{sec:prop-syntax-semantics-02}.  Sequents
+\(\Gamma\Rightarrow\Delta\) have finite multisets as antecedent and
+succedent, the comma is pointwise sum, and \(\operatorname{supp}\) is the
+support, as in the definition of sequents in \cref{sec:prop-deduction-02}.
+For a finite multiset \(\Pi\) write \(|\Pi|\defeq\sum_{\chi}\Pi(\chi)\) and
+\(\varphi^{k}\) for \(k\) copies of \(\varphi\) (the empty multiset when
+\(k=0\)).
+
+\(\mathsf{LK}_{\mathsf{CPL}}\) is exactly the calculus displayed in
+\cref{sec:prop-deduction-02}: identity sequents
+\(\Gamma,\varphi\Rightarrow\varphi,\Delta\) and \(\bottom\)-sequents
+\(\Gamma,\bottom\Rightarrow\Delta\) as initial sequents; the structural
+rules \(W_L,W_R,C_L,C_R\); the logical rules
+\(\neg L,\neg R,\land L,\land R,\lor L,\lor R,\to L,\to R\), whose
+two-premise instances share their contexts; and Cut, with premises
+\(\Gamma\Rightarrow\Delta,\varphi\) and \(\Sigma,\varphi\Rightarrow\Pi\) and
+conclusion \(\Gamma,\Sigma\Rightarrow\Delta,\Pi\).  In a logical rule the
+displayed compound formula of the conclusion is \emph{principal} and the
+displayed formulas of the premises are its \emph{side formulas}.
+
+\(\mathsf{ND}_{\mathsf{CPL}}\) is exactly the calculus of labelled-discharge
+trees displayed before \cref{lem:nd-substitution}, with rules
+\(\land I,\land E_1,\land E_2,\lor I_1,\lor I_2,\lor E,\to I,\to E,
+\neg I,\neg E,\bottom E,\mathsf{RAA}\).  An application of
+\(\to I\), \(\neg I\) or \(\mathsf{RAA}\) with label \(i\) discharges exactly
+the open occurrences marked \(i\) of its bracketed formula above its premise,
+and \(\lor E\) with labels \(i,j\) discharges exactly the open occurrences of
+the first disjunct marked \(i\) above its second premise and of the second
+disjunct marked \(j\) above its third premise; every label carried by such an
+application discharges at least one occurrence.  A leaf written
+\(\varphi^{\ell}\) is an assumption occurrence of \(\varphi\) marked
+\(\ell\).
+\end{hbconvention}
+
+\begin{hbdefinition}{def:p02-w02b-p02-009-validity}{Falsifying valuations, validity, Cut-free derivations and weight}
+A valuation \(v\) \emph{falsifies} a sequent \(\Gamma\Rightarrow\Delta\) iff
+\(v\entails\gamma\) for every \(\gamma\in\operatorname{supp}(\Gamma)\) and
+\(v\not\entails\delta\) for every \(\delta\in\operatorname{supp}(\Delta)\);
+otherwise \(v\) satisfies it, in the sense of the definition of sequents in
+\cref{sec:prop-deduction-02}.  The sequent is \emph{valid} iff no valuation
+falsifies it.  An \(\mathsf{LK}_{\mathsf{CPL}}\)-derivation is
+\emph{Cut-free} iff it contains no application of Cut; it may contain
+weakening and contraction.  It is \emph{purely logical} iff each of its nodes
+is an initial sequent or the conclusion of a logical rule.  The
+\emph{weight} of a sequent is
+\[
+ \operatorname{wt}(\Gamma\Rightarrow\Delta)\defeq
+ \sum_{\chi\in\mathsf{Fm}_{\mathsf{CPL}}}
+ \bigl(\Gamma(\chi)+\Delta(\chi)\bigr)\,c(\chi),
+\]
+a finite sum because \(\Gamma\) and \(\Delta\) have finite support.
+\end{hbdefinition}
+
+\subsection{Rule-by-rule soundness}
+
+\begin{hblemma}{thm:p02-w02b-p02-009-lk-rule-soundness}{proved=annex:p02-w02b-p02-009-lk-rule-soundness}{Every rule of the sequent calculus reflects falsification}
+No valuation falsifies an initial sequent of
+\(\mathsf{LK}_{\mathsf{CPL}}\).  For every instance of each of the rules
+\(W_L,W_R,C_L,C_R,\neg L,\neg R,\land L,\land R,\lor L,\lor R,\to L,\to R\)
+and Cut, every valuation that falsifies the conclusion falsifies at least one
+premise.  Consequently every sequent derivable in
+\(\mathsf{LK}_{\mathsf{CPL}}\) is valid; this is
+\cref{thm:prop-lk-soundness}, here with every rule case written out.
+\end{hblemma}
+
+\begin{hblemma}{thm:p02-w02b-p02-009-nd-rule-soundness}{proved=annex:p02-w02b-p02-009-nd-rule-soundness}{Every rule of natural deduction preserves truth from open assumptions}
+Let \(D\) be an \(\mathsf{ND}_{\mathsf{CPL}}\)-derivation with conclusion
+\(\varphi\), and let \(v\) be a valuation that satisfies the formula of
+every open assumption occurrence of \(D\).  Then \(v\entails\varphi\).  The
+proof treats the assumption case and each of the twelve rules separately;
+for a set \(\Gamma\) it gives
+that \(\Gamma\derives_{\mathsf{ND}_{\mathsf{CPL}}}\varphi\) implies
+\(\Gamma\entails\varphi\), which is \cref{thm:prop-nd-soundness}.
+\end{hblemma}
+
+\subsection{Cut admissibility and the subformula property}
+
+The route to a Cut-free derivation used here is semantic: each logical rule
+is invertible with respect to validity, so a valid sequent can be decomposed
+from the root upward until only initial sequents remain, and soundness
+places every derivable sequent among the valid ones.  This route is the one
+Buss uses for his propositional calculus \(PK\)
+\cite[Secs.~1.2.7--1.2.11, pp.~13--16]{Buss1998Intro}; the statements below
+are proved directly for \(\mathsf{LK}_{\mathsf{CPL}}\), whose multiset
+contexts, contexted identity sequents, \(\bottom\)-sequents and primitive
+negation differ from \(PK\) (\cref{def:p02-w02b-p02-009-scope}).
+
+\begin{hblemma}{thm:p02-w02b-p02-009-inversion}{proved=annex:p02-w02b-p02-009-inversion}{Semantic invertibility of the logical rules}
+For every instance of each logical rule of \(\mathsf{LK}_{\mathsf{CPL}}\),
+every valuation that falsifies a premise falsifies the conclusion.  Hence, if
+the conclusion is valid, every premise is valid.  Moreover, the weight of
+each premise is strictly smaller than the weight of the conclusion.
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p02-w02b-p02-009-cutfree-completeness}{proved=annex:p02-w02b-p02-009-cutfree-completeness}{Purely logical completeness}
+Every valid sequent \(\Gamma\Rightarrow\Delta\) has a purely logical
+\(\mathsf{LK}_{\mathsf{CPL}}\)-derivation: a derivation using only initial
+sequents and the eight logical rules, with no Cut, weakening or
+contraction.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p02-w02b-p02-009-cut-admissibility}{proved=annex:p02-w02b-p02-009-cut-admissibility}{Cut admissibility for the classical propositional sequent calculus}
+If \(\Gamma\Rightarrow\Delta\) is derivable in \(\mathsf{LK}_{\mathsf{CPL}}\),
+with any number of applications of Cut, weakening and contraction, then
+\(\Gamma\Rightarrow\Delta\) has a purely logical derivation.  In particular,
+Cut is admissible: adding it to the other rules of
+\(\mathsf{LK}_{\mathsf{CPL}}\) derives no new sequent; and
+\(W_L,W_R,C_L,C_R\) and Cut are together admissible in the calculus of
+initial sequents and logical rules.  For every finite multisets
+\(\Gamma,\Delta\), the following are equivalent: \(\Gamma\Rightarrow\Delta\)
+is derivable; it has a purely logical derivation; it is valid.
+\end{hbtheorem}
+
+The theorem asserts the existence of a Cut-free derivation of the same
+endsequent; it does not transform a given derivation.  The derivation it
+provides is the one built by the procedure of
+\cref{def:p02-w02b-p02-009-decomposition} from the endsequent alone.
+
+\begin{hbdefinition}{def:p02-w02b-p02-009-subformula-property}{Subformula property}
+An \(\mathsf{LK}_{\mathsf{CPL}}\)-derivation with endsequent
+\(\Gamma\Rightarrow\Delta\) has the \emph{subformula property} iff for every
+sequent \(\Pi\Rightarrow\Sigma\) occurring in it and every
+\(\theta\in\operatorname{supp}(\Pi)\cup\operatorname{supp}(\Sigma)\) there is
+\(\chi\in\operatorname{supp}(\Gamma)\cup\operatorname{supp}(\Delta)\) with
+\(\theta\in\operatorname{Sub}(\chi)\).
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p02-w02b-p02-009-subformula}{proved=annex:p02-w02b-p02-009-subformula}{Subformula property without Cut}
+Every Cut-free \(\mathsf{LK}_{\mathsf{CPL}}\)-derivation, with or without
+weakening and contraction, has the subformula property.  More precisely,
+for every application of a rule other than Cut, every formula in the
+support of either side of a premise is a subformula of a formula in the
+support of one side of the conclusion.
+\end{hbtheorem}
+
+\begin{hbcorollary}{thm:p02-w02b-p02-009-analytic}{proved=annex:p02-w02b-p02-009-analytic}{Analytic derivations}
+Every \(\mathsf{LK}_{\mathsf{CPL}}\)-derivable sequent has a purely logical
+derivation with the subformula property.  Every formula occurring in such a
+derivation of \(\Gamma\Rightarrow\Delta\) belongs to the finite set
+\(\bigcup\{\operatorname{Sub}(\chi):\chi\in\operatorname{supp}(\Gamma)\cup
+\operatorname{supp}(\Delta)\}\).  The empty sequent \({}\Rightarrow{}\) is
+not derivable.
+\end{hbcorollary}
+
+\begin{hbmethod}{def:p02-w02b-p02-009-decomposition}{Root-first decomposition}
+\emph{Input:} a sequent \(\Gamma\Rightarrow\Delta\).  \emph{Output:} a purely
+logical derivation of it, or a valuation falsifying it.
+\begin{enumerate}
+  \item If \(\bottom\in\operatorname{supp}(\Gamma)\), stop: the sequent is a
+    \(\bottom\)-sequent.  If some \(\varphi\) lies in
+    \(\operatorname{supp}(\Gamma)\cap\operatorname{supp}(\Delta)\), stop: it
+    is an identity sequent.
+  \item Otherwise, if every member of
+    \(\operatorname{supp}(\Gamma)\cup\operatorname{supp}(\Delta)\) is a
+    variable or \(\bottom\), stop and return the valuation \(v\) with
+    \(v(p_n)=1\) iff \(p_n\in\operatorname{supp}(\Gamma)\).
+  \item Otherwise choose one occurrence of a compound formula, write the
+    sequent as the conclusion of the logical rule whose principal formula is
+    that occurrence (unique readability fixes the rule), apply the procedure
+    to each premise, and place the rule beneath the results.  If a premise
+    returns a falsifying valuation, return it.
+\end{enumerate}
+\emph{Side conditions:} the contexts of the premises are the remaining
+contexts of the conclusion, shared in \(\land R\), \(\lor L\), \(\to L\).
+Every call terminates, because premises have smaller weight
+(\cref{thm:p02-w02b-p02-009-inversion}).  A returned valuation falsifies the
+premise it came from and therefore the input sequent, by the same lemma;
+the stop in step 2 returns a falsifying valuation because neither stop of
+step 1 applied.
+\end{hbmethod}
+
+\begin{hbexample}{def:p02-w02b-p02-009-peirce}{Peirce's law without Cut}
+Decomposing \({}\Rightarrow((P\to Q)\to P)\to P\) gives, in three logical
+steps, the following derivation, written as numbered lines in which each
+line names the rule and the lines of its premises:
+\[
+\begin{array}{rll}
+1.&P\Rightarrow P,Q&\text{identity sequent}\\
+2.&{}\Rightarrow P,P\to Q&\to R,\ 1\\
+3.&P\Rightarrow P&\text{identity sequent}\\
+4.&(P\to Q)\to P\Rightarrow P&\to L,\ 2,3\\
+5.&{}\Rightarrow((P\to Q)\to P)\to P&\to R,\ 4
+\end{array}
+\]
+Both leaves are identity sequents, the second with empty contexts and the
+first with \(\Delta=Q\).  The \(\to L\) step has \(\Gamma\) empty,
+\(\Delta=P\), \(\varphi=P\to Q\) and \(\psi=P\).  Every formula is a
+subformula of the endformula.  The left premise of \(\to L\) has two
+succedent formulas; the multi-formula succedent is what lets the classical
+law have a Cut-free derivation.
+\end{hbexample}
+
+\begin{hbwarning}{def:p02-w02b-p02-009-cut-limits}{What Cut changes, and what the semantic proof does not give}
+Cut is the only rule whose premises may contain a formula that is not a
+subformula of its conclusion.  For instance, Cut on \(R\) between the
+identity sequents \(P\Rightarrow P,R\) and \(R,P\Rightarrow P\) concludes
+\(P,P\Rightarrow P,P\), and \(C_L\), \(C_R\) then give \(P\Rightarrow P\);
+the derivation contains \(R\), which is not a subformula of \(P\).
+
+The proof of \cref{thm:p02-w02b-p02-009-cut-admissibility} discards the
+given derivation and rebuilds one from the endsequent.  It yields no
+procedure acting on derivations and no bound on the size of the result in
+terms of the size of the given derivation; Buss records both points for
+the same semantic route \cite[Sec.~1.2.11, pp.~15--16]{Buss1998Intro}.
+\end{hbwarning}
+
+\begin{hbconvention}{def:p02-w02b-p02-009-scope}{Exact scope of this result and of the Part~7 elimination theorem}
+\Cref{thm:p02-w02b-p02-009-cut-admissibility} concerns exactly
+\(\mathsf{LK}_{\mathsf{CPL}}\).  The syntactic elimination theorem
+\cref{thm:p07-classical-cut-elimination} concerns exactly the calculus
+\texttt{sheet:lk-defneg}, and Buss's semantic argument concerns his \(PK\)
+\cite[Sec.~1.2.2, pp.~11--12]{Buss1998Intro}.  They differ as follows.
+\begin{center}
+\small
+\begin{tabular}{@{}p{0.2\linewidth}p{0.24\linewidth}p{0.24\linewidth}p{0.24\linewidth}@{}}
+\toprule
+ & \(\mathsf{LK}_{\mathsf{CPL}}\) & \texttt{sheet:lk-defneg} & \(PK\) \\
+\midrule
+Formulas & \(p_n,\bottom,\neg,\land,\lor,\to\) &
+ \(\bot,\land,\lor,\to,\forall,\exists\); \(\neg\varphi\defeq\varphi\to\bot\) &
+ variables with \(\neg,\land,\lor,\supset\) \\
+Contexts & finite multisets & finite multisets & sequences, explicit exchange \\
+Identity & \(\Gamma,\varphi\Rightarrow\varphi,\Delta\), any \(\varphi\) &
+ \(\varphi\Rightarrow\varphi\) & \(A\Rightarrow A\), \(A\) atomic \\
+Falsum & \(\Gamma,\bottom\Rightarrow\Delta\) & \(\bot,\Gamma\Rightarrow\Delta\) & none \\
+Negation rules & \(\neg L,\neg R\) primitive & none & primitive \\
+\(\to L\) & shared contexts & split contexts & shared contexts \\
+Cut & split contexts & split contexts, plus Mix & shared contexts \\
+Cut-free result & admissibility, semantic proof (this section) &
+ elimination by local reductions & admissibility, semantic proof \\
+\bottomrule
+\end{tabular}
+\end{center}
+The comparison \cref{thm:p07-lk-presentation-equivalence} between the
+canonical primitive-negation calculus of Part~7 and
+\texttt{sheet:lk-defneg} is proved there only as a sketch, and
+\cref{annex:p7.calculi.2} states that it establishes no preservation of
+Cut-freeness, height or size.  The Part~7 theorem therefore does not by itself give a
+Cut-free \(\mathsf{LK}_{\mathsf{CPL}}\)-derivation, and the present theorem
+does not depend on it.  Conversely, the present theorem says nothing about
+quantifiers, Mix, uncontexted identity or split-context \(\to L\).  The
+subformula statement \cref{thm:p02-w02b-p02-009-subformula} is the
+\(\mathsf{LK}_{\mathsf{CPL}}\) counterpart of
+the subformula clause of \cref{thm:p07-classical-analytic}; here negation is primitive, so no
+expansion of \(\neg\) precedes the subformula test.
+\end{hbconvention}
+
+\subsection{From natural deduction to sequents}
+
+\begin{hbdefinition}{def:p02-w02b-p02-009-open-multiset}{Open-assumption multiset}
+For an \(\mathsf{ND}_{\mathsf{CPL}}\)-derivation \(D\), the
+\emph{open-assumption multiset} \(\operatorname{om}(D)\) is the finite
+multiset whose value at \(\chi\) is the number of open assumption
+occurrences of \(\chi\) in \(D\).  Its support is the set of formulas having
+an open occurrence in \(D\).  If \(r\) is the root rule of \(D\) and
+\(\operatorname{Dis}(r)\) is the set of occurrences it discharges, then the
+open occurrences of \(D\) are those of its immediate subderivations, minus
+\(\operatorname{Dis}(r)\); the occurrence sets of distinct immediate
+subderivations are disjoint, so their multisets add.
+\end{hbdefinition}
+
+\begin{hbmethod}{def:p02-w02b-p02-009-nd-to-lk}{Translating a natural-deduction derivation into a sequent derivation}
+\emph{Input:} an \(\mathsf{ND}_{\mathsf{CPL}}\)-derivation \(D\) with
+conclusion \(\varphi\).  \emph{Output:} an
+\(\mathsf{LK}_{\mathsf{CPL}}\)-derivation \(D^{\mathsf{LK}}\) of
+\(\operatorname{om}(D)\Rightarrow\varphi\).  Proceed by recursion on \(D\).
+Write \(D_1,D_2,D_3\) for the immediate subderivations in left-to-right
+order and \(\Gamma_m\defeq\operatorname{om}(D_m)\).  A label
+\((W_L)^{\Pi}\) denotes \(|\Pi|\) successive \(W_L\) steps adding the members
+of \(\Pi\) with their multiplicities, \((C_L)^{n}\) denotes \(n\) successive
+\(C_L\) steps on the displayed formula, and either denotes no step when its
+count is zero.  Each translation tree is written as numbered lines; a line
+names the rule that concludes it and the lines of its premises, and a line
+marked ``from \(D_m\)'' is the root of the translation of \(D_m\).
+\begin{enumerate}
+  \item \emph{Assumption} \(\varphi^{\ell}\) (open): the identity sequent
+    \(\varphi\Rightarrow\varphi\).  It discharges nothing;
+    \(\operatorname{om}(D)=\varphi\).
+  \item \(\land I\):
+    \[
+    \begin{array}{rll}
+    1.&\Gamma_1\Rightarrow\varphi&\text{from }D_1\\
+    2.&\Gamma_2\Rightarrow\psi&\text{from }D_2\\
+    3.&\Gamma_1,\Gamma_2\Rightarrow\varphi&(W_L)^{\Gamma_2},\ 1\\
+    4.&\Gamma_1,\Gamma_2\Rightarrow\psi&(W_L)^{\Gamma_1},\ 2\\
+    5.&\Gamma_1,\Gamma_2\Rightarrow\varphi\land\psi&\land R,\ 3,4
+    \end{array}
+    \]
+  \item \(\land E_1\) (for \(\land E_2\) replace line 2 by the identity
+    sequent \(\varphi,\psi\Rightarrow\psi\) and conclude \(\psi\)):
+    \[
+    \begin{array}{rll}
+    1.&\Gamma_1\Rightarrow\varphi\land\psi&\text{from }D_1\\
+    2.&\varphi,\psi\Rightarrow\varphi&\text{identity sequent}\\
+    3.&\varphi\land\psi\Rightarrow\varphi&\land L,\ 2\\
+    4.&\Gamma_1\Rightarrow\varphi&\mathrm{Cut},\ 1,3
+    \end{array}
+    \]
+  \item \(\lor I_1\) (for \(\lor I_2\) start from \(\Gamma_1\Rightarrow\psi\)
+    and let \(W_R\) add \(\varphi\)):
+    \[
+    \begin{array}{rll}
+    1.&\Gamma_1\Rightarrow\varphi&\text{from }D_1\\
+    2.&\Gamma_1\Rightarrow\varphi,\psi&W_R,\ 1\\
+    3.&\Gamma_1\Rightarrow\varphi\lor\psi&\lor R,\ 2
+    \end{array}
+    \]
+  \item \(\to E\) (premises \(\varphi\) from \(D_1\), \(\varphi\to\psi\) from
+    \(D_2\)):
+    \[
+    \begin{array}{rll}
+    1.&\Gamma_1\Rightarrow\varphi&\text{from }D_1\\
+    2.&\Gamma_2\Rightarrow\varphi\to\psi&\text{from }D_2\\
+    3.&\Gamma_1\Rightarrow\psi,\varphi&W_R,\ 1\\
+    4.&\Gamma_1,\psi\Rightarrow\psi&\text{identity sequent}\\
+    5.&\Gamma_1,\varphi\to\psi\Rightarrow\psi&\to L,\ 3,4\\
+    6.&\Gamma_2,\Gamma_1\Rightarrow\psi&\mathrm{Cut},\ 2,5
+    \end{array}
+    \]
+  \item \(\neg E\) (premises \(\varphi\) from \(D_1\), \(\neg\varphi\) from
+    \(D_2\)):
+    \[
+    \begin{array}{rll}
+    1.&\Gamma_1\Rightarrow\varphi&\text{from }D_1\\
+    2.&\Gamma_2\Rightarrow\neg\varphi&\text{from }D_2\\
+    3.&\Gamma_1,\neg\varphi\Rightarrow{}&\neg L,\ 1\\
+    4.&\Gamma_1,\neg\varphi\Rightarrow\bottom&W_R,\ 3\\
+    5.&\Gamma_2,\Gamma_1\Rightarrow\bottom&\mathrm{Cut},\ 2,4
+    \end{array}
+    \]
+  \item \(\bottom E\):
+    \[
+    \begin{array}{rll}
+    1.&\Gamma_1\Rightarrow\bottom&\text{from }D_1\\
+    2.&\bottom\Rightarrow\varphi&\bottom\text{-sequent}\\
+    3.&\Gamma_1\Rightarrow\varphi&\mathrm{Cut},\ 1,2
+    \end{array}
+    \]
+  \item \(\to I\) with label \(i\): let \(k\geq1\) be the number of open
+    occurrences of \(\varphi\) marked \(i\) in \(D_1\); these are exactly the
+    discharged ones, and \(\Gamma_1=\Gamma',\varphi^{k}\) with
+    \(\Gamma'=\operatorname{om}(D)\):
+    \[
+    \begin{array}{rll}
+    1.&\Gamma',\varphi^{k}\Rightarrow\psi&\text{from }D_1\\
+    2.&\Gamma',\varphi\Rightarrow\psi&(C_L)^{k-1},\ 1\\
+    3.&\Gamma'\Rightarrow\varphi\to\psi&\to R,\ 2
+    \end{array}
+    \]
+  \item \(\neg I\) with label \(i\), \(k\) and \(\Gamma'\) as in item 8:
+    \[
+    \begin{array}{rll}
+    1.&\Gamma',\varphi^{k}\Rightarrow\bottom&\text{from }D_1\\
+    2.&\Gamma',\varphi\Rightarrow\bottom&(C_L)^{k-1},\ 1\\
+    3.&\bottom\Rightarrow{}&\bottom\text{-sequent}\\
+    4.&\Gamma',\varphi\Rightarrow{}&\mathrm{Cut},\ 2,3\\
+    5.&\Gamma'\Rightarrow\neg\varphi&\neg R,\ 4
+    \end{array}
+    \]
+  \item \(\mathsf{RAA}\) with label \(i\): let \(k\geq1\) be the number of
+    open occurrences of \(\neg\varphi\) marked \(i\) in \(D_1\), and
+    \(\Gamma_1=\Gamma',(\neg\varphi)^{k}\):
+    \[
+    \begin{array}{rll}
+    1.&\Gamma',(\neg\varphi)^{k}\Rightarrow\bottom&\text{from }D_1\\
+    2.&\Gamma',\neg\varphi\Rightarrow\bottom&(C_L)^{k-1},\ 1\\
+    3.&\bottom\Rightarrow{}&\bottom\text{-sequent}\\
+    4.&\Gamma',\neg\varphi\Rightarrow{}&\mathrm{Cut},\ 2,3\\
+    5.&\varphi\Rightarrow\varphi&\text{identity sequent}\\
+    6.&{}\Rightarrow\varphi,\neg\varphi&\neg R,\ 5\\
+    7.&\Gamma'\Rightarrow\varphi&\mathrm{Cut},\ 6,4
+    \end{array}
+    \]
+  \item \(\lor E\) with labels \(i,j\) and conclusion \(\chi\): let
+    \(k\geq1\) be the number of open occurrences of \(\varphi\) marked
+    \(i\) in \(D_2\) and \(m\geq1\) that of \(\psi\) marked \(j\) in \(D_3\);
+    write \(\Gamma_2=\Gamma_2',\varphi^{k}\) and
+    \(\Gamma_3=\Gamma_3',\psi^{m}\):
+    \[
+    \begin{array}{rll}
+    1.&\Gamma_1\Rightarrow\varphi\lor\psi&\text{from }D_1\\
+    2.&\Gamma_2',\varphi^{k}\Rightarrow\chi&\text{from }D_2\\
+    3.&\Gamma_3',\psi^{m}\Rightarrow\chi&\text{from }D_3\\
+    4.&\Gamma_2',\varphi\Rightarrow\chi&(C_L)^{k-1},\ 2\\
+    5.&\Gamma_2',\Gamma_3',\varphi\Rightarrow\chi&(W_L)^{\Gamma_3'},\ 4\\
+    6.&\Gamma_3',\psi\Rightarrow\chi&(C_L)^{m-1},\ 3\\
+    7.&\Gamma_2',\Gamma_3',\psi\Rightarrow\chi&(W_L)^{\Gamma_2'},\ 6\\
+    8.&\Gamma_2',\Gamma_3',\varphi\lor\psi\Rightarrow\chi&\lor L,\ 5,7\\
+    9.&\Gamma_1,\Gamma_2',\Gamma_3'\Rightarrow\chi&\mathrm{Cut},\ 1,8
+    \end{array}
+    \]
+\end{enumerate}
+\emph{Side conditions:} the counts \(k,m\) are at least \(1\) because every
+label of a discharging application discharges at least one occurrence;
+occurrences marked \(i\) of a formula other than the bracketed one, and
+occurrences marked \(i\) above another premise of \(\lor E\), are not
+discharged and remain in \(\Gamma'\), \(\Gamma_1\), \(\Gamma_2'\) or
+\(\Gamma_3'\).
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p02-w02b-p02-009-nd-to-lk}{proved=annex:p02-w02b-p02-009-nd-to-lk}{Natural deduction into the sequent calculus}
+For every \(\mathsf{ND}_{\mathsf{CPL}}\)-derivation \(D\) with conclusion
+\(\varphi\), the tree \(D^{\mathsf{LK}}\) of
+\cref{def:p02-w02b-p02-009-nd-to-lk} is an
+\(\mathsf{LK}_{\mathsf{CPL}}\)-derivation of
+\(\operatorname{om}(D)\Rightarrow\varphi\).  In it each rule application
+discharging \(k\) occurrences produces exactly \(k-1\) applications of
+\(C_L\), and each two- or three-premise rule produces exactly
+\(|\Gamma_2|+|\Gamma_1|\) (for \(\land I\)) or
+\(|\Gamma_3'|+|\Gamma_2'|\) (for \(\lor E\)) applications of \(W_L\).
+\end{hbtheorem}
+
+\subsection{From sequents to natural deduction}
+
+\begin{hbdefinition}{def:p02-w02b-p02-009-representation}{Label scheme and representing derivations}
+The set \(\mathsf{Fm}_{\mathsf{CPL}}\) consists of finite strings over a
+countable alphabet and is therefore countable.  Fix maps
+\(\ell_{\mathrm L},\ell_{\mathrm R},\ell_{\mathrm A}:
+\mathsf{Fm}_{\mathsf{CPL}}\to\N\) that are jointly injective: the values
+\(\ell_{\mathrm X}(\chi)\) for \(\mathrm X\in\{\mathrm L,\mathrm R,\mathrm A\}\)
+and \(\chi\in\mathsf{Fm}_{\mathsf{CPL}}\) are pairwise distinct.  An
+\(\mathsf{ND}_{\mathsf{CPL}}\)-derivation \(D\) \emph{represents} the
+sequent \(\Gamma\Rightarrow\Delta\) iff its conclusion is \(\bottom\) and each
+of its open assumption occurrences is either an occurrence of some
+\(\gamma\in\operatorname{supp}(\Gamma)\) marked \(\ell_{\mathrm L}(\gamma)\)
+(a \emph{left} occurrence) or an occurrence of \(\neg\delta\) for some
+\(\delta\in\operatorname{supp}(\Delta)\) marked \(\ell_{\mathrm R}(\delta)\)
+(a \emph{right} occurrence).  Not every member of the supports need occur.
+\end{hbdefinition}
+
+\begin{hbmethod}{def:p02-w02b-p02-009-lk-to-nd}{Translating a sequent derivation into a natural-deduction derivation}
+\emph{Tree notation.}  For a rule \(R\) of \(\mathsf{ND}_{\mathsf{CPL}}\),
+\(R(T_1,\ldots,T_n)\) is the tree whose root is an application of \(R\)
+with immediate subtrees \(T_1,\ldots,T_n\), in the left-to-right order of the
+premises of \(R\) as displayed with the rules; \(R[\ell](\ldots)\) and
+\(R[\ell,\ell'](\ldots)\) record the labels carried by a discharging
+application; a marked leaf is \(\chi^{\ell}\).  In \(\lor I_1\) and
+\(\lor I_2\) below the conclusion is the displayed disjunction.
+
+\emph{Helper operations} on a derivation \(D\) with conclusion \(\bottom\):
+\begin{itemize}
+  \item \(\operatorname{ext}_\chi(D)\), concluding \(\chi\): if \(D\) has an
+    open occurrence of \(\neg\chi\) marked \(\ell_{\mathrm R}(\chi)\), it is
+    \(\mathsf{RAA}[\ell_{\mathrm R}(\chi)](D)\), discharging exactly those
+    occurrences; otherwise it is \(\bottom E(D)\), discharging nothing.
+  \item \(\operatorname{neg}_\chi(D)\), concluding \(\neg\chi\): if \(D\)
+    has an open occurrence of \(\chi\) marked \(\ell_{\mathrm L}(\chi)\), it
+    is \(\neg I[\ell_{\mathrm L}(\chi)](D)\), discharging exactly those
+    occurrences; otherwise it is \(\bottom E(D)\).
+  \item \(\operatorname{pin}_\chi(D)\defeq
+    \neg E\bigl(\chi^{\ell_{\mathrm A}(\chi)},\operatorname{neg}_\chi(D)\bigr)\),
+    concluding \(\bottom\), with one new open occurrence of \(\chi\) marked
+    \(\ell_{\mathrm A}(\chi)\).
+\end{itemize}
+\emph{Input:} an \(\mathsf{LK}_{\mathsf{CPL}}\)-derivation of
+\(\Gamma\Rightarrow\Delta\).  \emph{Output:} a derivation \(D^{\mathsf{ND}}\)
+representing it.  Proceed by recursion on the sequent derivation; \(D_1,D_2\)
+are the outputs for the premises.
+\begin{enumerate}
+  \item Identity \(\Gamma,\varphi\Rightarrow\varphi,\Delta\):
+    \[\neg E\bigl(\varphi^{\ell_{\mathrm L}(\varphi)},
+    (\neg\varphi)^{\ell_{\mathrm R}(\varphi)}\bigr)\]
+  \item \(\bottom\)-sequent \(\Gamma,\bottom\Rightarrow\Delta\): the one-node
+    tree \(\bottom^{\ell_{\mathrm L}(\bottom)}\).
+  \item \(W_L,W_R,C_L,C_R\): \(D_1\) itself.
+  \item \(\neg L\) (premise \(\Gamma\Rightarrow\Delta,\varphi\)):
+    \[\neg E\bigl(\operatorname{ext}_\varphi(D_1),
+    (\neg\varphi)^{\ell_{\mathrm L}(\neg\varphi)}\bigr)\]
+  \item \(\neg R\) (premise \(\Gamma,\varphi\Rightarrow\Delta\)):
+    \[\neg E\bigl(\operatorname{neg}_\varphi(D_1),
+    (\neg\neg\varphi)^{\ell_{\mathrm R}(\neg\varphi)}\bigr)\]
+  \item \(\land L\) (premise \(\Gamma,\varphi,\psi\Rightarrow\Delta\)): first
+    \[D'\defeq\neg E\bigl(\land E_2((\varphi\land\psi)^{\ell_{\mathrm L}(\varphi\land\psi)}),
+    \operatorname{neg}_\psi(D_1)\bigr)\]
+    and then
+    \[\neg E\bigl(\land E_1((\varphi\land\psi)^{\ell_{\mathrm L}(\varphi\land\psi)}),
+    \operatorname{neg}_\varphi(D')\bigr)\]
+  \item \(\land R\) (premises \(\Gamma\Rightarrow\Delta,\varphi\) and
+    \(\Gamma\Rightarrow\Delta,\psi\)):
+    \[\neg E\bigl(\land I(\operatorname{ext}_\varphi(D_1),\operatorname{ext}_\psi(D_2)),
+    (\neg(\varphi\land\psi))^{\ell_{\mathrm R}(\varphi\land\psi)}\bigr)\]
+  \item \(\lor L\) (premises \(\Gamma,\varphi\Rightarrow\Delta\) and
+    \(\Gamma,\psi\Rightarrow\Delta\)):
+    \[\lor E[\ell_{\mathrm A}(\varphi),\ell_{\mathrm A}(\psi)]\bigl(
+    (\varphi\lor\psi)^{\ell_{\mathrm L}(\varphi\lor\psi)},
+    \operatorname{pin}_\varphi(D_1),\operatorname{pin}_\psi(D_2)\bigr)\]
+    Its conclusion is \(\bottom\).
+  \item \(\lor R\) (premise \(\Gamma\Rightarrow\Delta,\varphi,\psi\)): first
+    \[D'\defeq\neg E\bigl(\lor I_2(\operatorname{ext}_\psi(D_1)),
+    (\neg(\varphi\lor\psi))^{\ell_{\mathrm R}(\varphi\lor\psi)}\bigr)\]
+    and then
+    \[\neg E\bigl(\lor I_1(\operatorname{ext}_\varphi(D')),
+    (\neg(\varphi\lor\psi))^{\ell_{\mathrm R}(\varphi\lor\psi)}\bigr)\]
+  \item \(\to L\) (premises \(\Gamma\Rightarrow\Delta,\varphi\) and
+    \(\Gamma,\psi\Rightarrow\Delta\)):
+    \[\neg E\bigl(\to E(\operatorname{ext}_\varphi(D_1),
+    (\varphi\to\psi)^{\ell_{\mathrm L}(\varphi\to\psi)}),
+    \operatorname{neg}_\psi(D_2)\bigr)\]
+  \item \(\to R\) (premise \(\Gamma,\varphi\Rightarrow\Delta,\psi\)):
+    \[\neg E\bigl(\to I[\ell_{\mathrm A}(\varphi)](
+    \operatorname{ext}_\psi(\operatorname{pin}_\varphi(D_1))),
+    (\neg(\varphi\to\psi))^{\ell_{\mathrm R}(\varphi\to\psi)}\bigr)\]
+  \item Cut (premises \(\Gamma\Rightarrow\Delta,\varphi\) and
+    \(\Sigma,\varphi\Rightarrow\Pi\)):
+    \[\neg E\bigl(\operatorname{ext}_\varphi(D_1),
+    \operatorname{neg}_\varphi(D_2)\bigr)\]
+\end{enumerate}
+\emph{Side conditions:} every discharging application above is nonvacuous:
+\(\mathsf{RAA}\) and \(\neg I\) are used only when an occurrence is present,
+and the auxiliary discharges in items 8 and 11 each discharge exactly the
+single occurrence created by \(\operatorname{pin}\).  No subderivation is
+grafted onto a leaf, so no label is renamed.
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p02-w02b-p02-009-lk-to-nd}{proved=annex:p02-w02b-p02-009-lk-to-nd}{Sequent derivations into natural deduction}
+For every \(\mathsf{LK}_{\mathsf{CPL}}\)-derivation, with or without Cut, of
+\(\Gamma\Rightarrow\Delta\), the tree \(D^{\mathsf{ND}}\) of
+\cref{def:p02-w02b-p02-009-lk-to-nd} is an
+\(\mathsf{ND}_{\mathsf{CPL}}\)-derivation representing
+\(\Gamma\Rightarrow\Delta\).  At each step the discharged occurrences are
+exactly: for \(\operatorname{ext}_\chi\), the open right occurrences of
+\(\neg\chi\) marked \(\ell_{\mathrm R}(\chi)\); for
+\(\operatorname{neg}_\chi\), the open left occurrences of \(\chi\) marked
+\(\ell_{\mathrm L}(\chi)\); for the auxiliary labels, the one occurrence
+created by \(\operatorname{pin}\).  Weakening and contraction leave the tree
+unchanged: representation depends only on the supports of the two sides,
+which weakening enlarges and contraction preserves.
+\end{hbtheorem}
+
+\begin{hbcorollary}{thm:p02-w02b-p02-009-equivalence}{proved=annex:p02-w02b-p02-009-equivalence}{Derivability correspondence by explicit translation}
+Let \(\Gamma\) be a finite set of formulas, read as a multiset with
+multiplicity one, and \(\Delta\) a finite multiset.
+\begin{enumerate}
+  \item If \(\Gamma\derives_{\mathsf{ND}_{\mathsf{CPL}}}\varphi\), then
+    \(\Gamma\Rightarrow\varphi\) is derivable in \(\mathsf{LK}_{\mathsf{CPL}}\),
+    and it has a purely logical derivation.
+  \item If \(\Gamma\Rightarrow\Delta\) is derivable in
+    \(\mathsf{LK}_{\mathsf{CPL}}\), then
+    \(\Gamma\cup\{\neg\delta:\delta\in\operatorname{supp}(\Delta)\}
+    \derives_{\mathsf{ND}_{\mathsf{CPL}}}\bottom\); if \(\Delta=\varphi\), then
+    \(\Gamma\derives_{\mathsf{ND}_{\mathsf{CPL}}}\varphi\).
+\end{enumerate}
+Apart from the words ``purely logical'' in item 1, which use
+\cref{thm:p02-w02b-p02-009-cut-admissibility}, the proof is syntactic: it
+uses neither soundness nor completeness.
+\end{hbcorollary}
+
+\begin{hbexample}{def:p02-w02b-p02-009-example-nd-lk}{From natural deduction to sequents}
+Take the derivation of \(P\lor\neg P\) in the excluded-middle example
+before \cref{lem:nd-substitution}, with two occurrences of
+\(\neg(P\lor\neg P)\) marked \(1\) and one occurrence of \(P\) marked \(2\).
+Write \(\theta\) for \(P\lor\neg P\).  The translation produces, in order:
+\begin{enumerate}
+  \item \(P\Rightarrow P\) (assumption \(P^{2}\)); \(W_R\) and \(\lor R\)
+    give \(P\Rightarrow\theta\) (item 4 of the method).
+  \item The rule \(\neg E\) with the assumption \((\neg\theta)^{1}\),
+    translated as \(\neg\theta\Rightarrow\neg\theta\): \(\neg L\) and
+    \(W_R\) give \(P,\neg\theta\Rightarrow\bottom\), and Cut against
+    \(\neg\theta\Rightarrow\neg\theta\) gives
+    \(\neg\theta,P\Rightarrow\bottom\).  The antecedent records the two
+    open occurrences.
+  \item \(\neg I\) with label \(2\) discharges one occurrence (\(k=1\), no
+    contraction): Cut against \(\bottom\Rightarrow{}\) and \(\neg R\) give
+    \(\neg\theta\Rightarrow\neg P\).  Then \(W_R\) and \(\lor R\) give
+    \(\neg\theta\Rightarrow\theta\).
+  \item The rule \(\neg E\) with the second assumption \((\neg\theta)^{1}\):
+    as in step 2, \(\neg\theta,\neg\theta\Rightarrow\bottom\).  Its
+    antecedent has multiplicity \(2\), matching the two open occurrences
+    marked \(1\).
+  \item \(\mathsf{RAA}\) with label \(1\) discharges both (\(k=2\)): one
+    \(C_L\) gives \(\neg\theta\Rightarrow\bottom\); Cut against
+    \(\bottom\Rightarrow{}\) gives \(\neg\theta\Rightarrow{}\); Cut against
+    \({}\Rightarrow\theta,\neg\theta\), obtained from
+    \(\theta\Rightarrow\theta\) by \(\neg R\), gives \({}\Rightarrow\theta\).
+\end{enumerate}
+The result derives \({}\Rightarrow P\lor\neg P\) with five Cuts.  The
+purely logical derivation of the same sequent found by
+\cref{def:p02-w02b-p02-009-decomposition} is
+\[
+\begin{array}{rll}
+1.&P\Rightarrow P&\text{identity sequent}\\
+2.&{}\Rightarrow P,\neg P&\neg R,\ 1\\
+3.&{}\Rightarrow P\lor\neg P&\lor R,\ 2
+\end{array}
+\]
+\end{hbexample}
+
+\begin{hbexample}{def:p02-w02b-p02-009-example-lk-nd}{From sequents to natural deduction}
+Translate the derivation in the example after the rules of
+\(\mathsf{LK}_{\mathsf{CPL}}\): \(P\Rightarrow P,Q\), then \(\lor R\), then
+\(\to R\).  Choose the label maps so that \(\ell_{\mathrm L}(P)=1\), \(\ell_{\mathrm R}(P)=2\),
+\(\ell_{\mathrm R}(P\lor Q)=3\), \(\ell_{\mathrm A}(P)=4\),
+\(\ell_{\mathrm R}(P\to(P\lor Q))=5\).
+\[
+\begin{array}{rll}
+1.&P^{1}&\text{assumption}\cr
+2.&\neg P^{2}&\text{assumption}\cr
+3.&\bottom&\neg E,1,2\quad\text{(identity \(P\Rightarrow P,Q\))}\cr
+4.&Q&\bottom E,3\quad\text{(\(\operatorname{ext}_Q\): no \(\neg Q\) marked \(\ell_{\mathrm R}(Q)\))}\cr
+5.&P\lor Q&\lor I_2,4\cr
+6.&\neg(P\lor Q)^{3}&\text{assumption}\cr
+7.&\bottom&\neg E,5,6\cr
+8.&P&\mathsf{RAA},2\text{--}7\quad\text{(discharges line 2)}\cr
+9.&P\lor Q&\lor I_1,8\cr
+10.&\neg(P\lor Q)^{3}&\text{assumption}\cr
+11.&\bottom&\neg E,9,10\quad\text{(represents \(P\Rightarrow P\lor Q\))}\cr
+12.&\neg P&\neg I,1\text{--}11\quad\text{(discharges line 1)}\cr
+13.&P^{4}&\text{assumption}\cr
+14.&\bottom&\neg E,13,12\cr
+15.&P\lor Q&\mathsf{RAA},3\text{--}14\quad\text{(discharges lines 6 and 10)}\cr
+16.&P\to(P\lor Q)&\to I,4\text{--}15\quad\text{(discharges line 13)}\cr
+17.&\neg(P\to(P\lor Q))^{5}&\text{assumption}\cr
+18.&\bottom&\neg E,16,17\quad\text{(represents \({}\Rightarrow P\to(P\lor Q)\))}\cr
+19.&P\to(P\lor Q)&\mathsf{RAA},5\text{--}18.
+\end{array}
+\]
+Line 19 is \(\operatorname{ext}_{P\to(P\lor Q)}\) of line 18 and has no open
+assumptions.
+\end{hbexample}
+
+\begin{hbwarning}{def:p02-w02b-p02-009-translation-limits}{What the translations preserve}
+The two translations are not inverse to each other and preserve neither
+size nor the absence of detours.  The translation into sequents uses Cut for
+every elimination rule and for \(\neg I\) and \(\mathsf{RAA}\), so it does
+not produce Cut-free derivations; Cut-freeness is recovered only through
+\cref{thm:p02-w02b-p02-009-cut-admissibility}, which does not start from the
+translated derivation.  The translation into natural deduction turns every
+Cut, and every right rule, into an introduction followed by an elimination
+or by \(\neg E\) against a negated assumption.  It forgets multiplicities:
+contraction and weakening act as the identity on trees, and the number of
+open occurrences of a formula in \(D^{\mathsf{ND}}\) is not determined by
+its multiplicity in the sequent.  Natural-deduction derivability depends only on
+the set of open formulas; sequent derivability depends on the multisets, but
+only up to the structural rules.
+\end{hbwarning}
+
+\paragraph{Relationships and sources.}
+The equivalence of the three calculi with the semantic consequence relation
+is \cref{thm:p02-calculi-derivability-equivalence}; the translations above
+give its natural-deduction and sequent legs by explicit constructions on
+\(\mathsf{ND}_{\mathsf{CPL}}\) and \(\mathsf{LK}_{\mathsf{CPL}}\) themselves,
+in place of the derivability-level construction of
+\cref{thm:p07-lk-nd-equivalence} for the first-order calculi.  The sketched
+completeness argument \cref{thm:prop-lk-completeness} uses the
+natural-deduction-to-sequent direction; its translation subroutine is
+\cref{thm:p02-w02b-p02-009-nd-to-lk}, and
+\cref{thm:p02-w02b-p02-009-cutfree-completeness} gives completeness without
+Cut by a separate argument.  The semantic route to Cut-free completeness and
+Cut elimination, the inversion property and the subformula property for a
+propositional sequent calculus are in Buss
+\cite[Secs.~1.2.4--1.2.11, pp.~13--16]{Buss1998Intro}.  The syntactic
+elimination for the defined-negation calculus is
+\cref{thm:p07-classical-cut-elimination}.

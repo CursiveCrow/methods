@@ -1,0 +1,477 @@
+\begin{annexitem}{annex:p12.har.prcompiler-typing}{thm:p12-har-prcompiler-typing}{Typing the complete finite prescription compiler}
+\begin{proof}
+Induct on the finite ranked prescription, with its arity as part of the
+induction assertion. The type \(T_0=\mathsf{nat}\) is admitted; if
+\(T_j:\mathsf{Set}\), the admitted Set-to-Set product gives
+\(\mathsf{nat}\to T_j:\mathsf{Set}\). Thus every \(T_k\) is
+an admitted data type. In the context
+\(x_1:\mathsf{nat},\ldots,x_k:\mathsf{nat}\), O:nat gives the
+zero template after k abstractions. For k=0 it gives O itself, not a
+function on a fictitious empty-tuple value. Sx:nat gives the unary
+successor template. The side condition \(1\le i\le k\) makes
+\(x_i:\mathsf{nat}\) a declared variable, so projection has type
+\(T_k\); there is deliberately no zeroary projection case.
+
+For composition, the induction hypotheses give
+\(\mathcal C f:T_m\) and \(\mathcal C g_i:T_k\). Weakening
+these closed templates into the x context and k successive applications
+give \((\mathcal C g_i)\vec x:\mathsf{nat}\). Apply
+\(\mathcal C f\) to these m arguments, one at a time, to obtain nat.
+Then k abstractions give \(T_k\). At m=0 this is the judgment
+\(\mathcal C f:T_0=\mathsf{nat}\) with no applications. The
+unused x declarations are simply weakened declarations.
+
+For recursion, the induction hypotheses give \(\mathcal C g:T_k\)
+and \(\mathcal C h:T_{k+2}\). In the x context the seed
+\((\mathcal C g)\vec x\) has type nat. In its extension by
+\(n:\mathsf{nat},r:\mathsf{nat}\), exactly k+2 applications give
+\((\mathcal C h)\vec x\ n\ r:\mathsf{nat}\). Abstract over r
+then n to get the step type nat-to-nat-to-nat. The fixed-target nat
+recursor therefore returns nat-to-nat; k abstractions give
+\(T_{k+1}\). At k=0 the same judgments use g:nat and
+h:nat-to-nat-to-nat, with no x declarations. None of these steps reads
+an existential proof to choose the seed or the next value.
+
+The construction traverses a finite prescription once to emit each
+template and its subtemplates, so it is an actual metalevel algorithm.
+No normalization or classifier of arbitrary source terms is called.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.har.prcompiler-predicate}{thm:p12-har-prcompiler-predicate}{The explicit arbitrary-prescription characteristic program and computation}
+\begin{proof}
+Typing the compiled \(e\) in the \(k\)-variable nat context gives a nat
+result; \(\mathsf{one}:\mathsf{nat}\) then makes its equality constructor a form value.
+Exactly \(k\) abstractions give \(p_e\), and the predicate-instance theorem
+gives the typed nat-valued \(K_e\) and its range. Expanding the
+\(\mathcal P\) interpretation of this form is exactly the internal
+equation \((\mathcal C e)\vec x=\mathsf{one}\). Thus the two
+internal iff assertions follow from the positive and negative maps
+already constructed, without assuming the numerical predicate's
+conclusion. They apply to arbitrary typed open variables.
+
+For the additional numerical computation statement, fix a numerical
+tuple and put \(v:=\langle e\rangle(\vec a)\). The actual
+representation reduction supplies
+\((\mathcal C e)\overline{\vec a}\longrightarrow^*\overline v\).
+Unfold \(p_e\), \(K_e\) and the atomic comp clause. Congruence permits that
+finite reduction in the first \(\mathsf{b\_eq}\) argument, leaving
+\(\mathsf{code}(\mathsf{b\_eq}\ \overline v\ (S O))\).
+If \(v=0\), the zero/successor equality clause gives false, then code
+gives \(O\). If \(v=1\), successor/successor followed by zero/zero gives
+true, then code gives one. If \(v\) is at least two, write its numeral
+as \(S(S\overline w)\); the successor/successor clause leaves
+b\_eq\((S\overline w)O\), whose successor/zero clause gives
+false, then code gives O. Ordinary natural-number case analysis
+has exhausted every possible v, so exactly v=1 yields one and
+every other v yields O. The k=0 instance has the same calculation
+with no input applications. These are prescribed finite contractions,
+not a normalization theorem for the entire host calculus.
+
+A predicate given by a finite zero/one characteristic prescription
+has truth definition precisely value one, so the preceding construction
+represents that original predicate. No new assumption of a desired
+adequacy theorem was introduced. The output program's range was
+derived from its boolean data selector, independently of any claimed
+range for the input prescription. Thus the same construction is
+well defined for every finite prescription, while an arbitrary host
+predicate is not declared primitive recursive without such a prescription.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.har.prcompiler-representation}{thm:p12-har-prcompiler-representation}{The complete universal numerical representation derivation}
+\begin{proof}
+First ordinary induction on n specifies the numerical value in the
+recursion clause: at zero use the already specified value of g; at
+n+1 use the already specified value at n as h's last argument.
+Induction on the finite prescription therefore defines a total numerical
+function at its exact arity. This does not use the emitted term to
+define its purported meaning.
+
+Now induct on the prescription, universally quantifying the numerical
+argument tuple. The zero template beta-contracts to O, which is the
+numeral for zero, including the no-abstraction k=0 case. The successor
+template on \(\overline a\) beta-contracts to
+\(S\overline a=\overline{a+1}\). The projection template contracts
+to its ith input numeral. For composition, the k outer beta steps
+expose the application of the compiled f to the m compiled children.
+By the child induction hypotheses, reduce the ith child in its argument
+position to \(\overline{\langle g_i\rangle(\vec a)}\), for every
+i from 1 through m. Congruence of reduction licenses these finite
+argument-position reductions. The hypothesis for f then reduces the
+whole application to the numeral for the independently defined
+composition value. At m=0 no child reduction is performed and the
+zeroary f hypothesis is applied directly.
+
+In the recursion case fix \(\vec a\), and make a second induction
+on the last numerical input n. Put
+\(B:=(\mathcal C g)\overline{\vec a}\) and
+\(H:=\lambda j:\mathsf{nat}.\lambda r:\mathsf{nat}.
+(\mathcal C h)\overline{\vec a}\ j\ r\).
+At zero the recursor contracts to B, and the g hypothesis gives the
+required numeral. At n+1 the successor computation gives
+\[
+ \mathsf{nat\_rec}\ B\ H\ (S\overline n)
+ \longrightarrow H\ \overline n\
+                      (\mathsf{nat\_rec}\ B\ H\ \overline n).
+\]
+After the two beta steps, reduce the displayed recursive argument by
+the inner induction hypothesis to
+\(\overline{\langle\mathsf{Rec}_k(g,h)\rangle(\vec a,n)}\).
+The hypothesis for h, at the k+2 now numerical arguments, gives the
+numeral for precisely the successor clause of the independent meaning.
+No simultaneous normalization of arbitrary open inputs was assumed:
+these are explicit finite reduction sequences for every numerical tuple.
+
+A valuation assigning ordinary natural numbers to the k parameters
+supplies exactly such a tuple. Its numeral substitution is the displayed
+calculation, so the result holds for every standard valuation. This
+valuation statement is not an assertion of a chosen standard-model
+interpretation for every uninterpreted carrier, nor of contraction of
+an opaque variable to a numeral.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.har.prcompiler-boolean}{thm:p12-har-prcompiler-boolean}{All boolean cases, types and the nonidentical code bridge}
+\begin{proof}
+The generated selector at bool takes a bool discriminator and two bool
+branches; all four connective terms therefore have the displayed unary
+or binary bool types. The selector at nat gives code:bool-to-nat.
+Case analysis into the proposition code Prop gives istrue:bool-to-Prop;
+this is elimination of a data constructor, not of a Prop proof into Set.
+For the comparisons, \(q_0,e_0:\mathsf{nat}\to\mathsf{bool}\).
+The inner recursion in d has target bool, false seed, and step
+\(\lambda j:\mathsf{nat}.\lambda r:\mathsf{bool}.q j\) of
+type nat-to-bool-to-bool. Thus d has type
+\(\mathsf{nat}\to(\mathsf{nat}\to\mathsf{bool})\to
+(\mathsf{nat}\to\mathsf{bool})\). The two outer recursions
+have fixed target nat-to-bool and give the required binary comparison
+types. The three derived comparisons apply these terms to nat arguments.
+Expanding their recursors gives exactly the four constructor equations
+stated in the body, with no assumed comparison primitive.
+
+Here are full propositional constructions for the boolean connective
+cases. Put T:=TT and F:=FF. The equivalences
+\(T\wedge T\leftrightarrow T\), \(T\vee A\leftrightarrow T\)
+and \(A\vee T\leftrightarrow T\) project or return trivial in the
+forward direction and introduce the corresponding conjunction or
+disjunction in the reverse direction. For
+\(F\wedge A\leftrightarrow F\), project the F component and use
+FF elimination for the reverse direction; the symmetric conjunction
+is identical with the other projection. For
+\(F\vee A\leftrightarrow A\), eliminate the disjunction, with
+the F branch eliminated and the A branch returned; reverse by right
+injection. The symmetric disjunction uses left injection. These maps
+also settle F-with-F. Finally
+\(\neg T\leftrightarrow F\) applies the alleged negation to
+trivial, with FF elimination in reverse; \(\neg F\leftrightarrow T\)
+returns trivial forward and the identity F-to-F map reverse.
+
+For implication the four pairs (a,b) reduce the left side to,
+respectively for (true,true), (true,false), (false,true), (false,false),
+T,F,T,T. In the first case \(T\to T\leftrightarrow T\): forward
+return trivial, reverse return the constant trivial function. In the
+second \(T\to F\leftrightarrow F\): forward apply to trivial,
+reverse eliminate F to construct the function. In the last two,
+\(F\to T\leftrightarrow T\) and \(F\to F\leftrightarrow T\):
+forward return trivial; reverse use FF elimination or the identity
+F-to-F function. Combining these maps with the literal selector
+computations proves implication. The preceding conjunction,
+disjunction and negation maps prove the other connective equivalences
+in all their literal cases. Nested generated bool induction supplies
+these results for arbitrary a and b, without excluded middle.
+
+For the code bridge, bool induction has only two branches. At true,
+code reduces to one and istrue to T. Return the right range injection;
+T-to-(one=one) returns equality reflexivity, and the reverse returns
+trivial. Both \(\neg T\) and \(\mathsf{one}=O\) imply F:
+the former by application to trivial, the latter by nat constructor
+disjointness from the historical equality lemma. Conversely F
+elimination gives either. Thus their equivalence is constructed. At
+false, code reduces to O and istrue to F. Return the left range
+injection; F and O=one are equivalent by FF elimination and nat
+constructor disjointness. Both \(\neg F\) and O=O are inhabited:
+use the identity F-to-F map and reflexivity to give both directions.
+These branches prove all three assertions for arbitrary b. In
+particular bool values were not mistaken for nat values.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.har.prcompiler-atoms}{thm:p12-har-prcompiler-atoms}{The complete five-atom comparison proofs}
+\begin{proof}
+For b\_le, induct on n with motive
+\(\Pi m:\mathsf{nat}.
+\mathsf{istrue}(\mathsf{b\_le}\ n\ m)\leftrightarrow n\le m\).
+At n=O the program returns true for every m. The historical order
+lemma gives \(O\le m\); T-to-order returns that proof and
+order-to-T returns trivial. At n=S a, perform nat case analysis on m.
+At m=O the program returns false. No positive natural is at most O,
+by the already proved historical order lemma; the order-to-F map is
+that refutation and the F-to-order map is FF elimination. At m=S b
+the program contracts to b\_le a b. The induction hypothesis gives
+its istrue equivalence to \(a\le b\). Historical successor
+monotonicity and cancellation give the two maps between
+\(a\le b\) and \(S a\le S b\). Composing gives both maps
+required in the successor/successor branch. These three branches
+are the complete generalized induction.
+
+For b\_eq use the same motive with equality. At n=O split m:
+zero/zero returns true and both directions use equality reflexivity
+or trivial; zero/successor returns false and the equality-to-F map
+is constructor disjointness. At n=S a split m: successor/zero is
+again the disjointness case, and successor/successor contracts to
+b\_eq a b. The induction hypothesis supplies equality of a and b
+in one direction, which successor congruence turns into equality of
+their successors; in the reverse direction successor injectivity
+supplies a=b, then the reverse induction map proves istrue. F
+elimination supplies the other map in each disjointness case.
+All equality manipulations have Prop targets, as established in
+\cref{thm:p12-har-prime-equality}.
+
+Finally b\_lt n m is literally b\_le(S n)m, and the historical
+definition of n<m is \(S n\le m\). Apply the weak-order result at
+these arguments. The b\_ge and b\_gt definitions reverse the
+arguments, giving \(m\le n\) and m<n, respectively. Thus all five
+source atomic interpretations, not only equality, have both maps.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.har.prcompiler-bounds}{thm:p12-har-prcompiler-bounds}{The complete exclusive-bound induction and both directions}
+\begin{proof}
+The two seeds have type C and each step has type nat-to-C-to-C:
+for f:nat-to-bool, f m and r f are bool, and their conjunction or
+disjunction is bool. The recursors therefore have type nat-to-C,
+giving the announced quantifier program types and literal zero and
+successor computations.
+
+We first establish the exact endpoint decomposition from the historical
+order library, rather than assuming an enumeration theorem:
+\[
+ x<S m\ \leftrightarrow\ (x<m)\vee(x=m).
+\]
+Indeed \(x<S m\) means \(S x\le S m\); cancellation gives
+\(x\le m\). Trichotomy for x,m gives x<m, x=m or m<x.
+The last is impossible by x\(\le\)m and the proved strict-order
+incompatibility, so the first two injections remain. Conversely, x<m
+implies \(x\le m\), then \(S x\le S m\); x=m gives that same
+inequality by equality transport from reflexivity. Thus both maps are
+constructive. The order library also gives no x<O and \(m<S m\).
+
+Induct on b, universally quantifying the data family f. For all at
+zero, istrue of the seed is T. Its forward map sends any x and
+x<O proof to FF elimination into istrue(f x). Its reverse map
+returns trivial. For ex at zero, istrue of the seed is F.
+The forward map eliminates F to the existential. The reverse map
+eliminates a purported witness x and its x<O proof to F. Witness
+elimination is into a proposition only.
+
+For all at S m, constructor computation and the boolean conjunction
+lemma identify istrue with
+\(\mathsf{istrue}(f m)\wedge
+ \mathsf{istrue}(\mathsf{b\_all}\ m\ f)\).
+In the forward direction take this pair and apply the induction
+hypothesis to its second component to get the old universal prefix.
+For arbitrary x<S m use the endpoint decomposition. In the x<m
+case apply that prefix; in the x=m case transport the first component
+along the equality. This constructs the new universal family.
+In the reverse direction, apply the proposed universal family at m
+and \(m<S m\) for the endpoint value. Restrict the family to x<m
+by the forward inclusion x<m implies x<S m; the reverse induction
+map gives the old b\_all istrue proof. Pair the two results and apply
+the reverse boolean-conjunction map. These are actual lambda, pair,
+case and transport constructions for both implications.
+
+For ex at S m, the analogous boolean disjunction identifies istrue
+with \(\mathsf{istrue}(f m)\vee
+\mathsf{istrue}(\mathsf{b\_ex}\ m\ f)\).
+In its left branch produce existential witness m with \(m<S m\)
+and the supplied value proof. In its right branch apply the forward
+induction map, eliminate its existential only into the new existential
+proposition, and use x<m implies x<S m on the same witness.
+In reverse, eliminate a supplied witness x with x<S m and istrue(f x)
+into the disjunction goal. Endpoint decomposition gives x<m or x=m.
+The first builds a witness for the old existential, applies the
+reverse induction map, and returns the right disjunction injection.
+The second transports the value proof to f m and returns the left
+injection. Then apply the reverse boolean-disjunction map. No Set
+datum in either quantifier program depends on a Prop witness or on DN.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.har.prcompiler-form-typing}{thm:p12-har-prcompiler-form-typing}{Typing both internal interpreters and all higher-order branches}
+\begin{proof}
+Use exactly the generated fold of the selected strictly positive form
+declaration; its family-field computation passes the function of
+recursive values described in the body. This is an explicit premise
+about that source declaration, not a theorem granting recursion on
+every arbitrary syntax. In the paper's PRED-omega extension, Set
+domains can form products into Set, Type and Prop. The target bool
+is in Set and the target proposition-code type Prop is in Type, so
+both selected folds are licensed, as is elimination of the bool data
+discriminator to proposition codes.
+
+For \(\mathcal P\), the five atomic branches are the abstractions
+\(\lambda n:\mathsf{nat}.\lambda m:\mathsf{nat}.R(n,m)\),
+where R runs through the five Prop relations in the table. Each has
+type nat-to-nat-to-Prop. The negation branch is
+\(\lambda p:\mathsf{form}.\lambda u:\mathsf{Prop}.\neg u\),
+of type form-to-Prop-to-Prop. The three binary branches are
+\(\lambda p:\mathsf{form}.\lambda u:\mathsf{Prop}.
+\lambda q:\mathsf{form}.\lambda v:\mathsf{Prop}.u\wedge v\),
+and the same term with disjunction or implication: each has the
+required four-argument branch type. For the two quantifier branches,
+in the context \(b:\mathsf{nat},h:\mathsf{nat}\to\mathsf{form},
+r:\mathsf{nat}\to\mathsf{Prop}\),
+\(\Pi x:\mathsf{nat}.(x<b)\to r x\) and
+\(\exists x:\mathsf{nat}.(x<b)\wedge r x\) are propositions.
+Three annotated abstractions therefore give precisely the required
+quantifier branch type. This lists all eleven branches, including
+the unused constructor fields p,q,h that the fold interface supplies.
+
+For comp the atomic branches are the five binary bool comparison
+terms already typed. The negation branch is
+\(\lambda p:\mathsf{form}.\lambda u:\mathsf{bool}.
+\mathsf{b\_not}\ u\). The binary branches abstract p,u,q,v
+at form,bool,form,bool and apply the appropriate boolean operation
+to u and v. The all branch is
+\(\lambda b:\mathsf{nat}.\lambda h:\mathsf{nat}\to\mathsf{form}.
+\lambda r:\mathsf{nat}\to\mathsf{bool}.\mathsf{b\_all}\ b\ r\),
+and ex uses b\_ex. The bounded program typing just proved shows
+these results are bool. This again supplies all eleven typed branches.
+Applying the respective folds yields \(\mathcal P:\mathsf{form}\to
+\mathsf{Prop}\) and comp:form-to-bool. Their generated iota
+computations substitute the corresponding recursive results, giving
+exactly every equation in the body table.
+
+Now P(p), the conjunction of the two implications in the adequacy
+assertion, is Prop for p:form. At a family constructor its generated
+induction premise \(\Pi x:\mathsf{nat}.P(h x)\) is also Prop.
+Thus all motives and family premises of form induction are admitted.
+This argument does not infer an arbitrary higher-order function's
+behavior from parametricity or assume extensional equality of functions.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.har.prcompiler-ok}{thm:p12-har-prcompiler-ok}{The full eleven-branch universal internal proof}
+\begin{proof}
+Apply the generated form induction at the well-typed motive
+\(P(p):=\mathcal P p\leftrightarrow
+\mathsf{istrue}(\mathsf{comp}\ p)\). Denote its two induction
+maps at p by \(u_p:\mathcal P p\to\mathsf{istrue}(\mathsf{comp}\ p)\)
+and \(v_p\) in the reverse direction.
+At each of the five atomic constructors the interpreter computations
+identify the goal with the corresponding atomic theorem. Those five
+proofs give exactly the five atomic branch functions, generalized
+over their n and m fields.
+
+For not p, a proof \(a:\mathcal P p\to\mathsf{FF}\) gives
+\(\lambda z. a(v_p z):\neg\mathsf{istrue}(\mathsf{comp}\ p)\).
+The reverse boolean-negation equivalence maps this to the required
+istrue result. Conversely, its forward boolean equivalence gives
+\(b:\neg\mathsf{istrue}(\mathsf{comp}\ p)\); return
+\(\lambda z.b(u_p z)\) as a proof of \(\neg\mathcal P p\).
+This states explicitly why both directions of the induction assertion
+are needed even to construct its forward negation branch.
+
+For and p q, in the forward direction project its two source
+components, apply \(u_p,u_q\), pair them and apply the reverse
+boolean-conjunction equivalence. In reverse, apply the forward
+boolean equivalence, project the resulting pair, apply \(v_p,v_q\)
+and pair the source results. For or p q, eliminate the source
+disjunction into the boolean istrue proposition, use \(u_p\) with
+left injection or \(u_q\) with right injection, and apply the reverse
+boolean-disjunction equivalence. In reverse use its forward map,
+eliminate the resulting disjunction, and use \(v_p\) or \(v_q\)
+with the corresponding source injection. These give both binary
+connective branches without extracting any data.
+
+For implication p q, source \(a:\mathcal P p\to\mathcal P q\)
+gives the actual map \(\lambda z.u_q(a(v_p z))\) between the two
+istrue propositions. The reverse boolean-implication equivalence
+returns the required istrue value. In reverse, the forward boolean
+equivalence gives \(b:\mathsf{istrue}(\mathsf{comp}\ p)\to
+\mathsf{istrue}(\mathsf{comp}\ q)\); return
+\(\lambda z.v_q(b(u_p z))\). No classical implication
+decision principle is being assumed: its boolean equivalence was
+proved by data-constructor cases.
+
+For all b h, the family induction hypothesis supplies \(u_{h x}\)
+and \(v_{h x}\) for every x, in the context x:nat, without a
+restriction to already enumerated x. Given
+\(a:\Pi x.(x<b)\to\mathcal P(h x)\), form
+\(\lambda x.\lambda d.u_{h x}(a x d)\).
+The reverse b\_all theorem turns this bounded family into the
+required istrue result, after the comp constructor computation.
+Conversely the forward b\_all theorem gives a bounded family c of
+istrue proofs; return \(\lambda x.\lambda d.v_{h x}(c x d)\).
+This is the complete universal constructor branch, including the
+dependence of the family on its freely chosen x.
+
+For ex b h, eliminate a source witness x and its pair of x<b and
+\(\mathcal P(h x)\), into the istrue proposition. Build the same
+bounded witness with value proof \(u_{h x}\) applied to the second
+component; the reverse b\_ex theorem supplies istrue. Conversely
+the forward b\_ex theorem gives a witness x, its bound, and its
+istrue value; eliminate that existential only into the source
+existential proposition, and build the same witness using \(v_{h x}\).
+This completes the eleventh branch.
+
+The generated form induction applied to these eleven branch proof
+functions is the actual proof term ok. The preceding descriptions
+specify its lambda, conjunction, disjunction, existential and transport
+operations, with the only recursions supplied by the already explicit
+induction proofs. Generalization over all free declarations, or
+substitution by any terms of their declared types, preserves the
+typing of every branch. Consequently open parameter contexts and
+arbitrary typed higher-order h families are covered; neither closure
+nor normalization of their nat fields was used.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.har.prcompiler-extraction}{thm:p12-har-prcompiler-extraction}{Universal characteristic instances and the exact conversion step}
+\begin{proof}
+In a context of k nat variables, apply the typed family p to exactly
+these arguments to obtain a form value. Apply comp to obtain bool,
+and the actual code selector to obtain nat. Abstract over these k
+variables to give \(K_p:T_k\). At k=0 the input p is a form value
+and the result is the nat datum code(comp p), without an empty-tuple
+or unit assumption. The range proof for code, instantiated at
+comp(p\(\vec x\)), gives its O/one disjunction for every tuple.
+Composition of ok's two maps with the two code-bridge maps gives
+\(\mathcal P(p\vec x)\leftrightarrow K_p\vec x=\mathsf{one}\).
+
+For completeness also construct the negative characteristic maps.
+Let A be \(\mathcal P(p\vec x)\) and B be
+\(\mathsf{istrue}(\mathsf{comp}(p\vec x))\). The adequacy pair
+u:A-to-B and v:B-to-A gives \(\neg A\to\neg B\) by
+\(a\mapsto\lambda b.a(v b)\), and \(\neg B\to\neg A\) by
+\(c\mapsto\lambda a.c(u a)\). Compose these with the negative
+code bridge to obtain the asserted iff with zero. This is a
+constructive contravariant composition, not an invocation of DN.
+
+For a closed input whose comp result has a specified finite
+beta/delta/iota reduction to true, conversion identifies its istrue
+proposition with TT. Thus trivial has the required istrue type and
+the reverse component of ok p applied to trivial has type
+\(\mathcal P p\). This proof construction is conditional on that
+actual contraction, not on the bare assertion that a user intended
+the formula to be true. Its same universal adequacy remains valid
+for an opaque closed or open input which does not reduce.
+
+Finally finite arithmetic expressions built from the compiled
+prescriptions have typed nat outputs by the compiler typing theorem.
+Put those outputs into the five atomic form constructors, use the
+four connective constructors for the matching finite formula
+connectives, and for a bounded quantifier abstract its bound variable
+as \(\lambda x:\mathsf{nat}.\text{the recursively constructed form}\).
+This external construction of a specified finite formula is by
+structural recursion on that formula. Constructor equations show
+that its \(\mathcal P\) interpretation is the intended formula
+on those \emph{same typed arithmetic terms}; the numerical
+representation theorem connects numeral valuations to their
+independently specified arithmetic values. It supplies instances of
+the internal generic program, not an assumed internal inverse on
+arbitrary propositions. In particular neither that inverse nor a
+classifier of every host nat function follows from ok.
+\end{proof}
+\end{annexitem}

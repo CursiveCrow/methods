@@ -1,0 +1,430 @@
+\chapter{The Prakken--Sartor inference system: rules and fixed priorities}
+\label{sec:p18-is1996}
+
+Prakken and Sartor's \emph{A Dialectical Model of Assessing Conflicting
+Arguments in Legal Reasoning}, in the held author version dated
+July 19, 1996, constructs arguments from named rules, distinguishes
+weak from strong negation, detects conflicts through strict extensions,
+and compares the defeasible rules responsible for a conflict
+\cite{PrakkenSartor1996Dialectical}.
+Its technical companion supplies the fixed-point presentation and
+the referred proof arguments \cite{PrakkenSartor1997Priorities}.
+This chapter completes the fixed-priority construction and a corrected
+finite proof procedure. The extension in which priorities are
+themselves conclusions is supplied in
+Chapter~\ref{sec:p18-is-dynamic}; its corrected full-domain
+dialogue is proved in Chapter~\ref{sec:p18-is-dynamic-completeness}.
+
+The source's arguments are rule sequences with potentially several
+conclusions. They are not identified without explanation with the
+single-rooted arguments of the separate ASPIC treatment.
+The examples below are stipulated rule systems, including when
+their atoms name familiar legal concepts; they state no current law.
+General set-sized constructions use ordinary classical set theory
+with choice; all choices in the finite examples are finite.
+
+\section{Ground rules and arguments}
+
+\begin{hbdefinition}{def:p18-is1996-theory}{Language and ordered theory}
+Fix a first-order signature and its set of ground terms.
+A \emph{strong literal} is a ground atom or its strong negation
+\(\neg A\). Write \(\overline L\) for its complementary literal.
+A \emph{weak literal} is \(\mathord{\sim}L\), expressing the
+defeasible absence of support for \(L\), not strong support for
+\(\overline L\).
+A named rule has form
+\[
+r:L_1,\ldots,L_k,\mathord{\sim}M_1,\ldots,\mathord{\sim}M_j
+   \Rightarrow N,
+\]
+where all displayed letters after the colon are strong literals.
+Its name is a ground term. A variable-containing rule abbreviates
+all its ground instances; use names containing the variables
+needed to distinguish those instances.
+
+An ordered theory is \(\Gamma=(S,\mathcal D,\prec)\).
+The disjoint sets \(S,\mathcal D\) contain the strict and defeasible
+ground rules. Strict rules contain no weak antecedent.
+Write \(\to\) for membership in \(S\), as the source's notation
+for this status, rather than treating it as an extra classical
+implication connective. Empty antecedents are allowed.
+Strict rules are not automatically closed under contraposition.
+The relation \(\prec\) is a strict partial order on \(\mathcal D\);
+\(r\prec s\) means that \(s\) has priority over \(r\).
+No order on strict rules is required.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p18-is1996-argument}{Arguments, conclusions, assumptions, and subarguments}
+An argument is a finite list of rules such that every strong
+antecedent of a rule was concluded by an earlier rule in the list,
+and each conclusion has a unique producing rule in the list.
+The empty argument \([]\) is allowed.
+Weak antecedents are not proved when constructing the list.
+They are recorded for later attack.
+
+We use lists without redundant repetitions and identify valid
+reorderings with the same rule content when comparing arguments.
+This makes the source's content-based nonrepetition and its
+set-inclusion comparisons explicit.
+A subargument is a subset of the rule content that itself admits
+a valid list, not an arbitrary subset lacking its required premises.
+Write \(\mathcal A_\Gamma\) for the argument universe.
+
+The set \(\operatorname{Con}(A)\) contains the consequents of
+\emph{all} rules in \(A\).
+The assumption set is
+\[
+\operatorname{Ass}(A)=
+\{\overline M:\mathord{\sim}M\text{ occurs in a rule of }A\}.
+\]
+Thus a rule using \(\mathord{\sim}b\) assumes \(\neg b\);
+it does not conclude \(\neg b\).
+An argument is strict if all its rules are in \(S\), and
+defeasible otherwise.
+\end{hbdefinition}
+
+\begin{hbexample}{def:p18-is1996-weak-strong}{Absence of evidence differs from contrary evidence}
+Let
+\[
+r:\mathord{\sim}\operatorname{minor}(c)\Rightarrow
+       \operatorname{capacity}(c),\qquad
+s:\neg\operatorname{minor}(c)\Rightarrow\operatorname{vote}(c).
+\]
+With no further rules, \([r]\) is an argument and \([s]\) is not:
+the latter lacks an earlier producer of its strong antecedent.
+The conclusions of \([r]\) contain capacity alone.
+Adding a rule \(\Rightarrow\operatorname{minor}(c)\) creates
+an attacker of its weak assumption. Adding a rule
+\(\Rightarrow\neg\operatorname{minor}(c)\) instead supplies the
+missing premise for \(s\). These are different changes.
+\end{hbexample}
+
+\section{Strict extensions and conflicts}
+
+\begin{hbdefinition}{def:p18-is1996-strict-closure}{Strict extensions and saturation}
+A strict extension \(A+T\) appends strict rules so that the result
+is an argument. Its added rules must retain the unique-producer
+condition. Let
+\[
+C_S(A)=\{L:\text{some strict extension of }A
+                    \text{ has conclusion }L\}.
+\]
+Equivalently, start with \(\operatorname{Con}(A)\) and repeatedly
+apply ground strict rules whose strong premises have been obtained.
+For infinite \(S\), this is a definition by finite derivations,
+not a claimed terminating computation.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p18-is1996-closure}{proved=annex:p18.is1996-closure}{Saturation and extension agree}
+The two descriptions of \(C_S(A)\) agree. If \(A\) is a
+subargument of \(B\), then \(C_S(A)\subseteq C_S(B)\) and
+\(\operatorname{Ass}(A)\subseteq\operatorname{Ass}(B)\).
+Removing repeated occurrences of an identical producing rule
+does not change the conclusions or assumptions of a valid list.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p18-is1996-attack}{Head conflict, assumption attack, and coherence}
+Argument \(A\) attacks \(B\) if either:
+\begin{enumerate}
+\item there is \(L\in C_S(A)\) with
+\(\overline L\in C_S(B)\); or
+\item there is \(L\in C_S(A)\) with
+\(\overline L\in\operatorname{Ass}(B)\).
+\end{enumerate}
+The first is a head conflict and is symmetric.
+The second is the source's \emph{undercutting} relation
+\(U(A,B)\): a weak antecedent is contradicted.
+It need not be symmetric, although mutual undercutting is possible.
+This source-specific usage need not coincide with later uses of
+the word undercutter.
+An argument is coherent when it does not attack itself.
+A set is conflict-free when no member attacks any member,
+including itself.
+\end{hbdefinition}
+
+\begin{hbexample}{def:p18-is1996-strict-conflict}{A conflict exposed by a strict convention}
+Let \(r:\Rightarrow\operatorname{lease}(c)\) and
+\(s:\Rightarrow\neg\operatorname{contract}(c)\) be defeasible,
+and let
+\(\operatorname{lease}(x)\to\operatorname{contract}(x)\) be strict.
+The arguments \([r]\) and \([s]\) attack each other even though
+their immediate consequents are not complementary.
+The strict extension of \([r]\) exposes the conflict.
+The priority comparison must concern \(r\) and \(s\);
+it must not demote the strict convention to a defeasible rival.
+\end{hbexample}
+
+\section{Relevant rules and defeat}
+
+\begin{hbdefinition}{def:p18-is1996-frontier}{The relevant defeasible frontier}
+For a fixed argument \(E\) and \(L\in\operatorname{Con}(E)\),
+define \(R_L(E)\) recursively along its unique producing rule.
+If the producer is defeasible \(r\), set \(R_L(E)=\{r\}\).
+If the producer is strict, with strong antecedents
+\(L_1,\ldots,L_k\), set
+\[
+R_L(E)=\bigcup_{i=1}^k R_{L_i}(E).
+\]
+For a strict empty-premise rule the union is empty.
+Apply this recurrence to the whole strictly extended argument,
+including strict rules already present in its original prefix.
+The frontier is unique for that argument; different strict
+extensions can have different frontiers and must not be silently merged.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p18-is1996-frontier}{proved=annex:p18.is1996-frontier}{Frontier construction terminates}
+The recurrence determines a unique finite set of defeasible rules
+for every produced literal. A strict argument has empty frontiers.
+A defeasible final producer contributes itself, regardless of
+earlier defeasible support; attacks on that earlier support
+remain possible through the other conclusions of the argument.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p18-is1996-set-priority}{The source's strict set comparison}
+For finite sets \(R,R'\subseteq\mathcal D\), define
+\[
+R\prec_*R'
+\quad\Longleftrightarrow\quad
+\exists r\in R\ \forall r'\in R'\ (r\prec r').
+\]
+One rule on the left must be below every rule on the right.
+This is not a comparison of average weights or of all pairs.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p18-is1996-set-priority}{proved=annex:p18.is1996-set-priority}{Order and empty-frontier cases}
+The lifted relation is a strict partial order.
+Every nonempty \(R\) satisfies \(R\prec_*\varnothing\);
+the empty set is below no set.
+In particular, both \(R\prec_*R'\) and \(R'\prec_*R\)
+cannot hold.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p18-is1996-defeat}{Rebuttal and the generated defeat relation}
+Argument \(A\) rebuts \(B\), written \(R(A,B)\), when there
+are strict extensions \(A+T,B+V\) and complementary conclusions
+\(L,\overline L\) for which
+\[
+R_L(A+T)\not\prec_*R_{\overline L}(B+V).
+\]
+The quantifier is existential over conflict witnesses and their
+actual strict derivations.
+Define \(D_\Gamma(A,B)\), or simply \(A D_\Gamma B\), by:
+\[
+\bigl(A=[]\text{ and }B\text{ incoherent}\bigr)
+\quad\text{or}\quad U(A,B)
+\quad\text{or}\quad\bigl(R(A,B)\text{ and not }U(B,A)\bigr).
+\]
+Strict defeat \(A D_\Gamma^s B\) means
+\(A D_\Gamma B\) and not \(B D_\Gamma A\).
+The first disjunct is a designated incoherence defeat.
+It need not itself be an attack by the empty argument.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p18-is1996-orientation}{proved=annex:p18.is1996-orientation}{Conflict orientation and inherited attacks}
+Every attack between two arguments yields a defeat in at least
+one direction. Rebuttal and undercutting imply attack.
+Defeat implies attack except possibly for the designated empty
+incoherence case.
+An attack on a subargument is an attack on its superargument,
+although its direction of successful defeat may change.
+If strict arguments are not conflict-free, every argument is incoherent.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p18-is1996-undercut}{Undercutting takes precedence over rebuttal}
+Take \(r:\mathord{\sim}\neg a\Rightarrow a\) and
+\(s:\Rightarrow\neg a\), with no priorities.
+Each argument rebuts the other. But \([s]\) undercuts \([r]\),
+whereas \([r]\) does not undercut \([s]\).
+Thus \([s]\) strictly defeats \([r]\).
+By contrast, \([\mathord{\sim}b\Rightarrow a]\) and
+\([\mathord{\sim}a\Rightarrow b]\) mutually undercut;
+neither strictly defeats the other.
+\end{hbexample}
+
+\section{The original fixed-point semantics}
+\label{sec:p18-is1996-semantics}
+
+For \(X\subseteq\mathcal A_\Gamma\), put
+\[
+F_\Gamma(X)=\{A:\ \forall B\,
+ [B D_\Gamma A\Rightarrow
+       \exists C\in X\ (C D_\Gamma^s B)]\}.
+\]
+The source requires strict defense against every defeater.
+Let \(J_\Gamma\) be its least fixed point, obtained by iteration
+from the empty set, using unions at limit ordinals.
+An ordered theory is \emph{finitary} here when every argument
+has only finitely many attackers. The extra empty incoherence
+defeater adds at most one further defeater.
+
+\begin{hbtheorem}{thm:p18-is1996-semantics}{proved=annex:p18.is1996-semantics}{Existence, finite approximation, and structural properties}
+\(F_\Gamma\) is monotone and has a unique least fixed point.
+Its finite iterates are contained in \(J_\Gamma\).
+For finitary \(\Gamma\), their union equals \(J_\Gamma\).
+The set \(J_\Gamma\) is conflict-free under the source's attack
+relation and contains every subargument of each of its members.
+If the strict arguments are not conflict-free, \(J_\Gamma=\varnothing\).
+\end{hbtheorem}
+
+The source calls members of \(J_\Gamma\) justified; it calls an
+argument overruled when it is attacked by a justified argument,
+and defensible when it is neither justified nor overruled.
+Retain the word \emph{attacked} in this source-specific definition.
+Because the empty incoherence defeat need not be an attack,
+the residual class can contain incoherent arguments.
+It is a technical residual classification, not a claim that
+such an argument is a reasonable position.
+If the strict base is inconsistent, every argument falls in
+that residual class because there are no justified arguments.
+
+A literal is justified if some justified argument concludes it;
+it is defensible if it is not justified and some defensible
+argument concludes it; and it is overruled if neither prior
+case applies but an overruled argument concludes it.
+If no argument concludes it, record it as unsupported.
+These classifications do not assert empirical truth or falsity.
+
+\section{A corrected finite proof game}
+
+\begin{hbdefinition}{def:p18-is1996-proof-game}{Finite dialectical proofs}
+A dialogue alternates proponent \(P\) and opponent \(O\),
+starting with the argument to be proved.
+Every subsequent \(O\) move is any \(D_\Gamma\)-defeater
+of the preceding argument. Every subsequent \(P\) move is
+a \(D_\Gamma^s\)-defeater of the preceding argument.
+\(P\) may not repeat the same argument content on one branch;
+\(O\) may repeat.
+There is no additional global minimality restriction on \(P\)'s reply.
+
+A finite proof tree has one such dialogue on each branch,
+contains every possible opponent reply at each \(P\) node,
+and chooses a successful \(P\) response at each nonterminal
+\(O\) node. It is won by \(P\) when every leaf is a \(P\) move
+with no opponent reply. A terminal play alone is not a proof
+unless all opponent alternatives have been covered.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p18-is1996-proof-correctness}{proved=annex:p18.is1996-proof-correctness}{General soundness and finitary completeness}
+Every argument with a finite proof tree in this corrected game
+belongs to \(J_\Gamma\), for arbitrary \(\Gamma\).
+For finitary \(\Gamma\), every member of \(J_\Gamma\) has
+such a finite proof tree.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p18-is1996-minimality}{proved=annex:p18.is1996-minimality}{Global reply minimality can destroy completeness}
+If \(P\)'s replies must instead be globally minimal, by inclusion
+of rule content, among strict defeaters of the preceding argument,
+finitary completeness and proof-theoretic subargument closure fail.
+A four-rule finite theory with no strict rules or priorities
+provides a counterexample.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p18-is1996-minimality-case}{Two pieces of support can protect each other}
+Use exactly
+\[
+r_1:\Rightarrow a,\quad r_2:\Rightarrow b,\quad
+r_3:\mathord{\sim}b\Rightarrow\neg a,\quad
+r_4:\mathord{\sim}a\Rightarrow\neg b.
+\]
+The combined argument \(C=[r_1,r_2]\) has no defeaters:
+every argument with a contrary conclusion uses \(r_3\) or \(r_4\),
+whose weak antecedent \(C\) undercuts.
+Hence \(C\) is justified immediately and its subarguments
+\([r_1]\), \([r_2]\) are justified as well.
+
+With global minimality, an opponent can force
+\[
+P:[r_1],\quad O:[r_3],\quad P:[r_2],\quad O:[r_4].
+\]
+The only minimal strict response now repeats \([r_1]\).
+The protective \(C\) is not globally minimal, so that version
+cannot finish a proof of \([r_1]\).
+In the corrected game, \(P\) replies with \(C\) and wins.
+The annex proves the claim against all possible argument contents;
+it is not a comparison of an arbitrarily selected defeat graph.
+\end{hbexample}
+
+\begin{hbexample}{def:p18-is1996-earlier-support}{An earlier defeat can settle a later conflict}
+Take
+\[
+r_1:\Rightarrow a,\quad r_2:a\Rightarrow b,\quad r_3:b\Rightarrow c,
+\qquad
+r_4:\Rightarrow\neg a,\quad r_5:\neg a\Rightarrow d,\quad
+r_6:d\Rightarrow\neg c
+\]
+with \(r_4\prec r_1\) and \(r_3\prec r_6\).
+The complete chains \([r_1,r_2,r_3]\) and \([r_4,r_5,r_6]\)
+can defeat each other through different conclusions.
+The single argument \([r_1]\), however, strictly defeats every
+argument containing \(r_4\), and has no defeaters.
+Every attack against the positive chain requires \(r_4\):
+the contrary conclusions \(\neg a,\neg c\) both arise through it.
+Thus respond to each such opponent with \([r_1]\).
+This gives a complete finite proof, covering all opposing
+superarguments as well as the displayed negative chain.
+\end{hbexample}
+
+\section{Finite computation and the LIS connection}
+
+\begin{hbtheorem}{thm:p18-is1996-finite}{proved=annex:p18.is1996-finite}{A decision procedure for a finite ground theory}
+If \(S\cup\mathcal D\) is a finite set of ground rules and
+its priority relation is given, the argument universe, attack
+and defeat relations, fixed-point statuses, and corrected
+finite proof outcomes can all be computed by finite enumeration.
+Finitely many written schemata with function symbols do not
+by themselves satisfy this hypothesis.
+\end{hbtheorem}
+
+For example, \(\to p(c)\) and \(p(x)\Rightarrow p(f(x))\)
+are only two written schemata but produce arbitrarily long
+arguments with different conclusions \(p(f^n(c))\).
+Conversely, a theory can have infinitely many arguments and
+no attacks, making it finitary without being finite.
+The finite-ground algorithm must not be described as an
+algorithm for every finitary theory.
+
+\begin{hbtheorem}{thm:p18-is1996-lis-bridge}{proved=annex:p18.is1996-lis-bridge}{The precise fixed-role bridge}
+Use the actual rule-generated relation \(D_\Gamma\) as the
+defeat graph for the corrected fixed-role game of
+Chapter~\ref{sec:p18-lis-burdens}.
+Its grounded extension equals \(J_\Gamma\).
+For finitary \(\Gamma\), its winning arguments are exactly
+those with the corrected finite proofs above.
+This identifies justification only; it does not identify the
+source's attack-based residual labels with every later label convention.
+\end{hbtheorem}
+
+There is no identity bridge to the changing-role LIS interface
+without extra data. A rule-sequence argument can have several
+conclusions and a counterargument can attack several incomparable
+subarguments. For instance, separate conclusions \(a,b\)
+can be opposed by an argument containing both \(\neg a,\neg b\).
+The single-target role rule in that LIS interface does not
+choose a target for this case. A designated conclusion, occurrence
+representation, and justified target policy are additional requirements.
+
+\begin{proofboundary}{def:p18-is1996-next}{Exact continuing source obligations}
+This bounded component supplies the original ground-rule construction,
+strict-extension conflicts, relevant frontiers, fixed priorities,
+generated defeat, fixed-point semantics, and a corrected finite
+proof theorem with the original general/finitary scope.
+The global-minimality formulation is refuted by the full
+rule-generated counterexample rather than asserted complete.
+
+Chapter~\ref{sec:p18-is-dynamic} supplies the reversed-role
+fixed-comparison game, derived priorities, neutralization,
+the dynamic semantic proofs, the priority examples and the
+applicability alternatives with their exact failure boundaries.
+The original dynamic game's finite completeness claim is
+refuted by Theorem~\ref{thm:p18-is-compression-countermodel},
+so an unrestricted finitary extension of that claim is also false.
+The corrected sequential game is complete on the original
+set-sized domain by Theorem~\ref{thm:p18-is-licensing-complete},
+with finite proofs for finitary theories by
+Theorem~\ref{thm:p18-is-licensing-finite}.
+
+The separate sensitive-exclusion semantics, unrestricted
+non-semidecidability coding, broader stable-semantics comparisons
+and historical Dung-version question retain their stated
+source obligations.
+\end{proofboundary}

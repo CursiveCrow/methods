@@ -1,0 +1,253 @@
+\chapter{Primitive-Recursive Texts and Tester Identification}
+\label{sec:p15-pr-learning-obstructions}
+
+Restricting a positive presentation to a primitive-recursive sequence
+does not by itself make exact tester identification possible.
+Gold's Theorem I.9 separates this restriction from the generator-naming
+result in \cref{sec:p15-formal-identification}
+\cite[pp.\ 471--473]{Gold1967IdentificationFLT}.
+The obstruction needs a primitive-recursive guessing rule, not merely
+a computable rule. Gold invokes Theorem~5 of his 1965 limiting-recursion
+paper for that reduction \cite{Gold1965LimitingRecursionPR}.
+The finite-prefix normalization below is supplied as an explicit
+serial simulation, with its own precisely declared scope.
+
+\section{The typed interfaces and finite computations}
+\label{sec:p15-pr-learning-interfaces}
+
+\begin{hbconvention}{def:p15-pr-learning-codes}{Word, text, tester and computation codes}
+Use the fixed primitive-recursive word coding of
+\cref{def:p15-flt-names}, shifted if necessary so words have positive
+integer codes. In this chapter a text is
+\(i_1,i_2,\ldots\), and a finite observation prefix is
+\(\sigma=(i_1,\ldots,i_t)\).
+The text function \(t\mapsto i_t\), for \(t\geq1\), must be
+primitive recursive. Repetitions are allowed and its range is the
+target language. There are no negative labels or pause symbols.
+
+Fix one effective machine-program numbering throughout the argument.
+Gold's \(Z_a(x)\) denotes the partial numerical output of the program
+with hypothesis number \(a\), on word code \(x\).
+A valid \emph{tester name} for \(L\) must be total on word codes, have values in
+\(\{0,1\}\), and satisfy \(Z_a(x)=\mathbf1_L(x)\) on every word.
+For this tester-naming instance of the earlier \(\Gamma\),
+\(\Gamma(a)=L\) exactly when \(a\) is such a valid tester for \(L\);
+on other program numbers the naming map is undefined.
+An intermediate hypothesis may be a wrong tester or a partial program.
+No uniform procedure decides which program numbers are total testers.
+A tester-identifiable target class must be contained in this
+tester-naming range, as required by \cref{def:p15-flt-names}.
+An unnameable target is a failure of that prerequisite, not success
+inferred by vacuous quantification over absent presentations.
+A learner is a total computable prefix function
+\(G_0(\sigma)\in\mathbb N\); an optional abstention can instead be
+encoded by a fixed invalid program number.
+Success requires eventual constancy of that actual number and
+correctness of its tester meaning.
+
+Keep Gold's native computation notation
+\[
+ T(a,x,y),\qquad U(y).
+\]
+Here \(T\) is a numerical three-place primitive-recursive predicate:
+\(y\) codes a complete halting computation of program \(a\) on input
+\(x\). The primitive-recursive numerical function \(U\) extracts the
+output of such a computation. These are not a presentation sequence
+called \(T\), a semantic truth predicate, or an oracle for termination.
+The coding is chosen consistently with \(Z_a\); malformed histories
+make \(T\) false, and \(U\) has an arbitrary total default on them.
+For valid histories,
+\[
+ (\exists y)\,[T(a,x,y)\land U(y)=v]
+ \quad\Longleftrightarrow\quad Z_a(x)\downarrow=v.
+ \tag{PR.1}
+\]
+Thus a bound \(y\leq t\) limits the \emph{history code}, not necessarily
+the number of computation steps.
+The symbols retain the roles of Gold's equation I.16.
+In (PR.3), Gold's \(\equiv\) defines a predicate and his
+\(\&\) is Boolean conjunction. This local definitional use of
+\(\equiv\) is not elementary equivalence between structures.
+\end{hbconvention}
+
+\begin{hblemma}{thm:p15-pr-learning-coding}{proved=annex:p15-pr-learning-coding}{Primitive-recursive finite simulation}
+There is a standard finite-sequence and machine-configuration coding
+with primitive-recursive prefix extraction, initialization,
+one-step transition, halting recognition and numerical output
+extraction. Complete finite-history verification gives the \(T,U\)
+of \cref{def:p15-pr-learning-codes} and satisfies (PR.1).
+Iterating a fixed transition for an explicitly given finite number
+of steps is primitive recursive. This is not a primitive-recursive
+universal evaluator that runs every terminating program to completion.
+\end{hblemma}
+
+\section{Normalization without losing a hypothesis change}
+\label{sec:p15-pr-learning-normalization}
+
+\begin{hbmethod}{def:p15-pr-learning-relay}{The serial prefix simulator}
+Fix a machine computing \(G_0\) on coded finite sequences.
+For an input \(\sigma=(i_1,\ldots,i_n)\), start with next-prefix
+number \(m=1\), an inactive simulation state, and a fixed initial
+hypothesis \(a_{\mathrm{init}}\).
+Perform exactly \(n\) ticks, labelled \(1,\ldots,n\).
+At a tick, initialize the inactive machine on
+\(\sigma{\upharpoonright}m\), if necessary, and execute one
+machine transition. If it is now halted, copy its numerical
+answer into the retained hypothesis, increase \(m\) by one and
+mark the simulation inactive for the next tick.
+If it has not halted, retain its configuration and the previous
+hypothesis. At most one prefix computation is completed per tick,
+including an initially halted computation.
+Return the retained hypothesis; call this prefix function
+\(\widehat G(\sigma)\). On the empty prefix return
+\(a_{\mathrm{init}}\).
+On a numerical input that is not the code of a finite sequence
+of word numbers, return the same default.
+
+Before tick \(r\), at most \(r-1\) computations have completed, so
+\(m\leq r\leq n\). Every prefix requested exists in the input.
+Initialization, a transition, copying, and resetting are finite
+primitive-recursive operations. No unbounded waiting occurs inside
+a tick. A long-running call is spread across successive ticks.
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p15-pr-learning-normalization}{proved=annex:p15-pr-learning-normalization}{Exact finite-prefix convergence normalization}
+For every total computable finite-prefix rule \(G_0\), the
+\(\widehat G\) of \cref{def:p15-pr-learning-relay} is primitive
+recursive on finite-sequence codes. For every infinite sequence
+\(i=(i_1,i_2,\ldots)\) and every hypothesis number \(a\),
+\[
+ \bigl[G_0(i_1,\ldots,i_t)\longrightarrow a\bigr]
+ \quad\Longleftrightarrow\quad
+ \bigl[\widehat G(i_1,\ldots,i_t)\longrightarrow a\bigr].
+ \tag{PR.2}
+\]
+Arrows here mean eventual equality of natural numbers, not a metric
+limit. In particular nonstabilization is preserved, and a stable
+tester number is not replaced by a different equivalent name.
+The construction does not change the observed presentation,
+and applies to primitive-recursive texts as well as to arbitrary
+ones. It asserts no uniform stabilization time or runtime bound.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p15-pr-learning-relay-trace}{A slow computation cannot be skipped}
+Suppose, on a particular text, the first five ordinary prefix
+answers are \(7,7,11,7,7\), and their simulations take respectively
+\(2,4,1,3,2\) ticks, under the fixed transition convention.
+The serial simulator's answers at ticks \(1\) through \(12\) are
+\[
+ a_{\mathrm{init}},7,7,7,7,7,11,11,11,7,7,7.
+\]
+The answer \(11\) is displayed when its call finishes at tick \(7\),
+even though later input is already available.
+If answers \(7\) and \(11\) alternate forever, both remain visible
+infinitely often. Selecting only the largest prefix whose call
+finishes within the current budget can instead skip slow calls;
+that shortcut does not establish the reverse implication in (PR.2).
+The displayed numbers are illustrative hypothesis codes, not
+membership values of the text's words.
+\end{hbexample}
+
+\section{The primitive-recursive countertext}
+\label{sec:p15-pr-learning-countertext}
+
+\begin{hblemma}{thm:p15-pr-learning-range}{proved=annex:p15-pr-learning-range}{A primitive-recursive range for a nonempty enumerable language}
+Every nonempty computably enumerable language \(L\), in the declared
+word coding, is the range of a total primitive-recursive function
+\(f:\mathbb N_{>0}\to\mathbb N_{>0}\).
+The construction may repeat words and uses one fixed word already
+known to belong to \(L\). It is not a uniform decision of emptiness
+and does not assert that membership in \(L\) is primitive recursive.
+\end{hblemma}
+
+\begin{hbmethod}{def:p15-pr-learning-native-diagonal}{Gold's bounded rejection construction}
+Let \(\mathcal C\) contain every finite language and an infinite
+language \(L\). If \(L\) is not recursive it has no tester name,
+so tester identification of \(\mathcal C\) already fails.
+Otherwise fix a primitive-recursive \(f\) with range \(L\).
+For a proposed successful learner \(G_0\), use
+\(\widehat G\) from (PR.2), and denote this primitive-recursive
+prefix rule by \(G\), retaining Gold's native notation.
+Define simultaneously
+\[
+ \begin{split}
+ g_t&=G(i_1,\ldots,i_t),\\
+ P_t&\equiv[f(X_t)=i_1]\lor\cdots\lor[f(X_t)=i_t],\\
+ Q_t&\equiv(\exists y\leq t)
+       \{T[g_t,f(X_t),y]\mathbin{\&}[U(y)=0]\},\\
+ X_1&=1,\qquad i_1=f(1),\\
+ X_{t+1}&=
+ \begin{cases}X_t+1,&P_t,\\X_t,&\neg P_t,\end{cases}\\
+ i_{t+1}&=
+ \begin{cases}f(X_t),&\neg P_t\land Q_t,\\i_t,&\text{otherwise}.
+ \end{cases}
+ \end{split}
+ \tag{PR.3}
+\]
+These are Gold's equations I.14--I.22
+\cite[pp.\ 471--472]{Gold1967IdentificationFLT}.
+The information prefix, current hypothesis and candidate word all
+have different types. In \(T[g_t,f(X_t),y]\), the first argument
+is a tester program number, the second a word number and the
+third a computation-history number.
+
+\(P_t\) says the current candidate is already in the observed
+positive content. If it is, advance its enumeration position.
+Otherwise keep the same position until bounded evidence appears
+that the current hypothesis rejects that candidate; then present it.
+When evidence is absent, repeat the last positive word.
+The predicates are bounded, and the paired sequence is defined
+by primitive recursion on its finite coded history.
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p15-pr-learning-obstruction}{proved=annex:p15-pr-learning-obstruction}{Gold I.9: superfinite classes resist primitive-recursive-text tester learning}
+For information given by primitive-recursive positive texts and
+the tester-naming relation, no class containing all finite languages
+and at least one infinite language is identifiable in the limit
+by a total computable finite-prefix learner.
+When the selected infinite member \(L\) is recursive,
+for each proposed learner (PR.3) produces a primitive-recursive
+countertext. Its range is either a finite nonempty subset of \(L\)
+or all of \(L\). If the learner's hypotheses stabilize, the
+stabilized program fails the tester specification for that range;
+if they do not stabilize, identification already fails.
+If \(L\) is nonrecursive, the tester-name prerequisite itself fails,
+as specified in \cref{def:p15-pr-learning-codes}.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p15-pr-learning-candidate-case}{What the delayed word proves}
+Display word names in this example; each denotes its fixed positive
+integer code. Here \(a\) is an alphabet letter, not a hypothesis number.
+For the unary-word language \(\{\varepsilon,a,a^2,\ldots\}\),
+take \(f(k)=a^{k-1}\). Initially \(i_1=\varepsilon\), \(X_1=1\);
+because the first candidate was seen, \(X_2=2\) and
+\(i_2=\varepsilon\). The next candidate \(a\) is now held while
+\(\varepsilon\) is repeated. If a current tester is observed,
+through a finite computation witness, to reject \(a\), then \(a\)
+is inserted and that hypothesis is wrong for every eventual
+target containing \(a\). No fixed number of repetitions forces
+a rejection; only the witnessed computation triggers insertion.
+The same mechanism next applies to \(a^2\), with any delays
+determined by the learner and the computation-history numbering.
+\end{hbexample}
+
+\begin{proofboundary}{def:p15-pr-learning-limits}{Which assumptions do the work}
+The negative result is about tester output and eventual syntactic
+stabilization, not merely eventual semantic correctness of changing
+names. Under generator naming, primitive-recursive texts have a
+different positive result, as in \cref{thm:p15-flt-pr-text}.
+An accepting-only recognizer cannot certify the rejection required
+by \(Q_t\). Totality is required of a correct final tester, not of
+all intermediate guesses, and no totality oracle is introduced.
+Each constructed presentation is primitive recursive for the fixed
+proposed learner; this is not a uniform primitive-recursive
+evaluation of every computable learner.
+
+Nonempty pure texts suffice for the contradiction, so adding an
+empty-language pause convention does not repair it.
+Negative data, a restricted target family omitting some finite
+sublanguages, or a different hypothesis-success criterion changes
+the theorem's premises. The finite-prefix normalization is distinct
+from a general theorem about numerical/function-variable limiting
+functionals; neither provides a finite stopping certificate.
+\end{proofboundary}

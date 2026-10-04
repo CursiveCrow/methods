@@ -1,0 +1,468 @@
+%% parts/p04/machines-effective-procedures.tex --- Phase-4 migration of
+%% v1.1 Part V, ch:turing-machines, source lines 7497--7849.
+%% Body = definitions, statements, warnings, and method descriptions only;
+%% every source proof/sketch is represented in the parallel annex fragment.
+%% Depth additions: D-P5-001 and D-P5-002.  Apparatus: A-045.
+%% Source lines 7494--7496 are the part heading already owned by the P4 driver;
+%% they are accounted for there and intentionally not duplicated in this file.
+
+\chapter{Machines and Effective Procedures}
+\label{sec:p04-machines-effective-procedures}
+
+Deterministic single-tape Turing machines are the primary computation model
+in this part.  Alternative standard formalisms enter only after this model and
+its numerical conventions have been fixed.  Historical sources are Church
+and Turing \cite{Church1936,Turing1937}; systematic references include
+\cite{Shoenfield1967,BoolosBurgessJeffrey2007}.
+
+\section{Deterministic single-tape Turing machines}
+\label{sec:p04-machines}
+
+\begin{hbdefinition}{def:p04-turing-machine}{Turing machine}
+A \emph{deterministic single-tape Turing machine} (TM) is a tuple
+\[
+  \mathcal T=(Q,\mathcal A_{\mathrm{in}},\mathcal A_{\mathrm{tape}},
+  \delta,q_0,q_{\mathrm{acc}},q_{\mathrm{rej}})
+\]
+such that:
+\begin{enumerate}
+  \item \(Q\) is a finite set of states;
+  \item \(\mathcal A_{\mathrm{in}}\) is a finite input alphabet not
+        containing the blank symbol \(\sqcup\);
+  \item \(\mathcal A_{\mathrm{tape}}\) is a finite tape alphabet with
+        \(\mathcal A_{\mathrm{in}}\cup\{\sqcup\}
+        \subseteq\mathcal A_{\mathrm{tape}}\);
+  \item \(q_0,q_{\mathrm{acc}},q_{\mathrm{rej}}\in Q\), with
+        \(q_{\mathrm{acc}}\ne q_{\mathrm{rej}}\); and
+  \item
+  \[
+    \delta:(Q\setminus\{q_{\mathrm{acc}},q_{\mathrm{rej}}\})
+    \times\mathcal A_{\mathrm{tape}}
+    \longrightarrow Q\times\mathcal A_{\mathrm{tape}}\times\{L,R\}.
+  \]
+\end{enumerate}
+The alphabet symbols in this tuple are machine components, not formula
+contexts or arithmetical-hierarchy classes.  The tape is infinite in both
+directions, has finite nonblank support at each finite time, and has one head.
+\index{Turing machine!deterministic single-tape}
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p04-configuration-computation}{Configuration and computation}
+A \emph{configuration} of \(\mathcal T\) is \(C=(q,T,h)\), where
+\(q\in Q\), \(h\in\mathbb Z\), and
+\(T:\mathbb Z\to\mathcal A_{\mathrm{tape}}\) has finite nonblank support.  If
+\(q\notin\{q_{\mathrm{acc}},q_{\mathrm{rej}}\}\) and
+\(\delta(q,T(h))=(q',a,d)\), let \(T'\) agree with \(T\) away from
+\(h\), put \(T'(h)=a\), and set \(h'=h-1\) for \(d=L\) and
+\(h'=h+1\) for \(d=R\).  Then, and only then,
+\[
+  (q,T,h)\longrightarrow_{\mathcal T}(q',T',h').
+\]
+A halting-state configuration has no successor; write
+\(\longrightarrow_{\mathcal T}^{*}\) for reflexive transitive closure.
+
+For \(w\in\mathcal A_{\mathrm{in}}^*\) of length \(n\), let \(T_w(i)\)
+be the \(i\)-th symbol of \(w\) for \(0\le i<n\), and \(\sqcup\)
+otherwise.  The initial configuration is \((q_0,T_w,0)\).  A
+\emph{computation on \(w\)} is the unique maximal finite or infinite
+sequence from this configuration following \(\longrightarrow_{\mathcal T}\).
+It halts exactly on reaching a halting state and accepts or rejects according
+to which one it reaches.  Thus the empty input starts with the head scanning
+a blank in cell \(0\).
+\index{Turing machine!configuration}
+\index{Turing machine!computation}
+\end{hbdefinition}
+
+\begin{hbconvention}{def:p04-numerical-coding}{Binary numerical and tuple coding}
+For \(n\in\N\), \(\operatorname{bin}(0)\) is the one-symbol word \(0\),
+and for \(n>0\), \(\operatorname{bin}(n)\) is the ordinary base-two
+expansion without leading zeros, most significant bit first.  Use
+\[
+  \operatorname{pair}_{\N}(a,b)
+  =\frac{(a+b)(a+b+1)}2+b,
+\]
+a numerical pairing map distinct in notation and type from the set-theoretic
+ordered pair \(\langle a,b\rangle\).  For each fixed arity set
+\[
+ \operatorname{code}_0()\defeq0,
+ \qquad \operatorname{code}_1(n)\defeq n,
+\]
+and, for \(k\geq1\),
+\[
+ \operatorname{code}_{k+1}(n_0,\ldots,n_k)
+ \defeq
+ \operatorname{pair}_{\N}\bigl(n_0,
+   \operatorname{code}_k(n_1,\ldots,n_k)\bigr).
+\]
+The type \(\N^k\), rather than the code, supplies the arity.  The numerical
+input for \(\vec n\in\N^k\) is
+\(\operatorname{bin}(\operatorname{code}_k(\vec n))\), placed from cell
+\(0\) with its most significant bit first.
+\index{binary numerical coding}
+\index{tuple coding}
+\end{hbconvention}
+
+\begin{hbconvention}{def:p04-numerical-output}{Numerical output}
+A machine used to compute a numerical function has
+\(\{0,1\}\subseteq\mathcal A_{\mathrm{in}}\).  For a halting tape \(T\), put
+\[
+  m\defeq\min\{i\in\N:T(i)=\sqcup\}.
+\]
+Finite nonblank support makes \(m\) defined.  The prefix of length \(m\)
+is a \emph{valid numerical output} exactly when it is
+\(\operatorname{bin}(y)\) for a unique \(y\in\N\).  Hence the empty word,
+a word containing a nondigit, and a nonzero binary word with a leading zero
+are invalid.  Cells outside the prefix and the final head position do not
+affect the output.  A numerical-function machine must halt in
+\(q_{\mathrm{acc}}\) with a valid numerical output.
+\index{Turing machine!numerical output}
+\end{hbconvention}
+
+\begin{hbdefinition}{def:p04-partial-computable}{Partial computable function}
+A partial function \(f:\N^k\rightharpoonup\N\) is \emph{partial
+computable} iff some Turing machine satisfies both of the following conditions
+for every \(\vec n\in\N^k\): when \(f(\vec n)\) is defined, the computation
+on \(\operatorname{bin}(\operatorname{code}_k(\vec n))\) reaches
+\(q_{\mathrm{acc}}\) with output
+\(\operatorname{bin}(f(\vec n))\); when \(f(\vec n)\) is undefined, that
+computation is infinite.  A total partial computable function is
+\emph{computable}.  The arrow \(\rightharpoonup\) permits undefined values;
+divergence is not a third numerical output.
+\index{partial computable function}
+\index{computable function}
+\end{hbdefinition}
+
+Definition~\ref{def:p04-partial-computable} is the repaired R-035 definition:
+it contains one definiendum--definiens biconditional and then two cases, not a
+nested or doubled ``if and only if.''
+
+\begin{hbmethod}{def:p04-coding-procedures}{Effective encoding and decoding}
+The fixed codes introduce no hidden computation model.  To invert
+\(\operatorname{pair}_{\N}\) at \(z\), boundedly search for the greatest
+\(s\le z\) with \(s(s+1)/2\le z\), then put
+\(b=z-s(s+1)/2\) and \(a=s-b\).  Given the arity, iteration decodes a tuple.
+Repeated division by two produces a binary word, while the recurrence
+\(r\mapsto2r+b\) decodes a word from left to right.  Each is a terminating
+Turing-machine procedure.
+\end{hbmethod}
+
+\begin{hbexample}{def:p04-unary-successor}{Unary successor}
+Because \(\operatorname{code}_1(n)=n\), a successor machine scans the input
+\(\operatorname{bin}(n)\) rightward, propagates a carry left through trailing
+\(1\)s, and writes \(1\) at the first \(0\).  If the carry passes the most
+significant bit, it shifts the resulting zero block right, writes \(1\) in
+cell \(0\), and leaves the following cell blank, so \(111\) becomes
+\(1000\).  The invariant says that the
+processed suffix is the correct low-order suffix of \(n+1\), while the state
+records whether a carry remains.  The final prefix is an output word, not a
+second tuple code.
+\end{hbexample}
+
+\begin{hbwarning}{def:p04-formalism-complexity}{Machine formalism versus complexity measure}
+Changing from one tape to several does not change which partial functions are
+computable, but it can change running time by a polynomial factor.  A
+computability claim and a complexity claim therefore require different
+invariance arguments; see \cite{BoolosBurgessJeffrey2007} for the multi-tape
+argument.
+\end{hbwarning}
+
+\section{Primitive recursion}
+\label{sec:p04-primitive-recursion}
+
+\begin{hbdefinition}{def:p04-primitive-recursive-function}{Primitive recursive function}
+The \emph{primitive recursive functions} form the least class of total
+functions on finite powers of \(\N\) containing, for every \(k\in\N\), the
+zero function \(Z_k:\N^k\to\N\) (including \(Z_0()=0\)); successor
+\(S(n)=n+1\); and every projection
+\(P_i^k(n_1,\ldots,n_k)=n_i\) for \(k\ge1\) and \(1\le i\le k\).  The class
+is closed under composition
+\[
+  f(\vec x)=g(h_1(\vec x),\ldots,h_m(\vec x))
+\]
+and, for every \(k\in\N\), under primitive recursion from
+\(g:\N^k\to\N\) and \(h:\N^{k+2}\to\N\):
+\[
+  f(\vec x,0)=g(\vec x),
+  \qquad
+  f(\vec x,n+1)=h(\vec x,n,f(\vec x,n)).
+\]
+\index{primitive recursive function}
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p04-primitive-recursive-relation}{Primitive recursive relation}
+A relation \(R\subseteq\N^k\) is \emph{primitive recursive} iff its
+characteristic function \(\operatorname{char}_R:\N^k\to\{0,1\}\), equal to \(1\) exactly
+on tuples in \(R\), is primitive recursive.  This term classifies a relation,
+not a representing arithmetic formula.  The distinction is required because
+the later coding predicates for formulas and derivations are relations, while
+Definition~\ref{def:p04-primitive-recursive-function} concerns functions.
+\index{primitive recursive relation}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p04-pr-functions-computable}{sketched=annex:p04-machines.1}{Primitive recursive functions are computable}
+Every primitive recursive function is computable and total.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p04-addition-multiplication-pr}{Addition and multiplication}
+List addition before multiplication by the following recursive presentations:
+\[
+\begin{aligned}
+  x+0&=x, & x+(y+1)&=S(x+y),\\
+  x\times0&=0, & x\times(y+1)&=(x\times y)+x.
+\end{aligned}
+\]
+In the second line, \(+\) denotes the addition function presented in the first
+line.
+The Ackermann function is total and computable but not primitive recursive;
+its domination proof is outside this entry and may be found in
+\cite{BoolosBurgessJeffrey2007}.
+\end{hbexample}
+
+\section[Minimization and Formalisms]{Unbounded minimization and equivalent formalisms}
+\label{sec:p04-partial-recursion}
+
+\begin{hbconvention}{def:p04-kleene-equality}{Kleene equality}
+For expressions denoting possibly undefined values, \(a\simeq b\) means that
+both are undefined or both are defined and equal.  For partial functions
+\(f,g:\N\rightharpoonup\N\), \(f\simeq g\) abbreviates
+\(\forall x\in\N\,f(x)\simeq g(x)\).  This convention is placed here, ahead
+of its position in the migrated source, because the new normal-form entry is
+its first handbook use.
+\index{Kleene equality}
+\end{hbconvention}
+
+\begin{hbdefinition}{def:p04-partial-recursive}{Unbounded minimization and partial recursive functions}
+For a partial map \(g:\N^{k+1}\rightharpoonup\N\), its \emph{unbounded
+minimization} is the partial map
+\[
+  (\mu g)(\vec x)=\mu y\,[g(\vec x,y)=0].
+\]
+This value is defined as the least \(y\) for which \(g(\vec x,y)\) is defined
+and equals \(0\), provided \(g(\vec x,z)\) is defined and nonzero for every
+\(z<y\); it is undefined if an earlier required computation diverges or no
+such zero is reached.
+
+For each arity, the \emph{partial recursive functions}, also called the
+\emph{\(\mu\)-recursive functions}, are the least class of
+partial maps between finite powers of \(\N\) that contains the zero,
+successor, and projection functions and is closed under composition, primitive
+recursion, and unbounded minimization.  Composition is defined only when all
+required inner values and then the outer value are defined; a recursively
+defined value is defined only when its base value and every preceding value
+needed by the step clause are defined.  This is a class of partial numerical
+functions, not a class of formulas or machine descriptions.  It strictly adds
+the possibility of divergence to the total class in
+Definition~\ref{def:p04-primitive-recursive-function}; that distinction is
+needed by the normal-form and machine-equivalence theorems below.
+\index{unbounded minimization}
+\index{partial recursive function}
+\index{mu-recursive function@\(\mu\)-recursive function}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p04-kleene-normal-form}{cited=Kleene1952}{Kleene normal form}
+For each \(k\ge1\), there are a primitive recursive relation
+\(\mathsf T_k(e,x_1,\ldots,x_k,y)\) and a primitive recursive function
+\(\mathsf U(y)\) such that every partial recursive
+\(f:\N^k\rightharpoonup\N\) has an index \(e\), in the fixed computation
+coding of this normal-form theorem, satisfying
+\[
+  f(x_1,\ldots,x_k)
+  \simeq
+  \mathsf U\bigl(\mu y\,
+    \mathsf T_k(e,x_1,\ldots,x_k,y)\bigr),
+\]
+where the minimization selects the least \(y\) satisfying \(\mathsf T_k\).
+Conversely, every partial function displayed in this form is partial
+recursive.  Here \(\mathsf T_k\) is the relation saying that \(y\) is a valid
+finite accepting-computation code under the computation coding fixed for this
+normal form, and \(\mathsf U\) extracts its numerical output; it is not the
+bounded object-language computation formula introduced later for
+arithmetization.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p04-tm-partial-recursive}{cited=Kleene1952}{Turing-computable iff partial recursive}
+For every \(k\ge1\) and every partial map
+\(f:\N^k\rightharpoonup\N\), the following are equivalent:
+\begin{enumerate}
+  \item \(f\) is computed by a Turing machine under
+        Definitions~\ref{def:p04-turing-machine} and
+        \ref{def:p04-partial-computable};
+  \item \(f\) is partial recursive in the closure sense of
+        Definition~\ref{def:p04-partial-recursive}.
+\end{enumerate}
+\end{hbtheorem}
+
+The equivalence is at the level of partial numerical functions, after the
+input/output encodings are fixed.  Historical equivalences among general recursion,
+Turing computation, and lambda definability are in
+\cite{Kleene1936,Turing1937Lambda}; \cite{Kleene1952} gives the modern
+partial-function development.
+
+The index \(e\) in Theorem~\ref{thm:p04-kleene-normal-form} belongs to that
+cited normal-form coding; it is not yet being identified with an index in the
+handbook's bespoke program numbering.  The next chapter fixes the single
+effective program numbering used by every index-dependent construction in this
+part and verifies its enumeration and parameter-specialization properties.  No
+second handbook program numbering or unrelated compiler is introduced.
+
+\begin{hbdefinition}{def:p04-shepherdson-sturgis-urm}{Shepherdson--Sturgis Unlimited Register Machine}
+The \emph{Shepherdson--Sturgis Unlimited Register Machine} (URM) has registers
+\(1,2,\ldots\), each storing a natural number, and a finite program mentioning
+only finitely many registers.  Its six instruction forms are
+\(P(n)\), increment register \(n\); \(D(n)\), decrement a nonzero register
+\(n\); \(O(n)\), set register \(n\) to zero; \(C(m,n)\), copy register \(m\)
+to register \(n\), with \(m\ne n\); \(J[E_1]\), transfer unconditionally;
+and \(J(m)[E_1]\), take exit \(E_1\) exactly when register \(m\) is zero and
+otherwise take the normal next-line exit.  Execution begins at line \(1\) and
+halts on reaching the nonexistent line after the last instruction.
+
+To compute \(f:\N^n\rightharpoonup\N\), choose distinct register addresses
+\(x_1,\ldots,x_n,y\) and a bound \(N\) containing them.  Initialize the
+\(x_i\)-registers with the inputs.  If \(f(\vec x)\) is undefined, the program
+does not stop; if it is defined, the program stops with register \(y\)
+containing \(f(\vec x)\), while registers \(1,\ldots,N\) other than \(y\)
+retain their initial contents.  Registers above \(N\) may be scratch space.
+This name denotes that exact formalism and function convention, not an
+unspecified generic register machine; the distinction is required for its row in
+Table~\ref{tab:p04-machine-equivalences} \cite{ShepherdsonSturgis1963}.
+\index{Unlimited Register Machine!Shepherdson--Sturgis}
+\index{register machine!Shepherdson--Sturgis}
+\end{hbdefinition}
+
+\begin{landscape}
+\begingroup\small\setlength{\tabcolsep}{3pt}
+\begin{longtable}{@{}p{1.10in}p{2.25in}p{1.85in}p{1.84in}@{}}
+\caption{Machine models, recursive-function formalisms, and their exact
+evidence relationships (A-045).}
+\label{tab:p04-machine-equivalences}\\
+\toprule
+Model & Object and function convention & Verified relationship & Evidence \\
+\midrule
+\endfirsthead
+\toprule
+Model & Object and function convention & Verified relationship & Evidence \\
+\midrule
+\endhead
+Fixed single-tape Turing machine & Partial numerical functions; convergence
+means accepting with a valid canonical output, while rejection, divergence,
+and invalid acceptance are undefined. & Defines the Turing-computable class
+under exactly this convergence convention. &
+Definitions~\ref{def:p04-turing-machine} and
+\ref{def:p04-partial-computable}; the next chapter supplies the index
+realization. \\
+\addlinespace
+Partial recursive functions & Least partial-function class containing zero,
+successor, and projections and closed under composition, primitive recursion,
+and the definedness-sensitive \(\mu\)-operator. & Same partial numerical
+functions as the fixed Turing-machine formalism. & Cited
+Theorem~\ref{thm:p04-tm-partial-recursive};
+\cite{Kleene1936,Kleene1952,Turing1937Lambda}. \\
+\addlinespace
+Shepherdson--Sturgis URM & Countably many \(\N\)-valued registers and finite
+programs using exactly \(P,D,O,C,J,J\)-zero as specified in
+Definition~\ref{def:p04-shepherdson-sturgis-urm}. & Computes exactly the
+partial recursive numerical functions; equivalence with the preceding Turing
+model follows through that shared class. & Primary URM construction and
+two-symbol-machine reduction: \cite{ShepherdsonSturgis1963}; the final
+TM--URM edge is transitive. \\
+\addlinespace
+Lambda definability & Fix Church numerals; on represented inputs, a term
+represents a numerical function when its application to the input numerals
+converts to the numeral for the value.  Comparison is by represented
+functions, not raw-term equality. & Turing's historical theorem identifies the
+corresponding computable, lambda-definable, and general recursive function
+classes on positive integers. & \cite{Turing1937Lambda}; no modern
+undefined-input convention is attributed to that paper. \\
+\addlinespace
+Effective calculability & Informal explicandum, not a fourth formal model or a
+class fixed by a formal definition. & Church--Turing thesis pointer; no
+equivalence edge is asserted from a theorem. &
+\cite{Church1936,Turing1937Lambda,Soare1996ComputabilityRecursion}; see
+Boundary~\ref{def:p04-church-turing}. \\
+\bottomrule
+\end{longtable}
+\endgroup
+\end{landscape}
+
+\begin{proofboundary}{def:p04-church-turing}{Church--Turing thesis}
+The \emph{Church--Turing thesis} identifies the informally understood
+effectively calculable numerical functions with the Turing-computable
+functions.  Church proposed general recursion and Turing analyzed machine
+computation; the equivalence and robustness of the resulting formal models
+support the identification
+\cite{Church1936,Turing1937Lambda,Soare1996ComputabilityRecursion}.  They do
+not prove it, because ``effective calculability'' is the informal explicandum,
+not an independently formalized class quantified over by a theorem.  The
+thesis stated here is not the claim that every physical process is Turing
+computable, and formal-model equivalence does not imply equality of complexity
+costs (Warning~\ref{def:p04-formalism-complexity}).
+\index{Church--Turing thesis}
+\end{proofboundary}
+
+\section{Decidable and computably enumerable sets}
+\label{sec:p04-decidable-ce}
+
+\begin{hbdefinition}{def:p04-decidable-ce-set}{Decidable and computably enumerable sets}
+For \(A\subseteq\N\), \(A\) is \emph{decidable} iff its characteristic
+function \(\operatorname{char}_A:\N\to\{0,1\}\) is computable.  It is \emph{computably
+enumerable}, abbreviated \emph{c.e.}, iff it is the domain of a partial
+computable function.
+\index{decidable set}
+\index{computably enumerable set}
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p04-decidable-ce-relation}{Decidable and computably enumerable relations}
+For \(R\subseteq\N^k\), \(R\) is \emph{decidable} iff its characteristic
+function is computable.  It is \emph{computably enumerable} iff
+\[
+  \{\operatorname{code}_k(\vec n):\vec n\in R\}
+\]
+is a computably enumerable subset of \(\N\).  These terms classify relations;
+for \(k=1\) they reproduce Definition~\ref{def:p04-decidable-ce-set}.  This
+extension is used for computation-history and proof predicates.
+\index{decidable relation}
+\index{computably enumerable relation}
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p04-machine-decision-recognition}{Machine decision and recognition}
+Let \(A\subseteq\N\).  A Turing machine \emph{decides} \(A\) iff it halts
+on every unary input \(\operatorname{bin}(n)\), accepting exactly when
+\(n\in A\) and rejecting exactly when \(n\notin A\).  It \emph{recognizes}
+\(A\) iff it accepts exactly the inputs with \(n\in A\), with no halting
+requirement outside \(A\).  Such machines are respectively a \emph{decider}
+and a \emph{recognizer}.  These terms classify machine behavior, not sets or
+functions; both are needed in the next two results, and they differ because a
+recognizer may diverge outside \(A\).
+\index{Turing machine!decider}
+\index{Turing machine!recognizer}
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p04-machine-decidability}{proved=annex:p04-machines.2}{Machine form of decidability}
+A set \(A\subseteq\N\) is decidable iff some Turing machine decides \(A\).
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p04-ce-equivalences}{sketched=annex:p04-machines.3}{Equivalent forms of computable enumerability}
+For \(A\subseteq\N\), the following are equivalent:
+\begin{enumerate}
+  \item \(A\) is computably enumerable;
+  \item some Turing machine recognizes \(A\);
+  \item either \(A=\varnothing\), or \(A\) is the range of a computable
+        function \(e:\N\to\N\); and
+  \item there is a decidable relation \(R(x,k)\) such that
+        \(x\in A\) iff \(\exists k\,R(x,k)\).
+\end{enumerate}
+The empty-set exception in the range clause is necessary because a total
+function on \(\N\) has nonempty range.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p04-ce-complement}{proved=annex:p04-machines.4}{Complement criterion for decidability}
+A set \(A\subseteq\N\) is decidable iff both \(A\) and
+\(\N\setminus A\) are computably enumerable.
+\end{hbtheorem}
+
+% SOURCE ACCOUNTING -- RETIRED EXERCISE ex:turing-machines-01.
+% The source exercise on closure of decidable sets under complement, finite
+% union, and finite intersection, and of c.e. sets under finite union and
+% finite intersection, is deliberately not printed: this handbook has no
+% exercise layer.  Its warning not to assume c.e.-closure under complement is
+% retained substantively by thm:p04-ce-complement.

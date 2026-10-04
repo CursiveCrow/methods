@@ -1,0 +1,529 @@
+% ED26-SRC-036-014, Davis 2008 Physical Reasoning; assigned coordination filename.
+\chapter{Physical Action, Kinematics and Liquids}
+\label{sec:p16-kr2008-action-and-causation}
+
+Ernest Davis's physical-reasoning chapter concerns the laws and representations
+needed to understand actions in a geometrically and temporally continuous
+world \cite[pp.~597--620]{Davis2008PhysicalReasoning}.
+An action language can describe a change without explaining why an actual
+manipulator can perform it. The STRIPS blocks world does not even specify
+the swept positions of a block while it moves. Conversely, an accurate
+scientific simulator can be too specialized or detailed for a commonsense
+question. Davis's concern is a physical ontology and usable domain theory,
+not a replacement definition of nonmonotonic causal explanation or C+.
+
+\section{Physical assumptions, fluents and architectures}
+\label{sec:p16-phys-architectures}
+
+The chapter distinguishes significant-event/region reasoning from numerical
+discretization, and asks for inference in several directions, explanation,
+action, continuous geometry and interaction between models. It separates
+two defeasible commitments: closure of the relevant entities and mechanisms,
+and adequacy of an idealization. Knowing all objects does not justify making
+them rigid; making them rigid does not establish that all relevant forces
+are known. A qualitative answer can still depend on precise numerical data,
+as in the car stopping just short of a cliff
+\cite[pp.~597--600]{Davis2008PhysicalReasoning}.
+
+A Davis fluent is a time-varying entity. \(Temperature(o)\) and
+\(Place(o)\) are functions of time, while \(On(a,b)\) is Boolean-valued.
+A parameter is a numeric-valued fluent. Addition and differentiation act on
+the time functions, not on an isolated qualitative label.
+
+In the component architecture, a component has ports with parameters and
+algebraic/differential constraints. Nodes group connected ports and add
+domain-specific connection constraints. The component/connection structure
+is fixed; the parameters vary. For an electrical node, incoming currents
+sum to zero and port voltages agree. An agent can be an exogenous component
+which chooses an input waveform. Static, initial-value, signal-response and
+comparative problems use the same physical constraints differently
+\cite[pp.~600--601]{Davis2008PhysicalReasoning}.
+
+\begin{hbdefinition}{def:p16-phys-rc}{An actual construction from the source's port equations}
+The source resistor has \(InCurrent(a)=-InCurrent(b)\) and
+\(Voltage(b)-Voltage(a)=R\,InCurrent(b)\). Its capacitor has the same
+current balance and \(InCurrent(b)=C(Voltage(b)-Voltage(a))'\).
+Here \(R,C>0\) are constant. Connect a resistor from a chosen voltage
+\(u(t)\) to a capacitor node of voltage \(v(t)\), whose other port is
+at zero voltage. Orient the resistor's \(b\) port at \(u\) and its
+\(a\) port at \(v\). At their shared node, Kirchhoff current balance
+equates the resistor current \((u-v)/R\) with \(Cv'\).
+This ideal RC construction assumes no other branch current, sources or
+changing component characteristics.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p16-phys-rc}{proved=annex:p16.phys-rc}{Composed signal response with all boundary data stated}
+For continuous \(u\) on \([0,T]\), \(T>0\), and specified \(v(0)=v_0\), the
+port/node constraints give \(RCv'+v=u\) and their unique differentiable
+solution is
+\[
+ v(t)=e^{-t/(RC)}v_0+
+       \frac1{RC}\int_0^t e^{-(t-s)/(RC)}u(s)\,ds.
+\]
+An unspecified input waveform or initial capacitor voltage does not determine
+a unique response. The construction concerns this physical idealization;
+it is not a proof of completeness of a qualitative sign predictor.
+\end{hbtheorem}
+
+In the process architecture, a process lasts while its conditions hold
+and contributes to a derivative. An optional action takes place at an
+instant if feasible; a natural event must occur when its triggering conditions
+hold. Indirect parameter relations are distinct from direct influences.
+Davis retains the no-direct-and-indirect-overlap and acyclic-indirect-dependency
+restrictions of the process framework, already developed in the separate
+qualitative-process treatment \cite[pp.~601--602]{Davis2008PhysicalReasoning}.
+
+\begin{hbexample}{def:p16-phys-bucket}{The source's process/action/event distinction}
+A tap fills a bucket while open, positioned above it and while the bucket
+is not full. Other taps contribute positively and a leak negatively to
+the volume derivative. Turning on the tap is an agent's optional action,
+requiring proximity and a closed tap; it changes the tap's discrete state.
+The weak bucket's bottom falling out at half capacity is instead a mandatory
+event, changing the bucket into a cylinder and a pan.
+
+For a stipulated constant positive net rate \(r\), initial volume
+\(V_0<B/2\), and retained conditions, the pre-event history is
+\(V(t)=V_0+rt\); equality with half capacity occurs at
+\((B/2-V_0)/r\). Choosing to close the tap before this time changes the
+active process set; reaching the trigger is not a choice to postpone the
+event. Simultaneous interventions and event priority need separate semantics.
+The event also changes the object structure, not merely a value on a fixed
+component list. The source's envisionment can admit paths without physical
+realizations; it does not identify every graph path with an actual history.
+\end{hbexample}
+
+\section{Rigid shape, pose, place and configuration space}
+\label{sec:p16-phys-kinematics}
+
+The source kinematic theory preserves shape, requires continuous position
+and prevents interpenetration. It does not predict that a book stays on
+a shelf rather than floating away. Shape is the occupied region in a
+reference position; position is the rigid mapping from that frame; place
+is the resulting occupied region. Figure~14.1 distinguishes those objects
+\cite[pp.~603--605]{Davis2008PhysicalReasoning}.
+
+\begin{hbdefinition}{def:p16-phys-configuration}{A precise rigid-body configuration model}
+For the following constructions, take finitely many objects with nonempty
+compact, connected, regular closed shapes \(S_o\subseteq\mathbb R^d\),
+\(d=2\) or \(3\). Regular closed means closure of the interior.
+A pose is \((Q_o,b_o)\), where \(Q_o^TQ_o=I\), \(\det Q_o=1\),
+and \(b_o\in\mathbb R^d\). Proper rotations exclude reflections.
+The source functions have the explicit evaluation
+\[
+ Shape(o)=S_o,\quad Position(o)(t)=(Q_o(t),b_o(t)),\quad
+ Place(o)(t)=Q_o(t)S_o+b_o(t).
+\]
+A configuration is the tuple of poses. Its feasible set \(\mathcal F\)
+requires disjoint \emph{interiors} of occupied regions for distinct objects;
+contact at boundaries is allowed. Additional genuine joint constraints,
+if any, must be declared. Give pose tuples their ordinary matrix/vector
+topology, not discontinuous Euler-angle coordinates.
+\end{hbdefinition}
+
+Compactness is supplied here for the occupied-set continuity argument;
+it is not silently inferred from regular closedness. The source's rotation
+description, rather than arbitrary orthogonal reflections, motivates the
+proper-rotation convention. Likewise forbidding any intersection of closed
+regions would incorrectly forbid the contact needed by mechanics.
+
+\begin{hbtheorem}{thm:p16-phys-kinematics}{proved=annex:p16.phys-kinematics}{Rigid invariants and the exact attainable-history construction}
+Each pose preserves compactness, connectedness and regular closedness of a
+shape. A continuous pose history gives continuous occupied regions in
+Hausdorff distance. In this stated kinematic model, a configuration \(q_1\)
+is attainable from \(q_0\) exactly when a continuous path in
+\(\mathcal F\) joins them. Every such path constructs a full model
+history via the source's shape/position/place functions; every model history
+gives such a path. This is a path component, not automatically an ordinary
+connected component for arbitrary shape descriptions.
+\end{hbtheorem}
+
+The source's computational organization is to obtain the feasible
+configuration space from exact shape descriptions, select the initial
+attainable component, divide it into physically significant regions and
+analyze continuity/connectivity. Low-dimensional mechanisms make this useful;
+a few moving parts can nevertheless yield a difficult global geometry.
+No finite sign table or mere count of degrees of freedom proves that this
+construction terminates for arbitrary shapes.
+
+\section{Qualitative cells and physically feasible manipulator paths}
+\label{sec:p16-phys-cells-actions}
+
+\begin{hbtheorem}{thm:p16-phys-cells}{proved=annex:p16.phys-cells}{An exact finite cell-cover construction, with its premises}
+Suppose \(\mathcal F\) has a finite cover by nonempty path-connected
+subsets \(C_1,\ldots,C_n\), each closed relative to \(\mathcal F\).
+Construct a graph with an edge when \(C_i\cap C_j\ne\varnothing\).
+Two configurations are path-reachable exactly when cells containing them
+are connected in this graph. A graph path constructs a continuous physical
+path by joining intersection witnesses within each cell.
+
+If qualitative cells are disconnected, or edges only mean that closures
+touch at a point excluded from \(\mathcal F\), the conclusion can fail.
+Computing this exact cover and its intersections remains a geometric task.
+\end{hbtheorem}
+
+A qualitative category can accidentally unite two disconnected corridors.
+An edge entering one corridor and another edge leaving the other then gives
+a false qualitative route. Contact with an excluded collision configuration
+also does not establish a usable passage. These are why partition labels
+alone cannot establish global physical realizability.
+
+\begin{hbtheorem}{thm:p16-phys-action-lift}{proved=annex:p16.phys-action-lift}{The source action-feasibility requirement as a continuous lift}
+Fix the initial configuration and designate a subset of objects manipulable.
+A specified continuous pose motion \(m(t)\) for them is kinematically
+feasible exactly when it has a continuous lift \(q(t)\in\mathcal F\)
+from the initial configuration whose manipulable coordinates equal \(m(t)\).
+Feasibility of every individual frame does not suffice.
+
+For an explicit abstract constrained mechanism,
+\(\mathcal F=\{(x,0):x\le0\}\cup\{(x,1):x\ge0\}\), every
+specified \(x(t)=2t-1\), \(0\le t\le1\), has a feasible frame.
+But no continuous lift starts at \((-1,0)\) and performs the whole motion.
+The constraints, not a statistical intervention variable, define this example.
+\end{hbtheorem}
+
+Davis's projection problem specifies shapes, initial positions and motions
+of manipulable objects. Unmanipulated objects must accommodate those motions
+along a feasible path, if there is one. This does not choose their unique
+trajectory or explain forces. Figure~14.2's pinned gears are another
+important abstraction: remove pin/frame geometry and impose fixed centers.
+That constraint has to be justified by the concrete joint and planar-motion
+assumptions; permitting a three-dimensional lift can invalidate it.
+
+\section{Dynamics, contact history and the limits of a physical explanation}
+\label{sec:p16-phys-dynamics}
+
+Rigid dynamics adds Newton's force/momentum laws, contact normals, static
+and sliding friction, impact assumptions, gravity, fixed objects and chosen
+manipulator forces. Force closure is an assumption. Kinematics alone permits
+a book to leave its shelf along a collision-free upward path; statics can
+instead establish equilibrium. Davis distinguishes point-object prediction,
+statics and quasi-statics, rather than calling all of them rigid dynamics
+\cite[pp.~605--608]{Davis2008PhysicalReasoning}.
+
+In quasi-statics momentum is neglected relative to driving and dissipative
+forces. This can support sensorless pushing or qualitative mechanical
+analysis, but it is not arbitrary slow-time simulation. The simplification
+``objects move only when necessary'' needs the relevant contact, force and
+kinematic restrictions. Prescribing a force, prescribing a motion and using
+feedback-dependent compliance are different descriptions of manipulation.
+The chapter does not supply a universal high-level language for them or an
+unconditional existence/uniqueness theorem for all rigid-body impacts.
+Its discussion of unsettled collision laws is part of the 2008 source's
+assessment, not a claim about today's state of mechanics.
+
+\begin{hbdefinition}{def:p16-phys-nail}{A contact-force model for Figure 14.3}
+Idealize the vertical nail by two symmetric, equal-height side contacts.
+Each supplies a horizontal normal force of specified magnitude \(N\ge0\).
+The forces oppose and their torques cancel. Upward static friction at each
+contact is between zero and \(\mu N\), where \(\mu\ge0\).
+Gravity acts through the central mass, with weight \(mg>0\); no other
+forces act. This is a stated static contact model, not a prediction of
+\(N\) from position and velocity alone.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p16-phys-nail}{proved=annex:p16.phys-nail}{Same geometry, different force boundary conditions}
+A static equilibrium of this model exists exactly when \(mg\le2\mu N\).
+Choosing equal friction forces \(mg/2\) balances both vertical force and
+torque when this inequality holds. With zero normal force no such equilibrium
+exists; when \(\mu>0\), sufficiently preloaded contacts can hold the same
+positioned nail.
+Thus its geometry and zero initial velocity do not specify this static outcome.
+\end{hbtheorem}
+
+Davis's example distinguishes a nail placed in a hole from one driven into
+it. The latter has substantial normal/frictional force information not
+encoded by its visible pose. The static construction makes that omitted
+boundary datum explicit; it does not infer every preload or collision force.
+
+The source's funnel argument excludes upward escape by energy, a stable
+interior rest by geometry, and perpetual internal motion by dissipation.
+Those are three separate obligations. The marble must fit the outlet;
+adhesion, jamming, other supports or an external drive change the problem.
+Moreover, energy decreasing by itself does not establish finite exit.
+The following supplies a precise sufficient progress condition rather than
+claiming that the source's short prose is a complete general dynamics proof
+\cite[pp.~608,615, referral~9]{Davis2008PhysicalReasoning}.
+
+\begin{hbtheorem}{thm:p16-phys-exit}{proved=annex:p16.phys-exit}{A full bounded energy-and-progress argument}
+Let a jointly continuous forward flow \(\Phi_t\) describe a metric
+phase-space model, with \(\Phi_0\) the identity and
+\(\Phi_{t+s}=\Phi_t\circ\Phi_s\) for nonnegative times,
+and let \(K\) be a compact candidate trap. Let a continuous energy \(E\)
+have a continuous derivative along the flow, \(D\le0\). If there is
+no nonempty forward-invariant subset of \(K\cap\{D=0\}\), no trajectory
+can remain in \(K\) forever. If an exit face has potential energy strictly
+greater than initial total energy, with total energy at least that potential,
+the trajectory cannot exit through that face.
+
+For the smooth damped model \(q'=v,\ v'=-\nabla U(q)-\gamma v\),
+\(\gamma>0\), energy \(\|v\|^2/2+U(q)\) has
+\(D=-\gamma\|v\|^2\). If \(K\) contains no zero-velocity
+equilibrium \(\nabla U(q)=0\), it satisfies the progress condition.
+This is a continuous-flow result, not a theorem covering arbitrary nonsmooth
+impact laws. The abstract exit system \(x'=-x\), \(0<x\le1\),
+with exit at zero and energy \(x^2\), decreases energy and has no interior
+stationary point yet does not exit at finite time.
+\end{hbtheorem}
+
+Pseudo-objects in Davis's logical work are geometric entities carried with
+an object, such as a doughnut's hole or a center of mass. They permit
+statements about a passage or material support which a bare object name
+does not express. A hole is not another solid to which noninterpenetration
+is applied. The complete funnel axiomatization referred to by the
+chapter is a distinct original work; the bounded progress proof above does
+not silently close it.
+
+\section{Liquids: regions, chunks, particles and moving control boundaries}
+\label{sec:p16-phys-liquid-ontology}
+
+Liquids lack a fixed rigid shape and are not naturally individuated into
+permanent object-sized bodies. Davis contrasts three complementary
+representations. Region quantities use \(Volume(l,r)\) and oriented
+\(Flow(l,b)\). Material chunks use \(Place(c)\), which can be disconnected.
+Particle/molecular descriptions follow many small units and need an interaction
+model producing liquid behavior. A material reference-time description uses
+\(LiquidTrajectory(X,L)\) for the later position of the liquid particle
+at \(X\) initially. A material chunk and a spatial observation region
+are not the same kind of entity
+\cite[pp.~608--610]{Davis2008PhysicalReasoning}.
+
+The source's liquid kinematics assumes no mixing/phase change,
+incompressibility, continuous motion and noninterpenetration with solids
+or other liquids. It preserves each material quantity's volume. A moving
+container can be used as the region argument, but the boundary frame must
+then enter the flux definition.
+
+\begin{hbdefinition}{def:p16-phys-liquid-balance}{A smooth material/control-region balance with explicit frame}
+For this analytic portion take compact liquid and control regions \(L(t)\)
+and \(r(t)\), with compact twice-continuously-differentiable boundaries
+meeting transversely. Assume their
+motion is differentiable, with liquid boundary velocity \(v\), control
+boundary velocity \(w\), and a continuously differentiable liquid velocity
+field extending to its boundary with \(\nabla\cdot v=0\).
+Normals on \(\partial r\) point outward. Liquid volume in the control
+region is \(V(t)=\operatorname{vol}(L(t)\cap r(t))\); its relative
+outflow is
+\[
+ F_{rel}(t)=\int_{\partial r(t)\cap L(t)}(v-w)\cdot n_r\,dA.
+\]
+Smoothness here includes the local boundary-layer differentiability used
+in the annex; intersections have codimension two, not coincident faces.
+Contact/topology-change cases require their appropriate piecewise treatment.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p16-phys-liquid-balance}{proved=annex:p16.phys-liquid-balance}{Relative outflow and material conservation}
+At that scope \(V'=-F_{rel}\); reversing orientation reverses outflow.
+For a fixed control region \(w=0\), this is the laboratory-frame balance.
+A material liquid region preserves volume. For a moving control region,
+using laboratory flux without boundary motion can give a false derivative.
+For example, in a unit-cross-section one-dimensional model, stationary
+liquid \([0,10]\) and control interval \([t-1,t+1]\), \(-1<t<1\),
+have liquid volume \(t+1\), although laboratory liquid velocity is zero.
+\end{hbtheorem}
+
+The source's \(Volume\)/\(Flow\) equation therefore needs ``Flow''
+to mean outward flux \emph{relative to the specified moving surface},
+or its region must be fixed. Conservation of a chunk's total volume does
+not make its volume in every spatial region constant. Nor does a region-
+flow representation by itself determine a unique fluid dynamics.
+
+\section{Hydrostatic levels, capacity and qualitative liquid histories}
+\label{sec:p16-phys-liquid-statics}
+
+Ignore wetting and surface tension and take one connected body of liquid
+at rest under uniform gravity, with constant density \(\rho>0\).
+Free surfaces are horizontal. Common open air makes their heights equal;
+different trapped-gas pressures can make them unequal. Figure~14.4's
+surfaces A and B meet the atmosphere, while C is pressed down by enclosed
+gas. Omitting that gas loses a necessary physical entity.
+
+\begin{hbtheorem}{thm:p16-phys-liquid-level}{proved=annex:p16.phys-liquid-level}{The actual pressure/height and capacity conditions}
+On a connected open fluid interior, assume pressure is continuously
+differentiable inside and continuous up to the relevant free surfaces,
+and assume the hydrostatic law
+\(\nabla p=-\rho g\,e_z\), \(g>0\). Surfaces at heights
+\(h_i,h_j\) with gas pressures \(p_i,p_j\) satisfy
+\[
+ h_i-h_j=\frac{p_j-p_i}{\rho g}.
+\]
+Equal gas pressures give equal heights; higher pressure lowers its surface.
+For an open watertight container with no trapped gas or inaccessible cavity,
+let \(A(h)=\int_{h_0}^{h}a(z)\,dz\) be its below-level capacity,
+where \(h_0<h_r\) are finite and \(a\ge0\) is integrable and has positive integral on every
+nonempty height interval up to the lowest opening \(h_r\).
+Every \(0\le V\le A(h_r)\) has exactly one level \(A(h)=V\).
+If \(V>A(h_r)\), no wholly contained hydrostatic state satisfies these
+premises. Applying this to slow tilting still needs the quasi-static
+assumption; inertia, sloshing or capillarity can invalidate that application.
+\end{hbtheorem}
+
+The source's tilted-cup rule is a capacity comparison, unlike the geometry
+needed to tip a rigid object from a box. A slowly moving piston can sometimes
+preserve hydrostatic constraints as liquid/gas moves; spilling is a case
+where that simple quasi-static maintenance becomes impossible. Kim's liquid/
+mechanical model also represents one-way-valve motion caused by liquid
+\cite[pp.~608--611]{Davis2008PhysicalReasoning}.
+
+Hayes' history ontology partitions liquid quantities and their space--time
+histories using spatial distribution and motion categories. Davis's table
+has fifteen nonempty categories. Its examples and question marks are retained
+below; blank cells are not a proof that all unlisted physical phenomena
+are impossible.
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{p{.19\linewidth}p{.22\linewidth}p{.22\linewidth}p{.22\linewidth}}
+ & Lazy still & Lazy moving & Energetic moving\\\hline
+Bulk on surface & Wet surface & Flow down a surface, e.g. sloping roof
+ & Waves lapping a shore (?); jet hitting a surface (?)\\
+Bulk in space & Contained in a container & Flow along a channel, e.g. river
+ & Pumped along a pipeline\\
+Bulk unsupported & -- & Falling column, e.g. pouring from a jug
+ & Waterspout, fountain, hose jet\\
+Divided on surface & Dew, drops on a surface & -- & --\\
+Divided in space & Mist filling a valley & Mist rolling down a valley
+ & Steam or mist blown along a tube\\
+Divided unsupported & Mist, cloud & Rain, shower & Spray, splash, driving rain
+\end{tabular}
+\caption{Hayes' liquid-history categories as surveyed in Davis's Table 14.1.}
+\label{tab:p16-phys-liquid-histories}
+\end{table}
+
+A falling history has downward outflow at its bottom face; a pool's faces
+other than its upper horizontal one meet solid histories. Those spatial
+and temporal face relations are representation obligations, not just state
+names. Davis explicitly says that the proposed liquid-history axiomatization
+was not completed and that its intended spatial language was insufficient.
+No complete liquid simulator or exhaustive formal classification theorem
+is inferred from the table \cite[pp.~610--611]{Davis2008PhysicalReasoning}.
+
+\section{Abstraction is a physical commitment, not a guarantee of easier reasoning}
+\label{sec:p16-phys-abstraction}
+
+Davis separates several relationships between physical theories: added
+constraints, added entities, limiting cases, greater numerical precision,
+discretization into selected states/events, smoothing discrete phenomena,
+and radically different conceptualizations such as wave/particle accounts.
+These are not all the same logical weakening. Ignoring thermal expansion
+or approximating a ball by a point can remove a decisive distinction.
+Conversely a stronger static or frictional theory can simplify the actual
+question by proving that nothing moves
+\cite[pp.~611--614]{Davis2008PhysicalReasoning}.
+
+\begin{hbtheorem}{thm:p16-phys-abstraction}{proved=annex:p16.phys-abstraction}{What weakening a theory or shrinking an object preserves}
+For same-vocabulary theories \(U=V\cup A\), every \(U\)-model is
+a \(V\)-model; \(V\)-consequences remain \(U\)-consequences.
+Consistency with \(V\) need not imply consistency with \(U\).
+This ordering alone makes no assertion about computational difficulty or
+physical validity of the added constraints.
+
+For a disk of radius \(r>0\) in a planar straight corridor of width
+\(w>0\), between fixed parallel walls, its center can be feasible inside
+the corridor exactly when \(w\ge2r\). Replacing the disk by a point
+admits a corridor path for every \(w>0\), including \(w<2r\) where
+the original disk has no feasible center. At equality contact is allowed
+kinematically; friction or force limits remain different questions.
+\end{hbtheorem}
+
+The source's loosely meshed gear train has two coordinated paths, for
+opposite driving directions, separated by a narrow tube of free-play
+configurations. Collapsing that tube to a central path can be useful for
+one task and wrong when reversal/backlash matters. Treating a table as one
+object is valid only while its internal joints remain fixed; it fails when
+the table breaks. A hierarchy can also share subparts, defeating an
+assumption that high-level components are independent.
+
+The pinned-gear abstraction is computationally straightforward when all
+later reasoning uses its computed constrained configuration space. In a
+logical theory, the generated constraint must either be reified with a
+semantics or added as an axiom justified from the concrete system.
+Combining it with the original geometry remains a consistency obligation.
+It cannot simply be asserted because the downstream solver handles it.
+
+\begin{hbdefinition}{def:p16-phys-braking}{A quantitative margin for the source's qualitative cliff question}
+For this worked idealization, treat the car's relevant front position as
+a point initially zero, moving toward an edge at distance \(L>0\).
+Braking gives constant deceleration \(a>0\) until speed reaches zero,
+then holds it stationary, with no new driving force. Initial speed
+\(v_0\ge0\) and deceleration are independently permitted to vary over
+\([v_{min},v_{max}]\) and \([a_{min},a_{max}]\), with
+\(0\le v_{min}\le v_{max}<\infty\) and
+\(0<a_{min}\le a_{max}<\infty\). This excludes reaction delay, slope variation, finite
+body geometry and changes of traction. Those are not inferred negligible.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p16-phys-braking}{proved=annex:p16.phys-braking}{Exactly when the qualitative answer is determined by those bounds}
+The stopping distance is \(d=v_0^2/(2a)\), and the full range over
+the specified parameter rectangle is
+\[
+ d_{min}=\frac{v_{min}^2}{2a_{max}},\qquad
+ d_{max}=\frac{v_{max}^2}{2a_{min}}.
+\]
+Stopping strictly before the edge is guaranteed iff \(d_{max}<L\),
+and possible iff \(d_{min}<L\). Passing the edge is guaranteed iff
+\(d_{min}>L\), and possible iff \(d_{max}>L\). If
+\(d_{min}<L<d_{max}\), both outcomes are realizable. Equality is
+a boundary case, not a proof of either strict outcome. Correlations among
+the parameters can invalidate these rectangle extrema.
+\end{hbtheorem}
+
+This is why a qualitative output does not eliminate the need for numerical
+information near a threshold. It is an analysis of the declared model,
+not a driving recommendation or a prediction that a real car will crash.
+
+\section{The source's historical and representational comparisons}
+\label{sec:p16-phys-history}
+
+Davis's historical landmarks are the qualitative-program literature,
+Hayes' Naive Physics Manifesto/liquid ontology, and the 1987 configuration-
+space work of Faltings and Joskowicz. The qualitative-calculus development
+belongs to Chapter 9; its original and reprinted source versions are not
+silently merged with later QSIM accounts.
+
+The logic-based branch includes Schmolze's actions/events/processes/containers
+and liquid granules; Sandewall's combination of nonmonotonic logic with
+continuous motion; the distinct egg-cracking axiomatizations of Lifschitz,
+Morgenstern and Shanahan; and Bennett and colleagues' geometric treatment of
+rigid motion. Davis's cutting work distinguishes an object which changes
+shape and splits from material chunks which persist until penetrated by the
+blade. These are different persistence/individuation choices, not variant
+spellings of one object ontology. Hayes' cluster programme and Davis's later
+microworld methodology are also distinct
+\cite[pp.~614--615]{Davis2008PhysicalReasoning}.
+
+The mechanics referrals distinguish exact geometric simulation from qualitative
+configuration analysis. CLOCK constructs an exact configuration space before
+abstraction and force-based qualitative prediction. Stahovich, Davis and
+Shrobe use planar one-degree-of-freedom objects, negligible inertia and
+inelastic collisions; the input qc-space contains pairwise feasible/contact
+regions. Davis explicitly notes that its proposed extraction from an informal
+sketch is not specified clearly. Their simulation is not a complete algorithm
+for arbitrary three-dimensional rigid bodies or arbitrary input images
+\cite[pp.~615--616]{Davis2008PhysicalReasoning}.
+
+The multiple-model referrals address reformulation and approximation.
+The other-domain survey includes particle/hybrid liquid models, qualitative
+magnetic-flux reasoning and narrowly specialized scientific systems.
+Its Project Halo discussion distinguishes held-out answer/explanation
+evaluation from evidence of general representational coverage: a timeless
+chemical equation need not represent the temporal replacement of reactants
+by products. Davis's criticism is a 2008 source assessment, not an independent
+current evaluation of those systems. Bobrow's reprint volume, Weld/de Kleer's
+readings and Kuipers' 1994 book are distinct source works
+\cite[pp.~616--620]{Davis2008PhysicalReasoning}.
+
+\begin{hbmethod}{def:p16-phys-consultation}{A physical-action modeling specification}
+Identify the actual bodies, material quantities, boundaries and agents.
+State closure and idealization separately. Decide whether the task needs
+kinematics, equilibrium, quasi-statics or a full dynamic model. For motion,
+construct the relevant configuration constraints and a continuous path, not
+just endpoint feasibility. For dynamics, record contact/preload, force and
+impact assumptions. For liquids, distinguish material chunks from moving
+control regions and use the proper flux frame and gas/pressure information.
+When changing abstraction, identify the discarded distinction and check its
+effect on the query; do not equate a quotient graph or state classification
+with all physically realizable trajectories.
+\end{hbmethod}
+
+\index{physical reasoning}\index{configuration space}\index{kinematics}
+\index{liquid!ontology}\index{liquid!moving boundary}\index{abstraction!physical}

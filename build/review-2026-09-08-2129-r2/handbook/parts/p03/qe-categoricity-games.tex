@@ -1,0 +1,451 @@
+%% parts/p03/qe-categoricity-games.tex --- P3 quantifier elimination,
+%% categoricity, back-and-forth, and Ehrenfeucht--Fraisse games.
+%%
+%% Migration accounting for source/formal-logic-reference.tex 7150--7493:
+%% every definition, method, result, warning, and worked example is retained.
+%% The ACF categoricity example is promoted to a cited result (S-011).
+%% Exercise qe-categoricity-01 is absorbed by thm:p03-dlo-countable-categorical;
+%% exercise 02 is retired after its QE-to-inclusion argument is instantiated
+%% in the DLO corollary and its both-models hypothesis is retained explicitly;
+%% exercise 03 is retired as a redundant practice problem after the general
+%% back-and-forth method and two applications have been retained.
+%% Repairs R-015, R-016, and R-030 are preserved in annex:p3.qe.1--.5.
+%% Apparatus: A-040, A-041, A-122.  Depth: D-P4-001 and stub D-P4-006.
+
+\chapter[QE, Categoricity, and Games]{Quantifier Elimination, Categoricity, and Games}
+\label{sec:p03-qe-categoricity-games}
+
+\section{Quantifier elimination and model completeness}
+\label{sec:p03-quantifier-elimination}
+
+\begin{hbdefinition}{def:p03-quantifier-elimination}{Quantifier elimination}
+Let (T) be a theory in a signature \(\Lang\).  The theory \emph{eliminates
+quantifiers} if, for every \(\Lang\)-formula \(\varphi(\bar x)\), there is a
+quantifier-free \(\Lang\)-formula \(\psi(\bar x)\) such that
+\[
+  T\entails\forall\bar x\,
+  \bigl(\varphi(\bar x)\leftrightarrow\psi(\bar x)\bigr).
+\]
+Thus the equivalence is relative to the models of \(T\), not to all
+\(\Lang\)-structures.
+\index{quantifier elimination}
+\end{hbdefinition}
+
+\begin{hbmethod}{def:p03-one-quantifier-reduction}{One-quantifier reduction}
+It suffices to eliminate the displayed quantifier from every formula
+\(\exists y\,\theta(y,\bar x)\) with quantifier-free \(\theta\).  Put Boolean
+combinations into a convenient normal form, distribute the existential over
+finite disjunctions, replace universal quantifiers by negated existentials,
+rename bound variables, and induct outward through the formula.  The method
+reduces a global elimination theorem to an explicit analysis of one
+quantifier; it is not itself an eliminating algorithm until that analysis is
+given for the theory at hand.
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p03-dlo-qe}{cited=Marker2002}{Quantifier elimination for dense linear orders}
+Let \(\mathsf{DLO}\) be the first-order theory of nonempty dense linear orders
+without endpoints in the signature \(\{<\}\).  Then \(\mathsf{DLO}\)
+eliminates quantifiers.
+\end{hbtheorem}
+
+For one conjunction of order literals, terms involving the eliminated
+variable supply lower bounds, upper bounds, equalities, and disequalities.  An
+equality permits substitution.  With no equality, density and the absence of
+endpoints reduce existence to finite compatibility among the bounds and the
+forbidden parameter values.  The cited proof verifies every literal case and
+then applies the one-quantifier method \cite{Marker2002}.
+
+\begin{hbexample}{def:p03-dlo-one-quantifier}{A one-quantifier DLO witness}
+Modulo \(\mathsf{DLO}\),
+\[
+  \exists y\,(x<y\land y<z)\quad\leftrightarrow\quad x<z.
+\]
+Transitivity gives the forward implication, and density gives the reverse
+implication.
+\end{hbexample}
+
+\begin{hbdefinition}{def:p03-theory-completeness}{Three completeness notions}
+A theory \(T\) is \emph{deductively complete} if for every sentence \(\sigma\)
+in its signature either \(T\derives\sigma\) or \(T\derives\neg\sigma\).  It is
+\emph{semantically complete} if either \(T\entails\sigma\) or
+\(T\entails\neg\sigma\) for every such \(\sigma\).  Soundness and semantic
+completeness of the fixed first-order calculus identify these two properties.
+
+The theory \(T\) is \emph{model complete} if every embedding between models
+of \(T\) is elementary.  This third property concerns formulas with parameters
+along arbitrary embeddings; it is neither of the preceding decision
+properties.
+\index{model complete theory}\index{deductively complete theory}
+\index{semantically complete theory}
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p03-model-completeness-reduction}{proved=annex:p3.qe.1}{Reduction of model completeness to inclusions}
+Let \(T\) be a theory such that \(\mathcal M\preccurlyeq\mathcal N\) whenever
+\(\mathcal M\subseteq\mathcal N\) are both models of \(T\).  Then every
+embedding between models of \(T\) is elementary, so \(T\) is model complete.
+\end{hblemma}
+
+The conclusion quantifies over arbitrary embeddings.  Factoring an embedding
+through its image is therefore load-bearing; this is the repaired reduction
+R-015, not a restriction of model completeness to literal inclusions.
+
+\begin{hbcorollary}{thm:p03-dlo-complete-model-complete}{sketched=annex:p3.qe.2}{DLO completeness and model completeness}
+The theory \(\mathsf{DLO}\) is deductively complete (equivalently,
+semantically complete) and model complete.
+\end{hbcorollary}
+
+\begin{hbtheorem}{thm:p03-acfp-qe}{cited=Marker2002}{\(\mathsf{ACF}_p\) quantifier elimination}
+For each fixed characteristic \(p\), where \(p=0\) or \(p\) is prime, the
+theory \(\mathsf{ACF}_p\) of algebraically closed fields of characteristic
+\(p\) eliminates quantifiers in the ring language
+\(\{0,1,+,-,\mathbin{\cdot}\}\).
+\end{hbtheorem}
+
+The characteristic is part of the theory: the union customarily called
+``ACF'' without a fixed characteristic is not complete.  Real closed fields,
+by contrast, have literal elimination in the \emph{ordered}-ring language;
+Presburger arithmetic needs congruence or divisibility predicates before an
+elimination theorem is literal.  These language boundaries are made explicit
+in the two catalogs below \cite{Marker2002,Presburger1929}.
+
+\begin{hbdefinition}{def:p03-definable-skolem-functions}{Definable Skolem functions}
+A theory \(T\) has \emph{definable Skolem functions} if, for every formula
+\(\varphi(\bar x,y)\), some formula \(\theta(\bar x,y)\) satisfies
+\[
+ T\entails\forall\bar x\Bigl(
+   \exists y\,\varphi(\bar x,y)\to
+   \exists!y\,[\varphi(\bar x,y)\land\theta(\bar x,y)]\Bigr).
+\]
+This is a property of a theory: \(\theta\) uniformly chooses a definable
+witness on every nonempty fiber.  It is separated here because neither
+quantifier elimination nor model completeness alone supplies such a choice;
+the next catalog uses the distinction.
+\index{definable Skolem functions}
+\end{hbdefinition}
+
+For the last complexity cell of Table~\ref{tab:p03-qe-catalog},
+\(\mathrm{STA}(s,t,a)\) denotes the class accepted by alternating Turing
+machines using space \(O(s(n))\), time \(O(t(n))\), and at most \(O(a(n))\)
+alternations; an asterisk leaves that resource unrestricted.  This
+metalinguistic abbreviation is needed to report Kozen's exact Boolean-algebra
+classification and is not a synonym for \(\mathsf{PSPACE}\).
+
+\begin{landscape}
+\begingroup\tiny\setlength{\tabcolsep}{3pt}
+\begin{longtable}{@{}p{1.15in}p{1.05in}p{.62in}p{.65in}p{.95in}p{2.64in}@{}}
+\caption{First-order theories master table (apparatus A-040).  ``Complete''
+means deductively complete in the displayed language; conditional negative
+entries expose their consistency assumptions.}
+\label{tab:p03-first-order-theories}\\
+\toprule
+Theory and exact language & Complete? & Decidable? & Literal QE? & Categoricity summary & Exact scope or caveat \\
+\midrule\endfirsthead
+\toprule
+Theory and exact language & Complete? & Decidable? & Literal QE? & Categoricity summary & Exact scope or caveat \\
+\midrule\endhead
+\(\mathsf{DLO}\) in \(\{<\}\) & Yes & Yes & Yes & \(\aleph_0\)-categorical & Not categorical in any uncountable cardinal. \\
+\addlinespace
+\(\mathsf{ACF}_p\), fixed \(p=0\) or prime, in \(\{0,1,+,-,\mathbin{\cdot}\}\) & Yes & Yes & Yes & Uncountably categorical & Categorical in every uncountable cardinal; not \(\aleph_0\)-categorical. \\
+\addlinespace
+\(\mathsf{RCF}\) in \(\{0,1,+,-,\mathbin{\cdot},<\}\) & Yes & Yes & Yes & No infinite categoricity & The order symbol is essential to the literal QE entry. \\
+\addlinespace
+\(\operatorname{Th}(\N;0,1,+,<)\) (Presburger arithmetic) & Yes & Yes & No & No infinite categoricity & QE holds after adding all congruence, equivalently divisibility, predicates. \\
+\addlinespace
+\(\operatorname{Th}(\N;S)\) in \(\{S\}\) & Yes & Yes & No & Uncountably categorical & Not \(\aleph_0\)-categorical; naming the unique initial point yields QE. \\
+\addlinespace
+Atomless Boolean algebras in \(\{0,1,\wedge,\vee,\neg\}\) & Yes & Yes & Yes & \(\aleph_0\)-categorical & Not categorical in uncountable cardinals. \\
+\addlinespace
+\(\mathsf{PA}\) in \(\{0,S,+,\times\}\) & No, if consistent & No, if consistent & No, if consistent & No infinite categoricity, if consistent & Effective axiomatizability and arithmetic strength activate incompleteness. \\
+\addlinespace
+True arithmetic \(\operatorname{Th}(\N;0,1,+,\times,<)\) & Yes, by definition & No; not c.e. & No & No infinite categoricity & It has nonstandard elementary equivalents; completeness is not categoricity. \\
+\addlinespace
+\(\mathsf{ZFC}\) in \(\{\in\}\) & No, if consistent & No, if consistent & No, if consistent & No infinite categoricity, conditional on consistency & The row presupposes that the consistency/model condition is met. \\
+\bottomrule
+\end{longtable}
+\endgroup
+\end{landscape}
+
+The DLO, fixed-characteristic ACF, and RCF classifications are standard
+consequences of their elimination theorems; the arithmetic negative rows use
+the effective and incompleteness boundaries developed elsewhere in the
+handbook.  Sources for the table include
+  \cite{Marker2002,Steinitz1910,Hodges1993,Presburger1929,Shoenfield1967,Godel1931,
+FerranteRackoff1979,Kozen1980}.  No row infers categoricity merely from
+completeness.
+
+\begin{landscape}
+\begingroup\tiny\setlength{\tabcolsep}{2pt}
+\begin{longtable}{@{}p{.65in}p{1.10in}p{1.20in}p{.60in}p{.70in}p{.80in}p{2.10in}@{}}
+\caption{Quantifier-elimination catalog (apparatus A-041).  An em dash in the
+definable-choice column records that this entry deliberately makes no claim;
+it does not mean failure.}
+\label{tab:p03-qe-catalog}\\
+\toprule
+Theory & Base language and literal QE & Eliminating expansion or witness & Model complete? & Definable Skolem functions? & Complete / decidable? & Calibrated complexity statement \\
+\midrule\endfirsthead
+\toprule
+Theory & Base language and literal QE & Eliminating expansion or witness & Model complete? & Definable Skolem functions? & Complete / decidable? & Calibrated complexity statement \\
+\midrule\endhead
+\(\mathsf{DLO}\) & \(\{<\}\): yes & Finite lower/upper-bound order types & Yes & No: automorphisms fixing \(x\) prevent a definable choice above \(x\) & Yes / yes & Validity is \(\mathsf{PSPACE}\)-complete \cite{Kozen2006}. \\
+\addlinespace
+\(\mathsf{ACF}_p\) & Ring language, fixed \(p\): yes & Algebraic-geometric elimination; resultants witness the procedure & Yes & No: conjugate roots cannot be uniformly selected & Yes / yes & Grigor'ev's bound is polynomial in \(L^{n^{2a+1}}\), parameterized by formula length \(L\), variables \(n\), and alternations \(a\); no unqualified polynomial-time claim \cite{Grigoriev1987}. \\
+\addlinespace
+\(\mathsf{RCF}\) & Ordered-ring language: yes; pure-ring language: no literal claim & Sign conditions and Tarski--Seidenberg projection & Yes & Yes: semialgebraic definable choice & Yes / yes & Some QE outputs require doubly exponential time and space; this is not an exact decision-class classification \cite{DavenportHeintz1988}. \\
+\addlinespace
+Presburger & \(\{0,1,+,<\}\): no & Add congruence/divisibility predicates; Cooper-style elimination & Yes & --- & Yes / yes & Fischer--Rabin give a doubly exponential lower bound in formula length in their computation model \cite{FischerRabin1974}. \\
+\addlinespace
+\(\operatorname{Th}(\N;S)\) & \(\{S\}\): no & Add the initial-point constant \(0\); predecessor existence becomes \(x\ne0\) & No in the base language; yes after naming \(0\) & --- & Yes / yes & The one-successor theory in \(\{S\}\) is \(\mathsf{PSPACE}\)-complete \cite{FerranteRackoff1979}. \\
+\addlinespace
+Atomless Boolean algebras & \(\{0,1,\wedge,\vee,\neg\}\): yes & Split finite Boolean combinations into their Boolean atoms & Yes & --- & Yes / yes & Complete under log-space reductions for \(\bigcup_{c<\omega}\mathrm{STA}(*,2^{cn},n)\), including the atomless theory; do not relabel this class \(\mathsf{PSPACE}\) \cite{Kozen1980}. \\
+\bottomrule
+\end{longtable}
+\endgroup
+\end{landscape}
+
+The shift embedding \(n\mapsto n+1\) maps \((\N,S)\) onto a substructure
+whose first element has no predecessor internally but does have one in the
+ambient structure; hence the bare successor theory is not model complete.
+Naming \(0\) blocks that embedding, and quantifier elimination in
+\(\{0,S\}\) gives model completeness.  The three em dashes in the choice
+column keep that independent property open rather than manufacturing it from
+QE.
+
+\section{Categoricity and back-and-forth}
+\label{sec:p03-categoricity-back-and-forth}
+
+\begin{hbdefinition}{def:p03-categoricity}{Categoricity in a cardinal}
+Let \(T\) be a theory and let \(\kappa\) be an infinite cardinal.  The theory
+\(T\) is \emph{\(\kappa\)-categorical} if it has a model of cardinality
+\(\kappa\) and any two models of \(T\) of cardinality \(\kappa\) are
+isomorphic.
+\index{categoricity}
+\end{hbdefinition}
+
+\begin{hbwarning}{def:p03-categoricity-cardinal}{Categoricity is cardinal-specific}
+Categoricity in one cardinal is not categoricity in every cardinal.  The
+L\"owenheim--Skolem theorems produce models in several infinite cardinalities;
+they do not preclude uniqueness separately inside one cardinal.  For example,
+the pure-equality theory asserting at least \(n\) elements for every
+\(n\geq1\) is categorical in every infinite cardinal.  Transfer results such
+as Morley's theorem require their own hypotheses.
+\end{hbwarning}
+
+\begin{hbdefinition}{def:p03-finite-partial-isomorphism}{Finite partial isomorphism}
+A \emph{finite partial isomorphism} from \(\mathcal M\) to \(\mathcal N\) is a
+finite injective map \(f:A\to N\), with \(A\subseteq M\), that preserves and
+reflects every atomic formula on tuples from \(A\).
+\index{partial isomorphism!finite}
+\end{hbdefinition}
+
+\begin{hbmethod}{def:p03-back-and-forth}{Back-and-forth}
+For countable structures, construct an isomorphism as the union of an
+increasing sequence of finite partial isomorphisms.  A ``forth'' step puts the
+next enumerated element of the first structure into the domain; a ``back'' step
+puts the next element of the second into the range.  The name denotes this
+alternating construction, not a new map or relation.  Unlike the one-sided
+extension property called homogeneity, the two directions force totality and
+surjectivity together.
+\index{back-and-forth method}
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p03-back-and-forth-test}{proved=annex:p3.qe.3}{Back-and-forth test}
+Let \(\mathcal M\) and \(\mathcal N\) be countable structures.  Suppose
+\(\mathcal F\) is a nonempty set of finite partial isomorphisms from
+\(\mathcal M\) to \(\mathcal N\) such that, for every \(f\in\mathcal F\):
+\begin{enumerate}
+  \item for every \(a\in M\), some \(g\in\mathcal F\) extends \(f\) and has
+        \(a\) in its domain; and
+  \item for every \(b\in N\), some \(g\in\mathcal F\) extends \(f\) and has
+        \(b\) in its range.
+\end{enumerate}
+Then, for \emph{every} starting map \(f_0\in\mathcal F\), there is an
+isomorphism \(h:\mathcal M\to\mathcal N\) with \(f_0\subseteq h\), extension
+taken as inclusion of sets of ordered pairs.  In particular,
+\(\mathcal M\cong\mathcal N\).
+\end{hbtheorem}
+
+The universal extension clause in the conclusion is the R-016 repair.  It is
+stronger than the bare assertion that some isomorphism exists and is required
+by the next corollary.
+
+\begin{hbcorollary}{thm:p03-countable-saturated-automorphism}{proved=annex:p3.qe.4}{Finite elementary self-maps of countable saturated structures}
+Assume the Axiom of Choice in the ambient set theory.  If \(\mathcal M\) is
+countable and \(\aleph_0\)-saturated, every finite elementary map from
+\(\mathcal M\) to itself extends to an automorphism of \(\mathcal M\).
+\end{hbcorollary}
+
+\begin{hbtheorem}{thm:p03-dlo-countable-categorical}{proved=annex:p3.qe.5}{Countable categoricity of dense linear order}
+Any two countable dense linear orders without endpoints are isomorphic.
+Consequently, \(\mathsf{DLO}\) is \(\aleph_0\)-categorical.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p03-acfp-uncountable-categorical}{cited=Steinitz1910}{Uncountable categoricity of algebraically closed fields}
+Fix \(p=0\) or a prime.  For every uncountable cardinal \(\kappa\), the theory
+\(\mathsf{ACF}_p\) is \(\kappa\)-categorical.  It is not
+\(\aleph_0\)-categorical.
+\end{hbtheorem}
+
+By the Steinitz classification, an algebraically closed field of fixed
+characteristic and uncountable cardinality \(\kappa\) has transcendence degree
+\(\kappa\) over its prime field, so equal-cardinality transcendence bases give
+isomorphic algebraic closures.  In the countable cardinal, distinct finite or
+countable transcendence degrees give nonisomorphic models
+\cite{Steinitz1910,Marker2002}.
+
+\begin{hbtheorem}{thm:p03-ryll-nardzewski}{cited=RyllNardzewski1959}{Ryll--Nardzewski theorem}
+Let \(T\) be a deductively complete theory in a countable signature with an
+infinite model.  The following are equivalent:
+\begin{enumerate}
+  \item \(T\) is \(\aleph_0\)-categorical;
+  \item for every \(n\geq1\), the type space \(S_n(T)\) is finite;
+  \item for every \(n\geq1\), every complete \(n\)-type over
+        \(\varnothing\) is isolated; and
+  \item for every \(n\geq1\), only finitely many formulas with free variables
+        among \(x_1,\ldots,x_n\) exist up to equivalence modulo \(T\).
+\end{enumerate}
+\end{hbtheorem}
+
+In this setting the unique countable model is prime.  It is also
+\(\aleph_0\)-saturated.  The theorem's independent formulations and that
+consequence are treated in
+\cite{RyllNardzewski1959,Engeler1959,Svenonius1959,Hodges1993,Marker2002}.
+
+\begin{hbtheorem}{thm:p03-morley-categoricity}{cited=Marker2002}{Morley's categoricity theorem}
+Let \(T\) be a deductively complete theory in a countable signature.  If
+\(T\) is categorical in one uncountable cardinal, then it is categorical in
+every uncountable cardinal.
+\end{hbtheorem}
+
+\begin{hbwarning}{def:p03-completeness-versus-categoricity}{Theory completeness versus categoricity}
+A deductively complete theory may have many nonisomorphic models of the same
+cardinality.  Completeness says that the models agree on sentences;
+\(\kappa\)-categoricity says that the models of the specified size are
+isomorphic.
+\end{hbwarning}
+
+\hbstub{D-P4-006: a statement-level entry for Vaught's two-cardinal theorem,
+including its exact two-cardinal hypotheses and a calibrated method sketch,
+is deferred because this Phase-4 row is priority could; new-content row
+N-a-005 remains open.}
+
+\section{Ehrenfeucht--Fra\"iss\'e games}
+\label{sec:p03-ef-games}
+
+\begin{hbdefinition}{def:p03-quantifier-rank}{Quantifier rank and bounded agreement}
+The \emph{quantifier rank} \(\operatorname{qr}(\varphi)\) is defined
+recursively: atomic formulas have rank \(0\); negation preserves rank; a
+binary Boolean connective takes the maximum rank of its arguments; and
+\(\exists x\,\varphi\) and \(\forall x\,\varphi\) have rank
+\(\operatorname{qr}(\varphi)+1\).  Two structures \emph{agree through rank
+\(k\)} if they satisfy the same first-order sentences of quantifier rank at
+most \(k\).  This metalinguistic relation is needed to state the finite-round
+game theorem and is weaker than elementary equivalence, which quantifies over
+sentences of every finite rank.
+\index{quantifier rank}
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p03-ef-game}{Ehrenfeucht--Fra\"iss\'e game}
+Fix a finite relational signature \(\tau\), two \(\tau\)-structures
+\(\mathcal A,\mathcal B\), and \(k\in\N\).  In each of \(k\) rounds,
+Spoiler chooses an element in either structure and Duplicator responds with an
+element of the other.  Record every pair as \(a_i\mapsto b_i\), regardless of
+which structure Spoiler chose from.  Duplicator wins exactly when the resulting
+pairing is a finite partial isomorphism: it respects repetitions/equality and
+preserves and reflects every relation symbol on selected tuples.  The finite
+relational vocabulary is fixed; function symbols require a separate
+relationalization or closure formulation.
+\index{Ehrenfeucht--Fraisse game@Ehrenfeucht--Fra\"iss\'e game}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p03-ef}{cited=Ehrenfeucht1961}{Ehrenfeucht--Fra\"iss\'e theorem}
+For structures \(\mathcal A\) and \(\mathcal B\) in the same fixed finite
+relational signature, Duplicator has a winning strategy in the \(k\)-round
+Ehrenfeucht--Fra\"iss\'e game if and only if \(\mathcal A\) and
+\(\mathcal B\) agree through rank \(k\).
+\end{hbtheorem}
+
+The theorem converts syntactic rank into a combinatorial invariant; it does
+not turn one fixed finite game into full elementary equivalence.  The game,
+rank induction, and its finite-model applications are developed in
+\cite{Ehrenfeucht1961,Libkin2004}.
+
+\begin{hbcorollary}{thm:p03-ef-inexpressibility}{cited=Libkin2004}{Game criterion}
+Let \(\mathcal C\) be an isomorphism-closed class of finite structures in one
+fixed finite relational signature.  If, for every \(k\), there are finite
+\(\mathcal A_k\in\mathcal C\) and \(\mathcal B_k\notin\mathcal C\) on which
+Duplicator wins the \(k\)-round game, then no first-order sentence defines
+\(\mathcal C\) on finite structures.
+\end{hbcorollary}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  x=1.35cm,y=1.25cm,
+  point/.style={circle,draw,minimum size=6.5mm,inner sep=1pt,font=\small},
+  chosen/.style={circle,draw,double,minimum size=7.5mm,inner sep=1pt,font=\small},
+  order/.style={-{Latex[length=2mm]}},
+  pair/.style={dashed,thick}
+]
+  \node[point]  (a0) at (0,1.7) {\(a_0\)};
+  \node[chosen] (a1) at (1,1.7) {\(a_1\)};
+  \node[chosen] (a2) at (2,1.7) {\(a_2\)};
+  \draw[order] (a0) -- (a1);
+  \draw[order] (a1) -- (a2);
+  \node[left=5mm of a0,font=\small] {\(\mathcal A\)};
+
+  \node[point]  (b0) at (-.5,0) {\(b_0\)};
+  \node[chosen] (b1) at (.5,0) {\(b_1\)};
+  \node[point]  (b2) at (1.5,0) {\(b_2\)};
+  \node[chosen] (b3) at (2.5,0) {\(b_3\)};
+  \draw[order] (b0) -- (b1);
+  \draw[order] (b1) -- (b2);
+  \draw[order] (b2) -- (b3);
+  \node[left=5mm of b0,font=\small] {\(\mathcal B\)};
+
+  \draw[pair] (a1) -- node[left,font=\footnotesize] {round 1} (b1);
+  \draw[pair] (a2) -- node[right,font=\footnotesize] {round 2} (b3);
+\end{tikzpicture}
+\caption{A two-round EF position on the three- and four-element linear orders
+(apparatus A-122).  Spoiler first chose \(a_1\), answered by \(b_1\), and
+then chose \(b_3\), answered by \(a_2\).  The selected pairing preserves
+equality and order.  This board illustrates one play of a fixed-round strategy;
+it is not the uniform family needed for the parity result.}
+\label{fig:p03-ef-board}
+\end{figure}
+
+For the full two-round strategy in Figure~\ref{fig:p03-ef-board}, Duplicator
+answers an endpoint by the corresponding endpoint and an interior first move
+by an interior point.  On round two, the response repeats the paired element
+when Spoiler repeats a move, and otherwise lies on the same side of the first
+selected point.  With only two selected points this preserves their complete
+order type.
+
+\begin{hbexample}{def:p03-ef-parity}{Finite order parity is not first-order definable}
+For \(k\geq1\), compare the linear orders of sizes \(2^k\) and \(2^k+1\).
+With \(r\) rounds remaining, Duplicator maintains that the selected pairing is
+order-preserving and every pair of corresponding gaps either has the same size
+below \(2^r-1\), or both gaps have size at least \(2^r-1\).  Initially the
+invariant holds.  A repeated selection receives its existing mate.  In equal
+small gaps Duplicator copies the exact offset.
+In two large gaps, if Spoiler leaves fewer than \(2^{r-1}-1\) points on one
+side, Duplicator copies that smaller side; otherwise Duplicator chooses a point
+leaving at least \(2^{r-1}-1\) points on both sides.  Thus the invariant
+survives, and at \(r=0\) the selected map preserves equality and order.  The
+\(k=0\) game is vacuous.  Hence every rank has an even/odd pair that agrees
+through that rank, so Corollary~\ref{thm:p03-ef-inexpressibility} shows that no
+first-order sentence defines even cardinality on finite linear orders.
+\end{hbexample}
+
+\begin{hbexample}{def:p03-ef-connectivity}{Finite graph connectivity is not first-order definable}
+For each \(k\), let \(C_m\) denote the simple undirected cycle on \(m\)
+vertices, and compare \(C_{2m}\) with the disjoint union \(C_m\sqcup C_m\)
+for sufficiently large \(m\).  The cited EF argument matches the bounded
+neighborhoods of selected vertices: with \(r\) rounds left it preserves all
+distances below \(2^r\), while points outside those neighborhoods are answered
+outside the corresponding neighborhoods.  For sufficiently large \(m\), the
+responses remain available through \(k\) rounds.  One graph is connected and
+the other is not, so connectivity is not first-order definable on finite
+graphs.  The full invariant and response lemma are cited from
+\cite{Libkin2004}; the preceding parity example supplies the fully expanded
+strategy pattern used by this entry.
+\end{hbexample}

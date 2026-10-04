@@ -1,0 +1,239 @@
+\section{Simple types: substitution, reduction, and termination}
+
+\begin{annexitem}{annex:p7.stlc.substitution}{thm:p07-stlc-substitution}{Simultaneous typing substitution}
+\begin{proof}
+First establish the context facts used in the induction. Enlarging a context
+by fresh declarations preserves a variable judgment by membership. It
+preserves an application by applying the induction hypothesis to its two
+premises. At an abstraction, rename the bound variable away from the added
+declarations, apply the induction hypothesis to its body, and reapply the
+abstraction rule. Reordering a context has the same three cases: membership
+is unchanged, application uses its two premises, and abstraction retains
+the fresh final declaration for its body. The renaming used here is justified
+by the identical induction: replace the designated variable in the membership
+case, propagate through an application, and rename an intervening binder
+fresh before propagating through an abstraction. Thus the argument does not
+assume a context rule absent from the registered calculus.
+
+Now induct on the given derivation of \(\Theta\vdash M:\alpha\), using
+the abbreviated turnstile only in this proof. If its last rule is a variable
+rule, \(M=x\), the required derivation is exactly the hypothesis for
+\(\rho(x)\). If it is application, the premises derive
+\(P:\beta\mathbin{\to_{\mathrm{ty}}}\alpha\) and \(Q:\beta\).
+Induction gives both substituted judgments in \(\Delta\), and application
+derives \(P\rho\,Q\rho=(PQ)\rho:\alpha\).
+
+For an abstraction, write \(M=\lambda y{:}\beta.P\), with premise
+\(\Theta,y:\beta\vdash P:\gamma\) and
+\(\alpha=\beta\mathbin{\to_{\mathrm{ty}}}\gamma\).
+Choose \(y\) fresh for \(\Delta\), the substitution domain, and the free
+variables of every image. In the target context \(\Delta,y:\beta\), the
+old images retain their types by weakening, and the additional substitution
+image of \(y\) is \(y\) itself. Apply induction with this extended
+substitution. The result is \(\Delta,y:\beta\vdash P\rho:\gamma\).
+Abstraction discharges the added declaration and gives
+\(\Delta\vdash\lambda y{:}\beta.P\rho:\alpha\), exactly the
+capture-avoiding substitution into \(M\). These exhaust the typing rules.
+For the single-variable consequence, use the identity images for the
+variables of \(\Theta\), and the specified image \(N\) for \(x\).
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p7.stlc.subject-reduction}{thm:p07-stlc-subject-reduction}{Subject reduction for simple types}
+\begin{proof}
+For a contraction at the root, typing inversion for application and
+abstraction gives
+\[
+ \Theta,x:\beta\vdash_{\mathsf{STLC}}P:\alpha,
+ \qquad \Theta\vdash_{\mathsf{STLC}}Q:\beta
+\]
+for \((\lambda x{:}\beta.P)Q\). The substitution lemma gives the
+judgment \(\Theta\vdash_{\mathsf{STLC}}P[Q/x]:\alpha\) for its
+contractum. Inversion is valid because the last typing rule is determined
+by the outer constructor, and equality of arrow types requires equality of
+their argument and result types.
+
+For an arbitrary position, induct on the number of enclosing constructors.
+There is no contraction inside a variable. Inside an abstraction, apply
+induction in its context extended by the bound variable and reapply the
+abstraction rule. Inside the function of an application, induction preserves
+the function's entire arrow type while the argument judgment is unchanged.
+Inside its argument, induction preserves the argument type while the function
+judgment is unchanged. Reapply application in both cases. Root, abstraction,
+and these two application cases are every clause of compatible reduction.
+Iteration proves the finite-reduction assertion, including the empty sequence.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p7.stlc.strong-normalization}{thm:p07-stlc-strong-normalization}{Strong normalization by reducibility}
+\begin{proof}
+Use the raw-term predicates of Definition~\ref{def:p07-stlc-reducibility}.
+All term equalities in this proof respect alpha-equivalence. There are
+finitely many redex positions in a finite term, and contracting a position
+determines one reduct modulo alpha-equivalence. For a strongly normalizing
+term \(M\), let \(h(M)\) be the greatest length of a reduction starting
+at \(M\). This is a finite natural number. Indeed, the reduction tree is
+finitely branching. If it had paths of unbounded length, some immediate
+successor would also have unbounded remaining path lengths; repeatedly choose
+the first such successor in the finite position order. This constructs an
+infinite reduction, a contradiction. Consequently
+\[
+ M\to_\beta M'\quad\Longrightarrow\quad h(M')<h(M)
+ \qquad(M\in\mathsf{SN}_\beta).
+\]
+Every reduct and every subterm of a strongly normalizing term is strongly
+normalizing: an infinite sequence from either would extend to, or lift into,
+one from the original term.
+
+\paragraph{Substitution and reduction.}
+We will use two elementary facts on raw terms:
+\[
+ P\to_\beta P'\ \Longrightarrow\ P\rho\to_\beta P'\rho,
+ \qquad
+ U\to_\beta U'\ \Longrightarrow\ P[U/x]\to_\beta^*P[U'/x].
+ \tag{S}
+\]
+For the first, rename the binder of a contracted redex fresh for the
+substitution and its images. Substituting into
+\((\lambda y{:}\gamma.A)B\) leaves a beta redex with contractum
+\(A\rho[B\rho/y]\). This is alpha-equal to \((A[B/y])\rho\).
+The equality follows by induction on \(A\): variables distinguish \(y\)
+from the other variables, applications distribute both substitutions to
+both children, and abstractions use a binder fresh for both substitutions.
+Induction on the context surrounding the redex proves the first fact in
+all positions, with a genuine contraction still present after substitution.
+For the second fact, reduce the designated occurrence inside each copy of
+\(U\) inserted for a free occurrence of \(x\). There are finitely many
+such disjoint copies. If there are none, use zero steps. Formally, induction
+on \(P\) uses the given reduction at \(P=x\), reflexivity at other
+variables, concatenation inside the two application positions, and reduction
+inside a freshly renamed abstraction. The same facts apply to finite
+sequences by iteration.
+
+\paragraph{The three closure properties.}
+For every type \(\alpha\), prove simultaneously:
+\begin{enumerate}
+ \item if \(M\in\mathcal R_\alpha\), then \(M\in\mathsf{SN}_\beta\);
+ \item if \(M\in\mathcal R_\alpha\) and \(M\to_\beta M'\), then
+       \(M'\in\mathcal R_\alpha\);
+ \item if \(M\) is neutral and every immediate reduct of \(M\) is in
+       \(\mathcal R_\alpha\), then \(M\in\mathcal R_\alpha\).
+\end{enumerate}
+At a base type the first is the definition. The second holds because an
+infinite sequence from a successor would extend to one from \(M\).
+For the third, any infinite sequence must begin with an immediate successor,
+contradicting that successor's strong normalization. In particular, a variable,
+being neutral with no reducts, belongs to the base predicate.
+
+Let the type be \(\alpha\mathbin{\to_{\mathrm{ty}}}\beta\), and suppose
+all three properties proved at its proper subtypes. To prove the first, take
+a variable \(z\). Property 3 at \(\alpha\) puts \(z\) in
+\(\mathcal R_\alpha\), so \(Mz\in\mathcal R_\beta\). Property 1 at
+\(\beta\) makes \(Mz\) strongly normalizing. An infinite reduction of
+\(M\) would remain an infinite reduction in the function position of
+\(Mz\), so \(M\) is strongly normalizing.
+
+For property 2, let \(U\in\mathcal R_\alpha\). Then
+\(MU\in\mathcal R_\beta\) and \(MU\to_\beta M'U\).
+Property 2 at \(\beta\) puts \(M'U\) in \(\mathcal R_\beta\).
+As this holds for every such \(U\), the arrow definition gives the result.
+
+For property 3, fix neutral \(M\) whose immediate reducts lie in the arrow
+predicate. For every \(U\in\mathcal R_\alpha\), prove
+\(MU\in\mathcal R_\beta\) by induction on \(h(U)\), which exists by
+property 1 at \(\alpha\). A reduct of \(MU\) is either \(M'U\), which
+is in \(\mathcal R_\beta\) by the assumption on \(M'\), or \(MU'\).
+In the latter case property 2 at \(\alpha\) gives
+\(U'\in\mathcal R_\alpha\), and the smaller height allows the induction
+hypothesis. There is no root beta contraction, since \(M\) is not an
+abstraction. The application \(MU\) is neutral, so property 3 at \(\beta\)
+places it in \(\mathcal R_\beta\). This proves property 3 at the arrow
+type and completes the induction on types. Variables therefore belong to
+\(\mathcal R_\alpha\) at every type. Property 2 also holds for finite
+reductions, by iteration.
+
+\paragraph{Controlled beta expansion.}
+For any type \(\beta\), if \(P,U\in\mathsf{SN}_\beta\) and
+\(P[U/x]\in\mathcal R_\beta\), then
+\[
+       (\lambda x{:}\alpha.P)U\in\mathcal R_\beta.       \tag{B}
+\]
+Here the annotation \(\alpha\) is any fixed simple type; raw-term membership
+does not presume a typing derivation. Induct on \(h(P)+h(U)\).
+The root reduct is \(P[U/x]\), in the required predicate by assumption.
+A reduction in \(P\) gives \((\lambda x{:}\alpha.P')U\).
+The first fact (S) and property 2 give
+\(P'[U/x]\in\mathcal R_\beta\); the strictly smaller height permits
+induction. A reduction in \(U\) gives \((\lambda x{:}\alpha.P)U'\).
+The second fact (S), including its zero-copy case, and finite reduction
+closure give \(P[U'/x]\in\mathcal R_\beta\); induction again applies.
+These are all immediate reducts. The entire application is neutral, so
+property 3 places it in \(\mathcal R_\beta\), proving (B).
+
+It follows that if \(P[U/x]\in\mathcal R_\beta\) for every
+\(U\in\mathcal R_\alpha\), then
+\(\lambda x{:}\alpha.P\in
+ \mathcal R_{\alpha\mathbin{\to_{\mathrm{ty}}}\beta}\).
+To justify the strong-normalization premise needed in (B), choose a variable
+\(z\) fresh for \(P\). It belongs to \(\mathcal R_\alpha\), so
+\(P[z/x]\in\mathcal R_\beta\subseteq\mathsf{SN}_\beta\).
+By the first fact (S), any infinite reduction of \(P\) would give an
+infinite reduction of \(P[z/x]\). Thus \(P\) is strongly normalizing.
+Every \(U\in\mathcal R_\alpha\) is strongly normalizing by property 1,
+and (B) now applies separately to every such argument. This proves the
+abstraction property without assuming that an arbitrary beta expansion
+preserves strong normalization.
+
+\paragraph{Fundamental lemma.}
+If \(\Theta\vdash_{\mathsf{STLC}}M:\alpha\) and a simultaneous raw
+substitution \(\rho\) sends every \(x:\gamma\) in \(\Theta\) to a
+member of \(\mathcal R_\gamma\), then \(M\rho\in\mathcal R_\alpha\).
+Induct on the typing derivation. At a variable the assertion is its
+substitution hypothesis. At application, the two induction hypotheses
+give membership in the arrow and argument predicates; their application
+belongs to the result predicate by its definition.
+
+At an abstraction \(\lambda y{:}\gamma.P\), first rename \(y\) fresh
+for the substitution domain and all images. For any
+\(U\in\mathcal R_\gamma\), extend the substitution with \(y\mapsto U\).
+The induction hypothesis for the premise gives
+\(P\rho[U/y]\in\mathcal R_\delta\), where \(\delta\) is the body type.
+The equality with the extended simultaneous substitution follows from the
+freshness condition; induction on the body gives the variable, application,
+and freshly renamed abstraction cases. The abstraction property just proved
+therefore places \(\lambda y{:}\gamma.P\rho\) in
+\(\mathcal R_{\gamma\mathbin{\to_{\mathrm{ty}}}\delta}\).
+This is the required substituted abstraction. All typing cases are covered.
+
+Finally choose the identity substitution on the finite context. Every
+variable belongs to the predicate indexed by its assigned type, so the
+fundamental lemma gives \(M\in\mathcal R_\alpha\). Property 1 yields
+strong normalization, for open as well as closed terms. A maximal reduction
+cannot be infinite and cannot stop at a reducible term by its definition.
+It therefore ends in a normal term, whose type is preserved by
+Theorem~\ref{thm:p07-stlc-subject-reduction}.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p7.stlc.inert-constants}{thm:p07-stlc-inert-constants}{Typed inert constants}
+\begin{proof}
+A finite input term uses only finitely many constants. Replace each different
+constant occurring in it by a different fresh variable assigned that constant's
+declared simple type. Choose these variables fresh for every variable in the
+term and its typing context. Induction on the extended typing derivation gives
+a derivation of the replaced term in the ordinary calculus with these fresh
+declarations added: a constant leaf becomes a variable leaf; original variable
+leaves use weakening; application and abstraction retain their rules, with
+binders renamed fresh when necessary.
+
+The replacement commutes with capture-avoiding substitution, by induction on
+the substituted term. Hence every beta contraction in the original term gives
+one beta contraction at the same position in the replaced term. Constants
+are inert, so there is no further reduction case to consider. An infinite
+beta sequence of the original term would thus produce an infinite sequence
+from a term typable in the ordinary calculus, contradicting strong
+normalization. The reasoning uses only the finitely many constants in the
+input. Beta reduction can duplicate or erase them but cannot introduce a
+new constant, so an infinite constant signature causes no additional case.
+\end{proof}
+\end{annexitem}

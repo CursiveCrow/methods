@@ -1,0 +1,244 @@
+\section{Normal forms}
+\label{sec:prop-syntax-semantics-04}
+
+\begin{definition}[Propositional literal, clause, and formula interpretation]
+A \emph{propositional literal} is a propositional variable or the negation of
+a propositional variable.  A \emph{clause} is a finite set of propositional
+literals.  Thus clause equality is set equality: order and repeated
+occurrences are not part of a clause.
+
+To map this set object back to the formula language, put
+\[
+ \operatorname{code}(p_n)=2n,
+ \qquad
+ \operatorname{code}(\neg p_n)=2n+1.
+\]
+For a clause \(C\), let \(k=\abs{C}\); when \(k>0\), list its members as
+\(L_1,\ldots,L_k\) in strictly increasing code order and define, by downward
+recursion,
+\[
+ D_k\defeq L_k,
+ \qquad
+ D_i\defeq(L_i\lor D_{i+1})\quad(1\leq i<k).
+\]
+Then define
+\[
+ \operatorname{form}_{\CPL}(C)\defeq
+ \begin{cases}
+  \bottom,&C=\varnothing,\\
+  D_1,&C\ne\varnothing.
+ \end{cases}
+\]
+This is an exact metalinguistic function from clauses to
+\(\Fm_{\CPL}\), not a new formula constructor.  A valuation \(v\)
+\emph{satisfies} \(C\) iff
+\(v\entails\operatorname{form}_{\CPL}(C)\).  In particular, the empty
+clause is false under every valuation.
+\end{definition}
+
+\begin{definition}[Negation, conjunctive, and disjunctive normal form]
+A formula is in \emph{negation normal form} iff it is built from literals and
+\(\bottom,\topv\) using only \(\land\) and \(\lor\).  It is in
+\emph{conjunctive normal form} iff it is \(\topv\), the empty conjunction,
+or there are clauses \(C_1,\ldots,C_m\), with \(m>0\), such that it is
+\(N_1\), where the formula sequence \(N_m,\ldots,N_1\) is defined by
+\[
+ N_m\defeq\operatorname{form}_{\CPL}(C_m),
+ \qquad
+ N_i\defeq
+ \bigl(\operatorname{form}_{\CPL}(C_i)\land N_{i+1}\bigr)
+ \quad(1\leq i<m).
+\]
+Thus a conjunctive-normal-form formula is a right-associated finite
+conjunction of the formula interpretations of clauses.  In every finite
+conjunction and finite disjunction used in this chapter, the empty conjunction
+is \(\topv\) and the empty disjunction is \(\bottom\).  A formula is in
+\emph{disjunctive normal form} iff it is a finite disjunction of finite
+conjunctions of literals under these conventions.
+\end{definition}
+
+\begin{lemma}[Satisfaction of clauses and of clause conjunctions]
+\label{lem:prop-clause-satisfaction}
+Let \(v\) be a valuation.
+\begin{enumerate}
+  \item For every clause \(C\):
+        \(v\entails\operatorname{form}_{\CPL}(C)\) iff
+        \(v\entails L\) for at least one literal \(L\in C\).
+  \item For all clauses \(C_1,\ldots,C_m\) with \(m>0\), and the formulas
+        \(N_m,\ldots,N_1\) built from them as in the definition of
+        conjunctive normal form: \(v\entails N_1\) iff
+        \(v\entails\operatorname{form}_{\CPL}(C_j)\) for every \(j\) with
+        \(1\leq j\leq m\).
+\end{enumerate}
+\end{lemma}
+\begin{proof}
+For 1, if \(C=\varnothing\), then
+\(\operatorname{form}_{\CPL}(C)=\bottom\), which no valuation satisfies,
+and \(C\) has no member, so both sides fail.  Otherwise let
+\(k=\abs{C}>0\), list \(C\) in strictly increasing code order as
+\(L_1,\ldots,L_k\), and let \(D_k,\ldots,D_1\) be the formulas of the
+clause-interpretation recursion.  By downward induction along that
+recursion, \(v\entails D_i\) iff \(v\entails L_j\) for some \(j\) with
+\(i\leq j\leq k\): the base case \(D_k=L_k\) is immediate, and the case
+\(D_i=(L_i\lor D_{i+1})\) follows from the recursive truth clause for
+\(\lor\) together with the induction hypothesis.  Taking \(i=1\) and
+\(\operatorname{form}_{\CPL}(C)=D_1\) proves 1.
+
+For 2, by downward induction along the recursion defining
+\(N_m,\ldots,N_1\), \(v\entails N_i\) iff
+\(v\entails\operatorname{form}_{\CPL}(C_j)\) for every \(j\) with
+\(i\leq j\leq m\): the base case \(N_m=\operatorname{form}_{\CPL}(C_m)\)
+is immediate, and the case
+\(N_i=(\operatorname{form}_{\CPL}(C_i)\land N_{i+1})\) follows from the
+recursive truth clause for \(\land\) together with the induction
+hypothesis.  Taking \(i=1\) proves 2.
+\end{proof}
+
+\begin{theorem}[Negation normal form]
+Every propositional formula is logically equivalent to a formula in negation
+normal form.
+\end{theorem}
+\begin{proof}
+First eliminate every occurrence of \(\to\) using
+\(\varphi\to\psi\equiv\neg\varphi\lor\psi\).  Proceed by structural
+induction through the resulting formula.  Double negations are removed, and a
+negation immediately above a binary connective is moved inward by
+\[
+ \neg(\varphi\land\psi)\equiv\neg\varphi\lor\neg\psi,
+ \qquad
+ \neg(\varphi\lor\psi)\equiv\neg\varphi\land\neg\psi.
+\]
+The base cases are variables, their negations, \(\bottom\), and \(\topv\).
+Each displayed replacement decreases the number of connectives lying below a
+negation, so the process terminates.  Every replacement is checked by the
+recursive truth clauses and therefore preserves logical equivalence.
+\end{proof}
+
+\begin{theorem}[Conjunctive and disjunctive normal forms]
+\label{thm:prop-normal-forms}
+Every propositional formula is logically equivalent to a formula in
+disjunctive normal form and to a formula in conjunctive normal form.
+\end{theorem}
+\begin{proof}
+Let \(p_1,\ldots,p_n\) be the variables occurring in \(\varphi\), listed in
+increasing index order.  In this
+proof only, a \emph{valuation on} a finite variable set is a function from
+that set to \(\B\); the recursive truth clauses apply verbatim to formulas
+whose variables lie in the set, and \cref{lem:prop-coincidence} identifies
+satisfaction under such a function with satisfaction under any total
+valuation extending it.  For each
+valuation \(v\) on these variables define
+\[
+  \delta_v\defeq\bigwedge_{i=1}^{n}\ell_i^v,
+  \qquad
+  \ell_i^v\defeq
+  \begin{cases}
+    p_i,&v(p_i)=\True,\\
+    \neg p_i,&v(p_i)=\False.
+  \end{cases}
+\]
+A valuation on the empty variable set is the empty function, and when
+\(n=0\) the displayed conjunction is \(\topv\) by the preceding convention.
+A valuation \(w\) satisfies \(\delta_v\) iff \(w(p_i)=v(p_i)\) for every
+\(i\).  Let \(V_{\varphi}\) be the finite set of valuations on
+\(p_1,\ldots,p_n\) that satisfy \(\varphi\).  Order these valuations
+lexicographically by
+\((v(p_1),\ldots,v(p_n))\), with \(\False<\True\), enumerate the resulting
+order as \(v_1,\ldots,v_m\), and put
+\[
+  D_{\varphi}\defeq\bigvee_{j=1}^{m}\delta_{v_j}.
+\]
+If \(V_{\varphi}=\varnothing\), then \(m=0\) and this disjunction is
+\(\bottom\).  By the
+coincidence lemma, an arbitrary valuation satisfies \(D_{\varphi}\) iff
+it satisfies \(\varphi\).  Hence \(D_{\varphi}\) is the required
+disjunctive normal form.
+
+For the conjunctive normal form, construct dually.  For each valuation
+\(v\) on \(p_1,\ldots,p_n\) put
+\[
+  \bar\ell^{\,v}_i\defeq
+  \begin{cases}
+    \neg p_i,&v(p_i)=\True,\\
+    p_i,&v(p_i)=\False,
+  \end{cases}
+  \qquad
+  K_v\defeq\set{\bar\ell^{\,v}_1,\ldots,\bar\ell^{\,v}_n}.
+\]
+The coding in the clause-interpretation definition gives the variable of
+index \(i\) the code \(2i\) and its negation the code \(2i+1\), both
+strictly increasing in \(i\).  The enumeration \(p_1,\ldots,p_n\) is in
+increasing index order---the indices need not form an initial
+segment---so any literal on \(p_j\) has smaller code than any literal on
+\(p_k\) for \(j<k\): if their indices are \(i_j<i_k\), then
+\(2i_j+1<2i_k\).  The listing of \(K_v\) in strictly increasing code order
+is therefore exactly \(\bar\ell^{\,v}_1,\ldots,\bar\ell^{\,v}_n\), and
+\(\gamma_v\defeq\operatorname{form}_{\CPL}(K_v)\) requires no
+re-ordering.  A valuation \(w\) falsifies \(\bar\ell^{\,v}_i\) iff
+\(w(p_i)=v(p_i)\), so \cref{lem:prop-clause-satisfaction}(1) gives:
+\(w\) falsifies \(\gamma_v\) iff \(w(p_i)=v(p_i)\) for every
+\(i\leq n\).
+
+Let \(W_\varphi\) be the set of valuations on \(p_1,\ldots,p_n\) that
+falsify \(\varphi\), enumerated in the lexicographic order fixed above as
+\(v_1,\ldots,v_m\).  Put \(C_\varphi\defeq\topv\) if \(m=0\); otherwise
+put \(C_\varphi\defeq N_1\), where \(N_m,\ldots,N_1\) are built from the
+clauses \(C_j\defeq K_{v_j}\) by the recursion in the definition of
+conjunctive normal form.  In every case \(C_\varphi\) satisfies that
+definition verbatim, the degenerate cases included: for valid
+\(\varphi\), \(m=0\) and \(C_\varphi=\topv\); for variable-free true
+\(\varphi\), \(n=m=0\) and again \(C_\varphi=\topv\); for variable-free
+false \(\varphi\), \(n=0\) and \(m=1\) with \(v_1\) the empty valuation,
+so \(K_{v_1}=\varnothing\) and
+\(C_\varphi=\operatorname{form}_{\CPL}(\varnothing)=\bottom\), the
+conjunctive normal form whose single clause is empty.
+
+Let \(w\) be an arbitrary valuation and \(w_0\) its restriction to
+\(\set{p_1,\ldots,p_n}\).  Suppose \(m>0\).  By
+\cref{lem:prop-clause-satisfaction}(2) and (1), \(w\) satisfies
+\(C_\varphi\) iff for every \(j\leq m\) it satisfies some literal of
+\(K_{v_j}\), iff \(w_0\ne v_j\) for every \(j\leq m\), iff
+\(w_0\notin W_\varphi\), iff \(w_0\) satisfies \(\varphi\), iff, by the
+coincidence lemma, \(w\) satisfies \(\varphi\).  If \(m=0\), every
+valuation on the variable set satisfies \(\varphi\), so by the
+coincidence lemma every valuation satisfies both \(\varphi\) and
+\(C_\varphi=\topv\).  Hence \(C_\varphi\) is the required conjunctive
+normal form, obtained from the definitional recursions,
+\cref{lem:prop-clause-satisfaction}, and the coincidence lemma alone.
+\end{proof}
+
+For the satisfiability-preserving transformation with fresh variables,
+see Section~\ref{sec:p02-tseitin-transformation} and
+Theorem~\ref{thm:p02-tseitin}.
+
+An \(n\)-ary \emph{truth-functional connective} is a connective symbol
+interpreted by a fixed function \(\B^n\to\B\).  For a set \(C\) of
+truth-functional connectives, the \emph{formulas over \(C\)} are generated
+by the propositional variables together with one formation clause per member
+of \(C\), and the recursive truth clause of each member applies its
+interpreting function to the values of the immediate subformulas.  For a
+formula \(\varphi\) whose variables are among \(p_1,\ldots,p_n\), the
+\emph{truth function of \(\varphi\) in those variables} is the function
+\(f_\varphi:\B^n\to\B\) with
+\(f_\varphi(a_1,\ldots,a_n)\defeq\widehat v(\varphi)\) for any valuation
+\(v\) with \(v(p_i)=a_i\) for each \(i\); this is well defined by
+\cref{lem:prop-coincidence}.
+
+\begin{definition}[Functional completeness]
+A set \(C\) of truth-functional connectives is \emph{functionally complete}
+iff, for every \(n\in\N\) and every function \(f:\B^n\to\B\), some formula
+built from variables \(p_1,\ldots,p_n\) and connectives in \(C\) has truth
+function \(f\) in those variables.
+\end{definition}
+
+\begin{theorem}[A functionally complete basis]
+The set \(\set{\neg,\land,\bottom}\) is functionally complete.
+\end{theorem}
+\begin{proof}
+Given \(f:\B^n\to\B\), form the disjunctive normal form whose conjunctions of
+literals correspond exactly to the inputs \(a\in\B^n\) for which
+\(f(a)=\True\), as in \cref{thm:prop-normal-forms}.  Replace each occurrence
+of \(\alpha\lor\beta\) by
+\(\neg(\neg\alpha\land\neg\beta)\).  The empty disjunction is \(\bottom\).
+The resulting formula uses only \(\neg,\land,\bottom\) and computes \(f\).
+\end{proof}

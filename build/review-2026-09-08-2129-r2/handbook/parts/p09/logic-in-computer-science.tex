@@ -1,0 +1,2589 @@
+%% parts/p09/logic-in-computer-science.tex --- Part 9
+\chapter{Logic in Computer Science}\label{sec:p09-logic-in-computer-science}
+
+This chapter treats logical formalisms as specifications of finite structures,
+program executions, databases, and verification obligations. It keeps three
+questions separate throughout: what a language expresses, whether its
+semantic problems are decidable, and how an implementation certifies an
+answer. A tractable data-complexity bound, for example, says nothing by itself
+about combined complexity or about the correctness of an unverified solver.
+
+\section*{Source and presentation standing}
+\addcontentsline{toc}{section}{Source and presentation standing}
+\label{sec:p09-source-standing}
+
+Part~IX is an editorial synthesis from the sources cited throughout.  The
+inherited chapters that formerly carried the historical Part-IX heading concern
+second- and higher-order logic and are now read at
+Chapters~\ref{ch:second-order-logic}
+and~\ref{ch:simple-type-theory}.  This relocation does not make the present
+computer-science chapter a derivative of those chapters.
+
+Finite-model and descriptive-complexity results use
+\textcite{EbbinghausFlum1995,Libkin2004,Immerman1999}; classical prefix history
+and classification use
+\textcite{Lowenheim1915,Behmann1922,BorgerGradelGurevich1997}.  Description
+logics use the separate presentations of
+\textcite{SchmidtSchaussSmolka1991,DoniniMassacci2000,
+BaaderHorrocksSattler2008}; the acquisition standing of
+\textcite{BaaderEtAl2003,BaaderHorrocksLutzSattler2017} is recorded
+with their respective presentations.  The
+standardized OWL profile boundaries use \textcite{W3COWL2Profiles2012}.
+Modal guardedness and the temporal comparison reuse the Part~VIII definitions
+and are controlled by \textcite{AndrekaVanBenthemNemeti1998,Kamp1968}.
+For finite-tree automata, \textcite{ThatcherWright1968} has only
+abstract-level historical standing here; the operative definitions,
+constructions, and theorem use the inspected TATA release
+\parencite{ComonEtAl2007}.  Temporal,
+symbolic, interpolating, and probabilistic verification use
+\textcite{Thomas1996Report,ClarkeGrumbergPeled1999,McMillan2003,BaierKatoen2008},
+while continuous-time stochastic verification uses the distinct presentation
+of \textcite{BaierHaverkortHermannsKatoen2003}.
+Atemporal probability reasoning uses
+\textcite{FaginHalpernMegiddo1990,Halpern2003}.  Program and database logics use
+\textcite{Apt1981,Lloyd1987,ISO13211-1-1995,AbiteboulHullVianu1995}.
+Each theorem, calculus, and complexity row below narrows those source roles to
+one exact language and problem.
+
+Notation is governed by the
+\hyperref[sec:p01-symbol-registry]{symbol registry} and
+\hyperref[tab:p01-precedence]{precedence table}; every proof-system identifier
+resolves to the \hyperref[sec:p14-rule-sheets]{rule-sheet catalog}.
+
+\section{Finite structures and descriptive complexity}
+\label{sec:p09-finite-structures}
+
+\begin{hbdefinition}{def:p09-finite-validity}{Finite satisfiability and finite validity}
+Fix a finite relational signature \(\tau_{\mathrm{fin}}\). A
+\(\tau_{\mathrm{fin}}\)-sentence is
+\emph{finitely satisfiable} when it has a finite
+\(\tau_{\mathrm{fin}}\)-model, and is \emph{finitely valid} when every finite
+\(\tau_{\mathrm{fin}}\)-structure satisfies it.
+The qualifier is necessary because ordinary first-order satisfiability and
+validity quantify over structures of every cardinality. These are semantic
+properties of sentences relative to the class of finite structures, not new
+proof relations; their difference from unrestricted semantics drives the
+failures of compactness and effective completeness used below.
+\index{finite satisfiability}\index{finite validity}
+\end{hbdefinition}
+
+Finite structures are not an elementary class: if one sentence held exactly
+in the finite structures, compactness applied to it together with sentences
+asserting at least \(n\) elements would produce an infinite model.
+
+The handbook's public finite-validity statement is
+Theorem~\ref{thm:trakhtenbrot}: for every fixed finite relational signature
+containing a binary relation symbol, finite first-order satisfiability is
+undecidable, while finite validity is not recursively enumerable.  Part~IX
+uses that inherited theorem rather than assigning the result a second public
+identity.
+
+Consequently no recursively enumerable calculus can be both sound and complete
+for finite first-order validity on these signatures.  This is the effective-
+completeness failure meant here; it does not contradict the ordinary
+first-order completeness theorem, whose semantics ranges over all structures.
+
+The handbook's single first-order zero--one statement is
+Theorem~\ref{thm:p03-fol-zero-one}.  Its hypotheses are load-bearing: the
+vocabulary is fixed, finite, purely relational, and positive-arity, with no
+constants or function symbols, and the distribution is uniform on labelled
+structures with universe \([n]\).  The extension-axiom and countable-random-
+graph bridge, including its probability calculation, is
+Section~\ref{sec:p03-zero-one-law}.  A nullary predicate would instead have
+probability \(1/2\), so it is deliberately excluded.
+
+\begin{hbtheorem}{thm:p09-finite-craig-beth}{cited=Libkin2004}{Craig interpolation and Beth definability fail over finite structures}
+When consequence is restricted to finite structures, first-order logic does
+not in general have Craig interpolation, and implicit definability over finite
+structures does not in general imply explicit first-order definability.  These
+are failures of the finite-model restrictions of the two theorems, not failures
+of the unrestricted results in
+Theorems~\ref{thm:p02-craig-interpolation}
+and~\ref{thm:p02-beth-definability}.
+The cited source records the two finite failures as Exercises~3.12 and~3.13,
+with prompts and hints rather than complete proofs.
+\end{hbtheorem}
+
+The principal finite inexpressibility method is the exact
+Ehrenfeucht--Fra\"iss\'e game of
+Definition~\ref{def:p03-ef-game} and
+Theorem~\ref{thm:p03-ef}.  Its worked finite board is
+Figure~\ref{fig:p03-ef-board}.  Part~IX uses that one public game identity
+rather than silently creating a finite-only variant.
+The finite/unrestricted comparison, including compactness, Trakhtenbrot,
+zero--one, and descriptive-complexity boundaries, is
+Table~\ref{tab:p03-finite-model-theory}.
+
+\begin{hbdefinition}{def:p09-locality}{Gaifman and Hanf locality}
+For a structure \(\mathcal A\), the \emph{Gaifman graph} joins distinct elements that
+occur together in a relation tuple. The radius-\(r\) neighbourhood of a tuple
+is the induced pointed structure on elements at Gaifman distance at most
+\(r\).  A formula \(\psi(x)\) is \emph{\(r\)-local around \(x\)} when every
+quantifier in it is relativized to that neighbourhood.  A \emph{basic local
+sentence} has the form
+\[
+ \exists x_1\cdots\exists x_m
+ \left(
+   \bigwedge_{i<j} d(x_i,x_j)>2r
+   \ \land\
+   \bigwedge_{i=1}^{m}\psi(x_i)
+ \right),
+\]
+where \(\psi\) is \(r\)-local.  This separated-witness clause is not
+replaceable by one pointed neighbourhood.
+
+For fixed \(r,t\), structures are \emph{Hanf-equivalent} when, for every
+isomorphism type of pointed radius-\(r\) neighbourhood, the two numbers of
+realizations are equal below \(t\), or are both at least \(t\).  The name
+counts local types globally and is therefore nonredundant with Gaifman-local
+truth.  The bounded-degree theorem below uses this exact threshold convention.
+\index{Gaifman graph}\index{Gaifman locality}\index{Hanf locality}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p09-gaifman-normal-form}{cited=Libkin2004}{Gaifman normal form}
+Over a fixed finite relational vocabulary, every first-order sentence is
+equivalent to a Boolean combination of basic local sentences.  The required
+radius depends effectively on the formula, and may be bounded in terms of its
+quantifier rank.  The conclusion is a Boolean combination of local and
+separated-witness information; it is not one local formula.
+\end{hbtheorem}
+
+Hanf's original locality method is the historical source
+\cite{Hanf1965}.  The finite threshold form used here is the later
+finite-model theorem of Fagin, Stockmeyer, and Vardi.
+
+\begin{hbtheorem}{thm:p09-hanf-bounded-degree}{cited=FaginStockmeyerVardi1995}{Finite Hanf locality on bounded-degree structures}
+For every finite relational vocabulary, quantifier rank \(q\), and degree bound
+\(d\), there are \(r,t\) such that finite structures of Gaifman degree at most
+\(d\) which are Hanf-equivalent at radius \(r\) and threshold \(t\) satisfy the
+same first-order sentences of quantifier rank at most \(q\)
+\cite{Libkin2004}.
+\end{hbtheorem}
+
+These theorems give cited inexpressibility arguments for connectivity and
+acyclicity on finite graphs: for every quantifier rank one constructs finite
+graphs with the required matching local data but different global property
+\cite{EbbinghausFlum1995,Libkin2004}.  No claim is made that every
+first-order formula is itself local.
+
+The exact meaning of a logic capturing a complexity class is
+Definition~\ref{def:p04-captures-complexity}.  Fagin's theorem is the single
+public Theorem~\ref{thm:p03-fagin}: existential second-order logic captures
+\(\mathsf{NP}\) on finite relational structures.
+
+\noindent The cited proof has two encoding directions.  An existential
+second-order sentence guesses relations encoding a polynomially
+bounded computation tableau and checks its local transition constraints in
+first-order logic. Conversely, the guessed finite relations form a
+polynomial-size certificate, and the first-order matrix can be model-checked
+in polynomial time for fixed syntax.  The exact tableau vocabulary and
+representation proof remain source-carried
+\cite{Fagin1974,Immerman1999}.
+
+The single public Immerman--Vardi statement is
+Theorem~\ref{thm:p04-immerman-vardi}: on finite structures equipped with a
+distinguished linear order, least fixed-point logic captures \(\mathsf P\).
+The order hypothesis is part of the statement.  Without an order predicate,
+least fixed-point logic is strictly weaker than \(\mathsf P\) on arbitrary
+finite structures; parity on pure finite sets already separates the two.  The
+ordered capture theorem therefore cannot be quoted as an unordered one.
+The finite descriptive-complexity correspondences are collected without new
+theorem identities in Table~\ref{tab:p04-descriptive-complexity}.
+
+\input{parts/p09/presentations/n-c-001}
+\input{parts/p09/presentations/n-c-002}
+\input{parts/p09/presentations/n-c-003}
+\input{parts/p09/presentations/n-c-004}
+
+\section{Decidable fragments and classical prefix classes}
+\label{sec:p09-decidable-fragments}
+
+The exact monadic, two-variable, guarded, and
+Bernays--Sch\"onfinkel rows---including their equality, function-symbol,
+finite-model, and complexity conventions---are
+Table~\ref{tab:p02-decidable-fragments}.  In particular, the monadic row is
+the handbook's equality-free and function-free lookup convention; the source
+presentation below also distinguishes equality-bearing relational monadic
+logic from the full class with unary functions.  The language \(\mathrm{FO}^{2}\)
+is relational and permits
+equality, and the guarded row permits equality as an atom but not as its own
+guard \cite{Behmann1922,Mortimer1975,AndrekaVanBenthemNemeti1998,
+GradelKolaitisVardi1997,Gradel1999}.
+
+\begin{table}[htbp]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}l X X X@{}}
+\toprule
+Prefix class & Exact prenex and vocabulary convention & Decision/model result &
+Boundary \\
+\midrule
+Bernays--Sch\"onfinkel--Ramsey &
+\(\exists^{*}\forall^{*}\), relational and function-free, with or without equality;
+leading existentials may be represented by fresh constants &
+finite-model property and decidable satisfiability; exact complexity is in
+Table~\ref{tab:p02-decidable-fragments} &
+positive-arity functions are excluded \\
+Ackermann &
+\(\exists^{*}\forall\exists^{*}\), relational and function-free; the
+equality-bearing version is maximal among the decidable prefix classes with
+equality &
+finite-model property and decidable satisfiability &
+one universal variable is load-bearing \\
+G\"odel--Kalm\'ar--Sch\"utte &
+\(\exists^{*}\forall^{2}\exists^{*}\), relational and function-free, without
+equality &
+finite-model property and decidable satisfiability &
+exactly two adjacent universal variables \\
+Goldfarb boundary &
+the preceding G\"odel prefix with logical equality &
+finite and unrestricted satisfiability are undecidable &
+equality is not a harmless extension of the GKS row \\
+\bottomrule
+\end{tabularx}
+\caption{Classical relational prefix classes and one sharp reduction boundary.
+The rows classify satisfiability for prenex inputs; they are not an algorithm
+for arbitrary first-order syntax.}
+\label{tab:p09-prefix-classes}
+\end{table}
+
+The displayed input vocabularies are relational and function-free.  This must
+not be confused with the vocabulary of a Skolem form.  In the
+Bernays--Sch\"onfinkel--Ramsey row, leading existential variables may be
+replaced by constants.  In the Ackermann row, trailing existentials generally
+produce unary Skolem functions; in the G\"odel--Kalm\'ar--Sch\"utte row they
+may produce unary or binary Skolem functions according to the preceding
+universal variables.  Those Skolem forms therefore leave the original
+function-free class.  A validity reduction negates the sentence and dualizes
+each quantifier in place; it does not reverse the order of the prefix.  The
+historical sources establish the decision-problem setting and early monadic or
+prefix cases \cite{Lowenheim1915,Behmann1922,BorgerGradelGurevich1997}.
+The modern exact Bernays--Sch\"onfinkel complexity bound is source-controlled
+separately by \textcite{Lewis1980}.
+
+The modal standard translation is already fixed by
+Definition~\ref{def:p08-modal-standard-translation}; no second translation is
+introduced here.
+
+\begin{hbtheorem}{thm:p09-modal-guarded}{cited=AndrekaVanBenthemNemeti1998}{The modal standard translation has guarded range}
+For every basic modal formula \(A\),
+\(\operatorname{ST}_x(A)\) belongs to the guarded fragment: each translated
+box or diamond quantifies a fresh world variable under the accessibility atom
+\(Rxy\).  For every Kripke model \(M\) and world \(w\),
+\[
+ M,w\models A
+ \quad\Longleftrightarrow\quad
+ M^{\mathrm{fo}}\models\operatorname{ST}_x(A)[x\mapsto w].
+\]
+For a sentence-level satisfiability reduction, take a fresh unary predicate
+\(G\) and use
+\(\exists x\,(G(x)\land\operatorname{ST}_x(A))\); the atom \(G(x)\) guards the
+outer quantifier and may be interpreted to contain the chosen world.
+Consequently modal satisfiability reduces to guarded-fragment satisfiability.
+This conclusion concerns the translated formula.  Separate first-order frame
+conditions, such as transitivity of \(R\), need not have guarded form and are
+not silently conjoined to the reduction.
+\end{hbtheorem}
+
+\input{parts/p09/presentations/n-c-005}
+\input{parts/p09/presentations/n-c-006}
+\input{parts/p09/presentations/n-c-007}
+\input{parts/p09/presentations/n-c-008}
+
+\section{Description logics}
+\label{sec:p09-description-logics}
+
+\begin{hbdefinition}{def:p09-alc}{The description logic \(\mathcal{ALC}\)}
+Fix concept names \(A\), role names \(r\), and individual names \(a\).
+Concepts are generated by
+\[
+ C ::= \top\mid\bot\mid A\mid\neg C\mid C\sqcap D\mid C\sqcup D
+       \mid \exists r.C\mid\forall r.C.
+\]
+An interpretation \(I=(\Delta^I,\cdot^I)\) has a nonempty domain
+\(\Delta^I\), assigns concept names subsets of \(\Delta^I\), roles binary
+relations on \(\Delta^I\), and individuals elements of \(\Delta^I\). Boolean
+constructors have their set-theoretic meanings,
+\((\exists r.C)^I=\{x:\exists y(xr^Iy\land y\in C^I)\}\), and
+\((\forall r.C)^I=\{x:\forall y(xr^Iy\Rightarrow y\in C^I)\}\).
+A \emph{TBox} is a finite set of concept inclusions \(C\sqsubseteq D\); an
+\emph{ABox} is a finite set of assertions \(C(a)\) and \(r(a,b)\).
+An interpretation \(I\) satisfies \(C\sqsubseteq D\) exactly when
+\(C^I\subseteq D^I\), satisfies \(C(a)\) when \(a^I\in C^I\), and satisfies
+\(r(a,b)\) when \((a^I,b^I)\in r^I\).  A \emph{knowledge base} is the
+syntactic input pair \(\mathcal K=(\mathcal T,\mathcal A)\) consisting of one
+finite TBox and one finite ABox, rather than either component alone.  Write
+\(I\models\mathcal K\) exactly when \(I\) satisfies every member of both
+components; \(\mathcal K\) is satisfiable when some interpretation does so.
+A standalone concept \(C\) is \emph{satisfiable} exactly when
+\(C^I\ne\varnothing\) for some interpretation \(I\), with neither a TBox nor
+an ABox included in that input.  Schild calls this standalone property
+\emph{coherence}; the two terms have the same extension even though his source
+also permits the inert empty-domain interpretation.
+The name
+\(\mathcal{ALC}\) is needed to fix this exact concept language rather than a
+whole description-logic family; it stands as a formal language with model
+semantics and is used in the tableau and modal-translation results.
+\index{ALC@\(\mathcal{ALC}\)}\index{TBox}\index{ABox}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p09-alc-modal}{cited=Schild1991}{\(\mathcal{ALC}\) as multimodal \(\mathsf K\)}
+Replacing concept names by propositional letters, \(\exists r\) by
+\(\Diamond_r\), and \(\forall r\) by \(\Box_r\) preserves and reflects truth
+at corresponding points. Thus standalone concept satisfiability---with neither
+TBox nor ABox input---is a notational presentation of multimodal \(\mathsf K\),
+while TBoxes add global assumptions and must not be silently dropped.
+\end{hbtheorem}
+
+\begin{hbmethod}{def:p09-alc-tableau}{A blocking tableau for \(\mathcal{ALC}\)}
+The optional \emph{tested concept} \(C_0\) is an additional concept input whose
+extension is required to be nonempty in a model of the supplied
+\((\mathcal T,\mathcal A)\); when it is absent, the task is knowledge-base
+satisfiability alone.  A \emph{general concept inclusion} (GCI) is exactly a TBox
+member \(C\sqsubseteq D\), and its \emph{internalized concept} is
+\(\operatorname{nnf}(\neg C\sqcup D)\).  For any concept \(E\), its
+\emph{NNF complement} means \(\operatorname{nnf}(\neg E)\).  These are
+metalinguistic names for the fixed input and normalization operations, not new
+concept constructors.
+
+First convert \(C_0\) when present, every ABox concept assertion, and every
+internalized GCI to one fixed negation normal form in which negation occurs
+only before concept names.  Put
+\[
+ \mathsf{Glob}(\mathcal T)
+   =\{\operatorname{nnf}(\neg C\sqcup D):C\sqsubseteq D\in\mathcal T\}.
+\]
+The finite closure \(\operatorname{cl}(C_0,\mathcal T,\mathcal A)\) contains the normalized
+tested concept when present, every normalized ABox concept, every member of
+\(\mathsf{Glob}(\mathcal T)\), all their sub-concepts, and the NNF complement
+of each such concept; it also contains \(\top\) and \(\bot\).
+
+The \emph{completion graph} is the search object on one branch.  Its nodes
+carry concept labels and its role-labelled edges include both declared ABox
+edges and generated existential-witness edges; the generated edges alone form
+a successor forest.  Initialize the graph as follows.  For every ABox
+individual \(a\), create a root with
+\[
+ \mathcal L(a)=
+ \{\operatorname{nnf}(D):D(a)\in\mathcal A\}
+ \cup\mathsf{Glob}(\mathcal T),
+\]
+and retain every declared edge \(r(a,b)\).  If \(C_0\) is being tested, create
+a fresh root \(c_0\) with
+\(\mathcal L(c_0)=\{\operatorname{nnf}(C_0)\}\cup
+\mathsf{Glob}(\mathcal T)\).  If neither ABox individuals nor a tested concept
+supply a root, create one anonymous root labelled
+\(\{\top\}\cup\mathsf{Glob}(\mathcal T)\); this enforces the nonempty-domain
+semantics even for a TBox-only input.
+
+A \emph{branch} is one completion graph produced by a sequence of legal
+expansions and one choice at every applied disjunction; a disjunction step
+copies the current graph and adds one alternative to each copy.  Every initial
+node receives \(\mathsf{Glob}(\mathcal T)\) during initialization, and every
+generated node receives it when the existential rule creates that witness.
+Because labels only grow, every node thereafter contains all of
+\(\mathsf{Glob}(\mathcal T)\).  The TBox consequences are therefore explicit
+label members rather than an implicit model condition; no separate global
+expansion rule is needed.
+
+Expansion uses exactly the conjunction, disjunction, existential-successor,
+and universal-propagation rules on
+\hyperref[sheet:tableaux-alc]{\texttt{sheet:tableaux-alc}}.  A branch clashes
+on \(\bot\) or on \(A,\neg A\) at one node.  A nonroot node \(y\) is directly
+blocked by an ancestor \(x\) in the generated successor forest when
+\(\mathcal L(y)\subseteq\mathcal L(x)\); it is blocked when it is directly
+blocked or one of its ancestors in that forest is blocked.  Blocking is
+re-evaluated whenever
+a label grows.  Only fresh existential-witness generation is disabled at a
+blocked source; Boolean and universal consequences remain applicable.
+An existential at an unblocked source creates a witness only if no existing
+successor already carries its filler.
+
+A branch is \emph{complete} exactly when no legal expansion rule remains
+applicable, and it is \emph{open} exactly when it has no clash.  An input is
+accepted exactly when some branch is complete and open.  The completion graph
+is finite search data, not automatically a
+model; a clash-free graph yields a finite model only after a target of an edge
+retained from an unblocked source is redirected, when necessary, to a direct
+blocking ancestor as in the annex proof.  No map on residual descendants that
+are blocked only through an ancestor is required.  Termination
+follows because labels are subsets of the finite closure, each rule can make
+only finitely many additions, and no unblocked path repeats one of its at most
+\(2^{|\operatorname{cl}(C_0,\mathcal T,\mathcal A)|}\) possible labels.  This
+is the handbook's stated calculus; its correctness and termination are proved
+under the exact conventions below.
+\index{description-logic tableau}\index{blocking}
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p09-alc-tableau}{proved=annex:p9.alc.1}{Correctness and termination of the \(\mathcal{ALC}\) completion procedure}
+For every finite \(\mathcal{ALC}\) tested concept, TBox, and ABox input in the
+conventions above, the registered tableau has a complete open branch exactly
+when the knowledge base has a model \(I\) and, when a tested concept \(C_0\) is
+present, that model can be chosen with \(C_0^I\ne\varnothing\).
+Every legal expansion sequence terminates.
+\end{hbtheorem}
+
+\input{parts/p09/alc-general-tboxes}
+
+\begin{systementry}{entry:p09-alc}{The description logic \(\mathcal{ALC}\)}
+  \entrylanguage{Concept and knowledge-base syntax of
+    Definition~\ref{def:p09-alc}; arbitrary concept negation is normalized
+    before proof search.}
+  \entrysemantics{Set-and-relation interpretations satisfying the exact TBox
+    and ABox clauses of Definition~\ref{def:p09-alc}.}
+  \entrycalculus{sheet:tableaux-alc}
+  \entryadequacy{proved=annex:p9.alc.1}{The completion procedure is sound,
+    complete, and terminating for the fixed input convention; the handbook's
+    single editorial proof identity is Theorem~\ref{thm:p09-alc-tableau}.}
+  \entrydecidability{proved=annex:p9.alc.3}{Concept satisfiability and
+    subsumption relative to general finite TBoxes, finite knowledge-base
+    satisfiability, and instance checking are \(\mathsf{EXPTIME}\)-complete
+    in combined complexity, as proved in
+    Theorem~\ref{thm:p09-alc-general-exptime}.}
+  \entrycharacteristic{At the standalone-concept level, with neither a TBox nor
+    an ABox input, it is the notational multimodal \(\mathsf K\) presentation of
+    Theorem~\ref{thm:p09-alc-modal}; blocking
+    ensures finite search, but the completion graph becomes the finite model
+    used in the proof only after blocked targets are redirected.}
+  \entrytranslations{Concept names map to atoms, roles to modal indices,
+    \(\exists r\) to \(\Diamond_r\), and \(\forall r\) to \(\Box_r\).}
+  \entrysources{Schild1991,SchmidtSchaussSmolka1991,DoniniMassacci2000,
+    BaaderHorrocksSattler2008,BaaderHorrocksLutzSattler2017}
+\end{systementry}
+
+\input{parts/p09/presentations/n-c-010}
+
+\begin{table}[htbp]
+\centering\scriptsize
+\begin{tabularx}{\textwidth}{@{}l X X X@{}}
+\toprule
+Logic/profile & Added or restricted constructors & Fixed reasoning task and
+complexity & Source/OWL boundary \\
+\midrule
+\(\mathcal{ALC}\) & the Boolean concept grammar of
+Definition~\ref{def:p09-alc} & concept satisfiability and subsumption with
+general finite TBoxes, finite knowledge-base satisfiability, and instance
+checking are \(\mathsf{EXPTIME}\)-complete in combined complexity
+(Theorem~\ref{thm:p09-alc-general-exptime}) &
+  Schild's modal correspondence covers standalone concepts with neither TBox
+  nor ABox input; no OWL profile identity
+  \cite{Schild1991,BaaderHorrocksSattler2008} \\
+\(\mathcal{EL}^{++}(\mathcal D_1,\ldots,\mathcal D_n)\) & bottom, nominals,
+conjunction, existential restriction, CBoxes with arbitrary finite left-hand
+role chains normalized to unary and binary forms, and concrete atoms &
+subsumption with respect to CBoxes is in
+polynomial time when every fixed \(\mathcal D_j\) is \(p\)-admissible in the
+preceding exact sense: finite-conjunction satisfiability and implication are
+polynomial and the domain is convex & source family for, but not identical
+with, the standardized profile \cite{BaaderBrandtLutz2005} \\
+OWL 2 EL & one position-independent profile class grammar, named object
+properties, and its final-chain range condition & exact task-by-axis bounds are
+in Table~\ref{tab:p09-owl-profile-complexity} & normative OWL syntax and
+inherited global restrictions \cite{W3COWL2Profiles2012} \\
+\(\mathrm{DL\mbox{-}Lite}_{\mathcal R}\) & source logic designed for
+first-order query rewriting & with fixed TBox and fixed UCQ and a varying
+nonempty ABox, answering is first-order reducible and has the source's
+\(\mathsf{LOGSPACE}\) data upper bound & logical underpinning for, not an alias of, OWL 2 QL
+\cite{CalvaneseEtAl2007} \\
+OWL 2 QL & different subclass and superclass grammars, with named or inverse
+object properties & exact non-query and conjunctive-query bounds are in
+Table~\ref{tab:p09-owl-profile-complexity} & normative profile without the
+2007 paper's UNA \cite{W3COWL2Profiles2012} \\
+OWL 2 RL & three position-sensitive class grammars and inherited
+simple-property/regular-chain restrictions & exact consistency,
+satisfiability/subsumption/instance, and query bounds are separate rows in
+Table~\ref{tab:p09-owl-profile-complexity} & syntactic profile is distinct from
+the partial RL/RDF rule axiomatization \cite{W3COWL2Profiles2012} \\
+OWL 2 under Direct Semantics & full structural OWL 2 syntax subject to OWL 2 DL
+typing and global restrictions & exact basic-task and open conjunctive-query
+entries are in Table~\ref{tab:p09-owl-profile-complexity} & semantic regime for
+structural ontologies, not one of the three profiles
+\cite{W3COWL2DirectSemantics2012,W3COWL2Profiles2012} \\
+\bottomrule
+\end{tabularx}
+\caption{Description-logic families, source-bounded reasoning problems, and OWL
+correspondences.  No complexity bound transfers to a row with a different
+constructor, number-encoding convention, or semantic regime.}
+\label{tab:p09-description-logic-family}
+\end{table}
+
+The available source basis does not support two further historical-foundation
+rows.  The 2017 chapter body would be needed to define the exact
+\(\mathcal{SHOIQ}\) grammar, semantics, number encoding, reasoning task, and
+theorem scope claimed in connection with OWL~1~DL.  The exact primary bodies
+would likewise be needed to define the datatype parameter and the distinction
+among \(\mathcal{SROIQ}\), \(\mathcal{SROIQ}(D)\), and structural OWL~2, then locate
+the exact complexity theorem and its encoding hypotheses.  Horrocks--Kutz--
+Sattler proves decidability but leaves exact complexity open; the Kazakov body
+is not part of the available source basis.  The handbook therefore states
+neither a comparison row nor an exact classification for those
+notations \cite{HorrocksKutzSattler2006,Kazakov2008,
+BaaderHorrocksLutzSattler2017}.
+
+\begingroup\scriptsize
+\begin{longtable}{@{}p{0.105\textwidth}p{0.19\textwidth}p{0.155\textwidth}p{0.145\textwidth}p{0.13\textwidth}p{0.175\textwidth}@{}}
+\caption{Recommendation Table~10 classifications by exact language or semantic
+regime, reasoning task, and varying input.  A dash means not applicable, not
+absence of the task.}\label{tab:p09-owl-profile-complexity}\\
+\toprule
+Language or semantics & Reasoning problem & Taxonomic & Data & Query & Combined \\
+\midrule
+\endfirsthead
+\toprule
+Language or semantics & Reasoning problem & Taxonomic & Data & Query & Combined \\
+\midrule
+\endhead
+OWL 2, RDF-Based Semantics &
+consistency; class satisfiability; subsumption; instance checking; CQ answering &
+undecidable & undecidable & undecidable & undecidable \\
+\addlinespace
+OWL 2, Direct Semantics &
+consistency; class satisfiability; subsumption; instance checking &
+\(\mathsf{N2EXPTIME}\)-complete; \(\mathsf{NEXPTIME}\)-complete
+\({}^{\ddagger}\) &
+decidable, exact complexity open; \(\mathsf{NP}\)-hard &
+--- &
+\(\mathsf{N2EXPTIME}\)-complete; \(\mathsf{NEXPTIME}\)-complete
+\({}^{\ddagger}\) \\
+OWL 2, Direct Semantics & Boolean conjunctive-query answering &
+decidability open & decidability open & decidability open & decidability open \\
+\addlinespace
+OWL 2 EL &
+consistency; class satisfiability; subsumption; instance checking &
+\(\mathsf{PTIME}\)-complete & \(\mathsf{PTIME}\)-complete & --- &
+\(\mathsf{PTIME}\)-complete \\
+OWL 2 EL & Boolean conjunctive-query answering &
+in \(\mathsf{EXPTIME}\); \(\mathsf{PTIME}\)-complete\({}^{\dagger}\) &
+\(\mathsf{PTIME}\)-complete &
+\(\mathsf{NP}\)-complete &
+in \(\mathsf{EXPTIME}\); \(\mathsf{PSPACE}\)-complete\({}^{\dagger}\) \\
+\addlinespace
+OWL 2 QL &
+consistency; class satisfiability; subsumption; instance checking &
+\(\mathsf{NLOGSPACE}\)-complete & in \(\mathsf{AC}^{0}\) & --- &
+\(\mathsf{NLOGSPACE}\)-complete \\
+OWL 2 QL & Boolean conjunctive-query answering &
+\(\mathsf{NLOGSPACE}\)-complete & in \(\mathsf{AC}^{0}\) &
+\(\mathsf{NP}\)-complete & \(\mathsf{NP}\)-complete \\
+\addlinespace
+OWL 2 RL & ontology consistency &
+\(\mathsf{PTIME}\)-complete & \(\mathsf{PTIME}\)-complete & --- &
+\(\mathsf{PTIME}\)-complete \\
+OWL 2 RL &
+class satisfiability; subsumption; instance checking &
+\(\mathsf{PTIME}\)-complete & \(\mathsf{PTIME}\)-complete & --- &
+\(\mathsf{coNP}\)-complete; \(\mathsf{PTIME}\)-complete
+\({}^{\star}\) \\
+OWL 2 RL & Boolean conjunctive-query answering &
+\(\mathsf{PTIME}\)-complete & \(\mathsf{PTIME}\)-complete &
+\(\mathsf{NP}\)-complete & \(\mathsf{NP}\)-complete \\
+\addlinespace
+OWL 1 DL &
+consistency; class satisfiability; subsumption; instance checking &
+\(\mathsf{NEXPTIME}\)-complete &
+decidable, exact complexity open; \(\mathsf{NP}\)-hard &
+--- & \(\mathsf{NEXPTIME}\)-complete \\
+OWL 1 DL & Boolean conjunctive-query answering &
+decidability open & decidability open & decidability open & decidability open \\
+\bottomrule
+\end{longtable}
+
+\noindent\({}^{\dagger}\)The conditional EL bound applies exactly when the
+property hierarchy can be translated into a polynomially sized nondeterministic
+finite automaton.  The same condition changes each
+\({}^{\ddagger}\) full-Direct-Semantics bound from
+\(\mathsf{N2EXPTIME}\)-complete to \(\mathsf{NEXPTIME}\)-complete.  Section~5
+provides no operational translation, test, or size convention for that
+condition.  The \({}^{\star}\) RL alternative applies when the checked class
+expressions are atomic; the Recommendation does not define that qualifier at
+the table.
+
+Bare \emph{in} records membership only.  The \(\mathsf{NP}\)-hard annotations
+are lower bounds only; a decidability-open cell is not a decidability result;
+and a dash is not a zero-complexity claim.  The RDF-Based and full
+Direct-Semantics rows are semantic regimes, not additional profiles.  Section~5
+also uses \(\mathsf{EXPTIME}\) and \(\mathsf{coNP}\) without defining them at
+that location.  Every cell is preserved at its printed logical force
+\cite[\S5 and table~10]{W3COWL2Profiles2012}.
+\endgroup
+
+\input{parts/p09/presentations/n-c-009}
+\input{parts/p09/presentations/n-c-011}
+
+\section{Temporal logic and automata}
+\label{sec:p09-temporal-automata}
+
+\begin{hbdefinition}{def:p09-ltl}{The reused LTL language and its past extension}
+The exact base language, infinite-word semantics, Hilbert calculus, and
+adequacy standing are the \hyperref[entry:p08-ltl]{Part VIII LTL card} and
+\hyperref[sheet:hilbert-ltl]{its sheet}.  Part~IX reuses
+\(\mathsf X,\mathsf U,\mathsf F,\mathsf G\) with no renaming.  It adds previous
+\(\mathsf Y\) and since \(\mathsf S\) by
+\[
+\begin{aligned}
+ (w,i)\models\mathsf Y A
+ &\Longleftrightarrow i>0\ \text{and}\ (w,i-1)\models A,\\
+ (w,i)\models A\mathbin{\mathsf S}B
+ &\Longleftrightarrow
+ \exists j\le i\,
+ \bigl((w,j)\models B\land
+   \forall k\,(j<k\le i\to(w,k)\models A)\bigr).
+\end{aligned}
+\]
+These constructors are necessary to state the two-direction first-order
+expressiveness result below; they stand as formula constructors on pointed
+words, not branching-state operators.
+\index{linear temporal logic}\index{until operator}
+\end{hbdefinition}
+
+The strict two-direction order theorem is already stated with its exact domain
+in Definition~\ref{def:p08-tense-until-since} and
+Theorem~\ref{thm:p08-kamp}: strict future and past translate to first-order
+logic over every binary structure, while the converse is proved only over
+Kamp's complete strict linear orders, a class which permits discreteness and
+endpoints.  Kamp's rational-order counterexample bars extension of that
+four-operation basis to all chains.  GPSS's later Theorem~2.5 prints two
+additional connective symbols for the broader class but supplies no semantic
+clauses for them in that paper, so they are not imported as defined operators
+here.
+
+On \(\mathbb N\), Kamp's strict prefix constructors and the reused inclusive
+infix constructors are related exactly by
+\[
+\begin{aligned}
+ U\,B\,A&\equiv\mathsf X(A\mathbin{\mathsf U}B),
+ &A\mathbin{\mathsf U}B&\equiv
+   B\lor\bigl(A\land U\,B\,A\bigr),\\
+ S\,B\,A&\equiv\mathsf Y(A\mathbin{\mathsf S}B),
+ &A\mathbin{\mathsf S}B&\equiv
+   B\lor\bigl(A\land S\,B\,A\bigr).
+\end{aligned}
+\]
+For completeness, these equations extend recursively over the two grammars.
+From formulas generated by atoms, Boolean connectives, and Kamp's strict
+\(U,S\), define \(\tau\) into the inclusive discrete language by fixing atoms,
+commuting with every Boolean connective, and setting
+\[
+ \tau(U\,B\,A)=
+ \mathsf X\bigl(\tau(A)\mathbin{\mathsf U}\tau(B)\bigr),
+ \qquad
+ \tau(S\,B\,A)=
+ \mathsf Y\bigl(\tau(A)\mathbin{\mathsf S}\tau(B)\bigr).
+\]
+In the reverse direction, define \(\sigma\) by the same atomic and Boolean
+clauses and
+\[
+\begin{aligned}
+ \sigma(\mathsf XA)&=U\,\sigma(A)\,\bot,
+ &\sigma(\mathsf YA)&=S\,\sigma(A)\,\bot,\\
+ \sigma(A\mathbin{\mathsf U}B)
+   &=\sigma(B)\lor
+     \bigl(\sigma(A)\land U\,\sigma(B)\,\sigma(A)\bigr),
+ &\sigma(A\mathbin{\mathsf S}B)
+   &=\sigma(B)\lor
+     \bigl(\sigma(A)\land S\,\sigma(B)\,\sigma(A)\bigr).
+\end{aligned}
+\]
+The letters \(\tau,\sigma\) are eliminable metalinguistic translation
+functions, not new connectives or named logics.  Both directions are needed
+here because the same surface letters otherwise conceal strictness and operand
+order; a structural induction using the displayed semantic clauses proves
+truth preservation at every position of every infinite word.  The strict
+constructors define next and previous by using \(\bot\) on the open interval.
+Therefore the inclusive grammar needs \(\mathsf X,\mathsf Y\); inclusive
+\(\mathsf U,\mathsf S\) alone are not being credited with next-time
+expressiveness.  The following theorem and
+Table~\ref{tab:p08-temporal-comparison} use that exact bridge.
+
+\begin{hbtheorem}{thm:p09-ltl-fo}{cited=Kamp1968,GabbayPnueliShelahStavi1980}{First-order expressive completeness on discrete words}
+Over pointed infinite words \((\mathbb N,<,(P_p)_{p\in\mathsf{Prop}})\), the
+properties definable by first-order formulas with one free position variable
+are exactly those definable by Boolean temporal formulas using Kamp's strict
+\(U,S\).  Equivalently, they are exactly those definable in the two-direction
+discrete language with \(\mathsf X,\mathsf Y\) and the inclusive strong
+\(\mathsf U,\mathsf S\) of Definition~\ref{def:p09-ltl}.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p09-ltl-pspace}{cited=SistlaClarke1985}{Infinite-word LTL satisfiability is PSPACE-complete}
+For the infinite-word language generated from propositions by Boolean
+connectives, \(\mathsf X\), and the inclusive \(\mathsf U\) of
+Definition~\ref{def:p09-ltl}, satisfiability is
+\(\mathsf{PSPACE}\)-complete.  In Sistla--Clarke's source notation this is the
+\(L(U,X)\) row of Table~I.  The same table separately classifies
+\(L(F)\) as \(\mathsf{NP}\)-complete and \(L(F,X)\), \(L(U)\), and
+\(L(U,S,X)\) as \(\mathsf{PSPACE}\)-complete; no fragment result is silently
+promoted to a different operator basis.  The \(L(U,X)\) classification also
+follows directly from
+\[
+ L(U)\subseteq L(U,X)\subseteq L(U,S,X):
+\]
+the left fragment supplies PSPACE-hardness and the right fragment supplies
+the PSPACE upper bound.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p09-safety-liveness}{Safety and liveness properties}
+A word property is \emph{safety} when every violating word has a finite bad
+prefix all of whose infinite extensions violate it.  It is \emph{liveness}
+when every finite word is a prefix of some satisfying infinite word.  These
+semantic classes may overlap and do not coincide with individual surface
+operators; the names are used to classify verification obligations rather
+than formulas by typography \cite{AlpernSchneider1985}.
+\index{safety property}\index{liveness property}
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p09-omega-automata}{Acceptance on infinite words}
+The nondeterministic B\"uchi word automaton, run relation, and existential
+acceptance clause are Definition~\ref{def:p08-buchi-automaton}.  A
+\emph{deterministic parity word automaton} is
+\[
+ (Q,\Sigma,\delta,q_0,\Omega),
+ \qquad
+ \delta:Q\times\Sigma\to Q,
+ \qquad
+ \Omega:Q\to\{0,\ldots,d\},
+\]
+where \(Q\) is finite, \(\Sigma\) is the input alphabet, \(q_0\in Q\), and
+\(d\in\mathbb N\).  Its unique run
+\(r_0r_1\ldots\) on \(\sigma_0\sigma_1\ldots\) starts at \(q_0\), obeys
+\(r_{n+1}=\delta(r_n,\sigma_n)\), and accepts exactly when the least value of
+\(\Omega\) occurring infinitely often along the run is even.  The priority map
+and least-recurring-even clause stand as acceptance data on a word-automaton
+run; they differ from both the single B\"uchi set and the Rabin pairs below.
+This is the handbook's deterministic-word specialization of the
+Bradfield--Stirling least-recurring convention and is used later in the
+modal-\(\mu\) games and alternating parity automata of
+Section~\ref{sec:p09-presentation-n-c-018}
+\cite[\S\S4--5]{BradfieldStirling2007}.
+
+A \emph{deterministic Rabin word automaton} is
+\[
+ (Q,\Sigma,\delta,q_0,((E_i,F_i))_{i<m}),
+ \qquad
+ \delta:Q\times\Sigma\to Q,
+ \qquad
+ E_i,F_i\subseteq Q\quad(i<m).
+\]
+Here \(Q\) is finite, \(\Sigma\) is the input alphabet, \(q_0\in Q\), and
+\(m\in\mathbb N\).
+Its unique run \(r_0r_1\ldots\) starts at \(q_0\), obeys
+\(r_{n+1}=\delta(r_n,\sigma_n)\), and accepts exactly when, for some \(i<m\),
+\(\operatorname{Inf}(r)\cap E_i=\varnothing\) and
+\(\operatorname{Inf}(r)\cap F_i\ne\varnothing\).  The Rabin name is necessary
+because this pair condition differs from the single recurrent set in B\"uchi
+acceptance.  It stands here as an automaton over words; no tree run is inferred
+from the tuple \cite[Def.~5.1]{Thomas1996Report}.
+\index{Buchi automaton@B\"uchi automaton}\index{parity automaton}\index{Rabin automaton}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p09-ltl-buchi}{cited=WolperVardiSistla1983,VardiWolper1986}{LTL-to-B\"uchi translation}
+For every LTL formula \(A\), one can effectively construct a nondeterministic
+B\"uchi word automaton \(\mathcal A_A\) which accepts exactly the infinite
+words satisfying \(A\), with at most \(2^{O(|A|)}\) states.  Vardi--Wolper
+state this as Theorem~2.1, attribute it to Wolper--Vardi--Sistla 1983, and in
+their Appendix~B construct a
+local-consistency component and an eventuality-discharge component whose
+permitted-start-set product has at most \(2^{3|A|}\) states before projection
+to the alphabet of propositional valuations.  The handbook-owned conversion to
+Definition~\ref{def:p08-buchi-automaton}'s single-start convention adds one
+fresh state.  The complete construction, conversion, and proof boundary are in
+Section~\ref{sec:p09-presentation-n-c-013}.
+\end{hbtheorem}
+
+Nondeterministic B\"uchi languages are closed under union and intersection.
+Complementation is effective but requires a nontrivial construction;
+deterministic Rabin automata provide convenient complemented forms
+\cite{Safra1995Extended,Thomas1996Report}.
+
+\begin{hbmethod}{def:p09-ltl-model-checking}{Automata-theoretic LTL model checking}
+Let \(\mathcal K=(S,R,V)\) be a finite total transition structure with initial
+state \(s_0\).  Let
+\[
+ \mathsf{AP}(A)=\{p\in\mathsf{Prop}:p\text{ occurs in }A\},
+ \qquad
+ \ell_A(s)=\{p\in\mathsf{AP}(A):s\in V(p)\}.
+\]
+The first expression is the finite set of proposition letters relevant to the
+input formula, and the second is the induced state-label map on that finite
+alphabet.  The map is needed because the reused valuation has type
+\(V:\mathsf{Prop}\to\mathcal P(S)\), whereas automaton transitions consume
+sets of letters true at a state.  Construct the B\"uchi automaton
+\(\mathcal A_{\neg A}=(Q,2^{\mathsf{AP}(A)},\delta,q_0,F)\).
+The product graph has vertices \(S\times Q\).  Its initial vertices are
+\[
+ \{(s_0,q):q\in\delta(q_0,\ell_A(s_0))\},
+\]
+and it has an edge
+\((s,q)\to(t,q')\) exactly when \(sRt\) and
+\(q'\in\delta(q,\ell_A(t))\).  A counterexample to \(A\) exists exactly when an
+initial product vertex reaches a strongly connected component containing a
+state whose automaton coordinate lies in \(F\) and which contains a cycle.
+Depth-first reachability plus strongly connected components therefore returns
+either satisfaction or a counterexample represented by a finite product path
+to a nonempty product cycle.  Repeating that cycle forever gives the infinite
+counterexample path.
+
+For an explicit graph the product check is linear in its product size.  The
+formula-to-automaton construction contributes separately to that product size;
+combined model checking is in polynomial space and, for each fixed
+formula/automaton, linear in the explicit structure
+\cite{VardiWolper1986,SistlaClarke1985}.
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p09-ltl-model-checking}{cited=VardiWolper1986,SistlaClarke1985}{Correctness and complexity of automata-theoretic LTL model checking}
+For the product in Definition~\ref{def:p09-ltl-model-checking}, an initial
+product vertex reaches an accepting cyclic strongly connected component if
+and only if \(\mathcal K\) has a path satisfying \(\neg A\).  Consequently the
+procedure returns ``satisfies \(A\)'' exactly when every path from \(s_0\)
+satisfies \(A\), and every negative answer yields a finite product path plus a
+nonempty product cycle whose infinite unfolding is a counterexample.  With the
+formula and explicit finite structure both included
+in the input, this universal-path model-checking problem is
+\(\mathsf{PSPACE}\)-complete: Sistla--Clarke prove the corresponding
+existential-path problem PSPACE-complete, and deterministic polynomial space
+is closed under complement.  For each fixed formula it is linear in the
+structure size.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p09-bet}{cited=Buchi1959WeakReport,Buchi1960,Elgot1961,Trakhtenbrot1961,Trakhtenbrot1962Expanded,Thomas1996Report}{B\"uchi--Elgot--Trakhtenbrot theorem for finite words}
+Let \(\Sigma\) be a finite alphabet and let \(L\subseteq\Sigma^*\).  The
+language \(L\) is definable in monadic second-order logic on finite word
+structures whose domain is the set of positions, with one unary letter
+predicate \(P_a\) for each \(a\in\Sigma\) and the linear order on positions,
+exactly when it is regular.  Equivalently one may retain the same letter
+predicates and use successor: on a finite successor chain, its endpoints and
+order are monadic-second-order definable
+\cite{Buchi1959WeakReport,Buchi1960,Elgot1961,Trakhtenbrot1961,
+Trakhtenbrot1962Expanded,Thomas1996Report}.
+This displayed sentence is the modern formulation.  The original sources use
+different encodings and result packages: B\"uchi's 1959 report
+precursor uses eventually-false predicates and a terminal-marker word
+encoding; Elgot develops finite-set arithmetics and automaton design; and
+Trakhtenbrot's 1961 announcement and complete 1962 expansion place their
+finite-word bridge inside a broader theory of arbitrary predicates, finite
+operators, topology, and synthesis.  The name does not assert that this
+sentence occurs verbatim in each source.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p09-s1s}{cited=Buchi1962}{B\"uchi's normal form and decision theorem; modern automata corollary}
+Let \(SC\) be B\"uchi's interpreted monadic second-order language over
+\(\mathbb N\), with \(0\), successor, individual variables, and monadic
+variables ranging over all subsets of \(\mathbb N\).  Every formula whose only
+free variables are the listed monadic variables
+\(\mathbf i=(i_1,\ldots,i_k)\), with no free individual variable, is
+equivalent by B\"uchi's Theorem~1 to a recurrent existential formula.  The
+paper's later finite-enumeration and effectivity argument turns that existence
+statement into an effective construction before Theorem~2 concludes
+decidability.  Under the handbook-owned finite-data encoding and single-start
+conversion in Section~\ref{sec:p09-presentation-n-c-013}, the satisfying
+assignments form a nondeterministic B\"uchi-recognizable language over
+\(\{0,1\}^k\); conversely the same handbook encoding turns every such
+recognized language into an \(SC\)-formula.  The modern automaton tuple and
+converse packaging are therefore handbook corollaries, not the literal wording
+of Theorem~1.  In particular, after the later effective normalization, truth
+of closed \(SC\)-sentences is decidable by the finite stem--cycle search in
+B\"uchi's Lemma~12.  The source proves decidability but states no modern
+complexity bound.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p09-s2s}{cited=Rabin1969}{Decidability of S2S}
+Let \(T=\{0,1\}^*\), and for \(i\in\{0,1\}\) define
+\(S_i:T\to T\) by \(S_i(u)=ui\).  The monadic second-order theory of the full
+infinite binary successor tree \((T;S_0,S_1)\) is decidable by Rabin's
+tree-automata construction.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p09-ranked-tree-automaton}{Finite ranked trees and bottom-up tree automata}
+A finite ranked alphabet is a disjoint union
+\(\Sigma=\bigsqcup_{n\geq0}\Sigma_n\), where every symbol in \(\Sigma_n\) has
+arity \(n\).  The set \(T_\Sigma\) of finite \(\Sigma\)-trees is the least set
+such that
+\[
+ f\in\Sigma_n,\quad t_1,\ldots,t_n\in T_\Sigma
+ \quad\Longrightarrow\quad f(t_1,\ldots,t_n)\in T_\Sigma;
+\]
+the case \(n=0\) supplies leaves.
+
+A nondeterministic finite bottom-up tree automaton is
+\(\mathcal A=(Q,\Sigma,\Delta,F)\), with finite state set \(Q\), final states
+\(F\subseteq Q\), and transitions
+\[
+ f(q_1,\ldots,q_n)\longrightarrow q
+ \qquad(f\in\Sigma_n).
+\]
+A run on \(t\) assigns a state to every position of \(t\) so that a node
+labelled \(f\in\Sigma_n\), whose children carry \(q_1,\ldots,q_n\), carries
+some \(q\) licensed by the displayed transition.  The run accepts when its
+root state lies in \(F\), and
+\(L(\mathcal A)=\{t\in T_\Sigma:\mathcal A\text{ has an accepting run on }t\}\).
+These definitions are necessary because arity-indexed finite trees and
+bottom-up runs are not word automata or Rabin runs on infinite trees.  They
+stand as finite terms and finite automata, and the distinction is used by the
+decision and definability theorem below
+\cite{ComonEtAl2007}.
+\index{tree automaton}\index{ranked alphabet}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p09-finite-tree-automata}{proved=annex:p9.trees.1}{Finite-tree automata and monadic second-order logic}
+Regard a finite ranked tree as the finite structure of its positions, with one
+unary label predicate for each ranked symbol and one child-position relation
+for each available child index.  A language of such trees is recognized by a
+finite bottom-up tree automaton exactly when it is definable in monadic
+second-order logic over that signature.  Here weak monadic variables range over
+finite subsets of the finite position domain, whereas full monadic variables
+range over all subsets of that domain.  Every subset of a finite domain is
+finite, so weak and full quantification coincide on these structures.  This
+finite-domain coincidence does not identify their distinct ranges over the
+infinite successor tree.
+The automata admit an effective subset determinization; their languages are
+effectively closed under union, intersection, and complement; membership and
+emptiness are decidable, the latter by computing states reachable from nullary
+transitions upward.  Consequently every construction that effectively
+reduces a finite-tree property to one of these language operations and an
+emptiness question yields a decision procedure
+\cite{ComonEtAl2007}.  None of these finite-tree clauses is Rabin's
+infinite-tree automaton construction used in Theorem~\ref{thm:p09-s2s}.
+\end{hbtheorem}
+
+The existing worked automaton for \(\mathsf G\mathsf Fp\) is
+Figure~\ref{fig:p08-buchi-gfp}; the branching-time comparison is
+Figure~\ref{fig:p08-ctl-tree}.
+
+\input{parts/p09/presentations/n-c-012}
+\input{parts/p09/presentations/n-c-013}
+\input{parts/p09/presentations/n-c-014}
+\input{parts/p09/presentations/n-c-015}
+
+\section{Model checking: explicit, symbolic, and quantitative}
+\label{sec:p09-model-checking}
+
+\begin{hbdefinition}{def:p09-ctl}{Reused CTL syntax and explicit predecessor operations}
+The exact CTL and CTL* syntax, semantics, cards, and Hilbert sheets are
+Definition~\ref{def:p08-ctl-semantics},
+Definition~\ref{def:p08-ctl-star-semantics},
+\hyperref[entry:p08-ctl]{the CTL card}, and
+\hyperref[entry:p08-ctl-star]{the CTL* card}.  For the finite total transition
+structure \(\mathcal K=(S,R,V)\), define the state-set maps
+\[
+ \operatorname{Pre}_{\exists},\operatorname{Pre}_{\forall}:
+ \mathcal P(S)\longrightarrow\mathcal P(S)
+\]
+as follows for every \(X\in\mathcal P(S)\):
+\[
+\begin{aligned}
+ \operatorname{Pre}_{\exists}(X)
+   &=\{s\in S:\exists t\,(sRt\land t\in X)\},\\
+ \operatorname{Pre}_{\forall}(X)
+   &=\{s\in S:\forall t\,(sRt\to t\in X)\}.
+\end{aligned}
+\]
+These predecessor maps are algorithmic operations on state sets, not new path
+quantifiers.  They are used by every temporal clause of the labelling
+algorithm below.
+\index{CTL}\index{CTL*}
+\end{hbdefinition}
+
+\begin{hbmethod}{def:p09-ctl-labelling}{Total finite-state CTL labelling}
+Given a finite total transition structure \(\mathcal K=(S,R,V)\) and a CTL
+formula \(A\), use the predecessor maps of Definition~\ref{def:p09-ctl}.
+For a monotone map \(F:\mathcal P(S)\to\mathcal P(S)\), the notations
+\(\mu X.F(X)\) and \(\nu X.F(X)\) denote respectively its least and greatest
+fixed points in the complete lattice \((\mathcal P(S),\subseteq)\); the bound
+variable \(X\) therefore ranges over state sets.  Process the subformulas of
+\(A\) bottom-up.  Put
+\[
+\begin{aligned}
+ L(\top)&=S,&
+ L(p)&=V(p),\\
+ L(\neg B)&=S\setminus L(B),\\
+ L(B\land C)&=L(B)\cap L(C),&
+ L(B\lor C)&=L(B)\cup L(C),\\
+ L(\mathsf{EX}B)&=\operatorname{Pre}_{\exists}(L(B)),&
+ L(\mathsf{AX}B)&=\operatorname{Pre}_{\forall}(L(B)),\\
+ L(\mathsf E[B\mathsf U C])
+ &=\mu X\bigl(L(C)\cup(L(B)\cap\operatorname{Pre}_{\exists}(X))\bigr),\\
+ L(\mathsf A[B\mathsf U C])
+ &=\mu X\bigl(L(C)\cup(L(B)\cap\operatorname{Pre}_{\forall}(X))\bigr),\\
+ L(\mathsf{EG}B)
+ &=\nu X\bigl(L(B)\cap\operatorname{Pre}_{\exists}(X)\bigr),\\
+ L(\mathsf{AG}B)
+ &=\nu X\bigl(L(B)\cap\operatorname{Pre}_{\forall}(X)\bigr).
+\end{aligned}
+\]
+\(\mathsf{EF}B\) and \(\mathsf{AF}B\) abbreviate the corresponding until
+formulas with left operand \(\top\).  Compute each least fixed point from
+\(\varnothing\) and each greatest fixed point from \(S\), using a worklist
+until no label changes.  Monotonicity makes the iterations well-defined, and
+each state enters or leaves a fixed-point approximation at most once per
+subformula.  The output is \(L(A)\).
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p09-ctl-labelling}{proved=annex:p9.ctl.1}{Correctness and complexity of CTL labelling}
+For every finite total transition structure, CTL formula \(A\), and state
+\(s\),
+\[
+ s\in L(A)\quad\Longleftrightarrow\quad\mathcal K,s\models A.
+\]
+With adjacency lists and worklists, the algorithm runs in
+\(O((|S|+|R|)\,|A|)\) time.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p09-ltl-ctl-boundary}{cited=EmersonHalpern1986}{The LTL--CTL expressiveness boundary}
+For an LTL path formula \(\varphi\), let \(A\varphi\) be its state lift: it is
+true at a state exactly when \(\varphi\) holds on every path from that state.
+On finite total transition structures, state-lifted LTL and CTL are
+expressively incomparable.  No state-lifted LTL formula defines the CTL
+branching pattern \(\mathsf{AG}\mathsf{EF}p\), while no CTL formula defines the
+state lift \(A(\mathsf F\mathsf Gp)\).  CTL* contains CTL and state-lifted LTL
+while keeping state formulas distinct from path formulas.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p09-ctl-star-complexity}{cited=ClarkeEmersonSistla1986,EmersonLei1987,EmersonHalpern1985,EmersonJutla1999}{CTL and CTL* decision boundaries}
+For finite explicit total transition structures, CTL model checking is
+\(\mathsf P\)-complete and is performed by the linear labelling algorithm
+above.  Combined CTL* model checking is \(\mathsf{PSPACE}\)-complete.  CTL
+satisfiability is \(\mathsf{EXPTIME}\)-complete, whereas CTL* satisfiability is
+\(\mathsf{2EXPTIME}\)-complete.  These four problems and bounds are distinct.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p09-mu-calculus}{Niwi\'nski, simple, and Emerson--Lei alternation classes}
+The exact language, positivity condition, semantics, calculus, and system card
+are Definition~\ref{def:p08-modal-mu-semantics},
+\hyperref[sheet:hilbert-mu]{the Kozen sheet}, and
+\hyperref[entry:p08-modal-mu]{the Part VIII card}.  Assume formulas are in
+positive form.  Put
+\[
+ \Sigma^{N\mu}_0=\Pi^{N\mu}_0
+   =\{A:A\text{ contains no fixed-point operator}\}.
+\]
+For \(n\geq0\), \(\Sigma^{N\mu}_{n+1}\) is the least class containing
+\(\Sigma^{N\mu}_n\cup\Pi^{N\mu}_n\) and closed under the following clauses:
+
+\begin{enumerate}
+\item if \(A,B\) belong to the class, then so do \(A\land B\), \(A\lor B\),
+      \(\langle a\rangle A\), and \([a]A\);
+\item if \(A\) belongs to the class, then \(\mu Z.A\) belongs to it;
+\item if \(A(Z)\) and \(B\) belong to the class, then the substitution
+      \(A(B)\) belongs to it, provided that no free variable of \(B\) is
+      captured by a fixed-point binder in \(A\).
+\end{enumerate}
+
+The dual definition of \(\Pi^{N\mu}_{n+1}\) uses the same Boolean, modal, and
+capture-avoiding substitution clauses and closes under \(\nu Z.A\) rather than
+\(\mu Z.A\).  These are Niwi\'nski's formula classes.  Omitting the substitution
+clause gives the \emph{simple} classes
+\(\Sigma^{S\mu}_n,\Pi^{S\mu}_n\); permitting that clause only when the
+substituted formula \(B\) is closed gives the \emph{Emerson--Lei} classes
+\(\Sigma^{EL\mu}_n,\Pi^{EL\mu}_n\).
+
+For \(X\in\{N,S,EL\}\), the symmetric \(X\)-\emph{alternation depth} of \(A\)
+is the least \(n\) such that
+\(A\in\Sigma^{X\mu}_{n+1}\cap\Pi^{X\mu}_{n+1}\).  The superscript is never
+dropped when the three conventions can disagree.  The three names are
+necessary because capture-avoiding substitution, closed substitution, and no
+substitution yield nonidentical classifications.  Their standing is as
+syntactic formula classes and a metalinguistic formula measure; none denotes
+the number of iterations in one finite model-checking run.  The Niwi\'nski
+classes are used in the next theorem \cite[sec.~7]{BradfieldStirling2007}.
+\index{modal mu-calculus@modal \(\mu\)-calculus}\index{alternation depth}
+\index{parity game}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p09-mu-alternation}{cited=BradfieldStirling2007}{Strictness of the modal-\(\mu\) alternation hierarchy}
+For every \(n\geq1\), there is a closed formula
+\(A\in\Sigma^{S\mu}_n\subseteq\Sigma^{N\mu}_n\) that is not equivalent over
+transition systems to any formula in \(\Pi^{N\mu}_n\).
+The same exclusion holds when equivalence is restricted to all finite
+transition systems. Because the witnesses already belong to the simple
+classes, they also prove strictness for the Emerson--Lei and Niwi\'nski
+classes. The opposite-sided witnesses follow by duality.
+Section~\ref{sec:p09-mu-alternation-strictness-proof} supplies the proof,
+including the translation that preserves the Niwi\'nski index and the
+binary-tree diagonal construction \cite{Arnold1999BinaryHierarchy}.
+\end{hbtheorem}
+
+Parity-game model checking uses priorities derived from the selected
+dependency-sensitive alternation convention \cite{EmersonJutla1999}; the
+exact finite-state decision status remains on
+\hyperref[entry:p08-modal-mu]{the Part VIII system card}.
+
+Reduced ordered binary decision diagrams and their fixed-order canonicity have
+the single public identities Definition~\ref{def:p12-robdd} and
+Theorem~\ref{thm:p12-robdd-canonicity}.  Symbolic model checking applies the
+fixed-point operations above to those representations
+\cite{BurchEtAl1992}.  Bounded model checking instead encodes
+executions of a fixed bound as SAT instances; absence of a bounded
+counterexample is not an unbounded safety proof unless a completeness bound is
+also established \cite{BiereCimattiClarkeZhu1999}.  Counterexample-guided
+abstraction refinement alternates an abstract check with a feasibility test
+and refinement \cite{ClarkeEtAl2003}.
+
+\begin{hbmethod}{def:p09-interpolant-model-checking}{Resolution-interpolant finite-state safety checking}
+Let a finite Boolean transition system be represented by formulas
+\[
+ M=(I(V),T(V,V'),F(V)),
+\]
+where \(I\) is the initial-state set, \(F\) the bad-state set, and the total
+relation \(T\) connects current variables \(V\) to next variables \(V'\).
+A run of length \(m\) is an assignment to copies
+\(W_0,\ldots,W_m\) satisfying
+\[
+ I(W_0)\land\bigwedge_{0\leq i<m}T(W_i,W_{i+1});
+\]
+it is bad when some \(F(W_i)\) holds.  This semantic run formula is the object
+encoded by bounded model checking.
+
+Fix a horizon \(k>0\), first check \(I(V)\land F(V)\), and initialize the
+reachable-state overapproximation \(R:=I\).  At each interpolation iteration,
+rename variables and form
+\[
+\begin{aligned}
+ A&=\operatorname{CNF}
+   \bigl(R(W_{-1})\land T(W_{-1},W_0)\bigr),\\
+ B&=\operatorname{CNF}
+   \left(
+    \bigwedge_{0\leq i<k}T(W_i,W_{i+1})
+    \land\bigvee_{0\leq i\leq k}F(W_i)
+   \right).
+\end{aligned}
+\]
+Here \(\operatorname{CNF}\) means a definitional CNF whose projection onto the
+displayed state variables is equivalent to the encoded formula: a state
+assignment satisfies the encoded formula exactly when some assignment to the
+fresh auxiliary variables satisfies the CNF.  The two
+encodings use disjoint auxiliary variables; their only shared variables are
+the state copy \(W_0\).  If \(A\land B\) is unsatisfiable, a
+resolution refutation yields a Craig interpolant \(P(W_0)\) with
+\(A\models P\) and \(P\land B\) unsatisfiable.  Rename \(W_0\) back to \(V\)
+and replace \(R\) by \(R\lor P\).  Because \(B\) includes \(F(W_0)\), every
+interpolant excludes the bad set; together with the initial zero-step check,
+this preserves \(R\land F\) as unsatisfiable.  If \(P\models R\) held before
+the update, then the old \(R\) is closed under one-step successors and excludes
+\(F\), so it is an inductive safety invariant.  If \(A\land B\) is satisfiable
+on the first iteration, its assignment is a genuine bad run of length at most
+\(k+1\) from an initial state.  On a
+later iteration \(R\) may contain unreachable states, so satisfiability may be
+spurious: the current horizon is abandoned and increased rather than reported
+as a counterexample.
+
+The \emph{reverse depth} of \((M,F)\) is
+\[
+ \operatorname{rd}(M,F)=
+ \max\{\min\{m:\exists s_0,\ldots,s_m\,
+       (s_0=s\land s_m\in F\land
+        \bigwedge_{0\leq i<m}T(s_i,s_{i+1}))\}:
+        s\text{ can reach }F\},
+\]
+with maximum \(0\) when no state reaches \(F\).  It is a graph parameter, not
+a formula constructor: unlike graph diameter it ignores pairs irrelevant to
+the bad set and takes each relevant state's shortest bad-state distance.  The
+distinction is necessary because it supplies the termination horizon in the
+next theorem.  The interpolant itself is a formula over one state copy, not a
+path predicate, and is used only to enlarge \(R\)
+\cite{McMillan2003}.
+\index{interpolation-based model checking}\index{reverse depth}
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p09-interpolant-model-checking}{cited=McMillan2003}{Correctness and finite-state termination of interpolation-based safety checking}
+For a fixed horizon, a first-iteration satisfying assignment returned by the
+procedure above denotes a real bad run, and a fixed point denotes an inductive
+invariant proving that no bad run exists.  A satisfying assignment after the
+first iteration justifies only the stated abort of that horizon.  For every
+finite transition system, the positive horizon
+\[
+ k=\max\{1,\operatorname{rd}(M,F)\}
+\]
+makes the procedure terminate with either a genuine counterexample or an
+inductive safety invariant.  McMillan's proof chooses the reverse depth itself;
+the maximum with \(1\) records the displayed procedure's separate hypothesis
+\(k>0\), including the case in which the reverse depth is \(0\).
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p09-dtmc-mdp}{Finite Markov chains and Markov decision processes}
+A finite discrete-time Markov chain is
+\(\mathcal D=(S,P,L)\), where \(S\) is finite,
+\(P:S\times S\to\mathbb Q\cap[0,1]\) has
+\(\sum_{t\in S}P(s,t)=1\), and \(L:S\to2^{\mathsf{Prop}}\).  Products of
+transition probabilities assign probabilities to finite path cylinders and
+thereby determine the path measure \(\Pr_s\) from state \(s\).
+
+A finite Markov decision process is
+\(\mathcal M=(S,\mathsf{Act},P,L)\), again with rational probabilities, where
+\[
+ P:S\times\mathsf{Act}\times S\longrightarrow\mathbb Q\cap[0,1],
+ \qquad
+ \sum_{t\in S}P(s,a,t)\in\{0,1\},
+\]
+and
+\[
+ \mathsf{Act}(s)=
+ \left\{a:\sum_{t\in S}P(s,a,t)=1\right\}\ne\varnothing
+\]
+for every state.  Thus an enabled row is a probability distribution and a
+disabled row is identically zero.  Let
+\(\operatorname{Paths}_{\mathrm{fin}}(\mathcal M)\) contain exactly the finite
+state sequences \(s_0\cdots s_n\) such that, for every \(i<n\), some
+\(a\in\mathsf{Act}(s_i)\) has \(P(s_i,a,s_{i+1})>0\).  A deterministic
+history-dependent scheduler is a function
+\[
+ \sigma:\operatorname{Paths}_{\mathrm{fin}}(\mathcal M)\longrightarrow
+ \mathsf{Act},
+ \qquad
+ \sigma(\pi)\in\mathsf{Act}(\operatorname{last}(\pi)).
+\]
+For a history \(\pi=s_0\cdots s_n\), let
+\(\operatorname{Cyl}(\pi)\) be the set of infinite paths having \(\pi\) as
+their prefix.  The induced cylinder measure is
+\[
+ \Pr_{s_0}^{\sigma}(\operatorname{Cyl}(\pi))
+   =\prod_{0\leq i<n}
+     P\bigl(s_i,\sigma(s_0\cdots s_i),s_{i+1}\bigr).
+\]
+Only after \(\sigma\) is fixed does this extend to one path measure.
+Accordingly, for a measurable path event \(E\),
+\[
+ \Pr_s^{\min}(E)=\inf_\sigma\Pr_s^\sigma(E),
+ \qquad
+ \Pr_s^{\max}(E)=\sup_\sigma\Pr_s^\sigma(E),
+\]
+where both extrema range over this exact scheduler class.  The MDP name is
+necessary to separate nondeterministic action choice from probabilistic
+transition choice; both objects are transition models, and the distinction is
+used by the PCTL semantics and algorithms below \cite{BaierKatoen2008}.
+\index{discrete-time Markov chain}\index{Markov decision process}
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p09-pctl}{Probabilistic computation-tree logic}
+For rational \(q\in[0,1]\), comparison
+\(\bowtie\in\{<,\leq,\geq,>\}\), and a unary-encoded
+\(k\in\mathbb N\), PCTL state and path formulas are
+\[
+\begin{aligned}
+ \Phi&::=\top\mid p\mid\neg\Phi\mid\Phi\land\Phi
+       \mid\mathsf P_{\bowtie q}[\psi]
+       \mid\mathsf P^{\min}_{\bowtie q}[\psi]
+       \mid\mathsf P^{\max}_{\bowtie q}[\psi],\\
+ \psi&::=\mathsf X\Phi\mid\Phi\mathbin{\mathsf U}\Phi
+       \mid\Phi\mathbin{\mathsf U^{\leq k}}\Phi.
+\end{aligned}
+\]
+The undecorated operator is well formed on a Markov chain; the two decorated
+operators are well formed on an MDP.  For an infinite path
+\(\pi=s_0s_1\ldots\), path truth is
+\[
+\begin{aligned}
+ \pi\models\mathsf X\Phi
+ &\Longleftrightarrow s_1\models\Phi,\\
+ \pi\models\Phi\mathbin{\mathsf U}\Psi
+ &\Longleftrightarrow
+   \exists j\geq0\,[s_j\models\Psi\land
+     \forall i<j\ (s_i\models\Phi)],\\
+ \pi\models\Phi\mathbin{\mathsf U^{\leq k}}\Psi
+ &\Longleftrightarrow
+   \exists j\leq k\,[s_j\models\Psi\land
+     \forall i<j\ (s_i\models\Phi)].
+\end{aligned}
+\]
+Thus \(k\) counts transitions, not visited states.  On a Markov chain,
+\(\mathcal D,s\models\mathsf P_{\bowtie q}[\psi]\) exactly when
+\(\Pr_s(\{\pi:\pi\models\psi\})\bowtie q\).  On a Markov decision process the
+two displayed decorations use \(\Pr_s^{\min}\) and \(\Pr_s^{\max}\),
+respectively.  This quantitative modality is not the CTL path quantifier: it
+compares the measure of a path set with a threshold and is used by the next
+theorem.
+\index{PCTL}\index{probabilistic model checking}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p09-pctl-model-checking}{cited=BaierKatoen2008}{Finite-state PCTL model checking}
+PCTL model checking for finite rational Markov chains and Markov decision
+processes is polynomial in the encoded model and formula when transition
+probabilities and thresholds are binary-encoded rationals and every bounded-
+until integer \(k\) is unary encoded.  Bounded until is computed by dynamic
+programming.  For unbounded
+\(\Phi\mathbin{\mathsf U}\Psi\), target states receive value \(1\), states
+outside \(\Phi\lor\Psi\) receive value \(0\), and the remaining Markov-chain
+values satisfy
+\[
+ x_s=\sum_{t\in S}P(s,t)x_t.
+\]
+The least solution gives the reachability probabilities.  In an MDP, after
+target and forced-zero states are classified, minimum or maximum over enabled
+actions gives the corresponding Bellman equations; their extremal reachability
+values are computable by the standard linear-programming formulations.
+Deterministic memoryless schedulers attain both extrema for these finite PCTL
+reachability objectives, even though the semantics above quantifies over the
+larger history-dependent class.
+Numerical iteration alone certifies a threshold comparison only with an
+accompanying error bound.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p09-ctmc-csl}{Continuous-time Markov chains and continuous stochastic logic (CSL)}
+A finite continuous-time Markov chain in the source presentation is
+\(\mathcal C=(S,R,L)\), with finite state set \(S\), rate map
+\(R:S\times S\to\mathbb Q_{\geq0}\), and labelling map
+\(L:S\to2^{\mathsf{Prop}}\).  Rational rates are the handbook's effective-input
+convention; the semantic definition in the source permits arbitrary
+nonnegative real rates.  Unlike a generator matrix, this rate map may have
+\(R(s,s)>0\).  Put
+\[
+ E(s)=\sum_{t\in S}R(s,t).
+\]
+At a state with \(E(s)>0\), residence time is exponential with parameter
+\(E(s)\), and the state after the transition is \(t\) with probability
+\(P(s,t)=R(s,t)/E(s)\), possibly with \(t=s\).  A state \(s\) is absorbing
+exactly when \(R(s,t)=0\) for every \(t\in S\).  Allowing rate self-loops makes
+the source's next-step semantics literal; it does not change transient or
+steady-state probabilities \cite[Def.~1 and \S2.1]{BaierHaverkortHermannsKatoen2003}.
+
+A path from \(s_0\) is a timed sequence
+\[
+ \pi=s_0\xrightarrow{\tau_0}s_1
+       \xrightarrow{\tau_1}s_2\xrightarrow{\tau_2}\cdots,
+ \qquad \tau_i>0,
+\]
+with \(R(s_i,s_{i+1})>0\) at every step, ending only at an absorbing state
+when it is finite.  Put \(T_0=0\) and
+\(T_i=\sum_{j<i}\tau_j\).  Infinite paths are required to be time-divergent,
+\(T_i\to\infty\); these have full measure for a finite rate matrix.
+Write \(\pi[i]=s_i\).  We use right-continuous state occupation:
+\(\pi@t=s_i\) when \(T_i\leq t<T_{i+1}\), and, for a finite path ending
+in \(s_k\), \(\pi@t=s_k\) for every \(t\geq T_k\).
+Thus the state reached by a jump is occupied at that jump time, and a
+zero-step absorbing path occupies its initial state at every time.
+For residence-time intervals \(I_i\) with
+\(a_i=\inf I_i\) and \(b_i=\sup I_i\), the probability of the finite-prefix
+event requiring \(\pi[i]=s_i\) for \(i\leq k\) and
+\(\tau_i\in I_i\) for \(i<k\), along a feasible prescribed prefix, is
+\[
+ \prod_{i<k}P(s_i,s_{i+1})
+   \bigl(e^{-E(s_i)a_i}-e^{-E(s_i)b_i}\bigr),
+\]
+with \(e^{-E(s_i)\infty}=0\) for the positive rates of these prefix steps.
+The empty product is \(1\); an infeasible prefix has probability \(0\).
+These values determine the path measure
+\(\Pr_{s_0}\) used below \cite[\S\S2.2--2.3]{BaierHaverkortHermannsKatoen2003}.
+
+For rational \(q\in[0,1]\) and
+\(\bowtie\in\{<,\leq,>,\geq\}\), the mutually typed CSL grammar is
+\[
+ \Phi ::= \top\mid p\mid\neg\Phi\mid(\Phi\land\Phi)
+          \mid\mathsf S_{\bowtie q}[\Phi]
+          \mid\mathsf P_{\bowtie q}[\psi],
+ \qquad
+ \psi ::= \mathsf X^{I}\Phi
+          \mid\Phi\mathbin{\mathsf U^{I}}\Phi.
+\]
+For effective input, the nonempty interval
+\(I\subseteq\mathbb R_{\geq0}\) has a finite rational lower endpoint and
+a rational upper endpoint or upper bound \(\infty\), with its endpoint
+flags recorded as part of the input.  Infinity is not a possible witness
+time.  A nonempty interval whose endpoints coincide is the closed singleton
+\([a,a]\).  The timed clauses are
+\[
+ \pi\models\mathsf X^I\Phi
+ \quad\Longleftrightarrow\quad
+ \pi[1]\text{ exists},\ \tau_0\in I,\text{ and }\pi[1]\models\Phi,
+\]
+and
+\[
+ \pi\models\Phi\mathbin{\mathsf U^I}\Psi
+ \quad\Longleftrightarrow\quad
+ \exists t\in I\,[\pi@t\models\Psi\land
+   \forall u\,(0\leq u<t\to\pi@u\models\Phi)].
+\]
+The probability operator compares \(\Pr_s\{\pi:\pi\models\psi\}\) with
+\(q\).  The long-run operator has the clause
+\[
+ \mathcal C,s\models\mathsf S_{\bowtie q}[\Phi]
+ \quad\Longleftrightarrow\quad
+ \lim_{t\to\infty}
+   \Pr_s\{\pi:\pi@t\models\Phi\}\ \bowtie\ q.
+\]
+The continuous-time name is required because transition rates, residence
+times, and real-time intervals have no counterpart in the DTMC tuple; these
+objects are state and path semantics, not a renamed discrete-step model
+\cite[Defs.~4--6 and \S\S3.1--3.3]{BaierHaverkortHermannsKatoen2003}.
+\index{continuous-time Markov chain}\index{continuous stochastic logic}
+\end{hbdefinition}
+
+\paragraph{Interval endpoints and the time-zero witness.}
+\label{sec:p09-csl-endpoints}
+Abbreviate \(\Pr_s\{\pi:\pi\models\psi\}\) by \(\Pr_s(\psi)\).
+\begin{hbtheorem}{thm:p09-csl-endpoints}{proved=annex:p9.csl.1}{Endpoint normalization for CSL until}
+Fix a finite CTMC with the right-continuous semantics of
+Definition~\ref{def:p09-ctmc-csl}, and state formulas \(\Phi,\Psi\).  Put
+\(A=\{s:s\models\Phi\}\), \(B=\{s:s\models\Psi\}\), and
+\(u_I(s)=\Pr_s\{\pi:\pi\models\Phi\mathbin{\mathsf U^I}\Psi\}\).
+For a nonempty interval with \(a=\inf I<b=\sup I\), let \(J=[a,b]\)
+if \(b<\infty\), and \(J=[a,\infty)\) otherwise.  Then
+\[
+ u_I(s)=
+ \begin{cases}
+  \mathbf 1_A(s)\,u_J(s),&a=0\text{ and }0\notin I,\\
+  u_J(s),&\text{otherwise}.
+ \end{cases}
+\]
+Here \(\mathbf 1_A\) is the indicator of \(A\).  Thus finite positive
+endpoint flags can be removed for these nondegenerate until intervals;
+removing or adding the time-zero witness requires the displayed initial-state
+test.  Singleton intervals are treated separately:
+\[
+ \begin{aligned}
+  u_{[0,0]}(s)&=\mathbf 1_B(s),\\
+  u_{[a,a]}(s)&=
+   \Pr_s\{\pi:\pi@a\in B,\ \forall u\in[0,a)\ (\pi@u\in A)\}
+   \quad(a>0).
+ \end{aligned}
+\]
+An empty interval, if produced during a calculation, gives probability zero
+and must not be replaced by a nonempty singleton.
+
+\end{hbtheorem}
+
+For example, in the one-state absorbing chain with \(p\) true, put
+\(\bot=\neg\top\).  Its path probabilities are
+\[
+ \Pr_s(\bot\mathbin{\mathsf U^{(0,1]}}p)=0,
+ \qquad
+ \Pr_s(\bot\mathbin{\mathsf U^{[0,1]}}p)=1.
+\]
+Every positive witness requires \(\bot\) at time zero; the witness zero
+requires no prior state.  In contrast,
+\(\Pr_s(p\mathbin{\mathsf U^{[a,a]}}p)=1\) for every \(a\geq0\).
+Continuity of residence-time distributions does not make a prescribed-time
+state-occupation event have probability zero.
+
+\begin{hbtheorem}{thm:p09-csl-model-checking}{cited=BaierHaverkortHermannsKatoen2003}{Finite-state CSL model checking}
+For a finite rational continuous-time Markov chain, the source gives four
+separate computations.
+
+First, its Corollary~1 identifies unbounded-until probability with the least
+solution of the embedded-chain reachability equations.  Second, its
+Proposition~2 decomposes a long-run probability over bottom strongly connected
+components: solve the steady-state linear equations inside each component and
+weight the result by the probability of eventually reaching that component.
+Third, its Theorem~1 characterizes until with closed finite time bounds as the
+least fixed point of a Volterra integral-equation operator.  Fourth, its
+Theorems~2 and~3 replace that integral computation by transient analysis:
+\([0,b]\) needs one suitably absorbing transformation of the chain, while a compact
+interval \([a,b]\) with \(0<a\leq b\) needs transient analyses at \(a\) and at
+\(b-a\) on two such transformations
+\cite[Prop.~2, Cor.~1, and Thms.~1--3]{BaierHaverkortHermannsKatoen2003}.
+The distinct April 2002 CTIT report provides an earlier presentation
+\cite{BaierHaverkortHermannsKatoen2002Report}; its report locators and the
+journal locators identify separate versions.
+\end{hbtheorem}
+
+The following formulation fixes the occupation and endpoint conventions for
+these computations; its direct derivation is separate from the cited
+Volterra and steady-state results.
+\begin{hbtheorem}{thm:p09-csl-interval-computations}{proved=annex:p9.csl.2}{Endpoint-aware CSL until computations}
+Use the chain and notation of Theorem~\ref{thm:p09-csl-endpoints}.
+The until probability vectors \(u_I,v_t,h\) are column vectors.
+The sets \(A,B\) are evaluated in the original chain and held fixed during
+each transformation; nested state formulas are not reevaluated in a modified
+chain.
+For \(C\subseteq S\), let \(R_C(s,t)=R(s,t)\) for \(s\in C\), and
+\(R_C(s,t)=0\) otherwise; put
+\[
+ E_C(s)=\sum_tR_C(s,t),\qquad
+ Q_C=R_C-\operatorname{diag}(E_C),\qquad
+ D_A=\operatorname{diag}(\mathbf 1_A).
+\]
+Thus states outside \(C\) are made absorbing.  Write
+\(\mathbf 1_B\) for the indicator column of \(B\) and put
+\(v_t=e^{Q_{A\setminus B}t}\mathbf 1_B\).  The until probabilities are
+\[
+ u_{[0,b]}=v_b\quad(b\geq0),\qquad
+ u_{[a,b]}=e^{Q_Aa}D_Av_{b-a}\quad(0<a\leq b<\infty).
+\]
+For an infinite upper bound, first compute the unbounded-until vector \(h\):
+set \(h_s=1\) on \(B\), set \(h_s=0\) outside \(A\cup B\) and at
+absorbing states outside \(B\), and take the least nonnegative solution of
+\(h_s=\sum_tP(s,t)h_t\) at the remaining states.  Then
+\[
+ u_{[0,\infty)}=h,\qquad
+ u_{[a,\infty)}=e^{Q_Aa}D_Ah\quad(a>0).
+\]
+For any nondegenerate flagged interval, apply Theorem~\ref{thm:p09-csl-endpoints} to
+these vectors.  In particular, an interval with excluded lower endpoint zero
+requires left multiplication by \(D_A\); its initial-state test must not be
+discarded before transient analysis.
+
+\end{hbtheorem}
+
+For a two-state chain with \(R(s,g)=r>0\), all other rates zero,
+\(A=\{s\}\), and \(B=\{g\}\), the first jump time is exponential of
+rate \(r\).  At that jump the path occupies \(g\), so
+\[
+ u_{[0,b]}(s)=1-e^{-rb},\qquad
+ u_{[a,b]}(s)=e^{-ra}-e^{-rb}\quad(0<a\leq b).
+\]
+In particular, \(u_{[a,a]}(s)=0\) for \(a>0\): the first entry would
+have to occur exactly at \(a\).  If instead \(A=S\), the singleton-until
+event is occupation of \(g\) at \(a\), whose probability is
+\(1-e^{-ra}\); a visit before \(a\) can then persist until the witness.
+
+Timed next has a separate computation.  For nonempty \(I\) with endpoints
+\(a,b\),
+\[
+ \Pr_s(\mathsf X^I\Psi)=
+ \begin{cases}
+  0,&E(s)=0,\\
+  \bigl(e^{-E(s)a}-e^{-E(s)b}\bigr)
+       \displaystyle\sum_{t\in B}P(s,t),&E(s)>0,
+ \end{cases}
+\]
+where the second exponential is zero for \(b=\infty\)
+\cite[Prop.~3]{BaierHaverkortHermannsKatoen2003}; the conditioning calculation
+is given after the proof in Annex~\ref{annex:p9.csl.2}.
+Its probability is unaffected by finite endpoint flags, and is zero for
+every singleton interval; an absorbing state has no next step.
+
+The source's uniformization calculation makes the approximation boundary
+explicit.  Let
+\[
+ Q=R-\operatorname{diag}(E),\qquad
+ 0<\lambda\quad\text{and}\quad\lambda\geq\max_{s\in S}E(s),\qquad
+ U=I+\frac{Q}{\lambda}.
+\]
+Here \(I\) is the identity matrix on \(S\); at zero time, use
+\(e^{Q_C0}=I\) exactly.  For an initial row distribution \(\mu\),
+\[
+ \mu e^{Qt}
+ =\sum_{n=0}^{\infty}
+   e^{-\lambda t}\frac{(\lambda t)^n}{n!}\,\mu U^n.
+\]
+If \(k\) is chosen so that the retained Poisson mass is at least
+\(1-\varepsilon\), the omitted probability mass is at most \(\varepsilon\).
+Thus the exact partial sum bounds each transient probability from below, with
+upper endpoint obtained by adding \(\varepsilon\); any error from evaluating
+the retained terms or from floating-point arithmetic must be bounded and added
+separately.  Sums and products in Theorems~2--3 must propagate those bounds
+\cite[\S4.3, eqs.~(7)--(8), and \S6]{BaierHaverkortHermannsKatoen2003}.
+
+A Boolean threshold conclusion is justified only when the resulting interval
+lies wholly on the required side of the rational threshold.  If the threshold
+remains in the interval, refinement may separate unequal values; equality
+requires a separate exact or analytic argument.  A displayed decimal alone is
+not a proof of a CSL clause.
+
+\begin{table}[htbp]
+\centering\scriptsize
+\begin{tabularx}{\textwidth}{@{}l X X X@{}}
+\toprule
+Model and logic & Choice quantified & Core computation & Boundary \\
+\midrule
+DTMC / PCTL & one probability measure from each state & bounded dynamic
+programming; unbounded reachability equations & rational finite-state input \\
+MDP / PCTL & minimum or maximum over deterministic history-dependent
+schedulers & Bellman equations or linear programming & the scheduler
+quantifier must be printed; memoryless schedulers attain reachability extrema \\
+CTMC / CSL & exponential residence times and continuous-time path measure &
+embedded-chain reachability, steady-state equations, transient analysis &
+retain interval endpoint flags and the time-zero case; numerical answers
+require error control \\
+\bottomrule
+\end{tabularx}
+\caption{Qualitative, probabilistic, and stochastic model-checking boundaries.
+The rows fix different transition objects and may not inherit one another's
+algorithms merely because each has a temporal modality.}
+\label{tab:p09-probabilistic-model-checking}
+\end{table}
+
+\subsection{Atemporal probability statements}
+
+\begin{hbdefinition}{def:p09-likelihood-logic}{Propositional likelihood language and probability structures}
+Let \(\varphi\) range over propositional event formulas.  A likelihood term is
+\(w(\varphi)\), and a basic likelihood formula is a linear inequality
+\[
+ a_1w(\varphi_1)+\cdots+a_nw(\varphi_n)\geq b
+\]
+with rational coefficients; multiplying through by a common denominator gives
+the equivalent integer-coefficient presentation.  Likelihood formulas are
+Boolean combinations of these inequalities.
+
+A probability structure is a tuple \((W,\mathcal F,\mu,\pi)\), where
+\((W,\mathcal F,\mu)\) is a probability space and \(\pi(w)\) is a
+propositional valuation at each world.  Here \(\pi\) is locally a valuation
+map, not the path metavariable used in the preceding temporal section.  Every
+definable event
+\[
+ \llbracket\varphi\rrbracket
+   =\{w\in W:(W,\mathcal F,\mu,\pi),w\models\varphi\}
+\]
+is required to lie in \(\mathcal F\), and
+\(w(\varphi)\) denotes \(\mu(\llbracket\varphi\rrbracket)\).  An inequality is
+true exactly when the resulting real numbers satisfy it; Boolean connectives
+then have their ordinary truth conditions.
+
+This atemporal language is necessary because a probability assigned to a
+propositional event is not a probability of temporal paths.  It stands as a
+family of statements interpreted in probability structures, differs from
+PCTL and CSL by having no transition relation, scheduler, or time coordinate,
+and is used by the axiomatization and complexity theorem below
+\cite{FaginHalpernMegiddo1990,Halpern2003}.
+\index{likelihood logic}\index{probability structure}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p09-likelihood-logic}{cited=FaginHalpernMegiddo1990}{Axiomatization and complexity of propositional likelihood reasoning}
+After rational coefficients have been cleared to integers, the likelihood
+language of Definition~\ref{def:p09-likelihood-logic} has a sound and complete
+axiomatization.  The source calls it
+\(\mathsf{AX}_{\mathrm{MEAS}}\).  It consists of propositional reasoning, all
+valid linear-inequality principles, and the probability clauses
+\[
+\begin{gathered}
+ w(\varphi)\geq0,\qquad w(\top)=1,\\
+ w(\varphi\land\psi)+w(\varphi\land\neg\psi)=w(\varphi),\\
+ \text{if }\varphi\leftrightarrow\psi\text{ is a tautology, then }
+ w(\varphi)=w(\psi).
+\end{gathered}
+\]
+It derives \(w(\bot)=0\) and, when \(\varphi\land\psi\) is contradictory,
+\(w(\varphi\lor\psi)=w(\varphi)+w(\psi)\).
+
+More precisely, if \(F\) is satisfiable and \(|F|\) counts its symbols with
+each integer coefficient counted once, then \(F\) has a model with at most
+\(|F|\) states and with every subset of the state set measurable.  If
+\(\lVert F\rVert_{\mathrm{coef}}\) is the largest binary coefficient length,
+the state probabilities may be chosen rational with bit length
+\[
+ O\!\left(|F|\,\lVert F\rVert_{\mathrm{coef}}
+          +|F|\log |F|\right).
+\]
+Consequently satisfiability for Boolean combinations of the inequalities is
+\(\mathsf{NP}\)-complete.  These are respectively the source's
+Theorems~2.2, 2.4, 2.6, and~2.9.  The result is about finite additivity on
+propositional events; it imports neither a temporal path measure nor an
+independence assumption.
+\end{hbtheorem}
+
+\input{parts/p09/presentations/n-x-015}
+
+\input{parts/p09/presentations/n-c-016}
+\input{parts/p09/presentations/n-c-017}
+\input{parts/p09/presentations/n-c-018}
+
+\section{Program logics}
+\label{sec:p09-program-logics}
+
+\begin{hbdefinition}{def:p09-pdl}{Propositional dynamic logic}
+Programs and formulas are generated together:
+\[
+\begin{aligned}
+ \alpha&::=a\mid\alpha;\beta\mid\alpha\cup\beta\mid\alpha^{*}\mid A?,\\
+ A&::=p\mid\neg A\mid A\land B\mid[\alpha]A.
+\end{aligned}
+\]
+An atomic program \(a\) denotes a binary relation; composition, union, and
+star denote relational composition, union, and reflexive-transitive closure;
+the test \(A?\) denotes the identity relation restricted to \(A\)-states.
+\(M,s\models[\alpha]A\) exactly when every \(\alpha\)-successor of \(s\)
+satisfies \(A\).  The program grammar is necessary because the star is a
+regular-program constructor, not formula closure.
+\index{propositional dynamic logic}\index{PDL}
+\end{hbdefinition}
+
+The finite vocabulary used for filtration is defined exactly by the following
+simultaneous recursion:
+\[
+\begin{aligned}
+ \operatorname{FL}(p)
+   &=\{p\},\\
+ \operatorname{FL}(\neg A)
+   &=\{\neg A\}\cup\operatorname{FL}(A),\\
+ \operatorname{FL}(A\land B)
+   &=\{A\land B\}\cup\operatorname{FL}(A)\cup\operatorname{FL}(B),\\
+ \operatorname{FL}([\alpha]A)
+   &=\operatorname{FL}_{\Box}([\alpha]A)\cup\operatorname{FL}(A),\\[2pt]
+ \operatorname{FL}_{\Box}([a]A)
+   &=\{[a]A\},\\
+ \operatorname{FL}_{\Box}([\alpha\cup\beta]A)
+   &=\{[\alpha\cup\beta]A\}
+     \cup\operatorname{FL}_{\Box}([\alpha]A)
+     \cup\operatorname{FL}_{\Box}([\beta]A),\\
+ \operatorname{FL}_{\Box}([\alpha;\beta]A)
+   &=\{[\alpha;\beta]A\}
+     \cup\operatorname{FL}_{\Box}([\alpha][\beta]A)
+     \cup\operatorname{FL}_{\Box}([\beta]A),\\
+ \operatorname{FL}_{\Box}([\alpha^{*}]A)
+   &=\{[\alpha^{*}]A\}
+     \cup\operatorname{FL}_{\Box}([\alpha][\alpha^{*}]A),\\
+ \operatorname{FL}_{\Box}([B?]A)
+   &=\{[B?]A\}\cup\operatorname{FL}(B).
+\end{aligned}
+\]
+Both \(\operatorname{FL}\) and \(\operatorname{FL}_{\Box}\) are
+metalinguistic finite-set functions on the registered syntax.
+\(\operatorname{FL}_{\Box}\) is defined only on boxed formulas and decomposes
+their outer program index, while the separate \(\operatorname{FL}\) clauses
+decompose formula structure.  This separation makes the star clause
+well-founded: every recursive program argument is a proper subexpression of
+the outer program, even when the displayed boxed formula becomes longer.
+The resulting Fischer--Ladner closure is used in the filtration,
+small-model, and decision arguments below and is not closure under arbitrary
+program formation \cite[\S6.1]{HarelKozenTiuryn2000}.
+
+Kozen and Parikh prove completeness for the test-free Segerberg language and
+explicitly omit the test constructor from that paper.  The test-containing
+language and calculus printed here are therefore controlled by the later
+complete presentation of Harel, Kozen, and Tiuryn; the two source roles are not
+identified \cite{KozenParikh1981,HarelKozenTiuryn2000}.
+
+\begin{hbtheorem}{thm:p09-pdl-adequacy}{cited=HarelKozenTiuryn2000}{Soundness and completeness of the registered test-containing PDL calculus}
+The calculus on
+\hyperref[sheet:hilbert-pdl]{\texttt{sheet:hilbert-pdl}} is sound and complete
+for the relational semantics of Definition~\ref{def:p09-pdl}.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p09-pdl-decision}{cited=HarelKozenTiuryn2000}{PDL finite-model and decision bounds}
+Every satisfiable PDL formula \(A\) has a model with at most
+\(2^{|\operatorname{FL}(A)|}\) states and hence with exponentially many states
+in \(|A|\).  Under the source's symbol-count convention, the sharper printed
+bound is \(2^{|A|}\).  PDL satisfiability is
+\(\mathsf{EXPTIME}\)-complete.  Fischer and Ladner supply the original closure,
+finite-model construction, and their literal exponential machine bounds;
+Harel--Kozen--Tiuryn Theorems 6.5, 8.4, and 8.5 control the stated small-model,
+algorithmic, and exact modern complexity conclusions.  These results are
+source-controlled separately from calculus completeness.
+\end{hbtheorem}
+
+\begin{systementry}{entry:p09-pdl}{Propositional dynamic logic}
+  \entrylanguage{The mutually generated regular-program and modal formula
+    grammar of Definition~\ref{def:p09-pdl}.}
+  \entrysemantics{Binary relations for programs; universal successor truth for
+    \([\alpha]\).}
+  \entrycalculus{sheet:hilbert-pdl}
+  \entryadequacy{cited=HarelKozenTiuryn2000}{Sound and complete for the exact
+    relational semantics.}
+  \entrydecidability{cited=HarelKozenTiuryn2000}{Satisfiability is
+    \(\mathsf{EXPTIME}\)-complete and has the exponential finite-model
+    property.}
+  \entrycharacteristic{Composition, choice, test, and Kleene-star axioms plus
+    induction; star is not unrestricted program recursion.}
+  \entrytranslations{Fischer--Ladner closure supplies the finite canonical
+    search vocabulary.}
+  \entrysources{FischerLadner1979,KozenParikh1981,HarelKozenTiuryn2000}
+\end{systementry}
+
+\begin{hbdefinition}{def:p09-hoare-triple}{Partial and total correctness}
+The deterministic while language is
+\[
+ C::=\mathbf{skip}\mid x:=e\mid C;D\mid
+ \mathbf{if}\ b\ \mathbf{then}\ C\ \mathbf{else}\ D\mid
+ \mathbf{while}\ b\ \mathbf{do}\ C,
+\]
+over total integer expressions and Boolean tests.  A state \(s\) maps program
+variables to integers.  Assertions may additionally contain \emph{rigid
+logical variables}: integer parameters supplied when an assertion is
+evaluated, not members of the program state, and therefore unchanged by every
+command.  Assertion implications and triples containing them are required to
+hold uniformly for every choice of their integer values.  This parameter role
+is necessary to retain an old expression value across a command, which an
+assignable program variable cannot do; it is used by the variable \(z\) in the
+registered total-while rule and nowhere changes the command language.  The
+big-step relation
+\(\langle C,s\rangle\Downarrow t\) is the least relation satisfying: skip
+returns \(s\); assignment returns \(s[x\mapsto\llbracket e\rrbracket_s]\);
+sequence composes two big steps; the conditional executes the branch selected
+by \(b\); and the while command returns \(s\) when \(b\) is false, otherwise
+executes its body once and recurs from the resulting state.
+
+For assertions \(P,Q\) and command \(C\), the partial-correctness triple
+\(\{P\}\,C\,\{Q\}\) means that every terminating execution of \(C\) from a
+\(P\)-state ends in a \(Q\)-state. Total correctness adds termination of every
+such execution. The two names are necessary because divergence makes partial
+correctness vacuous on an execution; they stand as semantic relations among
+assertions and commands and are used to state the soundness and relative-
+completeness boundaries \cite{Floyd1967,Hoare1969}.
+\index{Hoare logic}\index{partial correctness}\index{total correctness}
+\end{hbdefinition}
+
+The complete assignment, skip, consequence, sequence, conditional, partial
+while, and variant-based total-while rules are on
+\hyperref[sheet:hoare-while]{\texttt{sheet:hoare-while}}.  Assertion
+substitution is capture avoiding.  The partial while rule proves invariant
+preservation; only the total rule carries a natural-valued decreasing variant.
+\textcite{Apt1981} controls the distinction between partial and total
+correctness and prints Harel's indexed-assertion while Rule~II.  The displayed
+decreasing-integer-variant rule is instead an editorial rule for this
+handbook's command language, proved directly in
+Annex~\ref{annex:p9.hoare.1}; it is not identified with the distinct
+Apt--Harel presentation.  \textcite{Cook1978} controls only the relative-
+completeness theorem for partial correctness below.
+
+\begin{hbtheorem}{thm:p09-hoare-soundness}{proved=annex:p9.hoare.1}{Soundness of the registered Hoare rules}
+Every partial- or total-correctness triple derivable on
+\hyperref[sheet:hoare-while]{the registered while-language sheet} has the
+corresponding semantics of Definition~\ref{def:p09-hoare-triple}.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p09-hoare-relative-completeness}{cited=Cook1978}{Cook relative completeness for partial correctness}
+Fix the deterministic while language above and an assertion theory in which
+the required strongest postconditions (equivalently, the required weakest
+liberal preconditions) are expressible and every valid assertion implication
+is available to the consequence rule.  Then every semantically valid
+partial-correctness triple is derivable on the registered sheet.  This is
+relative completeness: it does not decide the assertion theory and does not
+by itself prove termination.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p09-wp-wlp}{Weakest and weakest liberal preconditions}
+For a deterministic command \(C\) and postcondition \(Q\), define
+\[
+\begin{aligned}
+ \operatorname{wp}(C,Q)
+   &=\{s:\exists t\,(\langle C,s\rangle\Downarrow t\land t\models Q)\},\\
+ \operatorname{wlp}(C,Q)
+   &=\{s:\forall t\,(\langle C,s\rangle\Downarrow t\to t\models Q)\}.
+\end{aligned}
+\]
+Thus \(\operatorname{wp}\) includes termination, whereas
+\(\operatorname{wlp}\) permits divergence.  The two names are necessary to
+state total and partial correctness without conflation; they denote predicate
+transformers and are used in Table~\ref{tab:p09-hoare-wp}
+\cite{Dijkstra1975}.
+\index{weakest precondition}\index{weakest liberal precondition}
+\end{hbdefinition}
+
+\begin{hbexample}{def:p09-hoare-counter}{A verified countdown loop}
+For \(n\geq0\), consider
+\[
+ y:=0;\quad
+ \mathbf{while}\ x>0\ \mathbf{do}\
+   (y:=y+1;\ x:=x-1).
+\]
+Write \(C\) for this complete command.
+From precondition \(x=n\land n\geq0\), use invariant
+\(I\equiv x\geq0\land x+y=n\).  The two assignments preserve \(I\) when
+\(x>0\), and exit gives \(x=0\), hence \(y=n\).  For total correctness, the
+integer expression \(x\) is nonnegative under \(I\land x>0\) and decreases by
+one in the body, so the total-while rule applies.  This derives
+\[
+ \{x=n\land n\geq0\}\ C\ \{y=n\}
+\]
+both partially and totally, with the variant premise used only for the latter.
+\end{hbexample}
+
+\begin{table}[htbp]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}l X X@{}}
+\toprule
+Surface & Exact role & Boundary or route \\
+\midrule
+Hoare calculus & skip, assignment, consequence, sequence, conditional,
+partial while, and total while & all rule shapes and side conditions are on
+\hyperref[sheet:hoare-while]{\texttt{sheet:hoare-while}} \\
+\(\operatorname{wp}(\mathbf{skip},Q)\) & \(Q\) & total correctness \\
+\(\operatorname{wp}(x:=e,Q)\) & \(Q[e/x]\) & capture-avoiding substitution \\
+\(\operatorname{wp}(C;D,Q)\) &
+\(\operatorname{wp}(C,\operatorname{wp}(D,Q))\) & sequential composition \\
+\(\operatorname{wp}(\mathbf{if}\ b\ \mathbf{then}\ C\ \mathbf{else}\ D,Q)\) &
+\((b\land\operatorname{wp}(C,Q))\lor
+(\neg b\land\operatorname{wp}(D,Q))\) & deterministic branch \\
+\(\operatorname{wp}(\mathbf{while}\ b\ \mathbf{do}\ C,Q)\) &
+least fixed point of
+\(X\mapsto(\neg b\land Q)\lor(b\land\operatorname{wp}(C,X))\) &
+termination included \\
+\(\operatorname{wlp}(\mathbf{while}\ b\ \mathbf{do}\ C,Q)\) &
+greatest fixed point of
+\(X\mapsto(\neg b\land Q)\lor(b\land\operatorname{wlp}(C,X))\) &
+divergence permitted \\
+Separation frame & preserve an independently owned disjoint heap fragment &
+\hyperref[sheet:separation-logic]{\texttt{sheet:separation-logic}} and
+Theorem~\ref{thm:p09-frame-rule} \\
+\bottomrule
+\end{tabularx}
+\caption{Hoare rules, weakest preconditions, liberal preconditions, and the
+separation-logic boundary.}
+\label{tab:p09-hoare-wp}
+\end{table}
+
+\begin{hbdefinition}{def:p09-separation-logic}{Heap separation and the frame rule}
+Write \(h_1\perp h_2\) when finite partial heaps have disjoint domains and
+\(h_1\uplus h_2\) for their union.  Assertions denote sets of stack--heap
+states.  The separating conjunction \(P*Q\) holds at \((s,h)\) exactly when
+\(h=h_1\uplus h_2\), \(h_1\perp h_2\), \((s,h_1)\models P\), and
+\((s,h_2)\models Q\).
+
+A heap command may terminate, diverge, or reach a distinguished fault outcome.
+It is \emph{safe} at \((s,h)\) when no finite execution reaches fault.  A heap
+triple requires safety from every state satisfying its precondition and
+requires every terminating result to satisfy its postcondition.
+
+A heap command \(C\) is \emph{local} for this presentation when, for every
+\(h\perp h_f\):
+\begin{enumerate}
+\item safety at \((s,h)\) implies safety at \((s,h\uplus h_f)\); and
+\item if \(C\) is safe at \((s,h)\) and
+\[
+ \langle C,(s,h\uplus h_f)\rangle\Downarrow(s',k),
+\]
+then some \(h'\perp h_f\) satisfies
+\[
+ \langle C,(s,h)\rangle\Downarrow(s',h')
+ \quad\text{and}\quad k=h'\uplus h_f.
+\]
+\end{enumerate}
+The second clause is the frame property: any terminating execution on an
+extended heap is explained by an execution on the owned footprint and leaves
+the framed fragment unchanged.  Thus the command cannot clear, inspect, or
+mutate that fragment.  The
+registered frame rule also requires that \(C\) modify no free stack variable
+of the frame assertion.
+
+The terminology is needed to distinguish disjoint resource composition from
+ordinary conjunction. It stands as an assertion semantics and local proof
+rule, differs from Hoare logic by exposing heap ownership, and is used in
+compositional symbolic execution and bi-abductive shape analysis
+\cite{OHearnReynoldsYang2001,ReynoldsSeparation2002,
+CalcagnoDistefanoOHearnYang2009}.
+\index{separation logic}\index{frame rule}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p09-frame-rule}{cited=OHearnReynoldsYang2001}{Soundness of the separation frame rule}
+For local commands in the sense of
+Definition~\ref{def:p09-separation-logic}, the rule on
+\hyperref[sheet:separation-logic]{\texttt{sheet:separation-logic}} preserves
+partial correctness.  The locality and free-variable hypotheses are both
+essential; disjointness alone does not make an arbitrary heap action frame
+preserving.
+\end{hbtheorem}
+
+Symbolic execution uses separating conjunction to expose the owned heap
+fragment of each command.  Bi-abduction additionally searches for a missing
+anti-frame and a residual frame; this is a source pointer, not an algorithm
+specified here \cite{CalcagnoDistefanoOHearnYang2009,OHearn2007}.
+
+\input{parts/p09/presentations/n-c-019}
+\input{parts/p09/presentations/n-c-020}
+\input{parts/p09/presentations/n-c-021}
+
+\section{Logic programming, databases, and constraints}
+\label{sec:p09-logic-programming}
+
+\begin{hbdefinition}{def:p09-definite-program}{Definite programs and immediate consequence}
+A definite clause is \(H\leftarrow B_1,\ldots,B_n\), with every displayed
+formula a non-equality predicate atom and every variable implicitly universally
+quantified.  The active first-order signature has at least one ground term; if
+it has none, first add one fresh constant by the convention of
+Section~\ref{sec:p02-herbrand-validity}.  Logical equality is not a program
+predicate in this presentation.  Let
+\(\mathit{HB}_P\) be the Herbrand base of program \(P\).  On
+\(I\subseteq\mathit{HB}_P\), define
+\[
+ T_P(I)=\{H\theta:(H\leftarrow B_1,\ldots,B_n)\in P,\quad
+   \theta\text{ is ground, and }B_i\theta\in I\text{ for every }i\}.
+\]
+The operator \(T_P\) is monotone.  Write
+\[
+ M_P=\operatorname{lfp}(T_P)
+     =\bigcup_{k<\omega}T_P^k(\varnothing).
+\]
+The operator name is necessary to separate semantic closure from a chosen
+goal-search order; it stands as a map on Herbrand interpretations and is used
+to connect model semantics, Datalog evaluation, and SLD resolution
+\cite{Kowalski1974,VanEmdenKowalski1976}.
+\index{definite program}\index{immediate-consequence operator}\index{Herbrand model}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p09-definite-fixpoint}{cited=VanEmdenKowalski1976}{Least-model theorem for definite programs}
+For every definite program \(P\), \(M_P\) is its least Herbrand model.  Hence a
+ground atom \(A\) is a logical consequence of \(P\) exactly when
+\(A\in M_P\).
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p09-sld}{SLD goals, transitions, and computed answers}
+An SLD goal is a finite sequence
+\(\leftarrow A_1,\ldots,A_n\).  A transition selects \(A_i\), chooses a program
+clause \(H\leftarrow B_1,\ldots,B_k\) standardized apart from the current
+derivation, and uses a most general unifier \(\theta\) of \(A_i,H\) in the
+finite first-order term algebra, with the occurs check.  This unification
+equality is metalinguistic and is not an object-language equality atom.  The exact
+resolvent and success rows are on
+\hyperref[sheet:sld-resolution]{\texttt{sheet:sld-resolution}}.  A refutation
+ends in the empty goal.  If its successive mgu substitutions are
+\(\theta_1,\ldots,\theta_m\), then
+\((\theta_1\cdots\theta_m)\) restricted to the variables of the initial goal is
+its \emph{computed answer}.  Standardizing apart prevents clause-local
+variables from capturing query variables.
+
+For the initial goal \(G_0=\leftarrow A_1,\ldots,A_n\) with original variables
+\(\bar x\), a substitution \(\eta\) on \(\bar x\) is a \emph{correct answer}
+when
+\[
+ P\models\forall\bigl((A_1\land\cdots\land A_n)\eta\bigr),
+\]
+where the universal closure binds every variable remaining after applying
+\(\eta\).  This is a semantic, metalinguistic condition, whereas a computed
+answer is the finite substitution returned by a refutation.  The distinction
+is necessary and nonredundant because completeness compares the two in the
+next theorem.
+
+Fix a computation rule that selects one atom in every nonempty goal.  Its
+complete SLD tree has, at each node, one child for every standardized-apart
+program clause whose head unifies with that selected atom, using an mgu.  A
+fair enumeration is simply an enumeration that eventually visits every finite
+node of this complete tree.
+\index{SLD resolution}\index{computed answer substitution}\index{correct answer substitution}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p09-sld-adequacy}{cited=Lloyd1987}{Soundness and completeness of SLD resolution}
+For any fixed computation rule, every computed answer of a definite program is
+a correct answer in the exact sense of Definition~\ref{def:p09-sld}.
+Conversely, if \(\eta\) is a correct answer to a finite goal, the complete SLD
+tree for that computation rule has a refutation with computed answer
+\(\theta\) and a substitution \(\rho\) such that \(\eta=\theta\rho\) on the
+variables of the original goal.  A fair enumeration of that tree therefore
+eventually visits the finite refutation.
+\end{hbtheorem}
+
+\paragraph{Pure Prolog operational boundary.}
+Pure Prolog ordinarily selects the leftmost literal, tries clauses in textual
+order, and explores the resulting alternatives by depth-first backtracking in
+that order.  This is an operational policy, not a consequence relation, and it
+is nonredundant with the complete-tree enumeration above: depth-first search
+may diverge on an earlier branch before reaching an existing refutation.
+Common implementations may also use unification without the occurs check,
+whose cyclic or rational-tree behavior lies outside the finite-term SLD
+theorem unless separately formalized.  Cut and other extra-logical features
+likewise lie outside that theorem.  This boundary is needed by the Prolog row
+of Table~\ref{tab:p09-logic-programming}
+\cite{Lloyd1987,ISO13211-1-1995}.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  level distance=13mm,
+  sibling distance=48mm,
+  every node/.style={draw,rounded corners,align=center,font=\small,inner sep=3pt},
+  edge from parent/.style={->,draw}]
+\node {\(\leftarrow edge(a,X),red(X)\)}
+  child {node {\(\leftarrow red(b)\)}
+    edge from parent node[left,draw=none]{\(X=b\)}
+    child {node {success\\\(X=b\)}
+      edge from parent node[left,draw=none]{\(red(b)\)}}}
+  child {node {\(\leftarrow red(c)\)}
+    edge from parent node[right,draw=none]{\(X=c\)}
+    child {node {failure}
+      edge from parent node[right,draw=none]{no matching fact}}};
+\end{tikzpicture}
+\caption{An SLD tree for the facts \(edge(a,b)\), \(edge(a,c)\), and \(red(b)\).
+The left branch returns the computed answer \(X=b\); the right branch finitely
+fails.}
+\label{fig:p09-sld-tree}
+\end{figure}
+
+\begin{hbdefinition}{def:p09-normal-program}{Normal programs and allowedness}
+A normal clause is
+\[
+ H\leftarrow A_1,\ldots,A_m,
+   \mathsf{not}\ B_1,\ldots,\mathsf{not}\ B_n,
+\]
+where \(H,A_i,B_j\) are non-equality predicate atoms and \(\mathsf{not}\) is
+default negation, not classical negation.  The non-equality and ground-term
+signature conventions of Definition~\ref{def:p09-definite-program} remain in
+force.  A clause is \emph{admissible} when every variable in it occurs either
+in the head or in a positive body atom.  It is \emph{allowed} when every
+variable in it occurs in a positive body atom.  A query is allowed when every
+variable in it occurs in a positive literal.
+
+For a normal program \(P\) and query \(G\), the pair \(P\cup\{G\}\) is
+\emph{allowed} when (i) every clause of \(P\) is admissible; (ii) every clause
+defining a predicate that occurs positively in \(G\), or positively in the body
+of any clause of \(P\), is allowed; and (iii) \(G\) is allowed.  Admissibility is
+the weaker syntactic condition: a head-only variable may be admissible but is
+not allowed.  Both terms classify syntax, not semantics, and the pair condition
+is used below only for the nonfloundering and ground-answer conclusion
+\cite[\S15, pp.~88--90]{Lloyd1987}.
+\index{normal logic program}\index{allowed logic program}
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p09-sldnf}{SLDNF and negation as finite failure}
+SLDNF uses the positive transition of
+Definition~\ref{def:p09-sld}.  Selection is \emph{safe}: any positive literal
+may be selected, but a negative literal may be selected only when its atom is
+ground.  Safeness restricts the computation rule; it is distinct from the
+allowedness condition on program and query syntax.  The mutually recursive
+notions of refutation and finitely failed tree are stratified by a finite rank.
+Rank \(0\) uses only positive selections; at rank \(k+1\), a selected ground
+\(\mathsf{not}\ A\) succeeds by a finitely failed subsidiary tree for
+\(\leftarrow A\) of rank at most \(k\), and it fails when such a subsidiary
+goal has a refutation of rank at most \(k\).  An SLDNF refutation or finitely
+failed tree has some finite rank.  The rank is a metalinguistic natural number,
+not an object-language level; it is needed only to make these mutually recursive
+definitions well founded.
+
+A computation \emph{flounders} when it reaches a goal containing only
+nonground negative literals, so safe selection has no available literal.  Thus
+negation as failure is an operational finite-failure test, not classical
+negation; divergence and floundering remain outcomes distinct from success and
+finite failure \cite[\S15, pp.~84--89]{Lloyd1987}.
+\index{negation as failure}\index{SLDNF}\index{floundering}
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p09-clark-completion}{Clark completion}
+Suppose the clauses defining \(p\) have heads
+\(p(\bar t_i)\) and bodies \(B_i\).  After renaming their local variables
+\(\bar y_i\) apart, the completion contains
+\[
+ \forall\bar x\left(
+ p(\bar x)\leftrightarrow
+ \bigvee_i\exists\bar y_i\,
+   (\bar x=\bar t_i\land B_i)
+ \right),
+\]
+where each \(\mathsf{not}\ A\) in \(B_i\) is read as \(\neg A\), and an empty
+disjunction is \(\bot\).  For the active finite signature \(\Sigma\), Clark's
+equality theory is the following signature-relative axiom set:
+\begin{enumerate}
+\item equality is reflexive, symmetric, and transitive, and every function and
+predicate respects it:
+\[
+\begin{gathered}
+ \forall x\;x=x,\qquad
+ \forall x\,y\;(x=y\to y=x),\\
+ \forall x\,y\,z\;((x=y\land y=z)\to x=z),\\
+ \bigwedge_i x_i=y_i\to f(\bar x)=f(\bar y),\qquad
+ \bigwedge_i x_i=y_i\to
+   \bigl(p(\bar x)\leftrightarrow p(\bar y)\bigr),
+\end{gathered}
+\]
+with universal closure in the last two schemas;
+\item distinct function symbols have disjoint ranges,
+\[
+ \forall\bar x\,\bar y\;f(\bar x)\ne g(\bar y)\qquad(f\ne g);
+\]
+\item every function symbol is coordinatewise injective,
+\[
+ \forall\bar x\,\bar y\;
+ f(\bar x)=f(\bar y)\to\bigwedge_i x_i=y_i;
+\]
+\item the signature-relative acyclicity schema
+\(\forall x\,\bar z\;t[x,\bar z]\ne x\) for every nonvariable finite term
+\(t[x,\bar z]\) in which \(x\) occurs as a proper subterm.
+\end{enumerate}
+Constants are the nullary function symbols, so distinct constants are covered
+by disjointness.  These axioms state the free finite-term-algebra behavior that
+completion needs; they are object-language equality axioms, unlike the
+metalinguistic unification operation in Definition~\ref{def:p09-sld}.  The
+predicate biconditionals together with this explicit equality theory form
+\(\operatorname{Comp}(P)\).  Completion closes the
+definitions of predicates; it is not the least-model or stable-model
+construction and can differ from both on recursive negation
+\cite{Clark1978}.
+\index{Clark completion}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p09-sldnf-completion}{cited=Lloyd1987}{Soundness and nonfloundering boundaries for SLDNF}
+Let \(P\) be a normal program and let
+\(G=\leftarrow L_1,\ldots,L_n\) be a normal query.  Under safe selection, every
+computed SLDNF answer \(\theta\) satisfies
+\[
+ \operatorname{Comp}(P)\models
+ \forall\bigl((L_1\land\cdots\land L_n)\theta\bigr),
+\]
+where \(\mathsf{not}\ A\) is read as \(\neg A\) and the universal closure binds
+the variables remaining after \(\theta\).  If \(P\cup\{G\}\) has a finitely
+failed SLDNF tree, then the universally closed goal clause
+\(\neg(L_1\land\cdots\land L_n)\) is entailed by
+\(\operatorname{Comp}(P)\).  In particular, finite failure of the ground query
+\(\leftarrow A\) entails \(\operatorname{Comp}(P)\models\neg A\).
+
+If \(P\cup\{G\}\) is allowed in the exact sense of
+Definition~\ref{def:p09-normal-program}, no computation flounders and every
+computed answer grounds all variables of \(G\).  These are soundness and
+nonfloundering results, not completeness or termination for arbitrary normal
+programs.  Lloyd's adjacent completeness theorem requires a map from predicate
+symbols to nonnegative integers such that every predicate in a clause body has
+strictly lower level than its head predicate; in particular, that hypothesis
+excludes recursion \cite[\S\S14--16, thms.~15.4, 15.6, and 16.3]{Lloyd1987}.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p09-stable-model}{Stable model of a finite normal program}
+For the finite ground specialization of
+Definition~\ref{def:p09-normal-program} and a set \(M\) of its atoms, the
+Gelfond--Lifschitz reduct \(P^M\) deletes each rule containing
+\(\mathsf{not}\ A\) with \(A\in M\), then deletes every remaining
+default-negated literal.  The set \(M\) is a \emph{stable model} when it is the
+least model of the resulting positive program \(P^M\).  The term is needed
+because default negation and classical negation have different standings; it
+ denotes a two-valued model relation, differs from completion on recursive
+ negation, and is used by answer-set programming
+ \cite{GelfondLifschitz1988,Lifschitz2008TwelveDefinitions}.  A nonground
+ program denotes this construction
+ only through an explicitly declared ground instantiation; the finite
+ complexity theorem below does not cover infinite groundings.
+\index{stable-model semantics}\index{answer-set programming}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p09-stable-complexity}{cited=DantsinEiterGottlobVoronkov2001}{Complexity of finite normal stable models}
+For finite propositional normal programs, stable-model existence and credulous
+atom consequence are \(\mathsf{NP}\)-complete; skeptical atom consequence is
+\(\mathsf{coNP}\)-complete.  Verification of one proposed stable model is
+polynomial because its reduct is positive.  Disjunctive heads have a different
+complexity and are not covered \cite{MarekTruszczynski1999}.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p09-well-founded}{Alternating fixed point for a finite ground normal program}
+Let \(\Gamma_P(M)\) be the least model of the reduct \(P^M\).
+\(\Gamma_P\) is antimonotone, so \(\Gamma_P^2\) is monotone.  Put
+\[
+ L=\operatorname{lfp}(\Gamma_P^2),
+ \qquad
+ G=\operatorname{gfp}(\Gamma_P^2).
+\]
+The well-founded interpretation makes atoms in \(L\) true, atoms outside
+\(G\) false, and atoms in \(G\setminus L\) undefined.  This is a
+three-valued semantic object, not a failed attempt to choose one stable model.
+\index{well-founded semantics}\index{alternating fixed point}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p09-well-founded-properties}{cited=VanGelderRossSchlipf1991}{Well-founded approximation and computation}
+The interpretation of Definition~\ref{def:p09-well-founded} is unique and is
+computable in polynomial time for finite ground programs.  Every stable model
+\(M\) satisfies \(L\subseteq M\subseteq G\); hence it extends every
+well-founded true and false assignment.  If \(L=G\), this total interpretation
+is the unique stable model.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p09-conjunctive-query}{Conjunctive queries and canonical databases}
+Over a finite relational database signature, a \(k\)-ary conjunctive query is
+\[
+ q(\bar x)=\exists\bar y\,
+   \bigwedge_{j=1}^{m}R_j(\bar z_j),
+\]
+where the displayed tuples use variables from \(\bar x,\bar y\) and may use
+declared constants; the equality-free convention is in force.  It is Boolean
+when \(k=0\).  For a finite instance \(D\), a tuple \(\bar a\) is in \(q(D)\)
+exactly when an assignment sending \(\bar x\) to \(\bar a\) makes every atom a
+fact of \(D\).
+
+The canonical database \(D_q\) has the variables and constants of \(q\) as its
+elements, one relation fact for each query atom, and distinguished tuple
+\(\bar x\).  Homomorphisms fix declared constants.  This object is necessary
+to turn query evaluation and containment into typed homomorphism problems; it
+is a finite structure with a distinguished tuple and is used in the next
+theorem.
+\index{conjunctive query}\index{canonical database}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p09-chandra-merlin}{cited=ChandraMerlin1977}{Chandra--Merlin homomorphism theorem}
+For every finite instance \(D\) and tuple \(\bar a\),
+\(\bar a\in q(D)\) exactly when there is a homomorphism
+\(D_q\to D\) carrying the distinguished tuple to \(\bar a\).  For
+conjunctive queries \(q_1,q_2\) of the same arity,
+\[
+ q_1\subseteq q_2
+ \quad\Longleftrightarrow\quad
+ \text{there is a homomorphism }D_{q_2}\to D_{q_1}
+ \text{ aligning their distinguished tuples}.
+\]
+\end{hbtheorem}
+
+Vardi's presentation separates data, expression, and combined complexity; it
+controls that input-measure distinction rather than both bounds below
+\cite{Vardi1982}.  The two theorem identities are nonredundant because the
+first fixes the query and varies only the database, whereas the second varies
+both objects.
+
+\begin{hbtheorem}{thm:p09-cq-data-evaluation}{cited=AbiteboulHullVianu1995}{Fixed-query conjunctive-query data complexity}
+Under the standard finite relational encoding, evaluation of each fixed
+conjunctive query is in \(\mathsf{AC}^{0}\) data complexity.  The formula is
+fixed and only the finite database instance varies.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p09-cq-combined-evaluation}{cited=ChandraMerlin1977}{Combined conjunctive-query evaluation complexity}
+Boolean conjunctive-query evaluation is \(\mathsf{NP}\)-complete when the query
+and finite database instance are both input.  This combined problem is not the
+fixed-query problem of Theorem~\ref{thm:p09-cq-data-evaluation}.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p09-cq-containment}{cited=ChandraMerlin1977}{Conjunctive-query containment complexity}
+Containment of two equality-free conjunctive queries of the same arity is
+\(\mathsf{NP}\)-complete under the finite relational encoding.  The decision
+test uses the reverse canonical-database homomorphism in
+Theorem~\ref{thm:p09-chandra-merlin}; it is a query-to-query problem, not data
+evaluation with one query fixed.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p09-datalog}{Datalog programs and evaluation}
+A Datalog program is a finite function-free set of definite clauses over
+extensional database predicates and intensional predicates.  Every variable in
+a rule head occurs in its positive body.  Given a finite database \(D\), the
+active domain consists of constants in \(D\) or the program.  Starting with the
+extensional facts, the immediate-consequence operator adds ground intensional
+heads whose bodies already hold; because the active Herbrand base is finite,
+iteration reaches its least fixed point after finitely many additions.  A
+designated intensional atom or tuple is the query output.  This finite
+least-fixed-point evaluation is distinct from SLD search order and is used by
+the following complexity result.
+\index{Datalog}\index{data complexity}\index{combined complexity}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p09-datalog-complexity}{cited=DantsinEiterGottlobVoronkov2001}{Datalog data and combined complexity}
+Every fixed Datalog program and query has polynomial-time data complexity, and
+some fixed Datalog query has \(\mathsf P\)-complete evaluation under logspace
+many-one reductions as the extensional database varies.  Evaluation is
+\(\mathsf{EXPTIME}\)-complete in combined complexity when program, query, and
+database are all input.  General Datalog query containment is undecidable;
+the decidable \(\mathsf{NP}\)-complete containment result in
+Theorem~\ref{thm:p09-cq-containment} concerns conjunctive queries, not arbitrary
+recursive Datalog programs.
+\end{hbtheorem}
+
+\begin{table}[htbp]
+\centering\scriptsize
+\begin{tabularx}{\textwidth}{@{}l X X X@{}}
+\toprule
+Presentation & Exact input and standing & Success/model criterion & Boundary \\
+\midrule
+Definite program / SLD & first-order definite clauses and a selected goal &
+empty-goal refutation with computed answer; complete under fair enumeration &
+may diverge even when no refutation exists \\
+Pure Prolog search & leftmost literal, textual clause order, depth-first
+backtracking & first success reached by that operational traversal & may
+diverge before an existing SLD refutation; cut and non-finite-term unification
+are outside Theorem~\ref{thm:p09-sld-adequacy} \\
+Clark completion / SLDNF & normal clauses with safe literal selection;
+allowedness separately guarantees nonfloundering and ground answers &
+default negation succeeds only by finite failure of a ground subsidiary tree &
+may flounder or diverge; no arbitrary-program completeness \\
+Well-founded semantics & finite ground normal program &
+one polynomial-time three-valued alternating fixed point &
+undefined atoms need not receive a two-valued choice \\
+Stable semantics & finite ground normal program &
+\(M=\operatorname{lfp}(T_{P^M})\); zero, one, or many stable models &
+existence/credulous \(\mathsf{NP}\)-complete; skeptical
+\(\mathsf{coNP}\)-complete \\
+Datalog & finite safe function-free positive rules over a finite database &
+finite least-fixed-point saturation &
+polynomial data for each fixed query, with a fixed \(\mathsf P\)-complete
+query; \(\mathsf{EXPTIME}\)-complete combined \\
+\bottomrule
+\end{tabularx}
+\caption{Operational and model-theoretic boundaries for logic programming and
+Datalog.  The rows differ in syntax, result object, and failure behavior; no
+single use of \emph{negation} or \emph{fixed point} identifies them.}
+\label{tab:p09-logic-programming}
+\end{table}
+
+\begin{hbdefinition}{def:p09-csp}{Finite-template constraint satisfaction}
+For finite relational structures \(A,B\) of the same signature, a
+constraint-satisfaction instance asks whether a homomorphism \(A\to B\)
+exists.  In \(\operatorname{CSP}(B)\), the finite template \(B\) is fixed and
+only \(A\) is input.  Fixing the template is necessary: it is the parameter
+whose algebraic polymorphisms classify the problem, and it distinguishes the
+family below from unrestricted combined homomorphism.
+\index{constraint-satisfaction problem}\index{finite template}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p09-csp-dichotomy}{cited=Zhuk2020}{Finite-domain CSP dichotomy}
+For every fixed finite relational template \(B\),
+\(\operatorname{CSP}(B)\) is either solvable in polynomial time or is
+\(\mathsf{NP}\)-complete.  The theorem classifies each fixed-template problem;
+it does not assert that unrestricted finite homomorphism is tractable.
+\end{hbtheorem}
+
+\input{parts/p09/presentations/n-c-022}
+\input{parts/p09/presentations/n-c-023}
+\input{parts/p09/presentations/n-c-024}
+\input{parts/p09/presentations/n-c-025}
+
+\section{Complexity and verification boundaries}
+\label{sec:p09-complexity-boundaries}
+
+\begingroup\scriptsize\setlength{\tabcolsep}{3pt}
+\begin{longtable}{@{}p{.18\textwidth}p{.15\textwidth}p{.38\textwidth}p{.20\textwidth}@{}}
+\caption{Decision and verification boundaries used in Part IX.  Every row fixes
+the input problem and the convention on parameters.}
+\label{tab:p09-complexity-boundaries}\\
+\toprule
+Problem & Status & Exact boundary & Route \\
+\midrule
+\endfirsthead
+\multicolumn{4}{@{}l}{\small\itshape Table~\thetable\ continued}\\
+\toprule
+Problem & Status & Exact boundary & Route \\
+\midrule
+\endhead
+\midrule
+\multicolumn{4}{r@{}}{\scriptsize continued on next page}\\
+\endfoot
+\bottomrule
+\endlastfoot
+Finite first-order validity & not recursively enumerable &
+fixed finite relational signatures containing a binary relation; finite
+satisfiability is recursively enumerable but undecidable &
+Theorem~\ref{thm:trakhtenbrot} \\
+\addlinespace
+First-order validity & recursively enumerable and undecidable &
+ordinary semantics over all structures; neither conclusion is a finite-model
+claim & Theorem~\ref{thm:fol-validity-undecidable} and
+Corollary~\ref{thm:fol-validity-enumerable} \\
+\addlinespace
+Bernays--Sch\"onfinkel satisfiability & \(\mathsf{NEXPTIME}\)-complete &
+equality-free, function-free relational \(\exists^{*}\forall^{*}\) sentences;
+constants may encode leading witnesses &
+Table~\ref{tab:p02-decidable-fragments} \\
+\addlinespace
+\(\mathcal{ALC}\) knowledge-base satisfiability &
+\(\mathsf{EXPTIME}\)-complete & combined complexity for the full Boolean
+concept language with general finite TBoxes and finite ABoxes containing
+concept assertions and positive atomic-role assertions &
+Theorem~\ref{thm:p09-alc-general-exptime};
+\hyperref[entry:p09-alc]{\(\mathcal{ALC}\) card} \\
+\addlinespace
+LTL satisfiability / model checking & \(\mathsf{PSPACE}\)-complete combined &
+infinite-word semantics; explicit-structure checking is linear in the
+structure for a fixed formula & Theorems~\ref{thm:p09-ltl-pspace}
+and~\ref{thm:p09-ltl-model-checking} \\
+\addlinespace
+CTL / CTL* & \(\mathsf P\)-complete / \(\mathsf{PSPACE}\)-complete model
+checking & finite explicit total structures; satisfiability is respectively
+\(\mathsf{EXPTIME}\)- and \(\mathsf{2EXPTIME}\)-complete &
+Theorem~\ref{thm:p09-ctl-star-complexity} \\
+\addlinespace
+PDL satisfiability & \(\mathsf{EXPTIME}\)-complete &
+regular programs generated by composition, choice, test, and star &
+Theorem~\ref{thm:p09-pdl-decision} \\
+\addlinespace
+PCTL model checking & polynomial time & binary-encoded rational finite DTMC or
+MDP, unary bounded-until integers, and an explicit minimum or maximum MDP
+operator &
+Theorem~\ref{thm:p09-pctl-model-checking} \\
+\addlinespace
+CSL model checking & effective with certified numerical boundary & finite
+rational CTMCs with interval endpoint flags retained; time-bounded transient
+probabilities require rigorous error
+intervals and equality needs separate exact analysis &
+Theorems~\ref{thm:p09-csl-interval-computations}
+and~\ref{thm:p09-csl-model-checking} \\
+\addlinespace
+Propositional likelihood satisfiability & \(\mathsf{NP}\)-complete & Boolean
+combinations of binary-encoded rational linear inequalities over event
+probabilities; no temporal path measure &
+Theorem~\ref{thm:p09-likelihood-logic} \\
+\addlinespace
+Stable-model existence / credulous consequence & \(\mathsf{NP}\)-complete &
+finite propositional normal programs; disjunctive heads and infinite groundings
+are excluded &
+Theorem~\ref{thm:p09-stable-complexity} \\
+\addlinespace
+Stable-model skeptical consequence & \(\mathsf{coNP}\)-complete & the same
+finite propositional normal-program input convention &
+Theorem~\ref{thm:p09-stable-complexity} \\
+\addlinespace
+Fixed conjunctive-query evaluation & \(\mathsf{AC}^{0}\) data complexity &
+one equality-free finite relational query is fixed and only the database varies
+& Theorem~\ref{thm:p09-cq-data-evaluation} \\
+\addlinespace
+Combined conjunctive-query evaluation & \(\mathsf{NP}\)-complete & the
+equality-free finite relational query and database are both input &
+Theorem~\ref{thm:p09-cq-combined-evaluation} \\
+\addlinespace
+Conjunctive-query containment & \(\mathsf{NP}\)-complete & two equality-free
+finite relational queries of the same arity &
+Theorem~\ref{thm:p09-cq-containment} \\
+\addlinespace
+Datalog evaluation & polynomial data / \(\mathsf{EXPTIME}\)-complete combined &
+each fixed query is polynomial in the database and some fixed query is
+\(\mathsf P\)-complete & Theorem~\ref{thm:p09-datalog-complexity} \\
+\addlinespace
+Finite-template CSP & \(\mathsf P\) or \(\mathsf{NP}\)-complete &
+the relational template is fixed and the input structure varies &
+Theorem~\ref{thm:p09-csp-dichotomy} \\
+\addlinespace
+Modal \(\mathsf K,\mathsf{KT},\mathsf{S4}\) / \(\mathsf{S5}\) satisfiability &
+\(\mathsf{PSPACE}\)-complete / \(\mathsf{NP}\)-complete &
+basic one-modal language over the corresponding frame classes; the bounds do
+not transfer to richer languages & \cite{Ladner1977} \\
+\addlinespace
+SAT & \(\mathsf{NP}\)-complete & propositional formulas under polynomial-time
+many-one reductions & Theorem~\ref{thm:p04-cook-levin} \\
+\addlinespace
+TQBF & \(\mathsf{PSPACE}\)-complete & closed quantified Boolean formulas under
+polynomial-time many-one reductions & Theorem~\ref{thm:p04-tqbf-pspace} and
+Annex~\ref{annex:p9.tqbf.1} \\
+\end{longtable}
+\endgroup
+
+\paragraph{Proof route for Theorem~\ref{thm:p04-tqbf-pspace}.}
+For every fixed deterministic Turing machine \(M\) with a fixed polynomial
+space bound, a closed
+quantified Boolean formula \(\Phi_{M,x}\) can be computed from input \(x\) in
+polynomial time such that \(\Phi_{M,x}\) is true exactly when \(M\) accepts
+\(x\).  Truth of a quantified Boolean formula is itself decidable in polynomial
+space by depth-first evaluation.  These are the hardness and membership
+constructions for the public completeness statement in
+Theorem~\ref{thm:p04-tqbf-pspace}; the result is not assigned a second public
+identity here.  The complete construction is
+Annex~\ref{annex:p9.tqbf.1}.
+
+\input{parts/p09/presentations/n-c-026}
+\input{parts/p09/presentations/n-c-028}
+
+The publication boundary is therefore explicit: an algorithmic result records
+its input representation, parameter held fixed, decision problem, resource
+measure, and proof or citation. A solver run additionally records the input,
+tool version, limits, status, and independently checkable certificate or trust
+assumption. No benchmark outcome, bounded search, or successful compilation
+is promoted to a general logical theorem.
+
+\section{Source navigation and further reading}
+\label{sec:p09-further-reading}
+
+For finite-model theory and descriptive complexity, begin with
+\textcite{EbbinghausFlum1995,Libkin2004,Immerman1999}; the classical prefix
+classification is organized by \textcite{BorgerGradelGurevich1997}, with the
+historical cases routed through \textcite{Lowenheim1915,Behmann1922}.  The
+description-logic family and its reasoning boundaries are treated by
+\textcite{BaaderEtAl2003,BaaderHorrocksLutzSattler2017}; standardized profile
+syntax and complexity measures are fixed by \textcite{W3COWL2Profiles2012}.
+
+For finite-word monadic logic, use B\"uchi's 1959 report precursor,
+the separately registered 1960 article, Elgot's article and errata, and
+Trakhtenbrot's announcement plus complete expansion
+\parencite{Buchi1959WeakReport,Buchi1960,Elgot1961,Elgot1962Errata,
+Trakhtenbrot1961,Trakhtenbrot1962Expanded}, together with the 1996 report
+precursor of \textcite{Thomas1996Report}; the registered 1997 chapter
+remains a separate version boundary \parencite{Thomas1997}.  Infinite-tree
+monadic logic is controlled by
+\textcite{Rabin1969}.  Temporal verification and finite-tree automata use
+\textcite{ClarkeGrumbergPeled1999,ComonEtAl2007}; interpolant-based
+safety checking is due to \textcite{McMillan2003}; discrete-time quantitative
+model checking is developed by \textcite{BaierKatoen2008}, while continuous-time
+CSL model checking is the distinct presentation of
+\textcite{BaierHaverkortHermannsKatoen2003}.  The separate atemporal probability
+language is treated by
+\textcite{FaginHalpernMegiddo1990,Halpern2003}.
+
+The Floyd--Hoare line is source-separated through
+\textcite{Floyd1967,Hoare1969,Dijkstra1975,Cook1978,Apt1981}.  Dynamic logic
+uses the distinct presentations of
+\textcite{Pratt1976,FischerLadner1979,KozenParikh1981,HarelKozenTiuryn2000};
+local heap reasoning and bi-abduction use
+\textcite{OHearnReynoldsYang2001,ReynoldsSeparation2002,
+CalcagnoDistefanoOHearnYang2011,OHearn2019}.
+
+For definite programs, SLD, completion, and negation as failure, follow
+\textcite{Kowalski1974,VanEmdenKowalski1976,Clark1978,AptVanEmden1982,Lloyd1987}.
+Stable semantics and ASP are separated through
+\textcite{GelfondLifschitz1988,MarekTruszczynski1999,
+BrewkaEiterTruszczynski2011}.  Conjunctive queries and Datalog use
+\textcite{ChandraMerlin1977,Vardi1982,AbiteboulHullVianu1995}; the CSP
+conjecture and its two independent 2017 proofs use
+\textcite{FederVardi1998,Bulatov2017,Zhuk2017}.
+These routes preserve the distinctions printed in
+Table~\ref{tab:p09-complexity-boundaries}: a change of syntax, model class,
+fixed parameter, or acceptance convention creates a different problem.
+
+For the complexity boundaries themselves, Cook's historical query reduction
+and Levin's independent work are \textcite{Cook1971,Levin1973}; quantified
+Boolean truth is routed through
+\textcite{StockmeyerMeyer1973,Papadimitriou1994}; and the polarity-sensitive
+modal classifications are due to \textcite{Ladner1977}.
+
+\section{Theorem and definition register}
+\label{sec:p09-theorem-definition-register}
+
+\input{generated/audit-p09}

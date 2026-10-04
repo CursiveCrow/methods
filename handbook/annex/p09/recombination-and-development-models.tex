@@ -1,0 +1,259 @@
+% Reciprocal complete proofs for the bounded P9 biological-generative packet.
+\section{Recombination and Development: Formal Proofs}
+\label{annex:p09-recombination-development}
+
+\begin{annexitem}{annex:p09.recombination-regular-step}{thm:p09-recombination-regular-step}{Regular one-step splicing}
+\begin{proof}
+Let \(c\notin V\cup\{\#,\$\}\). Choose finite automata for \(L\) and
+\(R\), determinizing if necessary, and restrict the latter to the stipulated
+rule format. A deterministic automaton \(B\) for \(LcL\) runs the
+\(L\)-automaton on the first word, permits the unique delimiter \(c\) only
+at an accepting state, resets to the start state, and runs on the second
+word. It accepts only after the second word is accepted and the delimiter
+has been read. This also permits empty input words precisely when
+\(\lambda\in L\).
+
+Construct a nondeterministic finite transducer \(T\). Its finite control
+records a phase and a state of the rule automaton \(A_R\).
+The following phases describe its complete successful runs.
+\begin{enumerate}
+\item Read a prefix \(x_1\) over \(V\), copying it to the output.
+       Nondeterministically end this phase and initialize \(A_R\).
+\item Read \(u_1\), both copying it and feeding its letters to \(A_R\).
+       An epsilon-input move feeds \(\#\) to \(A_R\).
+\item Read \(u_2\), feeding its letters to \(A_R\) and producing no output.
+       Nondeterministically end this phase.
+\item Read \(x_2\) over \(V\), producing no output and leaving the rule
+       state unchanged. Read the input delimiter \(c\), feed \(\$\)
+       to \(A_R\), and enter the second input word.
+\item Read \(y_1\) over \(V\), producing no output and leaving the rule
+       state unchanged. Nondeterministically end this phase.
+\item Read \(u_3\), feeding its letters to \(A_R\) and producing no output.
+       An epsilon-input move feeds \(\#\) to \(A_R\).
+\item Read \(u_4\), copying it and feeding its letters to \(A_R\).
+       This phase may end only when \(A_R\) is accepting.
+\item Read \(y_2\) over \(V\), copying it and leaving the rule state
+       unchanged. Accept only at the end of input.
+\end{enumerate}
+Every phase change other than the delimiter move has epsilon input and
+epsilon output. The changes can occur without consuming letters, so
+empty handles and empty surrounding pieces are included. Every ordinary
+letter-reading transition has either that letter or epsilon as output;
+there are finitely many such transitions and control states.
+
+A successful run on a word in \(LcL\) determines a factorization
+\(x=x_1u_1u_2x_2\), \(y=y_1u_3u_4y_2\).
+The simulated rule automaton has read exactly
+\(u_1\#u_2\$u_3\#u_4\in R\), and the output is exactly
+\(x_1u_1u_4y_2\). Thus every output is in \(\sigma(L)\).
+Conversely, any witnesses in the definition of splicing specify exactly
+these phase changes and a successful rule-automaton run. The input belongs
+to \(LcL\), and the output is its prescribed recombinant.
+Thus the transducer image of \(LcL\) equals \(\sigma(L)\) literally,
+including possible empty outputs.
+
+For completeness, this image has an explicitly finite automaton.
+Take states consisting of a transducer control state and a state of \(B\).
+A transducer edge reading \(a\) updates the \(B\)-state by its \(a\)-transition;
+an epsilon-input edge leaves it unchanged. Label the resulting edge by
+the transducer's output letter or epsilon, ignoring its consumed input label.
+Start with both initial states and accept when both components accept.
+Every path in this output automaton reconstructs the consumed input labels
+of its transducer edges, so final acceptance by \(B\) ensures an input in
+\(LcL\). Conversely, any successful transduction of such an input gives
+a path. Epsilon closure gives an ordinary finite automaton for exactly
+\(\sigma(L)\), proving both regularity and effective constructibility.
+
+For the finite-rule retained-piece formula in the body, \(p\in P_r\)
+means exactly \(p=x_1u_1\) and \(pu_2x_2\in L\) for some \(x_1,x_2\).
+Likewise \(s\in S_r\) means exactly \(s=u_4y_2\) and \(y_1u_3s\in L\).
+These witnesses splice to \(ps\), while every \(r\)-splicing gives such
+witnesses. Taking the union over rules proves the displayed equality.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p09.recombination-balanced-obstruction}{thm:p09-recombination-balanced-obstruction}{Balanced-output obstruction}
+\begin{proof}
+Suppose a deterministic automaton with \(m\geq1\) states accepts \(L_0\),
+and suppose the stated equality holds. Let \(n=m+1\) and choose witnesses
+for the output \(a^nb^n\). Write the retained pieces as
+\(p=x_1u_1\), \(s=u_4y_2\), so \(ps=a^nb^n\) and
+\(x=pu_2x_2\), \(y=y_1u_3s\) are in \(L_0\).
+The cut between \(p\) and \(s\) has one of two positions.
+
+If \(|p|\geq n\), then \(p=a^nb^t\) for some \(0\leq t\leq n\).
+The automaton reads the initial \(a^n\) in \(x\). Among the \(m+1\)
+states before and after its first \(m\) letters there is a repeated state;
+the corresponding nonempty cycle consists only of \(a\)'s.
+Repeating the cycle once more produces an accepted word
+\(x'=a^{n+d}b^tu_2x_2\), with \(d\geq1\).
+Set \(p'=a^{n+d}b^t\). Since \(u_1\) was a suffix of \(a^nb^t\),
+it is still a suffix of \(p'\): its final \(b\)'s are unchanged and its
+initial \(a\)-part still fits before them. Thus \(p'=x'_1u_1\) for
+some \(x'_1\), and the very same rule and the unchanged second input
+yield \(p's=a^{n+d}b^n\). This is not a balanced word.
+
+If \(|p|<n\), then \(p=a^t\) and \(s=a^{n-t}b^n\), with \(t<n\).
+Run the automaton on the final \(b^n\) of \(y=y_1u_3a^{n-t}b^n\).
+There is again a nonempty all-\(b\) cycle; repeating it yields an
+accepted word \(y'=y_1u_3a^{n-t}b^{n+d}\).
+Set \(s'=a^{n-t}b^{n+d}\). The original \(u_4\), a prefix of \(s\),
+is still a prefix of \(s'\), so \(s'=u_4y'_2\).
+The unchanged first input and same rule now yield
+\(ps'=a^nb^{n+d}\), again unbalanced.
+
+Both cases give a nonempty output outside the alleged language.
+No effectiveness, finiteness, or regularity assumption on \(R\) was used:
+one particular rule is preserved throughout. Since the counterexample
+outputs are nonempty, ignoring the empty word cannot avoid the contradiction.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p09.recombination-least-closure}{thm:p09-recombination-least-closure}{Least closure and unary example}
+\begin{proof}
+The operation \(\sigma\) is monotone: witnesses in a smaller language
+are also witnesses in a larger one. The sequence \(L_n\) is increasing.
+If \(x,y\) belong to its union, choose \(k\) large enough that both belong
+to \(L_k\). Every splicing of this pair lies in
+\(\sigma(L_k)\subseteq L_{k+1}\). Hence the union is closed and contains \(L\).
+For any closed language \(K\) containing \(L\), induction gives
+\(L_n\subseteq K\): if \(L_n\subseteq K\), monotonicity gives
+\(\sigma(L_n)\subseteq\sigma(K)\subseteq K\). Thus the union is least.
+
+In the unary example, splicing \(a^m,a^n\) at cuts after positions
+\(i,j\) is possible exactly when \(1\leq i<m\) and \(1\leq j<n\).
+Its output length is \(i+n-j\), which is at least \(2\).
+The seed has length \(3\), so no generated word has length below \(2\).
+Using two copies of the seed with \(i=1,j=2\) gives \(a^2\).
+If \(a^k\), \(k\geq2\), is available, splice it with \(a^3\),
+choosing \(i=k-1,j=1\), to obtain \(a^{k+1}\).
+Induction produces all lengths at least \(2\). This proves exact equality,
+not just an infinite sublanguage.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p09.development-bracket-preservation}{thm:p09-development-bracket-preservation}{Axial decomposition and bracket invariant}
+\begin{proof}
+Define the height of a prefix by the number of opening brackets minus
+closing brackets in it; module symbols contribute zero. A word is well
+nested exactly when every prefix has nonnegative height and its final
+height is zero.
+
+Scan such a word from left to right at height zero. Module symbols form
+the maximal intervening label block. An opening bracket must have a
+matching closing bracket, namely the first later position where height
+returns to zero. This first-return position is unique. All positions
+between them are its branch interior, which is well nested after
+subtracting one from its heights. Continue after that closing bracket.
+This determines the ordered outer branches and the intervening label
+blocks uniquely, including empty blocks before, between, or after
+adjacent branches. Conversely these blocks and branch interiors reconstruct
+the original word. Apply the same construction to each interior;
+its length is smaller. Induction on word length proves the unique
+recursive decomposition, including the empty-word case.
+
+Now replace each module occurrence by its specified well-nested successor
+and keep every old bracket unchanged. At a module occurring at height \(d\),
+the inserted successor starts and ends at \(d\) and never falls below \(d\).
+The unchanged brackets traverse the original nonnegative heights.
+Thus no prefix of the new word has negative height, and final height
+remains zero. This applies simultaneously to every occurrence: concatenate
+the finite inserted blocks in old-word order. It also permits an empty
+successor. Iterating this argument proves preservation in every generation.
+It depends on both conditions: deleting a lone opening bracket or using
+a successor consisting of an unmatched closing bracket destroys the invariant.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p09.development-morphic-expressiveness}{thm:p09-development-morphic-expressiveness}{Morphic generations and nonregularity}
+\begin{proof}
+For a word \(a_1\cdots a_m\), define
+\(h(a_1\cdots a_m)=h(a_1)\cdots h(a_m)\), and define \(h(\lambda)=\lambda\).
+The unique letter sequence of a word makes this well defined; splitting
+a concatenation at its two constituent words proves
+\(h(uv)=h(u)h(v)\). This is the unique monoid morphism with the assigned
+letter images. Parallel context-free deterministic rewriting chooses
+precisely those images, so its one-step result is \(h\) of the old word.
+Induction on the number of generations gives exactly \(h^n(\omega)\).
+Implicit identities simply assign \(h(a)=a\) to those letters.
+
+For the doubling example, induction gives \(h^n(a)=a^{2^n}\).
+Suppose its generation language were accepted by a deterministic automaton
+with \(m\geq1\) states. Choose \(n\) with \(2^n>m\).
+Among the states at the beginning and after the first \(m\) letters of
+the accepted word \(a^{2^n}\), two coincide. Repeating this all-\(a\)
+cycle once adds \(d\) letters, with \(1\leq d\leq m<2^n\), without
+changing acceptance. The new length satisfies
+\(2^n<2^n+d<2^{n+1}\), so it is not a power of two.
+This contradiction proves nonregularity. It asserts nothing about
+contextual, parametric, terminal-filtered, or stochastic variants.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p09.development-parametric-invariants}{thm:p09-development-parametric-invariants}{Parametric-example invariants}
+\begin{proof}
+The snowflake axiom has three drawing modules of length one.
+Each generation replaces every drawing module of length \(s\) by
+exactly four drawing modules of length \(s/3\), while angle modules
+remain unchanged and never create drawing modules. Induction therefore
+gives \(3\cdot4^n\) modules, each of length \(3^{-n}\).
+Their total polygonal path length is their count times that length.
+No limiting curve, dimension, or plant-development conclusion is needed.
+
+For the branching-width formula at \(e=1/2\), the successor widths
+are \(w\sqrt q\) and \(w\sqrt{1-q}\). The assumed interval makes both
+square roots real and nonnegative. Their squared sum is
+\(w^2q+w^2(1-q)=w^2\). If widths are proportional to circular diameters,
+the same common proportionality factor converts this into an area equality.
+Without that interpretation it is only an equality of model attributes.
+
+In the growth-budget model, let the initial straight-lineage budget
+be an integer \(v\geq0\). At budget zero the guard \(v>0\) fails, so
+identity preserves the apex and no further straight internode is created.
+At positive budget one applicable growth step creates one internode
+and a unique straight continuation with budget \(v-1\). Its lateral
+apex is not a continuation of this same axis and does not change that
+count. Induction on \(v\) gives one extension followed by exactly \(v-1\)
+more, hence exactly \(v\). Length/orientation parameter updates do not
+alter the budget recursion. The integer and nonnegative hypotheses are
+essential to this exact statement; they are not silently imposed on all
+modules of the source's real-parameter formalism.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p09.development-stochastic-kernel}{thm:p09-development-stochastic-kernel}{Normalization and expected branching}
+\begin{proof}
+For a module \(a\), finiteness makes \(W(a)=\sum_{p\in P(a)}w_p(a)\)
+a defined finite sum. Its assumed positivity allows division.
+Each ratio is nonnegative, and their sum is \(W(a)/W(a)=1\).
+Thus they form a probability distribution. If different productions
+have the same successor, summing their probabilities gives the induced
+distribution on successor words. A zero total violates the hypothesis.
+
+Condition on the old structure at generation \(k\), including its finite
+count \(N_k\). Let \(I_i\) be the indicator that apex \(i\) produces two
+rather than one successor. Then
+\(N_{k+1}=N_k+\sum_{i=1}^{N_k}I_i\).
+Every conditional marginal expectation is \(p_k\), so linearity gives
+\(\mathbb E(N_{k+1}\mid\hbox{old structure})=N_k(1+p_k)\).
+This uses no independence. Since \(p_k\) depends only on \(k\), total
+expectation gives the same multiplier for \(\mathbb E N_k\).
+
+The first two probabilities are \(p_1=p_2=1\), so
+\(N_1=1,N_2=2,N_3=4\) deterministically. For every integer \(k\geq3\),
+\(0<(2k+1)/k^2<1\) and \(1+p_k=(k+1)^2/k^2\).
+Therefore, for \(k\geq3\),
+\[
+ \mathbb E N_k
+ =4\prod_{j=3}^{k-1}\frac{(j+1)^2}{j^2}
+ =4\frac{k^2}{9}.
+\]
+The empty product at \(k=3\) gives \(4\), so the boundary case is included.
+Under the additional conditional-independence hypothesis,
+the covariance terms between distinct \(I_i\)'s vanish and each variance
+is \(p_k(1-p_k)\). Summing gives the stated conditional variance.
+Without that hypothesis, the expectation persists but the extra covariance
+terms cannot be discarded. These count identities do not imply that
+every sample saturates a geometric crown bound.
+\end{proof}
+\end{annexitem}

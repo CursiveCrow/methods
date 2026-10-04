@@ -1,0 +1,501 @@
+\section{Numeral calculations as annotated arithmetic proofs}
+\label{sec:p05-pa-numeral-proof-builders}
+
+The following constructions produce actual row trees for the selected
+\(\mathsf{Prf}^{19}_{\PA}\) of
+\cref{def:p05-selected-direct-pa-graph}. Their verification takes place in
+\(\PA\), using the specified graph equations. The output includes the
+universal-elimination rows of every arithmetic axiom instance. In particular,
+the construction does not enlarge the seven-axiom leaf convention of
+\cref{sec:p05-standard-pa-checker}.
+
+\begin{hbdefinition}{def:p05-numeral-builder-notation}{Code operations and fixed descriptions}
+Use the descriptions and expansion order of
+\cref{def:p05-checker-description-language,def:p05-checker-list-description}.
+The following names abbreviate constructor expressions:
+\[
+\begin{aligned}
+ v_i&\defeq N_0(i),& o&\defeq N_1(),& s(t)&\defeq N_2(t),\\
+ a(t,u)&\defeq N_3(t,u),& b(t,u)&\defeq N_4(t,u),&
+ \mathsf{Eq}(t,u)&\defeq N_5(t,u),\\
+ \mathsf{bc}&\defeq N_6(),& \mathsf{Neg}(c)&\defeq N_7(c),&
+ c\mathbin{\&}d&\defeq N_8(c,d),\\
+ c\Rightarrow d&\defeq N_{10}(c,d),&
+ \mathsf{All}(i,c)&\defeq N_{11}(i,c),&
+ \mathsf{Ex}(i,c)&\defeq N_{12}(i,c).
+\end{aligned}
+\]
+Here \(\mathsf{bc}\) is only a local code name, not an extra logical constant.
+The displayed operations construct syntax codes. Numerical addition and
+multiplication retain the names \(A,M\). Write
+\(\mathsf{entry}(R,j)\defeq h(T(R,j))\) for the existing list-entry
+description, and \(\mathsf{nodes}(c)\) for the already fixed syntax-node-count
+description. A reference to an earlier library function inserts its previously
+fixed description with its original arguments.
+
+Define, by primitive recursion with its counter last,
+\[
+ \mathsf{it}(t,0)=t,\qquad
+ \mathsf{it}(t,Sj)=s(\mathsf{it}(t,j)),\qquad
+ \nu(j)\defeq\mathsf{it}(o,j).
+\]
+Write \(\mathsf{pack}(R)\defeq N_{19}(N_{15}(R),0)\).
+An application of a named description inside arithmetic always means its
+unique \(\Gamma\)-graph output, under
+\cref{thm:p05-pa-pr-graphs}. Finite displayed templates expand by composition;
+every recursion, fold, branch order and failure value is specified below.
+Numerical guards \(x=y,x\ne y,x<y,x\leq y\) expand respectively to
+\(E(x,y),Z(E(x,y)),\mathsf{lt}(x,y),Z(\mathsf{lt}(y,x))\);
+reverse the arguments for \(>\) and \(\geq\). Thus every guarded
+success/failure case below is a composition with the already fixed numerical
+conditional, including its values on all failing inputs.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p05-builder-nocapture}{A table for substitution without renaming}
+For parameters \(i,u\), form a table with rows \([d,z,w]\), in increasing
+expression-code order. A row at \(c\) is zero in all three fields if \(c\)
+is neither a term nor a formula, or \(u\) is not a term. Otherwise use the
+following ordered constructor cases. Child fields are entries in the earlier
+table, exactly as in the selected syntax tables.
+\begin{enumerate}
+\item A variable \(v_j\) gives \([1,I(E(j,i),u,c),1]\).
+Zero and bottom give \([1,c,1]\).
+\item A unary nonbinding constructor \(N_k(c_0)\), for \(k=2,7\),
+gives \([d_0,N_k(z_0),2+w_0]\). A binary nonbinding constructor
+\(N_k(c_0,c_1)\), for \(k=3,4,5,8,9,10\), gives
+\([d_0d_1,N_k(z_0,z_1),2+w_0+w_1]\).
+\item A binder \(N_k(j,c_0)\), for \(k=11,12\), gives
+\([1,c,1]\) when \(j=i\), and otherwise gives
+\([d_0Z(\mathsf{AV}(u,j)),N_k(j,z_0),2+w_0]\).
+\end{enumerate}
+In each case replace the whole row by \([0,0,0]\) if its first field is
+zero. Retrieve row \(c\) after \(Sc\) updates and call its fields
+\(\mathsf{nc}(c,i,u),\mathsf{ns}(c,i,u),\mathsf{cost}(c,i,u)\).
+These are three projections of one fixed finite table description. Wrong
+tags, arities or child types are already excluded by its initial type test.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p05-builder-nocapture}{proved=annex:p5.builder-nocapture}{Internal substitution identities needed by the builders}
+In \(\PA\), if \(\mathsf{nc}(c,i,u)=1\), the table output has the
+input expression's term or formula type and
+\[
+ \mathsf{sub}(c,i,u)=\mathsf{ns}(c,i,u),\qquad
+ 1\leq\mathsf{cost}(c,i,u)\leq2\mathsf{nodes}(c).
+\]
+Thus its table equations are internal equations for the selected substitution
+machine on these inputs. If \(u\) is a term with no variable occurrences,
+the first field is one for every valid \(c\). It is also one for every
+quantifier-free valid expression and every term \(u\).
+
+In particular \(\PA\) proves that \(\nu(j)\) is a variable-free term
+and, assuming \(\mathsf{Tm}(t)=1\), that
+\(\mathsf{it}(s(t),j)=\mathsf{it}(t,Sj)\). With universal numerical
+closure it also proves the guarded numeral-invariance assertion
+\[
+ \mathsf{Tm}(u)=1\ \longrightarrow
+ \bigl(\mathsf{ns}(\nu(n),i,u)=\nu(n)\land
+        \mathsf{sub}(\nu(n),i,u)=\nu(n)\bigr).
+\]
+The finite open-term axiom instances used below satisfy the same
+table test; their only surviving inner binder has index 1 and their outer
+replacement contains no variable of that index.
+\end{hblemma}
+
+\begin{hbdefinition}{def:p05-builder-row-templates}{Exact row joins and elementary proof templates}
+All builders first construct raw row lists. For a fixed arity
+\(0\leq h\leq3\), let \(R_0,\ldots,R_{h-1}\) be their input lists,
+\(l_j=\ell(R_j)\), and \(t_j=\sum_{k<j}l_k\). Define
+\(\mathsf{J}_r(c,U;R_0,\ldots,R_{h-1})\) by concatenating, in that
+order, \(\mathsf{SR}(t_j,R_j)\), then appending the single row
+\[
+ [r,c,[t_0+D(l_0),\ldots,t_{h-1}+D(l_{h-1})],U,0].
+\]
+The empty concatenation and empty reference list are both zero. This is a
+separate fixed composition for each displayed arity. It is total on raw
+lists; validity claims require every supplied premise list to be nonempty.
+Define
+\[
+ \mathsf{L}(c,l)\defeq[[0,c,0,0,l]],\qquad
+ \mathsf{R}(t)\defeq\mathsf{J}_{18}(\mathsf{Eq}(t,t),[t];\ ),
+ \qquad f(R)\defeq\mathsf{root}(R).
+\]
+The second argument of \(\mathsf L\) is the stored marker: marker \(Si\)
+means label \(i\), whereas marker zero is unmarked.
+
+The following table specifies all remaining primitive templates. Symbols
+\(c,d,t,u,i,y,k\) in its parameter columns are supplied numerical inputs;
+each formula/term expression means the constructor expression already fixed.
+\[
+\begin{array}{c|c}
+\text{template}&\text{row-list expression}\\\hline
+ \mathsf{FE}(R,t)&
+ \mathsf J_{13}(\mathsf{sub}(c,i,t),[i,c,t];R)
+       \quad(f(R)=\mathsf{All}(i,c))\\
+ \mathsf{FI}(R,i)&\mathsf J_{15}(\mathsf{All}(i,f(R)),[i];R)\\
+ \mathsf{EI}(R,i,c,t)&\mathsf J_{14}(\mathsf{Ex}(i,c),[i,c,t];R)\\
+ \mathsf{EE}(P,R,i,c,y,k)&\mathsf J_{16}(f(R),[i,c,y,k];P,R)\\
+ \mathsf{II}(R,c,k)&\mathsf J_7(c\Rightarrow f(R),[k];R)\\
+ \mathsf{NI}(R,c,k)&\mathsf J_9(\mathsf{Neg}(c),[k];R)\\
+ \mathsf{B}(R,S)&\mathsf J_{10}(\mathsf{bc},0;R,S)\\
+ \mathsf{And}(R,S)&\mathsf J_1(f(R)\mathbin{\&}f(S),0;R,S)\\
+ \mathsf{MP}^{\rm row}(R,S)&\mathsf J_8(d,0;R,S)
+                         \quad(f(S)=c\Rightarrow d)\\
+ \mathsf{EEq}(R,S,t,u,c,i)&
+       \mathsf J_{19}(\mathsf{sub}(c,i,u),[t,u,c,i];R,S).
+\end{array}
+\]
+The two patterns in this table are decoded by the actual tag/arity
+projections; their template returns zero if that pattern fails. All other
+templates have the displayed value on every numerical input. Their invariants
+include precisely the appropriate rule premises and side conditions.
+
+If \(R\) has root \(\mathsf{Eq}(t,u)\), let \(j=1+\max(m(t),m(u))\) and set
+\[
+ \mathsf{Sym}(R)\defeq
+ \mathsf{EEq}(R,\mathsf R(t),t,u,\mathsf{Eq}(v_j,t),j).
+\]
+If \(R,S\) have roots \(\mathsf{Eq}(t,u),\mathsf{Eq}(u,w)\), let
+\(j=1+\max(m(t),m(u),m(w))\) and set
+\[
+ \mathsf{Tr}(R,S)\defeq\mathsf{EEq}(S,R,u,w,\mathsf{Eq}(t,v_j),j).
+\]
+For symmetry, decode both endpoints from its sole equality root. For
+transitivity, take \(t,u\) from the first and second arguments of \(f(R)\)
+and \(w\) from the second argument of \(f(S)\). Test that each indicated
+root has tag 5 and arity two; failure returns zero. Equality of the first
+argument of \(f(S)\) with \(u\) is an invariant hypothesis, not an
+additional branch test in this description.
+
+For each fixed one-hole term context \(g\) used below, define
+\(\mathsf{Cg}_g(R)\), for root \(\mathsf{Eq}(t,u)\), by
+\[
+ \mathsf{EEq}(R,\mathsf R(g(t)),t,u,\mathsf{Eq}(g(t),g(v_j)),j),
+ \quad j=1+\max(m(t),m(u),m(g(t)),m(g(u))).
+\]
+Here the contexts are exactly successor, left addition by a supplied term,
+right addition by a supplied term, and the analogous two multiplication
+contexts. Each is a separately fixed constructor expression with its fixed
+terms as additional parameters. There is no recursion over contexts in this
+definition. It returns zero on a failed equality-root pattern.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p05-builder-row-templates}{proved=annex:p5.builder-row-templates}{Internal preservation for raw proof joins}
+\(\PA\) proves the following assertions for the fixed templates. Joining
+nonempty trees with successful rows, and with the exact local test at the
+new row satisfied, gives another tree with all rows successful. Each old
+nonroot keeps parent count one; each old root receives one parent; the new
+root has count zero. The new open list is exactly the selected row rule's
+update on the shifted premise open lists.
+
+Consequently the templates for symmetry, transitivity and congruence have
+their displayed equality conclusions. They retain only the old open leaves.
+Every retained leaf has the same formula and marker as its original copy.
+The quantifier and discharge templates additionally require their actual
+free-variable or all-variable tests and a surviving matching marked leaf
+where the rule requires nonvacuity. They assert no vacuous discharge rule.
+For sentence proofs with axiom leaves, the raw implication-elimination join
+is precisely the successful value of \(\mathsf{mp}_{19}\) after packing.
+\end{hblemma}
+
+\begin{hbdefinition}{def:p05-builder-axiom-instances}{Axiom instances and two explicit derived constants}
+For the seven literal constants \(q_1,\ldots,q_7\), put
+\[
+ \mathsf A_j(t_0,\ldots,t_{r-1})\defeq
+  \mathsf{FE}(\cdots\mathsf{FE}(\mathsf L(q_j,0),t_0)\cdots,t_{r-1}),
+\]
+where \(r=1\) for \(j=1,3,4,6\), and \(r=2\) for \(j=2,5,7\).
+The order is the printed outside-in order, indices 0 then 1 when there are
+two binders. No \(q_j\) instance is an assumption leaf.
+
+The next finite expressions construct two derived sentence proofs. Set
+\[
+\begin{aligned}
+ m_Z&\defeq \mathsf{Eq}(a(o,v_0),v_0),& I_Z&\defeq\mathsf{IndAx}(m_Z,0),\\
+ m_L&\defeq \mathsf{Eq}(a(s(v_0),v_1),s(a(v_0,v_1))),&
+ I_L&\defeq\mathsf{IndAx}(m_L,1).
+\end{aligned}
+\]
+Their concrete matrices and indices are fixed here; their axiom codes use
+the existing fully specified canonical-induction constructor. Define
+\[
+\begin{aligned}
+ Z_0&\defeq\mathsf A_4(o),\\
+ Z_s&\defeq\mathsf{Tr}(\mathsf A_5(o,v_0),
+                         \mathsf{Cg}_s(\mathsf L(m_Z,1))),\\
+ D_Z&\defeq\mathsf{MP}^{\rm row}
+  (\mathsf{And}(Z_0,\mathsf{FI}(\mathsf{II}(Z_s,m_Z,0),0)),
+                                                     \mathsf L(I_Z,0)),\\
+ L_0&\defeq\mathsf{Tr}(\mathsf A_4(s(v_0)),
+                              \mathsf{Sym}(\mathsf{Cg}_s(\mathsf A_4(v_0)))),\\
+ L_s&\defeq\mathsf{Tr}\bigl(
+       \mathsf{Tr}(\mathsf A_5(s(v_0),v_1),
+                           \mathsf{Cg}_s(\mathsf L(m_L,1))),
+                         \mathsf{Sym}(\mathsf{Cg}_s(\mathsf A_5(v_0,v_1)))\bigr),\\
+ D_L&\defeq\mathsf{FI}\bigl(
+   \mathsf{MP}^{\rm row}
+    (\mathsf{And}(L_0,\mathsf{FI}(\mathsf{II}(L_s,m_L,0),1)),
+                                   \mathsf{FE}(\mathsf L(I_L,0),v_0)),0\bigr).
+\end{aligned}
+\]
+Each repeated template occurrence inserts a fresh copy of its entire row
+tree. Set \(\mathsf A_Z(t)=\mathsf{FE}(D_Z,t)\) and
+\(\mathsf A_L(t,u)=\mathsf{FE}(\mathsf{FE}(D_L,t),u)\).
+These expressions copy the derived proofs; they do not create new axiom
+leaves with their conclusions.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p05-builder-left-addition}{proved=annex:p5.builder-left-addition}{The two derived addition proofs}
+The packed records \(D_Z,D_L\) satisfy the selected checker, with roots
+\[
+ \mathsf{All}(0,m_Z),\qquad
+ \mathsf{All}(0,\mathsf{All}(1,m_L)),
+\]
+respectively. Their decoded conclusions are
+\(\forall x_0(0+x_0=x_0)\) and
+\(\forall x_0\forall x_1(Sx_0+x_1=S(x_0+x_1))\).
+Their surviving leaves are unmarked members of the fixed list
+\[
+ \mathcal A_*\defeq[q_1,q_2,q_3,q_4,q_5,q_6,q_7,I_Z,I_L].
+\]
+Every member passes \(\mathsf{Ax}_{19}\), and every variable occurring in
+one of these leaves has index 0 or 1. These assertions, including the
+checker assertions, hold as theorems of \(\PA\) for the displayed fixed
+constructor expressions.
+\end{hblemma}
+
+\begin{hbdefinition}{def:p05-numeral-arithmetic-builders}{Arithmetic and successor-string recurrences}
+Define the following raw row-list recurrences in their displayed order.
+Numerical output values use the already fixed descriptions \(A,M\).
+\[
+\begin{aligned}
+ R_+(m,0)&=\mathsf A_4(\nu(m)),\\
+ R_+(m,Sn)&=\mathsf{Tr}(\mathsf A_5(\nu(m),\nu(n)),
+                                      \mathsf{Cg}_s(R_+(m,n))),\\
+ R_\times(m,0)&=\mathsf A_6(\nu(m)),\\
+ R_\times(m,Sn)&=\mathsf{Tr}\bigl(
+   \mathsf{Tr}(\mathsf A_7(\nu(m),\nu(n)),
+                 \mathsf{Cg}_{z\mapsto a(z,\nu(m))}(R_\times(m,n))),
+                                            R_+(M(m,n),m)\bigr),\\
+ R_{\rm right}(t,0)&=\mathsf A_4(t),\\
+ R_{\rm right}(t,Sn)&=\mathsf{Tr}(\mathsf A_5(t,\nu(n)),
+                                \mathsf{Cg}_s(R_{\rm right}(t,n))),\\
+ R_{\rm left}(t,0)&=\mathsf A_Z(t),\\
+ R_{\rm left}(t,Sn)&=\mathsf{Tr}(\mathsf A_L(\nu(n),t),
+                                 \mathsf{Cg}_s(R_{\rm left}(t,n))).
+\end{aligned}
+\]
+The parameter \(t\) in the last two recurrences will be a numeral,
+\(v_y\), or \(s(v_y)\), with \(y\geq3\). These are their asserted
+domains. On other inputs the same equations give total numerical outputs,
+with the already specified template failure values.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p05-numeral-arithmetic-builders}{proved=annex:p5.numeral-arithmetic-builders}{Internal arithmetic-builder invariants}
+With universal numerical quantification, \(\PA\) proves
+\[
+\begin{aligned}
+ \mathsf{Prf}^{19}_{\PA}
+  (\mathsf{pack}(R_+(m,n)),\mathsf{Eq}(a(\nu(m),\nu(n)),\nu(A(m,n)))),\\
+ \mathsf{Prf}^{19}_{\PA}
+  (\mathsf{pack}(R_\times(m,n)),\mathsf{Eq}(b(\nu(m),\nu(n)),\nu(M(m,n)))).
+\end{aligned}
+\]
+For every permitted \(t\), the two remaining recurrences produce successful
+trees with roots
+\[
+ \mathsf{Eq}(a(t,\nu(n)),\mathsf{it}(t,n)),\qquad
+ \mathsf{Eq}(a(\nu(n),t),\mathsf{it}(t,n)),
+\]
+respectively. Their surviving leaves, and those of the numeral recurrences,
+are unmarked members of \(\mathcal A_*\). A root containing \(v_y\)
+is an intermediate open formula; it is not asserted to pass the sentence
+test until the later construction closes it.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p05-numeral-literal-builders}{Disequality and both comparison polarities}
+First define a contradiction constructor. For \(t=o\) or \(t=v_y\)
+with \(y\geq3\), use numerical parameters \(k,b\) and a raw tree \(R\).
+The counter \(j\) is last:
+\[
+\begin{aligned}
+ P(t,k,b,R,0)&=R,\\
+ P(t,k,b,R,Sj)&=
+ \begin{cases}
+ \mathsf{MP}^{\rm row}\bigl(P(t,k,b,R,j),
+    \mathsf A_2(\mathsf{it}(t,L(k,Sj)),\nu(L(b,Sj)))\bigr),&j<b,\\
+ P(t,k,b,R,j),&j\geq b,
+ \end{cases}\\
+ \mathsf{Clash}(t,k,b,R)&\defeq
+ \mathsf B\bigl(P(t,k,b,R,b),
+                    \mathsf A_1(\mathsf{it}(t,D(L(k,b))))\bigr).
+\end{aligned}
+\]
+The two cases expand to the numerical conditional in their printed order.
+For the stated domain of \(t\), the asserted success premises are
+\[
+ \mathsf{Tree}(R)=1,\qquad k>b,\qquad
+ f(R)=\mathsf{Eq}(\mathsf{it}(t,k),\nu(b)).
+\]
+
+For \(m\ne n\), let \(c=\mathsf{Eq}(\nu(m),\nu(n))\), and set
+\[
+ R_{\ne}(m,n)\defeq
+ \begin{cases}
+ \mathsf{NI}(\mathsf{Clash}(o,m,n,\mathsf L(c,1)),c,0),&n<m,\\
+ \mathsf{NI}(\mathsf{Clash}(o,n,m,\mathsf{Sym}(\mathsf L(c,1))),c,0),&m<n,\\
+ 0,&m=n.
+ \end{cases}
+\]
+Set \(R_{=}(m,n)=I(E(m,n),\mathsf R(\nu(m)),0)\).
+
+The inherited comparison expansions retain a supplied binder index \(i\):
+\[
+ \mathsf{Le}_i(t,u)\defeq\mathsf{Ex}(i,\mathsf{Eq}(a(v_i,t),u)),\qquad
+ \mathsf{Lt}_i(t,u)\defeq\mathsf{Ex}(i,\mathsf{Eq}(a(t,s(v_i)),u)).
+\]
+For closed numeral terms define, in the success cases,
+\[
+\begin{aligned}
+ R_{\leq}^+(i,m,n)&\defeq
+  \mathsf{EI}(R_+(L(n,m),m),i,\mathsf{Eq}(a(v_i,\nu(m)),\nu(n)),\nu(L(n,m))),
+       &&m\leq n,\\
+ R_<^+(i,m,n)&\defeq
+  \mathsf{EI}(R_+(m,L(n,m)),i,\mathsf{Eq}(a(\nu(m),s(v_i)),\nu(n)),
+                                            \nu(D(L(n,m)))),&&m<n.
+\end{aligned}
+\]
+Outside the indicated numerical condition each builder returns zero.
+
+For either negative comparison put \(y=i+3\), let \(c\) be the matrix
+of that comparison at \(\nu(m),\nu(n)\), and let
+\(C=\mathsf{Ex}(i,c)\). Take
+\[
+ H=\mathsf L(C,1),\qquad
+ K=\mathsf L(\mathsf{sub}(c,i,v_y),2).
+\]
+For \(m>n\), set
+\[
+ V_{\leq}=\mathsf{Tr}(\mathsf{Sym}(R_{\rm right}(v_y,m)),K),\qquad
+ W_{\leq}=\mathsf{Clash}(v_y,m,n,V_{\leq}).
+\]
+For \(m\geq n\), set
+\[
+ V_<=\mathsf{Tr}(\mathsf{Sym}(R_{\rm left}(s(v_y),m)),K),\qquad
+ W_<=\mathsf{Clash}(v_y,Sm,n,V_<).
+\]
+In the respective success case define
+\[
+ R_\diamond^-(i,m,n)\defeq
+ \mathsf{NI}(\mathsf{EE}(H,W_\diamond,i,c,y,1),C,0),
+                 \qquad\diamond\in\{\leq,<\}.
+\]
+The failure value is zero. Thus the existential assumption has label 0,
+its minor instance has label 1, and the eigenvariable is exactly \(i+3\).
+Finally put
+\[
+ R_{\neg\bot}\defeq\mathsf{NI}(\mathsf L(\mathsf{bc},1),\mathsf{bc},0).
+\]
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p05-numeral-literal-builders}{proved=annex:p5.numeral-literal-builders}{Internal literal-proof assertions}
+\(\PA\) proves, with all numerical parameters universally quantified,
+that the packed builders in the following table satisfy
+\(\mathsf{Prf}^{19}_{\PA}\) with exactly the listed root whenever its
+condition holds:
+\[
+\begin{array}{c|c|c}
+ \text{raw builder}&\text{condition}&\text{literal root}\\\hline
+ R_=(m,n)&m=n&\mathsf{Eq}(\nu(m),\nu(n))\\
+ R_{\ne}(m,n)&m\ne n&\mathsf{Neg}(\mathsf{Eq}(\nu(m),\nu(n)))\\
+ R_{\leq}^+(i,m,n)&m\leq n&\mathsf{Le}_i(\nu(m),\nu(n))\\
+ R_{\leq}^-(i,m,n)&m>n&\mathsf{Neg}(\mathsf{Le}_i(\nu(m),\nu(n)))\\
+ R_<^+(i,m,n)&m<n&\mathsf{Lt}_i(\nu(m),\nu(n))\\
+ R_<^-(i,m,n)&m\geq n&\mathsf{Neg}(\mathsf{Lt}_i(\nu(m),\nu(n)))\\
+ R_{\neg\bot}&\text{always}&\mathsf{Neg}(\mathsf{bc}).
+\end{array}
+\]
+All surviving leaves are unmarked members of \(\mathcal A_*\).
+Under the stated term domain and the premises \(\mathsf{Tree}(R)=1\),
+\(k>b\) and \(f(R)=\mathsf{Eq}(\mathsf{it}(t,k),\nu(b))\), the
+contradiction constructor has successful rows, root \(\mathsf{bc}\), and
+retains its input open leaves together with unmarked \(q_1,q_2\) leaves.
+These are internal checker invariants, including
+zero numeral arguments, a zero peeling bound, equal comparison endpoints,
+and the premise-free identity case.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p05-fixed-term-literal-builders}{A builder for each fixed term and literal}
+Fix a finite list \([i_0,\ldots,i_{r-1}]\) of distinct variable indices
+and a term \(t\) whose variables belong to that list. The variable
+\(x_{i_j}\) receives the numerical input \(m_j\). For this numerical tuple
+\(\bar m\), define its value \(t^\#(\bar m)\) by the fixed term
+formation using numerical \(0,S,A,M\). Define its numeral-instance code
+\(t^\nu(\bar m)\) by the same formation using \(o,s,a,b\) and the
+numeral codes of the supplied entries.
+
+Define a raw proof \(R_t(\bar m)\) by meta-recursion on this one fixed
+term. Zero and a variable use \(\mathsf R(o)\) and
+\(\mathsf R(\nu(m_j))\), respectively. Successor uses
+\(\mathsf{Cg}_s(R_u)\). For a sum of fixed terms \(u,v\), use
+\[
+ \mathsf{Tr}\bigl(
+  \mathsf{Tr}(\mathsf{Cg}_{z\mapsto a(z,v^\nu)}(R_u),
+       \mathsf{Cg}_{z\mapsto a(\nu(u^\#),z)}(R_v)),
+                              R_+(u^\#,v^\#)\bigr).
+\]
+For a product replace both addition contexts by the corresponding
+multiplication contexts and the final builder by \(R_\times\).
+All tuple arguments in this display are unchanged \(\bar m\).
+This assigns a separately fixed finite description to each term; the
+object-language parameters never range over term descriptions.
+
+For a fixed signed equality or signed comparison of terms \(u,v\), write
+\(W(t,z)\) for its formula-code constructor, including its sign. In a
+comparison retain the binder \(i\) selected when the original abbreviation
+was expanded: do not select a new binder after numeral substitution.
+For equality use the auxiliary numerical value \(i=0\). Choose
+\(j=1+\max(i,m(u^\nu),m(v^\nu))\), and take the appropriate normalized
+raw literal proof \(Q\) at \(u^\#,v^\#\) from the preceding table.
+Apply successively
+\[
+\begin{aligned}
+ Q_1&=\mathsf{EEq}(\mathsf{Sym}(R_u),Q,
+                   \nu(u^\#),u^\nu,W(v_j,\nu(v^\#)),j),\\
+ Q_2&=\mathsf{EEq}(\mathsf{Sym}(R_v),Q_1,
+                   \nu(v^\#),v^\nu,W(u^\nu,v_j),j).
+\end{aligned}
+\]
+The final description returns \(\mathsf{pack}(Q_2)\) when the numerical
+condition for that signed literal holds, and zero otherwise. The literal
+\(\neg\bottom\) uses \(\mathsf{pack}(R_{\neg\bot})\); the positive
+bottom builder returns zero on every input.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p05-fixed-term-literal-builders}{proved=annex:p5.fixed-term-literal-builders}{Fixed-term evaluation and literal transport inside PA}
+For each fixed term \(t\), \(\PA\) proves that
+\(\mathsf{pack}(R_t(\bar m))\) satisfies the selected checker with root
+\[
+                 \mathsf{Eq}(t^\nu(\bar m),\nu(t^\#(\bar m))).
+\]
+For each fixed literal \(\lambda\) just specified, with final builder
+description \(d_\lambda\) and literal numeral-instance code
+\(\lambda^\nu(\bar m)\), it proves
+\[
+ \forall\bar m\,\bigl(\lambda(\bar m)\to
+   \exists p\,(\Gamma_{d_\lambda}(\bar m,p)\land
+                \mathsf{Prf}^{19}_{\PA}(p,\lambda^\nu(\bar m)))\bigr).
+\]
+In this arithmetic implication \(\lambda(\bar m)\) denotes the original
+fixed formula at the numerical parameters, not its code or an internal truth
+predicate. All code-valued applications are eliminated through their specified
+graphs. The positive-bottom instance has contradictory antecedent.
+\end{hbtheorem}
+
+\paragraph{The next construction.}
+The next component combines these literal builders through the connectives and
+marked bounded quantifiers of each fixed bounded formula. It must still
+construct finite case enumeration, convert it to a quantified derivation, and
+verify dependent substitutions and all discharge/freshness conditions. The
+literal construction above supplies its arithmetic leaves. It does not itself
+establish the bounded-formula compiler, the evidence-to-proof theorem, D3 or
+the remaining provability-logic results.

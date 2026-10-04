@@ -1,0 +1,162 @@
+\section{Satisfaction}
+\label{sec:fol-semantics-02}
+
+\begin{definition}[Satisfaction]
+For a structure \(\Meta\), assignment \(s\), and formula \(\varphi\), the
+relation \(\Meta,s\entails\varphi\) is defined by structural recursion:
+\[
+\begin{aligned}
+ \Meta,s\entails r=t
+ &\quad\text{iff}\quad
+ \sem{r}^{\Meta}_s=\sem{t}^{\Meta}_s,\\
+ \Meta,s\entails R(t_1,\ldots,t_n)
+ &\quad\text{iff}\quad
+ (\sem{t_1}^{\Meta}_s,\ldots,\sem{t_n}^{\Meta}_s)\in R^{\Meta},\\
+ \Meta,s\notentails\bottom,
+ &\\
+ \Meta,s\entails\neg\varphi
+ &\quad\text{iff}\quad\Meta,s\notentails\varphi,\\
+ \Meta,s\entails\varphi\land\psi
+ &\quad\text{iff}\quad
+ \Meta,s\entails\varphi\text{ and }\Meta,s\entails\psi,\\
+ \Meta,s\entails\varphi\lor\psi
+ &\quad\text{iff}\quad
+ \Meta,s\entails\varphi\text{ or }\Meta,s\entails\psi,\\
+ \Meta,s\entails\varphi\to\psi
+ &\quad\text{iff}\quad
+ \Meta,s\notentails\varphi\text{ or }\Meta,s\entails\psi,\\
+ \Meta,s\entails\forall x\,\varphi
+ &\quad\text{iff}\quad
+ \Meta,s[x\mapsto a]\entails\varphi
+ \text{ for every }a\in\abs{\Meta},\\
+ \Meta,s\entails\exists x\,\varphi
+ &\quad\text{iff}\quad
+ \Meta,s[x\mapsto a]\entails\varphi
+ \text{ for some }a\in\abs{\Meta}.
+\end{aligned}
+\]
+\end{definition}
+
+\begin{lemma}[Formula coincidence]
+\label{lem:fol-coincidence}
+If assignments \(s\) and \(s'\) agree on \(\FV(\varphi)\), then
+\[
+ \Meta,s\entails\varphi
+ \quad\text{iff}\quad
+ \Meta,s'\entails\varphi.
+\]
+\end{lemma}
+\begin{proof}
+Proceed by structural induction.  Atomic cases use term coincidence.
+Connective cases follow from the induction hypotheses.  For
+\(\forall x\,\psi\), the assignments
+\(s[x\mapsto a]\) and \(s'[x\mapsto a]\) agree on \(\FV(\psi)\) for each
+\(a\), because \(s\) and \(s'\) agree on
+\(\FV(\psi)\setminus\set{x}\).  Apply the induction hypothesis for every
+\(a\).  The existential case is identical with ``some'' in place of
+``every.''
+\end{proof}
+
+\begin{theorem}[Substitution lemma]
+\label{thm:fol-substitution}
+For every formula \(\varphi\), term \(t\), variable \(x\), structure
+\(\Meta\), and assignment \(s\),
+\[
+ \Meta,s\entails\varphi[t/x]
+ \quad\text{iff}\quad
+ \Meta,s[x\mapsto\sem{t}^{\Meta}_s]\entails\varphi.
+\]
+\end{theorem}
+\begin{proof}
+Proceed by induction on formula complexity.  Atomic cases follow from
+\cref{lem:term-substitution}.  Connective cases follow immediately from the
+induction hypotheses.
+
+Let \(\varphi=Qy\,\psi\), where
+\(Q\in\set{\forall,\exists}\).  If \(y=x\), substitution stops at the
+quantifier.  Updating \(x\) before evaluating \(Qx\,\psi\) is immaterial,
+because the quantified update of \(x\) overrides it.  If \(y\ne x\) and
+\(y\notin\operatorname{Var}(t)\), then
+\(\sem{t}^{\Meta}_{s[y\mapsto a]}=\sem{t}^{\Meta}_s\) for every \(a\).
+Apply the induction hypothesis to \(\psi\) under each updated assignment and
+then apply the truth clause for \(Q\).
+
+If \(y\ne x\) and \(y\in\operatorname{Var}(t)\), the definition first replaces \(y\) by a
+fresh \(z\).  The variable \(z\) occurs neither in \(t\) nor free in
+\(\psi\).  The induction hypothesis applied to the renamed body---
+legitimate because renaming preserves complexity, by
+\cref{lem:substitution-complexity}---together with formula coincidence,
+shows directly that
+\(Qy\,\psi\) and \(Qz\,(\psi[z/y])\) have the same satisfaction condition.
+The preceding quantifier argument then applies to the renamed body, whose
+complexity equals \(c(\psi)\) by \cref{lem:substitution-complexity}.  Thus
+the equivalence holds in all cases.
+\end{proof}
+
+\begin{corollary}[Alpha-invariance]
+\label{cor:alpha-invariance}
+If \(\varphi\equiv_\alpha\psi\), then
+\(\Meta,s\entails\varphi\) iff \(\Meta,s\entails\psi\) for every structure
+\(\Meta\) and assignment \(s\).
+\end{corollary}
+\begin{proof}
+Define a relation \(R\) on formulas by \(\varphi R\psi\) iff, for every
+structure \(\Meta\) and assignment \(s\),
+\(\Meta,s\entails\varphi\) iff \(\Meta,s\entails\psi\).  The relation
+\(R\) is reflexive, symmetric, and transitive.  It is a congruence for
+\(\bottom,\neg,\land,\lor,\to\) by the corresponding satisfaction clauses.
+It is also a congruence for each quantifier: if \(\varphi R\psi\), then the
+equivalence holds under every assignment \(s[x\mapsto a]\), and the
+universal or existential satisfaction clause transfers it to
+\(Qx\,\varphi\) and \(Qx\,\psi\).
+
+It remains to check a generating renaming.  Suppose
+\(y\notin\operatorname{Var}(\varphi)\).  By
+\cref{thm:fol-substitution}, satisfaction of \(\varphi[y/x]\) under
+\(s[y\mapsto a]\) is equivalent to satisfaction of \(\varphi\) under
+\(s[y\mapsto a][x\mapsto a]\).  Since \(y\notin\FV(\varphi)\), formula
+coincidence identifies the latter satisfaction condition with that of
+\(\varphi\) under \(s[x\mapsto a]\).  Applying the satisfaction clause for
+\(Q\in\set{\forall,\exists}\) gives
+\(Qx\,\varphi\;R\;Qy\,(\varphi[y/x])\).  Thus \(R\) is an equivalence
+relation and a congruence containing every generating renaming.  By the
+leastness clause in the definition of \(\equiv_\alpha\), alpha-equivalence is
+contained in \(R\).
+\end{proof}
+
+\begin{corollary}[Assignment independence for sentences]
+If \(\sigma\in\Sent(\Lang)\), then
+\(\Meta,s\entails\sigma\) iff \(\Meta,s'\entails\sigma\) for all assignments
+\(s,s'\) in \(\Meta\).
+\end{corollary}
+\begin{proof}
+The assignments agree on \(\FV(\sigma)=\varnothing\); apply
+\cref{lem:fol-coincidence}.
+\end{proof}
+
+\begin{definition}[Truth, validity, and semantic consequence]
+For a sentence \(\sigma\), write \(\Meta\entails\sigma\) iff
+\(\Meta,s\entails\sigma\) for one, equivalently every, assignment \(s\).
+For \(\Gamma\subseteq\Fm(\Lang)\), write
+\(\Gamma\entails\varphi\) iff, for every \(\Lang\)-structure \(\Meta\) and
+assignment \(s\),
+\[
+ \bigl(\Meta,s\entails\gamma\text{ for every }\gamma\in\Gamma\bigr)
+ \quad\Longrightarrow\quad
+ \Meta,s\entails\varphi.
+\]
+The formula \(\varphi\) is \emph{valid} iff
+\(\varnothing\entails\varphi\).
+Two \(\Lang\)-formulas \(\varphi\) and \(\psi\) are \emph{logically
+equivalent}, written \(\varphi\equiv\psi\), iff, for every
+\(\Lang\)-structure \(\Meta\) and every assignment
+\(s\),
+\[
+  \Meta,s\entails\varphi
+  \quad\Longleftrightarrow\quad
+  \Meta,s\entails\psi.
+\]
+This is logical equivalence over all \(\Lang\)-structures, not
+alpha-equivalence and not literal identity of formula strings.
+\end{definition}
+

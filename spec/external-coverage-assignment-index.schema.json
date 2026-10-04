@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "external-coverage-assignment-index.schema.json",
+  "title": "Streamed external-coverage assignment sidecar index",
+  "description": "Version 1 preserves content-only sidecars. Version 2 additionally permits independently reviewed acquisition-file-descriptor dispositions, initially only profile src068-h278-v1 (exactly the 409 children SRC-068-T11120 through SRC-068-T11528). The checker validates the fixed producer grammar, original receipt payloads and joins in the same catalog stream. Schema validity alone grants no disposition or content admission.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "coverage_manifest_path",
+    "coverage_manifest_sha256",
+    "coverage_manifest_bytes",
+    "coverage_manifest_record_count",
+    "packet_admission_path",
+    "packet_admission_sha256",
+    "packet_admission_bytes",
+    "sidecars"
+  ],
+  "properties": {
+    "schema_version": {"enum": [1, 2]},
+    "coverage_manifest_path": {"$ref": "#/$defs/repositoryPath"},
+    "coverage_manifest_sha256": {"$ref": "#/$defs/sha256"},
+    "coverage_manifest_bytes": {"type": "integer", "minimum": 0},
+    "coverage_manifest_record_count": {"type": "integer", "minimum": 1},
+    "packet_admission_path": {"$ref": "#/$defs/repositoryPath"},
+    "packet_admission_sha256": {"$ref": "#/$defs/sha256"},
+    "packet_admission_bytes": {"type": "integer", "minimum": 0},
+    "metadata_dispositions": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/metadataDisposition"}
+    },
+    "sidecars": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/sidecar"}
+    }
+  },
+  "allOf": [{
+    "if": {"properties": {"schema_version": {"const": 1}}},
+    "then": {"not": {"required": ["metadata_dispositions"]}},
+    "else": {"required": ["metadata_dispositions"]}
+  }],
+  "$defs": {
+    "nonemptyString": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^\\S(?:[^\\r\\n]*\\S)?$"
+    },
+    "repositoryPath": {
+      "allOf": [
+        {"$ref": "#/$defs/nonemptyString"},
+        {"pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"}
+      ]
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "stringSet": {
+      "type": "array", "minItems": 1, "uniqueItems": true,
+      "items": {"$ref": "#/$defs/nonemptyString"}
+    },
+    "authorityFile": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": {"$ref": "#/$defs/repositoryPath"},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "aiEvidence": {
+      "description": "Three independently produced passing reviews using the established AI evidence fields. recorded_scope must equal the checker's metadata_review_scope, binding disposition identity/profile, receipt and rationale paths/hashes, and the catalog path/hash/bytes/count. Receipt/rationale/catalog authorities and the exact descriptor-membership locator are required at runtime. Actual model configuration and findings must be recorded by the reviewer.",
+      "type": "object", "additionalProperties": false,
+      "required": ["category", "recorded_result", "artifact_path", "sha256", "producer_identity", "recorded_scope", "model", "model_version", "instructions", "consulted_authority_files", "consulted_authority_locators", "findings", "evidence_digest"],
+      "properties": {
+        "category": {"enum": ["source_fidelity_ai", "topic_specialist_ai", "adversarial_publication_ai"]},
+        "recorded_result": {"const": "pass"},
+        "artifact_path": {"$ref": "#/$defs/repositoryPath"},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "producer_identity": {"$ref": "#/$defs/nonemptyString"},
+        "recorded_scope": {"$ref": "#/$defs/nonemptyString"},
+        "model": {"$ref": "#/$defs/nonemptyString"},
+        "model_version": {"$ref": "#/$defs/nonemptyString"},
+        "instructions": {"$ref": "#/$defs/nonemptyString"},
+        "consulted_authority_files": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/authorityFile"}},
+        "consulted_authority_locators": {"$ref": "#/$defs/stringSet"},
+        "findings": {"$ref": "#/$defs/stringSet"},
+        "evidence_digest": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "metadataDisposition": {
+      "type": "object", "additionalProperties": false,
+      "required": ["disposition_id", "disposition_kind", "descriptor_profile", "membership_receipt_path", "membership_receipt_sha256", "rationale_path", "rationale_sha256", "verification_evidence"],
+      "properties": {
+        "disposition_id": {"type": "string", "pattern": "^META-[A-Za-z0-9][A-Za-z0-9._-]*$"},
+        "disposition_kind": {"const": "acquisition_file_descriptor"},
+        "descriptor_profile": {"const": "src068-h278-v1"},
+        "membership_receipt_path": {"allOf": [{"$ref": "#/$defs/repositoryPath"}, {"pattern": "^spec/provenance/external-coverage-assignments/"}]},
+        "membership_receipt_sha256": {"$ref": "#/$defs/sha256"},
+        "rationale_path": {"allOf": [{"$ref": "#/$defs/repositoryPath"}, {"pattern": "^spec/research/"}]},
+        "rationale_sha256": {"$ref": "#/$defs/sha256"},
+        "verification_evidence": {
+          "type": "array", "minItems": 3, "maxItems": 3,
+          "items": {"$ref": "#/$defs/aiEvidence"},
+          "allOf": [
+            {"contains": {"properties": {"category": {"const": "source_fidelity_ai"}}, "required": ["category"]}, "minContains": 1, "maxContains": 1},
+            {"contains": {"properties": {"category": {"const": "topic_specialist_ai"}}, "required": ["category"]}, "minContains": 1, "maxContains": 1},
+            {"contains": {"properties": {"category": {"const": "adversarial_publication_ai"}}, "required": ["category"]}, "minContains": 1, "maxContains": 1}
+          ]
+        }
+      }
+    },
+    "sidecar": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sidecar_path",
+        "sidecar_sha256",
+        "assignment_count",
+        "first_coverage_id",
+        "last_coverage_id"
+      ],
+      "properties": {
+        "sidecar_path": {
+          "allOf": [
+            {"$ref": "#/$defs/repositoryPath"},
+            {"pattern": "^spec/provenance/external-coverage-assignments/"}
+          ]
+        },
+        "sidecar_sha256": {"$ref": "#/$defs/sha256"},
+        "assignment_count": {"type": "integer", "minimum": 1},
+        "first_coverage_id": {"$ref": "#/$defs/nonemptyString"},
+        "last_coverage_id": {"$ref": "#/$defs/nonemptyString"}
+      }
+    }
+  }
+}

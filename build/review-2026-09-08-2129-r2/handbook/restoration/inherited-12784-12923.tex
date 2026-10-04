@@ -1,0 +1,140 @@
+\section{Standard and Henkin semantics}
+\label{sec:simple-type-theory-02}
+
+\begin{definition}[Standard type structure]
+A standard type structure \(\mathcal M\) assigns nonempty sets \(D_\alpha\) to types such
+that
+\[
+  D_o=\set{0,1},
+  \qquad
+  D_{\alpha\to\beta}=D_\beta^{D_\alpha},
+\]
+the full set of functions from \(D_\alpha\) to \(D_\beta\).  Application is
+function application, lambda abstraction denotes the corresponding function,
+equality denotes identity at each type, and the logical constants have their
+classical meanings.  Every admitted nonlogical constant \(c{:}\alpha\) is
+assigned an element \(c^{\mathcal M}\in D_\alpha\).
+\end{definition}
+
+\begin{definition}[Henkin type structure]
+A Henkin type structure \(\mathcal M\) assigns a nonempty set
+\(D_\alpha\) to every type, with \(D_o=\set{0,1}\), and
+a selected set
+\[
+  D_{\alpha\to\beta}\subseteq D_\beta^{D_\alpha}
+\]
+to every function type.  The selected function sets must contain the
+denotation, under the recursion below, of every well-typed lambda term under
+every assignment.  Application and the logical constants obey the same typed
+clauses as in a standard type structure, and every admitted nonlogical constant
+\(c{:}\alpha\) is assigned an element
+\(c^{\mathcal M}\in D_\alpha\).
+\end{definition}
+
+In either kind of structure, a typed assignment \(s\) maps every variable
+\(x{:}\alpha\) to a member of \(D_\alpha\).  Denotation is the recursion
+\[
+\begin{aligned}
+  \sem{x}^{\mathcal M}_s&=s(x),
+  &\sem{c}^{\mathcal M}_s&=c^{\mathcal M},\\
+  \sem{FA}^{\mathcal M}_s
+    &=\sem{F}^{\mathcal M}_s\bigl(\sem{A}^{\mathcal M}_s\bigr),
+  &\sem{\lambda x{:}\alpha.B}^{\mathcal M}_s
+    &=\bigl(a\mapsto
+       \sem{B}^{\mathcal M}_{s[x\mapsto a]}\bigr).
+\end{aligned}
+\]
+For a Henkin type structure, its closure requirement says precisely that the
+function in the last clause belongs to the selected
+\(D_{\alpha\to\beta}\) for every well-typed abstraction and matching
+assignment.  Equality at type \(\alpha\) denotes the characteristic function
+of identity on \(D_\alpha\), and \(\forall_\alpha\) returns \(1\) exactly on
+those predicates in \(D_{\alpha\to o}\) that take value \(1\) at every member
+of \(D_\alpha\).
+
+Every standard type structure is a Henkin type structure.  The converse fails
+when a selected function space omits set-theoretic functions.
+
+\paragraph{Cited theorem.}
+For the formal theory of types and the general structures fixed in
+\cite[pp.~81--91]{Henkin1950}, soundness and completeness hold for that exact
+paired syntax and semantics.  The hypotheses include the source's primitive
+typed constants, axioms, rules, conversion principles, and closure conditions.
+In its general structures a function domain need contain the functions denoted
+by the source's terms under assignments, rather than every set-theoretic
+function of the appropriate type.  This is a cited theorem.  It neither makes
+full-function semantics complete nor selects a derivability relation for the
+syntax-only presentation in this chapter.
+
+\paragraph{Worked semantic calculation.}
+The closure clause in a Henkin type structure is required already to interpret
+lambda abstraction.  Let \(x{:}\alpha\), let \(B{:}\beta\), let
+\(A{:}\alpha\), let \(\mathcal M\) be a standard or Henkin type structure,
+and let \(s\) be a typed assignment.  Capture-avoiding typed substitution
+satisfies the semantic substitution identity
+\[
+  \sem{B[A/x]}^{\mathcal M}_s
+  =
+  \sem{B}^{\mathcal M}_{
+    s[x\mapsto\sem{A}^{\mathcal M}_s]}.
+\]
+It is proved by induction on the typed construction of \(B\): the variable
+case reads the updated assignment, application uses the two induction
+hypotheses, and abstraction first renames a bound variable away from the free
+variables of \(A\) and then applies the induction hypothesis under the updated
+assignment.  Constants are unchanged.  Consequently a beta redex has the same
+denotation as its contractum in both standard and Henkin structures:
+\[
+\begin{aligned}
+  \sem{(\lambda x{:}\alpha.B)A}^{\mathcal M}_s
+    &=\sem{\lambda x{:}\alpha.B}^{\mathcal M}_s
+       \bigl(\sem{A}^{\mathcal M}_s\bigr)\\
+    &=\sem{B}^{\mathcal M}_{
+       s[x\mapsto\sem{A}^{\mathcal M}_s]}\\
+    &=\sem{B[A/x]}^{\mathcal M}_s.
+\end{aligned}
+\]
+The middle value is available because the denotation of the abstraction is a
+member of the selected domain \(D_{\alpha\to\beta}\).  Thus term closure is a
+definedness requirement, not an optional strengthening added only for a
+completeness proof.
+
+Quantification makes the semantic difference visible.  In
+\(\forall f{:}(\alpha\to\beta).\,C\), a standard structure varies \(f\) over
+all of \(D_\beta^{D_\alpha}\), whereas a Henkin structure varies it only over
+the declared \(D_{\alpha\to\beta}\).  The same typed formula can therefore
+have different validity status in the two semantic classes even though the
+beta calculation remains sound in both.
+
+\paragraph{Internal proof boundary.}
+An internal completeness theorem here would require a co-located list of every
+primitive typed constant, conversion rule, logical axiom, equality and
+extensionality principle, inference rule, and structural convention; an exact
+definition of finite derivations; semantic closure matching each syntactic
+principle; and a Henkin construction and truth lemma for precisely that
+package.  These data are source-dependent and are not reproduced.  The chapter
+therefore introduces no calculus symbol and asserts no local
+derivability--validity biconditional.
+
+\begin{example}[A polymorphism that simple types do not express]
+At each fixed type \(\alpha\), the identity term
+\[
+  \lambda x{:}\alpha.x
+\]
+has type \(\alpha\to\alpha\).  The displayed \(\alpha\) is a metavariable in a
+schema of typed terms.  It is not a type variable in the object language of
+simple type theory.  Object-language quantification over types would require a
+different, explicitly polymorphic type system.
+\end{example}
+
+\begin{example}[Typed representation of a binary relation]
+A binary relation on individuals has type
+\[
+  \iota\to\iota\to o,
+\]
+with application associated to the left.  If
+\(R:\iota\to\iota\to o\) and \(a,b:\iota\), then \(Rab:o\) is a formula.
+The terms \(Ra\) and \(R\) are not formulas: their types are
+\(\iota\to o\) and \(\iota\to\iota\to o\), respectively.
+\end{example}
+

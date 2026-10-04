@@ -1,0 +1,413 @@
+\section{Proofs for call-by-name PCF adequacy}
+\label{annex:p10-operational-adequacy-domain-models}
+
+\begin{annexitem}{annex:p10.oa.operational}{thm:p10-oa-operational}{Typed substitution and complete evaluation correspondence}
+\begin{proof}
+For typed substitution, induct on the typing derivation. A variable is
+either replaced by its same-typed supplied term or remains a declaration
+in the residual context. Constants are unaffected; each unary constructor
+uses the induction hypothesis on its argument; conditional uses it on
+guard and both branches; application uses it on both typed subterms.
+For abstraction, first choose the bound name fresh for the substitution's
+range; extend the residual context by its original type and apply the
+induction hypothesis to the body. The abstraction rule then restores
+the claimed arrow type. For \(\mu x:t.M\), choose \(x\) fresh in
+the same way; the body has type \(t\) under its \(x:t\) declaration,
+so substitution and the recursion rule give type \(t\) again.
+This also proves simultaneous substitution by induction, retaining each
+binder's annotation and not substituting into newly inserted terms.
+
+Each primitive contraction preserves typing: the beta and recursive
+cases use the just-proved substitution theorem; predecessor/zero-test
+use the numeral types; conditionals retain the branch type. Induction
+on the evaluation-context grammar lifts that property to every step.
+Canonical forms are immediate from the typed value grammar: a numerical
+value is a numeral, a boolean value is true or false, and an arrow value
+is an abstraction. For progress, induct on the syntax of a closed typed
+term. Variables are impossible. Constants and abstractions are values;
+successor steps its argument unless that argument is a numeral, when it
+is a value. Predecessor and zero-test step their argument or use the
+appropriate numeral contraction. Application steps only its operator
+until it is an abstraction, when beta applies. Conditional steps only
+its guard until it is a boolean, then selects exactly one branch.
+Recursion always unfolds. These alternatives are exclusive; the induction
+hypothesis on the unique active subterm proves determinism. Values have
+no primitive contraction or active substep.
+
+We next prove a one-step evaluation equivalence, before using the
+small/big-step correspondence. At a beta redex, inversion of NameApp
+and the abstraction axiom says precisely that its substituted body
+evaluates to the requested value. At a recursion redex, RecEval is
+exactly the equivalence with its unfolded body. At the two conditional
+redexes, the guard axiom and branch rule give the selected branch.
+At predecessor and zero-test redexes, the numeral evaluates to itself,
+by induction on the numeral, and inversion of the two arithmetic rules
+gives exactly the displayed contractum. Thus primitive \(M\to N\)
+preserves and reflects \(\Downarrow V\), for every value \(V\).
+To lift through \(E\), induct on its grammar. Succ, Pred and Test
+replace exactly the argument-evaluation premise. An operator context
+\(E[-]L\) replaces the premise evaluating the operator to the same
+abstraction, leaving the substituted-body premise identical. A guard
+context replaces its boolean-evaluation premise and leaves the selected
+branch identical. This proves the equivalence for every small step.
+
+If \(M\Downarrow V\), induction on its finite derivation constructs
+\(M\to^*V\). A successor evaluates its argument under Succ contexts;
+predecessor/test then perform their numeral contraction. Application
+first evaluates its operator under the operator context, contracts beta,
+and follows the body derivation. Conditional first evaluates its guard,
+contracts the chosen branch and follows that derivation. Recursion
+unfolds once and follows its premise. Constant and abstraction cases
+use zero steps. Conversely every value evaluates to itself, by numeral
+induction and the base/abstraction axioms. Along a finite reduction
+sequence ending in \(V\), repeatedly apply the one-step equivalence
+backwards to obtain \(M\Downarrow V\).
+Determinism and irreducibility of values imply uniqueness of that result.
+Finally, preservation and progress allow a next step at every nonvalue
+stage of a closed typed computation. If there is no finite result,
+iteration of this unique next step gives an infinite sequence. If there
+is a finite result, its deterministic sequence reaches an irreducible
+value and cannot also continue infinitely. This proves the stated
+divergence characterization, not an algorithm deciding divergence.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p10.oa.semantic-soundness}{thm:p10-oa-semantic-soundness}{Continuity, substitution and the sound direction}
+\begin{proof}
+The flat ground carriers are pointed bounded-complete algebraic domains.
+Theorem~\ref{thm:p10-domain-algebraic-functions}, iterated on the type
+grammar, supplies the same properties for every full continuous function
+space. Finite products form environment dcpo's.
+Interpret terms by induction. Projections/constants are continuous.
+The ground operations are continuous: a directed set in a flat carrier
+either consists only of bottom or contains a unique nonbottom value,
+which is its supremum. Their strict definitions preserve those suprema.
+For a directed family of guard/branch triples, a nonbottom guard in the
+supremum appears in some triple and then is constant on a cofinal upper
+tail. On that tail the selected branch's directed supremum is exactly
+the conditional result. If the supremum guard is bottom, all guard
+values and all results are bottom. This proves joint continuity of the
+conditional for every result type, including arrows.
+Application and abstraction use continuous evaluation and currying from
+Theorem~\ref{thm:p10-domain-function-space}. For recursion the body
+induces a continuous map from environments into \([D_t\to D_t]\);
+the continuous least-fixed-point operator of
+Theorem~\ref{thm:p10-domain-least-fixpoint} composes with it. Thus all
+terms have jointly continuous meanings and the recursion clause exists.
+
+For semantic substitution, induct on term construction. Variables and
+constants give the asserted equality immediately, and operations and
+application combine the equalities for their arguments. In each binder,
+choose the bound name fresh for all substituends. For abstraction, evaluate
+the two functions at arbitrary \(d\); the body induction hypothesis
+under the updated environment proves equal values. For recursion,
+the body induction hypothesis under \(x\mapsto d\), for every \(d\),
+makes the two defining continuous endomaps equal. Their least fixed
+points are therefore equal. The same fresh-name argument proves semantic
+bound-renaming invariance. This proves the simultaneous substitution
+formula, including recursive subterms, rather than importing an STLC-only
+substitution assertion for the enlarged syntax.
+
+Beta soundness is evaluation/currying plus substitution. The recursive
+contraction is sound because its least fixed point \(a\) satisfies
+\(a=\llbracket M\rrbracket_{\rho[x\mapsto a]}\); substitution identifies
+that expression with the unfolded term's denotation. Numeral and
+conditional contractions have exactly the stated semantic values,
+including predecessor at zero. Compositionality lifts equality through
+every evaluation context. Consequently every finite sequence preserves
+denotation, and the operational correspondence gives soundness for
+\(M\Downarrow V\). No argument here yet reflects nonbottom meaning
+back into a finite operational derivation.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p10.oa.relation-closure}{thm:p10-oa-relation-closure}{The admissible relation is closed at every type}
+\begin{proof}
+Induct on type. At ground type bottom is related by definition.
+For a directed family of related elements, a nonbottom supremum is a
+compact flat value and must occur among them. Its relatedness already
+gives the required evaluation. If the supremum is bottom, relatedness
+is automatic. At \(s\to t\), the bottom function sends every related
+argument to bottom, related at \(t\) by induction. For a directed
+family \((f_i)\) of functions related to \(M\), fix any
+\(a\mathrel{\mathcal R_s}P\). The directed family \(f_i(a)\) is
+related to \(M P\). The induction hypothesis at \(t\) relates its
+supremum to \(M P\); pointwise function suprema give the desired
+arrow clause. Thus every fixed-term fiber contains bottom and is closed
+under all directed suprema, not just the chain used later.
+
+For a one-step conversion at ground type, relatedness is either automatic
+bottom or precisely the evaluation equivalence established in
+Theorem~\ref{thm:p10-oa-operational}. At an arrow type, for every
+related argument \(a,P\), operator-context propagation gives
+\(M P\to N P\). The induction hypothesis at the result type equates
+their relatedness with \(f(a)\). Quantifying over all such arguments
+proves both directions of the arrow equivalence. Iteration gives the
+claim for \(\to^*\). This is an induction on types, not an unproved
+conversion axiom imposed on the relation.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p10.oa.fundamental}{thm:p10-oa-fundamental}{Every syntax clause and the complete recursion induction}
+\begin{proof}
+Induct on the typing derivation, proving the assertion for all related
+environments and closed substitutions. A variable uses the environment
+premise; zero and the booleans evaluate to their denoted values. For
+application, the two induction hypotheses give a related function and
+related argument; the arrow clause gives their application directly.
+For \(\lambda x:s.L\), choose \(x\) fresh. Given any closed
+\(P:s\) and \(a\mathrel{\mathcal R_s}P\), extend the related
+environment/substitution by \(x\mapsto a,P\). The body induction
+hypothesis relates \(\llbracket L\rrbracket_{\rho[x\mapsto a]}\)
+to \(L[\sigma][P/x]\). Beta conversion and the relation-closure
+theorem relate that same element to \((\lambda x:s.L[\sigma])P\).
+This is exactly the required arrow clause.
+
+For successor/predecessor/test, if the input meaning is bottom, strictness
+makes the output bottom, related to every corresponding term. Otherwise
+the ground induction hypothesis supplies its numeral evaluation.
+The registered arithmetic rule gives the required result, including
+\(\operatorname{pred}(0)\Downarrow0\) and the two zero-test outcomes.
+For conditional, a bottom guard gives bottom at its result type. A
+nonbottom guard is related to its boolean result, so the operational
+correspondence supplies a finite reduction of the guard to that boolean.
+Guard-context propagation and the branch contraction reduce the whole
+conditional to the selected substituted branch. Its induction hypothesis
+and all-type conversion closure establish the desired relatedness.
+No premise about the unselected branch's termination is used.
+
+For \(\mu x:t.L\), let \(Q=\mu x:t.L[\sigma]\), with \(x\)
+fresh and excluded from \(\sigma\), and define
+\[
+ F(d)=\llbracket L\rrbracket_{\rho[x\mapsto d]},\qquad
+ a_0=\bot_t,\quad a_{n+1}=F(a_n).
+\]
+We prove \(a_n\mathrel{\mathcal R_t}Q\) by induction on \(n\).
+Bottom closure proves the base. For the step, the induction hypothesis
+makes \(x\mapsto a_n,Q\), together with the original assignments,
+a related environment/substitution for the smaller body derivation.
+The typing induction hypothesis for that body therefore gives
+\(F(a_n)\mathrel{\mathcal R_t}L[\sigma][Q/x]\).
+The recursion rule gives \(Q\to L[\sigma][Q/x]\), so backwards
+conversion closure relates \(a_{n+1}\) to \(Q\).
+This is not circular: the body theorem is the structural induction
+hypothesis, while relatedness of the substitution term \(Q\) to each
+finite \(a_n\) is the separate numerical induction just established.
+Continuity makes \((a_n)\) increasing, its supremum is the proved
+least fixed point, and directed closure of the fixed-term fiber gives
+\(\bigsqcup_n a_n\mathrel{\mathcal R_t}Q\).
+That is exactly the recursion denotation related to its full recursive
+syntax. These cases exhaust the registered typing rules.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p10.oa.adequacy}{thm:p10-oa-adequacy}{Neither observation direction is left implicit}
+\begin{proof}
+For an empty context the fundamental lemma yields
+\(\llbracket M\rrbracket\mathrel{\mathcal R_g}M\).
+If the denotation equals that of a ground value \(V\), it is nonbottom
+and the ground relation clause gives \(M\Downarrow V\). Conversely,
+operational evaluation soundness gives that equality whenever
+\(M\Downarrow V\). The flat ground interpretation distinguishes
+every numeral and the two booleans, so the indicated value is exactly
+the observed one, not merely some terminating value.
+If a program has bottom denotation, soundness and nonbottom value
+interpretations prohibit any evaluation. If it has no evaluation, its
+denotation cannot be any nonbottom ground point by the converse direction;
+the complete list of flat ground points therefore makes it bottom.
+The operational theorem equates this nontermination with the infinite
+typed evaluation sequence. No higher-type value test enters the argument.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p10.oa.contextual-soundness}{thm:p10-oa-contextual-soundness}{All typed closing contexts, including binding contexts}
+\begin{proof}
+Suppose the meanings of \(M\) are below those of \(N\) in every
+environment of their common context. Induct on a typed one-hole program
+context. At the hole this is the assumption. At a ground operation,
+application or conditional, monotonicity of the interpreted constructor
+preserves the inequality, keeping all other subterms equal. Under
+abstraction, the hypothesis holds for every updated environment, so it
+gives pointwise order of the two functions. Under a recursion binder,
+the two body functions are pointwise ordered; monotonicity of iteration
+from bottom and of directed suprema gives order of their least fixed
+points. Thus even when context binders intentionally close variables of
+the inserted terms, the all-environments assumption applies to the
+environments induced by those binders. Capture-avoiding substitution is
+not mistakenly used to remove that specified binding.
+
+For a closing ground context obtain
+\(\llbracket C[M]\rrbracket\sqsubseteq\llbracket C[N]\rrbracket\).
+If \(C[M]\Downarrow V\), adequacy makes the left side the nonbottom
+flat value of \(V\). In a flat carrier the only point above that value
+is itself, so the right side equals it. The other adequacy direction
+gives \(C[N]\Downarrow V\). This proves contextual approximation.
+Equality of meanings yields both orders and hence both contextual
+approximations. The proof supplies no order or equality in the reverse
+direction from quantification over syntactic contexts alone.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p10.oa.strategy-boundaries}{thm:p10-oa-strategy-boundaries}{The exact observation and strategy countercases}
+\begin{proof}
+Unfolding \(\Omega_t\) yields itself. Its unique next-step sequence
+never reaches a value, so it has no finite evaluation, and its denotation
+is the least fixed point of identity, namely \(\bot_t\).
+The call-by-name application contracts directly to zero and evaluates
+to zero without inspecting that argument.
+For the comparison call-by-value relation, replace NameApp by the rule
+requiring both an abstraction result for the operator and a value result
+for the argument, then evaluate the value-substituted body; retain the
+other natural rules. Any derivation of the example's result would require
+a finite derivation of \(\Omega_{\mathsf{num}}\)'s value. No such
+derivation exists: its only possible last rule has the identical
+judgment as a strictly smaller premise, impossible in a finite tree.
+Nevertheless its unchanged call-by-name function interpretation is the
+constant-zero function applied to bottom, hence zero. This explicitly
+refutes reuse of this interpretation for the modified strategy.
+
+The abstraction \(\lambda x:\mathsf{num}.\Omega_{\mathsf{num}}\)
+evaluates to itself and denotes the constant-bottom function. The
+least fixed point of identity on the arrow domain is also its bottom
+function, which is the denotation of \(\Omega_{\mathsf{num}\to\mathsf{num}}\).
+The latter does not evaluate, by the same unfolding argument. Thus the
+higher-type denotation alone cannot distinguish termination to a weak
+function value from divergence. The adequacy theorem observes only the
+ground results reached by program contexts, as its language definition
+requires.
+\end{proof}
+\end{annexitem}
+\begin{annexitem}{annex:p10.oa.countdown}{thm:p10-oa-countdown}{A recursive call-by-name derivation and the semantic chain}
+\begin{proof}
+The recursion typing rule and the conditional/arithmetic rules give
+\(K:\mathsf{num}\to\mathsf{num}\). Unfolding once produces the
+closed abstraction whose body is the displayed conditional with each
+free \(f\) replaced by \(K\); RecEval and AbsValue give that operator
+evaluation without evaluating its body.
+We prove the assertion for every closed \(P\Downarrow\bar n\) by
+induction on \(n\), with this universal quantifier retained in the
+induction hypothesis. At zero, ZeroTest evaluates the guard to true and
+the selected branch to zero; NameApp therefore gives \(K P\Downarrow0\).
+For \(P\Downarrow\operatorname{succ}(\bar n)\), ZeroTest gives false
+and PredEval gives \(\operatorname{pred}(P)\Downarrow\bar n\).
+The induction hypothesis, applied to that unevaluated expression as a
+new argument, gives \(K(\operatorname{pred}(P))\Downarrow\bar n\).
+SuccEval and FalseBranch evaluate the body to
+\(\operatorname{succ}(\bar n)\), and NameApp gives the asserted
+application result. This constructs a finite derivation; it does not
+illegally reduce an argument before a call-by-name beta step.
+
+For the semantic chain, let \(F\) be the interpreted displayed body
+as an endomap of \([\mathbb N_{\bot}\to\mathbb N_{\bot}]\).
+The guard is strict, so \(F(h)(\bot)=\bot\);
+\(F(h)(0)=0\), and \(F(h)(n+1)=\operatorname{succ}(h(n))\).
+The bottom function has no nonbottom output. If its \(i\)-th iterate
+has value \(n\) exactly for \(n<i\), then the next iterate first
+gives zero at zero and gives \(n+1\) exactly when \(n<i\). Thus
+the \((i+1)\)-st iterate has exactly the claimed support. At each
+fixed numeral \(n\), iterate \(n+1\) already gives \(n\), so the
+pointwise supremum is identity on all numerals and is bottom at bottom.
+The fixed-point theorem identifies this supremum with the denotation
+of \(K\). Its application to bottom is bottom; ground adequacy and
+the divergence criterion give \(K\Omega_{\mathsf{num}}\Uparrow\).
+This explains both the terminating input and the demanded divergent
+input in the same specified language/model.
+\end{proof}
+\end{annexitem}
+\begin{annexitem}{annex:p10.oa.sequential-relations}{thm:p10-oa-sequential-relations}{All closure and constructor cases of the semantic relations}
+\begin{proof}
+Induct on type for the properties of \(Q_t\). At ground type the
+first/second-bottom property is in its definition. If a directed supremum
+has first and second components nonbottom, flat compactness and
+directedness give one triple where both have already appeared. Its
+membership forces the third value equal to both; every upper triple
+has the same three values. Thus the supremum is related. Otherwise one
+of its first two components is bottom and it is related automatically.
+At an arrow type, a bottom first or second function gives such a result
+on every related argument triple; use induction at the result type.
+For directed closure evaluate a directed family of function triples at
+a fixed related argument triple, use closure of the result relation,
+and use pointwise function suprema. Constantly-bottom tuples are included.
+In particular each \(A_t\) contains bottom and is directed-supremum closed.
+
+The ternary semantic fundamental lemma is a typing induction. Variables
+use the related environment premise; ground constants give related
+diagonals. Strict ground unary operations preserve the relation: if
+their first two outputs are nonbottom, both input components are
+nonbottom, so all three inputs and outputs are equal. Application uses
+the lifted relation and abstraction the body hypothesis on every related
+argument triple. For conditional, a bottom first/second guard makes that
+output component bottom, invoking the bottom-coordinate result. Otherwise
+all guards are the same boolean and select the same related branch.
+For recursion, the bottom tuple is related; the body induction hypothesis
+preserves related triples of approximants, and directed closure relates
+the three least fixed points. These cases exhaust the syntax. Hence a
+diagonal environment of members of \(A_t\) gives a diagonal related
+result. Closed-term membership in \(A_t\) follows in the empty context.
+
+For \(B_t\), induct on type to prove bottom-pair and directed closure.
+Equality at ground type is closed. At arrows the endpoints of a directed
+supremum remain in \(A_{s\to t}\); evaluation at every fixed related
+argument pair yields a directed \(B_t\)-related family. Closure at
+the result type and pointwise suprema prove the arrow clause. Bottom
+functions give a bottom output pair on every input. This proves closure
+without asserting that \(A_t\) is a full domain or every member definable.
+
+For the binary fundamental lemma, related environment endpoints lie in
+the relevant \(A_t\)'s. The ternary lemma separately ensures membership
+of every interpreted endpoint in \(A_t\). Variables/constants are
+binary-related. Unary ground operations send equal inputs to equal
+outputs. Related guards are equal: at bottom both outputs are bottom,
+and at a boolean they select the same related branch. Application uses
+the arrow clause; abstraction uses the body hypothesis for every related
+argument pair. In recursion the bottom approximants are related, the
+body hypothesis preserves related pairs, and directed closure relates
+the least fixed points. Thus the binary lemma holds for all terms.
+For any closing context of two closed terms, choose a new hole variable
+different from every context binder. Its context term is typed with
+that variable as its only free declaration. The binary lemma on the
+two hole environments and semantic substitution give a ground pair in
+\(B_g\), hence equality. The context's existing binders are retained.
+No different domain interpretation's adequacy is used.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p10.oa.not-fully-abstract}{thm:p10-oa-not-fully-abstract}{Sequential test impossibility and the semantic separator}
+\begin{proof}
+Let \(h\in A_{\mathsf{bool}\to\mathsf{bool}\to\mathsf{bool}}\).
+Both \((\mathsf{true},\bot,\mathsf{false})\) and
+\((\bot,\mathsf{true},\mathsf{false})\) belong to \(Q_{\mathsf{bool}}\).
+Apply the lifted relation twice to \((h,h,h)\). It gives
+\[
+ (h(\mathsf{true})(\bot),\ h(\bot)(\mathsf{true}),\
+                  h(\mathsf{false})(\mathsf{false}))\in Q_{\mathsf{bool}}.
+\]
+If the first two components are true, the third must be true. Each
+of \(T,F\) therefore sends such an \(h\) to bottom: a false outer
+guard selects \(\Omega\), a bottom outer guard produces bottom, and
+when both outer guards are true the inner guard is true and again
+selects \(\Omega\). This reasoning covers all possible guard values.
+The terms' own denotations lie in the appropriate \(A\) by the closed
+ternary lemma. Every binary-related input pair has sequential endpoints;
+the two outputs are bottom, hence binary-related. Thus the denotations
+of \(T,F\) are binary-related at their arrow type. The context lemma
+gives equal ground denotations in every closing context, and the proved
+ground adequacy yields the same value or divergence in each. Therefore
+\(T\simeq_o F\).
+
+The table for \(\operatorname{por}\) is monotone on the finite
+flat-boolean product. A true coordinate keeps the output true under
+refinement; false/false is maximal with output false; other nonmaximal
+outputs are bottom, below each refined output. Every directed subset
+of a finite poset has a greatest member, obtained by finitely many
+directedness steps, so any monotone map from it is Scott-continuous.
+Currying therefore places this table in the full continuous function
+carrier. Its first two tested outputs are true and its third tested
+output false. The innermost else-branch consequently returns true in
+\(T\) and false in \(F\), proving unequal denotations.
+The same triple test shows that por is not in \(A\), so its presence
+in the full model does not contradict closed-term sequentiality.
+This proves failure of full abstraction, not the stronger full-abstraction
+claim for an extended language containing a parallel primitive.
+\end{proof}
+\end{annexitem}

@@ -1,0 +1,318 @@
+% P16-C3/C4: finite graphical separation and sufficient back-door adjustment.
+\section{Graphical separation and adjustment}
+\label{sec:p16-graphical-separation-adjustment}
+
+Use the finite structural model and equation-replacement intervention of
+\cref{def:p16-finite-scm,def:p16-causal-intervention}. Whenever a
+structural model is used below, its disturbances are mutually independent.
+The graph includes every endogenous variable whose equation is part of
+the model, whether that variable is observed or latent. In particular,
+deleting an unobserved common cause from a diagram does not in general
+preserve the independent-disturbance factorization used by these results.
+
+The path-blocking definition and sufficient adjustment criterion follow
+Pearl's overview \cite[Definition~1, p.~106; Definition~3 and Eq.~(25),
+pp.~114--115]{Pearl2009CausalOverview}. The finite proofs, the explicit
+ancestral-moral bridge, and the numerical models here are supplied by
+the handbook. Identification is a statement about an exact observational
+law in a specified model class; estimation from a sample is a further
+problem.
+
+\subsection{Paths and their conditioning status}
+
+\begin{hbdefinition}{def:p16-active-path}{Ancestors, paths, and active paths}
+In the DAG \(G=(N,E)\), define
+\[
+ \operatorname{an}_G(J)=J\cup
+ \{i:\text{a directed path of positive length leads from }i
+                                  \text{ to a member of }J\}.
+\]
+Thus ancestry includes the starting set, whereas
+\(\operatorname{de}_G(J)\) in \cref{def:p16-causal-dag} uses
+positive length. A set \(H\subseteq N\) is \emph{ancestral} when
+\(\operatorname{an}_G(H)=H\).
+
+An \emph{undirected path in the DAG} is a sequence of distinct vertices
+\(i_0,\ldots,i_m\) such that each consecutive pair is joined by an
+edge in one of its two directions. The edge directions are retained
+when examining the path. An internal vertex \(i_r\), where
+\(0<r<m\), is a \emph{collider on this path} precisely when its two
+incident path edges have the form
+\(i_{r-1}\to i_r\leftarrow i_{r+1}\). Every other internal
+vertex is a \emph{noncollider on this path}. These descriptions concern
+the two edges used by this path, not all edges incident to the vertex.
+
+For a conditioning set \(C\subseteq N\), the path is
+\emph{active given \(C\)} when every internal noncollider is outside
+\(C\), and every internal collider belongs to
+\(\operatorname{an}_G(C)\). Equivalently, every collider is itself
+in \(C\) or has a strict descendant in \(C\). A path that is not
+active is \emph{blocked}. For pairwise disjoint \(A,B,C\subseteq N\),
+write
+\[
+ A\mathrel{\perp_G}B\mid C
+\]
+when there is no active path with one endpoint in \(A\) and the
+other in \(B\). This is \emph{d-separation}. Endpoint membership
+in \(C\) does not arise under the disjointness hypothesis.
+
+A \emph{walk} permits repeated vertices, but consecutive vertices must
+still be adjacent. Collider status is then assigned to each internal
+occurrence. The same activity definition applies occurrence by occurrence.
+\index{d-separation}\index{collider}\index{ancestor!causal graph}
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p16-active-walk-reduction}{proved=annex:p16.active-walk-reduction}{An active walk contains an active path}
+For pairwise disjoint \(A,B,C\), an active walk from \(A\) to
+\(B\) exists exactly when an active path does. Thus permitting
+repeated vertices in the path-blocking convention does not change
+d-separation.
+\end{hblemma}
+
+\begin{hbdefinition}{def:p16-ancestral-moral-graph}{The ancestral moral graph}
+For pairwise disjoint \(A,B,C\), put
+\(H=\operatorname{an}_G(A\cup B\cup C)\). Restrict \(G\) to
+the vertices \(H\). Its \emph{moral graph}, denoted \(G_H^{\mathrm m}\),
+is the undirected graph on \(H\) with an edge between distinct
+vertices \(i,j\) if either they are joined by an original directed
+edge or they are both parents of some \(k\in H\).
+The latter operation joins co-parents. An undirected graph has no
+arrow directions and no collider designations.
+
+Delete the vertices \(C\) and their incident edges from this moral
+graph. The resulting graph \(G_H^{\mathrm m}\setminus C\)
+\emph{separates \(A\) from \(B\)} when no undirected path joins
+the two sets. Restricting to ancestors occurs before joining co-parents.
+\index{moral graph}\index{ancestral graph}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p16-moral-separation-bridge}{proved=annex:p16.moral-separation-bridge}{Path blocking and ancestral moral separation agree}
+For every finite DAG and pairwise disjoint vertex sets \(A,B,C\),
+\[
+ A\mathrel{\perp_G}B\mid C
+ \quad\Longleftrightarrow\quad
+ G_{\operatorname{an}_G(A\cup B\cup C)}^{\mathrm m}\setminus C
+       \text{ separates }A\text{ from }B.
+\]
+This is a statement about the graph alone.
+\end{hbtheorem}
+
+\subsection{The independence supplied by factorization}
+
+The next two results also concern a mass function \(p\) on \(S_N\)
+without a specified system of equations. In that setting use the finite
+probability space \(S_N\) with law \(p\), and let \(V_i(v)=v_i\)
+be its coordinate random variables.
+
+\begin{hbdefinition}{def:p16-graphical-conditional-independence}{Conditional independence of coordinate tuples}
+For pairwise disjoint \(A,B,C\subseteq N\), write
+\(V_A\mathrel{\perp\!\!\!\perp}V_B\mid V_C\) if, for every
+\(c\in S_C\) with \(\mathbb P(V_C=c)>0\), and all
+\(a\in S_A,b\in S_B\),
+\[
+ \mathbb P(V_A=a,V_B=b\mid V_C=c)
+ =\mathbb P(V_A=a\mid V_C=c)
+       \mathbb P(V_B=b\mid V_C=c).
+\]
+These are the ordinary finite conditional probabilities. No conditional
+value is assigned when \(\mathbb P(V_C=c)=0\). For empty \(C\),
+its unique tuple has probability one, giving ordinary independence.
+An empty \(A\) or \(B\) also has one tuple and the identity is
+automatic.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p16-ancestral-marginal}{proved=annex:p16.ancestral-marginal}{Ancestral marginalization retains the local factors}
+Suppose a mass function on \(S_N\) has the product form
+\[
+ p(v)=\prod_{i\in N}k_i(v_i\mid v_{\operatorname{pa}_G(i)}),
+ \qquad \sum_{b\in S_i}k_i(b\mid a)=1
+\]
+with nonnegative kernels at every parent tuple. For every ancestral
+\(H\subseteq N\), its marginal is
+\[
+ p_H(h)=\prod_{i\in H}k_i(h_i\mid h_{\operatorname{pa}_G(i)}).
+\]
+The empty marginal and empty product both equal one.
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p16-finite-global-markov}{proved=annex:p16.finite-global-markov}{Graphical separation implies conditional independence}
+Every mass function factorizing as in
+\cref{thm:p16-ancestral-marginal} satisfies, for pairwise disjoint
+\(A,B,C\subseteq N\),
+\[
+ A\mathrel{\perp_G}B\mid C
+ \quad\Longrightarrow\quad
+ V_A\mathrel{\perp\!\!\!\perp}V_B\mid V_C.
+\]
+Consequently this implication holds for every finite structural causal
+model with mutually independent disturbances, by
+\cref{thm:p16-causal-factorization}. The joint law may have zeros.
+The conclusion concerns its positive conditioning events.
+\end{hbtheorem}
+
+\subsection{A sufficient back-door adjustment theorem}
+
+\begin{hbdefinition}{def:p16-back-door-data}{Treatment, response, and an adjustment set}
+Fix one treatment vertex \(t\in N\), a response set
+\(B\subseteq N\setminus\{t\}\), and a set
+\(C\subseteq N\setminus(\{t\}\cup B)\). Use
+\(X=V_t\), \(Y=V_B\), and \(Z=V_C\) for the associated random
+variables or tuples. For \(x\in S_t\), the notation \(\{t\}=x\)
+for an intervention uses the singleton indexed tuple with coordinate
+\(t\) equal to \(x\). Put
+\(Y^{t=x}=V_B^{\{t\}=x}\) and
+\(Z^{t=x}=V_C^{\{t\}=x}\). When the treatment vertex is named by
+its variable \(X\), the superscript \(X=x\) names this same
+intervention. A \emph{back-door path} is an undirected path
+from \(t\) to a member of \(B\) whose first edge points into
+\(t\). The set \(C\) satisfies the \emph{back-door criterion}
+for \((t,B)\) when
+\[
+ C\cap\operatorname{de}_G(\{t\})=\varnothing
+ \quad\text{and}\quad
+ C\text{ blocks every such back-door path in }G.
+\]
+For a fixed treatment value \(x\in S_t\), the required
+\emph{overlap condition} is
+\[
+ \mathbb P(X=x,Z=z)>0
+ \quad\text{for every }z\in S_C
+                   \text{ with }\mathbb P(Z=z)>0.
+\]
+Only the indicated treatment value is required here. A contrast of two
+values requires overlap at both. The graph criterion uses the complete
+specified graph, including any latent vertices along its paths.
+\index{back-door criterion}\index{causal positivity!overlap}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p16-finite-back-door-adjustment}{proved=annex:p16.finite-back-door-adjustment}{Sufficient adjustment with explicit observation and overlap}
+Let \(M\) be a finite structural causal model with mutually independent
+disturbances. Suppose \(C\) satisfies \cref{def:p16-back-door-data},
+and fix \(x\) satisfying its overlap condition. For every
+\(z\) with \(\mathbb P(Z=z)>0\), and every \(y\in S_B\),
+\[
+ \mathbb P(Y^{t=x}=y\mid Z^{t=x}=z)
+       =\mathbb P(Y=y\mid X=x,Z=z).
+\]
+In particular,
+\[
+ \mathbb P_M(Y=y\mid\operatorname{do}(X=x))
+ =\sum_{\substack{z\in S_C\\\mathbb P(Z=z)>0}}
+       \mathbb P(Y=y\mid X=x,Z=z)\mathbb P(Z=z).
+\]
+The treatment is a single vertex with any
+finite nonempty value set; the response and adjustment variables may
+be tuples.
+
+If \(\{t\}\cup B\cup C\subseteq O\) is observed, this formula
+identifies the displayed intervention law from \(p_{M,O}\) within
+the class with the specified graph, value sets, independence assumption,
+and overlap. Other endogenous variables may remain unobserved. The
+claim does not require their observational distribution as an input.
+\end{hbtheorem}
+
+The sum omits zero-mass strata instead of multiplying an undefined
+conditional probability by zero. The theorem supplies a sufficient
+adjustment condition. It does not assert that every identifiable effect
+has an adjustment set, or that every admissible adjustment formula must
+arise from this criterion.
+
+\subsection{Fully specified numerical models}
+
+\begin{hbdefinition}{def:p16-adjustment-example-data}{A confounded model with a nonzero treatment effect}
+Let \(U_Z\) be a fair bit, \(U_X\) a bit with probabilities
+\(\mathbb P(U_X=0)=3/4\), \(\mathbb P(U_X=1)=1/4\), and
+\(U_Y\) uniform on \(\{1,\ldots,8\}\), all mutually independent.
+Concretely the outcome \((z,a,u)\) has mass
+\(\frac12\alpha(a)\frac18\), where
+\(\alpha(0)=3/4,\alpha(1)=1/4\).
+The binary endogenous equations are
+\[
+ Z=U_Z,\qquad X=Z\oplus U_X,\qquad
+ Y=\mathbf1_{\{U_Y\leq1+2X+4Z\}}.
+\]
+The graph has edges \(Z\to X\), \(Z\to Y\), and \(X\to Y\).
+The symbol \(\oplus\) is the bit exclusive-or defined in
+\cref{def:p16-confounded-binary-model}. All functions are specified
+on their full input domains.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p16-adjustment-numerical-example}{proved=annex:p16.adjustment-numerical-example}{Adjustment removes the confounded part of the contrast}
+In \cref{def:p16-adjustment-example-data}, the eight joint masses are
+\[
+\begin{array}{cc|cc}
+ Z&X&Y=0&Y=1\\\hline
+ 0&0&21/64&3/64\\
+ 0&1&5/64&3/64\\
+ 1&0&3/64&5/64\\
+ 1&1&3/64&21/64
+\end{array}
+\]
+The observed conditional response probabilities are
+\(\mathbb P(Y=1\mid X=0)=1/4\) and
+\(\mathbb P(Y=1\mid X=1)=3/4\). The intervention probabilities are
+\[
+ \mathbb P(Y^{X=0}=1)=3/8,\qquad
+ \mathbb P(Y^{X=1}=1)=5/8.
+\]
+Thus the observed contrast is \(1/2\), and the average intervention
+contrast is \(1/4\). The measured set \(\{Z\}\) satisfies the
+back-door criterion and overlap at both values of \(X\); its
+adjustment formula gives these same intervention probabilities.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p16-collider-example-data}{A collider and its observed descendant}
+Let \(X=U_X\) and \(Y=U_Y\) be independent fair bits, and set
+\[
+ K=\mathbf1_{\{X=1\text{ or }Y=1\}},\qquad D=K.
+\]
+The graph is \(X\to K\leftarrow Y\), \(K\to D\).
+The disturbances for \(K,D\) are constants. A concrete outcome
+space is \(\{0,1\}^2\) with mass \(1/4\) at each pair;
+the two coordinate disturbances and the constant disturbances are
+mutually independent.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p16-collider-numerical-example}{proved=annex:p16.collider-numerical-example}{Conditioning on a collider can create dependence}
+The variables \(X,Y\) in \cref{def:p16-collider-example-data}
+are independent. Conditional on either \(K=1\) or \(D=1\), their
+joint table is
+\[
+\begin{array}{c|cc}
+ &Y=0&Y=1\\\hline
+ X=0&0&1/3\\
+ X=1&1/3&1/3
+\end{array}
+\]
+and they are dependent. The path through \(K\) is blocked given
+the empty set and active given either \(\{K\}\) or \(\{D\}\).
+Under \(\operatorname{do}(K=1)\), however, their joint law remains
+the independent uniform table with all four masses \(1/4\).
+
+There is also a model with this same allowed graph and independent
+disturbances in which the path is active given \(\{K\}\), yet
+\(X\) and \(Y\) are conditionally independent given \(K\).
+Hence failure of d-separation is not a dependence theorem for every
+model compatible with the graph.
+\end{hbtheorem}
+
+\begin{hbmethod}{def:p16-graphical-adjustment-procedure}{Using a graph to justify a conditional or adjustment formula}
+Specify the full DAG, the independent-disturbance assumption, the
+observed vertices, and the desired treatment and response. For a
+conditional-independence query, form the ancestors of its endpoint and
+conditioning sets, join co-parents there, delete the conditioning set,
+and check undirected separation. The bridge and global Markov theorem
+justify the resulting implication. For adjustment, exclude descendants
+of the treatment, check all back-door paths, and establish the positive
+conditioning events required at the chosen treatment values. Compute
+the displayed weighted conditional probabilities only after these
+assumptions are specified.
+\end{hbmethod}
+
+The front-door construction in \cref{sec:p16-front-door-identification}
+uses these separation and adjustment results to identify an effect with
+an unobserved common cause. \Cref{sec:p16-do-calculus-soundness} proves
+all three do-calculus rules in the finite structural setting.
+Completeness of graphical identification and general counterfactual
+identification require further constructions. No empirical effect or
+sampling guarantee follows from the stipulated numerical models alone.

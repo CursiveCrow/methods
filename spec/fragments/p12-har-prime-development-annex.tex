@@ -1,0 +1,511 @@
+\begin{annexitem}{annex:p12.har.prime-logical}{thm:p12-har-prime-logical}{Every selected source logical-library proof}
+\begin{proof}
+Use \(\mathsf{and}\) projections, the two \(\mathsf{or}\) constructors,
+and their generated eliminators with the displayed propositional target.
+To discharge the aliases rather than assume a separate logical library,
+take and_in to be conj; and_ell and and_elr are the generated and
+eliminations into the propositions A and B, with respective branches
+\(\lambda u:A.\lambda v:B.u\) and
+\(\lambda u:A.\lambda v:B.v\). The no-branch FF eliminator into
+a proposition a is false_el. The or constructors are or_inl and
+or_inr, and its generated Prop eliminator is or_el. The two predicate
+aliases are the actual expressions
+\(\mathsf{all\_el}:=\lambda x:A.\lambda h:\Pi y:A.P y.h x\)
+and
+\(\mathsf{ex\_in}:=\lambda x:A.\lambda u:P x.
+\mathsf{ex\_intro}\ A\ P\ x\ u\).
+For \(h:\neg(a\vee b)\), the source non_or proof is the pair
+\(\langle\lambda u:a.h(\mathsf{or\_inl}\ a\ b\ u),
+\lambda v:b.h(\mathsf{or\_inr}\ a\ b\ v)\rangle\).
+These operations all conclude propositions and are closed under the
+displayed domain/predicate parameters.
+Write \(\mathsf{exI}(x,u)\) for the source constructor
+\(\mathsf{ex\_intro}\ A\ P\ x\ u\), and
+\(\mathsf{exE}_C(e,f)\) for its eliminator into \(C:\mathsf{Prop}\),
+where \(f:\Pi x.P x\to C\). Parameters of each instance are the
+predicate in that instance, not suppressed changing domains.
+The actual four intuitionistic recipes are
+\[
+\begin{aligned}
+ \mathsf{non\_ex}(h)&:=\lambda x.\lambda u:P x.h(\mathsf{exI}(x,u)),\\
+ \mathsf{all\_not}(h)&:=\lambda e.\mathsf{exE}_{\mathsf{FF}}
+                   (e,\lambda x.\lambda u:P x.h x u),\\
+ \mathsf{all\_and}(h)&:=
+       \langle\lambda x.\mathsf{and\_ell}(h x),
+              \lambda x.\mathsf{and\_elr}(h x)\rangle,\\
+ \mathsf{ex\_or}(e)&:=\mathsf{exE}_{(\exists x.P x)\vee(\exists x.Q x)}
+       (e,\lambda x.\lambda u:P x\vee Q x.
+          \mathsf{orE}(u,
+            \lambda v:P x.\mathsf{inl}(\mathsf{exI}(x,v)),
+            \lambda w:Q x.\mathsf{inr}(\mathsf{exI}(x,w)))).
+\end{aligned}
+\]
+The fourth instance's input predicate is \(\lambda x.P x\vee Q x\).
+The two output constructor instances use \(P\) and \(Q\), respectively.
+No witness exists unless supplied by the input constructor, so these
+recipes also type check when \(A\) has no closed inhabitant.
+
+For \(\mathsf{dn\_c}\), take
+\(\langle\mathsf{DN}\ a,\lambda u:a.\lambda v:\neg a.v u\rangle\).
+For \(\mathsf{tnd}\ a\), the explicitly well-typed object is
+\[
+ \mathsf{DN}(a\vee\neg a)
+  (\lambda h:\neg(a\vee\neg a).
+      h(\mathsf{inr}(\lambda u:a.h(\mathsf{inl}(u))))).
+\]
+Here the inner lambda has type \(\neg a\), both calls to \(h\)
+have type \(\mathsf{FF}\), and the outer lambda has type
+\(\neg\neg(a\vee\neg a)\).
+Given \(h:\neg\Pi x.P x\), define
+\[
+ \mathsf{non\_all}(h):=
+ \mathsf{DN}(\exists x.\neg P x)
+  (\lambda k:\neg\exists x.\neg P x.
+     h(\lambda x.\mathsf{DN}(P x)
+         (\lambda u:\neg P x.k(\mathsf{exI}(x,u))))).
+\]
+Each inner DN proves \(P x\); thus the argument of \(h\) really is
+\(\Pi x.P x\). The output predicate of exI is \(\lambda x.\neg P x\).
+For \(\mathsf{ex\_c}\), its forward implication is
+\(\lambda e.\lambda h:\Pi x.\neg P x.
+\mathsf{exE}_{\mathsf{FF}}(e,\lambda x.\lambda u.h x u)\).
+Its reverse implication is
+\[
+ \lambda h:\neg\Pi x.\neg P x.
+ \mathsf{DN}(\exists x.P x)
+   (\lambda k:\neg\exists x.P x.
+      h(\lambda x.\lambda u:P x.k(\mathsf{exI}(x,u)))).
+\]
+Pair those implications. Every existential/disjunction elimination above
+lands in \(\mathsf{Prop}\); DN is not a data-valued choice operation.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.har.prime-equality}{thm:p12-har-prime-equality}{Equality and separation, with the transport direction checked}
+\begin{proof}
+Let \(E_{A,x,P}(u,y,e):P y\) denote the \emph{generated} equality
+eliminator, with \(u:P x\) and \(e:x=y\); its reflexivity branch is
+\(u\). This is the only equality-elimination premise.
+For \(e:x=y\), take \(P(z):=(z=x)\) and seed
+\(\mathsf{refl\_equal}\ A\ x\) to obtain \(y=x\), giving
+\(\mathsf{sym\_eq}\). The source \(\mathsf{leib}\ e\ u\) is precisely
+\(E_{A,x,P}(u,y,e)\), in the source's order of arguments.
+For \(e:y=x\), first form its just-proved symmetry \(x=y\), then
+apply \(E\); this gives \(\mathsf{eq\_ind\_r}\).
+For \(f:A\to B\), take \(P(z):=(f x=f z)\) with reflexivity seed;
+this yields \(\mathsf{f\_equal}\). Transitivity of equality is the
+same transport with \(P(z):=(x=z)\). All these motives are propositions.
+
+Congruence for the data-defined predecessor applied to \(S n=S m\)
+gives \(\mathsf{pred}(S n)=\mathsf{pred}(S m)\), definitionally \(n=m\).
+For \(e:O=S n\), first obtain \(S n=O\) by symmetry. Transport
+\(\mathsf{trivial}:\mathsf{Is\_suc}(S n)\), whose type computes to
+\(\mathsf{TT}\), along that
+equation, with the \emph{predicate} \(\mathsf{Is\_suc}\); the result
+has type \(\mathsf{Is\_suc}(O)=\mathsf{FF}\). Thus
+\(\mathsf{no\_conf}\ n:=\lambda e.E(\mathsf{trivial},O,
+\mathsf{sym\_eq}\ e)\). Reversing the equality without reversing
+the seed would not give this contradiction. The converse separation
+\(\neg(S n=O)\) follows by symmetry. Ex falso is used only to
+prove another proposition, never to select natural-number data.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.har.prime-order}{thm:p12-har-prime-order}{All order inversions and the actual course-of-values construction}
+\begin{proof}
+Every induction mentioned here has an explicit \(\mathsf{Prop}\)
+motive. First \(O\le n\) follows by nat induction: reflexivity at
+\(O\), and \(\mathsf{leseq\_suc}\) in the successor step.
+For \(x\le y\le z\), induct on the second \(\mathsf{leseq}\) proof
+with fixed \(y\) and motive \(\lambda z.\,(x\le y)\to(x\le z)\).
+Its reflexivity branch returns the input proof of \(x\le y\), and
+its successor branch applies \(\mathsf{leseq\_suc}\) to the induction
+result. This is \(\mathsf{leseq\_trans}\).
+Induction on \(n\le m\) with motive \(S n\le S m\) gives successor
+monotonicity: its reflexivity branch is reflexivity at \(S n\), and
+its successor branch again uses \(\mathsf{leseq\_suc}\).
+Also \(n\le S n\) is the constructor applied to reflexivity.
+
+For \(S n\le m\), induction on this proof with motive
+\(\mathsf{Is\_suc}(m)\) has seed \(\mathsf{trivial}\) and constant
+successor branch \(\mathsf{trivial}\). At \(m=O\) this is
+\(\mathsf{FF}\), proving \(\mathsf{non\_lt0}\).
+The data case split on \(m\) gives \(\mathsf{pred}(m)\le m\):
+reflexivity if \(m=O\), and \(k\le S k\) if \(m=S k\).
+Now induct on \(S n\le m\) with motive \(n\le\mathsf{pred}(m)\).
+At \(m=S n\) use reflexivity. At the step from \(m=k\) to \(S k\),
+the induction hypothesis is \(n\le\mathsf{pred}(k)\);
+compose it with \(\mathsf{pred}(k)\le k\), which is the required
+\(n\le\mathsf{pred}(S k)\). Specializing \(m=S r\) proves
+\(\mathsf{suc\_leseq}\). Thus
+\(n<S m\leftrightarrow n\le m\): one direction is successor
+cancellation and the other is successor monotonicity.
+Compose \(n\le S n\) with \(S n\le m\) for
+\(\mathsf{lthan\_leseq}\).
+
+Strict irreflexivity \(\neg(n<n)\) follows by nat induction. At
+zero it is \(\mathsf{non\_lt0}\). At \(S n\), a putative
+\(S(S n)\le S n\) cancels to \(S n\le n\), contradicting the
+induction hypothesis. A strict/weak chain therefore cannot cycle:
+\(a<b\) and \(b\le a\) compose to \(S a\le a\).
+Construct trichotomy with motive
+\(\Pi m.\,(n=m)\vee(n<m)\vee(m<n)\), by induction on \(n\)
+and data case analysis on \(m\). At \(n=m=O\) give reflexivity.
+At \(n=O,m=S k\), lift \(O\le k\) to \(S O\le S k\).
+At \(n=S k,m=O\), give the opposite strict inequality similarly.
+At \(n=S k,m=S l\), use the induction hypothesis for \(k,l\):
+lift equality by congruence, and each strict inequality by successor
+monotonicity. These exhaust the constructor cases, without DN.
+Antisymmetry follows by that trichotomy and the just-proved impossibility
+of a strict/weak cycle. Zero minimality follows by cases on \(n\):
+\(S k\le O\) is \(k<O\), excluded by non_lt0.
+
+For \(\mathsf{lt01}\), split \(x\): zero is the left alternative;
+\(S O\) is the middle alternative; \(S(S k)\) satisfies
+\(\mathsf{one}<S(S k)\), by lifting \(O\le k\) twice.
+Eliminating the first two alternatives against the supplied negative
+equations gives \(\mathsf{n0n1lt}\).
+If \(k\le S n\), apply trichotomy to \(k,S n\). Equality is one
+alternative; \(k<S n\) cancels to \(k\le n\); and
+\(S n<k\) contradicts \(k\le S n\) by the strict/weak cycle.
+This proves the successor-bound split used below.
+
+For the course-of-values theorem, let
+\(H:\Pi n.\mathsf{before}\ n\ P\to P n\) and use ordinary nat
+induction on the \emph{proposition}
+\(Q n:=\Pi k.(k\le n)\to P k\). At zero, prove \(P O\)
+by \(H O\) applied to \(\lambda k.\lambda u:k<O.
+\mathsf{false\_el}(\mathsf{non\_lt0}\ k\ u)\).
+For \(k\le O\), zero minimality gives \(k=O\); reverse this
+equation and transport \(P O\) to \(P k\), supplying \(Q O\).
+At \(S n\), the induction hypothesis \(Q n\) gives every
+\(P k\) for \(k<S n\), by the equivalence \(k<S n\iff k\le n\).
+Apply \(H(S n)\) to this function to obtain \(P(S n)\).
+For arbitrary \(k\le S n\), the successor-bound split gives
+either the old \(Q n\) case or an equality \(k=S n\), along whose
+symmetry the new \(P(S n)\) is transported. This constructs
+\(Q(S n)\). Finally \(Q n\ n\ \mathsf{leseq\_n}\) proves \(P n\).
+All displayed functions are proofs of propositions; no function uses
+an ordering proof to return a data-valued bound or predecessor.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.har.prime-semiring}{thm:p12-har-prime-semiring}{Every source arithmetic identity and the positive-factor order argument}
+\begin{proof}
+All equalities here are the source propositional equality on nat. Each
+chain composes the equality transport/transitivity just constructed;
+replacing a subexpression uses f_equal, not equality reflection.
+Computational endpoints use the displayed structural-recursion equations.
+The induction motives are the displayed equations universally quantified
+over the remaining natural-number parameters.
+
+For \(\mathsf{plus\_altsuc}\), induct on \(n\).
+At \(O\), both sides compute to \(S m\). At \(S n\), they are
+\(S(n+S m)\) and \(S(S(n+m))\), so apply congruence for S to the
+induction hypothesis. For \(\mathsf{plus\_altzero}\), zero computes
+to zero; its successor step is congruence for S on \(n+O=n\).
+For \(\mathsf{plus\_ass}:n+(m+k)=(n+m)+k\), zero computes to
+\(m+k\); the successor step computes both sides to S applied to
+the previous equality. For \(\mathsf{plus\_com}\), at zero use
+the symmetry of \(m+O=m\). At \(S n\) the actual chain is
+\[
+ (S n)+m=S(n+m)=S(m+n)=m+(S n),
+\]
+using the induction hypothesis and the symmetry of plus_altsuc.
+These proofs establish, as a usable equality recipe,
+\((a+b)+c=(a+c)+b\): rewrite the left side to \(a+(b+c)\),
+commute \(b+c\), then reassociate. They also establish arbitrary
+reassociation and permutation of a finite sum by repeated applications
+of the same two proved laws; no additional arithmetic axiom is meant.
+
+Addition cancellation \(a+b=a+c\to b=c\) is nat induction on a.
+At zero the premise computes to the conclusion. At S a, successor
+injectivity first yields \(a+b=a+c\), then the induction hypothesis
+applies. Right cancellation follows by commuting each side and applying
+this result. In particular \(n+\mathsf{one}=S n\), by plus_altsuc
+at O and plus_altzero.
+
+For \(\mathsf{timesaltzero}\), induction on n has zero reflexivity;
+the step is \((S n)O=nO+O=O+O=O\).
+For \(\mathsf{timesaltsuc}:n(S m)=nm+n\), induction on n again
+has the zero computation. Set \(a=nm\) in the successor step.
+Its left side is
+\[
+ (S n)(S m)=n(S m)+S m=(a+n)+S m=S((a+n)+m),
+\]
+and its right side is
+\[
+ ((S n)m)+S n=(a+m)+S n=S((a+m)+n).
+\]
+The finite-sum recipe just proved gives
+\((a+n)+m=(a+m)+n\), completing the step by S congruence.
+For \(\mathsf{distr}:(n+m)k=nk+mk\), induction on n has
+\(mk=O+mk\) at zero. The successor step is the concrete chain
+\[
+ ((S n)+m)k=(S(n+m))k=(n+m)k+k
+       =(nk+mk)+k=(nk+k)+mk=((S n)k)+mk.
+\]
+For \(\mathsf{times\_ass}:n(mk)=(nm)k\), induction on n has
+zero computation. Its step is
+\[
+ (S n)(mk)=n(mk)+mk=(nm)k+mk=(nm+m)k=((S n)m)k,
+\]
+where the penultimate equation is the symmetry of distr.
+Multiplication commutativity is a separate derived fact, by induction
+on n: zero uses timesaltzero at m, and
+\[
+ (S n)m=nm+m=mn+m=m(S n)
+\]
+uses the induction hypothesis and timesaltsuc in the last step.
+Right distributivity now follows without a new premise:
+\(n(m+k)=(m+k)n=mn+kn=nm+nk\).
+Also \(\mathsf{one}\,n=On+n=O+n=n\); commute for
+\(n\,\mathsf{one}=n\).
+
+For the additive characterization of order, induct on a proof of
+\(n\le m\), eliminating into \(\exists k.n+k=m:\mathsf{Prop}\).
+The reflexivity branch is witness O, with plus_altzero.
+At a successor branch, eliminate the induction result into the same
+propositional existential: from local witness k and equation
+\(n+k=m\), introduce witness \(S k\), since
+\(n+S k=S(n+k)=S m\).
+For the converse, induction on k constructs \(n\le n+k\): at
+zero transport reflexivity along plus_altzero; at the successor use
+the leseq successor constructor and \(n+S k=S(n+k)\).
+Then eliminate \(\exists k.n+k=m\) into \(n\le m\) and transport
+this bound along the local equation. This also proves
+\(n\le n+k\), and by commutation \(k\le n+k\).
+
+To make the positive-factor reflection argument explicit, first prove
+\(a<a+S u\). The already constructed \(a\le a+u\) lifts to
+\(S a\le S(a+u)=a+S u\), which is the required strict inequality.
+Any \(d\) with \(O<d\) has a successor constructor shape: a data
+case split on d excludes O by non_lt0, leaving \(d=S u\).
+Consequently \((S k)d=kd+d=kd+S u=S(kd+u)\) is positive,
+and \(a<a+(S k)d\), by the preceding strict-sum fact and this
+equation. If \(r<s\), the additive characterization for
+\(S r\le s\) supplies, locally in Prop, k with
+\(S r+k=s\). The addition equations give \(s=r+S k\), and distr
+gives \(sd=rd+(S k)d\). The strict-sum argument gives \(rd<sd\).
+Thus positive multiplication preserves strict order.
+If \(rd\le sd\), trichotomy of r,s gives equality, \(r<s\), or
+\(s<r\). The first two imply \(r\le s\), respectively by
+transported reflexivity and lthan_leseq. The last implies \(sd<rd\),
+whose composition with \(rd\le sd\) contradicts strict irreflexivity
+at sd. This proves the asserted weak-order reflection, without DN.
+For later use, a positive multiple \((S k)d\) is at least d,
+because \((S k)d=kd+d=d+kd\) and \(d\le d+kd\).
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.har.prime-divisibility}{thm:p12-har-prime-divisibility}{Local coefficient arithmetic, including the zero-divisor case}
+\begin{proof}
+Every existential elimination in this proof has a propositional target.
+For reflexivity \(\mathsf{div}\ n\ n\), introduce coefficient one,
+since \(\mathsf{one}\,n=n\). For \(\mathsf{div}\ \mathsf{one}\ n\),
+introduce coefficient n, since \(n\,\mathsf{one}=n\).
+For transitivity, eliminate \(\mathsf{div}\ d\ m\) and
+\(\mathsf{div}\ m\ n\) locally: let \(ad=m\), \(bm=n\).
+Associativity and substitution give \((ba)d=b(ad)=bm=n\).
+Introduce ba as the coefficient in \(\mathsf{div}\ d\ n\).
+
+Suppose \(\mathsf{one}<d\) and \(rd=\mathsf{one}\).
+Split the \emph{data} r. For \(r=O\), the equation computes to
+\(O=S O\), contradicted by no_conf. For \(r=S k\), the proved
+positive-multiple bound gives \(d\le rd=\mathsf{one}\).
+Composing \(S\mathsf{one}\le d\) with that bound gives
+\(\mathsf{one}<\mathsf{one}\), again a contradiction. Eliminating
+the divisibility existential into FF proves that d cannot divide one.
+
+The subtraction equations give \(a\mathbin{\dot{-}}O=a\), by
+cases on a. Nat induction on r with all k quantified proves
+\[
+ (r+k)\mathbin{\dot{-}}r=k.
+\]
+At r=O, the result is \(k\mathbin{\dot{-}}O=k\). At S r,
+\(((S r)+k)\mathbin{\dot{-}}(S r)\) computes to
+\((r+k)\mathbin{\dot{-}}r\), so the induction hypothesis applies.
+Thus if \(r+k=s\), propositional congruence and symmetry give
+\(s\mathbin{\dot{-}}r=k\). This is an equation about already
+defined natural-number data, not an extraction from an ordering proof.
+
+Now let \(\mathsf{div}\ d\ a\) and \(\mathsf{div}\ d\ (a+b)\).
+Eliminate these two existentials into the target
+\(\mathsf{div}\ d\ b:\mathsf{Prop}\), retaining local r,s with
+\(rd=a\), \(sd=a+b\). Split the data d.
+If \(d=O\), timesaltzero yields \(a=O\) and \(a+b=O\).
+Substitute \(a=O\); then \(O+b=b\) gives \(b=O\).
+Introduce coefficient O in \(\mathsf{div}\ O\ b\), transporting
+the reflexive computation \(OO=O\) to b. This settles the case
+which cancellation by a zero multiplier cannot settle.
+
+If \(d=S u\), then \(O<d\), by successor monotonicity of
+\(O\le u\). The additive order fact \(a\le a+b\) transports
+along the two local equations to \(rd\le sd\). Positive-factor
+reflection therefore gives \(r\le s\). Eliminate the additive
+characterization into the still propositional target: take local k
+with \(r+k=s\). Distr gives
+\[
+ a+b=sd=(r+k)d=rd+kd=a+kd.
+\]
+Addition cancellation yields \(b=kd\). The subtraction lemma gives
+\(s\mathbin{\dot{-}}r=k\), so substitution gives
+\((s\mathbin{\dot{-}}r)d=b\). Introduce the explicit local
+coefficient \(s\mathbin{\dot{-}}r\) in the output existential.
+The two coefficient inputs came from ex eliminations into Prop; the
+output is another ex proof in Prop. This derivation cannot be read as
+a map \(\mathsf{div}\ d\ n\to\mathsf{nat}\) or as classical choice.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.har.prime-divisor}{thm:p12-har-prime-divisor}{The complete course-of-values prime-divisor proof}
+\begin{proof}
+Set \(P n:=(\mathsf{one}<n)\to\mathsf{HPD}\ n\), which is a
+well-formed \(\mathsf{Prop}\)-valued predicate on the source nat.
+The proved cv_ind reduces the target to construction of
+\(\Pi n.(\Pi d.(d<n)\to P d)\to P n\).
+Take arbitrary n, \(I:\Pi d.(d<n)\to P d\), and
+\(h:\mathsf{one}<n\). Instantiate the explicitly derived tnd at
+\(B_n:=\exists d.\mathsf{propdiv}\ d\ n\). Its or elimination
+target is \(\mathsf{HPD}\ n:\mathsf{Prop}\).
+
+In its negative branch \(u:\neg B_n\), construct
+\(\langle h,u\rangle:\mathsf{prime}\ n\), and use divisibility
+reflexivity \(\mathsf{div}\ n\ n\). The ex constructor with
+witness n and this pair gives \(\mathsf{HPD}\ n\).
+In its positive branch \(e:B_n\), use ex elimination into that
+same target, with arbitrary local d and
+\(v:(\mathsf{one}<d)\wedge(d<n)\wedge\mathsf{div}\ d\ n\).
+Project its three conjuncts. The induction input is exactly
+\(I\ d\ (d<n)\ (\mathsf{one}<d):\mathsf{HPD}\ d\).
+Eliminate this existential, again into \(\mathsf{HPD}\ n\), with
+local p and pair \(w:\mathsf{prime}\ p\wedge\mathsf{div}\ p\ d\).
+Divisibility transitivity applied to its second projection and the
+third projection of v gives \(\mathsf{div}\ p\ n\).
+Pair this with the first projection of w and introduce p into
+\(\mathsf{HPD}\ n\). This completes both branches and hence the
+step required by cv_ind. Abstract n for the stated declaration.
+
+The sole classical instance in the step is tnd at \(B_n\), whose
+DN recipe is given in the logical-library annex; neither the induction
+principle nor any arithmetic lemma here uses DN. The development proves
+inhabitation of a Prop existential, not a Set-valued algorithm finding
+its prime. A constructive search would require its own terminating
+data procedure and correctness proof, not the elimination used here.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p12.har.prime-euclid}{thm:p12-har-prime-euclid}{Factorial divisibility and the fully linked Euclid argument}
+\begin{proof}
+First construct \(\mathsf{one}\le\mathsf{fac}\ n\) by nat
+induction. At zero this is reflexivity, since fac O=one.
+At S n, the factorial equation and the multiplication successor
+equation give
+\[
+ \mathsf{fac}(S n)=(S n)(\mathsf{fac}\ n)
+       =n(\mathsf{fac}\ n)+\mathsf{fac}\ n
+       =\mathsf{fac}\ n+n(\mathsf{fac}\ n).
+\]
+The additive bound gives \(\mathsf{fac}\ n\le\mathsf{fac}(S n)\).
+Compose with the induction hypothesis. This is a proof of a bound,
+not a property inferred just from the recursive definition.
+
+Next use nat induction on n with the quantified propositional motive
+\[
+ F n:=\Pi m.(\mathsf{one}\le m)\to(m\le n)\to
+                 \mathsf{div}\ m\ (\mathsf{fac}\ n).
+\]
+At zero, \(\mathsf{one}\le m\le O\) composes to
+\(\mathsf{one}\le O\), which is excluded by non_lt0 at O;
+ex falso proves the required divisibility proposition.
+At S n, fix m and its two bounds. The already proved successor-bound
+split on \(m\le S n\) gives \(m\le n\) or \(m=S n\).
+If \(m=S n\), introduce coefficient \(\mathsf{fac}\ n\), since
+commutativity gives
+\((\mathsf{fac}\ n)(S n)=(S n)(\mathsf{fac}\ n)
+=\mathsf{fac}(S n)\), and transport along the equation for m.
+If \(m\le n\), apply \(F n\ m\) to its bounds, yielding
+\(\mathsf{div}\ m\ (\mathsf{fac}\ n)\). Eliminate this
+existential into the desired divisibility proposition: from local
+coefficient a with \(am=\mathsf{fac}\ n\), associativity gives
+\[
+ ((S n)a)m=(S n)(am)=(S n)(\mathsf{fac}\ n)
+                          =\mathsf{fac}(S n).
+\]
+Introduce coefficient \((S n)a\). This closes both branches of the
+inductive step and proves factorial divisibility at every n.
+
+Fix arbitrary N, and form the data
+\(M:=\mathsf{fac}\ N+\mathsf{one}=S(\mathsf{fac}\ N)\).
+The bound just proved is \(S O\le\mathsf{fac}\ N\), or
+\(O<\mathsf{fac}\ N\). Successor monotonicity therefore gives
+\(S(S O)\le S(\mathsf{fac}\ N)=M\), exactly
+\(\mathsf{one}<M\). Apply numbers_gt1_have_primediv to obtain
+\(\mathsf{HPD}\ M\). Eliminate it into the propositional target
+\(\exists p.\mathsf{prime}\ p\wedge N<p\), with local p and
+\(u:\mathsf{prime}\ p\wedge\mathsf{div}\ p\ M\).
+Project \(\mathsf{one}<p\) from its primality component; in
+particular \(\mathsf{one}\le p\) by lthan_leseq.
+
+If \(p\le N\), factorial divisibility yields
+\(\mathsf{div}\ p\ (\mathsf{fac}\ N)\). Apply the proved
+divisibility subtraction theorem with
+\(a=\mathsf{fac}\ N\), \(b=\mathsf{one}\), and the given
+\(\mathsf{div}\ p\ M\); this yields
+\(\mathsf{div}\ p\ \mathsf{one}\), contradicted by
+\(\mathsf{one}<p\) and the prime-divisibility library.
+Thus \(\neg(p\le N)\). The constructive trichotomy of N,p now
+has only the alternative \(N<p\): equality would transport
+reflexivity to \(p\le N\), and \(p<N\) would give the same
+bound by lthan_leseq. Pair \(N<p\) with the given primality of p,
+and introduce that local p into the target existential. Abstract N.
+
+All witnesses used in factorial divisibility and the final prime
+statement were introduced by ex constructors or locally bound by ex
+eliminations into Prop. The factorial/subtraction functions themselves
+are data recursions independent of those proofs. DN enters this theorem
+only through the explicitly linked prime-divisor theorem; there is no
+extra appeal to classical choice, modern library automation or a
+different definition of primality.
+
+For the finite-family formulation, construct
+\(B k\ a:=\mathsf{nat\_rec}\ O\
+(\lambda j:\mathsf{nat}.\lambda r:\mathsf{nat}.r+a j)\ k\),
+an instance with data target nat and the indicated parameter a.
+Its equations are the displayed fold equations. Nat induction on k
+with propositional motive
+\(\Pi i.(i<k)\to(a i\le B k\ a)\) proves the bound.
+At zero the premise is excluded by non_lt0.
+At S k, cancel \(i<S k\) to \(i\le k\) and use trichotomy of
+i,k. In the equality branch, \(a i=a k\) by f_equal and
+\(a k\le B k\ a+a k=B(S k)\ a\) by the additive bound.
+In the \(i<k\) branch, the induction hypothesis gives
+\(a i\le B k\ a\); compose with
+\(B k\ a\le B k\ a+a k\). The \(k<i\) branch contradicts
+\(i\le k\). This proves every required bound.
+Apply the already proved Euclid result at the data bound \(B k\ a\)
+and eliminate its existential into the finite-family existential
+proposition. For local prime p with \(B k\ a<p\), take arbitrary
+\(i<k\). A putative \(p=a i\) transports the proved
+\(a i\le B k\ a\) to \(p\le B k\ a\), a strict/weak cycle.
+For an explicit proof recipe, name the proved bound function H,
+put \(T:=B k\ a\), and let \(u_{>}:T<p\) be the local Euclid
+proof. Let \(\mathsf{irr}_T:(T<T)\to\mathsf{FF}\) be the constructed
+strict-irreflexivity proof. The required negative-equation function is
+\[
+\begin{aligned}
+ &\lambda i:\mathsf{nat}.\lambda h:i<k.\lambda e:p=a i.\\
+ &\quad\mathsf{irr}_T\bigl(
+  \mathsf{leseq\_trans}\ (S T)\ p\ T\ u_{>}
+   (\mathsf{leib}\ \mathsf{nat}\ (\lambda z:\mathsf{nat}.z\le T)
+       \ (a i)\ p\ (\mathsf{sym\_eq}\ e)\ (H i h))\bigr).
+\end{aligned}
+\]
+The symmetry argument has type \(a i=p\), so leib really returns
+\(p\le T\); transitivity then returns \(S T\le T\), the input
+type of \(\mathsf{irr}_T\). Pair the function with primality and
+introduce p. All resulting quantifiers
+and existential eliminations are still in Prop. No List type, sequence
+code, maximum operation, or additional recursion theorem was imported.
+\end{proof}
+\end{annexitem}

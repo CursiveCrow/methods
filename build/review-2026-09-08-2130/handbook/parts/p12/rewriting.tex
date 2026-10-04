@@ -1,0 +1,130 @@
+%% parts/p12/rewriting.tex --- Part 12.4
+\chapter{Term Rewriting}\label{sec:p12-rewriting}
+
+\begin{hbdefinition}{def:p12-trs}{First-order term-rewriting system}
+Fix a ranked signature \(\Sigma\) and variables \(V\). A rewrite rule is a
+pair \(l\to r\) of finite \(\Sigma\)-terms such that \(l\notin V\) and
+\(\operatorname{Var}(r)\subseteq\operatorname{Var}(l)\). A term-rewriting
+system \(R\) is a set of such rules, and
+\[
+ C[l\sigma]\to_R C[r\sigma]
+\]
+for every one-hole context \(C[-]\) and substitution \(\sigma\). The exact
+name is needed to distinguish this contextual first-order relation from graph,
+higher-order, modulo-AC, or strategy-restricted rewriting. It stands as a
+binary relation on terms, differs through the displayed closure conditions,
+and is the relation used by every result in this chapter and on
+\hyperref[sheet:term-rewriting]{\texttt{sheet:term-rewriting}}.
+\index{term-rewriting system}\index{rewrite relation}
+\end{hbdefinition}
+
+Write \(\to_R^*\) for reflexive transitive closure. A term is a normal form
+when it has no \(R\)-successor. The relation is \emph{terminating} when it has
+no infinite forward chain, \emph{confluent} when
+\(s\to_R^*t_1\) and \(s\to_R^*t_2\) imply that \(t_1,t_2\) have a common
+descendant, and \emph{locally confluent} when the same holds for one-step
+forks. These properties have different quantifier patterns and are not
+interchangeable.
+
+\begin{hbtheorem}{thm:p12-newman}{cited=Newman1942}{Newman's lemma}
+Every terminating and locally confluent rewrite relation is confluent.
+\end{hbtheorem}
+
+\noindent\emph{Proof.}
+Use well-founded induction on the source \(s\) under the strict transitive
+closure of rewriting. For reductions
+\(s\to^*t_1\) and \(s\to^*t_2\), the empty-side cases are immediate.
+Otherwise take first steps \(s\to u_1\) and \(s\to u_2\). Local confluence
+joins \(u_1,u_2\) at some \(v\). The induction hypothesis, applied below
+\(s\), first joins each tail \(u_i\to^*t_i\) with \(u_i\to^*v\), and then
+joins the two resulting descendants. Termination is used exactly to justify
+the induction; local confluence alone is insufficient.
+
+\begin{hbdefinition}{def:p12-critical-pair}{Critical overlap and critical pair}
+Rename two rules \(l_1\to r_1\), \(l_2\to r_2\) apart. If a nonvariable
+subterm of \(l_2\) unifies with \(l_1\) with most general unifier \(\sigma\),
+the two corresponding one-step reducts of \(l_2\sigma\) form a critical pair.
+The nonvariable and rename-apart conditions are necessary to exclude ordinary
+substitution compatibility and accidental variable capture. A critical pair
+stands as a finite overlap witness, differs from an arbitrary peak by being
+most general, and is used in the critical-pair criterion
+\cite{Huet1973,Huet1980}.
+\index{critical pair}\index{overlap!term rewriting}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-critical-pair}{cited=Huet1980}{Critical-pair criterion}
+For a left-linear first-order term-rewriting system, local confluence is
+equivalent to joinability of every critical pair. Without left-linearity,
+variable-overlap phenomena require the corresponding stronger formulation.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p12-rewrite-example}{A terminating nonconfluent system}
+Let \(R=\{a\to b,a\to c\}\) with distinct constants. The system terminates,
+but the one-step peak \(b\leftarrow a\to c\) is not joinable, so it is not
+locally confluent and hence not confluent. Adding \(b\to c\) joins the peak
+and preserves termination under the order \(a\succ b\succ c\).
+\end{hbexample}
+
+\section{Reduction orderings}
+
+\begin{hbdefinition}{def:p12-reduction-order}{Reduction ordering}
+A reduction ordering \(\succ\) is a well-founded strict order on terms that is
+closed under substitutions and contexts. Orienting every rule \(l\to r\) with
+\(l\succ r\) proves termination. The term is needed because an arbitrary
+well-founded order need not survive substitution or contextual insertion. It
+stands as a metatheoretic order on terms, differs through those stability
+conditions, and is used by completion and termination proofs
+\cite{Dershowitz1982,BaaderNipkow1998}.
+\index{reduction ordering}
+\end{hbdefinition}
+
+Lexicographic path order (LPO) is determined by a precedence on function
+symbols and compares root symbols together with recursively smaller argument
+tuples; it is particularly suited to recursive definitions. Knuth--Bendix
+order (KBO) assigns positive symbol weights and a precedence, compares total
+weight first, and applies variable-occurrence conditions before precedence and
+lexicographic tie-breaking. Neither acronym identifies one order until the
+precedence, weights, status, and variable conditions are supplied.
+
+\section{Knuth--Bendix completion}
+
+\begin{hbmethod}{def:p12-completion}{Completion state and invariant}
+A completion state is \((E,R)\), where \(E\) is a finite set of unoriented
+equations and \(R\) a set of rules oriented by one fixed reduction ordering.
+The transformations Orient, Simplify, Compose, Collapse, and Deduce are exactly
+those on \hyperref[sheet:term-rewriting]{\texttt{sheet:term-rewriting}}. The
+invariant is
+\[
+ \equiv_{E_0}=\equiv_{E\cup R},
+\]
+where both sides denote the generated equational congruence. The method name
+is necessary to distinguish this fair transformation process from arbitrary
+rule orientation. It stands as a semidecision method, differs because it may
+fail or diverge, and is used in the conditional correctness theorem
+\cite{KnuthBendix1970}.
+\index{Knuth--Bendix completion}
+\end{hbmethod}
+
+Each transformation preserves the generated congruence: orientation replaces
+an equation by one direction while equational closure keeps symmetry; simplify
+and compose replace a side by an equal reduct; collapse returns an invalidated
+left side to the equation set; and deduce adds an equality already generated by
+two rule steps.
+
+\begin{hbtheorem}{thm:p12-completion-correctness}{cited=Huet1980}{Conditional correctness of fair completion}
+If a fair completion run terminates successfully with \(E=\varnothing\), every
+critical pair of \(R\) joinable, and every rule decreasing under the fixed
+reduction ordering, then \(R\) is terminating and confluent and
+\[
+ s\equiv_{E_0}t
+ \quad\Longleftrightarrow\quad
+ \operatorname{nf}_R(s)=\operatorname{nf}_R(t).
+\]
+The theorem is conditional: a failed orientation or an infinite fair run is
+not a negative answer to the existence of some convergent presentation.
+\end{hbtheorem}
+
+Rewriting modulo associativity/commutativity, conditional rewriting, and
+higher-order rewriting change unification, overlaps, and ordering requirements.
+The first-order critical-pair and completion results above do not transfer
+without their respective extensions.

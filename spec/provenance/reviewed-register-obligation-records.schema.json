@@ -1,0 +1,553 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "reviewed-register-obligation-records.schema.json",
+  "title": "Reviewer records checked before register obligations become terminal",
+  "description": "Schema validity is necessary but not sufficient. The generator also checks immutable register identity, admitted support, exact labels, contract bindings, and live evidence bytes.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "register_manifest_path",
+    "register_manifest_sha256",
+    "records",
+    "contract_supersessions"
+  ],
+  "properties": {
+    "schema_version": {"type": "integer", "const": 3},
+    "register_manifest_path": {"const": "spec/register-obligation-manifest.csv"},
+    "register_manifest_sha256": {
+      "const": "f3e18f08183192977055aa2edd30a5632d426e6f636457fab02e1f6d56e25f1f"
+    },
+    "records": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/record"}
+    },
+    "contract_supersessions": {
+      "type": "array",
+      "maxItems": 1,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/contractSupersession"}
+    }
+  },
+  "$defs": {
+    "nonemptyString": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^\\S(?:.*\\S)?$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "repositoryPath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_fidelity_ai",
+        "topic_specialist_ai",
+        "adversarial_publication_ai",
+        "static",
+        "build",
+        "visual"
+      ],
+      "properties": {
+        "source_fidelity_ai": {"const": "pass"},
+        "topic_specialist_ai": {"const": "pass"},
+        "adversarial_publication_ai": {"const": "pass"},
+        "static": {"const": "pass"},
+        "build": {"const": "pass"},
+        "visual": {"const": "pass"}
+      }
+    },
+    "authorityFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": {"$ref": "#/$defs/repositoryPath"},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "baseEvidenceProperties": {
+      "type": "object",
+      "properties": {
+        "recorded_result": {"const": "pass"},
+        "artifact_path": {"$ref": "#/$defs/repositoryPath"},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "producer_identity": {"$ref": "#/$defs/nonemptyString"},
+        "recorded_scope": {"$ref": "#/$defs/nonemptyString"}
+      }
+    },
+    "aiEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "category",
+        "recorded_result",
+        "artifact_path",
+        "sha256",
+        "producer_identity",
+        "recorded_scope",
+        "model",
+        "model_version",
+        "instructions",
+        "consulted_authority_files",
+        "consulted_authority_locators",
+        "findings",
+        "evidence_digest"
+      ],
+      "properties": {
+        "category": {
+          "enum": [
+            "source_fidelity_ai",
+            "topic_specialist_ai",
+            "adversarial_publication_ai"
+          ]
+        },
+        "recorded_result": {"const": "pass"},
+        "artifact_path": {"$ref": "#/$defs/repositoryPath"},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "producer_identity": {"$ref": "#/$defs/nonemptyString"},
+        "recorded_scope": {"$ref": "#/$defs/nonemptyString"},
+        "model": {"$ref": "#/$defs/nonemptyString"},
+        "model_version": {"$ref": "#/$defs/nonemptyString"},
+        "instructions": {"$ref": "#/$defs/nonemptyString"},
+        "consulted_authority_files": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/authorityFile"}
+        },
+        "consulted_authority_locators": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/nonemptyString"}
+        },
+        "findings": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/nonemptyString"}
+        },
+        "evidence_digest": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "mechanicalEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "category",
+        "recorded_result",
+        "artifact_path",
+        "sha256",
+        "producer_identity",
+        "recorded_scope"
+      ],
+      "properties": {
+        "category": {"enum": ["static", "build", "visual"]},
+        "recorded_result": {"const": "pass"},
+        "artifact_path": {"$ref": "#/$defs/repositoryPath"},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "producer_identity": {"$ref": "#/$defs/nonemptyString"},
+        "recorded_scope": {"$ref": "#/$defs/nonemptyString"}
+      }
+    },
+    "evidence": {
+      "oneOf": [
+        {"$ref": "#/$defs/aiEvidence"},
+        {"$ref": "#/$defs/mechanicalEvidence"}
+      ]
+    },
+    "supersededField": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["field_name", "original_value", "original_value_sha256"],
+      "properties": {
+        "field_name": {"enum": ["required_fix", "acceptance", "spec", "status"]},
+        "original_value": {"type": "string"},
+        "original_value_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "supersessionObligation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "obligation_id",
+        "source_register",
+        "source_line",
+        "record_sha256",
+        "original_record_json_sha256",
+        "superseded_fields"
+      ],
+      "properties": {
+        "obligation_id": {"enum": [
+          "OBL::defects::S-002",
+          "OBL::defects::S-003",
+          "OBL::apparatus::A-167",
+          "OBL::apparatus::A-168"
+        ]},
+        "source_register": {"enum": [
+          "spec/registers/defects.csv",
+          "spec/registers/apparatus.csv"
+        ]},
+        "source_line": {"type": "integer", "minimum": 2},
+        "record_sha256": {"$ref": "#/$defs/sha256"},
+        "original_record_json_sha256": {"$ref": "#/$defs/sha256"},
+        "superseded_fields": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {"$ref": "#/$defs/supersededField"},
+          "uniqueItems": true
+        }
+      }
+    },
+    "contractClause": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "start_line", "end_line", "excerpt_sha256"],
+      "properties": {
+        "path": {"enum": [
+          "spec/FULL-COMPENDIUM-TRANSCRIPTION-CONTRACT.md",
+          "spec/FULL-COMPENDIUM-ARCHITECTURE.md",
+          "handbook/CONVENTIONS.md"
+        ]},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "start_line": {"type": "integer", "minimum": 1},
+        "end_line": {"type": "integer", "minimum": 1},
+        "excerpt_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "currentSourceLocator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "obligation_id",
+        "revision",
+        "source_path",
+        "source_sha256",
+        "start_line",
+        "end_line",
+        "excerpt_sha256",
+        "required_tokens"
+      ],
+      "properties": {
+        "obligation_id": {"enum": ["OBL::defects::S-002", "OBL::defects::S-003"]},
+        "revision": {"const": "v1.1-verified"},
+        "source_path": {"const": "source/formal-logic-reference.tex"},
+        "source_sha256": {"$ref": "#/$defs/sha256"},
+        "start_line": {"type": "integer", "minimum": 1},
+        "end_line": {"type": "integer", "minimum": 1},
+        "excerpt_sha256": {"$ref": "#/$defs/sha256"},
+        "required_tokens": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/nonemptyString"}
+        }
+      }
+    },
+    "revisionLocatorPair": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "obligation_id",
+        "historical_revision",
+        "historical_source_sha256",
+        "historical_start_line",
+        "historical_end_line",
+        "historical_excerpt_sha256",
+        "current_revision",
+        "current_source_path",
+        "current_source_sha256",
+        "current_start_line",
+        "current_end_line",
+        "current_excerpt_sha256"
+      ],
+      "properties": {
+        "obligation_id": {"enum": ["OBL::defects::S-002", "OBL::defects::S-003"]},
+        "historical_revision": {"const": "v1.0-audit"},
+        "historical_source_sha256": {"const": "81bf3c0ab12863d7d89e1b44648ccc1d63832dc68ab8e32b84aa9a0700cd6de1"},
+        "historical_start_line": {"type": "integer", "minimum": 1},
+        "historical_end_line": {"type": "integer", "minimum": 1},
+        "historical_excerpt_sha256": {"$ref": "#/$defs/sha256"},
+        "current_revision": {"const": "v1.1-verified"},
+        "current_source_path": {"const": "source/formal-logic-reference.tex"},
+        "current_source_sha256": {"$ref": "#/$defs/sha256"},
+        "current_start_line": {"type": "integer", "minimum": 1},
+        "current_end_line": {"type": "integer", "minimum": 1},
+        "current_excerpt_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "provenanceIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provenance_id",
+        "path",
+        "sha256",
+        "source_start",
+        "source_end",
+        "interval_sha256",
+        "restoration_artifact_path",
+        "restoration_artifact_sha256"
+      ],
+      "properties": {
+        "provenance_id": {"enum": ["SRC-03429-03518", "SRC-03519-03680", "SRC-05043-05131"]},
+        "path": {"$ref": "#/$defs/repositoryPath"},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "source_start": {"type": "integer", "minimum": 1},
+        "source_end": {"type": "integer", "minimum": 1},
+        "interval_sha256": {"$ref": "#/$defs/sha256"},
+        "restoration_artifact_path": {"$ref": "#/$defs/repositoryPath"},
+        "restoration_artifact_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "unitIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "unit_id", "record_type", "path", "start_line", "end_line",
+        "bytes", "sha256", "unit_kind", "identity_sha256"
+      ],
+      "properties": {
+        "unit_id": {"type": "string", "pattern": "^HBU-[0-9a-f]+$"},
+        "record_type": {"$ref": "#/$defs/nonemptyString"},
+        "path": {"$ref": "#/$defs/repositoryPath"},
+        "start_line": {"type": "integer", "minimum": 1},
+        "end_line": {"type": "integer", "minimum": 1},
+        "bytes": {"type": "integer", "minimum": 0},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "unit_kind": {"$ref": "#/$defs/nonemptyString"},
+        "identity_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "scopedRole": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["glyph", "scope", "standing", "role"],
+      "properties": {
+        "glyph": {"$ref": "#/$defs/nonemptyString"},
+        "scope": {"enum": ["editorial handbook outside inheritedrestorationscope", "inheritedrestorationscope"]},
+        "standing": {"enum": ["editorial notation", "source-supplied notation"]},
+        "role": {"$ref": "#/$defs/nonemptyString"}
+      }
+    },
+    "preservationControl": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "required_tokens"],
+      "properties": {
+        "path": {"enum": [
+          "handbook/handbook.sty",
+          "tools/test_restoration_scope.py",
+          "tools/test_part2_reader_route.py"
+        ]},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "required_tokens": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/nonemptyString"}
+        }
+      }
+    },
+    "renderedArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "bytes"],
+      "properties": {
+        "path": {"const": "handbook/main.pdf"},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "bytes": {"type": "integer", "minimum": 1}
+      }
+    },
+    "contractSupersession": {
+      "$comment": "Necessity: ordinary completion cannot express that an immutable demand to normalize inherited source notation conflicts with the later fidelity contract. Definition: contract supersession is exactly the one atomic four-row record pinned here and accepted by the generator only after all identities, contract clauses, locators, surviving roles, and six evidence gates validate. Standing: it is a metalinguistic administrative disposition, not a motive, a relation among motives, or a statement family. Nonredundancy: COMPLETE records fulfilled work, while this disposition preserves the original demand and proves why only its notation-rewrite fields no longer govern. Use: the closure projection and terminal-readiness checker require this distinction to count the four conflicts without rewriting source or declaring them complete.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "supersession_id",
+        "obligations",
+        "binding_contract_clauses",
+        "revision_locator_pairs",
+        "current_source_locators",
+        "affected_handbook_units",
+        "affected_provenance_records",
+        "surviving_scoped_roles",
+        "preservation_controls",
+        "rendered_artifact",
+        "supersession_statement",
+        "verification",
+        "verification_evidence"
+      ],
+      "properties": {
+        "supersession_id": {"const": "notation-contract-2026-08-11"},
+        "obligations": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "prefixItems": [
+            {
+              "$ref": "#/$defs/supersessionObligation",
+              "properties": {
+                "obligation_id": {"const": "OBL::defects::S-002"},
+                "source_register": {"const": "spec/registers/defects.csv"},
+                "source_line": {"const": 45},
+                "record_sha256": {"const": "0c8e13539490f8efc90bfa54002bf53171bc77c7cb81015c03baa7b02254f9b6"},
+                "original_record_json_sha256": {"const": "b664181a7348d504a7cf7f5363bfea6e818df51dcb1ad84b266ee5e98c5da245"}
+              }
+            },
+            {
+              "$ref": "#/$defs/supersessionObligation",
+              "properties": {
+                "obligation_id": {"const": "OBL::defects::S-003"},
+                "source_register": {"const": "spec/registers/defects.csv"},
+                "source_line": {"const": 46},
+                "record_sha256": {"const": "c7ddae42c2bfd2c8046017a4ef996c52729207588542e2fd673cbc1076f5025a"},
+                "original_record_json_sha256": {"const": "0ca5a45188197a82c7a5bb3e6b6f75dace546cea1e9f29702719c6d7a51f141c"}
+              }
+            },
+            {
+              "$ref": "#/$defs/supersessionObligation",
+              "properties": {
+                "obligation_id": {"const": "OBL::apparatus::A-167"},
+                "source_register": {"const": "spec/registers/apparatus.csv"},
+                "source_line": {"const": 168},
+                "record_sha256": {"const": "4af93cac3863810a119c64325b988e33f67f32455c5e35a8f76056bc1d6ae4c8"},
+                "original_record_json_sha256": {"const": "accc46105fb47970f2d165f8a8881020e3235502d6e4c3bab923f35d236f7e98"}
+              }
+            },
+            {
+              "$ref": "#/$defs/supersessionObligation",
+              "properties": {
+                "obligation_id": {"const": "OBL::apparatus::A-168"},
+                "source_register": {"const": "spec/registers/apparatus.csv"},
+                "source_line": {"const": 169},
+                "record_sha256": {"const": "bb5b870d6da41e07ee138eccd2f8a7e0a64f602c16a460220546f66bcdd803d8"},
+                "original_record_json_sha256": {"const": "09aa5ce7bf6a3f8597a1bc54b91974deb0992cf67be1e022d655bbf8d263f932"}
+              }
+            }
+          ],
+          "items": false
+        },
+        "binding_contract_clauses": {
+          "type": "array", "minItems": 8, "maxItems": 8,
+          "items": {"$ref": "#/$defs/contractClause"}, "uniqueItems": true
+        },
+        "revision_locator_pairs": {
+          "type": "array", "minItems": 3, "maxItems": 3,
+          "items": {"$ref": "#/$defs/revisionLocatorPair"}, "uniqueItems": true
+        },
+        "current_source_locators": {
+          "type": "array", "minItems": 3, "maxItems": 3,
+          "items": {"$ref": "#/$defs/currentSourceLocator"}, "uniqueItems": true
+        },
+        "affected_handbook_units": {
+          "type": "array", "minItems": 1,
+          "items": {"$ref": "#/$defs/unitIdentity"}, "uniqueItems": true
+        },
+        "affected_provenance_records": {
+          "type": "array", "minItems": 3, "maxItems": 3,
+          "items": {"$ref": "#/$defs/provenanceIdentity"}, "uniqueItems": true
+        },
+        "surviving_scoped_roles": {
+          "type": "array", "minItems": 8, "maxItems": 8,
+          "items": {"$ref": "#/$defs/scopedRole"}, "uniqueItems": true
+        },
+        "preservation_controls": {
+          "type": "array", "minItems": 3, "maxItems": 3,
+          "items": {"$ref": "#/$defs/preservationControl"}, "uniqueItems": true
+        },
+        "rendered_artifact": {"$ref": "#/$defs/renderedArtifact"},
+        "supersession_statement": {
+          "const": "Only the four listed demands to rewrite inherited notation are displaced by the 2026-08-11 fidelity contract; source tokens, renderings, scoped roles, original register rows, and every unlisted obligation remain unchanged."
+        },
+        "verification": {"$ref": "#/$defs/verification"},
+        "verification_evidence": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "items": {"$ref": "#/$defs/evidence"},
+          "allOf": [
+            {"contains": {"properties": {"category": {"const": "source_fidelity_ai"}}, "required": ["category"]}, "minContains": 1, "maxContains": 1},
+            {"contains": {"properties": {"category": {"const": "topic_specialist_ai"}}, "required": ["category"]}, "minContains": 1, "maxContains": 1},
+            {"contains": {"properties": {"category": {"const": "adversarial_publication_ai"}}, "required": ["category"]}, "minContains": 1, "maxContains": 1},
+            {"contains": {"properties": {"category": {"const": "static"}}, "required": ["category"]}, "minContains": 1, "maxContains": 1},
+            {"contains": {"properties": {"category": {"const": "build"}}, "required": ["category"]}, "minContains": 1, "maxContains": 1},
+            {"contains": {"properties": {"category": {"const": "visual"}}, "required": ["category"]}, "minContains": 1, "maxContains": 1}
+          ]
+        }
+      }
+    },
+    "record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "obligation_id",
+        "source_register",
+        "source_line",
+        "record_sha256",
+        "completion_status",
+        "handbook_unit_ids",
+        "presentation_packet_ids",
+        "destination_labels",
+        "fulfillment_description",
+        "verification",
+        "verification_evidence"
+      ],
+      "properties": {
+        "obligation_id": {"$ref": "#/$defs/nonemptyString"},
+        "source_register": {"$ref": "#/$defs/repositoryPath"},
+        "source_line": {"type": "integer", "minimum": 2},
+        "record_sha256": {"$ref": "#/$defs/sha256"},
+        "completion_status": {"const": "complete"},
+        "handbook_unit_ids": {
+          "type": "array",
+          "items": {"type": "string", "pattern": "^HBU-[0-9a-f]+$"},
+          "uniqueItems": true
+        },
+        "presentation_packet_ids": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/nonemptyString"},
+          "uniqueItems": true
+        },
+        "destination_labels": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9._-]*:[A-Za-z0-9][A-Za-z0-9._:-]*$"
+          },
+          "uniqueItems": true
+        },
+        "fulfillment_description": {"$ref": "#/$defs/nonemptyString"},
+        "verification": {"$ref": "#/$defs/verification"},
+        "verification_evidence": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "items": {"$ref": "#/$defs/evidence"},
+          "allOf": [
+            {"contains": {"properties": {"category": {"const": "source_fidelity_ai"}}, "required": ["category"]}, "minContains": 1, "maxContains": 1},
+            {"contains": {"properties": {"category": {"const": "topic_specialist_ai"}}, "required": ["category"]}, "minContains": 1, "maxContains": 1},
+            {"contains": {"properties": {"category": {"const": "adversarial_publication_ai"}}, "required": ["category"]}, "minContains": 1, "maxContains": 1},
+            {"contains": {"properties": {"category": {"const": "static"}}, "required": ["category"]}, "minContains": 1, "maxContains": 1},
+            {"contains": {"properties": {"category": {"const": "build"}}, "required": ["category"]}, "minContains": 1, "maxContains": 1},
+            {"contains": {"properties": {"category": {"const": "visual"}}, "required": ["category"]}, "minContains": 1, "maxContains": 1}
+          ]
+        }
+      },
+      "anyOf": [
+        {"properties": {"handbook_unit_ids": {"minItems": 1}}},
+        {"properties": {"presentation_packet_ids": {"minItems": 1}}}
+      ]
+    }
+  }
+}

@@ -1,0 +1,24 @@
+# Round 4 topic-specialist verification
+
+### F6
+
+- reply: still-open
+- current location: `handbook/registry/calculi/mltt-intensional.tex:4-37`
+- reasoning: The post-R3 rules repair the computation half of the residual: Pi-beta at line 22, both Sigma-beta conclusions at line 27, and J-beta at line 31 now carry the contexts and typing premises needed to make their equality conclusions well formed. Lines 14-16 also make type equality's equivalence rules explicit. The new line-17 congruence schema, however, still does not generate the claimed congruence for the selected dependent type theory. Every varying input in its telescope is required to be related by a *term* equality of the form `Gamma |- sigma(x_i) == tau(x_i) : A_i[...]`. A type former such as Pi-F or Sigma-F instead takes a type judgment and a type judgment in an extended context as premises. Given `Gamma |- A == A' type`, that type equality cannot instantiate the schema's term-equality premise unless `A` and `A'` are separately terms of one displayed universe; the calculus permits well-formed types without such a universe-membership premise, and no rule turns type equality into universe-typed term equality. Thus the schema has no stated instantiation deriving dependent-product or dependent-sum type congruence from type equalities. Its final transport sentence does not repair this: Subst transports an already derivable judgment and Conv changes the type of a term using an already available type equality; neither generates the missing equality between the sigma- and tau-substituted dependent premise types. The sheet therefore still asserts at line 4 that judgmental equality is a congruence without exactly defining that congruence at the type-former and binder cases.
+- exact correction: Retain the now-typed computation rules. Replace line 17 by either (i) explicit typed congruence rules for Pi, Sigma, Id, lambda, application, pairing, projections, refl, and J, including the required equalities in extended contexts and every dependent transport, or (ii) a genuinely multi-sorted schema over context, type, and term judgments that defines how an equality premise is formed for each premise judgment in a rule and proves the transported conclusion well formed. A telescope containing only term-equality premises is not sufficient.
+
+### F8
+
+- reply: still-open
+- current location: `handbook/registry/calculi/omega-arithmetic.tex:4-13`; `handbook/parts/p07/arithmetic-proof-theory-supplement.tex:326-391`
+- source check: Jäger and Probst's primary paper, [*Variation on a Theme of Schütte*, pp. 2-4](https://home.inf.unibe.ch/ltg/publications/2004/jp04b.pdf) ([DOI](https://doi.org/10.1002/malq.200310097)), was checked directly. Its calculus uses finite disjunctive sets of semi-closed arithmetic formulas, its two axiom schemas and six displayed inference rules agree with sheet lines 6-13, and its Definition 1 quantifies over every ordinal `alpha`, natural `n`, and finite such sequent, requiring each premise height `alpha_i < alpha` and each cut rank `< n`. Its Theorem 2 concludes cut-free derivability at `2(n,alpha)`, with `2(0,alpha)=alpha` and `2(n+1,alpha)=2^(2(n,alpha))`. Body lines 347-383 reproduce that rank, indexed relation, eliminable notational renaming `2_n(alpha)`, domain, quantifiers, strict cut-rank bound, and conclusion correctly. The former local fundamental-sequence/rank-height residual is therefore fixed and source evidence is sufficient.
+- residual: The calculus identity at sheet line 4 nevertheless gives the wrong syntactic domain when it says that “number terms contain symbols for every primitive-recursive numerical function and relation.” In the source, the *language* contains function and relation symbols; number terms are built using function symbols, whereas relation symbols form literals `R(t_1,...,t_k)`. A relation symbol is not a constituent of a number term. The body states the language correctly at lines 327-331, so the sheet and body are internally inconsistent at the exact point that purports to identify the calculus.
+- exact correction: In sheet line 4, replace the term clause by an exact language clause: the language has function symbols for all primitive-recursive numerical functions and relation symbols for all primitive-recursive numerical relations; number terms are generated from number variables, `0`, `S`, and the function symbols, while relation symbols occur in literals. No change is required to rules 6-13, the indexed derivability definition, `2_n(alpha)`, or the cited Theorem 2 formula.
+
+## Round disposition
+
+- accept-fixed: none.
+- still-open: F6 (multi-sorted dependent congruence), F8 (number-term/relation-symbol domain sentence only).
+- needs-evidence: none.
+
+This final focused round inspected only F6 and F8 and made no manuscript or control-file edits.

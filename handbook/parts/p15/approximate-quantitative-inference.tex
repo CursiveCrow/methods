@@ -1,0 +1,537 @@
+% ED26-SCI-Mahajan2014-002; selected Mahajan 2014 Sections 6.1--6.4, 8.1--8.4.
+\chapter{Approximate Quantitative Inference}
+\label{sec:p15-approximate-quantitative-inference}
+
+An approximation is useful when it preserves the conclusion that matters.
+Estimating a quantity within ten percent can settle a factor-of-two comparison
+and still fail to settle its sign after subtraction from a nearby threshold.
+This chapter develops Mahajan's methods of logarithmic rounding, characteristic
+values, shape lumping and easy cases
+\cite[Secs.~6.1--6.4, 8.1--8.4]{Mahajan2014Insight}.
+The examples retain their model assumptions. Additional remainder and decision
+bounds are proved here; they are not attributed as the source's theorems.
+Dimensionless formulation and scaling are treated in
+\cref{sec:p15-dimensional-and-scaling-inference}.
+
+\section{State the relation before using the number}
+
+\begin{hbdefinition}{def:p15-approximation-relations}{Four different approximation claims}
+An \emph{identity} \(f(x)=g(x)\) asserts equality throughout a declared domain.
+A \emph{bound} specifies an inequality, such as
+\(|f(x)-g(x)|\leq E(x)\), throughout that domain.
+For a parameter \(\varepsilon\to0^+\), with all other variables fixed,
+\(f\sim g\) means \(f/g\to1\), where \(g\) is eventually nonzero.
+The assertion \(f=g+O(h)\) means that some constants \(C,\varepsilon_0>0\)
+satisfy \(|f-g|\leq C|h|\) for \(0<\varepsilon<\varepsilon_0\).
+It does not supply numerical values for those constants.
+
+A \emph{heuristic estimate} replaces a process or parameter by a convenient
+model value without supplying such a guarantee. Mahajan also uses a single
+approximation sign for quantities of comparable scale. Here write
+\(f\approx_{\mathrm{est}}g\) for that use, reserving \(\sim\) for ratio limits.
+Positive quantities satisfy a stated \emph{factor bound} \(K\geq1\) when
+\(K^{-1}\leq f/g\leq K\). Numerical rounding error, model error and statistical
+uncertainty are separate contributions; one does not bound another.
+\index{approximation!meaning}\index{asymptotic equivalence}\index{lumping}
+\end{hbdefinition}
+
+For example, \cref{thm:p15-stirling-with-remainder} gives an explicit finite
+remainder as well as Stirling's asymptotic relation. The uniform assumptions
+in \cref{thm:p15-laplace-relative-error} must be checked before applying
+that particular theorem. Neither result permits an arbitrary finite input to be
+declared accurate merely because a limiting approximation exists.
+
+\begin{hbtheorem}{thm:p15-approximation-certificates}{proved=annex:p15.approximation.certificates}{A bound that preserves a decision}
+Suppose \(L\leq f\leq U\). Then \(L>c\) certifies \(f>c\), and \(U<c\)
+certifies \(f<c\). If \(c\in[L,U]\), this interval alone certifies neither
+strict comparison. If \(|f-\widehat f|\leq E_f\) and
+\(|g-\widehat g|\leq E_g\), then
+\[
+ |(f-g)-(\widehat f-\widehat g)|\leq E_f+E_g.
+\]
+Thus \(\widehat f-\widehat g>E_f+E_g\) certifies \(f>g\).
+If \(|\widehat f|>E_f\), the relative-error bound is
+\(E_f/(|\widehat f|-E_f)\). No relative error is defined at a zero target.
+\end{hbtheorem}
+
+\section{Rounding on a logarithmic scale}
+
+\begin{hbdefinition}{def:p15-approximation-log-round}{Logarithmic rounding}
+For \(x>0\), base \(b>1\) and exponent spacing \(h>0\), choose an integer
+\(j\) nearest to \(\log_b(x)/h\), resolving an exact tie by either fixed rule,
+and set \(Q_h(x)=b^{hj}\). This rounds ratios rather than differences.
+The boundary between consecutive representatives is their geometric mean.
+The base and exponent act on a numerical value in stated units; a logarithm
+of a physical quantity requires division by a reference quantity of the same
+dimension.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p15-approximation-log-bound}{proved=annex:p15.approximation.log-bound}{Exact factor budget for logarithmic rounding}
+The rounding satisfies
+\[
+ b^{-h/2}\leq Q_h(x)/x\leq b^{h/2}.
+\]
+For positive inputs \(x_i\) and fixed real powers \(a_i\),
+\[
+ b^{-\frac h2\sum_i|a_i|}
+ \leq\frac{\prod_i Q_h(x_i)^{a_i}}{\prod_i x_i^{a_i}}
+ \leq b^{\frac h2\sum_i|a_i|}.
+\]
+No independence of the rounding errors is assumed. In particular, rounding
+each factor independently does not guarantee cancellation of their errors.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p15-approximation-calendar}{Minutes, seconds and a mnemonic}
+Nearest integral powers of ten replace \(24\) by \(10\) and \(60\) by
+\(100\). Their product estimates the \(1440\) minutes in a 24-hour day by
+\(1000\), an error of \(440/1440=11/36\) of the exact target.
+The rounding boundary between \(10\) and \(100\) is \(\sqrt{1000}\), not
+their arithmetic midpoint \(55\).
+
+Using half powers instead gives
+\(365\mapsto10^{2.5}\), \(24\mapsto10^{1.5}\), and
+\(3600\mapsto10^{3.5}\). Hence a stipulated 365-day year is estimated by
+\(10^{7.5}\) seconds, compared with its exact \(31\,536\,000\) seconds.
+The convenient mnemonic \(\pi\times10^7\) is a further numerical
+approximation, about \(0.381\) percent low. Its \(\pi\) comes from the
+chosen mnemonic and units, not from a proof about circular or elliptical
+orbits. With the source's circular-orbit model and radius
+\(1.5\times10^{11}\,\mathrm m\), the speed estimate
+\(2\pi r/(\pi10^7\,\mathrm s)=3\times10^4\,\mathrm{m/s}\) follows.
+\end{hbexample}
+
+Mahajan motivates this method with historical multiplication-estimation
+responses and approximate visual discrimination. Those examples motivate
+a reasoning exercise; they do not establish a universal perceptual threshold
+or prove that less accurate arithmetic improves every decision.
+
+\section{What a characteristic value retains}
+
+\begin{hbtheorem}{thm:p15-approximation-lumping}{proved=annex:p15.approximation.lumping}{Linear lumping and its nonlinear remainder}
+Let \(w_i\geq0\), \(\sum_iw_i=1\), and \(\mu=\sum_iw_ix_i\).
+For an affine function \(a+bx\), replacing the inputs by \(\mu\) preserves
+their weighted output exactly. If \(f\) is twice continuously differentiable
+on an interval containing the \(x_i\) and \(\mu\), with \(|f''|\leq M\),
+then
+\[
+ \left|\sum_iw_if(x_i)-f(\mu)\right|
+ \leq\frac M2\sum_iw_i(x_i-\mu)^2.
+\]
+For the square function the discrepancy is exactly
+\(\sum_iw_ix_i^2-\mu^2=\sum_iw_i(x_i-\mu)^2\).
+\end{hbtheorem}
+
+\begin{hbexample}{def:p15-approximation-populations}{Representative regions and rectangular age profiles}
+Mahajan's historical example replaces 50 unequal state populations by
+\(6\) million each, giving \(300\) million, and compares it with the
+reported 2012 population of \(314\) million. The exact identity is
+\(\sum_i n_i=50\overline n\); selecting one familiar state as the average
+is the heuristic step. If \(|n_i-n_*|\leq d_i\), the total error is at most
+\(\sum_i d_i\). A uniformly sampled state gives an unbiased total estimate,
+but that does not make one realized estimate accurate.
+
+The source also replaces an age-density curve by a rectangle of area
+\(N=300\) million and width \(L=75\) years. Its height is
+\(N/L=4\) million per year. Four age years and a stipulated participation
+fraction \(q=1/2\) give \(q(4N/L)=8\) million students. This is a
+steady-population and participation model, not a census identity. Birth-rate
+changes, mortality, migration, study duration and older students can all
+change its result.
+
+With the source's separate 1950 UK inputs, \(N=50\) million and \(L=65\)
+years, the same participation assumption predicts approximately
+\(385\,000\) graduates per year. A reported \(17\,000\) would instead
+require \(q\approx0.0221\) within this particular rectangular model.
+Participation percentages with another denominator cannot be substituted
+into that inversion without changing the model.
+\end{hbexample}
+
+\begin{hbtheorem}{thm:p15-approximation-energy-average}{proved=annex:p15.approximation.energy-average}{The energy lost by replacing velocities by one velocity}
+For masses \(m_i>0\), velocities \(v_i\), total mass \(M_0=\sum_i m_i\)
+and common final velocity \(\overline v=\sum_i m_iv_i/M_0\),
+\[
+ \frac12\sum_i m_iv_i^2-\frac12M_0\overline v^2
+ =\frac12\sum_i m_i(v_i-\overline v)^2\geq0.
+\]
+Equality holds exactly when every velocity is the same. Thus equalizing
+velocities conserves momentum but generally does not conserve kinetic energy.
+\end{hbtheorem}
+
+The source's two unit-mass slabs at velocities \(6\) and \(4\) end at
+\(5\), with kinetic energy falling from \(26\) to \(25\). A physical model
+that converts this difference into heat needs a dissipative mechanism; the
+algebra identifies the available energy difference.
+
+\begin{hbexample}{def:p15-approximation-jumps}{A conditional size-independent jump height}
+Let \(m\) be body mass, \(\alpha m\) active muscle mass, \(e\) supplied
+energy per muscle mass, and \(\eta\) the fraction converted into upward
+gravitational potential energy. For a standing jump with no other energy
+input and no accounted drag loss, the model balance is
+\[
+ mgh=\eta\alpha m e,\qquad h=\eta\alpha e/g.
+\]
+Mass cancels only while \(\eta,\alpha,e,g\) are held fixed. The source's
+four reported examples are a \(0.5\)-mg flea reaching \(20\) cm, a
+\(40\)-mg click beetle reaching \(30\) cm, a \(3\)-g locust reaching
+\(59\) cm, and a \(70\)-kg human reaching \(60\) cm. This small historical set illustrates
+a scaling hypothesis; it is not a proof that all animals share these parameters.
+For geometrically similar jumpers, fixed target height and approximately
+quadratic drag, drag work divided by \(mgh\) scales as area/mass,
+approximately the inverse linear size. It can therefore become important
+at the small-size end where the initial model omits it.
+\end{hbexample}
+
+\begin{hbtheorem}{thm:p15-approximation-oscillators}{proved=annex:p15.approximation.oscillators}{Characteristic times with a specified equation}
+The model \(m\ddot x+kx=0\), with \(m,k>0\), has nonconstant periodic
+solutions of period \(2\pi\sqrt{m/k}\), independent of amplitude.
+More generally, for the restoring force
+\(m\ddot x=-k|x|^{n-1}x\), with \(n>0\) and force defined as zero at
+\(x=0\), a motion of amplitude \(A>0\)
+has period
+\[
+ T(A)=4\sqrt{\frac{m(n+1)}{2k}}\,
+ A^{(1-n)/2}\int_0^1\frac{du}{\sqrt{1-u^{n+1}}}.
+\]
+The integral is finite. The characteristic-time estimate retains the power
+\(A^{(1-n)/2}\); it does not determine the prefactor by dimensional
+cancellation alone.
+\end{hbtheorem}
+
+For a small-angle ideal pendulum, the linearized equation is
+\(\ddot\theta+(g/l)\theta=0\), giving \(2\pi\sqrt{l/g}\) within that
+model. Large angles require a different approximation check. Likewise,
+replacing a derivative by characteristic change divided by characteristic
+time is a scale estimate. In uniform circular motion it must use the
+velocity vector, not the constant speed: differentiation of
+\(r(\cos\omega t,\sin\omega t)\) gives acceleration magnitude
+\(r\omega^2=v^2/r\).
+
+\section{Lumping a shape or a changing process}
+
+\begin{hbtheorem}{thm:p15-approximation-rectangle}{proved=annex:p15.approximation.rectangle}{An error budget for replacing a graph by a rectangle}
+On an interval \(I\) of finite length \(L\), if \(f\) is integrable and
+\(|f(t)-c|\leq d\), then
+\[
+ \left|\int_I f(t)\,dt-cL\right|\leq dL.
+\]
+For an integrable function on a larger domain, an omitted region contributes
+at most its integral of \(|f|\). If \(f\) is Lipschitz with constant \(K\)
+on \([t_0-L/2,t_0+L/2]\), using height \(f(t_0)\) gives error at most
+\(KL^2/4\). A peak height and a guessed width without these bounds give
+a heuristic rectangle, not a certified integral.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p15-approximation-shape-models}{Cells, molecular paths and a localized field}
+Approximating an atom by a cube of side \(a\) gives the cell model
+\(\rho=A m_p/a^3\). Mahajan uses \(a\approx3\) angstroms and
+\(m_pN_A\approx1\,\mathrm{g/mol}\), obtaining roughly
+\(\rho\approx_{\mathrm{est}}A/18\,\mathrm{g/cm^3}\).
+If the true spacing is a factor \(s\) times the assumed spacing, the density
+changes by \(s^{-3}\); a density discrepancy of \(2.5\) corresponds to a
+spacing smaller by \(2.5^{1/3}\). Molecular composition, packing and voids
+must be included before treating this as a material-specific prediction.
+
+For a moving sphere of radius \(r\) among fixed point centers of number
+density \(n\), the swept-tube estimate uses area \(\sigma=\pi r^2\) and
+\(n\sigma\lambda\approx_{\mathrm{est}}1\). Equal-radius targets replace
+\(\sigma\) by \(\pi(2r)^2\). Under the additional model that centers form
+a homogeneous Poisson process, the no-collision probability over distance
+\(s\) is \(e^{-n\sigma s}\), and its integral gives the exact model mean
+\(\lambda=1/(n\sigma)\). Moving correlated molecules require another model.
+The source's \(22\)-liter molar volume and \(3\)-angstrom diameter give an
+order-of-magnitude path of \(10^{-7}\,\mathrm m\).
+
+A localized weak-deflection estimate takes acceleration scale \(GM/b^2\)
+and traversal time \(b/c\), giving a transverse-speed scale \(GM/(bc)\)
+and angle scale \(GM/(bc^2)\). The omitted integral and the gravitational
+model determine the coefficient. Extrapolating this weak-angle estimate to
+order-one deflection does not prove capture or the existence of an event
+horizon. It signals that the weak-deflection approximation needs replacement.
+\end{hbexample}
+
+For a generic impulsive energy release into a uniform medium, the source's
+characteristic-value argument uses energy density scale \(E/R^3\), speed
+scale \((E/(\rho R^3))^{1/2}\), and \(R/t\) of comparable size. Its
+consequence is the scaling \(E\approx_{\mathrm{est}}\rho R^5/t^2\).
+It concerns a stipulated self-similar strong-shock regime; a numerical
+coefficient, energy losses, background pressure and departures from that
+regime are not determined by the scaling argument.
+
+\begin{hbtheorem}{thm:p15-approximation-fall}{proved=annex:p15.approximation.fall}{A check on the terminal-speed approximation}
+In the model \(\dot v=g(1-v^2/V^2)\), \(v(0)=0\), with \(g,V>0\),
+\[
+ v(t)=V\tanh(gt/V),\qquad
+ s(t)=\frac{V^2}{g}\log\cosh(gt/V).
+\]
+For \(t\geq0\),
+\[
+ 0\leq Vt-s(t)\leq\frac{V^2}{g}\log2,\qquad
+ 0\leq1-v(t)/V\leq2e^{-2gt/V}.
+\]
+At a prescribed distance \(s\),
+\(v/V=\sqrt{1-e^{-2gs/V^2}}\).
+\end{hbtheorem}
+
+The source's lumped cone model uses \(V=1\,\mathrm{m/s}\) and
+\(g=10\,\mathrm{m/s^2}\). Its free-fall-to-terminal corner occurs at
+\(0.1\) s and \(5\) cm. The quadratic-drag model instead gives speed
+fraction \(\tanh1\approx0.762\) at \(0.1\) s, and
+\(\sqrt{1-e^{-1}}\approx0.795\) at \(5\) cm. Thus ``a substantial fraction''
+is meaningful here; exact arrival at terminal speed takes no finite time.
+Over \(2\) s the constant-terminal distance error is at most about
+\(6.94\) cm in this model.
+
+\begin{hbexample}{def:p15-approximation-contact}{A localized elastic contact model}
+For a sphere of radius \(R\), small indentation \(\delta\) and contact
+radius \(r\), the geometry gives \(r^2=2R\delta-\delta^2\).
+When \(\delta/R\ll1\), this gives \(\delta\approx r^2/(2R)\).
+The source's lumped strain region has depth comparable to \(r\), not \(R\);
+stress scale \(Y\delta/r\) acting over area scale \(r^2\) gives restoring
+force scale \(Yr^3/R\). Balancing a weight scale \(\rho gR^3\) yields
+\[
+ r/R\approx_{\mathrm{est}}(\rho gR/Y)^{1/3}.
+\]
+The result is self-consistent only when this ratio is small, the response
+is elastic and the localized strain model applies. The source's rubber-ball
+values \(R=10^{-2}\,\mathrm m\), \(\rho=10^3\,\mathrm{kg/m^3}\),
+\(Y=3\times10^7\,\mathrm{Pa}\) give a contact-radius scale near
+\(10^{-4}\,\mathrm m\). This estimate has no certified material error bar.
+Using a specified contact law supplies the omitted coefficient and a
+testable validity condition.
+\end{hbexample}
+
+\section{Easy cases reject formulas; they do not prove them}
+
+\begin{hbtheorem}{thm:p15-approximation-easy-cases}{proved=annex:p15.approximation.easy-cases}{Finite checks and matching limits are insufficient}
+A finite collection of values on an interval containing other points does
+not determine a function without a restricting model class. A candidate \(f\) can be changed to
+\(f+c\prod_i(x-x_i)^2\), preserving every checked value \(x_i\).
+Likewise, for any \(c>0\),
+\[
+ g_c(x)=\frac1{1+x}\left(1+\frac{cx}{(1+x)^2}\right),\quad x\geq0,
+\]
+satisfies \(g_c(0)=1\) and \(g_c(x)\sim1/x\) as \(x\to\infty\), yet
+\(g_c(1)=(1+c/4)/2\). Matching both limiting regimes supplies no uniform
+accuracy guarantee in the transition.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p15-approximation-counting-cases}{proved=annex:p15.approximation.counting-cases}{Two exact counting checks}
+Inclusive integer indices \(m_1\leq m_2\) number \(m_2-m_1+1\).
+For integers \(d\geq1,n\geq0\), with \(n\) independent uniform
+assignments to \(d\) possible birthdays,
+\[
+ P(\text{some match})=1-\prod_{j=0}^{n-1}(1-j/d),\quad 0\leq n\leq d,
+\]
+with empty product one; for \(n>d\), a match is certain.
+\end{hbtheorem}
+
+The source's hypothetical \$500 divided among August through December
+therefore gives \$100 per month. December alone exposes the erroneous
+denominator \(m_2-m_1\). Similarly, one person's match probability is zero,
+which rejects the birthday product with one extra factor. The counting
+derivation, rather than that one check alone, proves the surviving formula.
+
+\begin{hbtheorem}{thm:p15-approximation-mechanical-cases}{proved=annex:p15.approximation.mechanical-cases}{Models that determine the missing functions}
+Under the models specified below, with \(g>0\) and launch speed \(v\geq0\):
+\begin{enumerate}
+\item An ellipse with semiaxes \(a,b>0\) has area \(\pi ab\).
+\item An ideal Atwood machine with masses \(m_1,m_2>0\), massless
+inextensible string and massless frictionless pulley has downward
+acceleration of mass 1 and string tension
+\[
+ a=g\frac{m_1-m_2}{m_1+m_2},\qquad
+ T=\frac{2gm_1m_2}{m_1+m_2}.
+\]
+\item A projectile launched and received at the same height in constant
+gravity, without drag, has horizontal range
+\(R=2v^2\sin\theta\cos\theta/g\), for \(0\leq\theta\leq\pi/2\).
+\item A rigid body rolling without slipping with fixed rolling radius
+\(r>0\), mass \(m>0\), moment of inertia \(I\geq0\) and adequate static
+friction has acceleration
+\(a=g\sin\theta/(1+I/(mr^2))\) down a fixed incline.
+\end{enumerate}
+Each formula needs the corresponding geometry or dynamical equations;
+symmetry and limiting checks alone do not determine it.
+\end{hbtheorem}
+
+The Atwood parameter \((m_1-m_2)/(m_1+m_2)\) changes sign under exchange of
+the masses, just as the signed acceleration does. In the rolling example,
+\(I/(mr^2)\) can exceed one when a narrow axle carries distant masses:
+\(r\) is the rolling radius, not the largest radius of the object. A disc
+and ring with the usual mass distributions have parameters \(1/2\) and
+\(1\); their accelerations are respectively \(2g\sin\theta/3\) and
+\(g\sin\theta/2\).
+
+\section{Dominance, competition and the transition region}
+
+\begin{hbtheorem}{thm:p15-approximation-dominance}{proved=annex:p15.approximation.dominance}{A quantitative dominant-term criterion}
+For \(A,B>0\), let \(M=\max(A,B)\), \(m=\min(A,B)\), and \(r=m/M\).
+Then \(M\leq A+B\leq2M\), and using \(M\) has relative error
+\(r/(1+r)\) against the true sum. Separately, for real \(A,B\) with
+\(A\ne0\), \(|B|\leq r|A|\) and \(0\leq r<1\),
+then omitting \(B\) from \(A+B\) has relative error at most \(r/(1-r)\).
+The denominator records the danger of cancellation.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p15-approximation-drag}{Choose a drag regime and check it afterward}
+Let \(\nu\) be kinematic viscosity, \(\rho\) fluid density, \(r\) sphere
+radius and \(v\) relative speed. The diameter-based Reynolds number is
+\(\mathrm{Re}=2rv/\nu\). Under the stipulated creeping-flow sphere law
+\(F_d=6\pi\rho\nu rv\), its drag coefficient in
+\(F_d=\tfrac12\rho\pi r^2v^2C_d\) is \(C_d=24/\mathrm{Re}\).
+The source contrasts this with an approximately constant high-Reynolds
+coefficient. The latter is a regime-dependent empirical model; taking
+viscosity literally to zero is not a proof of its value or of a uniform
+inviscid limit. The source's illustrative high-Reynolds coefficients are
+about \(0.4\) for a car, \(0.5\) for a sphere, \(1\) for a cylinder and
+\(2\) for a transverse flat plate. They are not shape-independent constants.
+Its sphere example also identifies a marked coefficient change near
+Reynolds number \(3\times10^5\), so an approximately constant region
+must not be extrapolated through every later transition.
+
+For a dense falling sphere, neglecting buoyancy gives the creeping-flow
+terminal-speed candidate \(v=2\rho_sgr^2/(9\rho\nu)\).
+Substitute this result into \(2rv/\nu\). If that value is not small, the
+calculation has contradicted its own premise. Using illustrative air values
+\(\rho=1.2\), \(\nu=1.5\times10^{-5}\) in SI units and
+\(\rho_s=1000\), a \(10\)-micrometer radius gives about
+\(0.012\,\mathrm{m/s}\) and \(\mathrm{Re}\approx0.016\).
+A \(2.5\)-millimeter radius gives a creeping-flow candidate hundreds of
+meters per second and a Reynolds number above \(10^5\), decisively failing
+the premise. The contradiction selects further modeling work, not that
+unphysical speed as a prediction.
+\end{hbexample}
+
+\begin{hbtheorem}{thm:p15-approximation-competing-energies}{proved=annex:p15.approximation.competing-energies}{Balancing scales and locating an actual minimum}
+For \(A,B>0\), the stipulated energy \(E(r)=A/r^2-B/r\), \(r>0\), has
+unique minimum at \(r_0=2A/B\), with \(E_0=-B^2/(4A)\).
+Equating the magnitudes of its two terms instead gives \(A/B\); it
+predicts the scale, not the exact minimizer.
+At energy \(E_0+\Delta\), \(0<\Delta<|E_0|\), the two turning radii have
+midpoint
+\[
+ \frac{r_-+r_+}{2}=\frac{r_0}{1-\Delta/|E_0|}>r_0.
+\]
+This midpoint is not by definition a time average or a thermal expectation.
+\end{hbtheorem}
+
+The source uses competition between confinement and attraction to estimate
+an atomic size, and a skew potential to explain a tendency toward thermal
+expansion. The theorem gives a precise version for one stipulated potential.
+An actual thermal expansion coefficient also depends on the potential,
+statistical distribution, constraints and phase; a sketch of asymmetric
+turning points does not prove a universal positive coefficient.
+
+The atmospheric example compares \(mgH\) with \(k_BT\). In the ideal,
+isothermal, constant-gravity model, hydrostatic balance
+\(dP/dz=-\rho g\), with \(P=nk_BT\) and \(\rho=mn\), gives
+\(n(z)=n(0)e^{-z/H}\), \(H=k_BT/(mg)\). This is a scale height, not a
+sharp top of the atmosphere. The stellar example instead estimates
+\(k_BT\approx_{\mathrm{est}}GMm_p/R\), giving a temperature scale near
+\(2\times10^7\) K with the source's solar constants. A stellar temperature
+profile, composition, hydrostatic structure and stability are additional
+model information; this scale balance does not establish a supernova
+criterion or a quantitative nuclear reaction rate.
+
+\section{Two-parameter regimes and a controlled approximation}
+
+\begin{hbdefinition}{def:p15-approximation-water-model}{The linear surface-wave model}
+Consider a homogeneous incompressible, inviscid, irrotational fluid of depth
+\(h>0\), density \(\rho>0\), surface tension \(\gamma\geq0\) and gravity
+\(g>0\). The undisturbed surface is \(z=0\) and flat bottom \(z=-h\).
+For small-amplitude waves, the velocity potential satisfies
+\(\phi_{xx}+\phi_{zz}=0\), \(\phi_z=0\) at the bottom, and the linear
+surface conditions
+\[
+ \eta_t=\phi_z,\qquad
+ \phi_t+g\eta-(\gamma/\rho)\eta_{xx}=0\quad(z=0).
+\]
+These are the stipulated linear model equations. They omit viscosity,
+background flow, finite-amplitude breaking and nonflat boundaries.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p15-approximation-water-regimes}{proved=annex:p15.approximation.water-regimes}{The source's four corners and their error factors}
+For a nonzero sinusoidal traveling mode of angular wavenumber
+\(k=2\pi/\lambda>0\), this model's squared phase speed is
+\[
+ c^2=\left(\frac gk+\frac{\gamma k}{\rho}\right)\tanh(kh).
+\]
+Writing \(\ell=1/k=\lambda/(2\pi)\), the gravity/capillary and shallow/deep corners are
+\[
+\begin{array}{c|cc}
+ &\text{gravity dominant}&\text{capillarity dominant}\\\hline
+ kh\ll1&gh&\gamma h/(\rho\ell^2)\\
+ kh\gg1&g\ell&\gamma/(\rho\ell)
+\end{array}
+\]
+for \(c^2\). These are limiting forms, not exact equalities in a finite
+corner. For \(t>0\),
+\[
+ 0\leq1-\frac{\tanh t}{t}\leq\frac{t^2}{3},\qquad
+ 0\leq1-\tanh t\leq2e^{-2t}.
+\]
+If the omitted restoring term is at most \(\delta\) times the retained
+one and the depth-factor relative error is at most \(\epsilon\), the
+ratio of exact squared speed to its corner expression differs from one
+by at most \(\delta+\epsilon+\delta\epsilon\).
+\end{hbtheorem}
+
+The source's nine-region diagram combines the four corners with formulas
+retaining one or both effects. The complete expression above determines
+those intervening regions within the stated linear model. Its presence is
+essential: simply drawing a smooth connection between correct corners does
+not prove the intervening values.
+
+A conceptual map of classical, relativistic and quantum models likewise
+needs dimensionless regime parameters. For selected speed \(v\) and action
+scale \(S\), useful ratios are \(v/c\) and \(\hbar/S\). Relativistic
+quantum theory, including quantum electrodynamics for electromagnetic
+interactions, occupies the region where neither classical simplification
+has been justified. These ratios organize modeling questions; they do not
+prove a uniform classical limit for every observable, state or interaction.
+Limits must state the quantities held fixed.
+
+\begin{hbtheorem}{thm:p15-approximation-rational}{proved=annex:p15.approximation.rational}{A finite remainder and a threshold reversal}
+For \(0\leq x<1\),
+\[
+ \frac1{1-x}=1+x+\frac{x^2}{1-x}.
+\]
+For \(0\leq x\leq1/2\),
+\[
+ 1+x\leq\frac1{1-x}\leq1+x+2x^2.
+\]
+Thus a threshold outside that interval is decided by the corresponding
+strict inequality. At \(x=0.9\), the first-order approximation is \(1.9\)
+while the exact value is \(10\): comparison with \(5\) reverses.
+Even at \(x=0.1\), comparing \(1+x\) with \(1.105\) gives the wrong
+strict ordering of the exact function; the omitted remainder exceeds the
+comparison margin.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p15-approximation-nonuniform}{proved=annex:p15.approximation.nonuniform}{Pointwise accuracy can fail in a moving regime}
+For \(0<\varepsilon\leq1\), \(0<t\leq1\), let
+\(f_\varepsilon(t)=t/(t+\varepsilon)\).
+For every fixed \(t>0\), \(f_\varepsilon(t)\to1\) as
+\(\varepsilon\to0^+\). Nevertheless,
+\[
+ \sup_{0<t\leq1}|f_\varepsilon(t)-1|=1,
+ \qquad f_\varepsilon(\varepsilon)=\tfrac12.
+\]
+If instead \(t\geq t_0>0\), the uniform error is at most
+\(\varepsilon/(t_0+\varepsilon)\). The domain restriction supplies the
+uniform guarantee absent from the pointwise assertion.
+\end{hbtheorem}
+
+\begin{hbmethod}{def:p15-approximation-procedure}{A conclusion-directed approximation procedure}
+Specify the target, units and decision threshold. Identify the exact model
+and the dimensionless parameters controlling its regimes. Select the
+rounding, characteristic-value, shape or limiting approximation and state
+which relation in \cref{def:p15-approximation-relations} it establishes.
+Track retained and omitted terms, including nonlinear effects of lumping.
+Check the chosen regime using the resulting estimate. Obtain an error
+interval when the decision needs one, and compare its margin with the
+threshold. If the interval overlaps the threshold, improve the approximation
+or retain the unresolved comparison. Correct easy cases can reject a bad
+formula; proof, measurement or a justified error bound must supply what
+those checks leave undetermined.
+\end{hbmethod}

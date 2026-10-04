@@ -1,0 +1,548 @@
+%% ED26-SCI-SaltelliAnnoni2010-001.
+\chapter{Global Sensitivity and Robustness}
+\label{sec:p15-global-sensitivity}
+
+A model can be insensitive along the particular changes that were tried
+and still change substantially when inputs vary together.
+Sensitivity analysis must specify the output, the allowable inputs,
+their joint distribution when probabilities are used, and the conclusion
+being assessed. This entry reconstructs the argument and method choices
+of Saltelli and Annoni \cite{SaltelliAnnoni2010Sensitivity}.
+The variance decompositions and computation identities are derived below
+from the conditional-expectation and product-measure foundations.
+\index{sensitivity analysis!global}\index{one-at-a-time analysis}
+\index{variance-based sensitivity}\index{robustness!model-based inference}
+
+\section{The question and its domain}
+
+\begin{hbdefinition}{def:p15-global-model}{Model, uncertainty law and target}
+Let \(d\geq1\) be an integer, let \(\mathcal X\subseteq\mathbb R^d\)
+be a Borel input domain with its trace sigma-algebra, and let
+\(f:\mathcal X\to\mathbb R\) be a measurable
+deterministic model output. When uncertainty is probabilistic, specify
+a joint law \(P\) of \(X=(X_1,\ldots,X_d)\) supported on \(\mathcal X\)
+and set \(Y=f(X)\). A baseline \(b\in\mathcal X\) is one input vector.
+
+An uncertainty analysis concerns the distribution of \(Y\), such as
+its variance, quantiles or probability of exceeding a threshold.
+A sensitivity analysis attributes variation, or tests a conclusion,
+relative to specified changes of inputs or assumptions.
+A local derivative \(\partial_i f(b)\) concerns infinitesimal variation
+at one point. A finite change \(f(b+he_i)-f(b)\) concerns a particular
+coordinate segment. Neither object alone specifies the distribution
+of the output over \(\mathcal X\).
+
+A robustness claim additionally names its conclusion and alternatives:
+for example, \(f(x)\leq c\) throughout a stated set, or a ranking that
+persists over a stated family of input laws and model variants.
+The range, law, dependence assumptions, output transformation and
+threshold are part of the claim.
+\end{hbdefinition}
+
+Independent continuous input laws can be generated from independent
+uniform coordinates by their quantile functions. Generalized quantiles
+also accommodate atoms. Use interior probabilities where an endpoint
+quantile is infinite. Under dependence, separate marginal transforms
+do not define the joint law; a design must preserve the declared joint
+distribution and feasibility constraints.
+The measure used to weight an input region is distinct from its ordinary
+geometric volume.
+
+\section{What one-at-a-time exploration can establish}
+
+\begin{hbdefinition}{def:p15-global-oat}{A fixed-baseline OAT design}
+At baseline \(b\), a one-at-a-time design evaluates points for which
+at most one coordinate differs from \(b\).
+Its complete coordinate-line set is
+\[
+ A_b=\bigcup_{i=1}^d
+ \{x\in\mathcal X:x_j=b_j\text{ for every }j\ne i\}.
+\]
+A finite OAT design uses a subset of this set.
+An exact nonzero output difference establishes dependence along that
+specific coordinate change. A zero difference does not establish
+global irrelevance. With noisy or numerically inaccurate evaluations,
+even the interpretation of a nonzero observed difference requires
+an error analysis.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p15-global-oat-obstruction}
+ {proved=annex:p15.global.oat-obstruction}{Coordinate lines do not identify interaction}
+For \(d\geq2\), on any rectangle with nonzero widths about \(b\), the
+functions
+\[
+ f_0(x)=0,\qquad f_C(x)=C(x_1-b_1)(x_2-b_2)
+\]
+agree on all of \(A_b\), for every real \(C\).
+Nevertheless \(f_C\) has nonzero values outside \(A_b\)
+when \(C\ne0\), and its magnitude at such points can be made arbitrarily large.
+Thus even complete knowledge of every fixed-baseline coordinate curve
+does not identify the global output of a general continuous model.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p15-global-ball-bound}
+ {proved=annex:p15.global.ball-bound}{The centered-cube geometry}
+In the normalized cube \([0,1]^d\) with baseline
+\(b=(1/2,\ldots,1/2)\), the OAT coordinate-line set is contained in the
+ball of radius \(1/2\) centered at \(b\).
+The ratio of that ball's volume to the cube's volume is
+\[
+ r_d=\frac{\pi^{d/2}}{2^d\Gamma(d/2+1)}.
+\]
+Here \(\Gamma(s)=\int_0^\infty t^{s-1}e^{-t}\,dt\), \(s>0\).
+In particular,
+\[
+ r_2=\frac{\pi}{4},\qquad r_3=\frac{\pi}{6},\qquad
+ r_{12}=\frac{\pi^6}{2^{12}720}\approx0.000326,
+ \qquad r_d\longrightarrow0.
+\]
+This is the volume of a containing region, not the volume actually
+sampled by OAT. For \(d\geq2\), \(A_b\) itself has zero \(d\)-dimensional
+Lebesgue measure.
+\end{hbtheorem}
+
+The centered-baseline condition is essential for this particular inscribed
+ball argument. An arbitrary nominal vector need not be the cube center.
+Moreover, every finite Monte Carlo design also has zero geometric volume.
+Its value comes from its sampling law and integration properties;
+zero sample volume by itself does not rank methods.
+The interaction obstruction above is an independent information argument.
+
+OAT remains useful for debugging a model near a known input, studying a
+specified local response, or checking a justified linear or additive
+representation. Its convenient common baseline also helps isolate a
+particular model failure. These uses do not turn coordinate changes into
+an unrestricted global analysis
+\cite[Sections 2--4]{SaltelliAnnoni2010Sensitivity}.
+
+\section{Three inexpensive alternatives}
+
+\begin{hbdefinition}{def:p15-global-factorial}{Two-level contrasts}
+Evaluate a model at every point of \(\{0,1\}^d\) after declaring the
+physical low and high level of each factor. Put \(z_i=2x_i-1\) and
+\(\chi_u(z)=\prod_{i\in u}z_i\), with \(\chi_\varnothing=1\).
+For the corner response \(h(z)\), define
+\[
+ \beta_u=2^{-d}\sum_{z\in\{-1,1\}^d}h(z)\chi_u(z).
+\]
+The main effect of factor \(i\) is the high-level average minus the
+low-level average. Under this convention it is \(2\beta_{\{i\}}\).
+The usual two-factor effect is half the difference of those conditional
+main effects, and is \(2\beta_{\{i,j\}}\).
+All averages include the remaining corner coordinates.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p15-global-factorial}
+ {proved=annex:p15.global.factorial}{Exact corner decomposition and its boundary}
+Every corner response has the unique expansion
+\[
+ h(z)=\sum_{u\subseteq\{1,\ldots,d\}}\beta_u\chi_u(z).
+\]
+The stated main and interaction effects follow from these coefficients.
+For \(d=3\), eight evaluations determine all eight coefficients.
+This determines the response on the corners only: the function
+\(\prod_i x_i(1-x_i)\) vanishes on all corners and is positive at the
+center. A saturated corner fit has no residual degrees of freedom for
+estimating an observation-noise variance without further information.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p15-global-regression}{Standardized linear sensitivity}
+Suppose \(Y,X_1,\ldots,X_d\) are square integrable, with
+\(V=\operatorname{Var}(Y)>0\) and
+\(\sigma_i^2=\operatorname{Var}(X_i)>0\).
+Set
+\[
+ W=\frac{Y-EY}{\sqrt V},\qquad
+ Z_i=\frac{X_i-EX_i}{\sigma_i}.
+\]
+Write \(Z=(Z_1,\ldots,Z_d)^\mathsf T\).
+A population least-squares linear approximation is
+\(\widehat W=b^\mathsf T Z\), with \(b\in\mathbb R^d\).
+Let \(\Sigma=E[ZZ^\mathsf T]\) and \(c=E[ZW]\).
+The explained fraction is
+\(R^2=1-E[(W-\widehat W)^2]\) at the minimizing coefficient vector.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p15-global-regression}
+ {proved=annex:p15.global.regression}{What squared regression coefficients measure}
+If \(\Sigma\) is positive definite, the unique minimizing coefficient
+vector is \(b=\Sigma^{-1}c\), and
+\[
+ R^2=b^\mathsf T\Sigma b=c^\mathsf T\Sigma^{-1}c.
+\]
+If the standardized inputs are uncorrelated, \(\Sigma=I\), hence
+\(b_i=E[Z_iW]\) and \(R^2=\sum_i b_i^2\).
+For an exactly linear additive model with independent inputs,
+\[
+ Y=a_0+\sum_i a_iX_i,\qquad
+ b_i=\frac{a_i\sigma_i}{\sqrt V},\qquad R^2=1.
+\]
+The same algebra holds for an empirical least-squares fit when
+standardization and covariance use the same empirical measure.
+Population independence does not make finite sample columns exactly
+orthogonal.
+\end{hbtheorem}
+
+A low \(R^2\) says that the chosen linear span leaves much output variation
+unexplained under the chosen measure. Curvature and interactions are
+possible causes; noise and omitted inputs are other causes when present.
+It is not a universally calibrated amount of nonlinearity.
+When the fit is poor, coefficient magnitudes describe that limited
+linear projection and cannot stand for complete global factor importance.
+With collinearity, individual coefficient rankings can fail to be uniquely
+defined even when the fitted response is unique
+\cite[Section 5.2]{SaltelliAnnoni2010Sensitivity}.
+
+\begin{hbmethod}{def:p15-global-elementary-effects}{Elementary effects across changing backgrounds}
+Normalize the declared independent input ranges or quantile coordinates
+to a feasible design region. Write \(g(u)\) for the model in those
+coordinates. For a feasible signed step \(\delta\ne0\), define
+\[
+ \operatorname{EE}_i(u;\delta)
+       =\frac{g(u+\delta e_i)-g(u)}{\delta}.
+\]
+Choose a baseline and an ordering of the factors, then move each factor
+once along a trajectory of \(d+1\) points. Repeat at \(r\) different
+backgrounds. A radial alternative makes one change per factor from each
+of \(r\) baselines. Independent random choice of trajectories can give
+independent replicates across trajectories; separation of points alone
+does not imply statistical independence.
+
+Report the signed mean, mean absolute effect and, for \(r\geq2\), sample
+spread:
+\[
+ \overline e_i=\frac1r\sum_{\ell=1}^r e_{i\ell},\qquad
+ \overline{|e_i|}=\frac1r\sum_{\ell=1}^r|e_{i\ell}|,\qquad
+ s_{e_i}^2=\frac1{r-1}\sum_{\ell=1}^r(e_{i\ell}-\overline e_i)^2.
+\]
+These are summaries of the specified design.
+For a linear additive \(g\), every elementary effect of a given factor
+equals its coefficient. Varying effects can arise from curvature,
+interaction, or both; the spread does not distinguish these mechanisms.
+The function \(g(u)=u_i^2\), sampled with steps from \(-1\) to \(0\) and
+from \(0\) to \(1\), has signed effects \(-1,+1\): their average cancels
+although the factor matters.
+
+The nominal cost is \(r(d+1)\) evaluations, before reusing repeated
+points. Saltelli and Annoni contrast two trajectories for \(d=12\),
+cost \(26\), with a two-sided single-baseline OAT design costing \(25\).
+Their discussion of four to ten trajectories concerns screening in the
+settings cited, not a universal accuracy guarantee.
+Step size, coordinates, feasible region, randomization and model failures
+must be recorded \cite[Sections 5.3 and 6]{SaltelliAnnoni2010Sensitivity}.
+\end{hbmethod}
+
+\section{Variance attribution under independent inputs}
+
+\begin{hbdefinition}{def:p15-global-variance-setting}{Product-law variance setting}
+For this section, \(X_1,\ldots,X_d\) are independent, \(Y=f(X)\in L^2\),
+and \(V=\operatorname{Var}(Y)>0\).
+Let \(I=\{1,\ldots,d\}\) and
+\(\mathcal G_u=\sigma(X_i:i\in u)\).
+Write \(P_uY=E[Y\mid\mathcal G_u]\), with \(P_\varnothing Y=EY\).
+All equalities between conditional versions are almost sure.
+
+Define the functional components recursively:
+\[
+ Y_\varnothing=EY,\qquad
+ Y_u=P_uY-\sum_{v\subsetneq u}Y_v
+       =\sum_{v\subseteq u}(-1)^{|u|-|v|}P_vY.
+\]
+Each \(Y_u\) is a function of \(X_u\), up to a choice of measurable
+version. Put \(V_u=E[Y_u^2]\) for nonempty \(u\).
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p15-global-anova}
+ {proved=annex:p15.global.anova}{Orthogonal functional decomposition}
+In the product-law setting,
+\[
+ Y=\sum_{u\subseteq I}Y_u,\qquad
+ E[Y_uY_v]=0\quad(u\ne v),\qquad
+ \operatorname{Var}(Y)=\sum_{\varnothing\ne u\subseteq I}V_u.
+\]
+For every \(i\in u\ne\varnothing\),
+\(E[Y_u\mid\mathcal G_{I\setminus\{i\}}]=0\).
+These conditions uniquely determine the decomposition among square
+integrable components measurable in their indicated coordinates.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p15-global-indices}{First-order and total indices}
+Saltelli and Annoni's first-order and total indices are
+\[
+ S_i=\frac{\operatorname{Var}(E[Y\mid X_i])}{V},\qquad
+ S_{T_i}=\frac{E[\operatorname{Var}(Y\mid X_{-i})]}{V}.
+\]
+Here \(X_{-i}\) is the tuple of all coordinates other than \(i\).
+The first numerator is the expected reduction of variance from learning
+\(X_i\); the second is the expected remaining variance after learning all
+the other coordinates. These are averages over the declared input law,
+not promises about fixing an input at one selected nominal value.
+The law of total variance in
+Theorem~\ref{thm:p15-conditional-variance} gives these interpretations.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p15-global-indices}
+ {proved=annex:p15.global.indices}{Interactions, additivity and factor fixing}
+Under the product-law assumptions,
+\[
+ S_i=\frac{V_{\{i\}}}{V},\qquad
+ S_{T_i}=\frac{\sum_{u\ni i}V_u}{V},\qquad
+ 0\leq S_i\leq S_{T_i}\leq1.
+\]
+Also
+\[
+ \sum_i S_i\leq1,\qquad
+ 1\leq\sum_iS_{T_i}\leq d.
+\]
+The first sum equals \(1\) exactly when the response is additive almost
+surely. Equivalently, every interaction component of order at least two
+vanishes, or \(S_i=S_{T_i}\) for every factor.
+The total indices generally overlap; their sum is not a partition of
+variance. Finally, \(S_{T_i}=0\) exactly when \(Y\) is a function of
+\(X_{-i}\) almost surely under this law.
+\end{hbtheorem}
+
+Zero total effect is the appropriate variance criterion for discarding a
+factor in this setting. A zero first-order effect can conceal a pure
+interaction. Almost-sure factor fixing does not establish independence
+from that input at every point of an enlarged domain or under a different
+input law.
+
+\begin{hbtheorem}{thm:p15-global-product-case}
+ {proved=annex:p15.global.product-case}{A pure interaction missed at the origin}
+Let \(X_1,X_2\) be independent and uniform on \([-1,1]\), and
+\(Y=X_1X_2\). Every fixed-baseline OAT evaluation about \((0,0)\)
+returns zero, but
+\[
+ EY=0,\qquad V=\frac19,\qquad
+ S_1=S_2=0,\qquad S_{T_1}=S_{T_2}=1.
+\]
+The only nonzero variance component is the two-factor interaction.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p15-global-pick-freeze}
+ {proved=annex:p15.global.pick-freeze}{Paired evaluations for the two indices}
+Let \(A,B\) be independent copies of the product-law input vector, and
+\(C_i=(A_i,B_{-i})\): coordinate \(i\) comes from \(A\), and each other
+coordinate retains its position from \(B\). Then
+\[
+ \operatorname{Var}(E[Y\mid X_i])
+   =E[f(A)f(C_i)]-(EY)^2,
+\qquad
+ E[\operatorname{Var}(Y\mid X_{-i})]
+   =\frac12E[(f(B)-f(C_i))^2].
+\]
+With independent pairs \((A^{(\ell)},B^{(\ell)})\) across
+\(\ell\), sample means of these quantities and a consistent positive
+output-variance estimate give consistent ratio estimates.
+Finite-sample ratios are not asserted unbiased.
+For all \(d\) factors together, this construction uses \(n(d+2)\)
+model evaluations, before any reuse of duplicate points.
+\end{hbtheorem}
+
+These identities are direct computational consequences of conditional
+independence. For an explicit estimate, let
+\(\overline y_A=n^{-1}\sum_\ell f(A^{(\ell)})\) and
+\(\widehat V=n^{-1}\sum_\ell f(A^{(\ell)})^2-\overline y_A^2\).
+When \(\widehat V>0\), use
+\[
+ \widehat S_i=
+ \frac{n^{-1}\sum_\ell f(A^{(\ell)})f(C_i^{(\ell)})
+                         -\overline y_A^2}{\widehat V},
+\qquad
+ \widehat S_{T_i}=
+ \frac{(2n)^{-1}\sum_\ell
+       (f(B^{(\ell)})-f(C_i^{(\ell)}))^2}{\widehat V}.
+\]
+Finite estimates can lie outside population bounds because of estimation
+error; silently clipping them is not an uncertainty assessment.
+The identities do not specify a confidence interval.
+Monte Carlo error estimates require their own assumptions; deterministic
+quasi-Monte Carlo error bounds require a suitable function class.
+An emulator adds approximation uncertainty that must be assessed
+separately. Screening first and then applying more expensive methods to
+the retained factors is the source's suggested budget strategy
+\cite[Sections 5.4 and 7]{SaltelliAnnoni2010Sensitivity}.
+
+\section{The source's examples and what they establish}
+
+The two toy functions in the source are
+\[
+ G(x;a)=\prod_{i=1}^d\frac{|4x_i-2|+a_i}{1+a_i},
+ \qquad a_i\geq0,
+\]
+and
+\[
+\begin{split}
+ D(x_1,x_2)={}&0.2e^{x_1-3}+2.2|x_2|+1.3x_2^6
+              -2x_2^2-0.5x_2^4\\
+ &-0.5x_1^4+2.5x_1^2+0.7x_1^3\\
+ &+\frac3{(8x_1-2)^2+(5x_2-3)^2+1}
+       +\sin(5x_1)\cos(3x_1^2).
+\end{split}
+\]
+For its reported experiments the source assigns independent uniforms on
+\([-1,1]\), not the customary \([0,1]\) version of the \(G\) benchmark.
+It uses \(a=(0,0.01)\) for \(d=2\);
+\(a=(0,0.1,0.2,0.3,0.4)\) for \(d=5\); and
+\(a=(0,0.1,0.2,0.3,0.4,0.8,1)\) for \(d=7\).
+
+\begin{hbtheorem}{thm:p15-global-source-toys}
+ {proved=annex:p15.global.source-toys}{Exact calculations for the declared toy domains}
+For the \(G\) function with the source's independent uniform
+\([-1,1]\) inputs, set
+\[
+ m_i=\frac{a_i+5/2}{1+a_i},\qquad
+ v_i=\frac{37}{12(1+a_i)^2}.
+\]
+Then
+\[
+ EG=\prod_i m_i,\qquad
+ \operatorname{Var}(G)=
+   \prod_i(m_i^2+v_i)-\prod_i m_i^2,
+\qquad
+ V_u=\prod_{i\in u}v_i\prod_{j\notin u}m_j^2.
+\]
+Consequently the first and total numerators for \(i\) are respectively
+\[
+ v_i\prod_{j\ne i}m_j^2,\qquad
+ v_i\prod_{j\ne i}(m_j^2+v_j).
+\]
+For the \(D\) function,
+\[
+ D(1/4,3/5)-D(1/4,0)-D(0,3/5)+D(0,0)=\frac{81}{35}.
+\]
+Thus the mixed change contains a substantial interaction that cannot
+be recovered by adding the two baseline changes.
+\end{hbtheorem}
+
+The reported experiment compares empirical output CDFs.
+For the toy examples, the source describes a zero baseline with four
+coordinate moves and \(1+4d\) OAT evaluations.
+Its EE budget uses \(r\) trajectories with
+\(r\) chosen to make \(r(d+1)\) close to \(1+4d\).
+The reported counts are \(9\) versus \(9\) at \(d=2\),
+\(21\) versus \(24\) at \(d=5\), and \(29\) versus \(32\) at \(d=7\).
+A separate \(1000d\)-evaluation Sobol-sequence run supplies the reference
+CDF. It is a numerical reference, not an exact population distribution.
+
+The plots show the single-baseline OAT responses concentrated near the
+baseline and missing much of the displayed output range, while the
+illustrated EE trajectories reach a wider range. These are the reported
+finite examples. They do not prove a universal EE-versus-OAT accuracy
+ordering, and the empirical CDF of an arbitrary designed set is not
+automatically an iid sample estimate under \(P\).
+
+\subsection{The rate-chain comparison}
+\label{sec:p15-global-rate-chain}
+
+The application in Section 6.2 is retained as evidence for that
+comparison. It uses the linear chain
+\[
+ \dot N_1=-\lambda_1N_1,\qquad
+ \dot N_i=\lambda_{i-1}N_{i-1}-\lambda_iN_i,\quad 2\leq i\leq d,
+\]
+with \(N_1(0)=100\), other initial concentrations zero, and output
+\(N_d(0.1\,\mathrm{s})\). Independent uncertain rates have uniform
+ranges whose endpoints were selected within
+\([1,100]\,\mathrm{s}^{-1}\).
+The source reports the following evaluation budgets:
+\[
+ \begin{array}{c|rrrrrr}
+ d&2&4&6&8&10&12\\ \hline
+ \mathrm{OAT}&9&17&25&33&41&49\\
+ \mathrm{EE}&9&15&28&36&44&52
+ \end{array}
+\]
+It again compares with \(1000d\) quasi-Monte Carlo evaluations.
+This report concerns design behavior in the given rate-chain experiment;
+it does not establish a new application-domain model validation
+\cite[Section 6]{SaltelliAnnoni2010Sensitivity}.
+
+\section{Dependence, intervention and changing assumptions}
+
+\begin{hbtheorem}{thm:p15-global-dependent-boundary}
+ {proved=annex:p15.global.dependent-boundary}{Dependent inputs change the interpretation}
+The two conditional-variance ratios remain defined for any joint law
+with \(0<V<\infty\), and each lies in \([0,1]\).
+Their independent-input ordering and decomposition need not survive.
+For \(X_1=X_2=U\), where \(U\) is a fair binary variable, and \(Y=X_1\),
+\[
+ S_1=S_2=1,\qquad S_{T_1}=S_{T_2}=0.
+\]
+Both inputs individually reveal the output; either is redundant once
+the other is known. Independent marginal resampling would leave the
+diagonal support and analyze a different joint law.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p15-global-causal-boundary}
+ {proved=annex:p15.global.causal-boundary}{The indices do not identify an intervention effect}
+There are two structural models with identical joint distributions of
+\((X_1,X_2,Y)\), and hence identical indices above, but different
+distributions of \(Y\) after setting \(X_1=1\).
+Thus these observational sensitivity quantities do not by themselves
+identify a causal intervention response.
+\end{hbtheorem}
+
+The intervention changes a structural assignment while leaving the other
+mechanisms in place; this is the distinction used in
+Chapter~\ref{sec:p16-finite-causal-models}.
+In deterministic simulation, changing an input of a specified causal
+model can represent an intervention if that interpretation is justified.
+The numerical index alone supplies no such justification.
+
+For stochastic outputs, first specify whether the target is the mean
+response \(E[Y\mid X]\) or a random realization \(Y\).
+The decomposition
+\[
+ \operatorname{Var}(Y)
+ =\operatorname{Var}(E[Y\mid X])
+   +E[\operatorname{Var}(Y\mid X)]
+\]
+keeps input-explained variability separate from the remaining variation.
+An independent random seed can instead be included as an additional
+input for a decomposition of the entire stochastic output.
+When \(V=0\), normalized variance indices are undefined; the conclusion
+is constant output almost surely under the declared law, not universal
+irrelevance on other domains.
+
+\begin{hbtheorem}{thm:p15-global-ranking}
+ {proved=annex:p15.global.ranking}{A ranking and threshold can reverse under a new range}
+For \(Y=X_1+2X_2\), with independent centered inputs of variances
+\(v_1,v_2>0\),
+\[
+ S_1=S_{T_1}=\frac{v_1}{v_1+4v_2},\qquad
+ S_2=S_{T_2}=\frac{4v_2}{v_1+4v_2}.
+\]
+If both inputs are uniform on \([-1,1]\), these values are
+\(1/5,4/5\), and \(Y\leq3\) throughout the input rectangle.
+If only the range of \(X_1\) becomes \([-3,3]\), the values are
+\(9/13,4/13\), the ranking reverses, and the bound \(Y\leq3\) fails,
+with \(P(Y>3)=1/12\).
+The derivative coefficients \(1,2\) have not changed.
+More generally, over independently varying allowed variances
+\(v_1\in[\ell_1,u_1]\), \(v_2\in[\ell_2,u_2]\), with positive output
+variance, the inequality \(S_1\geq S_2\) holds throughout the family
+exactly when \(\ell_1\geq4u_2\).
+\end{hbtheorem}
+
+\begin{hbmethod}{def:p15-global-lookup}{Choosing and reporting a sensitivity analysis}
+Specify the model output and the inference that matters.
+Declare feasible ranges, the joint input law, dependencies and any
+alternative model formulations. Use local derivatives for a local
+question, corner contrasts for the specified two-level response,
+elementary effects for screening across varied backgrounds, and
+variance-based indices when their assumptions and computational budget fit.
+Report first and total indices together when interactions matter.
+
+Recompute a conclusion under justified alternative ranges, dependence
+structures and model assumptions. State which change reverses a ranking,
+crosses a decision threshold or leaves the conclusion intact.
+For sampled calculations, report design, number of model calls and
+estimation uncertainty separately from mathematical identifiability.
+A largest observed output is not a certified global maximum without
+an additional bound or optimization argument.
+A failed run is information about the model/domain combination and must
+not be silently omitted. The final conclusion remains conditional on
+the specified model and uncertainty description.
+\end{hbmethod}

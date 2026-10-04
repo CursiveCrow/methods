@@ -1,0 +1,657 @@
+%% Migrated from v1.1 Part IX, lines 12249--12969.  Statements only;
+%% proved and sketched material is carried by annex/p02/higher-order.tex.
+%% Phase-2 repairs retained in substance: R-031 (the injectivity induction in
+%% full PA2 categoricity) and R-033 (real categoricity remains cited rather
+%% than receiving an unsupported proof).  Source exercises are retired: their
+%% substantive warnings and calculations are incorporated below.
+
+\chapter{Second- and Higher-Order Logic}
+\label{sec:p02-second-and-higher-order-logic}
+
+Second-order syntax permits quantification over relations on the object
+domain.  That syntax supports sharply different semantic regimes: full
+semantics quantifies over every relation of the required arity, whereas
+Henkin semantics quantifies over selected relation domains.  Simple type
+theory repeats the distinction at function types.  Every consequence and
+completeness assertion below therefore names both its syntax and its semantic
+class \cite{Henkin1950,Manzano1996,BarwiseFeferman1985}.
+
+\section{Relational second-order syntax}
+\label{sec:p02-sol-syntax}
+
+\begin{hbdefinition}{def:p02-sol-language}{Relational second-order syntax}
+A \emph{relational second-order signature} \(\Lang_2\) contains the object
+constants, object function symbols, and predicate constants of a first-order
+signature.  For every integer \(n\geq1\), its logical variables include a
+countably infinite stock \(\mathsf{RelVar}_n\) of \(n\)-ary relation
+variables.  Object terms are the ordinary first-order terms.  The atomic
+formulas are
+\[
+  t=u,\qquad P^n(t_1,\ldots,t_n),\qquad X^n(t_1,\ldots,t_n),
+\]
+where \(P^n\) is a predicate constant and
+\(X^n\in\mathsf{RelVar}_n\).  Formulas are closed under the classical
+connectives, object quantifiers, and
+\(\forall X^n,\exists X^n\).  There are no function variables, relation
+terms other than variables and predicate constants, or relation equality.
+A \emph{second-order sentence} has no free object-variable or
+relation-variable occurrence.
+\index{second-order logic!relational language}
+\index{relation variable}
+\end{hbdefinition}
+
+The restriction to relation variables is load-bearing: a formula may replace
+a free occurrence of \(X^n\) only through a separate, capture-avoiding
+relation-formula substitution operation.  The displayed calculus instead
+instantiates relation quantifiers by relation variables or predicate
+constants; formula-defined relations enter through comprehension.
+
+\section{Full semantics and its exact metatheorems}
+\label{sec:p02-sol-full-semantics}
+
+\begin{hbdefinition}{def:p02-sol-full-semantics}{Full relational second-order semantics}
+Let \(\mathcal M\) have nonempty object domain \(M\).  A full assignment
+maps each object variable to an element of \(M\) and every \(n\)-ary
+relation variable to an arbitrary member of \(\mathcal P(M^n)\).  Besides
+the first-order clauses,
+\[
+\begin{aligned}
+ \mathcal M,s\entails X^n(t_1,\ldots,t_n)
+ &\quad\Longleftrightarrow\quad
+ (\lbrack\!\lbrack t_1\rbrack\!\rbrack_s^{\mathcal M},\ldots,
+  \lbrack\!\lbrack t_n\rbrack\!\rbrack_s^{\mathcal M})\in s(X^n),\\
+ \mathcal M,s\entails\forall X^n\,\varphi
+ &\quad\Longleftrightarrow\quad
+ \mathcal M,s[X^n\mapsto R]\entails\varphi
+ \text{ for every }R\subseteq M^n.
+\end{aligned}
+\]
+The existential clause is dual.  Write
+\(\Gamma\entails_{\mathrm{full}}\varphi\) when every such structure and
+full assignment satisfying \(\Gamma\) satisfies \(\varphi\).  The word
+\emph{full} specifies the relation-quantifier range; it does not say that
+\(M\) is a set-theoretic universe.
+\index{full second-order semantics}
+\index{semantic consequence!full second-order}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p02-sol-full-comprehension}{proved=annex:p2.hol.1}{Full comprehension validity}
+Let \(n\geq1\), let \(x_1,\ldots,x_n\) be pairwise distinct, and let
+\(X^n\) not occur free in
+\(\chi(x_1,\ldots,x_n,\bar p,\bar Q)\).  Under full semantics the
+universal closure over the displayed object and relation parameters of
+\[
+ \exists X^n\,\forall x_1\cdots\forall x_n
+ \bigl(X^n(x_1,\ldots,x_n)\leftrightarrow
+       \chi(x_1,\ldots,x_n,\bar p,\bar Q)\bigr)
+\]
+is valid.  The formula \(\chi\) may contain relation quantifiers, so this
+is impredicative comprehension.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p02-pa2}{Full second-order Peano axioms}
+In the signature \(\{0,S\}\), \(\mathsf{PA}_2\) comprises
+\[
+ \forall x\,Sx\ne0,
+ \qquad
+ \forall x\,\forall y\,(Sx=Sy\to x=y),
+\]
+and the single second-order induction sentence
+\[
+ \forall X\bigl[(X(0)\land
+   \forall x(X(x)\to X(Sx)))\to\forall x\,X(x)\bigr].
+\]
+When \(+\) and \(\times\) are present, add the four first-order recursion
+axioms
+\[
+ \forall x\,(x+0=x),\qquad
+ \forall x\,\forall y\,(x+S(y)=S(x+y)),
+\]
+\[
+ \forall x\,(x\times0=0),\qquad
+ \forall x\,\forall y\,(x\times S(y)=(x\times y)+x).
+\]
+This is still a finite axiom set; its categoricity assertion below is
+specifically full-semantic.
+\index{second-order arithmetic}
+\index{categoricity!second-order arithmetic}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p02-pa2-categoricity}{proved=annex:p2.hol.2}{Full \(\mathsf{PA}_2\) categoricity}
+Every \(\{0,S\}\)-structure satisfying \(\mathsf{PA}_2\) under full
+semantics is isomorphic to \((\N,0,n\mapsto n+1)\).  Consequently any two
+such structures are isomorphic.  With the recursive axioms for addition and
+multiplication, the isomorphism preserves those operations as well.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p02-sol-full-noncompact}{proved=annex:p2.hol.3}{Full-semantic noncompactness}
+Full relational second-order semantic consequence is not compact: there is
+a set \(T\) of second-order sentences every finite subset of which has a full
+model while \(T\) itself has no full model.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p02-sol-full-no-effective-completeness}{sketched=annex:p2.hol.4}{No effective completeness for full validity}
+Suppose an effective calculus means one whose finite derivations are
+computably checkable, hence whose theorem set is computably enumerable.
+There is no such calculus \(\mathsf D\) satisfying, for every relational
+second-order sentence \(\sigma\),
+\[
+ \mathsf D\derives\sigma
+ \quad\Longleftrightarrow\quad
+ \entails_{\mathrm{full}}\sigma.
+\]
+Equivalently, the full second-order validities are not computably enumerable.
+\end{hbtheorem}
+
+The last result is stronger than noncompactness and retains the source's
+effectiveness qualifier.  It uses the effective reduction from true
+first-order arithmetic to full validity and the non-enumerability of true
+arithmetic; the omitted coding details are controlled by
+\cite{BarwiseFeferman1985,Shapiro1991}.
+
+\begin{hbtheorem}{thm:p02-sol-real-categoricity}{cited=Shapiro1991}{Full-semantic categoricity of \(\mathbb R\)}
+In \(\{0,1,+,\times,<\}\), take the first-order ordered-field axioms and
+\[
+\begin{aligned}
+ \forall X\Bigl[&\bigl(\exists x\,X(x)\land
+   \exists y\,\forall x(X(x)\to x\leq y)\bigr)\\
+ &{}\to \exists z\Bigl(\forall x(X(x)\to x\leq z)\\
+ &\hspace{25mm}{}\land
+   \forall y((\forall x(X(x)\to x\leq y))\to z\leq y)\Bigr)\Bigr].
+\end{aligned}
+\]
+where \(u\leq v\) abbreviates \(u<v\lor u=v\) in this statement.  Under
+full semantics, every model of these axioms is isomorphic to the ordered field
+\(\mathbb R\); hence every such model is uncountable.
+\end{hbtheorem}
+
+The uncountability conclusion uses the ordinary set-theoretic theorem for
+\(\mathbb R\) \cite{Jech2003}; the categoricity proof remains citation-only,
+as required by the source repair R-033.  The cited proof sends each element of
+one model to the element of the other determined by the same cut of their
+common rational subfield and verifies that this map is an ordered-field
+isomorphism \cite{Shapiro1991}.
+
+\begin{hbcorollary}{thm:p02-sol-full-ls-failures}{proved=annex:p2.hol.6}{Failure of both L\"owenheim--Skolem directions under full semantics}
+Full relational second-order semantics has neither the blanket upward nor the
+blanket downward L\"owenheim--Skolem property.  The finite theory
+\(\mathsf{PA}_2\) has an infinite full model but no uncountable full model;
+the finite ordered-field plus least-upper-bound theory of
+Theorem~\ref{thm:p02-sol-real-categoricity} has an infinite full model but no
+countable full model.
+\index{Lowenheim-Skolem theorem@L\"owenheim--Skolem theorem!failure in full second-order logic}
+\end{hbcorollary}
+
+\section[Relational Henkin semantics]{Relational Henkin semantics and the matched calculus}
+\label{sec:p02-sol-henkin-semantics}
+
+\begin{hbdefinition}{def:p02-sol-henkin-structure}{Relational Henkin structure}
+A \emph{relational Henkin structure} is
+\[
+ \mathcal H=(M,(\mathcal R_n)_{n\geq1},\ldots),
+\]
+where \(M\ne\varnothing\), every
+\(\varnothing\ne\mathcal R_n\subseteq\mathcal P(M^n)\), and every
+\(n\)-ary predicate constant is interpreted by a member of
+\(\mathcal R_n\).  An \(n\)-ary relation variable ranges over
+\(\mathcal R_n\).  Satisfaction otherwise uses the clauses of
+Definition~\ref{def:p02-sol-full-semantics}, with that restricted range.
+A full structure is the special case
+\(\mathcal R_n=\mathcal P(M^n)\) for every \(n\).
+Write \(\Gamma\entails_{\mathrm H}\varphi\) when every relational Henkin
+structure under every matching assignment satisfying \(\Gamma\) satisfies
+\(\varphi\).  This unadorned subscript ranges over arbitrary selected
+relation domains; it does not silently impose comprehension or choice.
+\index{Henkin semantics!relational second-order}
+\index{Henkin structure!relational}
+\index{semantic consequence!Henkin second-order}
+\end{hbdefinition}
+
+Merely selecting nonempty relation domains is too weak for a calculus that
+contains comprehension or choice.  The next definition names the exact model
+class needed by the displayed sheet; the adjective ``matched'' records this
+syntactic--semantic equality of schema instances and has no broader meaning.
+
+\begin{hbdefinition}{def:p02-sol-matched-henkin}{Matched Henkin models}
+A relational Henkin structure is a \emph{matched
+comprehension--\allowbreak choice Henkin model}, abbreviated an
+\(\mathsf{H}_{\mathsf{CC}}\)-model, iff it satisfies every instance of both
+schema families below, with exactly the eligibility conditions displayed on
+\hyperref[sheet:sol]{\texttt{sheet:sol}}:
+\[
+\begin{aligned}
+\mathsf{Comp}_{\chi}^{n}&\defeq
+ \operatorname{ucl}\!\left(\exists X^n\,\forall\bar x
+   (X^n(\bar x)\leftrightarrow\chi(\bar x,\bar p,\bar Q))\right),\\
+\mathsf{Choice}_{\chi}^{n}&\defeq
+ \operatorname{ucl}\!\Bigl(\Bigl(\forall\bar x\,\exists y\,
+ \chi(\bar x,y,\bar p,\bar Q)\Bigr)\to{}\\
+&\hspace{18mm}\exists F^{n+1}\,\forall\bar x\,\exists y\,
+ \Bigl(F^{n+1}(\bar x,y)\land\chi(\bar x,y,\bar p,\bar Q)\\
+&\hspace{38mm}\land
+ \forall z(F^{n+1}(\bar x,z)\to z=y)\Bigr)\Bigr).
+\end{aligned}
+\]
+Here \(n\geq1\); in comprehension \(X^n\) is not free in \(\chi\);
+in choice \(F^{n+1}\) is fresh and not free in \(\chi\); and
+\(\operatorname{ucl}\) universally closes exactly the permitted object and
+relation parameters \(\bar p,\bar Q\).  Comprehension may be impredicative.
+Choice asserts an admissible single-valued selecting graph and adds no
+function variable.  It is not redundant with comprehension: comprehension
+collects a relation already defined by a formula, while choice selects one
+witness in every nonempty fibre, a step not available in a choice-free
+metatheory merely from definability.
+\index{comprehension!second-order}
+\index{choice!relational graph schema}
+\end{hbdefinition}
+
+Under full semantics, comprehension is automatic.  The choice schema is
+full-valid only relative to enough metatheoretic choice to select from every
+displayed family of nonempty fibres.  In a matched Henkin model, both schema
+families hold by definition; this is a restriction on the model class, not a
+consequence of \(\mathcal R_n\subseteq\mathcal P(M^n)\).
+
+\begin{hbdefinition}{def:p02-sol-henkin-consequence}{Matched Henkin consequence}
+Write \(\Gamma\entails_{\mathrm H}^{\mathsf{CC}}\varphi\) iff every
+\(\mathsf H_{\mathsf{CC}}\)-model under every matching object-and-relation
+assignment that satisfies \(\Gamma\) also satisfies \(\varphi\).  The
+superscript records the comprehension--choice closure and is necessary to
+distinguish this consequence relation from consequence over arbitrary
+relational Henkin structures.
+\index{semantic consequence!Henkin second-order!matched schemas}
+\end{hbdefinition}
+
+The calculus registry displays the exact four relation-quantifier rules and
+the two schema families on
+\hyperref[sheet:sol]{\texttt{sheet:sol}}.  It inherits the finite-multiset
+sequent conventions and object-equality rules of
+\hyperref[sheet:lk-eq]{\texttt{sheet:lk-eq}}; rules are not duplicated here.
+
+\begin{hbdefinition}{def:p02-sol-incidence-translation}{Incidence translation}
+For the exact language of Definition~\ref{def:p02-sol-language}, form a
+many-sorted first-order language with object sort \(D\), relation sort
+\(S_n\) for each \(n\geq1\), incidence predicate
+\(E_n:S_n\times D^n\), and a relation-sort constant \(\widehat P:S_n\) for
+each predicate constant \(P^n\).  Define the metalinguistic translation
+\(\varphi\mapsto\varphi^\sharp\) recursively by
+\[
+\begin{aligned}
+ (X^n(\bar t))^\sharp&\defeq E_n(X^n,\bar t),
+ & (P^n(\bar t))^\sharp&\defeq E_n(\widehat P,\bar t),\\
+ (\forall x\,\psi)^\sharp&\defeq\forall x{:}D\,\psi^\sharp,
+ & (\exists x\,\psi)^\sharp&\defeq\exists x{:}D\,\psi^\sharp,\\
+ (\forall X^n\,\psi)^\sharp&\defeq\forall X^n{:}S_n\,\psi^\sharp,
+ & (\exists X^n\,\psi)^\sharp&\defeq\exists X^n{:}S_n\,\psi^\sharp.
+\end{aligned}
+\]
+It leaves object terms and object equality unchanged and commutes with every
+classical connective.  This is a recursively eliminable metalinguistic map,
+not an object-language connective.  It is nonredundant with erasing the
+second-order binders: relation application becomes incidence, predicate
+constants become relation-sort objects, and the two quantifier ranges become
+different sorts.  These distinctions are used in the correspondence and
+adequacy theorems below.
+For a formula set \(\Gamma\), write
+\(\Gamma^\sharp\defeq\{\psi^\sharp:\psi\in\Gamma\}\); this is the
+pointwise image under the same map, not an additional closure operation.
+\index{incidence translation}
+\index{second-order logic!many-sorted translation}
+\end{hbdefinition}
+
+Given \(\mathcal H\), define the strict many-sorted structure
+\(\mathcal H^\sharp\) by tagging every sort:
+\[
+ D^{\mathcal H^\sharp}=\{D\}\times M,
+ \qquad S_n^{\mathcal H^\sharp}=\{S_n\}\times\mathcal R_n,
+\]
+\[
+\begin{aligned}
+ E_n^{\mathcal H^\sharp}
+   \bigl((S_n,R),(D,a_1),\ldots,(D,a_n)\bigr)
+ &\Longleftrightarrow(a_1,\ldots,a_n)\in R,\\
+ \widehat P^{\mathcal H^\sharp}
+ &= (S_n,P^{\mathcal H}).
+\end{aligned}
+\]
+Object constants and functions are transported along the object tag:
+\(c^{\mathcal H^\sharp}=(D,c^{\mathcal H})\) and
+\(f^{\mathcal H^\sharp}((D,\bar a))=(D,f^{\mathcal H}(\bar a))\).
+For a matching assignment \(s\), put \(s^\sharp(x)=(D,s(x))\) and
+\(s^\sharp(X^n)=(S_n,s(X^n))\).  Tagging is necessary because the sets
+\(M,\mathcal R_1,\mathcal R_2,\ldots\) may overlap; it makes the incidence
+structure satisfy the strict disjoint-sort convention used below.
+
+\begin{hbtheorem}{thm:p02-sol-incidence-satisfaction}{proved=annex:p2.hol.7}{Incidence translation preserves satisfaction}
+For every relational Henkin structure \(\mathcal H\), every second-order
+formula \(\varphi\), and every matching assignment \(s\),
+\[
+ \mathcal H,s\entails\varphi
+ \quad\Longleftrightarrow\quad
+ \mathcal H^\sharp,s^\sharp\entails\varphi^\sharp.
+\]
+Moreover, \(\mathcal H\) is an \(\mathsf H_{\mathsf{CC}}\)-model iff
+\(\mathcal H^\sharp\) satisfies the many-sorted translations of exactly all
+eligible \(\mathsf{Comp}_{\chi}^{n}\) and
+\(\mathsf{Choice}_{\chi}^{n}\) instances.
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p02-ms-variable-guard}{Total sorted-assignment guard}
+For a strict many-sorted signature \(\Lang_{\mathrm{MS}}\), write
+\(Q_{\mathsf s}\) for the unary predicate of its flat one-sorted translation
+that marks sort \(\mathsf s\).  Because assignments are total, guarding only
+variables free in the formulas would leave the values of every other sorted
+variable to an unlicensed choice across the nonempty sort domains.  Define
+the metalinguistic premise set
+\[
+ \mathsf{VarGuard}_{\mathrm{MS}}(\Lang_{\mathrm{MS}})
+ \defeq\{Q_{\mathsf s}(v):\mathsf s\in\mathsf{Sort},
+       \ v\text{ is a variable of sort }\mathsf s\}.
+\]
+This is an assignment guard, not an object-language operator or schema.  It
+differs from the bound-variable guards inserted by
+\(\operatorname{tr}_{\mathrm{MS}}\) and from
+\(\mathsf{Ax}_{\mathrm{sort}}\), which constrains structures rather than
+assignments.  The translated calculus uses the set immediately below, and
+the general reduction theorem reuses it in
+Section~\ref{sec:p02-many-sorted}.
+\index{assignment guard!many-sorted}
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p02-sol-derived-calculus}{Translation-defined SOL calculus}
+Let \(T_{\mathsf{CC}}^\sharp\) be the many-sorted first-order theory
+consisting of the incidence translations of exactly the eligible
+comprehension and choice instances above.  For a many-sorted formula set
+\(\Delta\) and formula \(\psi\), define
+\[
+ \Delta\derives_{\mathsf{MSFOL}}\psi
+ \quad\Longleftrightarrow\quad
+ \mathsf{Ax}_{\mathrm{sort}}\cup
+ \mathsf{VarGuard}_{\mathrm{MS}}(\Lang_{\mathrm{MS}})\cup
+ \operatorname{tr}_{\mathrm{MS}}[\Delta]
+ \derives_{\mathsf{ND}_{\mathsf{FOL}}}
+ \operatorname{tr}_{\mathrm{MS}}(\psi),
+\]
+using Definitions~\ref{def:p02-many-sorted-translation} and the registered
+first-order natural-deduction calculus.  This is again an eliminable
+metalinguistic abbreviation; Theorem~\ref{thm:p02-many-sorted-translation},
+its formula induction, and classical first-order adequacy make it sound and
+strongly complete under the same set-theoretic hypotheses.  Now define
+\[
+ \Gamma\derives_{\mathsf{SOL}_{\mathrm H}^{\mathsf{CC}}}\varphi
+ \quad\Longleftrightarrow\quad
+ T_{\mathsf{CC}}^\sharp\cup\Gamma^\sharp
+ \derives_{\mathsf{MSFOL}}\varphi^\sharp.
+\]
+The left side is thus an eliminable metalinguistic abbreviation for the right
+side, not a newly postulated native derivation relation.  This definition is
+needed because Henkin's typed completeness theorem does not cover the new
+relational rule surface; it is used immediately to state an exact adequacy
+theorem.  The formulas displayed on \texttt{sheet:sol} are admissible
+projections of this definition, rather than an independently complete finite
+list of native generators.
+
+The advertised two-sided sheet has the following exact derived meaning.  For
+finite-multiset contexts \(\Sigma,\Pi\), let \(\Sigma^\sharp\) be the
+translated support of \(\Sigma\), and let \(\bigvee\Pi^\sharp\) be the
+disjunction of any listing of \(\Pi^\sharp\), with
+\(\bigvee\varnothing\defeq\bottom\).  Declare
+\[
+ \Sigma\Rightarrow\Pi\text{ derivable on \texttt{sheet:sol}}
+ \quad\Longleftrightarrow\quad
+ T_{\mathsf{CC}}^\sharp\cup\Sigma^\sharp
+ \derives_{\mathsf{MSFOL}}\bigvee\Pi^\sharp.
+\]
+Classical first-order derivability makes this independent of listing,
+bracketing, and repeated occurrences.  Thus it is an eliminable sequent
+abbreviation, not a second calculus.  Its assignment guard includes every
+sorted object and relation variable, hence in particular every variable free
+in either context.
+\index{second-order calculus!translation-defined}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p02-sol-derived-adequacy}{proved=annex:p2.hol.8}{Strong adequacy of the matched relational calculus}
+Assume the Axiom of Choice in the ambient set theory.  For every set
+\(\Gamma\) of relational second-order formulas and every formula \(\varphi\),
+\[
+ \Gamma\derives_{\mathsf{SOL}_{\mathrm H}^{\mathsf{CC}}}\varphi
+ \quad\Longleftrightarrow\quad
+ \Gamma\entails_{\mathrm H}^{\mathsf{CC}}\varphi.
+\]
+All six additions on \hyperref[sheet:sol]{\texttt{sheet:sol}} are admissible
+for this derivability relation and for its two-sided projection just defined.
+The conclusion is
+strong completeness for the exact matched
+selected-domain semantics; it is not completeness for full validity.
+\end{hbtheorem}
+
+\begin{proofboundary}{def:p02-sol-native-boundary}{What has and has not been proved about the displayed sheet}
+The theorem defines derivability by the exact many-sorted reduction and then
+proves the displayed rules admissible.  It does not assert that the inherited
+first-order rules, four relation-quantifier rules, and two schema displays,
+taken as an independently generated native calculus, are complete.  Such a
+claim would additionally require a converse deductive-correspondence theorem.
+Nor does \cite{Henkin1950} supply that missing theorem: it proves soundness and
+completeness for Henkin's own typed system and its general models.
+\end{proofboundary}
+
+\begin{hbexample}{def:p02-sol-reachability}{Reachability under two semantics}
+For a directed graph with edge relation \(E\), set
+\[
+ \operatorname{Reach}(a,b)\defeq
+ \forall X\bigl[(X(a)\land
+   \forall u\,\forall v((X(u)\land E(u,v))\to X(v)))\to X(b)\bigr].
+\]
+Under full semantics this holds exactly when a finite directed path leads
+from \(a\) to \(b\): the converse direction instantiates \(X\) by the actual
+set of vertices reachable from \(a\).  In an arbitrary Henkin structure that
+set need not be admissible, so the converse can fail.
+\end{hbexample}
+
+\begin{hbwarning}{def:p02-sol-semantic-parameter}{Never omit the second-order semantic parameter}
+The expressions \(\Gamma\entails_{\mathrm{full}}\varphi\) and
+\(\Gamma\entails_{\mathrm H}^{\mathsf{CC}}\varphi\) name different
+consequence relations.  Combining full categoricity with Henkin completeness
+into the sentence ``second-order logic is complete and categorical'' is
+incorrect: the two claims quantify over different model classes.
+\end{hbwarning}
+
+\section{Full versus Henkin second-order semantics}
+\label{sec:p02-sol-comparison}
+
+\begin{landscape}
+\begingroup\scriptsize\setlength{\tabcolsep}{4pt}
+\begin{longtable}{@{}p{1.35in}p{2.95in}p{2.95in}@{}}
+\caption{Full versus matched Henkin relational semantics (apparatus A-039).}
+\label{tab:p02-full-vs-henkin-sol}\\
+\toprule
+Property & Full relational semantics & Matched Henkin relational semantics \\ \midrule
+\endfirsthead
+\toprule
+Property & Full relational semantics & Matched Henkin relational semantics \\ \midrule
+\endhead
+Relation-quantifier range & Every member of \(\mathcal P(M^n)\). & A selected nonempty \(\mathcal R_n\subseteq\mathcal P(M^n)\). \\
+\addlinespace
+Comprehension & Automatically valid for every eligible impredicative instance. & Must be imposed as satisfaction of exactly the eligible instances, equivalently the matching definability closure. \\
+\addlinespace
+Choice & Valid only relative to adequate metatheoretic choice. & Must be imposed by the eligible graph-choice instances or equivalent selector closure. \\
+\addlinespace
+Completeness & No sound effective recursively axiomatized calculus is complete for full validity. & Under ambient AC, strong completeness holds for the exact translation-defined calculus paired with the exact schema-closed model class, Theorem~\ref{thm:p02-sol-derived-adequacy}. \\
+\addlinespace
+Compactness & Fails, Theorem~\ref{thm:p02-sol-full-noncompact}. & Holds for the finitary matched many-sorted presentation by first-order compactness. \\
+\addlinespace
+Downward L\"owenheim--Skolem & Fails in general; full categoricity of the uncountable ordered field obstructs countable models. & The first-order cardinal-qualified form transfers through the many-sorted presentation. \\
+\addlinespace
+Upward L\"owenheim--Skolem & Fails in general; full categoricity of \(\mathsf{PA}_2\) obstructs uncountable models. & The first-order form transfers when the object sort \(D\), equivalently the object domain \(M\), is infinite, with the usual language/cardinality qualifications. \\
+\addlinespace
+Categoricity & Can characterize infinite structures such as \(\mathbb N\) and \(\mathbb R\) up to isomorphism. & The same written axioms need not be categorical; nonstandard selected-domain models remain. \\
+\bottomrule
+\end{longtable}
+\endgroup
+\end{landscape}
+
+In the Henkin completeness row, ``complete'' means complete for the exact
+calculus/model-class pair; it never means complete for full second-order
+validity.  The comparison synthesizes
+\cite{Henkin1950,Manzano1996,Shapiro1991}.
+
+\section{Simple type theory and higher-order semantics}
+\label{sec:p02-simple-type-theory}
+
+The phrase \emph{higher-order logic} does not determine a calculus.  One must
+specify types, term constructors, equality, logical constants, conversion
+rules, axioms, and semantics.  The representative language below fixes syntax
+and two semantic classes but no local proof calculus.
+
+\begin{hbdefinition}{def:p02-simple-types}{Simple types and typed terms}
+Let \(\iota\) be the type of individuals and \(o\) the type of truth values.
+The simple types are freely generated by
+\[
+ \alpha,\beta ::= \iota\mid o\mid(\alpha\mathbin{\to_{\mathrm{ty}}}\beta).
+\]
+Thus the base types are distinct, arrow formation is injective, and no finite
+simple type equals its own function-to-truth type.  For every type, fix typed
+variables and possibly typed constants.  If
+\(F:\alpha\mathbin{\to_{\mathrm{ty}}}\beta\) and \(A:\alpha\), then
+\(FA:\beta\); if \(x:\alpha\) and \(B:\beta\), then
+\(\lambda x{:}\alpha.B:\alpha\mathbin{\to_{\mathrm{ty}}}\beta\).
+Formulas are exactly terms of type \(o\).  Equality and universal
+quantification at type \(\alpha\) have types
+\[
+ \mathsf{Eq}_{\alpha}:\alpha\mathbin{\to_{\mathrm{ty}}}\alpha
+             \mathbin{\to_{\mathrm{ty}}}o,
+ \qquad
+ \forall_{\alpha}:(\alpha\mathbin{\to_{\mathrm{ty}}}o)
+              \mathbin{\to_{\mathrm{ty}}}o.
+\]
+Thus \(\forall x{:}\alpha.\,A\) abbreviates
+\(\forall_{\alpha}(\lambda x{:}\alpha.A)\).
+Here \(\alpha,\beta,\gamma\) are metalinguistic type variables, not quantified
+object-language type variables, while \(A,B,C,F\) are metalinguistic typed-term
+metavariables whenever a type is displayed.  The object-language constant
+\(\mathsf{Eq}_{\alpha}\) is distinct from the global metalinguistic
+alpha-equivalence relation \(=_{\alpha}\).  The type former
+\(\to_{\mathrm{ty}}\) is not object-language implication.  Type arrows
+associate to the right and application associates to the left.
+\index{simple type theory}
+\index{type!simple}
+\index{lambda abstraction!typed}
+\end{hbdefinition}
+
+Alpha-equivalence, capture-avoiding substitution, beta reduction, and eta
+conversion are typed operations.  A mismatched application is not a false
+formula; it is not a term.
+
+\begin{hbdefinition}{def:p02-type-structures}{Standard/Henkin type structures}
+A \emph{standard type structure} assigns a nonempty set \(D_\alpha\) to each
+type, with
+\[
+ D_o=\{0,1\},
+ \qquad
+ D_{\alpha\mathbin{\to_{\mathrm{ty}}}\beta}
+   =D_\beta^{D_\alpha}.
+\]
+A \emph{Henkin type structure} instead chooses a nonempty
+\[
+ D_{\alpha\mathbin{\to_{\mathrm{ty}}}\beta}
+ \subseteq D_\beta^{D_\alpha}
+\]
+that contains the denotation of every well-typed lambda abstraction under
+every matching assignment.  In both cases application is function
+application, equality is identity, logical constants have their classical
+meanings, and a typed assignment sends \(x:\alpha\) to \(D_\alpha\).
+Every admitted nonlogical constant \(c:\alpha\) is assigned an element
+\(c^{\mathcal M}\in D_\alpha\).
+Every standard type structure is a Henkin type structure; the converse fails
+when a selected function domain omits set-theoretic functions.
+\index{standard semantics!simple type theory}
+\index{Henkin semantics!simple type theory}
+\end{hbdefinition}
+
+Denotation is the typed recursion
+\[
+\begin{aligned}
+ \lbrack\!\lbrack x\rbrack\!\rbrack_s^{\mathcal M}&=s(x),
+&\lbrack\!\lbrack c\rbrack\!\rbrack_s^{\mathcal M}&=c^{\mathcal M},\\
+ \lbrack\!\lbrack FA\rbrack\!\rbrack_s^{\mathcal M}
+ &=\lbrack\!\lbrack F\rbrack\!\rbrack_s^{\mathcal M}
+   (\lbrack\!\lbrack A\rbrack\!\rbrack_s^{\mathcal M}),
+&\lbrack\!\lbrack\lambda x{:}\alpha.B\rbrack\!\rbrack_s^{\mathcal M}
+ &=\bigl(a\mapsto\lbrack\!\lbrack B\rbrack\!\rbrack_{s[x\mapsto a]}^{\mathcal M}\bigr).
+\end{aligned}
+\]
+The closure clause in a Henkin type structure is therefore a definedness
+condition for lambda abstraction, not an optional completeness assumption.
+At every type, \(\mathsf{Eq}_{\alpha}\) denotes the characteristic function of identity
+on \(D_\alpha\); and \(\forall_\alpha(P)=1\) exactly when
+\(P(a)=1\) for every \(a\in D_\alpha\), for each admitted
+\(P\in D_{\alpha\mathbin{\to_{\mathrm{ty}}}o}\).
+
+\begin{hbtheorem}{thm:p02-typed-henkin-completeness}{cited=Henkin1950}{Henkin completeness for typed logic}
+For the typed formula system, axioms, rules, conversion principles, and general
+structures fixed by Henkin, a formula is a theorem iff it is valid in every
+one of those general structures.  This theorem neither makes full-function
+semantics complete nor supplies a calculus for the syntax-only presentation
+of Definition~\ref{def:p02-simple-types}.
+\end{hbtheorem}
+
+\begin{hblemma}{thm:p02-typed-substitution-beta}{sketched=annex:p2.hol.9}{Typed substitution and beta soundness}
+Let \(B:\beta\), \(A:\alpha\), and \(x:\alpha\), and let \(\mathcal M\)
+be a standard or Henkin type structure.  For every matching assignment \(s\),
+\[
+ \lbrack\!\lbrack B[A/x]\rbrack\!\rbrack_s^{\mathcal M}
+ =\lbrack\!\lbrack B\rbrack\!\rbrack_{s[x\mapsto
+      \lbrack\!\lbrack A\rbrack\!\rbrack_s^{\mathcal M}]}^{\mathcal M}.
+\]
+Consequently the beta redex \((\lambda x{:}\alpha.B)A\) and its contractum
+\(B[A/x]\) have the same denotation in either semantic class.
+\end{hblemma}
+
+Quantification exposes the difference: a standard structure interprets
+\(\forall f{:}(\alpha\mathbin{\to_{\mathrm{ty}}}\beta).C\) over all of
+\(D_\beta^{D_\alpha}\), while a Henkin structure uses only its declared
+\(D_{\alpha\mathbin{\to_{\mathrm{ty}}}\beta}\).  Beta soundness survives
+because the latter remains closed under denotations of typed abstractions.
+
+\begin{proofboundary}{def:p02-typed-completeness-boundary}{Typed completeness needs a matched system}
+An internal completeness theorem would have to list every primitive typed
+constant, conversion rule, logical axiom, equality and extensionality
+principle, inference rule, structural convention, and semantic closure
+condition, then prove a Henkin construction and truth lemma for exactly that
+package.  This chapter does not reproduce those data, introduces no local
+typed turnstile, and confines its cited completeness claim to Henkin's source
+system \cite{Henkin1950,Church1940}.
+\end{proofboundary}
+
+\begin{hbexample}{def:p02-simple-types-polymorphism}{Metalinguistic type schema}
+For each fixed simple type \(\alpha\), the identity term
+\(\lambda x{:}\alpha.x\) has type
+\(\alpha\mathbin{\to_{\mathrm{ty}}}\alpha\).  This is a metalinguistic
+schema indexed by \(\alpha\), not one object-language term quantifying over
+types.  Object-language type quantification requires a different polymorphic
+system.
+\end{hbexample}
+
+\begin{hbexample}{def:p02-simple-types-relation}{A typed binary relation}
+A binary relation on individuals has type
+\(\iota\mathbin{\to_{\mathrm{ty}}}\iota
+\mathbin{\to_{\mathrm{ty}}}o\).  If \(R\) has that type and
+\(a,b:\iota\), then \(Rab:o\) is a formula; \(Ra\) and \(R\) are not
+formulas because their types still end in an unapplied function type.
+\end{hbexample}
+
+\begin{hbwarning}{def:p02-type-theory-scope}{Type discipline is not a blanket consistency theorem}
+Simple types block unrestricted self-application and thereby the syntactic
+form of Russell's self-membership paradox.  They do not prove consistency of
+every extension.  Functional extensionality is the principle
+\[
+ \forall f,g{:}(\alpha\mathbin{\to_{\mathrm{ty}}}\beta).\,
+ \bigl(\forall x{:}\alpha.\,\mathsf{Eq}_{\beta}\,(fx)\,(gx)\bigr)\to
+ \mathsf{Eq}_{\alpha\mathbin{\to_{\mathrm{ty}}}\beta}\,f\,g.
+\]
+A calculus may take it as an axiom, while a semantics may validate it by
+interpreting equality as identity of functions.  Functional extensionality
+and higher-type choice are separate principles, not consequences of the type
+grammar.  Likewise, a proof assistant's metalogic proves nothing about an
+encoded object logic until a theorem connects encoded derivability or
+satisfaction to the intended external judgment.
+\end{hbwarning}

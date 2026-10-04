@@ -1,0 +1,486 @@
+\section{Proof constructors for fixed bounded formulas}
+\label{sec:p05-pa-bounded-proof-builders}
+
+We continue with the selected tag-19 proof formula of
+\cref{def:p05-selected-direct-pa-graph}. The constructions below turn the
+numeral instances of a fixed bounded formula into annotated derivations.
+The universal case includes an arithmetic exhaustion proof and actual
+quantifier inferences. All functions have the finite-description meaning of
+\cref{def:p05-checker-description-language}; they are verified in
+\cref{sec:annex-p05-pa-bounded-proof-builders}.
+
+\begin{hbdefinition}{def:p05-bounded-builder-conventions}{Fixed formulas, marked bounds and raw proof notation}
+Fix a bounded formula in its marked presentation. Its primitive atomic
+formulas are equalities, with bottom and the connectives
+\(\neg,\land,\lor,\to\) also permitted. Any other propositional
+abbreviation is expanded first. The construction additionally treats the
+inherited comparisons as designated auxiliary literal blocks, in particular
+in the marked guards below; their unbounded existential expansions are not
+thereby reclassified as primitive atomic formulas of the hierarchy.
+The marked quantifiers are \(\exists x_i\mathrel\diamond t\) and
+\(\forall x_i\mathrel\diamond t\), with
+\(\diamond\in\{<,\leq\}\) and \(x_i\) absent from the term \(t\).
+Every comparison is expanded using the binder chosen in the original
+expression. Every marked quantifier retains its displayed binder. Thus, for
+a supplied comparison binder \(h\), put
+\[
+ G_<(i,h,u)=\mathsf{Lt}_h(v_i,u),\qquad
+ G_{\leq}(i,h,u)=\mathsf{Le}_h(v_i,u).
+\]
+In an application \(h\ne i\), and the term in the third position has no
+variable \(x_h\). The marked expansions have the exact codes
+\[
+ \mathsf{Ex}(i,G_\diamond(i,h,t)\mathbin{\&}c),\qquad
+ \mathsf{All}(i,G_\diamond(i,h,t)\Rightarrow c).
+\]
+Here and below a term letter in a code expression denotes its term code.
+
+Use \(\mathsf J,\mathsf L,\mathsf R,\mathsf{FE},\mathsf{FI},
+\mathsf{EI},\mathsf{EE},\mathsf{II},\mathsf{NI},\mathsf B,
+\mathsf{And},\mathsf{EEq},\mathsf{Sym},\mathsf{Tr}\), and
+\(\mathsf{MP}^{\rm row}\) exactly as defined in
+\cref{def:p05-builder-row-templates}. Write \(c\mathbin{|}d=N_9(c,d)\).
+The following additional names are fixed row expressions:
+\[
+\begin{aligned}
+ \mathsf{P}_0(R)&=\mathsf J_2(a_0(f(R)),0;R),&
+ \mathsf{P}_1(R)&=\mathsf J_3(a_1(f(R)),0;R),\\
+ \mathsf{OL}(R,d)&=\mathsf J_4(f(R)\mathbin{|}d,0;R),&
+ \mathsf{OR}(c,R)&=\mathsf J_5(c\mathbin{|}f(R),0;R),\\
+ \mathsf{OE}(H,R,S,j,k)&=\mathsf J_6(f(R),[j,k];H,R,S),&
+ \mathsf{EF}(R,c)&=\mathsf J_{11}(c,0;R),\\
+ \mathsf{RA}(R,c,k)&=\mathsf J_{12}(c,[k];R),&
+ \mathsf{Keep}(H,R)&=\mathsf P_1(\mathsf{And}(H,R)).
+\end{aligned}
+\]
+The projections \(\mathsf P_0,\mathsf P_1\) return zero unless the root
+has tag 8 and arity two. The other expressions have their displayed values
+on all numerical inputs; their successful-tree assertions require their
+actual rule premises. In particular \(\mathsf{Keep}\) retains all open
+leaves of both arguments, including a temporary assumption that must later
+be discharged. No repetition or vacuous-discharge rule is added.
+
+Write \(\mathsf{Safe}(R,c)\) for the arithmetic invariant (7) of
+\cref{annex:p5.numeral-arithmetic-builders}: \(\mathsf{Tree}(R)=1\),
+\(f(R)=c\), and every surviving leaf is unmarked and belongs to the
+specific nine-entry list \(\mathcal A_*\). A root of a safe raw tree may
+have free variables. Packing it is a selected proof when its root is a
+sentence. In particular, on the sentence-and-axiom domain,
+\[
+ \mathsf{pack}(\mathsf{MP}^{\rm row}(R,S))
+       =\mathsf{mp}_{19}(\mathsf{pack}(S),\mathsf{pack}(R)).
+\]
+The raw operation takes the antecedent first; the packed operation takes the
+implication first.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p05-bounded-em-template}{An explicit excluded-middle tree}
+For a formula code \(c\), let \(d=c\mathbin{|}\mathsf{Neg}(c)\), and put
+\[
+\begin{aligned}
+ T(c)&=\mathsf{NI}\bigl(
+   \mathsf B(\mathsf{OL}(\mathsf L(c,1),\mathsf{Neg}(c)),
+                    \mathsf L(\mathsf{Neg}(d),2)),c,0\bigr),\\
+ \mathsf{EM}(c)&=\mathsf{RA}\bigl(
+   \mathsf B(\mathsf{OR}(c,T(c)),\mathsf L(\mathsf{Neg}(d),2)),d,1\bigr).
+\end{aligned}
+\]
+Every occurrence of a tree inserts a separate copy. Marker 1 denotes label
+0, and marker 2 denotes label 1. These expressions also specify the values
+on nonformulas, without a successful-tree assertion there.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p05-bounded-logical-templates}{proved=annex:p5.bounded-logical-templates}{Logical templates and nonvacuous use}
+In \(\PA\), the new row expressions satisfy the exact local tests and
+open-list updates in \cref{def:p05-checker-row-description} whenever their
+displayed rule premises hold. For a formula \(c\), the tree
+\(\mathsf{EM}(c)\) has root \(c\mathbin{|}\mathsf{Neg}(c)\) and no
+open leaves. The two appearances of \(\mathsf{Neg}(d)\) in its last
+premise are both discharged. The operation \(\mathsf{Keep}(H,R)\)
+has root \(f(R)\), with precisely the shifted leaves of \(H\) followed
+by those of \(R\).
+\end{hblemma}
+
+\begin{hbdefinition}{def:p05-bounded-sum-exhaustion}{Finite exhaustion of a numeral sum}
+Define the formula-code recursion, with counter last,
+\[
+ \mathcal D(t,0)=\mathsf{bc},\qquad
+ \mathcal D(t,Sn)=\mathcal D(t,n)\mathbin{|}\mathsf{Eq}(t,\nu(n)).
+\]
+Thus zero cases are represented by bottom, and an additional case is appended
+on the right. Define two separate orientations, indexed here by the fixed
+metalinguistic choice \(\epsilon\in\{0,1\}\):
+\[
+\begin{array}{c|c|c|c}
+ \epsilon&g_\epsilon(t,u)&Z_\epsilon(t)&S_\epsilon(t,u)\\\hline
+ 0&a(t,u)&\mathsf A_4(t)&\mathsf A_5(t,u)\\
+ 1&a(u,t)&\mathsf A_Z(t)&\mathsf A_L(u,t).
+\end{array}
+\]
+The last two columns are the actual instance chains and copied derived
+records from \cref{def:p05-builder-axiom-instances}. They have roots
+\(g_\epsilon(t,o)=t\) and
+\(g_\epsilon(t,s(u))=s(g_\epsilon(t,u))\), respectively.
+
+We define \(\mathsf C_\epsilon(x,z,w,n)\) for pairwise distinct
+\(x,z,w\geq3\). Its failure value on any other triple is zero. The
+following stage expression \(F_\epsilon(x,z,w,n,R)\) is a fixed
+composition with a zero/successor branch on \(n\). Set
+\[
+\begin{aligned}
+ e&=\mathsf{Eq}(v_z,o),&
+ a_n&=\mathsf{Eq}(g_\epsilon(v_x,v_z),\nu(n)),&
+ d_n&=\mathcal D(v_x,Sn),\\
+ H&=\mathsf L(a_n,1),& Z&=\mathsf L(e,2),&
+ K&=\mathsf L(\mathsf{Eq}(v_z,s(v_w)),4).
+\end{aligned}
+\]
+The zero alternative for \(x_z\) is the tree
+\[
+ U=\mathsf{OR}\left(\mathcal D(v_x,n),
+   \mathsf{Tr}\left(
+    \mathsf{Tr}(\mathsf{Sym}(Z_\epsilon(v_x)),
+      \mathsf{Sym}(\mathsf{Cg}_{u\mapsto g_\epsilon(v_x,u)}(Z))),H\right)\right).
+\]
+In the predecessor alternative form
+\[
+ W=\mathsf{Tr}\left(\mathsf{Sym}(S_\epsilon(v_x,v_w)),
+       \mathsf{Tr}(\mathsf{Sym}
+           (\mathsf{Cg}_{u\mapsto g_\epsilon(v_x,u)}(K)),H)\right).
+\]
+Its intended root is
+\(\mathsf{Eq}(s(g_\epsilon(v_x,v_w)),\nu(n))\). Set
+\[
+ V=\begin{cases}
+  \mathsf{EF}(\mathsf B(W,\mathsf A_1(g_\epsilon(v_x,v_w))),d_n),&n=0,\\
+  \mathsf{OL}\left(
+    \mathsf{MP}^{\rm row}\left(
+      \mathsf{MP}^{\rm row}(W,
+          \mathsf A_2(g_\epsilon(v_x,v_w),\nu(D(n)))),
+      \mathsf{FE}(\mathsf{FE}(R,v_x),v_w)\right),
+                           \mathsf{Eq}(v_x,\nu(n))\right),&n>0.
+ \end{cases}
+\]
+Define
+\[
+\begin{aligned}
+ V'&=\mathsf{EE}\bigl(
+    \mathsf{MP}^{\rm row}(\mathsf L(\mathsf{Neg}(e),3),\mathsf A_3(v_z)),
+                 V,1,\mathsf{Eq}(v_z,s(v_1)),w,3\bigr),\\
+ F_\epsilon(x,z,w,n,R)&=
+  \mathsf{FI}\bigl(\mathsf{FI}\bigl(
+   \mathsf{II}(\mathsf{OE}(\mathsf{EM}(e),U,V',1,2),a_n,0),z\bigr),x\bigr).
+\end{aligned}
+\]
+Finally the promised recursion is
+\[
+ \mathsf C_\epsilon(x,z,w,0)=F_\epsilon(x,z,w,0,0),\qquad
+ \mathsf C_\epsilon(x,z,w,Sn)
+       =F_\epsilon(x,z,w,Sn,\mathsf C_\epsilon(x,z,w,n)).
+\]
+Include the triple's validity guard at the base and step; the guard is
+constant in the recursion counter. These are two finite descriptions, not a
+recursion over orientations or over formulas.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p05-bounded-sum-exhaustion}{proved=annex:p5.bounded-sum-exhaustion}{Internal exhaustion invariant in both orientations}
+For each orientation, \(\PA\) proves, for all pairwise distinct
+\(x,z,w\geq3\) and all \(n\),
+\[
+ \mathsf{Safe}\left(\mathsf C_\epsilon(x,z,w,n),
+  \mathsf{All}\left(x,\mathsf{All}\left(z,
+    \mathsf{Eq}(g_\epsilon(v_x,v_z),\nu(n))
+                       \Rightarrow\mathcal D(v_x,Sn)\right)\right)\right).
+\]
+In particular these are selected sentence proofs after packing. The
+surviving axiom leaves are precisely of the already allowed kinds in
+\(\mathcal A_*\); no additional induction-axiom family is used by the
+output trees. The verification uses induction in \(\PA\) on the
+numerical recursion counter.
+\end{hblemma}
+
+\begin{hbdefinition}{def:p05-bounded-range-exhaustion}{Strict sums and comparison exhaustion}
+First define \(\mathsf{CS}(x,z,w,n)\), on the same triple domain, by
+the following composition. Let
+\[
+ c_0=\mathsf{Eq}(a(v_x,s(v_z)),\nu(n)),\quad H=\mathsf L(c_0,1),\quad
+ W=\mathsf{Tr}(\mathsf{Sym}(\mathsf A_5(v_x,v_z)),H).
+\]
+At \(n=0\) put \(V=\mathsf B(W,\mathsf A_1(a(v_x,v_z)))\).
+At \(n>0\) put
+\[
+ V=\mathsf{MP}^{\rm row}\left(
+    \mathsf{MP}^{\rm row}(W,\mathsf A_2(a(v_x,v_z),\nu(D(n)))),
+    \mathsf{FE}(\mathsf{FE}(\mathsf C_0(x,z,w,D(n)),v_x),v_z)\right).
+\]
+Return \(\mathsf{FI}(\mathsf{FI}(\mathsf{II}(V,c_0,0),z),x)\).
+Invalid triples return zero.
+
+For \(i\ne h\), put \(M=\max(2,i,h)\) and
+\(y=M+1,x=M+2,z=M+3,w=M+4\). For either fixed comparison
+orientation let \(G=G_\diamond(i,h,\nu(n))=\mathsf{Ex}(h,c)\),
+\(H=\mathsf L(G,1)\), and \(K=\mathsf L(\mathsf{sub}(c,h,v_y),2)\).
+Use
+\[
+ Q=\begin{cases}
+   \mathsf C_1(x,z,w,n),&\diamond=\leq,\\
+   \mathsf{CS}(x,z,w,n),&\diamond=<,
+ \end{cases}
+\qquad
+ V=\mathsf{MP}^{\rm row}(K,\mathsf{FE}(\mathsf{FE}(Q,v_i),v_y)).
+\]
+Define
+\[
+ \mathsf{E}_\diamond(i,h,n)
+       =\mathsf{II}(\mathsf{EE}(H,V,h,c,y,1),G,0).
+\]
+This is a separate composition for each \(\diamond\); set its value to
+zero when \(i=h\). Set \(N_<(n)=n\), \(N_{\leq}(n)=Sn\).
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p05-bounded-range-exhaustion}{proved=annex:p5.bounded-range-exhaustion}{Actual exhaustion of a marked range}
+In \(\PA\), on the stated index domains, \(\mathsf{CS}\) is safe with
+root
+\[
+ \mathsf{All}(x,\mathsf{All}(z,
+    \mathsf{Eq}(a(v_x,s(v_z)),\nu(n))\Rightarrow\mathcal D(v_x,n))),
+\]
+and \(\mathsf E_\diamond(i,h,n)\) is safe with root
+\[
+ G_\diamond(i,h,\nu(n))\Rightarrow
+                        \mathcal D(v_i,N_\diamond(n)).
+\]
+The strict zero case derives bottom from the assumed comparison. The weak
+zero case retains the single possible equality to zero. Every existential
+elimination satisfies its all-variable test and discharges a surviving
+minor assumption with its specified formula and marker.
+\end{hblemma}
+
+\begin{hbdefinition}{def:p05-bounded-case-elimination}{The finite case tree and the quantified constructor}
+Let \(c\) be a formula code, let \(i\) be a variable index, and let
+\(Q\) be a list of raw proofs. Define a recursion with counter last:
+\[
+\begin{aligned}
+ \mathsf{Cases}(c,i,Q,0)&=\mathsf{EF}(\mathsf L(\mathsf{bc},1),c),\\
+ T_n&=\mathsf{EEq}\bigl(
+       \mathsf{Sym}(\mathsf L(\mathsf{Eq}(v_i,\nu(n)),1)),e(Q,n),
+                                      \nu(n),v_i,c,i\bigr),\\
+ \mathsf{Cases}(c,i,Q,Sn)&=
+   \mathsf{OE}\bigl(\mathsf L(\mathcal D(v_i,Sn),1),
+                            \mathsf{Cases}(c,i,Q,n),T_n,0,0\bigr),\\
+ \mathsf{CI}(c,i,Q,n)&=
+   \mathsf{II}(\mathsf{Cases}(c,i,Q,n),\mathcal D(v_i,n),0).
+\end{aligned}
+\]
+The entry \(T_n\) is the step expression, with the preceding state supplied
+only to the other minor premise. These expressions are total; successful
+use requires \(\mathsf{Safe}(e(Q,k),\mathsf{sub}(c,i,\nu(k)))\) for
+every \(k<n\).
+
+Now supply a variable-free term code \(u\), a numerical value \(b\),
+and a raw tree \(R_u\) safe with root \(\mathsf{Eq}(u,\nu(b))\).
+Let \(i\ne h\), \(G=G_\diamond(i,h,u)\),
+\(N=N_\diamond(b)\), and \(j=1+\max(i,h)\). Put
+\[
+\begin{aligned}
+ T&=\mathsf{EEq}(R_u,\mathsf L(G,1),u,\nu(b),G_\diamond(i,h,v_j),j),\\
+ V&=\mathsf{MP}^{\rm row}
+       (T,\mathsf E_\diamond(i,h,b)),\\
+ W&=\mathsf{MP}^{\rm row}(V,\mathsf{CI}(c,i,Q,N)),\\
+ \mathsf U_\diamond(c,i,h,u,b,R_u,Q)&=
+                  \mathsf{FI}(\mathsf{II}(W,G,0),i).
+\end{aligned}
+\]
+Thus the bound is normalized within the temporary guard; the final
+implication still has its original guard code \(G\).
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p05-bounded-case-elimination}{proved=annex:p5.bounded-case-elimination}{From all numeral cases to one quantified derivation}
+In \(\PA\), if \(c\) is a formula, \(\ell(Q)\geq n\), and every
+\(k<n\) entry of \(Q\) is safe with root
+\(\mathsf{sub}(c,i,\nu(k))\), then
+\(\mathsf{CI}(c,i,Q,n)\) is safe with root
+\(\mathcal D(v_i,n)\Rightarrow c\).
+
+Suppose additionally that \(c\) has no free indices other than \(i\),
+that \(u\) is variable-free, that \(i\ne h\), and that \(R_u\)
+has the stated safe equality root. If the case premise holds through
+\(N_\diamond(b)\), then \(\mathsf U_\diamond\) is safe with exact root
+\[
+             \mathsf{All}(i,G_\diamond(i,h,u)\Rightarrow c).
+\]
+This is a sentence, and its packed record satisfies
+\(\mathsf{Prf}^{19}_{\PA}\). The assertions include \(n=0\),
+\(b=0\), unused free indices, bound-variable shadowing in \(c\), and
+the originally supplied comparison binder \(h\).
+\end{hbtheorem}
+
+\begin{hbdefinition}{def:p05-fixed-bounded-builders}{The two proof descriptions for each fixed bounded formula}
+For a fixed formula \(\varphi\), list its distinct free indices in
+increasing order. Numerical inputs \(\bar m\) supply their values.
+Write \(\varphi^\nu(\bar m)\) for its literal numeral substitution
+code, and \(b_\varphi(\bar m)\) for the following fixed zero-one
+description. At equality and comparison use the numerical term values and
+the tests of \cref{def:p05-numeral-builder-notation}; bottom has value
+zero. Negation uses \(Z\), conjunction uses product, disjunction uses
+sign of the sum, and implication uses
+\(I(b_\psi,b_\chi,1)\) at \(\psi\to\chi\).
+At a marked quantifier with bound value \(b=t^\#(\bar m)\), let
+\(N=N_\diamond(b)\). Existential quantification uses
+\(\mathsf{sg}(\sum_{k<N}b_\psi(\bar m,k))\), and universal
+quantification uses \(\prod_{k<N}b_\psi(\bar m,k)\).
+
+At a child call, its free-index list receives the parent's numerical values
+at the corresponding indices; the currently bound index receives \(k\).
+It overrides that index only within this child. This is a fixed tuple
+projection at each node of the one fixed formula. For a quantifier, the
+bound is evaluated before its fold. A nested bound can consequently depend
+on all its surrounding numerical witnesses. No input ranges over formula
+descriptions.
+
+Define raw descriptions \(R_\varphi^+,R_\varphi^-\) in the same fixed
+formation, returning zero outside their respective success conditions
+\(b_\varphi=1\) and \(b_\varphi=0\). For equality and comparisons
+take the raw record inside the corresponding packed literal description in
+\cref{def:p05-fixed-term-literal-builders}; decode the outer tags 19 then
+15, returning zero on a failed pattern. This retains the exact six literal
+roots and their supplied comparison binders. Bottom uses zero for the
+positive description and \(R_{\neg\bot}\) for the negative description.
+
+Here are the complete connective clauses. In them \(c=\psi^\nu\),
+\(d=\chi^\nu\); each child proof has the unchanged tuple arguments,
+and \(H\) means \(\mathsf L(\varphi^\nu,1)\) in a negative clause.
+Write \(H_c=\mathsf L(c,1)\) and \(H_d=\mathsf L(d,1)\).
+\begin{enumerate}
+\item At \(\neg\psi\), the positive tree is \(R_\psi^-\), and the
+negative tree is
+\[
+ \mathsf{NI}(\mathsf B(R_\psi^+,\mathsf L(\mathsf{Neg}(c),1)),
+                                         \mathsf{Neg}(c),0).
+\]
+\item At \(\psi\land\chi\), the positive tree is
+\(\mathsf{And}(R_\psi^+,R_\chi^+)\). The negative tree is
+\[
+ \begin{cases}
+ \mathsf{NI}(\mathsf B(\mathsf P_0(H),R_\psi^-),c\mathbin{\&}d,0),&b_\psi=0,\\
+ \mathsf{NI}(\mathsf B(\mathsf P_1(H),R_\chi^-),c\mathbin{\&}d,0),&b_\psi=1.
+ \end{cases}
+\]
+\item At \(\psi\lor\chi\), the positive tree is
+\(\mathsf{OL}(R_\psi^+,d)\) when \(b_\psi=1\), and
+\(\mathsf{OR}(c,R_\chi^+)\) when \(b_\psi=0\). For the negative
+tree put
+\[
+ K_\psi=\mathsf B(H_c,R_\psi^-),\qquad
+ K_\chi=\mathsf B(H_d,R_\chi^-),
+\]
+and return
+\[
+ \mathsf{NI}(\mathsf{OE}(H,K_\psi,K_\chi,0,0),c\mathbin{|}d,0).
+\]
+\item At \(\psi\to\chi\), the positive tree is
+\[
+ \begin{cases}
+ \mathsf{II}(\mathsf{EF}(\mathsf B(H_c,R_\psi^-),d),c,0),&b_\psi=0,\\
+ \mathsf{II}(\mathsf{Keep}(H_c,R_\chi^+),c,0),&b_\psi=1.
+ \end{cases}
+\]
+The negative tree is
+\[
+ \mathsf{NI}\bigl(
+   \mathsf B(\mathsf{MP}^{\rm row}(R_\psi^+,H),R_\chi^-),c\Rightarrow d,0\bigr).
+\]
+\end{enumerate}
+The outer success guard precedes each listed subcase test. Thus the second
+negative-conjunction subcase has \(b_\chi=0\); the second
+positive-implication subcase has \(b_\chi=1\).
+
+For a marked quantifier let \(u=t^\nu(\bar m)\),
+\(b=t^\#(\bar m)\), \(N=N_\diamond(b)\), and let \(c\) be the
+matrix code after replacing its other free parameters by their numerals,
+leaving the current index \(i\) free. Set
+\(G=G_\diamond(i,h,u)\), \(C=G\mathbin{\&}c\), and
+\(A=\mathsf{All}(i,G\Rightarrow c)\). The bound term's proof is
+\(R_t(\bar m)\) from \cref{def:p05-fixed-term-literal-builders}.
+For every \(k<N\), let \(L_k\) be the raw positive fixed-literal
+proof of \(\mathsf{sub}(G,i,\nu(k))\). Its free parameter tuple
+includes the current \(k\) before numeral substitution; its comparison
+binder is the original \(h\). This is the already fixed literal
+description applied through tuple projections, not a new proof search.
+
+For the positive existential, choose the least \(k<N\) with
+\(b_\psi(\bar m,k)=1\), with failure value zero, and use
+\[
+ \mathsf{EI}(\mathsf{And}(L_k,R_\psi^+(\bar m,k)),i,C,\nu(k)).
+\]
+For the negative universal, choose the least \(k<N\) with
+\(b_\psi(\bar m,k)=0\), with failure value zero, and use
+\[
+ \mathsf{NI}\left(\mathsf B\left(
+    \mathsf{MP}^{\rm row}(L_k,\mathsf{FE}(\mathsf L(A,1),\nu(k))),
+                          R_\psi^-(\bar m,k)\right),A,0\right).
+\]
+Both searches are the earlier bounded least-search description and are
+called only in their outer success branches.
+
+Let \(Q^+\), respectively \(Q^-\), be the length-\(N\) fold starting
+with zero and appending \(R_\psi^+(\bar m,k)\), respectively
+\(R_\psi^-(\bar m,k)\), at step \(k\). For the positive universal use
+\[
+               \mathsf U_\diamond(c,i,h,u,b,R_t(\bar m),Q^+).
+\]
+For the negative existential first put
+\[
+ U=\mathsf U_\diamond(\mathsf{Neg}(c),i,h,u,b,R_t(\bar m),Q^-),
+ \quad E=\mathsf{Ex}(i,C),\quad y=1+\max(2,m(E)),
+ \quad K=\mathsf L(\mathsf{sub}(C,i,v_y),2).
+\]
+Use the tree
+\[
+ \mathsf{NI}\left(\mathsf{EE}\left(\mathsf L(E,1),
+    \mathsf B\left(\mathsf P_1(K),
+       \mathsf{MP}^{\rm row}(\mathsf P_0(K),\mathsf{FE}(U,v_y))\right),
+                                    i,C,y,1\right),E,0\right).
+\]
+The two displayed uses of \(K\) are two copies; the minor discharge
+removes both. Finally define
+\(d_\varphi^\pm(\bar m)=I(b,\mathsf{pack}(R_\varphi^\pm(\bar m)),0)\),
+where \(b=b_\varphi\) for the plus sign and \(b=Z(b_\varphi)\)
+for the minus sign. These guards also preserve a zero failure value after
+packing.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p05-fixed-bounded-builders}{proved=annex:p5.fixed-bounded-builders}{Internal proof construction for each fixed bounded formula}
+For each fixed bounded formula \(\varphi\), \(\PA\) proves
+\[
+\begin{aligned}
+ &b_\varphi(\bar m)\in\{0,1\},\qquad
+             b_\varphi(\bar m)=1\ \leftrightarrow\ \varphi(\bar m),\\
+ &b_\varphi(\bar m)=1\ \longrightarrow\
+             \mathsf{Safe}(R_\varphi^+(\bar m),\varphi^\nu(\bar m)),\\
+ &b_\varphi(\bar m)=0\ \longrightarrow\
+             \mathsf{Safe}(R_\varphi^-(\bar m),\mathsf{Neg}(\varphi^\nu(\bar m))),
+\end{aligned}
+\]
+with universal numerical closure. Here \(\varphi(\bar m)\) is the
+original fixed arithmetic formula at those numerical variables. Consequently
+it proves both
+\[
+\begin{aligned}
+ \forall\bar m\bigl(\varphi(\bar m)\to\exists p\,
+  (\Gamma_{d_\varphi^+}(\bar m,p)\land
+                \mathsf{Prf}^{19}_{\PA}(p,\varphi^\nu(\bar m)))\bigr),\\
+ \forall\bar m\bigl(\neg\varphi(\bar m)\to\exists p\,
+  (\Gamma_{d_\varphi^-}(\bar m,p)\land
+       \mathsf{Prf}^{19}_{\PA}(p,\mathsf{Neg}(\varphi^\nu(\bar m))))\bigr).
+\end{aligned}
+\]
+All graph applications in these assertions expand to their specified
+\(\Gamma\) formulas. The construction preserves literal roots, all
+original binders, dependent bounds and witnesses, and nonvacuous discharge.
+An empty free-parameter list gives a nullary description and an empty
+quantifier prefix. This theorem supplies the bounded-formula dependency;
+the subsequent evidence-to-proof construction must still specialize it and
+construct the original unbounded existential and other evidence clauses
+before an assertion of D3 for the selected predicate is available.
+\end{hbtheorem}

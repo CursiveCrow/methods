@@ -1,0 +1,364 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "reviewed-acquisition-gap-resolutions.schema.json",
+  "title": "Reviewed acquisition-gap terminal resolutions and nonterminal evidence",
+  "description": "Schema validity is necessary but not sufficient. The generator also checks the hash-locked gap manifest, exact live source identity, destination bytes and applicable labels, nonterminal NOT CLEAN reports, hash-pinned planned-presentation evidence, and six independent evidence artifacts.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "acquisition_gap_manifest_path",
+    "acquisition_gap_manifest_sha256",
+    "nonterminal_reports",
+    "nonterminal_evidence",
+    "records"
+  ],
+  "properties": {
+    "schema_version": {"const": 2},
+    "acquisition_gap_manifest_path": {"const": "spec/acquisition-gap-manifest.csv"},
+    "acquisition_gap_manifest_sha256": {
+      "const": "0b03e6f4e0fb2abc5468ef0fce2961177d270a469d3ac37302c760a80a1a85dc"
+    },
+    "nonterminal_reports": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/nonterminalReport"}
+    },
+    "nonterminal_evidence": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/plannedPresentationEvidence"}
+    },
+    "records": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/record"}
+    }
+  },
+  "$defs": {
+    "nonemptyString": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^\\S(?:.*\\S)?$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "repositoryPath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
+    },
+    "gapId": {
+      "type": "string",
+      "pattern": "^ACQ-GAP-[0-9]{3}$"
+    },
+    "label": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9._-]*:[A-Za-z0-9][A-Za-z0-9._:-]*$"
+    },
+    "exactScope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "acquisition_id",
+        "gap_record_sha256",
+        "content_links_digest"
+      ],
+      "properties": {
+        "acquisition_id": {"$ref": "#/$defs/gapId"},
+        "gap_record_sha256": {"$ref": "#/$defs/sha256"},
+        "content_links_digest": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "contentLink": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "start_line",
+        "end_line",
+        "content_sha256",
+        "labels"
+      ],
+      "properties": {
+        "path": {"$ref": "#/$defs/repositoryPath"},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "start_line": {"type": "integer", "minimum": 1},
+        "end_line": {"type": "integer", "minimum": 1},
+        "content_sha256": {"$ref": "#/$defs/sha256"},
+        "labels": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/label"}
+        }
+      }
+    },
+    "nonterminalReport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "report_result",
+        "gap_status_effect",
+        "applies_to_gap_ids",
+        "rights_holder_contacts",
+        "external_messages_sent",
+        "subscription_only_bodies_retrieved",
+        "inaccessible_bodies_credited_as_acquired"
+      ],
+      "properties": {
+        "path": {"$ref": "#/$defs/repositoryPath"},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "report_result": {"const": "not_clean"},
+        "gap_status_effect": {"const": "none"},
+        "applies_to_gap_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/gapId"}
+        },
+        "rights_holder_contacts": {"const": 0},
+        "external_messages_sent": {"const": 0},
+        "subscription_only_bodies_retrieved": {"const": 0},
+        "inaccessible_bodies_credited_as_acquired": {"const": 0}
+      }
+    },
+    "presentationRelation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "planned_presentation",
+        "superseding_presentation",
+        "relation_scope"
+      ],
+      "properties": {
+        "planned_presentation": {"$ref": "#/$defs/nonemptyString"},
+        "superseding_presentation": {"$ref": "#/$defs/nonemptyString"},
+        "relation_scope": {"const": "chapter_presentation_only"}
+      }
+    },
+    "plannedPresentationEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evidence_type",
+        "path",
+        "sha256",
+        "gap_status_effect",
+        "applies_to_gap_ids",
+        "planned_volume_title",
+        "planned_editors",
+        "presentation_relation",
+        "published_volume_identity_status",
+        "volume_body_status",
+        "rights_status"
+      ],
+      "properties": {
+        "evidence_type": {"const": "planned_presentation"},
+        "path": {"$ref": "#/$defs/repositoryPath"},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "gap_status_effect": {"const": "none"},
+        "applies_to_gap_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/gapId"}
+        },
+        "planned_volume_title": {"$ref": "#/$defs/nonemptyString"},
+        "planned_editors": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/nonemptyString"}
+        },
+        "presentation_relation": {"$ref": "#/$defs/presentationRelation"},
+        "published_volume_identity_status": {"const": "not_established"},
+        "volume_body_status": {"const": "not_acquired"},
+        "rights_status": {"const": "not_established"}
+      }
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_fidelity_ai",
+        "topic_specialist_ai",
+        "adversarial_publication_ai",
+        "static",
+        "build",
+        "visual"
+      ],
+      "properties": {
+        "source_fidelity_ai": {"const": "pass"},
+        "topic_specialist_ai": {"const": "pass"},
+        "adversarial_publication_ai": {"const": "pass"},
+        "static": {"const": "pass"},
+        "build": {"const": "pass"},
+        "visual": {"const": "pass"}
+      }
+    },
+    "authorityFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": {"$ref": "#/$defs/repositoryPath"},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "authorityLocator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "start_line", "end_line", "content_sha256"],
+      "properties": {
+        "path": {"$ref": "#/$defs/repositoryPath"},
+        "start_line": {"type": "integer", "minimum": 1},
+        "end_line": {"type": "integer", "minimum": 1},
+        "content_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "mechanicalEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "category",
+        "recorded_result",
+        "artifact_path",
+        "sha256",
+        "producer_identity",
+        "exact_scope"
+      ],
+      "properties": {
+        "category": {"enum": ["static", "build", "visual"]},
+        "recorded_result": {"const": "pass"},
+        "artifact_path": {"$ref": "#/$defs/repositoryPath"},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "producer_identity": {"$ref": "#/$defs/nonemptyString"},
+        "exact_scope": {"$ref": "#/$defs/exactScope"}
+      }
+    },
+    "aiEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "category",
+        "recorded_result",
+        "artifact_path",
+        "sha256",
+        "producer_identity",
+        "exact_scope",
+        "model",
+        "model_version",
+        "instructions",
+        "consulted_authority_files",
+        "consulted_authority_locators",
+        "findings",
+        "evidence_digest"
+      ],
+      "properties": {
+        "category": {
+          "enum": [
+            "source_fidelity_ai",
+            "topic_specialist_ai",
+            "adversarial_publication_ai"
+          ]
+        },
+        "recorded_result": {"const": "pass"},
+        "artifact_path": {"$ref": "#/$defs/repositoryPath"},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "producer_identity": {"$ref": "#/$defs/nonemptyString"},
+        "exact_scope": {"$ref": "#/$defs/exactScope"},
+        "model": {"$ref": "#/$defs/nonemptyString"},
+        "model_version": {"$ref": "#/$defs/nonemptyString"},
+        "instructions": {"$ref": "#/$defs/nonemptyString"},
+        "consulted_authority_files": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/authorityFile"}
+        },
+        "consulted_authority_locators": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/authorityLocator"}
+        },
+        "findings": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/nonemptyString"}
+        },
+        "evidence_digest": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "evidence": {
+      "oneOf": [
+        {"$ref": "#/$defs/aiEvidence"},
+        {"$ref": "#/$defs/mechanicalEvidence"}
+      ]
+    },
+    "record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "acquisition_id",
+        "record_type",
+        "manifest_status",
+        "source_file",
+        "source_line",
+        "source_sha256",
+        "gap_description",
+        "gap_record_sha256",
+        "resolution_status",
+        "content_links",
+        "destination_labels",
+        "resolution_description",
+        "verification",
+        "verification_evidence"
+      ],
+      "properties": {
+        "acquisition_id": {"$ref": "#/$defs/gapId"},
+        "record_type": {"const": "gap"},
+        "manifest_status": {"const": "open"},
+        "source_file": {"$ref": "#/$defs/repositoryPath"},
+        "source_line": {"type": "integer", "minimum": 1},
+        "source_sha256": {"$ref": "#/$defs/sha256"},
+        "gap_description": {"$ref": "#/$defs/nonemptyString"},
+        "gap_record_sha256": {"$ref": "#/$defs/sha256"},
+        "resolution_status": {"const": "resolved"},
+        "content_links": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/contentLink"}
+        },
+        "destination_labels": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/label"}
+        },
+        "resolution_description": {"$ref": "#/$defs/nonemptyString"},
+        "verification": {"$ref": "#/$defs/verification"},
+        "verification_evidence": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "items": {"$ref": "#/$defs/evidence"},
+          "allOf": [
+            {"contains": {"properties": {"category": {"const": "source_fidelity_ai"}}, "required": ["category"]}, "minContains": 1, "maxContains": 1},
+            {"contains": {"properties": {"category": {"const": "topic_specialist_ai"}}, "required": ["category"]}, "minContains": 1, "maxContains": 1},
+            {"contains": {"properties": {"category": {"const": "adversarial_publication_ai"}}, "required": ["category"]}, "minContains": 1, "maxContains": 1},
+            {"contains": {"properties": {"category": {"const": "static"}}, "required": ["category"]}, "minContains": 1, "maxContains": 1},
+            {"contains": {"properties": {"category": {"const": "build"}}, "required": ["category"]}, "minContains": 1, "maxContains": 1},
+            {"contains": {"properties": {"category": {"const": "visual"}}, "required": ["category"]}, "minContains": 1, "maxContains": 1}
+          ]
+        }
+      }
+    }
+  }
+}

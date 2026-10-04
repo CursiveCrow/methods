@@ -1,0 +1,644 @@
+\section{Verification of the numeral proof constructors}
+\label{sec:annex-p05-pa-numeral-proof-builders}
+
+\begin{annexitem}{annex:p5.builder-nocapture}{thm:p05-builder-nocapture}{The specified substitution machine on the required inputs}
+\begin{proof}
+All arguments in this annex take place in \(\PA\). Each named function
+means the unique graph output of its fixed description. The graph equations,
+table-prefix equations, constructor decoding and list equations used below
+are those proved in \cref{annex:p5.checker-description}; induction is full
+\(\PA\) induction with the other displayed parameters retained. In
+particular, the induction arguments apply to the numerical variables of
+\(\PA\), rather than just to standard codes.
+
+The new table is a finite description. Its row update uses only the previous
+table, the fixed type/variable tests, projections, constructors, arithmetic
+and a finite case distinction. Its bound is \(Sc\), evaluated before the
+fold. Every valid expression child has smaller code, so its row is available.
+Invalid input has exactly the displayed three zero fields. The earlier
+table-prefix theorem identifies a retrieved child row with its own completed
+table value, internally and on all codes.
+
+Strong induction on \(c\), expressed by retaining all earlier instances,
+proves the following assertion whenever its first field is one: the returned
+expression has the input type, and the cost is positive and at most twice
+the input node count. At a variable the replacement has the required term
+type, or the variable is unchanged. Zero and bottom retain their types.
+At a unary or binary constructor the child assertions and the fixed grammar
+give the output type. The cost is two plus the child costs, at most twice
+one plus the sum of child node counts. At a stopped binder the unchanged
+expression has cost one. At another binder the matrix assertion and the
+same cost calculation apply. These exhaust the valid syntax cases.
+
+Here is a stronger execution invariant identifying the actual selected
+machine, including its time bound. Write \(\mathsf{step}\) for its fixed
+single update and \(\mathsf{step}^{,w}\) for its \(w\)-fold primitive
+recursion. For arbitrary raw continuation and value lists \(D,V\), if
+the table row at \(c\) is \([1,z,w]\), then
+\[
+ \mathsf{step}^{,w}([1,C([0,c,i,u],D),V])=[1,D,C(z,V)].
+\tag{1}
+\]
+This is an arithmetic equation of specified graph outputs. Prove it in the
+same strong induction on \(c\), with \(D,V\) universally quantified.
+At a variable, zero or bottom the first substitution command returns the
+declared value in one update. At a nonbinding unary node, one update puts
+its child command and assembly command before \(D\). The child induction
+instance returns its value, and the one assembly update wraps the specified
+tag. At a binary node, the first update puts left command, right command,
+and assembly in that order. Apply the left instance with the other commands
+as continuation, then the right instance with the returned left value on
+the stack. Assembly pops right and then left, giving exactly
+\(N_k(z_0,z_1)\) in \(2+w_0+w_1\) updates. The iteration equation
+\(\mathsf{step}^{a+b}(s)=\mathsf{step}^{b}(\mathsf{step}^{a}(s))\),
+proved by induction on \(b\), justifies these compositions of runs.
+
+At a binder with index \(i\), the actual machine stops and returns \(c\)
+in one update. At a different binder \(j\), table success gives
+\(\mathsf{AV}(u,j)=0\). Thus the actual machine selects its no-renaming
+branch, invokes the matrix command, and then its quantified assembly command.
+The matrix induction instance gives (1) in \(2+w_0\) updates. Its term and
+formula tests succeed by the previously established type assertion. These
+cases verify every machine update that can occur under the table-success
+premise. In particular no fresh-renaming or continuation-after-renaming
+command is used. The new child values provide every value-stack entry needed
+by assembly. The continuation \(D\) is never executed in (1).
+
+Put \(D=V=0\). At cost \(w\) the state is successful with no pending
+command and exactly one value. This is an absorbing completed state of the
+selected machine. The internally proved bound
+\(w\leq2\mathsf{nodes}(c)<20(\mathsf{nodes}(c)+1)^2\) therefore makes
+its final extraction return exactly \(z\). This proves
+\(\mathsf{sub}=\mathsf{ns}\) from the defining equations of that machine.
+
+If the replacement \(u\) is a term with no variable occurrences, every factor
+\(Z(\mathsf{AV}(u,j))\) is one; the same strong induction proves success
+at every valid input. For a quantifier-free input there is no such factor,
+so every term replacement succeeds. These arguments also give the explicit
+nonbinding substitution equations, not just success of a computation.
+
+Induction on the recurrence for \(\nu\), using the syntax-table equations,
+proves that it is a term with every all-variable and free-variable bit zero.
+Retain \(\mathsf{Tm}(u)=1\) as a parameter while inducting on that
+recurrence in the new table. At zero this hypothesis passes the replacement
+type test, so the zero-term case gives success bit one and result \(\nu(0)\).
+At the successor the same type test passes, and the predecessor induction
+instance gives success bit one and the unchanged successor result. Thus
+\(\mathsf{nc}(\nu(n),i,u)=1\) and
+\(\mathsf{ns}(\nu(n),i,u)=\nu(n)\) under the retained hypothesis.
+Equation (1) then gives \(\mathsf{sub}(\nu(n),i,u)=\nu(n)\) under that
+same hypothesis, proving the body's universally closed guarded assertion.
+
+For an invalid replacement, \(\mathsf{Tm}(u)=0\), the original type guards
+instead give \(\mathsf{nc}(c,i,u)=\mathsf{ns}(c,i,u)=
+\mathsf{cost}(c,i,u)=0\) and \(\mathsf{sub}(c,i,u)=0\) for every \(c\).
+For example, the numerical input \(u=0\) is an empty-list code, not the
+zero-term code \(\nu(0)=N_1()=C(1,0)=2\). At \(n=i=u=0\), both
+substitution outputs are therefore zero, while \(\nu(0)=2\). These
+unchanged failure values explain the replacement-term hypothesis.
+
+Induction on \(j\) gives
+\(\mathsf{it}(s(t),j)=s(\mathsf{it}(t,j))=\mathsf{it}(t,Sj)\):
+the base is the zero equation and the step applies one further successor
+constructor to the preceding equality.
+
+One freshness fact will be used repeatedly. Strong induction on the syntax
+code, with the maximum-index table equations, proves internally that a valid
+expression has \(\mathsf{AV}(c,j)=0\) whenever \(j>m(c)\). At a variable
+the maximum is its index; at a compound the maximum dominates each child
+maximum; at a binder it also dominates the binder. Zero and bottom have no
+variable bits. Thus every hole index chosen in the body is absent from the
+other terms and binders in its context. The displayed open-term instances
+of the fixed axioms have no binding conflict: first substituting for index
+0 leaves at most the index-1 binder, and the replacement then has no index 1;
+the second substitution is in a quantifier-free matrix. Their table equations
+therefore identify all their literal roots. This completes every claimed
+substitution prerequisite.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p5.builder-row-templates}{thm:p05-builder-row-templates}{Internal tree, row and occurrence equations for the templates}
+\begin{proof}
+Work with the exact \(\mathsf{Rows}\), \(\mathsf{Tree}\), parent-count
+and open-list descriptions. For clarity, a successful tree assertion means
+\(\mathsf{Tree}(R)=1\); this includes nonemptiness, every row bit equal
+to one, and the exact parent-count product. It does not yet impose a
+sentence root or an axiom test on open assumptions.
+
+The joins are fixed finite compositions of length, shift, concatenation and
+constructor functions. At arity zero the result is the one displayed row;
+at any other allowed arity, positivity of premise lengths puts their root
+references below the appended row. The cumulative block intervals are
+disjoint. The internal shift and concatenation equations from
+\cref{annex:p5.checker-internal-mp} give, for block \(j\) and \(v<l_j\),
+\[
+ f_{\rm joined}(t_j+v)=f_{R_j}(v),\qquad
+ \lambda_{\rm joined}(t_j+v)=\lambda_{R_j}(v).
+\tag{2}
+\]
+The parameter fields are unchanged and premise references receive only the
+offset \(t_j\).
+
+Induct through each block's row counter. The first block's row computations
+are unchanged. For a later block, the induction assertion is that each row
+bit is its old bit and its open list is the old list shifted by \(t_j\).
+At assumptions the list is \([t_j+v]\); identity introduction has the empty
+list. Nondischarge rules use the old formula and parameter data, and
+concatenation commutes with shift. All substitution calls have exactly their
+old numerical arguments, so their unique outputs are unchanged. Discharge
+filters have equal label/formula tests at corresponding entries by (2);
+the internal filter/shift equation preserves both their result and their
+strict length-decrease test. Universal introduction has the same free-variable
+calls on corresponding leaves. Existential elimination has the same matrix,
+eigenvariable, major formula and conclusion; after the same minor discharge,
+its all-variable calls and its minor-before-major open-list order are
+unchanged. Alpha and equality rules likewise have identical syntactic
+arguments. These are the old-row cases of the accepted internal joining
+proof, whose premises were successful rows, without a sentence-root premise.
+Appending a last row changes none of the prefix lookups used in this induction.
+
+Split the defining parent-count sum into the fixed block intervals and the
+last row. Cancellation of offsets gives, for every \(v<l_j\),
+\[
+ \mathsf{pc}(\mathsf J,t_j+v)
+       =\mathsf{pc}(R_j,v)+E(v,D(l_j)).
+\tag{3}
+\]
+No other block contributes, since its references are confined to its own
+interval. Each last-row premise names precisely its block root, and these
+references are distinct. The new last row has count zero. Substituting the
+old count zero at each root and one at every nonroot proves the required
+new counts. These equations follow by bounded-sum induction and apply to
+arities one, two and three. For arity zero there is just one row and no
+reference, so the count is zero directly.
+
+The last row's successful local test now completes the tree product. Its
+open list is its exact rule update on the shifted premise lists. In
+particular, labels that coincide in different copied trees do not change
+an old discharge: the old row still consults only its own premise branch.
+This proves the general joining assertion, including temporary assumptions
+and intermediate roots with free variables.
+
+For the special equality templates use the internal substitution identities
+just proved. With the prescribed fresh hole, symmetry's two premises are
+\(t=u\) and \(t=t\), and the matrix is \(x_j=t\); tag 19 returns
+\(u=t\). Transitivity uses premises \(u=w\) first and \(t=u\) second,
+with matrix \(t=x_j\); it returns \(t=w\). Congruence uses \(t=u\)
+and the identity \(g(t)=g(t)\), with matrix \(g(t)=g(x_j)\), and returns
+\(g(t)=g(u)\). Every identity premise is a tag-18 row with parameter the
+actual term \(t\) or \(g(t)\). The term, formula and freshness facts make
+all common and additional row tests one. These nondischarge rules append
+only empty-context identity subtrees, so they introduce no new open leaves.
+
+The remaining templates explicitly encode tags 1, 7, 8, 9, 10, 13, 14, 15
+and 16 with the exact parameter arities in the body. For example, tag 8
+consumes the antecedent tree before the implication tree; tag 10 consumes
+the positive formula before its negation. Tags 7 and 9 use the supplied
+label, filter its specified formula and require a surviving occurrence.
+Tag 16 removes the specified minor instance and tests its eigenvariable
+against the all-variable sets of the major, conclusion and remaining open
+leaves. These conditions are hypotheses of the template invariant, not
+automatic consequences of being a numerical tree.
+
+Finally, if the two roots are sentences and their leaves pass the selected
+axiom test, the success guard of \(\mathsf{mp}_{19}\) holds. Its displayed
+row expression is precisely the arity-two tag-8 join here after packing,
+including the antecedent-first order. Thus the accepted internal MP theorem
+applies at such calls. The raw join assertion supplies the explicitly proved
+extension needed at the intermediate open-formula calls. A sentence root
+and an axiom test on every final open leaf always suffice, by direct expansion
+of \(\chi_{19}\), to turn one of the successful raw trees into a selected
+proof after packing. The empty final open list contributes the product one.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p5.builder-left-addition}{thm:p05-builder-left-addition}{Actual induction records for left addition}
+\begin{proof}
+The one-row \(\mathsf L(q_j,0)\) is an unmarked assumption. Its formula
+is one of the seven literal sentence constants, so its leaf test succeeds.
+Each subsequent \(\mathsf{FE}\) is one tag-13 row, with the actual binder,
+matrix and replacement term in its three parameter fields. The no-conflict
+table identifies the instances used here with the following decoded formulas.
+This verifies the whole instance chain rather than treating its final formula
+as another axiom.
+
+The induction matrix \(m_Z\) has exactly free index 0. Consequently its
+canonical induction axiom \(I_Z\) has no parameter prefix and is literally
+\[
+ \bigl(0+0=0\land
+    \forall x_0((0+x_0=x_0)\to(0+Sx_0=Sx_0))\bigr)
+                      \to\forall x_0(0+x_0=x_0).
+\tag{4}
+\]
+The computed zero and successor substitutions in (4) follow from the new
+table equations. The exact \(\mathsf{IndAx}\) reconstruction therefore
+accepts this leaf. Its code is the fixed expression \(I_Z\), not an
+unspecified induction instance.
+
+The root of \(Z_0\) is \(0+0=0\), by the instance of \(q_4\) at
+zero. In \(Z_s\), the marked assumption is \(0+x_0=x_0\), marker 1,
+label 0. Its successor congruence has root \(S(0+x_0)=Sx_0\). The
+instance of \(q_5\) at \((0,x_0)\) has root
+\(0+Sx_0=S(0+x_0)\). Transitivity therefore gives exactly the step
+consequent \(0+Sx_0=Sx_0\). The marked assumption occurs once in its
+open list; the other leaves are unmarked \(q_5\) and identity contributes
+none. Tag 7 discharges that occurrence nonvacuously and gives the step
+implication. Tag 15 generalizes index 0: every remaining open leaf is a
+closed arithmetic axiom. Tag 1 combines the base and universally quantified
+step. The raw tag-8 join with (4) concludes \(\mathsf{All}(0,m_Z)\).
+Every nonlast row is consumed once by the joining lemma. This is exactly
+the defined record \(D_Z\).
+
+For \(m_L\), the free indices are exactly 0 and 1. The induction index
+is 1, so \(I_L\) is its induction core preceded by precisely the binder
+\(\forall x_0\). The base and successor matrices are respectively
+\[
+ Sx_0+0=S(x_0+0),\qquad
+ Sx_0+Sx_1=S(x_0+Sx_1).
+\tag{5}
+\]
+The no-conflict substitution equations yield these literal codes and the
+ordered free-index fold yields prefix \([0]\). This checks its canonical
+axiom shape and its final direct-axiom factor.
+
+The record \(L_0\) starts with \(Sx_0+0=Sx_0\), obtained from
+\(q_4\) at \(Sx_0\). A separate copy of \(q_4\) at \(x_0\),
+successor congruence and symmetry gives \(Sx_0=S(x_0+0)\).
+Transitivity gives exactly the first formula in (5). The step record
+\(L_s\) chains the following three equalities, in that order:
+\[
+\begin{aligned}
+ Sx_0+Sx_1&=S(Sx_0+x_1),\\
+ S(Sx_0+x_1)&=S(S(x_0+x_1)),\\
+ S(S(x_0+x_1))&=S(x_0+Sx_1).
+\end{aligned}
+\tag{6}
+\]
+The first is \(q_5\) at \((Sx_0,x_1)\). The second is the successor
+congruence of the one marked \(m_L\) assumption. The third is the
+symmetry of successor congruence of \(q_5\) at \((x_0,x_1)\).
+Thus (6) has exactly the step-consequent code in (5). The marker-1
+assumption survives once; tag 7 discharges label 0 nonvacuously, and tag 15
+generalizes index 1 from closed unmarked axiom leaves. Combine this with
+\(L_0\) by tag 1. The other premise is the actual \(\forall E\)
+instance of \(I_L\) at term \(v_0\), whose no-conflict identity substitution
+returns its induction core literally. Raw implication elimination gives
+\(\forall x_1 m_L\); universal introduction at index 0 gives the displayed
+root of \(D_L\).
+
+Every operation in (4)--(6) is the fixed template expression in the body,
+so these calculations identify actual records, including all references,
+parameters and labels after the defined shifts. They are a finite proof
+of their checker assertions using its equations and the joining invariant.
+The only surviving leaves are among the seven fixed constants and
+\(I_Z,I_L\), all unmarked. Direct decoding shows that these nine sentences
+have no variable index other than 0 or 1. The syntax and axiom descriptions
+on this finite list verify the assertion in \(\PA\) by finitely many
+defining-equation instances. No derived conclusion of \(D_Z\) or \(D_L\)
+is used as an axiom leaf. Copying either record for a later instance retains
+its original verified leaves and adds only its specified \(\forall E\) rows.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p5.numeral-arithmetic-builders}{thm:p05-numeral-arithmetic-builders}{Induction on the arithmetic proof recurrences}
+\begin{proof}
+Use the following arithmetic invariant for the raw trees:
+\[
+\begin{split}
+ \mathsf{Safe}(R,c)\quad\text{means}\quad&
+ \mathsf{Tree}(R)=1\land f(R)=c\\
+ &\land\forall j<\ell(\mathsf{open}(R))\,
+   \bigl(\lambda_R(\mathsf{entry}(\mathsf{open}(R),j))=0
+    \land\mathsf{mem}(f_R(\mathsf{entry}(\mathsf{open}(R),j)),
+                                             \mathcal A_*)=1\bigr).
+\end{split}
+\tag{7}
+\]
+Every operation in (7) is an already specified graph, and the fixed list
+\(\mathcal A_*\) was verified in the preceding item. Thus (7) is an
+arithmetic formula licensed for induction. If its root is a sentence,
+expansion of the selected checker proves
+\(\mathsf{Prf}^{19}_{\PA}(\mathsf{pack}(R),c)\). No bound on the
+numerical magnitude of \(R\) is needed for this implication.
+
+For \(R_+\), induct on \(n\) in (7) with root
+\(\mathsf{Eq}(a(\nu(m),\nu(n)),\nu(A(m,n)))\), retaining \(m\) as parameter.
+The base \(q_4\) instance gives exactly
+\(\bar m+0=\bar m\), and the equations \(A(m,0)=m\) and \(\nu(0)=o\)
+identify the target code. In the step the \(q_5\) instance has root
+\[
+ \mathsf{Eq}(a(\nu(m),s(\nu(n))),s(a(\nu(m),\nu(n)))).
+\]
+The preceding proof's successor congruence has root
+\(\mathsf{Eq}(s(a(\nu(m),\nu(n))),s(\nu(A(m,n))))\).
+Transitivity joins these at identical intermediate term codes. The equations
+\(\nu(Sn)=s(\nu(n))\), \(A(m,Sn)=S(A(m,n))\) and
+\(\nu(SA(m,n))=s(\nu(A(m,n)))\) identify the exact required new root.
+All retained leaves satisfy (7), by the row-joining invariant and the fixed
+\(q_5\) leaf check. This is an internal base and step proof, so
+\cref{cor:p05-pa-recursion-invariant} proves (7) for the specified recurrence.
+
+For \(R_\times\), use the same induction with root
+\(\mathsf{Eq}(b(\nu(m),\nu(n)),\nu(M(m,n)))\). At zero the \(q_6\) instance
+and \(M(m,0)=0\) prove it. At the successor, the \(q_7\) instance is
+\[
+ \bar m\times S\bar n=(\bar m\times\bar n)+\bar m.
+\]
+The old multiplication proof lifted through right addition by \(\bar m\)
+gives
+\((\bar m\times\bar n)+\bar m=\overline{M(m,n)}+\bar m\).
+The already verified addition builder, at numerical arguments \(M(m,n),m\),
+gives this last term equal to \(\overline{A(M(m,n),m)}\). Two transitivity
+joins give the stated record's root. The numerical recurrence
+\(M(m,Sn)=A(M(m,n),m)\) identifies its last numeral literally. Each
+premise tree is copied into its own interval, so no equality proof is shared
+as a row with two parents. The leaf invariant persists. These base and step
+proofs establish its universal \(\mathsf{Safe}\) assertion in \(\PA\).
+
+For \(R_{\rm right}(t,n)\), retain the permitted term-code parameter
+\(t\). The base is the \(q_4\) instance \(t+0=t\), and the step
+chains the \(q_5\) instance \(t+S\bar n=S(t+\bar n)\) with successor
+congruence of its predecessor. The iterate equation identifies the output
+as \(\mathsf{it}(t,Sn)\). For \(R_{\rm left}(t,n)\), the base is
+the actual instance of \(D_Z\), \(0+t=t\). The step uses the actual
+instance of \(D_L\), \(S\bar n+t=S(\bar n+t)\), and successor
+congruence of its predecessor. All instance substitutions satisfy the new
+table test: a numeral has no variables, and the only possible open index
+of \(t\) is at least 3, away from the index-1 inner binder. Consequently
+the displayed formulas are the exact root codes, not merely equivalent
+formulas. The same induction proves (7) in both orientations.
+
+The roots of the numeral addition and multiplication builders are sentences,
+because numerals have no variables and their constructors add no binders or
+variable occurrences. Applying the implication following (7) proves the
+two selected-checker assertions in the body. At every use, replacing the
+function names by existentially quantified graph outputs gives an ordinary
+\(\PA\) derivation. Totality supplies those outputs, their defining
+equations supply the base and step identities, and uniqueness identifies
+the composed values. This establishes the assertions for the specified
+graphs rather than for an extensionally similar representative.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p5.numeral-literal-builders}{thm:p05-numeral-literal-builders}{Successor peeling, witness exclusion and literal roots}
+\begin{proof}
+First verify the raw contradiction constructor in \(\PA\). Assume
+\(\mathsf{Tree}(R)=1\), \(k>b\), and
+\(f(R)=\mathsf{Eq}(\mathsf{it}(t,k),\nu(b))\), with the stated domain
+of \(t\).
+Induct on \(j\leq b\) with the invariant that \(P(t,k,b,R,j)\) is a
+successful tree with root
+\[
+ \mathsf{Eq}(\mathsf{it}(t,L(k,j)),\nu(L(b,j))),
+\tag{8}
+\]
+and with exactly the old open leaves of \(R\), shifted as its copied tree,
+together with unmarked \(q_2\) leaves. This open-list assertion can be
+written using the join's exact shift/concatenation equations; in particular
+every old marked leaf survives with its multiplicity.
+
+At zero, subtraction's zero equation gives (8) and the record is \(R\).
+At \(j<b\), the arithmetic order and subtraction equations give
+\(L(k,j)>0\), \(L(b,j)>0\), and
+\[
+ L(k,j)=S(L(k,Sj)),\qquad L(b,j)=S(L(b,Sj)).
+\]
+The \(q_2\) instance in the update has antecedent exactly (8), by the
+iterate and numeral equations, and consequent exactly its instance at
+\(Sj\). The raw tag-8 join verifies the new tree and open list. Its
+term substitutions are numeral terms or successor iterates of \(v_y\)
+with \(y\geq3\), so the surviving binder-1 test succeeds and no renaming
+changes these literal roots. This proves the step. At \(j\geq b\) the
+description retains its state; this defines its total value without adding
+any unbounded loop. The final value is evaluated at the fixed bound \(b\).
+
+At \(j=b\), (8) is
+\(\mathsf{Eq}(\mathsf{it}(t,L(k,b)),o)\), and \(L(k,b)>0\). Thus the first
+term is literally \(s(\mathsf{it}(t,D(L(k,b))))\). The specified
+\(q_1\) instance is the negation of precisely this equality. Tag 10,
+positive equality first, produces bottom and retains the asserted open
+leaves together with one unmarked \(q_1\) leaf. This proves the full
+\(\mathsf{Clash}\) invariant. At \(b=0\) the peeling recursion performs
+no update; the initial equality is contradicted directly by \(q_1\).
+
+For \(R_{\ne}(m,n)\), internal trichotomy under \(m\ne n\) selects
+exactly one of its first two cases. In the first case \(t=o,k=m,b=n\),
+and the iterate equals the corresponding numeral. In the second case the
+explicit symmetry template first changes the root to
+\(\mathsf{Eq}(\nu(n),\nu(m))\); then \(k=n,b=m\). The contradiction invariant
+applies in either case. Its only marked leaf is the original equality
+\(c\) with marker 1, and it survives once: every update uses its old tree
+once, symmetry's identity has no assumptions, and new axiom leaves are
+unmarked. Tag 9 with parameter \([0]\) therefore discharges that leaf
+nonvacuously and returns exactly \(\mathsf{Neg}(c)\). The resulting tree satisfies
+\(\mathsf{Safe}\). If \(m=n\), the equality builder's conditional returns
+the premise-free identity tree; equality of the numerical arguments gives
+equality of their unique numeral-code outputs, so its root is the displayed
+\(\mathsf{Eq}(\nu(m),\nu(n))\). All these roots are sentences.
+
+For the positive weak comparison, \(m\leq n\) gives
+\(A(L(n,m),m)=n\). The addition proof therefore has root
+\(\mathsf{Eq}(a(\nu(L(n,m)),\nu(m)),\nu(n))\). This is the exact result of
+substituting the witness \(\nu(L(n,m))\) into the matrix
+\(\mathsf{Eq}(a(v_i,\nu(m)),\nu(n))\). Tag 14 yields
+\(\mathsf{Le}_i(\nu(m),\nu(n))\). For the positive strict comparison,
+put \(d=L(n,m)>0\); the arithmetic equations give \(A(m,d)=n\) and
+\(S(D(d))=d\). Thus \(R_+(m,d)\) has root
+\(\mathsf{Eq}(a(\nu(m),s(\nu(D(d)))),\nu(n))\), which is the stated matrix
+instance for witness \(\nu(D(d))\). Tag 14 yields its exact strict
+comparison root. A numeral has no variables, so these substitutions do not
+alter the supplied binder index. These raw trees satisfy \(\mathsf{Safe}\).
+
+Now verify the negative weak comparison with \(m>n\). Its major assumption
+\(H\) has root \(C=\exists x_i(x_i+\bar m=\bar n)\), marker 1.
+Its minor assumption \(K\) is exactly
+\(x_y+\bar m=\bar n\), marker 2, where \(y=i+3\).
+The right-addition recurrence proves
+\(x_y+\bar m=S^m x_y\) as an intermediate open formula. Symmetry and
+transitivity with \(K\) give \(S^m x_y=\bar n\), exactly the root
+required by \(\mathsf{Clash}(v_y,m,n,\cdot)\). That constructor produces
+bottom and retains the minor marked assumption once.
+
+For the negative strict comparison \(m\geq n\), the minor is
+\(\bar m+Sx_y=\bar n\). The left-addition recurrence proves
+\(\bar m+Sx_y=S^m(Sx_y)\). Its last term has exactly the code
+\(\mathsf{it}(v_y,Sm)\), by the internal iterate identity already proved.
+Symmetry and transitivity therefore give the root needed by
+\(\mathsf{Clash}(v_y,Sm,n,\cdot)\), and \(Sm>n\) licenses that
+constructor. It again returns bottom with the one marked minor leaf.
+
+For both orientations, the new tag-16 row has parameters precisely
+\([i,c,y,1]\), major \(H\), and the minor bottom derivation. Its
+formula-specific discharge removes the marker-2 minor instance, nonvacuously.
+Every other minor open leaf is an unmarked member of \(\mathcal A_*\).
+The eigenvariable \(y=i+3\) differs from \(i\), is at least 3, and is
+absent from every such leaf's all-variable set, since those sets are subsets
+of \(\{0,1\}\). The major comparison has only the bound index \(i\)
+in its all-variable set, and the conclusion bottom has no variables.
+The remaining major assumption is therefore also free of every occurrence
+of \(y\). These facts verify all three factors and the bounded product
+of the selected existential-elimination freshness test, including bound
+occurrences. Its open-list order is the filtered minor list followed by the
+major list, exactly as in the defined template.
+
+The new tag-9 row, with parameter \([0]\), then removes the major marker-1
+assumption \(C\), which remains once. Its conclusion is \(\mathsf{Neg}(C)\) and
+its remaining leaves are unmarked \(\mathcal A_*\) leaves. This proves
+\(\mathsf{Safe}\) and the sentence-root test for the two negative
+comparison records. Previously discharged label-0 assumptions inside copied
+\(D_Z,D_L\) records cause no collision: they are absent from those roots'
+open lists, and each earlier discharge still sees only its copied branch.
+
+The sentence assertions here follow from the internal variable-table
+equations. A numeral has every variable bit zero. In either comparison
+matrix the only possible free index is its supplied \(i\); at the
+existential constructor the index-\(i\) free bit is multiplied by zero,
+and at every other index the matrix bit was already zero. Negation preserves
+these zero bits. The type-table cases make every such root a formula, and
+the free-index filter is therefore empty. This proves its actual
+\(\mathsf{Sent}\) test for all numerical binder indices, including zero.
+
+Every arithmetic fact about \(L,E,\mathsf{lt}\) in this argument is an
+internal equation or comparison consequence proved for those descriptions
+in \cref{annex:p5.checker-description}, using the PA arithmetic laws from
+\cref{annex:p5.internal-pr-graphs}. The conditions selecting the displayed
+branches are therefore proved to make their success tests one. The zero
+failure branches remain total without any claimed proof on their failing
+domain.
+
+Finally, \(R_{\neg\bot}\) has exactly two rows. Its first row is the
+marked bottom assumption, and its second row is tag 9 with that row as its
+sole premise, formula \(\mathsf{Neg}(\mathsf{bc})\), parameter list \([0]\), and
+zero marker. Its discharge removes the unique bottom leaf. The first row
+has one parent, the last zero, and its final open list is empty. Thus it
+passes the selected checker after packing. At equal comparison endpoints,
+the positive weak comparison uses witness zero, while the negative strict
+comparison leaves a positive successor after peeling. In particular these
+arguments cover \(m=n=0\); neither an absent predecessor of zero nor a
+nonempty peeling range is assumed. All the tabled proof assertions now
+follow by packing the verified sentence-root trees.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p5.fixed-term-literal-builders}{thm:p05-fixed-term-literal-builders}{Fixed formation, arithmetic value and exact literal transport}
+\begin{proof}
+First, the descriptions in the body are finite in the required sense.
+Each row template is a fixed composition of earlier descriptions. The four
+arithmetic recurrences and the peeling recurrence use the declared last
+argument; their step descriptions call only earlier descriptions and their
+supplied preceding state. The peeling bound \(b\) is supplied before its
+run. Its branch tests, and the sign/ordering tests selecting literal builders,
+are the previously fixed Boolean descriptions. The two derived induction
+records are fixed finite compositions. An instance builder performs exactly
+one or two declared universal eliminations. Consequently there is no cyclic
+description dependency or proof-search call. Even a failure branch has its
+specified numerical value. The graph theorem supplies unique outputs for
+each of these fixed descriptions.
+
+For a fixed term, metainduction on its finite formation assigns the
+descriptions \(t^\#,t^\nu,R_t\). The induction assertion is an actual
+\(\PA\) theorem, with all its numerical tuple variables universally
+quantified, asserting \(\mathsf{Safe}\) with root
+\(\mathsf{Eq}(t^\nu,\nu(t^\#))\). The zero and variable cases are exactly
+their tag-18 identity rows. In the successor case, congruence lifts the
+child equality and \(\nu(Sk)=s(\nu(k))\) identifies its new right term.
+For addition, the first congruence replaces \(u^\nu\) in the left
+argument while keeping \(v^\nu\). The second replaces \(v^\nu\) in
+the right argument while keeping the already normalized left numeral.
+Their middle term is literally the same code. Transitivity gives
+\[
+ \mathsf{Eq}(a(u^\nu,v^\nu),a(\nu(u^\#),\nu(v^\#))).
+\]
+The previously verified addition proof supplies its last normalization
+step. Two transitivity joins yield the required output. Multiplication
+uses the same two child equalities in the specified multiplication contexts,
+then the verified multiplication proof. These steps retain only the fixed
+unmarked axiom leaves. This is a finite metainduction producing internal
+PA proofs for the separately fixed descriptions; it does not quantify over
+term descriptions inside \(\PA\).
+
+The same formation induction using the syntax equations proves that
+\(t^\nu\) is a variable-free term and is the literal numeral substitution
+instance of the original term. A numeral insertion is returned without
+being traversed as a new input, and the no-conflict table commutes with all
+of its term constructors. Thus the assertion covers any order of the
+declared distinct free-variable list; the numerical tuple positions were
+fixed before the construction.
+
+For the arithmetic antecedents, \(\PA\) proves that the fixed graph
+\(A\) agrees with object-language addition, as already established in
+\cref{ex:p05-pa-pair-cons-graphs}. Induction on the second argument of
+\(M\) similarly gives agreement with object-language multiplication:
+the graph's zero equation and \(q_6\) both give zero, and its successor
+equation, the addition identification and \(q_7\) give the same next
+value. Uniqueness proves both directions. The initial zero/successor
+descriptions already have their literal equations. Metainduction on the
+fixed term therefore gives, inside \(\PA\), equality of its value as
+an object-language term at \(\bar m\) and the graph value \(t^\#(\bar m)\).
+This is an arithmetic equality, not a uniform semantic evaluation theorem.
+Equality reasoning, and the fixed inherited comparison definitions with the
+internal PA order laws, consequently turn a true fixed signed literal
+antecedent \(\lambda(\bar m)\) into exactly the numerical condition in
+the normalized-literal table. For negated comparisons the same equivalences
+and trichotomy give the indicated complementary condition.
+
+Assume that condition and take the corresponding normalized raw proof
+\(Q\). Its root is \(W(\nu(u^\#),\nu(v^\#))\). The chosen hole
+index \(j\) is larger than the comparison binder \(i\), if present,
+and absent from every term argument, since those are variable-free. It
+is therefore a permissible hole in both displayed formula contexts. The
+first symmetry proof has equality root \(\mathsf{Eq}(\nu(u^\#),u^\nu)\).
+The two substitution equations for its equality-elimination matrix are
+\[
+\begin{aligned}
+ W(v_j,\nu(v^\#))[\nu(u^\#)/x_j]
+       &=W(\nu(u^\#),\nu(v^\#)),\\
+ W(v_j,\nu(v^\#))[u^\nu/x_j]
+       &=W(u^\nu,\nu(v^\#)).
+\end{aligned}
+\tag{9}
+\]
+Brackets in (9) mean the actual selected substitution graph. The new
+no-conflict theorem proves these identities also when \(W\) has an
+existential binder and an outer negation: the replacement terms have no
+variables, and that binder differs from the hole. The first tag-19 join
+therefore has precisely the latter root. The second join, using symmetry
+of the \(v\) evaluation proof and matrix \(W(u^\nu,v_j)\), gives
+\(W(u^\nu,v^\nu)\) by the corresponding two identities. It adds no
+open assumptions except the already allowed unmarked leaves of its three
+input trees. Both joins have the actual parameter list order
+\([\text{left term},\text{right term},\text{matrix},j]\).
+
+The final root is a sentence. It is also the literal numeral-instance code
+\(\lambda^\nu(\bar m)\). For a comparison, the existential binder was
+the least index absent from the original two terms when that abbreviation
+was expanded. Those indices and that code were fixed at that stage.
+Numeral substitution does not rename this binder, and the construction
+retains its supplied index \(i\), even if index zero becomes available
+after substitution. Thus there is no silent replacement of the target by
+an alpha-equivalent code. For a signed equality there is no comparison
+binder to retain. The outer negation, when present, is likewise preserved
+literally by (9).
+
+The resulting \(\mathsf{Safe}\) assertion and its sentence root give
+the selected \(\mathsf{Prf}^{19}_{\PA}\) formula after packing. The
+success branch is the specified output of \(d_\lambda\). Expand all
+its finitely many graph applications, existentially introduce the unique
+output \(p\), and apply implication introduction and universal closure
+in the tuple parameters. This is exactly the internal formula displayed
+in the body. The negative-bottom case uses its explicit two-row proof;
+for positive bottom, bottom elimination gives the displayed implication
+with contradictory antecedent, and no successful output of its zero-valued
+builder is asserted.
+
+An empty parameter list causes no exceptional proof step: the description
+is nullary, the tuple quantifier prefix is empty, and the same fixed
+formation argument applies. Numeral zero, multiplication by zero, witness
+zero for a weak comparison, a zero peeling bound, equal endpoints and empty
+identity-proof contexts were included in the preceding base cases. This
+completes the supplied literal constructors and their internal invariants.
+The bounded connective and quantifier constructors are the next dependency;
+no evidence-to-proof or positive-introspection claim follows from literals
+alone.
+\end{proof}
+\end{annexitem}

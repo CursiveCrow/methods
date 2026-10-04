@@ -1,0 +1,850 @@
+%% toc: P2 13 13.4,13.5,13.6,13.7
+\section{Tableau soundness and completeness}
+\label{sec:p02-w02-p02-014-tableau-metatheory}
+
+A propositional tableau is a search for a valuation satisfying a finite set
+of formulas.  The search either closes every branch, which certifies that no
+such valuation exists, or ends with an open branch from which a satisfying
+valuation can be read off.  This section makes that statement exact for the
+calculus of \cref{def:p02-cpl-tableau}, whose rules are displayed on the
+calculus sheet \texttt{sheet:\allowbreak tableaux-cpl}, and proves each of its parts: soundness of
+closure, termination of exhaustive expansion, the truth lemma for open
+saturated branches, and completeness.  Together these results establish every
+clause of \cref{thm:p02-tableau-adequacy}.  It then shows why the
+termination argument is special to the propositional case and treats the
+first-order calculus of \cref{def:p02-fol-tableau}, extended by equality
+rules: soundness, extraction of a Herbrand countermodel from an open
+saturated (fair) branch, completeness, and a fair systematic procedure that
+halts exactly on unsatisfiable inputs.  These results establish every clause
+of \cref{thm:p02-fol-tableau-adequacy}.
+
+\emph{Inputs.}  A finite set \(\Gamma\subseteq\mathsf{Fm}_{\mathsf{CPL}}\)
+in the language of \cref{sec:prop-syntax-semantics-01}, with primitive
+\(\bottom,\neg,\land,\lor,\to\); and, for consequence and validity, one
+further formula \(\varphi\).  \emph{Conclusions.}  Either a closed tableau,
+which shows that \(\Gamma\) is unsatisfiable (or that \(\Gamma\entails\varphi\)),
+or a finished tableau with an open branch together with an explicit valuation
+that satisfies \(\Gamma\) (or satisfies \(\Gamma\) and falsifies
+\(\varphi\)).  Valuations, satisfaction \(v\entails\chi\), satisfiability,
+validity and semantic consequence are those of
+\cref{sec:prop-syntax-semantics-02}; \(\widehat v\) is the extension of a
+valuation \(v\) to all formulas.  In the first-order part
+(\cref{sec:p02-w02-p02-014-fol-calculus,sec:p02-w02-p02-014-fol-herbrand,sec:p02-w02-p02-014-fol-systematic})
+the input is a finite set of first-order sentences, with or without
+equality, and the conclusion is either a finite closed tableau, which shows
+the set unsatisfiable, or an open saturated branch, possibly infinite,
+together with a structure built from closed terms that satisfies the set.
+
+\subsection{Input convention, expandable occurrences and finished tableaux}
+\label{sec:p02-w02-p02-014-input}
+
+\begin{hbconvention}{def:p02-w02-p02-014-input}{Root branch and the three tests}
+Fix a finite set \(\Gamma\) and list it without repetition in a fixed
+order as \(\gamma_1,\ldots,\gamma_n\), where \(n=0\) is allowed.  The \emph{root branch}
+\(B_\Gamma\) is the list \(\langle\gamma_1,\ldots,\gamma_n\rangle\) with no
+expansion marks: it lists each member of \(\Gamma\) exactly once.
+\begin{enumerate}
+  \item \emph{Satisfiability} of \(\Gamma\) is tested by a tableau rooted at
+        \(\Gamma\).
+  \item \emph{Consequence} \(\Gamma\entails\varphi\) is tested by a tableau
+        rooted at \(\Gamma\cup\{\neg\varphi\}\).  The added formula is
+        \(\neg\varphi\) itself, with no simplification even when
+        \(\varphi\) is a negation; if \(\neg\varphi\in\Gamma\) already, it is
+        listed once.
+  \item \emph{Validity} \(\entails\varphi\) is the case
+        \(\Gamma=\varnothing\): it is tested by a tableau rooted at
+        \(\{\neg\varphi\}\).
+\end{enumerate}
+\end{hbconvention}
+
+By unique readability (\cref{thm:prop-unique-readability}) every formula of
+\(\mathsf{Fm}_{\mathsf{CPL}}\) is a variable \(p\), \(\bottom\), or of the
+form \(\neg\chi\) or \((\chi\circ\psi)\) with
+\(\circ\in\{\land,\lor,\to\}\), and \(\chi\) in \(\neg\chi\) is again of one of
+these forms.  This fixes the following split, on which saturation depends.
+
+\begin{hbdefinition}{def:p02-w02-p02-014-expandable}{Expandable formulas, branches, expansion steps and finished tableaux}
+\begin{enumerate}
+  \item A formula is \emph{expandable} if it has one of the seven premise
+        shapes of the sheet:
+        \[
+          \varphi\land\psi,\quad \neg(\varphi\land\psi),\quad
+          \varphi\lor\psi,\quad \neg(\varphi\lor\psi),\quad
+          \varphi\to\psi,\quad \neg(\varphi\to\psi),\quad
+          \neg\neg\varphi .
+        \]
+        Every other formula is \emph{terminal}.  The terminal formulas are
+        exactly \(p\), \(\neg p\) (for a variable \(p\)), \(\bottom\) and
+        \(\neg\bottom\); the last is the defined verum \(\topv\).  No rule
+        has a terminal premise.
+  \item Each expandable formula has exactly one rule on the sheet, and that
+        rule lists its \emph{alternatives}: one alternative for the
+        \emph{linear} shapes and two for the \emph{branching} shapes.
+        \[
+        \begin{array}{lll}
+          \text{premise} & \text{alternatives} & \text{kind}\\ \hline
+          \varphi\land\psi & \langle\varphi,\psi\rangle & \text{linear}\\
+          \neg(\varphi\lor\psi) & \langle\neg\varphi,\neg\psi\rangle & \text{linear}\\
+          \neg(\varphi\to\psi) & \langle\varphi,\neg\psi\rangle & \text{linear}\\
+          \neg\neg\varphi & \langle\varphi\rangle & \text{linear}\\
+          \neg(\varphi\land\psi) & \langle\neg\varphi\rangle\mid\langle\neg\psi\rangle & \text{branching}\\
+          \varphi\lor\psi & \langle\varphi\rangle\mid\langle\psi\rangle & \text{branching}\\
+          \varphi\to\psi & \langle\neg\varphi\rangle\mid\langle\psi\rangle & \text{branching}
+        \end{array}
+        \]
+  \item A \emph{branch} is a pair \(B=(\langle\theta_1,\ldots,\theta_m\rangle,M)\)
+        of a finite list of formulas and a set \(M\subseteq\{1,\ldots,m\}\)
+        of \emph{marked positions}, each holding an expandable formula.  The
+        \emph{occurrence} at position \(i\) is the pair \((i,\theta_i)\): two
+        positions holding the same formula are two occurrences.  Write
+        \(\operatorname{fm}(B)=\{\theta_1,\ldots,\theta_m\}\).  The branch is \emph{closed} if
+        \(\bottom\in\operatorname{fm}(B)\) or both \(\chi\in\operatorname{fm}(B)\) and \(\neg\chi\in\operatorname{fm}(B)\) for
+        some \(\chi\), and \emph{open} otherwise.
+  \item An occurrence at position \(i\) is \emph{expandable on \(B\)} if
+        \(B\) is open, \(\theta_i\) is expandable and \(i\notin M\).  An
+        \emph{expansion step} at such an occurrence replaces \(B\) by one
+        \emph{child} for each alternative \(A\) of \(\theta_i\): the child is
+        \((\langle\theta_1,\ldots,\theta_m\rangle\frown A,\;M\cup\{i\})\).
+        Nothing is deleted, the new positions are unmarked, and a closed
+        branch admits no step.
+  \item A \emph{tableau rooted at \(\Gamma\)} is the last member \(T_k\) of an
+        \emph{expansion sequence} \(T_0,\ldots,T_k\) of finite lists of
+        branches, where \(T_0=\langle B_\Gamma\rangle\) and \(T_{j+1}\)
+        replaces one branch of \(T_j\) by its children under one expansion
+        step.  It is \emph{closed} if every branch is closed.
+  \item An open branch is \emph{saturated} if every position holding an
+        expandable formula is marked; terminal occurrences never need a mark.
+        A tableau is \emph{finished} if each of its branches is closed or
+        saturated.
+\end{enumerate}
+\end{hbdefinition}
+
+Children keep the positions of their parent, so a position below a split
+denotes the same occurrence on every branch descending from the branch where
+it was added.  The sheet's instruction to append the conclusions ``on every
+open branch through'' an occurrence is therefore a finite run of expansion
+steps, one for each open branch that carries that occurrence unmarked, and
+every result below applies to it.  The tree drawn in
+\cref{fig:p02-closed-tableau} is the picture of an expansion sequence in
+which shared initial segments of branches are drawn once.  Saturation is
+determinate: whether a branch is saturated depends only on its list and its
+mark set.  In particular \(\neg\bottom\) and \(\neg p\) never prevent
+saturation, and two occurrences of one expandable formula must each be
+expanded.
+
+The termination argument uses a size measure.  For a formula \(\chi\), let
+\(\operatorname{sz}(\chi)\) be the number of occurrences of variables,
+\(\bottom\) and connectives in \(\chi\) (parentheses are not counted):
+\(\operatorname{sz}(p)=\operatorname{sz}(\bottom)=1\),
+\(\operatorname{sz}(\neg\chi)=\operatorname{sz}(\chi)+1\) and
+\(\operatorname{sz}(\chi\circ\psi)=\operatorname{sz}(\chi)+\operatorname{sz}(\psi)+1\).
+For a branch \(B\), put
+\[
+  \mu(B)\defeq\sum_{\substack{1\leq i\leq m,\ i\notin M,\\
+     \theta_i\text{ expandable}}}3^{\operatorname{sz}(\theta_i)},
+\]
+a sum over positions, so a formula at two unmarked positions counts twice.
+For an open branch, \(\mu(B)=0\) exactly
+when \(B\) is saturated.  Finally the \emph{branch valuation} of a branch
+\(B\) is the valuation \(v_B\) with \(v_B(p)\) true exactly when the variable
+\(p\) belongs to \(\operatorname{fm}(B)\).
+
+\subsection{Soundness, termination and the truth lemma}
+\label{sec:p02-w02-p02-014-results}
+
+\begin{hblemma}{thm:p02-w02-p02-014-alternatives}{proved=annex:p02-w02-p02-014-alternatives}{Each rule is a semantic case split}
+For every expandable formula \(\chi\) and every valuation \(v\),
+\(v\entails\chi\) if and only if there is an alternative \(A\) of \(\chi\)
+with \(v\entails\alpha\) for every formula \(\alpha\) of \(A\).  Moreover
+every formula of every alternative of \(\chi\) has size at most
+\(\operatorname{sz}(\chi)-1\), and each alternative has at most two members.
+\end{hblemma}
+
+\begin{hblemma}{thm:p02-w02-p02-014-invariants}{proved=annex:p02-w02-p02-014-invariants}{Branch invariants}
+Let \(B=(\langle\theta_1,\ldots,\theta_m\rangle,M)\) be a branch of a tableau
+rooted at \(\Gamma=\{\gamma_1,\ldots,\gamma_n\}\).
+\begin{enumerate}
+  \item \(m\geq n\) and \(\theta_\ell=\gamma_\ell\) for \(\ell\leq n\); hence
+        \(\Gamma\subseteq\operatorname{fm}(B)\).
+  \item For each \(i\in M\), the formula \(\theta_i\) is expandable and some
+        alternative \(A\) of \(\theta_i\) satisfies \(A\subseteq\operatorname{fm}(B)\).
+\end{enumerate}
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p02-w02-p02-014-soundness}{proved=annex:p02-w02-p02-014-soundness}{Soundness of closure}
+Let \(\Gamma\) be finite.
+\begin{enumerate}
+  \item If \(v\entails\operatorname{fm}(B)\) and an expansion step replaces \(B\) by its
+        children, then \(v\entails\operatorname{fm}(C)\) for at least one child \(C\).
+  \item If \(v\entails\Gamma\), then every tableau rooted at \(\Gamma\) has a
+        branch \(B\) with \(v\entails\operatorname{fm}(B)\), and every such branch is open.
+  \item If some tableau rooted at \(\Gamma\), finished or not, is closed, then
+        \(\Gamma\) is unsatisfiable.
+\end{enumerate}
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p02-w02-p02-014-termination}{proved=annex:p02-w02-p02-014-termination}{Termination of exhaustive expansion}
+Let \(\Gamma\) be finite and \(\mu_0\defeq\mu(B_\Gamma)\).
+\begin{enumerate}
+  \item Every child \(C\) of an expansion step at a branch \(B\) satisfies
+        \(\mu(C)<\mu(B)\).
+  \item Every expansion sequence \(T_0,\ldots,T_k\) from \(B_\Gamma\) has
+        \(k\leq 2^{\mu_0+1}-2\).
+  \item A tableau admits an expansion step if and only if it is not finished.
+  \item Consequently, expanding expandable occurrences in any order stops
+        after at most \(2^{\mu_0+1}-2\) steps, and it stops exactly at a
+        finished tableau.  In particular a finished tableau rooted at
+        \(\Gamma\) exists.
+\end{enumerate}
+\end{hbtheorem}
+
+The bound in clause 2 is a crude ceiling that proves termination; it is not
+an estimate of the size of a typical tableau.
+
+\begin{hblemma}{thm:p02-w02-p02-014-truth}{proved=annex:p02-w02-p02-014-truth}{Truth lemma for open saturated branches}
+Let \(B\) be an open saturated branch of a tableau rooted at a finite set.
+Then \(v_B\entails\chi\) for every \(\chi\in\operatorname{fm}(B)\).
+\end{hblemma}
+
+\subsection{Completeness, countermodel read-off and decision}
+\label{sec:p02-w02-p02-014-completeness}
+
+\begin{hbtheorem}{thm:p02-w02-p02-014-completeness}{proved=annex:p02-w02-p02-014-completeness}{Systematic completeness and countermodel read-off}
+Let \(T\) be a finished tableau rooted at a finite set \(\Gamma\).
+\begin{enumerate}
+  \item \(T\) is closed if and only if \(\Gamma\) is unsatisfiable.
+  \item If \(B\) is an open branch of \(T\), then \(v_B\) satisfies every
+        formula on \(B\), and in particular \(v_B\entails\Gamma\).
+  \item Any two finished tableaux rooted at \(\Gamma\) are either both closed
+        or both open, whatever order of expansion produced them.
+\end{enumerate}
+\end{hbtheorem}
+
+\begin{hbcorollary}{thm:p02-w02-p02-014-consequence}{proved=annex:p02-w02-p02-014-consequence}{Tableau tests for consequence and validity}
+Let \(\Gamma\) be finite and \(\varphi\in\mathsf{Fm}_{\mathsf{CPL}}\).
+\begin{enumerate}
+  \item \(\Gamma\entails\varphi\) if and only if some, equivalently every,
+        finished tableau rooted at \(\Gamma\cup\{\neg\varphi\}\) is closed.
+  \item If a finished tableau rooted at \(\Gamma\cup\{\neg\varphi\}\) has an
+        open branch \(B\), then \(v_B\) is a countervaluation:
+        \(v_B\entails\Gamma\) and \(\widehat{v_B}(\varphi)\) is false.
+  \item \(\entails\varphi\) if and only if some, equivalently every,
+        finished tableau rooted at \(\{\neg\varphi\}\) is closed.
+\end{enumerate}
+\end{hbcorollary}
+
+\begin{hbmethod}{def:p02-w02-p02-014-procedure}{Systematic tableau procedure}
+\emph{Input:} a finite \(\Gamma\subseteq\mathsf{Fm}_{\mathsf{CPL}}\).
+\begin{enumerate}
+  \item Start with \(T_0=\langle B_\Gamma\rangle\).
+  \item While some branch is open and not saturated, take the first such
+        branch and the least unmarked position on it holding an expandable
+        formula, and perform the expansion step there.
+  \item When no step applies, output \emph{unsatisfiable} if every branch is
+        closed.  Otherwise take the first open branch \(B\) and output the
+        finite set of variables in \(\operatorname{fm}(B)\); it describes \(v_B\).
+\end{enumerate}
+For \(\Gamma\entails\varphi\) run the procedure on
+\(\Gamma\cup\{\neg\varphi\}\) and for \(\entails\varphi\) on
+\(\{\neg\varphi\}\): \emph{unsatisfiable} means the consequence (or validity)
+holds, and an output valuation is a countervaluation.  Any other fixed rule
+for choosing the branch and the position gives the same verdict, by
+\cref{thm:p02-w02-p02-014-completeness}(3).
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p02-w02-p02-014-decision}{proved=annex:p02-w02-p02-014-decision}{Propositional tableaux decide by terminating saturation}
+For every finite \(\Gamma\), the procedure of
+\cref{def:p02-w02-p02-014-procedure} halts after at most
+\(2^{\mu(B_\Gamma)+1}-2\) expansion steps.  It outputs \emph{unsatisfiable}
+exactly when \(\Gamma\) is unsatisfiable, and any valuation it outputs
+satisfies \(\Gamma\).  Hence satisfiability of finite sets of formulas,
+validity of formulas, and consequence from finitely many premises are each
+decided by an algorithm that halts on every input with the correct answer,
+and every negative answer to validity or consequence comes with a
+countervaluation.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p02-w02-p02-014-example-peirce}{A closed tableau: Peirce's law}
+Test \(\entails((P\to Q)\to P)\to P\).  The root branch is
+\(\langle\neg(((P\to Q)\to P)\to P)\rangle\).
+\begin{enumerate}
+  \item Position 1 has the linear shape \(\neg(\varphi\to\psi)\).  Mark it
+        and append \((P\to Q)\to P\) (position 2) and \(\neg P\)
+        (position 3).
+  \item Position 2 has the branching shape \(\varphi\to\psi\).  Mark it.
+        The left child appends \(\neg(P\to Q)\) at position 4; the right
+        child appends \(P\) at position 4.
+  \item The right child contains \(P\) and \(\neg P\) and is closed.
+  \item On the left child, position 4 has the shape \(\neg(\varphi\to\psi)\).
+        Mark it and append \(P\) and \(\neg Q\).  This child now contains
+        \(P\) and \(\neg P\) and is closed.
+\end{enumerate}
+Both branches are closed, so by \cref{thm:p02-w02-p02-014-consequence} the
+formula is valid.  The root measure is
+\(\mu_0=3^{\operatorname{sz}(((P\to Q)\to P)\to P)+1}=3^{8}\), and three
+steps were used.
+\end{hbexample}
+
+\begin{hbexample}{def:p02-w02-p02-014-example-counter}{An open branch and its countervaluation}
+Test \(\{P\to Q\}\entails Q\to P\).  The root branch is
+\(\langle P\to Q,\ \neg(Q\to P)\rangle\).
+\begin{enumerate}
+  \item Expand position 2, of shape \(\neg(\varphi\to\psi)\): mark it and
+        append \(Q\) (position 3) and \(\neg P\) (position 4).
+  \item Expand position 1, of shape \(\varphi\to\psi\): mark it.  The left
+        child appends \(\neg P\), the right child appends \(Q\).
+\end{enumerate}
+The left branch is
+\(\langle P\to Q,\neg(Q\to P),Q,\neg P,\neg P\rangle\) with positions 1 and
+2 marked.  It is open: \(\bottom\) is not on it, and no formula on it has
+its negation on it.  It is saturated, since its unmarked formulas \(Q\) and
+\(\neg P\) are terminal.  Its branch valuation makes \(Q\) true and every other variable,
+in particular \(P\), false.  It satisfies \(P\to Q\) and falsifies
+\(Q\to P\), as \cref{thm:p02-w02-p02-014-consequence}(2) requires, so the
+consequence fails.  The right branch is open and saturated as well and gives
+the same valuation.  In general different open branches may give different
+countervaluations.
+\end{hbexample}
+
+\begin{hbwarning}{def:p02-w02-p02-014-unfinished}{An open branch that is not saturated proves nothing}
+The truth lemma needs saturation.  The root branch \(\langle P\land\neg
+P\rangle\) is open before any expansion, and its branch valuation makes every
+variable false; that valuation falsifies \(P\land\neg P\).  Only after the
+\(\land\) step does the branch contain \(P\) and \(\neg P\) and close
+(\cref{fig:p02-closed-tableau}).  An open branch in an unfinished tableau
+therefore supports no conclusion about satisfiability, and a closed branch
+alone does not close the tableau: every branch must close.
+\end{hbwarning}
+
+\subsection{Why termination is special to the propositional case}
+\label{sec:p02-w02-p02-014-fol-contrast}
+
+Termination rests on two facts: an expandable occurrence is expanded at most
+once on a branch, and each alternative is smaller than its premise.  The
+first-order calculus of \cref{def:p02-fol-tableau} keeps the first fact
+for propositional and witness-producing occurrences (its rules are on the
+calculus sheet \texttt{sheet:\allowbreak tableaux-fol}), but a universal occurrence, or a negated
+existential, stays available at every closed term of the parameter-extended
+language \(\mathcal L_{\Gamma}^{*}\) not yet used for it.
+
+\begin{hblemma}{thm:p02-w02-p02-014-fol-no-finite-saturation}{proved=annex:p02-w02-p02-014-fol-no-finite-saturation}{Finite first-order branches with a universal occurrence are not saturated}
+Let \(\Gamma\) be a finite set of equality-free sentences and let \(B\) be a
+finite open branch of a first-order tableau rooted at \(\Gamma\) in the sense
+of \cref{def:p02-fol-tableau}.  If \(B\) contains an occurrence of a formula
+\(\forall x\,\varphi\) or \(\neg\exists x\,\varphi\), then \(B\) is not
+saturated.  Hence every saturated open branch containing such an occurrence
+is infinite.
+\end{hblemma}
+
+The rest of this section supplies the first-order metatheory: an exact
+bookkeeping for first-order branches, the equality rules, soundness, the
+Herbrand truth lemma for open saturated (fair) branches, and the fair
+systematic expansion procedure, which semidecides unsatisfiability.
+
+\subsection{First-order tableaux with and without equality}
+\label{sec:p02-w02-p02-014-fol-calculus}
+
+Signatures, terms, sentences, structures, satisfaction
+\(\mathcal M,s\entails\varphi\) and truth \(\mathcal M\entails\sigma\) are
+those of \cref{sec:fol-syntax-semantics-01,sec:fol-semantics-01,sec:fol-semantics-02};
+the equality sign is logical and every structure interprets it as identity
+on its domain \(\dom\mathcal M\).  For a closed term \(t\), write
+\(t^{\mathcal M}\) for its value \(\sem{t}^{\mathcal M}_s\), which does not
+depend on the assignment \(s\).  Substitution \(\varphi[t/x]\) is the total
+capture-avoiding operation of \cref{sec:fol-syntax-semantics-04}, and
+\(c(\varphi)\) is first-order formula complexity, which counts connectives
+and quantifiers and is unchanged by substitution
+(\cref{lem:substitution-complexity}).
+
+\begin{hbconvention}{def:p02-w02-p02-014-fol-setting}{Root language, parameters and the two calculi}
+Let \(\Gamma\) be a finite set of \(\mathcal L\)-sentences.  As in
+\cref{def:p02-fol-tableau}, \(\mathcal L_{\Gamma}\) contains exactly the
+function and relation symbols occurring in \(\Gamma\), and
+\(\mathcal L_{\Gamma}^{*}\) adds pairwise distinct new constant symbols
+\(a_0,a_1,\ldots\), the \emph{parameters}, none of which belongs to
+\(\mathcal L\).  Let \(\mathrm{CT}_{\Gamma}\) be the set of closed
+\(\mathcal L_{\Gamma}^{*}\)-terms.  It is countably infinite, since
+\(\mathcal L_{\Gamma}\) is finite and the parameters are infinitely many;
+fix a computable enumeration \(t_0,t_1,t_2,\ldots\) in which every member of
+\(\mathrm{CT}_{\Gamma}\) occurs.
+\begin{enumerate}
+  \item The \emph{equality-free calculus} \(\mathsf T\) is the calculus of
+        \cref{def:p02-fol-tableau}, whose rules are on the calculus sheet
+        \texttt{sheet:\allowbreak tableaux-fol}.  It is used only when no
+        member of \(\Gamma\) contains the equality sign.
+  \item The \emph{calculus with equality} \(\mathsf T^{=}\) has the rules
+        of \(\mathsf T\) together with the two equality rules of
+        \cref{def:p02-w02-p02-014-fol-equality}.  Its root \(\Gamma\) may
+        contain equations.
+\end{enumerate}
+By unique readability (\cref{thm:fol-unique-readability}) every
+\(\mathcal L_{\Gamma}^{*}\)-sentence has exactly one of the following
+\emph{kinds}.  It is \emph{propositional-expandable} if it has one of the
+seven premise shapes of \cref{def:p02-w02-p02-014-expandable}, with the
+alternatives listed there; a \emph{gamma} sentence if it is
+\(\forall x\,\varphi\) or \(\neg\exists x\,\varphi\); a \emph{delta}
+sentence if it is \(\exists x\,\varphi\) or \(\neg\forall x\,\varphi\); and
+\emph{terminal} otherwise.  The terminal sentences are exactly the atomic
+sentences \(R(t_1,\ldots,t_n)\) and \(r=u\), their negations,
+\(\bottom\) and \(\neg\bottom\).
+\end{hbconvention}
+
+\begin{hbdefinition}{def:p02-w02-p02-014-fol-equality}{Tableau equality rules}
+The calculus \(\mathsf T^{=}\) adds two linear rules, with closed terms
+\(r,u,t\in\mathrm{CT}_{\Gamma}\).
+\begin{enumerate}
+  \item \emph{Reflexivity.}  For any \(t\in\mathrm{CT}_{\Gamma}\) not yet
+        used for this rule on the branch, append \(t=t\).  The rule has no
+        premise; like a gamma rule it stays available at every unused term.
+  \item \emph{Replacement.}  Let an occurrence of the equation \(r=u\) and an
+        occurrence of an atomic sentence \(\alpha\) lie on the branch, and let
+        \(\varphi\) be an atomic \(\mathcal L_{\Gamma}^{*}\)-formula in which
+        the variable \(x_0\) occurs exactly once and no other variable
+        occurs, with \(\varphi[r/x_0]=\alpha\).  If this triple has not yet
+        been used on the branch, append \(\varphi[u/x_0]\).
+\end{enumerate}
+Replacement therefore rewrites one occurrence of \(r\) in \(\alpha\) to
+\(u\), left to right; \(\alpha\) may itself be an equation, and the two
+occurrences may coincide.  For given occurrences of \(r=u\) and
+\(\alpha\) there are as many choices of \(\varphi\) as there are
+occurrences of \(r\) as a subterm of \(\alpha\), which is finitely many.
+The rules are the tableau forms of the reflexivity and replacement rules of
+the equality calculus of \texttt{sheet:\allowbreak nd-fol}
+(\cref{thm:p02-equality-laws}); symmetry and transitivity are not rules here
+but are recovered from these two on every saturated branch
+(\cref{thm:p02-w02-p02-014-congruence}).
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p02-w02-p02-014-fol-branch}{First-order branches, tasks and steps}
+Fix \(\Gamma\) and one of the calculi \(\mathsf T\), \(\mathsf T^{=}\).
+\begin{enumerate}
+  \item A \emph{branch} is a pair
+        \(B=(\langle\theta_1,\theta_2,\ldots\rangle,D)\) of a finite or
+        infinite list of \(\mathcal L_{\Gamma}^{*}\)-sentences and a set
+        \(D\) of \emph{done tasks}.  Write \(\operatorname{fm}(B)\) for the
+        set of sentences on the list.  Closed and open are as in
+        \cref{def:p02-w02-p02-014-expandable}: \(B\) is \emph{closed} if
+        \(\bottom\in\operatorname{fm}(B)\) or \(\chi,\neg\chi\in\operatorname{fm}(B)\) for some \(\chi\).
+  \item The \emph{tasks available on \(B\)} are the following.
+        \begin{itemize}
+          \item \(\langle i\rangle\), for each position \(i\) holding a
+                delta sentence or a propositional-expandable one.
+          \item \(\langle i,t\rangle\), for each position \(i\) holding a
+                gamma sentence and each \(t\in\mathrm{CT}_{\Gamma}\).
+          \item In \(\mathsf T^{=}\) only: \(\langle{=},t\rangle\) for each
+                \(t\in\mathrm{CT}_{\Gamma}\); and
+                \(\langle i,j,\varphi\rangle\) for positions \(i,j\) such
+                that \(\theta_i\) is an equation \(r=u\) and \(\varphi\) is
+                as in the replacement rule with
+                \(\varphi[r/x_0]=\theta_j\).
+        \end{itemize}
+  \item An \emph{expansion step} applies to a finite open branch
+        \(B=(\langle\theta_1,\ldots,\theta_m\rangle,D)\) at an available task
+        \(\tau\notin D\).  It replaces \(B\) by one child
+        \((\langle\theta_1,\ldots,\theta_m\rangle\frown A,\;D\cup\{\tau\})\)
+        for each alternative \(A\) determined as follows.  For
+        \(\langle i\rangle\) with \(\theta_i\) propositional-expandable, the
+        alternatives of \(\theta_i\).  For \(\langle i\rangle\) with
+        \(\theta_i=\exists x\,\varphi\) or \(\neg\forall x\,\varphi\), the
+        single alternative \(\langle\varphi[a/x]\rangle\) or
+        \(\langle\neg(\varphi[a/x])\rangle\), where \(a\) is the parameter of
+        least index not occurring in \(\theta_1,\ldots,\theta_m\).  For
+        \(\langle i,t\rangle\) with \(\theta_i=\forall x\,\varphi\) or
+        \(\neg\exists x\,\varphi\), the single alternative
+        \(\langle\varphi[t/x]\rangle\) or \(\langle\neg(\varphi[t/x])\rangle\).
+        For \(\langle{=},t\rangle\), \(\langle t=t\rangle\); for
+        \(\langle i,j,\varphi\rangle\) with \(\theta_i\) the equation \(r=u\),
+        \(\langle\varphi[u/x_0]\rangle\).
+  \item The \emph{root branch} \(B_\Gamma\) lists the members of \(\Gamma\) once
+        each, in a fixed order, with \(D=\varnothing\).  An \emph{expansion
+        sequence} is a finite or infinite sequence \(T_0,T_1,\ldots\) of
+        finite lists of finite branches with \(T_0=\langle B_\Gamma\rangle\),
+        each \(T_{j+1}\) replacing one branch of \(T_j\) by its children under
+        one step.  Each branch of \(T_{j+1}\) has a \emph{parent} in \(T_j\):
+        the replaced branch, if it is one of its children, and itself
+        otherwise.  Iterating parents gives, for \(j\leq j'\), the unique
+        \emph{ancestor} in \(T_j\) of each branch of \(T_{j'}\); a branch
+        \emph{descends} from its ancestors.  A \emph{finite tableau} rooted at
+        \(\Gamma\) is the last member of a finite expansion sequence; it is
+        \emph{closed} if all its branches are closed.
+  \item A \emph{path} through an infinite expansion sequence is a sequence
+        \((B_j)_{j\in\N}\) in which \(B_j\) is a branch of \(T_j\) and
+        \(B_j\) is the parent of \(B_{j+1}\).  Its \emph{limit branch}
+        \(B_\omega\) has as list the union of the lists of the \(B_j\), each
+        of which extends the previous one, and as done set the union of
+        their done sets.  The finite branches of the \(T_j\) and the limit
+        branches are the branches of the tableau, possibly infinite,
+        generated by the sequence.
+  \item An open branch \(B\), finite or limit, is \emph{saturated} if every
+        task available on \(B\) belongs to \(D\).
+\end{enumerate}
+\end{hbdefinition}
+
+The tasks make the sheet's records exact.  A done \(\langle i\rangle\) is the
+mark of a propositional or delta occurrence.  The done tasks
+\(\langle i,t\rangle\) record the terms used for the gamma occurrence at
+position \(i\), so a saturated branch has used every \(t_k\) for every gamma
+occurrence: saturation in the sense of item 6 is exactly ``fair and
+saturated'' in the sense of \cref{def:p02-fol-tableau}.  The freshness
+condition is the choice of the least unused parameter in a delta step, and
+the instantiation condition is that gamma and reflexivity steps range over
+all of \(\mathrm{CT}_{\Gamma}\), not only over terms already on the branch.
+As in the propositional case, the sheet's instruction to append conclusions
+``on every open branch through'' an occurrence is a finite run of single
+steps.  Every instance \(\varphi[t/x]\) appended by a step is again a
+sentence, because the premise is a sentence and \(t\) is closed
+(\cref{lem:substitution-fv}).  In \(\mathsf T^{=}\) no finite branch is
+saturated, since infinitely many reflexivity tasks are available on it.
+
+\begin{hblemma}{thm:p02-w02-p02-014-fol-cases}{proved=annex:p02-w02-p02-014-fol-cases}{First-order rules are sound case splits}
+Let \(\mathcal M\) be an \(\mathcal L_{\Gamma}^{*}\)-structure.
+\begin{enumerate}
+  \item For every propositional-expandable sentence \(\chi\),
+        \(\mathcal M\entails\chi\) iff \(\mathcal M\) satisfies every member
+        of some alternative of \(\chi\).
+  \item If \(\mathcal M\entails\forall x\,\varphi\), then
+        \(\mathcal M\entails\varphi[t/x]\) for every
+        \(t\in\mathrm{CT}_{\Gamma}\); if
+        \(\mathcal M\entails\neg\exists x\,\varphi\), then
+        \(\mathcal M\entails\neg(\varphi[t/x])\) for every such \(t\).
+  \item Let \(a\) be a parameter that occurs in no member of a set \(X\) of
+        sentences.  If \(\mathcal M\entails X\) and
+        \(\exists x\,\varphi\in X\), there is a structure \(\mathcal M'\),
+        differing from \(\mathcal M\) at most in the interpretation of
+        \(a\), with \(\mathcal M'\entails X\cup\{\varphi[a/x]\}\).  The same
+        holds with \(\neg\forall x\,\varphi\in X\) and
+        \(\neg(\varphi[a/x])\).
+  \item \(\mathcal M\entails t=t\); and if \(\mathcal M\entails r=u\) and
+        \(\mathcal M\entails\varphi[r/x_0]\) for \(\varphi\) as in the
+        replacement rule, then \(\mathcal M\entails\varphi[u/x_0]\).
+\end{enumerate}
+\end{hblemma}
+
+\begin{hblemma}{thm:p02-w02-p02-014-fol-invariants}{proved=annex:p02-w02-p02-014-fol-invariants}{First-order branch invariants}
+Let \(B\) be a finite or limit branch generated from \(B_\Gamma\).  Then
+\(\Gamma\subseteq\operatorname{fm}(B)\), and every done task has its conclusion on \(B\):
+for \(\langle i\rangle\) with \(\theta_i\) propositional-expandable, some
+alternative of \(\theta_i\) is included in \(\operatorname{fm}(B)\); for
+\(\langle i\rangle\) with \(\theta_i=\exists x\,\varphi\) (or
+\(\neg\forall x\,\varphi\)), \(\varphi[a/x]\in\operatorname{fm}(B)\) (or
+\(\neg(\varphi[a/x])\in\operatorname{fm}(B)\)) for some parameter \(a\); for
+\(\langle i,t\rangle\), the instance of \(\theta_i\) at \(t\) is in \(\operatorname{fm}(B)\);
+for \(\langle{=},t\rangle\), \(t=t\in\operatorname{fm}(B)\); and for
+\(\langle i,j,\varphi\rangle\) with \(\theta_i\) the equation \(r=u\),
+\(\varphi[u/x_0]\in\operatorname{fm}(B)\).  In \(\mathsf T\), no member of \(\operatorname{fm}(B)\)
+contains the equality sign.  A limit branch is open if and only if every
+\(B_j\) on its path is open.
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p02-w02-p02-014-fol-soundness}{proved=annex:p02-w02-p02-014-fol-soundness}{First-order soundness of closure}
+Let \(\Gamma\) be a finite set of \(\mathcal L\)-sentences, equality-free
+for \(\mathsf T\).
+\begin{enumerate}
+  \item If an \(\mathcal L_{\Gamma}^{*}\)-structure satisfies \(\operatorname{fm}(B)\) and
+        an expansion step replaces the finite branch \(B\), then some
+        \(\mathcal L_{\Gamma}^{*}\)-structure satisfies \(\operatorname{fm}(C)\) for some
+        child \(C\).
+  \item If \(\Gamma\) has a model, every finite tableau rooted at \(\Gamma\)
+        has an open branch.
+  \item If some finite tableau rooted at \(\Gamma\) is closed, then
+        \(\Gamma\) is unsatisfiable.
+\end{enumerate}
+\end{hbtheorem}
+
+\subsection{Hintikka sets and the Herbrand truth lemma}
+\label{sec:p02-w02-p02-014-fol-herbrand}
+
+\begin{hbdefinition}{def:p02-w02-p02-014-hintikka}{Hintikka sets and their quotient Herbrand structures}
+A set \(H\) of \(\mathcal L_{\Gamma}^{*}\)-sentences is a \emph{Hintikka
+set} if:
+\begin{enumerate}
+  \item[(H0)] \(\bottom\notin H\), and no \(\chi\) has both \(\chi\in H\)
+        and \(\neg\chi\in H\);
+  \item[(H1)] if \(\chi\in H\) is propositional-expandable, every member of
+        some alternative of \(\chi\) is in \(H\);
+  \item[(H2)] if \(\forall x\,\varphi\in H\), then \(\varphi[t/x]\in H\), and
+        if \(\neg\exists x\,\varphi\in H\), then \(\neg(\varphi[t/x])\in H\),
+        for every \(t\in\mathrm{CT}_{\Gamma}\);
+  \item[(H3)] if \(\exists x\,\varphi\in H\), then \(\varphi[t/x]\in H\), and
+        if \(\neg\forall x\,\varphi\in H\), then \(\neg(\varphi[t/x])\in H\),
+        for some \(t\in\mathrm{CT}_{\Gamma}\);
+  \item[(H4)] if some member of \(H\) contains the equality sign, then
+        \(t=t\in H\) for every \(t\in\mathrm{CT}_{\Gamma}\), and
+        \(\varphi[u/x_0]\in H\) whenever \(r=u\in H\) and
+        \(\varphi[r/x_0]\in H\) for \(\varphi\) as in the replacement rule.
+\end{enumerate}
+\(H\) is \emph{equality-free} if none of its members contains the equality
+sign.  For a Hintikka set \(H\), put \(r\sim_H u\) iff \(r\) and \(u\) are
+the same term or \(r=u\in H\).  The \emph{quotient Herbrand structure}
+\(\mathcal M_H\) has domain \(\mathrm{CT}_{\Gamma}/{\sim_H}\), whose
+members are the classes \([t]\); it interprets \(f\) by
+\(f^{\mathcal M_H}([t_1],\ldots,[t_n])=[f(t_1,\ldots,t_n)]\) and \(R\) by
+\(R^{\mathcal M_H}=\{([t_1],\ldots,[t_n]):R(t_1,\ldots,t_n)\in H\}\).
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p02-w02-p02-014-congruence}{proved=annex:p02-w02-p02-014-congruence}{The branch equality is a congruence}
+Let \(H\) be a Hintikka set.  Then \(\sim_H\) is an equivalence relation on
+\(\mathrm{CT}_{\Gamma}\); if \(t_i\sim_H u_i\) for \(1\leq i\leq n\), then
+\(f(t_1,\ldots,t_n)\sim_H f(u_1,\ldots,u_n)\), and
+\(R(t_1,\ldots,t_n)\in H\) implies \(R(u_1,\ldots,u_n)\in H\).  Hence
+\(\mathcal M_H\) is well defined, \(t^{\mathcal M_H}=[t]\) for every
+\(t\in\mathrm{CT}_{\Gamma}\), and
+\(([t_1],\ldots,[t_n])\in R^{\mathcal M_H}\) iff
+\(R(t_1,\ldots,t_n)\in H\).  If \(H\) is equality-free, \(\sim_H\) is
+identity, each class is a singleton, and \(\mathcal M_H\) is, after
+identifying \([t]\) with \(t\), the Herbrand structure
+\(\mathcal M_{B^{+}_{\mathrm{at}}}\) of
+\cref{thm:p02-fol-tableau-adequacy} with \(B^{+}_{\mathrm{at}}\) the atomic
+members of \(H\).
+\end{hblemma}
+
+\begin{hblemma}{thm:p02-w02-p02-014-herbrand-truth}{proved=annex:p02-w02-p02-014-herbrand-truth}{Herbrand truth lemma}
+If \(H\) is a Hintikka set, then \(\mathcal M_H\entails\chi\) for every
+\(\chi\in H\).
+\end{hblemma}
+
+\begin{hblemma}{thm:p02-w02-p02-014-saturated-hintikka}{proved=annex:p02-w02-p02-014-saturated-hintikka}{Open saturated branches are Hintikka sets}
+If \(B\) is an open saturated branch, finite or limit, of a tableau rooted at
+\(\Gamma\) in \(\mathsf T\) or \(\mathsf T^{=}\), then \(\operatorname{fm}(B)\) is a Hintikka
+set, and in \(\mathsf T\) it is equality-free.
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p02-w02-p02-014-fol-extraction}{proved=annex:p02-w02-p02-014-fol-extraction}{Countermodel extraction from an open saturated branch}
+Let \(B\) be an open saturated branch, finite or limit, of a tableau rooted
+at a finite set \(\Gamma\) of \(\mathcal L\)-sentences in \(\mathsf T\) or
+\(\mathsf T^{=}\), and let \(H=\operatorname{fm}(B)\).  Then
+\(\mathcal M_H\entails\chi\) for every \(\chi\) on \(B\).  Its reduct
+\(\mathcal M_H\restriction\mathcal L_{\Gamma}\) satisfies \(\Gamma\), and
+interpreting the symbols of \(\mathcal L\) outside \(\mathcal L_{\Gamma}\)
+arbitrarily on the same domain gives an \(\mathcal L\)-structure satisfying
+\(\Gamma\).  In \(\mathsf T\), \(\mathcal M_H\) is the Herbrand structure
+\(\mathcal M_{B^{+}_{\mathrm{at}}}\) of
+\cref{thm:p02-fol-tableau-adequacy}.
+\end{hbtheorem}
+
+\subsection{Fair systematic expansion and semidecision}
+\label{sec:p02-w02-p02-014-fol-systematic}
+
+An arbitrary order of expansion can starve a gamma occurrence forever
+(\cref{def:p02-w02-p02-014-fol-unfair}).  The following procedure performs
+at each stage a finite batch of tasks that grows with the stage, so every
+task available on a surviving branch is eventually performed.
+
+\begin{hbmethod}{def:p02-w02-p02-014-fol-procedure}{Fair systematic expansion}
+\emph{Input:} a finite set \(\Gamma\) of \(\mathcal L\)-sentences, with the
+calculus \(\mathsf T\) if \(\Gamma\) is equality-free and \(\mathsf T^{=}\)
+otherwise, and the enumeration \(t_0,t_1,\ldots\) of
+\cref{def:p02-w02-p02-014-fol-setting}.  Let \(T^{(0)}=\langle
+B_\Gamma\rangle\).  At stage \(n=0,1,2,\ldots\), with current finite tableau
+\(T^{(n)}\):
+\begin{enumerate}
+  \item If every branch of \(T^{(n)}\) is closed, halt with output
+        \emph{unsatisfiable} and the closed tableau \(T^{(n)}\).
+  \item If some branch of \(T^{(n)}\) is finite, open and saturated, halt
+        with output \emph{satisfiable} and that branch.
+  \item Otherwise, for each branch \(B\) of \(T^{(n)}\) that is open, with
+        list length \(m_B\), form the finite list \(W_n(B)\) of the
+        following tasks, in a fixed order: \(\langle i\rangle\) for
+        \(i\leq m_B\) holding a propositional-expandable or delta sentence;
+        \(\langle i,t_k\rangle\) for \(i\leq m_B\) holding a gamma sentence
+        and \(k\leq n\); and, in \(\mathsf T^{=}\), \(\langle{=},t_k\rangle\)
+        for \(k\leq n\) and every replacement task \(\langle
+        i,j,\varphi\rangle\) with \(i,j\leq m_B\).  Taking the tasks of
+        \(W_n(B)\) in order, perform the expansion step at the task on every
+        open branch that descends from \(B\) and does not yet have that task
+        done, until none remains.  The resulting tableau is
+        \(T^{(n+1)}\).
+\end{enumerate}
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p02-w02-p02-014-fol-semidecision}{proved=annex:p02-w02-p02-014-fol-semidecision}{Fair systematic expansion semidecides unsatisfiability}
+Let \(\Gamma\) be a finite set of \(\mathcal L\)-sentences and run
+\cref{def:p02-w02-p02-014-fol-procedure}.
+\begin{enumerate}
+  \item Each stage performs finitely many expansion steps, and the steps of
+        all stages, in order, form an expansion sequence from \(B_\Gamma\).
+  \item \emph{Infinite branch construction.}  If the procedure does not
+        halt, there is a path \((B_j)_{j\in\N}\) through this expansion
+        sequence whose limit branch \(B_\omega\) is open and saturated, and
+        so fair; \(B_\omega\) is infinite.
+  \item The procedure halts with output \emph{unsatisfiable} if and only if
+        \(\Gamma\) is unsatisfiable, and then it outputs a finite closed
+        tableau rooted at \(\Gamma\).  It halts with output
+        \emph{satisfiable} only if \(\Gamma\) is satisfiable, and when
+        \(\Gamma\) is satisfiable and it does not halt, the model
+        \(\mathcal M_{\operatorname{fm}(B_\omega)}\) of clause 2 satisfies \(\Gamma\) by
+        \cref{thm:p02-w02-p02-014-fol-extraction}.
+  \item Consequently the procedure is an algorithm that halts with output
+        \emph{unsatisfiable} on exactly the unsatisfiable finite sets of
+        sentences.
+\end{enumerate}
+\end{hbtheorem}
+
+\begin{hbcorollary}{thm:p02-w02-p02-014-fol-completeness}{proved=annex:p02-w02-p02-014-fol-completeness}{First-order tableau completeness, consequence and validity}
+Let \(\Gamma\) be a finite set of \(\mathcal L\)-sentences and \(\psi\) an
+\(\mathcal L\)-sentence; use \(\mathsf T\) when the sentences involved are
+equality-free and \(\mathsf T^{=}\) otherwise.
+\begin{enumerate}
+  \item \(\Gamma\) is unsatisfiable if and only if some finite closed
+        tableau rooted at \(\Gamma\) exists.
+  \item \(\Gamma\entails\psi\) if and only if some finite closed tableau
+        rooted at \(\Gamma\cup\{\neg\psi\}\) exists, and \(\entails\psi\) if
+        and only if some finite closed tableau rooted at \(\{\neg\psi\}\)
+        exists.
+  \item If an open saturated branch \(B\) of a tableau rooted at
+        \(\Gamma\cup\{\neg\psi\}\) exists, the expansion of
+        \(\mathcal M_{\operatorname{fm}(B)}\restriction\mathcal L_{\Gamma\cup\{\neg\psi\}}\) of
+        \cref{thm:p02-w02-p02-014-fol-extraction} is a countermodel:
+        it satisfies \(\Gamma\) and falsifies \(\psi\).
+\end{enumerate}
+\end{hbcorollary}
+
+\begin{hbexample}{def:p02-w02-p02-014-fol-example-closed}{A closed first-order tableau}
+In \(\mathsf T\), test the consequence
+\[
+  \{\forall x(Px\to Qx),\ \exists x\,Px\}\entails\exists x\,Qx .
+\]
+The root branch is
+\(\langle\forall x(Px\to Qx),\ \exists x\,Px,\ \neg\exists x\,Qx\rangle\);
+\(\mathcal L_{\Gamma}\) has no function symbols, so the closed terms are the
+parameters.
+\begin{enumerate}
+  \item Task \(\langle 2\rangle\), a delta step: the least parameter not on
+        the branch is \(a_0\); append \(Pa_0\) (position 4).
+  \item Task \(\langle 1,a_0\rangle\), a gamma step: append
+        \(Pa_0\to Qa_0\) (position 5).
+  \item Task \(\langle 3,a_0\rangle\), a gamma step: append \(\neg Qa_0\)
+        (position 6).
+  \item Task \(\langle 5\rangle\), branching: the left child appends
+        \(\neg Pa_0\) and closes against position 4; the right child
+        appends \(Qa_0\) and closes against position 6.
+\end{enumerate}
+The finite tableau is closed, so the consequence holds by
+\cref{thm:p02-w02-p02-014-fol-completeness}(2).  The gamma steps were made at
+the parameter that the delta step introduced.  The systematic procedure
+need not choose this order, but fairness guarantees that it performs both
+gamma tasks at \(a_0\) by stage \(k\), where \(a_0\) is \(t_k\) in the
+enumeration.
+\end{hbexample}
+
+\begin{hbexample}{def:p02-w02-p02-014-fol-example-eq}{Equality steps}
+Let \(c,d\) be constant symbols and \(\Gamma=\{c=d,\ Pd,\ \neg Pc\}\), in
+\(\mathsf T^{=}\).
+\begin{enumerate}
+  \item Task \(\langle{=},c\rangle\): append \(c=c\) (position 4).
+  \item Task \(\langle 1,4,\varphi\rangle\) with \(\varphi\) the formula
+        \(x_0=c\): since \(\varphi[c/x_0]\) is \(c=c\), append
+        \(\varphi[d/x_0]\), that is \(d=c\) (position 5).
+  \item Task \(\langle 5,2,Px_0\rangle\): since \((Px_0)[d/x_0]\) is \(Pd\),
+        append \(Pc\) (position 6).  The branch now contains \(Pc\) and
+        \(\neg Pc\) and closes.
+\end{enumerate}
+Replacement rewrites only from left to right, so symmetry had to be
+obtained from reflexivity first, exactly as in the proof of
+\cref{thm:p02-w02-p02-014-congruence}.
+\end{hbexample}
+
+\begin{hbexample}{def:p02-w02-p02-014-fol-example-open}{A finite saturated open branch and its Herbrand countermodel}
+Let \(c\) be a constant symbol and \(\Gamma=\{\exists x\,Px,\ \neg Pc\}\), in
+\(\mathsf T\).  At stage 0 the only task is \(\langle 1\rangle\); the least
+parameter not on the branch is \(a_0\), and the step appends \(Pa_0\).  At
+stage 1 the branch \(\langle\exists x\,Px,\neg Pc,Pa_0\rangle\) is open and,
+as it carries no gamma sentence, saturated, so the procedure halts with
+output \emph{satisfiable}.  The structure \(\mathcal M_H\) has domain the
+closed terms \(c,a_0,a_1,\ldots\) and interprets \(P\) as \(\{a_0\}\); its
+reduct to \(\{P,c\}\) satisfies \(\exists x\,Px\) and \(\neg Pc\).
+\end{hbexample}
+
+\begin{hbexample}{def:p02-w02-p02-014-fol-example}{A satisfiable first-order root with no finite finished tableau}
+Let \(\Gamma=\{\forall x\,Px\}\) with \(P\) a unary relation symbol.  Then
+\(\mathcal L_{\Gamma}\) has no constant or function symbol, so the closed
+\(\mathcal L_{\Gamma}^{*}\)-terms are exactly the parameters \(a_0,a_1,\ldots\).
+The root occurrence is retained on every branch, so by
+\cref{thm:p02-w02-p02-014-fol-no-finite-saturation} no finite tableau rooted
+at \(\Gamma\) has a saturated open branch, and no finite tableau rooted at
+\(\Gamma\) is closed, since \(\Gamma\) is true in a one-element structure
+in which \(P\) holds of that element
+(\cref{thm:p02-w02-p02-014-fol-soundness}(3)).  The procedure of
+\cref{def:p02-w02-p02-014-fol-procedure} therefore never halts.  Stage \(n\)
+appends \(Pt_n\); the limit branch
+\(\langle\forall x\,Px,Pt_0,Pt_1,\ldots\rangle\) is open, saturated
+and infinite, and
+\(\mathcal M_H\) has domain \(\{a_0,a_1,\ldots\}\) with \(P\) true of every
+element.  So the propositional stopping rule ``expand until every branch is
+closed or saturated'' never stops here.
+\end{hbexample}
+
+\begin{hbwarning}{def:p02-w02-p02-014-fol-unfair}{An unfair branch is not a countermodel}
+Let \(\Gamma=\{\forall x\,Px,\ \forall x\,\neg Px\}\), which is
+unsatisfiable.  Expanding only the first occurrence, at
+\(a_0,a_1,a_2,\ldots\) in turn, is a legal infinite expansion sequence whose
+single limit branch \(\langle\forall x\,Px,\forall x\,\neg
+Px,Pa_0,Pa_1,\ldots\rangle\) is open.  It is not saturated: no task
+\(\langle 2,t\rangle\) is done.  The Herbrand structure whose relations are given
+by the atoms on the branch makes \(P\) true of every parameter and falsifies
+\(\forall x\,\neg Px\).  The systematic
+procedure performs \(\langle 2,t_0\rangle\) at stage 0 and closes the
+tableau.  Openness without fairness supports no conclusion.
+\end{hbwarning}
+
+\begin{hbwarning}{def:p02-w02-p02-014-fol-freshness}{The delta parameter must be new}
+The set \(\Gamma\) of
+\cref{def:p02-w02-p02-014-fol-example-open}, with members \(\exists x\,Px\)
+and \(\neg Pc\), is satisfiable.  A delta
+step that used \(c\) instead of a new parameter would append \(Pc\) and close
+the only branch, a closed tableau for a satisfiable set.  The proof of
+\cref{thm:p02-w02-p02-014-fol-cases}(3) uses exactly that the parameter
+does not occur on the branch.
+\end{hbwarning}
+
+\begin{proofboundary}{def:p02-w02-p02-014-fol-boundary}{Decision versus semidecision}
+For a finite propositional input, \cref{thm:p02-w02-p02-014-decision}
+gives a procedure that always halts and answers both ways.  For first-order
+input, \cref{thm:p02-w02-p02-014-fol-semidecision} gives a procedure that
+halts on every unsatisfiable input with a finite closed tableau, and that may
+run forever on a satisfiable one, as in
+\cref{def:p02-w02-p02-014-fol-example}; on a satisfiable input it builds an
+infinite fair branch whose quotient Herbrand structure is a model.  The
+difference is not an artefact of the procedure: by
+\cref{thm:fol-validity-undecidable}, whose status is cited there, first-order
+validity is not decidable, and \(\psi\) is valid exactly when \(\{\neg\psi\}\)
+is unsatisfiable, so no algorithm halts on every input with the correct
+satisfiability verdict.  This section proves the semidecision, the infinite
+branch construction and the failure of the propositional termination
+argument (\cref{thm:p02-w02-p02-014-fol-no-finite-saturation}); the
+undecidability theorem is used only for this concluding remark.
+\end{proofboundary}
+
+\subsection{Relationships and sources}
+\label{sec:p02-w02-p02-014-relations}
+
+The tableau verdict agrees with the other classical propositional calculi:
+by \cref{thm:p02-w02-p02-014-consequence} and the derivability equivalence
+\cref{thm:p02-calculi-derivability-equivalence}, whose proof is cited there,
+a finite consequence has a
+closed tableau exactly when it is derivable in each of the calculi compared
+in \cref{tab:p02-proof-systems}.  Resolution
+(\cref{thm:prop-resolution-complete}) is also a refutation method, but it
+saturates a clause set instead of splitting branches and does not keep a
+branch from which a valuation is read.  A finished tableau for
+\(\{\neg\varphi\}\) with an open branch is a semantic certificate that
+\(\varphi\) is not valid; for formulas of the \(\{\neg,\to\}\) language, the rejection calculus of
+\cref{sec:p02-classical-rejection} certifies the same fact by a syntactic
+derivation of the rejection judgment, which is a different kind of object.
+
+In the first-order case the Herbrand truth lemma plays the role of the truth
+lemma for maximal consistent sets with witnesses
+(\cref{lem:fol-truth}): both build a model from closed terms modulo a
+provable or listed equality.  The difference is that a Hintikka set need not
+be maximal, and the tableau constructs it by a fair search instead of by an
+enumeration of all sentences.  The first-order results of this section prove
+every clause of \cref{thm:p02-fol-tableau-adequacy} and extend it to roots
+with equality.
+
+The unsigned uniform rule format on the sheets is attributed there to
+\cite{Smullyan1968}.  The definitions and proofs in this section, including
+the task bookkeeping, the tableau equality rules derived from the
+natural-deduction equality rules, and the staged fair procedure, are written
+directly for the retained-occurrence formats of the calculus sheets
+\texttt{sheet:\allowbreak tableaux-cpl} and \texttt{sheet:\allowbreak
+tableaux-fol}; they are not a transcription of a published proof.

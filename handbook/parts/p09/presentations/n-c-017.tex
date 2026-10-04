@@ -1,0 +1,3715 @@
+% Source presentations for register row N-c-017.
+
+\subsection{Four mechanisms behind symbolic verification}
+\label{sec:p09-presentation-n-c-017}
+
+\subsubsection{Bryant's fixed-order reduced function graphs}
+\label{sec:p09-n-c-017-bryant}
+
+This treatment follows Bryant's annotated electronic author version;
+section and figure locators refer to that version \cite{Bryant1986}.
+
+Fix \(n\in\mathbb N\) and Boolean arguments in the order
+\(x_1<\cdots<x_n\). A Boolean function has type
+\(f:\{0,1\}^n\to\{0,1\}\). For \(1\leq i\leq n\) and
+\(b\in\{0,1\}\), its cofactor is the function
+\[
+ (f|_{x_i=b})(a_1,\ldots,a_n)
+ :=f(a_1,\ldots,a_{i-1},b,a_{i+1},\ldots,a_n).
+\]
+It is independent of its \(i\)-th argument. At \(n=0\), the domain contains
+the single empty assignment and the two functions are constants.
+Bryant's
+\emph{function graph} is a rooted directed graph in which every vertex is
+reachable from the root.  A terminal vertex has a value in \(\{0,1\}\).  A
+nonterminal vertex \(v\) has an index \(i\) and distinguished children
+\(\operatorname{low}(v)\) and \(\operatorname{high}(v)\); every nonterminal
+child has index strictly greater than \(i\).  The ordering condition makes the
+graph acyclic.  If \(f_v\) is the Boolean function denoted by the subgraph
+rooted at \(v\), then
+\[
+ f_v=
+ \begin{cases}
+  \operatorname{value}(v),&v\text{ terminal},\\
+  (\neg x_i\land f_{\operatorname{low}(v)})
+   \lor(x_i\land f_{\operatorname{high}(v)}),
+   &\operatorname{index}(v)=i.
+ \end{cases}
+\]
+Thus an assignment follows the low edge when \(x_i=0\), the high edge when
+\(x_i=1\), and obtains the terminal value at the end of its unique path
+\cite[defs.~1--2]{Bryant1986}.
+
+The graph is \emph{reduced} exactly when it has neither a vertex with identical
+low and high children nor two distinct vertices whose rooted subgraphs are
+isomorphic.  The first forbidden pattern is an irrelevant test; the second is
+duplicate representation of one residual function.  Eliminating the former
+and merging the latter preserve the denoted function
+\cite[defs.~3--5]{Bryant1986}.
+
+For example, expand \(x_1\land x_2\) as the full ordered decision tree.
+First merge its three \(0\)-leaves; there is only one \(1\)-leaf.
+Below \(x_1=0\), both edges of the \(x_2\)-vertex now reach that same
+\(0\)-terminal, so the identical-child reduction removes the test.
+The reduced
+graph has a root testing \(x_1\), low child \(0\), and high child testing
+\(x_2\) with children \(0\) and \(1\).  Both reductions are needed: one removes
+an irrelevant decision, while the other shares equal residual functions.
+
+For a Boolean function \(f\), put
+\[
+ I_f=\{i:f|_{x_i=0}\ne f|_{x_i=1}\}.
+\]
+Bryant's Theorem~1 says that \(f\) has a unique reduced function graph up to
+isomorphism and that every nonisomorphic function graph denoting \(f\) under
+the same order has more
+vertices \cite[thm.~1]{Bryant1986}.
+
+For existence, start with the full ordered decision tree of \(f\).
+Each reduction preserves the function and order and strictly decreases
+the number of vertices. Retain only vertices reachable from the new
+root after each step. This finite process ends in a reduced graph.
+
+Prove uniqueness by induction on the number of variables still
+allowed in an ordered suffix \(x_j,\ldots,x_n\). The empty suffix
+allows only a terminal, fixed by the constant function's value.
+For the induction step, the two children of any root testing
+\(x_\ell\), \(\ell\geq j\), use only the strictly shorter suffix
+\(x_{\ell+1},\ldots,x_n\). Hence the induction hypothesis already
+applies to their reduced subgraphs, whether or not \(x_\ell\)
+is essential to the function.
+
+If \(f\) is constant, the two children of a nonterminal root would
+denote that same constant. By induction they would be isomorphic,
+and reducedness would make them the same vertex. The root would
+then be a forbidden identical-child test. Thus a reduced constant
+graph is its single terminal.
+Otherwise put \(i=\min I_f\). A root index greater than \(i\)
+would skip an essential variable. A root index \(\ell<i\)
+would have equal cofactor functions because \(f\) is independent
+of \(x_\ell\). The shorter-suffix induction would again identify
+the child subgraphs, contradicting reducedness. Therefore the
+root index is exactly \(i\), and its low and high functions are
+the two prescribed cofactors at \(x_i\).
+
+Induction determines both reduced child graphs up to isomorphism.
+These isomorphisms also determine their sharing: whenever vertices
+in the low and high graphs denote the same residual function,
+shorter-suffix uniqueness makes their rooted graphs isomorphic,
+and reducedness requires one common vertex. Conversely, a shared
+vertex necessarily has one denotation. Thus the two child
+isomorphisms agree on their overlaps and extend to an isomorphism
+of the whole graphs. This completes the induction on suffix length.
+
+Finally, a nonisomorphic graph for \(f\) cannot already be reduced.
+Reducing it therefore makes at least one strict size decrease
+before reaching the unique reduced graph. This proves minimality.
+The theorem is conditional on the one fixed argument order;
+it compares no two orders
+\cite[thm.~1]{Bryant1986}.
+
+\paragraph{Bottom-up reduction.}
+Let \(N=|G|\) count the vertices of the input graph, including its terminals.
+Assign terminals the bookkeeping index \(n+1\). The reduction procedure
+assigns each original vertex \(v\) an integer \(\operatorname{id}(v)\) for
+its reduced residual function, and selects one representative vertex for
+each identifier. Figure~4 carries out the following operations
+\cite[\S4.2 and fig.~4]{Bryant1986}.
+
+\begin{enumerate}
+\item Collect the reachable vertices by index and process the levels from
+\(n+1\) down to \(1\). Every child of a vertex at the current nonterminal
+level has already been processed.
+\item At the terminal level, use the value \(0\) or \(1\) as key. All
+terminals with the same value receive one identifier and one representative.
+\item At a nonterminal vertex \(v\), compare the identifiers of its two
+children. If they are equal, set
+\(\operatorname{id}(v)=\operatorname{id}(\operatorname{low}(v))\);
+this vertex contributes no new representative.
+\item For the remaining vertices at level \(i\), sort the pairs
+\[
+ \bigl(\operatorname{id}(\operatorname{low}(v)),
+       \operatorname{id}(\operatorname{high}(v))\bigr).
+\]
+Give equal pairs one identifier, select one representative for each distinct
+pair, and redirect its children to their selected representatives. Different
+levels are processed separately, so equal pairs at different levels are not
+merged.
+\item Return the representative with the original root's identifier, retaining
+the subgraph reachable from it.
+\end{enumerate}
+
+The correctness invariant can be proved from the two reductions. After a
+level is processed, every processed vertex denotes the same function as its
+representative, and the representative subgraph is reduced. At a terminal
+the invariant follows from its value. Suppose it holds below level \(i\).
+If the child identifiers agree, the two cofactors agree, and Shannon
+expansion reduces the current function to that common cofactor. Otherwise,
+the ordered child pair determines the function at \(x_i\); merging equal
+pairs preserves it. Because the two reduced children have different
+functions, the result depends on \(x_i\), so it cannot equal a representative
+whose first essential variable has a different index. Thus no redundant
+test or duplicate residual remains. Induction reaches the root and gives the
+unique reduced graph from Theorem~1.
+
+The source's Figure~5 makes both operations visible. Its four terminal
+records have values \(0,1,0,1\), receiving identifiers \(1,2,1,2\).
+At index \(3\), both child-pair keys are \((1,2)\), receiving identifier \(3\).
+At index \(2\), key \((1,3)\) receives \(4\), while key \((3,3)\) is eliminated
+and inherits \(3\). The root's key is then \((4,3)\), receiving \(5\).
+The output has one representative for each of the five identifiers.
+
+Comparison sorting gives
+\[
+ \sum_i O(m_i\log(1+m_i))=O(N\log(1+N)),
+ \qquad \sum_i m_i\leq N,
+\]
+where \(m_i\) counts the keyed vertices at level \(i\). If an implementation
+scans an array of all \(n+1\) levels, its bookkeeping also costs \(O(n)\).
+Thus this comparison-sorting implementation runs in
+\[
+ O\bigl(n+N\log(1+N)\bigr).
+\]
+With a reduction implementation that processes each vertex in constant
+amortized or expected time, the graph-processing cost is \(O(N)\), under
+that implementation's data-structure assumptions. Either way, reduction
+of the intermediate result is part of the cost of \textsc{Apply} and
+\textsc{Compose} \cite[\S4.2 and table~1]{Bryant1986}.
+
+\paragraph{Residual functions and the effect of variable order.}
+Fix a cut in the ordered variable list. For any assignment to the
+variables before the cut, follow its graph edges until a terminal
+or the first test after the cut. The reached subgraph denotes the
+residual function of the remaining variables. Distinct residual
+functions therefore require distinct reached vertices, even if
+some input tests are skipped. Thus \(L\) distinct prefix residuals
+force at least \(L\) vertices in any ordered graph, reduced or not.
+
+The source's ordering example makes this principle quantitative. Under
+the displayed argument order,
+\[
+ \begin{aligned}
+  g_3&=x_1x_2\lor x_3x_4\lor x_5x_6,\\
+  h_3&=x_1x_4\lor x_2x_5\lor x_3x_6
+ \end{aligned}
+\]
+have reduced graphs with respectively eight and sixteen vertices, although
+one formula is obtained from the other by permuting arguments.
+For \(n\geq1\), on \(2n\) Boolean arguments,
+\(\bigvee_{r=1}^{n}x_{2r-1}x_{2r}\) has \(2n+2\) vertices, whereas
+\(\bigvee_{r=1}^{n}x_rx_{n+r}\) requires \(2^{n+1}\)
+\cite[\S3.2 and fig.~2]{Bryant1986}.
+
+Here is the exact count. For the interleaved expression, put
+\[
+ H_j=\bigvee_{r=j}^{n}(x_{2r-1}\land x_{2r}),\qquad H_{n+1}=0.
+\]
+Use an \(x_{2j-1}\)-vertex with low child \(H_{j+1}\) and high
+child an \(x_{2j}\)-vertex; that second vertex has low child
+\(H_{j+1}\) and high child \(1\). All \(2n\) test vertices and
+both terminals are reachable. Neither type of test has equal
+children: make every later pair false and vary the current
+pair to distinguish the branches. The test indices are all
+distinct, so there are no duplicate rooted subgraphs. This
+is a reduced graph with exactly \(2n+2\) vertices.
+
+For the separated expression, write \(y_j=x_{n+j}\).
+Before testing \(x_i\), the already chosen prefix selects a subset
+\(A\subseteq\{1,\ldots,i-1\}\), leaving
+\[
+ R_{i,A}=\bigvee_{j\in A}y_j
+       \lor\bigvee_{j=i}^{n}(x_j\land y_j).
+\]
+Different \(A\)'s give different functions, as an assignment
+making just one \(y_j\) true distinguishes any differing
+membership. Every \(R_{i,A}\) depends on \(x_i\): set \(y_i=1\)
+and every other \(y\)-variable to zero. Hence there are
+\(2^{i-1}\) distinct roots at that level, and the first block
+contains \(\sum_{i=1}^{n}2^{i-1}=2^n-1\) vertices.
+After this block, every subset \(A\subseteq\{1,\ldots,n\}\)
+occurs and leaves \(Q_A=\bigvee_{j\in A}y_j\).
+The empty subset gives \(0\). Each nonempty subset gives a
+distinct root testing \(y_{\min A}\), with high child \(1\)
+and low child \(Q_{A\setminus\{\min A\}}\). These are exactly
+the \(2^n-1\) nonterminal residuals in the second block.
+Adding the two terminals gives \(2^{n+1}\).
+At \(n=0\), both empty disjunctions are constant \(0\) and
+their graphs have one vertex; the positive-\(n\) formulas
+do not apply.
+
+\paragraph{Symmetry can keep the graph small.}
+Odd parity on \(n\geq1\) variables has one residual at its
+first level and two at every later level: parity of the
+unread variables or its complement, according to the
+prefix parity. Both later residuals occur, are distinct,
+and depend on the next variable. With the two terminals,
+the reduced graph therefore has
+\[
+ 1+2(n-1)+2=2n+1
+\]
+vertices, in any input order. In contrast, a noncontradictory
+conjunction of literals
+implying odd parity cannot omit an input variable, since
+flipping an omitted variable changes parity. Every
+noncontradictory such conjunction therefore specifies a
+full satisfying assignment. There are \(2^{n-1}\) of those,
+so that many full minterms are necessary and sufficient
+in a disjunctive normal form.
+
+More generally, if
+\(f(x_1,\ldots,x_n)=F(x_1+\cdots+x_n)\) for
+\(F:\{0,\ldots,n\}\to\{0,1\}\), a prefix of \(k\) tests
+needs only its number \(t\) of ones. Store a state \((k,t)\);
+the next branches lead to \((k+1,t)\) and \((k+1,t+1)\),
+and after the final test output \(F(t)\).
+For \(n\geq1\), merging equal terminal values and reducing
+therefore gives
+\[
+ |G_f|\leq\sum_{k=0}^{n-1}(k+1)+2
+          =\frac{n(n+1)}2+2.
+\]
+This is an upper bound, not an asserted exact size for
+every symmetric function. The construction works in
+every variable order because the number of ones is
+permutation-invariant \cite[\S3.1]{Bryant1986}.
+
+\paragraph{Combining two graphs.}
+The source's \textsc{Apply} procedure computes \(f_1\mathbin{\circ}f_2\) for
+any binary Boolean operation \(\circ\).  At roots \(v_1,v_2\), it chooses the
+smaller current index \(i\), recursively combines the two low restrictions and
+the two high restrictions, and records the result for the pair
+\((v_1,v_2)\).  If only one root tests \(x_i\), the other root is reused in both
+recursive calls.  A controlling terminal value, such as \(1\) for disjunction,
+ends that branch immediately.  Memoization ensures that each vertex pair is
+expanded once; reduction then removes redundant tests and duplicate subgraphs.
+
+Figure~7 applies disjunction to
+\[
+ f_1=\neg(x_1x_3),
+ \qquad
+ f_2=x_2x_3.
+\]
+The pair consisting of the first graph's terminal \(1\) and the second graph's
+root stops by the controlling-value rule; a later repeated pair is returned
+from the memo table.  Reducing the evaluation graph yields
+\[
+ f_1\lor f_2=\neg(x_1\land\neg x_2\land x_3).
+\]
+Put \(P=|G_1||G_2|\). There are at most \(P\) vertex pairs and at most \(P\)
+vertices in the unreduced evaluation graph. With constant-time memo-table
+access, recursive work is \(O(P)\); comparison-sorting reduction gives total
+time \(O(n+P\log(1+P))\). A linear reduction implementation gives \(O(P)\)
+graph-processing time under its corresponding access assumptions.
+
+The product dependence can be necessary for the output itself.
+Take \(n,m\geq1\) and use the order
+\[
+ x_1<\cdots<x_{n+m}<y_1<\cdots<y_{n+m}.
+\]
+Let
+\[
+ f_1=\bigvee_{i=1}^{n}(x_i\land y_i),\qquad
+ f_2=\bigvee_{i=n+1}^{n+m}(x_i\land y_i).
+\]
+Ignoring variables on which an operand does not depend, each
+has the separated-pair order already counted. Thus
+\[
+ |G_1|=2^{n+1},\qquad |G_2|=2^{m+1}.
+\]
+Their disjunction is the separated-pair function on all
+\(n+m\) pairs, so its reduced graph has
+\[
+ |G_{f_1\lor f_2}|=2^{n+m+1}
+                 =\tfrac12|G_1||G_2|
+\]
+vertices. Any method materializing that ordered output graph
+must therefore perform work proportional to the product
+on this family \cite[\S4.3]{Bryant1986}.
+
+This remains an input-graph bound. The multiplication argument below
+proves that, for every variable order and \(n\geq1\), some output bit of
+\(n\)-bit integer multiplication needs at least \(2^{n/8}\) vertices
+\cite[\S\S4.3, 6 and app.]{Bryant1986}.
+
+\paragraph{Restriction, quantification, and equality.}
+Restriction redirects an \(x_i\)-test to its selected child and reduces the
+result \cite[\S4.4]{Bryant1986}. The following identities make the subsequent
+symbolic operations explicit:
+\[
+\begin{aligned}
+ \exists x_i\,f&=f|_{x_i=0}\lor f|_{x_i=1},\\
+ \forall x_i\,f&=f|_{x_i=0}\land f|_{x_i=1},\\
+ f|_{x_i=g}
+   &=(\neg g\land f|_{x_i=0})\lor(g\land f|_{x_i=1}).
+\end{aligned}
+\]
+In the last equation \(g:\{0,1\}^n\to\{0,1\}\) is evaluated on the original
+assignment, including its original \(x_i\)-value if it depends on \(x_i\).
+The equation is therefore simultaneous functional substitution, not a
+recursive equation for \(x_i\). Each identity follows by the two possible
+truth values of the quantified or substituted argument.
+
+For \(W\subseteq\{x_1,\ldots,x_n\}\), eliminate its members one at a
+time. For existential abstraction, any order gives the same function because
+\[
+ (\exists W\,f)(a)
+ =\bigvee_{b\in\{0,1\}^{W}} f(a[W:=b]).
+\]
+Here \(a[W:=b]\) agrees with \(b\) on \(W\) and with \(a\) elsewhere.
+If \(W=\varnothing\), there is one empty assignment \(b\), so abstraction
+returns \(f\). Abstraction order may still affect intermediate graph sizes.
+
+For example, \(f(x,y)=x\land y\) has cofactors
+\(f|_{y=0}=0\) and \(f|_{y=1}=x\). Hence
+\(\exists y\,f=x\), whereas \(\forall y\,f=0\).
+This calculation derives a set projection directly from two restrictions.
+
+Canonicity makes equality of reduced graphs under one order an equality
+decision for their functions. Constant-time root comparison additionally
+requires a common representation in which equal reduced subgraphs share one
+identifier; separately allocated isomorphic graphs need not have the same
+root address. Consequently the symbolic fixed-point stopping test below uses
+semantic BDD equality, or identifier equality under that sharing convention.
+
+\paragraph{Composition by three residuals.}
+For Boolean functions \(a,b,c\), define
+\[
+ \operatorname{ITE}(a,b,c):=(a\land b)\lor(\neg a\land c).
+\]
+Composition \(f_1|_{x_i=f_2}\) is
+\[
+ \operatorname{ITE}(f_2,f_1|_{x_i=1},f_1|_{x_i=0}).
+\]
+Figure~8 combines restriction and this ternary operation in one traversal.
+Its recursive state consists of a low-cofactor vertex from \(G_1\), a
+high-cofactor vertex from \(G_1\), and a vertex from \(G_2\). Whenever a
+cofactor vertex tests \(x_i\), replace it by the corresponding low or high
+child before looking up the triple. At a terminal triple, evaluate
+\(\operatorname{ITE}\). Otherwise split at the smallest current index,
+retain an unchanged vertex in both branches when it does not test that index,
+recurse on the resulting low and high triples, and memoize the result.
+Reduce the returned graph \cite[\S4.5 and fig.~8]{Bryant1986}.
+
+For a fixed assignment, the cofactor replacements fix only the selected
+argument of \(f_1\). The third residual still evaluates \(f_2\) on the original
+assignment. Each split partitions assignments by one variable, so induction
+on the remaining indices proves that the returned function is the displayed
+\(\operatorname{ITE}\). There are at most
+\(|G_1|^2|G_2|\) triples; this bounds recursive pairings before the separately
+charged reduction cost. For \(C=|G_1|^2|G_2|\), comparison-sorting reduction
+therefore gives \(O(n+C\log(1+C))\) total time; a linear reduction routine
+gives \(O(C)\) graph-processing time under its access assumptions.
+
+For example, let \(f_1=x_1\mathbin{\oplus}x_3\) and
+\(f_2=x_2\), and substitute for \(x_1\). The two cofactors are
+\(f_1|_{x_1=0}=x_3\) and \(f_1|_{x_1=1}=\neg x_3\); hence
+\[
+ f_1|_{x_1=x_2}
+   =\operatorname{ITE}(x_2,\neg x_3,x_3)
+   =x_2\mathbin{\oplus}x_3.
+\]
+The example also shows why a functional substitution may change the first
+tested variable.
+
+Graph splicing is another implementation of substitution when the resulting
+paths respect the fixed variable order. After splicing, eliminate
+identical-child tests and merge isomorphic residual subgraphs. Preserving
+variable order alone does not ensure either reduction property.
+
+\paragraph{Finding, listing, and counting satisfying assignments.}
+Let
+\[
+ S_f:=\{a\in\{0,1\}^n:f(a)=1\}.
+\]
+For a reduced graph, Lemma~3 states that every nonterminal vertex has a
+\(1\)-terminal descendant \cite[\S4.6]{Bryant1986}. Indeed, if all its
+terminal descendants were \(0\), its function would be constant \(0\), whose
+unique reduced graph has no nonterminal vertex.
+
+To find one assignment, initialize the \(n\) argument bits arbitrarily.
+At a terminal return failure for \(0\) and success for \(1\). At an
+\(x_i\)-test, first set \(x_i=0\) and try the low child; on failure set
+\(x_i=1\) and try the high child. Reducedness and Lemma~3 imply that a failing
+first choice goes immediately to terminal \(0\); the other choice succeeds.
+Thus the search follows at most \(n\) tests and outputs a full assignment in
+\(O(n+1)\) time, including the constant-function cases.
+
+To list every assignment, keep the next output index \(i\) as well as the
+current vertex \(v\). When \(\operatorname{index}(v)>i\), branch over both
+values of the skipped variable while retaining \(v\). When the indices
+agree, follow the low and high children for the corresponding bit choices.
+Discard a \(0\)-terminal immediately; at \(i=n+1\), output the completed
+assignment exactly when the terminal is \(1\). The invariant is that the
+already chosen prefix is fixed and \(f_v\) describes precisely its possible
+satisfying extensions. Every assignment is generated once. For \(n\geq1\)
+and \(S_f\ne\varnothing\), the output-sensitive cost is \(O(n|S_f|)\);
+an empty satisfying set needs only the constant-time root test.
+
+Counting avoids enumeration. For a vertex \(v\) of index \(i\), let
+\(\alpha_v\) count satisfying assignments to variables \(x_i,\ldots,x_n\)
+for its residual function. A terminal has index \(n+1\) and
+\(\alpha_v=\operatorname{value}(v)\). The recurrence is
+\[
+ \alpha_v=
+  2^{\operatorname{index}(\operatorname{low}(v))-i-1}
+       \alpha_{\operatorname{low}(v)}
+  +2^{\operatorname{index}(\operatorname{high}(v))-i-1}
+       \alpha_{\operatorname{high}(v)}.
+\]
+For root \(r\),
+\[
+ |S_f|=2^{\operatorname{index}(r)-1}\alpha_r.
+\]
+Each child edge skips precisely
+\(\operatorname{index}(\text{child})-i-1\) untested variables, each freely
+Boolean; the branch fixes \(x_i\) itself. The two branches are disjoint.
+These facts prove the recurrence, and the root factor restores the variables
+skipped before the first test.
+
+For \(f=x_1\) on one argument, the accepting edge skips no variables and
+contributes \(2^0=1\); the rejecting edge contributes \(0\).
+For the constant \(1\), the root factor gives \(2^n\), including one empty
+assignment when \(n=0\).
+
+A further check uses \(f=x_1\lor x_3\) on three arguments. The \(x_3\)-vertex
+has \(\alpha=1\). The root's low edge skips \(x_2\), contributing \(2\);
+its high edge reaches terminal \(1\), leaving \(x_2,x_3\) free and
+contributing \(4\). Hence \(|S_f|=6\). A bottom-up traversal evaluates the
+recurrence once per vertex. The paper's \(O(|G|)\) bound assumes
+constant-time integer arithmetic at sufficient precision; the counts may
+require \(n+1\) bits, so this is not a bit-complexity bound.
+
+\paragraph{An exponential lower bound for multiplication.}
+Let \(n\geq1\) and define unsigned inputs
+\[
+ a=\sum_{u=1}^{n}a_u2^{u-1},\qquad
+ b=\sum_{v=1}^{n}b_v2^{v-1}.
+\]
+Write \(\operatorname{mul}_r(a,b)\) for bit \(r\) of the full
+\(2n\)-bit product, numbering bits from \(1\) at the least
+significant end. For every order of the \(2n\) input variables,
+there exists \(r\in\{1,\ldots,2n-1\}\) such that every ordered
+graph for that output has at least
+\[
+ 2^{q_*}\text{ vertices},\qquad
+ q_*=\left\lceil
+       \frac{\lceil n/2\rceil^2}{2n-1}
+      \right\rceil.
+\]
+In particular its size is at least \(2^{n/8}\). The selected
+output bit may depend on the input order
+\cite[app., thm.~2 and lem.~4]{Bryant1986}.
+
+\emph{Proof.}
+Cut the reading order after its first \(n\) variables.
+If it has \(t\) bits of \(a\) before the cut, it has \(t\)
+bits of \(b\) after it. Choose \(a\) as a data operand and
+\(b\) as a control operand when \(t\geq n/2\); otherwise
+exchange their roles. Multiplication is commutative.
+Let \(A\) be the significance indices of data bits before
+the cut and \(B\) those of control bits after it. Then
+\[
+ |A|=|B|=p=\max\{t,n-t\}\geq\lceil n/2\rceil.
+\]
+These are bit-significance indices, not positions in the
+reading order.
+
+For \(1\leq r\leq2n-1\), count the pairs on an output diagonal:
+\[
+ q_r=|\{(u,v)\in A\times B:u+v-1=r\}|.
+\]
+Every pair belongs to exactly one diagonal, so
+\(\sum_rq_r=p^2\). Some \(r\) therefore satisfies
+\[
+ q_r\geq\left\lceil\frac{p^2}{2n-1}\right\rceil
+       \geq q_*.
+\]
+Let \(A_r=\{u\in A:r-u+1\in B\}\); the corresponding
+control index is unique, so \(|A_r|=q_r\).
+For each vector \(\alpha\in\{0,1\}^{A_r}\), assign those
+data bits the values \(\alpha_u\), and assign every other
+variable before the cut zero.
+
+Two distinct such prefixes differ at some \(u\in A_r\).
+Give both the same suffix: set the control bit at
+\(v=r-u+1\in B\) to \(1\), and every other variable after
+the cut to zero. The complete control operand is
+\(2^{v-1}\), so multiplication is an exact left shift and
+\[
+ \operatorname{mul}_r=\operatorname{data}_{r-v+1}
+                    =\operatorname{data}_u.
+\]
+The two outputs differ. Thus the \(2^{q_r}\) prefixes
+induce pairwise different residual functions at the cut.
+The residual principle forces at least \(2^{q_r}\)
+vertices, even without assuming reducedness.
+Finally,
+\[
+ \frac{p^2}{2n-1}
+  \geq\frac{n^2}{4(2n-1)}>\frac n8,
+\]
+which yields the stated weaker exponential bound as well.
+For \(n=1\), the construction has one selected data bit,
+one control bit, and \(r=1\), so no small-\(n\) exception
+is needed. \(\square\)
+
+The quantifiers do not assert that every output is hard:
+the least significant output is just \(a_1\land b_1\).
+They assert that no choice of one input order makes all
+product outputs small.
+
+\paragraph{The ALU experiment.}
+Bryant also compared gate-level and behavioural descriptions
+of arithmetic logic units assembled from 74181 and 74182
+components. Table~2 reports the following VAX~11/780 CPU
+times for constructing both descriptions' graphs and checking
+their equivalence \cite[\S5 and table~2]{Bryant1986}.
+\begin{center}
+\begin{tabular}{rrrr}
+\hline
+Word bits & Gates & CPU minutes & Largest output graph\\
+\hline
+4  & 52  & 1.1  & 197\\
+8  & 123 & 2.3  & 377\\
+16 & 227 & 6.3  & 737\\
+32 & 473 & 22.8 & 1457\\
+64 & 927 & 95.8 & 2897\\
+\hline
+\end{tabular}
+\end{center}
+The largest graph in each row is the equality-indication output.
+With two \(n\)-bit operands, five controls, and carry-in,
+the input space has \(2^{2n+6}\) patterns; the experiment
+does not enumerate them. The best tested order puts the
+controls first, then carry-in, then interleaves operand
+bits from least to most significant. It is a measured
+choice, not a proof of global ordering optimality.
+Figure~11 contrasts these orders with separated operands,
+illustrating how the chosen representation affects graph
+growth in this particular circuit family
+\cite[fig.~11]{Bryant1986}.
+
+\subsubsection{Burch et al.'s symbolic fixed points}
+\label{sec:p09-n-c-017-burch}
+
+The paper's primary specification language is a relational \(\mu\)-calculus;
+its symbolic algorithm evaluates it over finite domains. Its formulas are
+built from applications
+\(R(z_1,\ldots,z_r)\), Boolean connectives, and existential quantification over
+individual variables.  An \(r\)-ary relational term is a relational variable,
+an abstraction \(\lambda z_1,\ldots,z_r[f]\), or a least fixed point
+\(\mu P[R]\).  The last form is admitted only when every free occurrence of
+\(P\) in \(R\) lies under an even number of negations, so that the induced
+operator is monotone.  The greatest fixed point \(\nu P[R]\) is introduced by
+duality. These terms denote relations over one nonempty domain \(D\); the
+fixed-point order is inclusion
+\cite[\S3]{BurchEtAl1992}.
+
+\paragraph{The relation denoted by a term.}
+Take \(D\ne\varnothing\). Each relational variable has a positive arity \(r\);
+an interpretation \(I_R\) assigns it an element of \(\mathcal P(D^r)\),
+and \(I_D\) assigns individual variables elements of \(D\).
+An abstraction binds pairwise distinct variables. In an application
+\(R(z_1,\ldots,z_r)\), the actual argument variables are not free in \(R\);
+this is a source syntax condition, not a claim that \(R\) has no other free
+individual parameters \cite[\S3]{BurchEtAl1992}.
+
+The following denotation clauses spell out the two sorts. Write
+\(\llbracket R\rrbracket_{I_R,I_D}\subseteq D^r\) for a relational term,
+and \(I_R,I_D\models f\) for a formula:
+\[
+\begin{aligned}
+ \llbracket P\rrbracket_{I_R,I_D}&=I_R(P),\\
+ \llbracket\lambda z_1,\ldots,z_r[f]\rrbracket_{I_R,I_D}
+ &=\{(a_1,\ldots,a_r)\in D^r:
+       I_R,I_D[z_1:=a_1,\ldots,z_r:=a_r]\models f\},\\
+ I_R,I_D\models R(z_1,\ldots,z_r)
+ &\iff (I_D(z_1),\ldots,I_D(z_r))
+             \in\llbracket R\rrbracket_{I_R,I_D},\\
+ I_R,I_D\models\neg f&\iff I_R,I_D\not\models f,\\
+ I_R,I_D\models f\lor g
+ &\iff (I_R,I_D\models f)\text{ or }(I_R,I_D\models g),\\
+ I_R,I_D\models\exists z[f]
+ &\iff\exists a\in D\;(I_R,I_D[z:=a]\models f).
+\end{aligned}
+\]
+Conjunction and universal quantification are the Boolean duals of disjunction
+and existential quantification. Interpretation updates change only the named
+variables; free individual parameters retain their \(I_D\)-values.
+
+For an \(r\)-ary term \(R\) positive in the \(r\)-ary variable \(P\), hold
+the remaining interpretations fixed and define
+\[
+ F:\mathcal P(D^r)\to\mathcal P(D^r),\qquad
+ F(X):=\llbracket R\rrbracket_{I_R[P:=X],I_D}.
+\]
+Then
+\[
+\begin{aligned}
+ \llbracket\mu P[R]\rrbracket_{I_R,I_D}
+   &=\bigcap\{X\subseteq D^r:F(X)\subseteq X\},\\
+ \llbracket\nu P[R]\rrbracket_{I_R,I_D}
+   &=\bigcup\{X\subseteq D^r:X\subseteq F(X)\}.
+\end{aligned}
+\]
+Positivity makes \(F\) monotone. These are respectively its least and greatest
+fixed points. Explicitly, put
+\[
+ X_0=\varnothing,\quad X_{j+1}=F(X_j),\qquad
+ Y_0=D^r,\quad Y_{j+1}=F(Y_j).
+\]
+On finite \(D\), these chains stabilize after at most \(|D|^r\) strict changes.
+The bound counts approximant changes, not the time to perform their BDD
+operations.
+For the least chain, induction gives \(X_j\subseteq U\) for every
+pre-fixed set \(U\); at stabilization \(F(X_j)=X_j\). The descending argument
+is dual. This supplies the justification for finite iteration without
+assuming that an arbitrary monotone iteration from an arbitrary seed converges
+to the least fixed point.
+
+For the Boolean domain, an \(r\)-ary relation is represented by a BDD whose
+placeholder variables \(d_1,\ldots,d_r\) stand for its arguments.  The source's
+two mutually recursive evaluators follow the syntax of formulas and relational
+terms.  Boolean connectives become BDD operations, existential quantification
+becomes BDD abstraction, and applying a relation substitutes the actual
+argument variables for its placeholders.  For \(\mu P[R]\), the printed
+fixed-point routine starts with \(Z_0=\mathit{false}\) and repeats
+\[
+ Z_{i+1}
+   =\operatorname{BDD}_{R}
+      \bigl(R,I_R[P\mapsto Z_i]\bigr)
+\]
+until \(Z_{i+1}=Z_i\).  Formal monotonicity makes the approximants increasing;
+finiteness makes them stabilize at the least fixed point.  Equality is cheap
+because reduced BDDs under the chosen order are canonical.  An arbitrary
+finite domain is handled by choosing \(m\geq1\) and a surjection
+\(\phi:\{0,1\}^{m}\twoheadrightarrow D\), replacing each domain value by a
+Boolean vector.  The encoding and BDD variable order can change performance,
+but not the denotation
+\cite[\S4 and fig.~2]{BurchEtAl1992}.
+
+\paragraph{The two recursive BDD evaluators.}
+The placeholder variables are fresh and are not individual variables of the
+logical signature. Substitutions below are simultaneous; bound variables are
+renamed when needed to avoid capture. A substitution denotes Boolean
+composition followed by ordered reduction, not unrestricted relabelling of
+vertices in a graph whose order might then be violated.
+An individual variable \(z\) may itself
+be read as a Boolean formula in this Boolean-domain evaluator, true exactly
+when \(I_D(z)=1\).
+
+Using the source's formula and relation evaluators, Figure~2 gives
+\[
+\begin{aligned}
+ \operatorname{BDD}_F(z,I_R)
+   &=\operatorname{BDDAtom}(z),\\
+ \operatorname{BDD}_F(f\land g,I_R)
+   &=\operatorname{BDDAnd}
+       (\operatorname{BDD}_F(f,I_R),\operatorname{BDD}_F(g,I_R)),\\
+ \operatorname{BDD}_F(\neg f,I_R)
+   &=\operatorname{BDDNegate}(\operatorname{BDD}_F(f,I_R)),\\
+ \operatorname{BDD}_F(\exists z[f],I_R)
+   &=\operatorname{BDDExists}(z,\operatorname{BDD}_F(f,I_R)),\\
+ \operatorname{BDD}_F(R(z_1,\ldots,z_r),I_R)
+   &=\operatorname{BDD}_R(R,I_R)
+           [d_1:=z_1,\ldots,d_r:=z_r],\\
+ \operatorname{BDD}_R(P,I_R)&=I_R(P),\\
+ \operatorname{BDD}_R(\lambda z_1,\ldots,z_r[f],I_R)
+   &=\operatorname{BDD}_F(f,I_R)
+           [z_1:=d_1,\ldots,z_r:=d_r].
+\end{aligned}
+\]
+Here \(I_R(P)\) in the last two lines means the BDD representing the
+interpreted relation, rather than its extension as a set. The \(\mu\)-case is
+the \(Z_i\)-iteration already displayed. The BDD operations denote, in order,
+an atomic test, conjunction, negation, and existential abstraction.
+Disjunction is recovered by De Morgan's law; the relational \(\nu\)-case
+uses complement duality
+\[
+ \nu P[R]=\neg\mu P[\neg R[P:=\neg P]],
+\]
+where relational negation complements an \(r\)-ary relation within \(D^r\)
+\cite[\S\S3--4 and fig.~2]{BurchEtAl1992}.
+
+For a relation term with free individual parameters, the returned BDD may
+contain those parameters as well as its \(r\) placeholders. Fixing the
+parameters first gives an \(r\)-ary relation; the fixed-point iteration is
+performed pointwise at those parameter values. The application condition
+above prevents a placeholder substitution from accidentally changing one of
+these free parameters.
+
+The Boolean encoding of a nonempty finite \(D\) also has a precise
+interpretation. For the surjection \(\phi:\{0,1\}^m\to D\), represent an
+\(r\)-ary relation \(Q\) by the characteristic function of
+\[
+ \{(b_1,\ldots,b_r):(\phi(b_1),\ldots,\phi(b_r))\in Q\}.
+\]
+Every bit vector has a denotation, though different vectors may denote the
+same element. Surjectivity makes existential quantification exact: a domain
+witness has a Boolean representative, and every Boolean witness maps to a
+domain witness. Inverse images preserve complement, union, and intersection.
+Induction through the finite fixed-point approximants therefore gives the
+same relation after decoding, including when \(|D|\) is not a power of two.
+
+The paper then instantiates this evaluator for a Kripke structure
+\[
+ M=(A,S,L,N,S_0),
+\]
+where \(A\) is the atomic-proposition set, \(S\) is finite,
+\(L:S\to2^A\), the transition relation \(N\subseteq S\times S\) is total, and
+\(S_0\subseteq S\) is the initial set.  Its primitive CTL temporal forms are
+\(EXf\), \(E[f\,U\,g]\), and \(EGf\).  Reading a CTL formula as a unary
+relational term gives the exact translations
+\[
+\begin{aligned}
+ EXf
+  &=\lambda s\,\exists t\,[f(t)\land N(s,t)],\\
+ EGf
+  &=\nu Q\,\lambda s\,[f(s)\land
+       \exists t\,(Q(t)\land N(s,t))],\\
+ E[f\,U\,g]
+  &=\mu Q\,\lambda s\,[g(s)\lor
+       (f(s)\land\exists t\,(Q(t)\land N(s,t)))].
+\end{aligned}
+\]
+The whole structure satisfies \(f\) at its initial states exactly when
+\(\forall s\,[S_0(s)\to f(s)]\) is true.  If states are encoded by current
+Boolean variables \(V\) and successors by a renamed copy \(V'\), the common
+predecessor operation is therefore
+\[
+ \operatorname{Pre}_{\exists}(X)(V)
+ =\exists V'\,\bigl(N(V,V')\land X(V')\bigr),
+\]
+implemented by conjunction, existential abstraction, and renaming on BDDs
+\cite[\S6.1]{BurchEtAl1992}.
+
+For a concrete fixed-point trace, take total transitions
+\(s_0\to s_1\), \(s_0\to s_2\), \(s_1\to s_1\), and \(s_2\to s_2\), let
+\(g\) hold only at \(s_1\), and let \(f\) hold at \(s_0,s_1\).  The least
+approximants for \(E[f\,U\,g]\) are
+\[
+ \varnothing,
+ \quad\{s_1\},
+ \quad\{s_0,s_1\},
+ \quad\{s_0,s_1\}.
+\]
+Representing these sets and \(N\) by their characteristic BDDs changes only
+the data structure: the second step is still conjunction with \(f\), symbolic
+preimage through \(N\), and union with \(g\).  The structural evaluator is
+correct because each BDD operation denotes its corresponding logical or
+relational operation, and the fixed-point case is the finite monotone iteration
+above.
+
+The symbolic calculation can be made explicit with two current bits \(b,c\)
+and next bits \(b',c'\). This is a handbook calculation of the preceding
+example. Use the surjection
+\[
+ \phi(0,0)=s_0,\qquad
+ \phi(0,1)=s_1,\qquad
+ \phi(1,0)=\phi(1,1)=s_2.
+\]
+The Boolean predicates for \(f\), \(g\), and the transition relation are
+\[
+\begin{aligned}
+ f(b,c)&=\neg b,& g(b,c)&=\neg b\land c,\\
+ N(b,c,b',c')
+  &=(\neg b\land\neg b'\land c')
+      \lor((b\lor\neg c)\land b').
+\end{aligned}
+\]
+The first disjunct encodes \(s_0\to s_1\) and \(s_1\to s_1\).
+The second encodes \(s_0\to s_2\) and \(s_2\to s_2\), including both Boolean
+representatives of \(s_2\). No bit vector is an invalid state code.
+
+For a state predicate \(U(b,c)\), its symbolic preimage is
+\[
+ \operatorname{Pre}_{\exists}(U)(b,c)
+ =\exists b'\exists c'\,
+      (N(b,c,b',c')\land U(b',c')).
+\]
+Here \(U(b',c')\) is simultaneous renaming to the next-state bits.
+For \(U=g\), substituting \(\neg b'\land c'\) removes the second disjunct
+of \(N\), leaving \(\neg b\land\neg b'\land c'\); existential abstraction
+therefore yields \(\neg b\).
+The until iteration is consequently
+\[
+ Z_0=0,\quad Z_1=\neg b\land c,\quad
+ Z_2=(\neg b\land c)\lor(\neg b\land\neg b)=\neg b.
+\]
+Substituting \(Z_2(b',c')=\neg b'\) again gives preimage \(\neg b\), so
+\(Z_3=Z_2\). Decoding yields precisely \(\{s_0,s_1\}\).
+This calculation exposes the conjunction, renaming, and quantifier
+elimination behind each state-set step.
+
+\paragraph{Positive transitive closure by squaring.}
+For \(E\subseteq S\times S\), relational composition is
+\[
+ (Q\circ Q)(x,y)\iff
+       \exists z\in S\;(Q(x,z)\land Q(z,y)).
+\]
+The iterative-squaring construction computes positive transitive closure:
+\[
+ \mu Q\,\lambda x,y\,[E(x,y)\lor
+   \exists z\,(Q(x,z)\land Q(z,y))].
+\]
+Starting with \(Q_0=\varnothing\), put \(Q_{i+1}=E\cup(Q_i\circ Q_i)\).
+For \(i\geq1\),
+\[
+ Q_i=\bigcup_{\ell=1}^{2^{i-1}}E^\ell.
+\]
+The base case is \(Q_1=E\). Composition of two positive paths of
+length at most \(2^{i-1}\) produces lengths from \(2\) through \(2^i\);
+every length in that interval splits into two permitted positive
+lengths. The extra \(E\) supplies length \(1\), proving the induction.
+Consequently the limit is \(E^+\), not the reflexive closure \(E^*\).
+The latter is \(=_{S}\cup E^+\).
+
+Let \(d_+(E)\) be the maximum shortest positive-path length over pairs
+in \(E^+\), taking \(d_+(E)=0\) when \(E^+=\varnothing\). Then the
+complete relation has been reached by round
+\[
+ 1+\left\lceil\log_2\max\{1,d_+(E)\}\right\rceil.
+\]
+An additional equality comparison detects stabilization. A shortest
+positive path between distinct states is simple; a shortest positive
+return to the same state is a simple cycle. Thus \(d_+(E)\leq|S|\).
+This bound includes self-return pairs, whose length is not their
+zero-valued reflexive distance. The logarithmic iteration count does
+not bound the sizes of the squared-relation BDDs
+\cite[\S5]{BurchEtAl1992}.
+
+\paragraph{The general iterative-squaring transformation.}
+Let \(D\) be a nonempty finite domain, \(r\geq1\), and \(V=D^r\).
+Fix a seed relation \(B\subseteq V\) and a transition kernel
+\(K\subseteq V\times V\). In the one-domain relational calculus,
+these have arities \(r\) and \(2r\), respectively. Their defining
+terms may have fixed parameters, but neither may contain the
+iteration variable \(Q\) free. Write
+\[
+ \operatorname{Post}_K(X)
+   :=\{\bar y\in V:\exists\bar x\in X\;K(\bar x,\bar y)\},
+ \qquad
+ \mathcal F(X):=B\cup\operatorname{Post}_K(X).
+\]
+Thus the admitted body has the form
+\[
+ \lambda\bar y\,
+   [B(\bar y)\lor
+      \exists\bar x\,(Q(\bar x)\land K(\bar x,\bar y))].
+\]
+The tuples of bound variables are chosen fresh and disjoint.
+The restriction that \(B,K\) do not depend on \(Q\) makes this a
+fixed graph-reachability operator throughout the iteration.
+It is the form used in the general transformation of
+Section~5.2 \cite[\S5.2, thms.~2--3]{BurchEtAl1992}.
+
+Compute the positive closure \(T=K^+\) by the preceding squaring
+construction, now on tuple states in \(V\). Define
+\[
+\begin{aligned}
+ M_B&=B\cup\operatorname{Post}_T(B),\\
+ C_K&=\{\bar y\in V:\exists\bar x\in V\
+                 [T(\bar x,\bar x)\land T(\bar x,\bar y)]\}.
+\end{aligned}
+\]
+Then
+\[
+ \mu\mathcal F=M_B,\qquad
+ \nu\mathcal F=M_B\cup C_K.
+\]
+The first set consists of the seed states and everything reachable
+from them. The additional set in the greatest fixed point consists
+of states reachable from a positive closed walk. A point on such
+a walk is included even when the route to itself is regarded as
+length zero, because its positive return already witnesses
+\(T(\bar x,\bar x)\).
+
+\emph{Proof of the least-fixed-point formula.}
+The set \(M_B\) contains \(B\) and is closed under one more
+\(K\)-edge. Conversely, a nonseed member of \(M_B\) has a
+positive path from \(B\); deleting its final edge leaves a
+predecessor in \(M_B\). These two observations give
+\(\mathcal F(M_B)=M_B\).
+If \(\mathcal F(X)\subseteq X\), then \(B\subseteq X\) and
+\(\operatorname{Post}_K(X)\subseteq X\). Induction on path
+length puts every state reachable from \(B\) in \(X\).
+Thus \(M_B\) is contained in every pre-fixed set and is the
+least fixed point.
+
+\emph{Proof of the greatest-fixed-point formula.}
+First,
+\[
+ \operatorname{Post}_K(C_K)=C_K.
+\]
+One inclusion follows by appending an edge to the path from
+a closed walk. For the other, let a positive path from a point
+\(\bar x\) on a closed walk end at \(\bar y\in C_K\).
+Its last-edge predecessor is itself reachable from that walk,
+and hence lies in \(C_K\). If this predecessor is \(\bar x\),
+its positive self-return supplies the required membership.
+Therefore every \(\bar y\in C_K\) has a predecessor in \(C_K\).
+Since relational image distributes over union and \(M_B\)
+is fixed,
+\[
+ \mathcal F(M_B\cup C_K)=M_B\cup C_K.
+\]
+
+Now let \(X\subseteq\mathcal F(X)\) and take \(\bar y_0\in X\).
+If \(\bar y_0\notin B\), post-fixedness supplies
+\(\bar y_1\in X\) with \(K(\bar y_1,\bar y_0)\).
+Repeat this predecessor choice until a seed is encountered.
+If \(\bar y_j\in B\) is reached, the selected edges give a
+finite forward path from that seed to \(\bar y_0\), putting
+\(\bar y_0\) in \(M_B\).
+Otherwise there is an infinite predecessor sequence in the
+finite set \(V\). Some \(\bar y_i=\bar y_j\), \(i<j\).
+The edges from \(\bar y_j\) down to \(\bar y_i\) give a
+positive closed walk, and the remaining edges lead to
+\(\bar y_0\). If \(i=0\), the closed walk itself gives a
+positive return to \(\bar y_0\). In every case
+\(\bar y_0\in C_K\).
+Thus every post-fixed set is contained in \(M_B\cup C_K\);
+the fixed set already exhibited is the greatest one.
+\(\square\)
+
+Finiteness is essential to that last argument. On
+\(V=\{0,1,2,\ldots\}\), take \(B=\varnothing\) and
+\(K(i+1,i)\) for every \(i\). There is no cycle, so both
+\(M_B\) and \(C_K\) are empty, yet
+\(\operatorname{Post}_K(V)=V\) and the greatest fixed point
+is all of \(V\). Infinite predecessor support need not
+contain a repeated state on an infinite domain.
+
+For a finite worked example, let
+\[
+ V=\{a,b,c,d,e\},\qquad B=\{a\},\qquad
+ K=\{(a,b),(b,c),(d,d),(d,e)\}.
+\]
+The least approximants are
+\[
+ \varnothing,\quad\{a\},\quad\{a,b\},\quad\{a,b,c\},
+ \quad\{a,b,c\}.
+\]
+The positive return at \(d\) and its edge to \(e\) give
+\(C_K=\{d,e\}\), so the greatest fixed point is \(V\).
+The state \(e\) belongs to it through an incoming edge
+from the closed walk; \(e\) need not itself have an
+outgoing edge. This is a forward-image fixed point.
+
+The CTL predecessor operators fit the same form after
+reversing the kernel arguments. For
+\[
+ \mathcal U(X)=G\cup(F\cap\operatorname{Pre}_{\exists}(X)),
+\]
+use seed \(G\) and kernel
+\[
+ K(x,y)\iff F(y)\land N(y,x).
+\]
+Then \(\mathcal U(X)=G\cup\operatorname{Post}_K(X)\),
+so the least formula computes \(E[F\,U\,G]\).
+With empty seed, the greatest formula computes
+\(EG(F)\). The direction of \(K\) matters: in the
+original relation \(N\), these are states that can
+reach a target or continue indefinitely, not states
+reached by running \(N\) forward from the target.
+
+Monotonicity alone is not enough to justify this graph
+transformation. Every operator \(B\cup\operatorname{Post}_K(X)\)
+preserves binary unions. Define the universal-predecessor operator by
+\[
+ \operatorname{Pre}_{\forall}(X)
+  :=\{s:\forall t\,(N(s,t)\Rightarrow t\in X)\}.
+\]
+It does not preserve binary unions: if \(s\) has exactly two distinct successors
+\(a,b\), it belongs to
+\(\operatorname{Pre}_{\forall}(\{a,b\})\) but not to
+\(\operatorname{Pre}_{\forall}(\{a\})\cup
+  \operatorname{Pre}_{\forall}(\{b\})\).
+Consequently such a body cannot simply be substituted
+for the admitted form; any use of duality or another
+rewriting must first establish the required equality.
+
+Once \(B,K\) are evaluated, the \(T\)-stage reaches closure
+in \(O(1+\log|V|)\) rounds, followed by the displayed
+Boolean, image, and diagonal operations. It computes
+a \(2r\)-ary relation where the original approximants
+were only \(r\)-ary. The round bound is therefore not
+a running-time improvement theorem for arbitrary BDDs,
+nor does it include the cost of evaluating nested terms
+inside \(B\) or \(K\).
+
+\paragraph{Applying the transformation inside a nested fixed point.}
+Let \(E\subseteq V\times V\) and \(A\subseteq V\), and use
+\(\operatorname{Pre}_E(X)=\{y:\exists x\in X\ E(y,x)\}\).
+Consider
+\[
+ Z=\nu P\,
+   \left[A\cap
+      \mu Q\,\bigl(\operatorname{Pre}_E(P)
+                     \cup\operatorname{Pre}_E(Q)\bigr)\right].
+\]
+For the inner iteration, \(P\) is a fixed parameter.
+Its seed is \(\operatorname{Pre}_E(P)\), so the inner
+least fixed point is exactly
+\(\operatorname{Pre}_{E^+}(P)\): it permits a positive
+number of \(E\)-steps to \(P\).
+For the outer iteration, the body becomes
+\(A\cap\operatorname{Pre}_{E^+}(P)\), with empty seed
+and kernel \(K(x,y)\iff A(y)\land E^+(y,x)\).
+It is again of the admitted form.
+
+This nested expression has the following direct result:
+\[
+ Z=\{y\in A:\exists x\in A\
+                       [E^+(y,x)\land E^+(x,x)]\}.
+\]
+To prove it, first observe that a post-fixed point of
+\(P\mapsto A\cap\operatorname{Pre}_{E^+}(P)\) lets one
+choose, from each of its states, a positive finite path
+to another state of that set. Concatenating such paths
+gives an infinite path visiting \(A\) infinitely often.
+Conversely, an infinite path beginning in \(A\) and
+visiting \(A\) infinitely often yields a post-fixed set
+by taking the states at those visits. This proves that
+the greatest fixed point denotes exactly those starting
+states.
+
+On a finite graph, some \(A\)-state then occurs twice
+strictly after the starting position, giving both a
+positive route from \(y\) and a positive return at \(x\).
+Conversely, a route to such an \(x\), followed by
+repetition of its closed walk, visits \(A\) infinitely
+often. This proves the displayed formula, including
+the case \(x=y\).
+For example, with
+\(E=\{(a,b),(b,c),(c,b)\}\) and \(A=\{a,c\}\),
+the set is \(\{a,c\}\). The recurring segment passes
+through \(b\notin A\); requiring every intermediate
+state to remain in \(A\) would express a different
+property \cite[\S5.2]{BurchEtAl1992}.
+
+\paragraph{Fair paths as nested fixed points.}
+Let \(C_1,\ldots,C_k\subseteq S\), with \(k\geq0\), be fixed state
+sets. An infinite path \(\pi=s_0s_1\cdots\) is fair when
+\[
+ \forall j\in\{1,\ldots,k\}\ \forall r\geq0\
+       \exists \ell\geq r\quad s_\ell\in C_j.
+\]
+Thus each constraint must be visited infinitely often, and every infinite
+path is fair when the list is empty. A CTL formula supplied as a constraint
+is first evaluated as a state predicate in the underlying structure.
+The sets \(C_j\) are then held fixed while the fair temporal operators are
+evaluated. This prevents a circular definition of the constraints.
+Section~6.2 implements this repeated-visit semantics with nested least and
+greatest fixed points \cite[\S6.2]{BurchEtAl1992}.
+
+For \(F,B\subseteq S\), put
+\[
+ \operatorname{Reach}_F(B)
+   :=\mu Y\,\bigl(B\cup(F\cap\operatorname{Pre}_{\exists}(Y))\bigr).
+\]
+The least approximants show that this is exactly the set of starting
+states of finite paths ending in \(B\), with every state before the
+endpoint in \(F\). The length-zero path is permitted; in particular
+\(B\subseteq\operatorname{Reach}_F(B)\). The corresponding
+positive-length constrained reachability set is
+\[
+ F\cap\operatorname{Pre}_{\exists}
+           \bigl(\operatorname{Reach}_F(B)\bigr).
+\]
+The extra preimage supplies the first edge, and the intersection
+requires its starting state to lie in \(F\).
+
+Adjoin the harmless constraint \(C_0=S\), which every infinite path
+satisfies, and define
+\[
+ \Phi_F(Z)
+   :=F\cap\bigcap_{j=0}^{k}
+       \operatorname{Pre}_{\exists}
+          \bigl(\operatorname{Reach}_F(Z\cap C_j)\bigr),
+ \qquad
+ E_CG(F):=\nu Z\,\Phi_F(Z).
+\]
+All operations are on \(\mathcal P(S)\). Preimage and constrained
+reachability are monotone in their set arguments, so \(\Phi_F\) is
+monotone. At a fixed point \(Z=\Phi_F(Z)\), every state lies in \(F\)
+and, for every \(j\), has a positive-length \(F\)-path to a state in
+\(Z\cap C_j\). In particular, the endpoint remains in the set from
+which the next visit can be arranged.
+
+\emph{Fair-path characterization.}
+The set \(E_CG(F)\) consists exactly of the states from which there is
+a fair infinite path all of whose states lie in \(F\).
+
+For one direction, write \(Z=\nu\Phi_F\) and start at \(s\in Z\).
+Use its fixed-point property to choose a finite path to \(Z\cap C_0\),
+then one to \(Z\cap C_1\), and so on through \(Z\cap C_k\), repeating
+this schedule forever. Every chosen segment has positive length.
+Its initial state and intermediate states lie in \(F\), and its
+endpoint lies in \(Z\subseteq F\). Concatenation therefore produces
+an infinite \(F\)-path, with a visit to every \(C_j\) during each
+schedule round. It is fair.
+
+Conversely, take a fair infinite \(F\)-path and let \(W\) be the set
+of states occurring on it. From any chosen occurrence of a state
+in \(W\), each \(C_j\) occurs again strictly later; \(C_0\) can be
+reached at the next position. The intervening finite segment lies
+in \(F\) and ends in \(W\cap C_j\). Hence \(W\subseteq\Phi_F(W)\).
+The greatest fixed point contains every such post-fixed set, so the
+initial state belongs to \(\nu\Phi_F\). This proves the characterization.
+
+The added \(C_0\) also handles \(k=0\) correctly. In that case the
+construction still requires indefinitely repeatable positive-length
+segments and gives ordinary \(EG(F)\). An empty intersection without
+this requirement would instead yield \(F\), even when an \(F\)-state
+has no infinite continuation inside \(F\).
+The proof works on a finite directed graph even if its transition
+relation is not total: a dead end simply has no infinite-path witness.
+
+Put \(H:=E_CG(S)\), the states with some fair continuation.
+If \(F,G\) are the already evaluated operand state sets, then
+\[
+ E_CX(F)=\operatorname{Pre}_{\exists}(F\cap H),
+ \qquad
+ E_C[F\,U\,G]=\operatorname{Reach}_F(G\cap H).
+\]
+A fair next witness has a successor in \(F\) whose remaining suffix
+is fair. A fair until witness has a finite \(F\)-prefix ending in
+\(G\) and then a fair suffix. Conversely, concatenate the indicated
+finite prefix with that fair suffix; finitely many added positions
+cannot change infinitely many visits. These observations prove both
+identities. Universal fair operators follow by duality over the same
+set of fair paths. At a state with no fair paths, existential fair
+assertions are false and universal ones are vacuously true.
+
+For an explicit calculation, take transitions
+\[
+ a\to a,\quad a\to b,\quad b\to b,\quad c\to c,
+ \qquad C_1=\{b\}.
+\]
+With \(F=S\), the outer iteration starts at \(S=\{a,b,c\}\).
+The inner reachability set for \(C_1\) is \(\{a,b\}\), and its
+preimage is again \(\{a,b\}\); the tautological constraint adds
+no restriction here. The next outer set is \(\{a,b\}\), which is
+fixed. Thus \(H=\{a,b\}\). The ordinary \(EG(\{a\})\) assertion
+holds at \(a\) via its self-loop, but \(E_CG(\{a\})\) is empty:
+that loop never visits \(b\).
+
+Symbolically, each inner computation uses union, conjunction, and
+the existing BDD preimage operation. Starting the outer iteration
+at \(S\) and each inner least iteration at \(\varnothing\) computes
+the displayed fixed points. There are at most \(|S|\) strict
+changes in each chain. A direct nested implementation uses
+\(O((k+1)(|S|+1)^2)\) preimage evaluations; this counts set
+operations, not their BDD running time or intermediate graph sizes.
+
+\paragraph{A symbolic tableau for linear temporal logic.}
+Let \(f\) be an LTL formula over its finite set of atomic propositions
+\(P\), with constructors \(\neg,\lor,X,U\), and use the infinite-word
+semantics of Definition~\ref{def:p09-ltl}. The tableau uses one Boolean
+coordinate for each member of the finite set \(\operatorname{el}(f)\):
+\[
+\begin{aligned}
+ \operatorname{el}(p)&=\{p\},\\
+ \operatorname{el}(\neg g)&=\operatorname{el}(g),\\
+ \operatorname{el}(g\lor h)&=\operatorname{el}(g)\cup\operatorname{el}(h),\\
+ \operatorname{el}(Xg)&=\{Xg\}\cup\operatorname{el}(g),\\
+ \operatorname{el}(g\,U\,h)
+   &=\{X(g\,U\,h)\}\cup\operatorname{el}(g)\cup\operatorname{el}(h).
+\end{aligned}
+\]
+Repeated occurrences of the same syntactic formula use one coordinate.
+Write \(\mathcal V_f=\{0,1\}^{\operatorname{el}(f)}\) for the
+valuation space and \(v_e\) for coordinate \(e\).
+The coordinate \(X(g\,U\,h)\) records a next-step obligation; the
+truth of \(g\,U\,h\) at the current step is computed, not stored
+as another independent bit \cite[\S7]{BurchEtAl1992}.
+
+For each subformula \(g\) of \(f\), define the Boolean predicate
+\(\alpha_g:\mathcal V_f\to\{0,1\}\) recursively:
+\[
+\begin{aligned}
+ \alpha_p(v)&=v_p,\\
+ \alpha_{\neg g}(v)&=\neg\alpha_g(v),\\
+ \alpha_{g\lor h}(v)&=\alpha_g(v)\lor\alpha_h(v),\\
+ \alpha_{Xg}(v)&=v_{Xg},\\
+ \alpha_{g\,U\,h}(v)
+   &=\alpha_h(v)\lor
+           \bigl(\alpha_g(v)\land v_{X(g\,U\,h)}\bigr).
+\end{aligned}
+\]
+The last clause recurses only into \(g,h\); the remaining expression
+is a coordinate lookup. Thus the recursion is well founded even
+though an until formula occurs inside its next-obligation coordinate.
+For a generated coordinate \(Xg\), the predicate \(\alpha_g\)
+is defined by the same clauses, including when \(g\) is the until
+formula that generated that coordinate.
+
+The initial predicate and transition relation are
+\[
+ I_f(v):=\alpha_f(v),\qquad
+ R_f(v,w):=
+   \bigwedge_{Xg\in\operatorname{el}(f)}
+        \bigl(v_{Xg}\leftrightarrow\alpha_g(w)\bigr).
+\]
+These are finite Boolean expressions on current and next coordinates,
+so their BDDs can be constructed by the operations already given.
+For every until subformula \(u=g\,U\,h\), add the fairness set
+\[
+ C_u:=\{v\in\mathcal V_f:
+              \neg\alpha_u(v)\lor\alpha_h(v)\}.
+\]
+It requires infinitely many positions at which that until obligation
+is either absent or fulfilled. It does not require its right operand
+to recur after the obligation has ceased.
+
+\emph{Truth lemma.}
+If \(v^0v^1\cdots\) is an \(R_f\)-path fair for all \(C_u\), define
+the word \(\sigma\) by
+\(\sigma(i)=\{p\in P:v^i_p=1\}\). Then, for every subformula \(g\)
+and every \(i\geq0\),
+\[
+ \alpha_g(v^i)=1\quad\Longleftrightarrow\quad\sigma,i\models g.
+\]
+The atomic and Boolean cases follow from their definitions. For \(Xg\),
+the transition equation gives
+\(\alpha_{Xg}(v^i)=v^i_{Xg}=\alpha_g(v^{i+1})\), so induction
+gives the next clause.
+For \(u=g\,U\,h\), put
+\[
+ w_i=\alpha_u(v^i),\qquad
+ b_i=\alpha_h(v^i),\qquad a_i=\alpha_g(v^i).
+\]
+The predicate and transition equations give
+\[
+ w_i=b_i\lor(a_i\land w_{i+1}).
+\]
+If \(w_i=1\) and no \(b_j\) with \(j\geq i\) were true, this
+recurrence would force \(w_j=a_j=1\) for every \(j\geq i\).
+The path would then avoid \(C_u\) forever, contrary to fairness.
+Let \(j\geq i\) be the first position with \(b_j=1\).
+The recurrence forces \(a_\ell=1\) for \(i\leq\ell<j\), and
+induction on the operands gives a semantic until witness.
+Conversely, any semantic until witness gives \(b_j=1\) and those
+intervening \(a_\ell=1\). Starting with \(w_j=1\) and using the
+recurrence backwards gives \(w_i=1\). This proves the until case
+and the lemma.
+
+For the converse construction, start with any word \(\sigma\).
+Set \(v^i_p\) to its atomic truth value and set every next-coordinate
+\(v^i_{Xg}\) to the truth value of \(\sigma,i+1\models g\).
+The usual until unfolding and structural induction then give
+\(\alpha_g(v^i)=1\) exactly when \(\sigma,i\models g\).
+Consequently every \(R_f(v^i,v^{i+1})\) holds. Each \(C_u\)
+occurs infinitely often: otherwise, from some point onward \(u\)
+would be true while its right operand remained false forever,
+contradicting the semantics of until.
+
+It follows in both directions that
+\[
+ f\text{ is satisfiable}
+ \quad\Longleftrightarrow\quad
+ \exists v\in\mathcal V_f\
+     \bigl(I_f(v)\land v\in E_CG(\mathcal V_f)\bigr).
+\]
+Here \(E_CG\) is evaluated on \(R_f\), with the displayed until
+fairness sets and the tautological constraint used above. In
+particular, satisfiability needs \emph{some} initial tableau state
+with a fair continuation, not every valuation satisfying \(I_f\).
+The relation \(R_f\) need not be total. For example, independent
+coordinates for \(Xp\) and \(X\neg p\) may both be set to \(1\),
+leaving no possible successor. The infinite-path fixed point
+correctly discards that state; adding a self-loop at a dead end
+would destroy the transition equations and the truth lemma.
+
+For \(f=p\,U\,q\), the coordinates are \(p,q,X(p\,U\,q)\).
+Writing the last bit as \(t\), the construction is
+\[
+ I_f(p,q,t)=q\lor(p\land t),\qquad
+ R_f(v,w)\iff t=q'\lor(p'\land t'),\qquad
+ C_f(v)\iff\neg(q\lor(p\land t))\lor q.
+\]
+The constant path \((1,0,1)^\omega\) satisfies both the initial
+and transition predicates, but not fairness: it postpones \(q\)
+forever. In contrast,
+\[
+ (1,0,1)\,(0,1,0)\,(0,0,0)^\omega
+\]
+is an initial fair path. The until obligation is fulfilled at
+position \(1\); all later states satisfy \(C_f\) because the
+obligation is false. The example distinguishes fulfilling an
+eventuality from demanding its right operand infinitely often.
+
+There are \(|\operatorname{el}(f)|=O(|f|)\) Boolean coordinates
+and at most \(2^{|\operatorname{el}(f)|}\) tableau states. A BDD
+represents their sets and transition constraints without requiring
+an explicit list of those states; no small-BDD bound follows
+solely from the linear number of coordinates.
+
+\paragraph{Strong and weak observational equivalence.}
+Consider two finite labelled transition systems with the same finite
+action alphabet:
+\[
+ \mathcal M_S=(S,s_*,\Sigma,\Delta_S),\qquad
+ \mathcal M_T=(T,t_*,\Sigma,\Delta_T),
+\]
+where \(\Delta_S\subseteq S\times\Sigma\times S\) and
+\(\Delta_T\subseteq T\times\Sigma\times T\). Transitions need not
+be total. For \(Z\subseteq S\times T\), define
+\[
+\begin{split}
+ \mathcal B(Z)=\{(s,t)\in S\times T:\;&
+   \forall a\in\Sigma\ \forall s'\in S\
+     [\Delta_S(s,a,s')\Rightarrow
+       \exists t'\in T\,(\Delta_T(t,a,t')\land Z(s',t'))],\\
+ &\forall a\in\Sigma\ \forall t'\in T\
+     [\Delta_T(t,a,t')\Rightarrow
+       \exists s'\in S\,(\Delta_S(s,a,s')\land Z(s',t'))]\}.
+\end{split}
+\]
+A strong bisimulation is precisely a relation \(Z\) with
+\(Z\subseteq\mathcal B(Z)\). The operator is monotone, since enlarging
+\(Z\) preserves all matching-move witnesses. Therefore
+\[
+ {\sim}\ :=\nu Z\,\mathcal B(Z)
+\]
+is itself a strong bisimulation and contains every strong bisimulation.
+The two pointed systems are strongly equivalent exactly when
+\((s_*,t_*)\in{\sim}\). This proves the greatest-fixed-point
+characterization, rather than merely giving a recurrence.
+Descending iteration from \(S\times T\) takes at most \(|S||T|\)
+strict changes. The universal and existential clauses are relational
+Boolean operations, so the existing symbolic evaluator applies
+\cite[\S8.1]{BurchEtAl1992}.
+
+For weak equivalence, designate an internal action \(\tau\in\Sigma\).
+Its zero-or-more-step relation in the first system is
+\[
+ H_S=\mu Y\,\lambda s,t\,
+      [s=t\lor\exists u\in S\,
+          (\Delta_S(s,\tau,u)\land Y(u,t))],
+\]
+and define \(H_T\) analogously. Least iteration gives exactly the
+reflexive transitive closure of the internal transitions.
+Define saturated transitions by
+\[
+ \widehat\Delta_S(s,a,t)\iff
+ \begin{cases}
+  H_S(s,t),&a=\tau,\\
+  \exists u,v\in S\
+   [H_S(s,u)\land\Delta_S(u,a,v)\land H_S(v,t)],&a\ne\tau.
+ \end{cases}
+\]
+Use the corresponding definition in \(T\). A visible action is
+surrounded by any finite number of internal steps; an internal
+action may be matched by no step at all.
+The weak bisimilarity relation is
+\[
+ {\approx}\ :=\nu Z\,\widehat{\mathcal B}(Z),
+\]
+where \(\widehat{\mathcal B}\) is the previous two-sided matching
+operator with both transition relations replaced by their saturated
+versions \cite[\S8.2]{BurchEtAl1992}.
+
+To justify this characterization, define a weak bisimulation directly:
+each original transition on either side must have a matching saturated
+transition on the other, ending in a related pair. A bisimulation for
+the saturated systems has this property because every original
+transition is saturated. Conversely, suppose \(Z\) has the direct
+weak-matching property. Match a finite string of internal moves
+one move at a time. The successive endpoints remain \(Z\)-related,
+and concatenating the matching internal paths gives an \(H\)-path.
+For a visible saturated move, apply this argument to its internal
+prefix, match the single visible move, and apply it to the internal
+suffix. The concatenated witness is the required saturated move.
+Zero internal moves are matched by reflexivity. Thus
+\(Z\subseteq\widehat{\mathcal B}(Z)\), proving that the two
+characterizations have the same greatest relation.
+
+This is divergence-insensitive weak equivalence: a state with only an
+internal self-loop and a state with no transitions are weakly
+equivalent. Their saturated internal relations both permit stuttering,
+and neither has a visible move. They are not strongly equivalent,
+because the original internal move has no strong match.
+Replacing \(H_S\) by a positive internal closure in the \(\tau\)-case
+would incorrectly exclude the zero-step match.
+
+To use the one-domain relational calculus, take disjoint copies of
+\(S,T,\Sigma\) inside \(D=S\sqcup T\sqcup\Sigma\). Interpret the
+transition predicates on their displayed sorts and express each
+restricted quantifier with the corresponding unary membership
+predicate. Equality supplies the diagonal in \(H_S,H_T\).
+This makes the state-pair and action arguments explicit before
+Boolean encoding; the fixed point for strong or weak equivalence
+is over the state-pair relation.
+
+\paragraph{Language containment with a deterministic specification.}
+Let
+\[
+ \mathcal A=(S,s_*,\Sigma,\Delta_A,F_A),\qquad
+ \mathcal D=(T,t_*,\Sigma,\delta_D,F_D)
+\]
+be finite B\"uchi automata. The first may be nondeterministic;
+the second is deterministic and complete:
+\(\delta_D:T\times\Sigma\to T\) is a function defined on every
+state-letter pair. A run starts at the designated initial state
+and is accepting exactly when it visits its accepting set
+infinitely often. Use product states \(U=S\times T\), initial
+state \(u_*=(s_*,t_*)\), and edges
+\[
+ R_\times((s,t),(s',t'))
+   \iff\exists a\in\Sigma\
+       [\Delta_A(s,a,s')\land t'=\delta_D(t,a)].
+\]
+The two acceptance predicates on the product are
+\[
+ P_A=F_A\times T,\qquad P_D=S\times F_D.
+\]
+Then
+\[
+ L(\mathcal A)\subseteq L(\mathcal D)
+ \quad\Longleftrightarrow\quad
+ \text{every infinite product path from }u_*
+ \text{ satisfies }GF\,P_A\Rightarrow GF\,P_D.
+\]
+Indeed, a word accepted by \(\mathcal A\) has an accepting run.
+Completeness supplies the run of \(\mathcal D\) on that same
+word, and determinism makes it the only run. Pairing them shows
+that a word outside \(L(\mathcal D)\) gives a product path visiting
+\(P_A\) infinitely often but \(P_D\) only finitely often.
+Conversely, choose a witnessing letter for each edge of such
+a product path. Its first projection is accepting, and its
+second projection is the unique run on the resulting word and
+is rejecting. This proves the equivalence
+\cite[\S9]{BurchEtAl1992}.
+
+Both restrictions on the specification automaton matter. A missing
+transition can be completed by adding a nonaccepting sink before
+forming the product. Without determinism, a rejecting specification
+run need not mean that the word is rejected. For example, over
+\(\{a\}\), an automaton with an accepting initial state \(u\),
+a nonaccepting state \(v\), and edges
+\(u\to u,u\to v,v\to v\) accepts \(a^\omega\) but also has
+a rejecting run on it. Universal quantification over paired runs
+would reject containment of \(\{a^\omega\}\) in its language.
+
+The containment test has two symbolic forms. First, use the fair
+greatest-fixed-point construction with the single fairness set
+\(P_A\), and put
+\[
+ W:=E_{\{P_A\}}G(U\setminus P_D).
+\]
+It denotes states with an infinite continuation that avoids
+\(P_D\) entirely and visits \(P_A\) infinitely often. A path
+visiting \(P_D\) only finitely often has such a suffix; adding
+an arbitrary finite prefix does not affect either recurrence
+condition. Hence
+\[
+ L(\mathcal A)\subseteq L(\mathcal D)
+ \quad\Longleftrightarrow\quad
+ u_*\notin\operatorname{Reach}_U(W),
+\]
+where preimages in \(\operatorname{Reach}\) now use \(R_\times\).
+This formulation also works when the product has dead ends,
+since it asks for an infinite witness explicitly.
+
+Alternatively, restrict the product edges to
+\[
+ T_{\neg D}
+   :=\{(u,v)\in R_\times:
+                   u\notin P_D\text{ and }v\notin P_D\},
+\]
+compute its positive closure \(T_{\neg D}^{+}\) by squaring, and set
+\[
+ B:=\{u\in P_A:T_{\neg D}^{+}(u,u)\}.
+\]
+Then the same containment criterion is
+\[
+ u_*\notin\operatorname{Reach}_U(B).
+\]
+To prove it, suppose an infinite violating path exists. After its
+last \(P_D\)-visit it stays outside \(P_D\). Finiteness and
+infinitely many \(P_A\)-visits give a state of \(P_A\) occurring
+at two distinct positions in that suffix. The intervening
+positive closed walk witnesses \(T_{\neg D}^{+}(u,u)\), and
+the original prefix reaches \(u\in B\).
+Conversely, reach a state \(u\in B\) and repeat its positive
+closed walk. It avoids \(P_D\) forever and visits \(P_A\)
+on every return, so it violates containment.
+
+Both the accepting-state conjunct \(u\in P_A\) and the positive
+length condition are essential. An arbitrary rejecting cycle
+need not correspond to a word accepted by \(\mathcal A\); a
+length-zero return supplies no infinite path.
+The nested unary fixed point and the binary-closure method
+therefore decide the same condition, with different intermediate
+relations and no uniform guarantee that the method with fewer
+iterations uses smaller BDDs.
+
+\paragraph{The pipeline experiment.}
+The empirical presentation is a three-stage synchronous pipeline: operands are
+read from a four-register file, an ALU operation is performed, and the result
+is written back after three clocks.  The instruction supplies source and
+destination register addresses; a \(\mathsf{STALL}\) input propagates a
+no-operation; and a bypass path permits immediate reuse of an ALU result.  For
+an exclusive-or instruction with source fields \(a,b\) and destination field
+\(c\), its latency-aware path assertion is
+\[
+ (X^3R)_c=(X^2R)_a\mathbin{\oplus}(X^2R)_b.
+\]
+Here \(R\) is a register-file value, not one Boolean proposition;
+\(X^dR\) reads that value \(d\) positions along a path. The conversion
+to CTL is bitwise. For word width \(w\geq1\), let \(r_{j,\ell}\)
+be the atomic predicate that bit \(\ell\) of register \(j\) is \(1\),
+where \(0\leq j<4\) and \(0\leq\ell<w\).
+First check, for \(d=2,3\),
+\[
+ AG\bigwedge_{j=0}^{3}\bigwedge_{\ell=0}^{w-1}
+     \bigl((EX)^d r_{j,\ell}
+              \leftrightarrow(AX)^d r_{j,\ell}\bigr).
+\]
+The notation \((EX)^d\) means \(d\) successive existential-next
+operators, and likewise for \((AX)^d\). Totality guarantees a
+length-\(d\) continuation. At any reachable state, the displayed
+equivalence for a bit says either that every such continuation
+sets it to \(1\), or that none does. Checking all bits therefore
+proves that the complete future register file is uniquely
+determined at that horizon.
+
+Define the word-valued state abbreviation \(V_j^{(d)}\) by taking
+its bit \(\ell\) to be the truth value of \((EX)^d r_{j,\ell}\).
+After the two checks, it equals register \(j\)'s value at horizon
+\(d\) on every path from the current state. Let \(a,b,c\in
+\{0,1,2,3\}\) be the current instruction's source and destination
+addresses. Register selection such as \(V_a^{(2)}\) is a finite
+multiplexer on the current address bits; word equality and
+exclusive-or are also Boolean abbreviations on their bits.
+The exclusive-or pipeline requirement can now be written in CTL:
+\[
+\begin{split}
+ AG\biggl[&
+  \neg\mathsf{STALL}\ \Rightarrow\
+   \biggl(V_c^{(3)}=V_a^{(2)}\mathbin{\oplus}V_b^{(2)}
+    \ \land\
+    \bigwedge_{j=0}^{3}
+       (c\ne j\Rightarrow V_j^{(3)}=V_j^{(2)})\biggr)
+ \biggr]\\
+ {}\land\ AG\biggl[&
+  \mathsf{STALL}\ \Rightarrow\
+     \bigwedge_{j=0}^{3}(V_j^{(3)}=V_j^{(2)})
+ \biggr].
+\end{split}
+\]
+The destination update, preservation of nondestination registers,
+and stalled no-operation are thus explicit formulas. Under the
+proved uniqueness conditions, each displayed state-level clause
+is equivalent to its corresponding path-level clause. This does
+not permit an unrestricted replacement of path operators by
+existential state operators
+\cite[\S10, pp.~164--166]{BurchEtAl1992}.
+
+The measured verifier operates directly on CTL, avoiding the overhead
+of translating each property through the general relational calculus.
+The reported scale is equally specific. Register widths range from one to
+twelve bits, with exclusive-or, addition, or both as ALU choices.  The
+twelve-bit pipeline has approximately \(1.5\times10^{29}\) reachable states.
+For the eight-bit exclusive-or pipeline, the transition-relation BDD has about
+42,000 nodes and verification took about 22 minutes on a Sun~3/60.  Grouping
+BDD variables by bit position leaves only a fixed amount of carry/control
+information between groups, producing the observed linear BDD growth in this
+family.  The source expressly says that this is heuristic and does not improve
+the asymptotic complexity of model checking; multiplication, barrel shifting,
+or another operation carrying unbounded information between bit positions can
+make the diagrams unmanageable.  Symbolic representation changes the practical
+representation of these systems, not the worst-case state-explosion boundary
+\cite[\S\S10--11]{BurchEtAl1992}.
+
+\subsubsection{McMillan's 1993 book and the earlier thesis}
+\label{sec:p09-n-c-017-mcmillan}
+
+McMillan's book is the registered full SMV, symbolic-algorithm, hardware/cache,
+induction, equivalence, and partial-order presentation. Its chapter ranges and
+scope are established, but the revised 1993 body needed for exact SMV syntax,
+partitioned transitions, algorithms, examples, and proofs is not part of the
+available source basis. The PDF linked from the author's thesis/book page is
+not that revision: its own title page identifies it as the May 1992 Carnegie
+Mellon doctoral thesis CMU-CS-92-131 \cite{McMillan1992Thesis}. That thesis and
+the Burch et al. article are related to, but are not the same source state as,
+the registered book \cite{McMillan1993}. The other presentations in this
+section do not supply that book presentation.
+
+\subsubsection{Biere--Cimatti--Clarke--Zhu bounded semantics}
+\label{sec:p09-n-c-017-biere}
+
+The source for the definitions below is the complete CMU technical report
+CMU-CS-99-101, dated 4 January 1999 and marked ``Submitted for TACAS'99.''  The
+published LNCS article has the same title and authors but a different container
+and pagination; the definitions and theorem numbers below are locators in the
+complete author-hosted report, not unverified claims about the typeset LNCS
+pages \cite{BiereCimattiClarkeZhu1999}.
+
+Definition~1 uses a finite Kripke structure
+\[
+ M=(S,I,T,L),
+\]
+where \(I\subseteq S\), \(T\subseteq S\times S\) is total, and
+\(L:S\to2^{AP}\).  For the encoding, \(S=\{0,1\}^n\); propositional formulas
+\(I(s)\), \(T(s,t)\), and \(p(s)\) recognize initial states, transitions, and
+atomic labels.  LTL is put in negation normal form with atomic negation,
+conjunction, disjunction, \(X,F,G,U\), and release \(R\), and retains its
+ordinary semantics on infinite paths.  Existential validity
+\(M\models_E h\) means that some path beginning in \(I\) satisfies \(h\);
+universal validity quantifies over all such paths
+\cite[defs.~1--3]{BiereCimattiClarkeZhu1999}.
+
+Fix \(k\in\mathbb N\) and \(0\leq\ell\leq k\). A finite prefix
+\(s_0\ldots s_k\) with
+\(T(s_k,s_\ell)\) represents the infinite path
+\[
+ s_0\ldots s_{\ell-1}(s_\ell\ldots s_k)^\omega;
+\]
+the source calls this a \((k,\ell)\)-loop.  On such a lasso, bounded truth is
+ordinary infinite-path truth. For an infinite path that is not a \(k\)-loop,
+Definition~6 uses only the observed horizon. At a position \(0\leq i\leq k\),
+\(Fh\) needs a witness
+between \(i\) and \(k\); \(Xh\) requires \(i<k\) and truth at \(i+1\); and
+\(h_1\mathbin{U}h_2\) needs a position \(j\leq k\) where \(h_2\) holds with
+\(h_1\) at every earlier position.  By contrast, \(Gh\) is false without a
+loop, because the prefix cannot certify the unobserved future.  Release also
+needs a finite witness rather than allowing its right operand to continue
+forever.  Consequently, the usual \(G/F\) and \(R/U\) dualities do not hold in
+this no-loop bounded semantics.  This is deliberate underapproximation, not a
+finite-trace redefinition of LTL
+\cite[defs.~4--6]{BiereCimattiClarkeZhu1999}.
+
+Lemma~7 proves soundness:
+\[
+ \pi\models_k h\quad\Longrightarrow\quad\pi\models h.
+\]
+The loop case is immediate from the definition.  In the no-loop case the
+source proves the stronger position-indexed assertion by structural induction;
+the release case uses its finite witness to obtain the ordinary disjunction
+``the right operand forever, or the left operand eventually while the right
+operand holds through that point.''  Lemma~8 proves the converse existence
+claim. Standard LTL model checking forms the product of \(M\) with a
+finite automaton for \(h\). An accepting product run can be chosen ultimately
+periodic. For an ordinary B\"uchi automaton with state set \(Q\), the bound
+is \(k\leq |S||Q|-1\), as proved below; the actual \(Q\) includes every
+state introduced by the acceptance construction. Projecting the accepting
+lasso back to \(M\) gives bounded truth.
+Theorem~9 combines the two lemmas:
+\[
+ M\models_E h
+ \quad\Longleftrightarrow\quad
+ \exists k\in\mathbb N\;M\models_E^k h.
+\]
+Thus bounded truth at one \(k\) is sound; completeness quantifies over all
+bounds \cite[lems.~7--8 and thm.~9]{BiereCimattiClarkeZhu1999}.
+
+The propositional encoding first unfolds the model:
+\[
+ \llbracket M\rrbracket_k
+ =I(s_0)\land\bigwedge_{i=0}^{k-1}T(s_i,s_{i+1}).
+\]
+For each possible loop start put
+\[
+ {}_\ell L_k:=T(s_k,s_\ell),
+ \qquad
+ L_k:=\bigvee_{\ell=0}^{k}{}_\ell L_k.
+\]
+Definitions~11 and 13 supply different recursive translations for a prefix
+without a selected loop and for a selected \((k,\ell)\)-loop. In both, the
+formula is in negation normal form, \(0\leq i\leq k\), an empty conjunction
+means \(\mathsf{true}\), and an empty disjunction means \(\mathsf{false}\).
+
+\paragraph{The complete no-loop translation.}
+The notation \(\llbracket f\rrbracket_k^i\) denotes a propositional formula
+over the state-vector copies \(s_0,\ldots,s_k\). Definition~11 is
+\[
+\begin{aligned}
+ \llbracket p\rrbracket_k^i&=p(s_i),&
+ \llbracket\neg p\rrbracket_k^i&=\neg p(s_i),\\
+ \llbracket f\land g\rrbracket_k^i
+   &=\llbracket f\rrbracket_k^i\land\llbracket g\rrbracket_k^i,&
+ \llbracket f\lor g\rrbracket_k^i
+   &=\llbracket f\rrbracket_k^i\lor\llbracket g\rrbracket_k^i,\\
+ \llbracket Gf\rrbracket_k^i&=\mathsf{false},&
+ \llbracket Ff\rrbracket_k^i&=\bigvee_{j=i}^{k}\llbracket f\rrbracket_k^j,\\
+ \llbracket Xf\rrbracket_k^i
+   &=\begin{cases}
+        \llbracket f\rrbracket_k^{i+1},&i<k,\\
+        \mathsf{false},&i=k.
+      \end{cases}
+\end{aligned}
+\]
+The two binary temporal clauses are
+\[
+\begin{aligned}
+ \llbracket f\,U\,g\rrbracket_k^i
+ &=\bigvee_{j=i}^{k}
+      \left(\llbracket g\rrbracket_k^j\land
+            \bigwedge_{q=i}^{j-1}\llbracket f\rrbracket_k^q\right),\\
+ \llbracket f\,R\,g\rrbracket_k^i
+ &=\bigvee_{j=i}^{k}
+      \left(\llbracket f\rrbracket_k^j\land
+            \bigwedge_{q=i}^{j}\llbracket g\rrbracket_k^q\right).
+\end{aligned}
+\]
+The release witness includes \(g\) at its endpoint; until does not require
+\(f\) at its endpoint. At \(i=k\), until reduces to \(g(s_k)\) and release
+reduces to \(f(s_k)\land g(s_k)\) when \(f,g\) are atoms. These are the finite
+witness conditions of Definition~6, with recursive bounded truth for
+non-atomic operands \cite[defs.~6, 11]{BiereCimattiClarkeZhu1999}.
+
+\paragraph{The complete selected-loop translation.}
+For fixed \(\ell\), the source's successor convention is
+\[
+ \operatorname{succ}(i)=
+ \begin{cases}i+1,&i<k,\\ \ell,&i=k.\end{cases}
+\]
+The formula \({}_\ell\llbracket f\rrbracket_k^i\) uses this successor and
+the selected infinite lasso. Its atomic and Boolean clauses are
+\[
+\begin{aligned}
+ {}_\ell\llbracket p\rrbracket_k^i&=p(s_i),&
+ {}_\ell\llbracket\neg p\rrbracket_k^i&=\neg p(s_i),\\
+ {}_\ell\llbracket f\land g\rrbracket_k^i
+  &={}_\ell\llbracket f\rrbracket_k^i
+     \land{}_\ell\llbracket g\rrbracket_k^i,&
+ {}_\ell\llbracket f\lor g\rrbracket_k^i
+  &={}_\ell\llbracket f\rrbracket_k^i
+     \lor{}_\ell\llbracket g\rrbracket_k^i.
+\end{aligned}
+\]
+Its unary temporal clauses are
+\[
+\begin{aligned}
+ {}_\ell\llbracket Xf\rrbracket_k^i
+   &={}_\ell\llbracket f\rrbracket_k^{\operatorname{succ}(i)},\\
+ {}_\ell\llbracket Ff\rrbracket_k^i
+   &=\bigvee_{j=\min(i,\ell)}^{k}{}_\ell\llbracket f\rrbracket_k^j,\\
+ {}_\ell\llbracket Gf\rrbracket_k^i
+   &=\bigwedge_{j=\min(i,\ell)}^{k}{}_\ell\llbracket f\rrbracket_k^j.
+\end{aligned}
+\]
+The binary clauses retain both a witness before wrapping and a witness after
+wrapping:
+\[
+\begin{split}
+ {}_\ell\llbracket f\,U\,g\rrbracket_k^i
+ ={}&
+ \bigvee_{j=i}^{k}
+   \left({}_\ell\llbracket g\rrbracket_k^j\land
+         \bigwedge_{q=i}^{j-1}{}_\ell\llbracket f\rrbracket_k^q\right)\\
+ &{}\lor
+ \bigvee_{j=\ell}^{i-1}
+   \left({}_\ell\llbracket g\rrbracket_k^j\land
+         \bigwedge_{q=i}^{k}{}_\ell\llbracket f\rrbracket_k^q\land
+         \bigwedge_{q=\ell}^{j-1}{}_\ell\llbracket f\rrbracket_k^q\right).
+\end{split}
+\]
+\[
+\begin{split}
+ {}_\ell\llbracket f\,R\,g\rrbracket_k^i
+ ={}&
+ \bigwedge_{j=\min(i,\ell)}^{k}{}_\ell\llbracket g\rrbracket_k^j\\
+ &{}\lor
+ \bigvee_{j=i}^{k}
+   \left({}_\ell\llbracket f\rrbracket_k^j\land
+         \bigwedge_{q=i}^{j}{}_\ell\llbracket g\rrbracket_k^q\right)\\
+ &{}\lor
+ \bigvee_{j=\ell}^{i-1}
+   \left({}_\ell\llbracket f\rrbracket_k^j\land
+         \bigwedge_{q=i}^{k}{}_\ell\llbracket g\rrbracket_k^q\land
+         \bigwedge_{q=\ell}^{j}{}_\ell\llbracket g\rrbracket_k^q\right).
+\end{split}
+\]
+Unlike no-loop release, this clause also permits \(g\) forever.
+When \(i<\ell\), the wrapped-witness disjunctions are empty: every reachable
+loop position already lies in the first traversal from \(i\) to \(k\).
+When \(i\geq\ell\), they cover the previously unvisited portion
+\(\ell,\ldots,i-1\) of that loop \cite[defs.~12--13]{BiereCimattiClarkeZhu1999}.
+
+\paragraph{Why a finite loop traversal suffices.}
+For any fixed loop position, its successive visits have identical infinite
+labelled suffixes. Every LTL subformula therefore has the same truth value at
+those visits. If an until witness occurs only after a complete extra loop,
+move it to the first visit to that position. Its right operand still holds,
+and the new required left-operand prefix is shorter. Thus the two displayed
+witness ranges are exhaustive. For release, either the right operand holds
+at every reachable position, or a finite left-operand witness is required
+before any failure of the right operand. Moving such a witness to its first
+visit again preserves every required position, now including the endpoint.
+
+This reasoning also justifies arbitrary nesting of temporal operators:
+structural induction uses the already established meanings of the proper
+subformulas at each visited position. The \(X\)-clause changes position but
+reduces formula size, so it creates no circular definition.
+For \(k=\ell=i=0\), the next position is \(0\), until reduces to its right
+operand, and release reduces to its right operand; an infinite constant-state
+lasso is being evaluated. Without that self-loop the no-loop release instead
+requires both operands at position \(0\).
+
+A wrapped witness illustrates why the second disjunction is needed. Take
+\(k=2\), \(\ell=1\), and evaluate at \(i=2\), with \(p\) true only at
+\(s_2\) and \(q\) true only at \(s_1\). The selected suffix is
+\(s_2s_1s_2s_1\ldots\). In
+\({}_1\llbracket p\,U\,q\rrbracket_2^2\), the first disjunction is false,
+because \(q(s_2)\) is false. The wrapped term \(j=1\) is
+\[
+ q(s_1)\land p(s_2)\land\mathsf{true},
+\]
+and is true. In contrast,
+\({}_1\llbracket q\,R\,p\rrbracket_2^2\) is false: the perpetual-\(p\) clause
+fails at \(s_1\), and the wrapped \(q\)-witness also requires \(p(s_1)\).
+Release cannot use a witness at the first position where its right operand
+already fails.
+
+Definition~15 combines the two translations:
+\[
+ \llbracket M,h\rrbracket_k
+ =\llbracket M\rrbracket_k\land
+ \left(
+   (\neg L_k\land\llbracket h\rrbracket^0_k)
+   \lor
+   \bigvee_{\ell=0}^{k}
+    ({}_\ell L_k\land{}_\ell\llbracket h\rrbracket^0_k)
+ \right).
+\]
+For example, take \(S=\{0,1\}\), \(I=\{0\}\), transitions
+\(0\to1\) and \(1\to1\), let \(p\) hold only at \(0\), and let \(q\) hold
+only at \(1\).  For \(h=p\mathbin{U}q\):
+\begin{itemize}
+\item at \(k=0\), \(s_0=0\), the only loop selector is
+  \(T(0,0)=\mathsf{false}\), and the no-loop until translation has no
+  \(q\)-witness, so the encoding is unsatisfiable;
+\item at \(k=1\), the unfolding forces \((s_0,s_1)=(0,1)\), and
+  \({}_1L_1=T(1,1)\) closes the lasso; \(p\) holds before the position where
+  \(q\) holds, so the encoding is satisfiable;
+\item at \(k=2\), the unfolding is \((0,1,1)\), both
+  \({}_1L_2\) and \({}_2L_2\) are true, and either chosen lasso satisfies the
+  same until obligation.
+\end{itemize}
+This displays separately the transition unfolding, loop choice, and temporal
+constraint; none is hidden inside a BDD operation.
+
+The encoding has the exact correctness property
+\[
+ \llbracket M,h\rrbracket_k\text{ is satisfiable}
+ \quad\Longleftrightarrow\quad M\models_E^k h.
+\]
+For the forward direction, a satisfying assignment supplies an initial state
+and \(k\) transitions. If it satisfies a loop disjunct, the selected back edge
+closes an infinite lasso. Induction through the selected-loop translation
+shows that this lasso satisfies \(h\). If it satisfies the no-loop disjunct,
+induction through the finite translation gives bounded truth of \(h\);
+totality extends the prefix to an infinite execution.
+
+Conversely, take a bounded witness. If it is a \(k\)-loop, assign its prefix
+to the state vectors and select its closing edge. The loop-translation
+induction makes the corresponding disjunct true. If its bounded truth uses
+the finite semantics and its prefix has no closing edge, use the no-loop
+disjunct. If that prefix does have a closing edge, select any such edge
+instead: every no-loop witness uses only positions through \(k\), and
+structural induction on the negation-normal formula shows that its truth
+survives every infinite continuation of that prefix. The selected lasso
+therefore satisfies \(h\), and its loop disjunct is true. This covers both
+possibilities for a finite witness prefix and proves the converse
+\cite[thm.~16]{BiereCimattiClarkeZhu1999}.
+
+For a universal LTL property \(\varphi\), put its negation into negation
+normal form \(h\). Correctness and the bounded-witness existence theorem give
+\[
+ M\models_A\varphi
+ \quad\Longleftrightarrow\quad
+ \llbracket M,h\rrbracket_k\text{ is unsatisfiable for every }k\in\mathbb N.
+\]
+The finite criteria below replace this infinite family by justified stopping
+bounds. With common subformulas
+shared, the report gives a translation polynomial in \(\lvert h\rvert\),
+quadratic in \(k\), and linear in the sizes of the propositional encodings of
+\(I,T\), and the atomic labels
+\cite[defs.~10--15, thm.~16, and cor.~17]{BiereCimattiClarkeZhu1999}.
+
+\paragraph{Searching successive horizons.}
+\label{sec:p09-n-c-017-biere-horizon-search}
+For a universal property \(\varphi\), let \(h\) be the
+negation-normal form of \(\neg\varphi\). The increasing-horizon
+procedure has the following three steps.
+\begin{enumerate}
+\item Starting at \(k=0\), construct \(\llbracket M,h\rrbracket_k\)
+directly from the state encoding and temporal clauses, and ask a
+SAT solver whether it is satisfiable.
+\item If it is satisfiable, read the state vectors and a true
+disjunct from the assignment. A loop disjunct gives a concrete
+infinite lasso. A no-loop disjunct gives a finite witness whose
+truth survives an infinite continuation by totality and bounded
+soundness. Return this counterexample to \(\varphi\).
+\item If it is unsatisfiable, stop with a proof of \(\varphi\)
+only when a justified completeness bound has been reached.
+Otherwise increment \(k\) and repeat.
+\end{enumerate}
+A solver timeout or resource limit is an unknown result, not
+unsatisfiability. If every smaller horizon was checked and found
+unsatisfiable, the first successful \(k\) is the least satisfiable
+bounded horizon: encoding correctness excludes a bounded witness
+at any smaller value. This does not separately minimize the
+period or the number of distinct states. Without a completeness
+bound, an unsuccessful search need not terminate
+\cite[\S1 and opening of \S5]{BiereCimattiClarkeZhu1999}.
+
+The fixed-\(k\) translation itself requires no tableau or
+automaton: it is the direct propositional construction already
+given. The automaton product used in the completeness argument
+supplies a sufficient stopping bound; it is not a prerequisite
+for bounded counterexample search. A known bound can also justify
+a single-horizon check when the lasso-padding argument below
+applies.
+
+\paragraph{The three-bit shift-register calculation.}
+\label{sec:p09-n-c-017-biere-shift-register}
+The report's initial example has state
+\(x=(x[0],x[1],x[2])\in\{0,1\}^3\), arbitrary initial contents,
+and transition predicate
+\[
+\begin{aligned}
+ I(x)&=\mathsf{true},\\
+ T(x,x')&\iff
+   x'[0]=x[1]\ \land\ x'[1]=x[2]\ \land\ x'[2]=1.
+\end{aligned}
+\]
+The intended zero-filling shift would use \(x'[2]=0\) and
+reach the zero state after three shifts. Instead, the displayed
+device evolves as
+\[
+ (a,b,c)\longrightarrow(b,c,1)
+ \longrightarrow(c,1,1)\longrightarrow(1,1,1),
+\]
+and \((1,1,1)\) is a fixed point. Define the nonzero predicate
+\[
+ \mathsf{NZ}(x):=x[0]\lor x[1]\lor x[2].
+\]
+The universal eventual-zero claim is
+\(M\models_A F\neg\mathsf{NZ}\); its counterexample query
+is \(M\models_E G\mathsf{NZ}\)
+\cite[\S2 and fig.~1]{BiereCimattiClarkeZhu1999}.
+
+At the report's illustrative horizon \(k=2\), let
+\(x_0,x_1,x_2\) be the three state-vector copies. The unfolding is
+\[
+ f_M=T(x_0,x_1)\land T(x_1,x_2).
+\]
+Its six bit constraints are, for \(i=0,1\),
+\[
+ x_{i+1}[0]=x_i[1],\qquad
+ x_{i+1}[1]=x_i[2],\qquad x_{i+1}[2]=1.
+\]
+For \(j=0,1,2\), the possible closing edge is
+\[
+\begin{split}
+ L_j=T(x_2,x_j)\iff{}&
+ x_j[0]=x_2[1]\ \land\ x_j[1]=x_2[2]\\
+ &{}\land\ x_j[2]=1.
+\end{split}
+\]
+No-loop semantics cannot certify \(G\mathsf{NZ}\). Every
+selected-loop translation at position zero requires nonzero
+states throughout the displayed prefix, so the SAT formula is
+\[
+ f_M\land(L_0\lor L_1\lor L_2)
+       \land\bigwedge_{j=0}^{2}\mathsf{NZ}(x_j).
+\]
+Setting all nine state bits to \(1\) satisfies every unfolding
+constraint, every closing-edge alternative, and every nonzero
+test. The resulting infinite execution is constantly \(111\),
+and therefore refutes eventual zero
+\cite[\S2, eq.~(1)]{BiereCimattiClarkeZhu1999}.
+
+The horizon \(2\) illustrates unfolding; it is not minimal.
+At \(k=0\), the same query is already
+\[
+ I(x_0)\land T(x_0,x_0)\land\mathsf{NZ}(x_0).
+\]
+The self-loop equations force all three bits to \(1\), which
+satisfies this formula. Thus a search starting at zero finds
+the counterexample immediately. The horizon counts unfolded
+transitions, while the closing self-loop is checked separately.
+
+\paragraph{Recurrence diameter and finite stopping bounds.}
+Let \(S\ne\varnothing\) be finite and \(T\subseteq S\times S\).
+A simple directed path is a finite sequence \(s_0,\ldots,s_m\) whose
+consecutive states are connected by \(T\) and whose states are pairwise
+distinct. Its length is its number \(m\) of edges. Define
+\[
+\begin{split}
+ \operatorname{recdiam}(S,T)
+ :=\max\{m\in\mathbb N:\;&
+   \exists s_0,\ldots,s_m\in S,\\
+ &\bigwedge_{i=0}^{m-1}T(s_i,s_{i+1})
+   \ \land\
+   \bigwedge_{0\leq i<j\leq m}s_i\ne s_j\}.
+\end{split}
+\]
+A one-state path shows that the set is nonempty. A simple path has at most
+\(|S|\) vertices, so
+\[
+ 0\leq\operatorname{recdiam}(S,T)\leq |S|-1.
+\]
+Equivalently, \(d=\operatorname{recdiam}(S,T)\) is the least nonnegative
+integer for which
+\[
+ \forall s_0,\ldots,s_{d+1}\in S,\qquad
+ \bigwedge_{i=0}^{d}T(s_i,s_{i+1})
+ \ \Longrightarrow\
+ \bigvee_{0\leq i<j\leq d+1}s_i=s_j.
+\]
+To prove equivalence, a path of \(d+1\) edges cannot be simple by maximality
+of \(d\). Conversely, if \(c<d\), the first \(c+2\) vertices of a longest
+simple path violate the displayed property with \(c\) in place of \(d\).
+The repeated pair may occur anywhere along the path.
+
+This also gives a symbolic upper-bound certificate. For any \(r\geq0\),
+unsatisfiability of
+\[
+ \left(\bigwedge_{i=0}^{r}T(s_i,s_{i+1})\right)
+ \land
+ \left(\bigwedge_{0\leq i<j\leq r+1}s_i\ne s_j\right)
+\]
+is equivalent to \(\operatorname{recdiam}(S,T)\leq r\), with all state
+vectors constrained to \(S\). No initial-state condition is present:
+this certificate bounds simple paths throughout the graph.
+
+\paragraph{Reachability and invariant verification.}
+Return to the finite total structure \(M=(S,I,T,L)\), and let \(p\) be a
+Boolean state predicate. Put \(d=\operatorname{recdiam}(S,T)\). Then
+\[
+ M\models_E Fp
+ \quad\Longleftrightarrow\quad
+ \exists k\in\{0,\ldots,d\}\;(M\models_E^k Fp).
+\]
+If an initial execution reaches \(p\), choose a shortest initial-to-\(p\)
+path. A repeated vertex would permit removal of the intervening cycle,
+contradicting shortestness. Its length is therefore at most \(d\).
+Totality extends it indefinitely, while its endpoint supplies the bounded
+eventuality witness. The reverse implication follows from bounded soundness.
+
+For every \(r\in\mathbb N\), define
+\[
+ C_r:=I(s_0)\land
+       \bigwedge_{i=0}^{r-1}T(s_i,s_{i+1})
+       \land\bigvee_{i=0}^{r}p(s_i).
+\]
+If \(r\geq d\), then \(M\models_A G\neg p\) exactly when \(C_r\) is
+unsatisfiable.
+Any satisfying assignment is a bad run prefix. Conversely, every reachable
+bad state has a path of length at most \(d\leq r\); totality extends that
+path to length \(r\), preserving the witnessed occurrence of \(p\).
+Thus \(r=|S|-1\) is always a sufficient safety bound, and a smaller
+recurrence-diameter certificate may improve it. If \(I=\varnothing\), every
+\(C_r\) is unsatisfiable and the universal property holds vacuously.
+
+Reachability may admit an even smaller bound. For \(I\ne\varnothing\), let
+\(\operatorname{dist}(I,s)\) be the shortest initial-to-\(s\) distance for a
+reachable state, and put
+\[
+ \delta_I=\max\{\operatorname{dist}(I,s):s\text{ is reachable from }I\}.
+\]
+The same shortest-path proof gives
+\(\delta_I\leq d\), and \(C_{\delta_I}\) suffices for safety. The quantity
+\(\delta_I\) measures shortest reachability distances; recurrence diameter
+measures longest simple paths.
+
+\paragraph{Certifying the ordinary diameter.}
+Let \(\operatorname{dist}(u,v)\) be the shortest \(T\)-path
+length from \(u\) to \(v\), defined for reachable pairs and
+allowing length zero. The all-state diameter is
+\[
+ \Delta=\max\{\operatorname{dist}(u,v):
+                   u,v\in S,\ v\text{ is reachable from }u\}.
+\]
+The set includes every \((u,u)\), so it is nonempty.
+Shortest paths are simple; hence
+\(0\leq\Delta\leq d\leq|S|-1\), and, when
+\(I\ne\varnothing\), also \(\delta_I\leq\Delta\).
+
+For any integer \(r\geq0\), the following quantified formula
+is true exactly when \(\Delta\leq r\):
+\[
+\begin{split}
+ \forall s_0,\ldots,s_{r+1}\in S\
+ \exists t_0,\ldots,t_r\in S:\qquad&
+ \bigwedge_{i=0}^{r}T(s_i,s_{i+1})
+ \ \Rightarrow\\
+ &\left(t_0=s_0\ \land\
+     \bigwedge_{i=0}^{r-1}T(t_i,t_{i+1})
+       \ \land\ \bigvee_{i=0}^{r}t_i=s_{r+1}\right).
+\end{split}
+\]
+If \(\Delta\leq r\), the endpoint of any displayed
+\((r+1)\)-edge path can be reached from its start within
+\(r\) edges. Totality extends that shorter path to exactly
+\(r\) edges if necessary, preserving its endpoint occurrence.
+This supplies the existential vectors. Conversely, if a
+shortest path had more than \(r\) edges, the formula would
+shorten its first \(r+1\) edges to at most \(r\); following
+the remaining suffix would contradict shortestness.
+This proves both directions, including \(r=0\).
+Under Boolean state encoding the formula is a quantified
+Boolean formula with a universal-existential prefix,
+distinct from the unsatisfiable-simple-path SAT certificate
+for recurrence diameter
+\cite[def.~19 and thms.~20--21]{BiereCimattiClarkeZhu1999}.
+
+The ordinary diameter bounds unrestricted target reachability,
+but not a path required to remain in an arbitrary predicate.
+For example, take a chain \(a_0\to a_1\to a_2\to a_3\),
+add a hub \(z\) with edges in both directions between it
+and every \(a_i\), and give \(a_3\) a self-loop. The
+unrestricted diameter is \(2\). If the until left operand
+holds exactly at \(a_0,a_1,a_2\) and its right operand
+exactly at \(a_3\), the shortest permitted witness from
+\(a_0\) has three edges: the shortcut through \(z\) is
+not allowed. The longest-simple-path bound \(d\) still
+applies to this constrained witness.
+
+\paragraph{A bounded witness for existential persistence.}
+For the same state predicate \(p\),
+\[
+ M\models_E Gp
+ \quad\Longleftrightarrow\quad
+ \exists k\in\{0,\ldots,d\}\;(M\models_E^k Gp).
+\]
+An infinite initial \(p\)-path contains a cycle in the subgraph of
+\(p\)-states. Choose a simple such cycle and a shortest initial path to
+its vertex set within that subgraph. The stem is simple and has no cycle
+vertex before its endpoint. Following the stem and then the cycle, but
+omitting the repeated closing vertex, is consequently a simple path of
+length \(k\leq d\). The closing edge gives a \(k\)-loop consisting entirely
+of \(p\)-states. It is the required bounded witness. Conversely, bounded
+soundness gives an infinite \(p\)-path. This argument concerns a state
+predicate \(p\); an arbitrary temporal formula requires additional state
+that records its acceptance obligations.
+
+\paragraph{Padding a lasso to one fixed horizon.}
+Suppose an execution has a stem of \(u\geq0\) states followed by
+a repeating block of \(v\geq1\) states. Its first lasso encoding
+has horizon \(k=u+v-1\), with loop entry \(u\).
+For any \(K\geq k\), take its prefix through position \(K\) and put
+\[
+ \ell_K=K+1-v.
+\]
+Then \(u\leq\ell_K\leq K\), and periodicity gives
+\(s_{K+1}=s_{\ell_K}\). Thus the actual next transition closes
+the prefix back to \(\ell_K\). The loop
+\(s_{\ell_K}\cdots s_K\) is a rotation of the same period,
+so its infinite repetition after the retained prefix represents
+the very same execution, not just a path with the same visited
+states. On a selected loop, bounded semantics agrees with
+ordinary LTL semantics. Consequently a satisfying lasso at
+horizon \(k\) yields a satisfying SAT encoding at every
+horizon \(K\geq k\), however deeply temporal operators are nested.
+
+\paragraph{A completeness bound for arbitrary LTL.}
+Let \(h\) be an LTL formula over a finite proposition set \(AP\), and let
+\[
+ \mathcal A_h=(Q,Q_0,\delta,F)
+\]
+be a finite nondeterministic B\"uchi automaton, without epsilon transitions,
+whose accepted words are exactly the infinite label sequences satisfying
+\(h\). Here \(Q\ne\varnothing\), \(Q_0\subseteq Q\),
+\(\delta:Q\times2^{AP}\to\mathcal P(Q)\), and \(F\subseteq Q\);
+acceptance requires infinitely many visits to \(F\).
+Existence of this automaton is Theorem~\ref{thm:p09-ltl-buchi}; its
+construction is given in Section~\ref{sec:p09-presentation-n-c-013}.
+
+The product has vertices \(S\times Q\), initial vertices \(I\times Q_0\),
+accepting vertices \(S\times F\), and edges
+\[
+ (s,q)\longrightarrow(t,q')
+ \quad\Longleftrightarrow\quad
+ T(s,t)\ \land\ q'\in\delta(q,L(s)).
+\]
+Thus \(q\) is the automaton state before reading the label of \(s\).
+Let \(d_P\) be the recurrence diameter of this product graph. Then
+\[
+ M\models_E h
+ \quad\Longleftrightarrow\quad
+ \exists k\leq d_P\;(M\models_E^k h),
+ \qquad d_P\leq |S||Q|-1.
+\]
+An accepting product run visits some accepting vertex infinitely often.
+That vertex lies on a positive cycle; a shortest cycle through it is
+simple apart from its repeated endpoint. Choose a shortest initial path
+to that cycle's vertex set. The stem is simple and disjoint from the
+cycle before entry. The stem followed by one cycle traversal, omitting
+the closing vertex, is therefore a simple product path of length at most
+\(d_P\). Repeating the cycle is accepting. Its projection onto \(S\)
+is a \(k\)-loop satisfying \(h\), proving the forward implication.
+The reverse implication follows from bounded soundness.
+
+This proof uses one B\"uchi acceptance set \(F\). If an LTL translation
+first produces a generalized B\"uchi automaton with several acceptance
+sets, convert it to ordinary B\"uchi acceptance and include the added
+acceptance-tracking states in \(Q\). The count \(|Q|\) is the size of that
+actual automaton. Consequently, take \(h\) to be the negation-normal form of
+\(\neg\varphi\) and construct \(\mathcal A_h\). The proof produces a
+satisfying lasso of horizon at most \(d_P\) whenever the property fails.
+By lasso padding, the universal property \(\varphi\) is therefore proved
+by unsatisfiability of the single encoding for \(h\) at horizon
+\(|S||Q|-1\), or at a certified smaller upper bound on \(d_P\).
+The bound is finite but need not be small
+\cite[\S5]{BiereCimattiClarkeZhu1999}.
+
+\paragraph{Systems with uniformly bounded stems and periods.}
+Suppose there are integers \(U\geq0\) and \(V\geq1\) such that
+every initial infinite execution of \(M\) has a lasso
+representation with at most \(U\) stem states and at most
+\(V\) period states. For every LTL formula \(h\), put
+\[
+ K=U+V-1.
+\]
+Then
+\[
+ M\models_E h
+ \quad\Longleftrightarrow\quad
+ \llbracket M,h\rrbracket_K\text{ is satisfiable}.
+\]
+Indeed, any satisfying execution has the assumed representation
+of horizon at most \(K\). Padding gives a satisfying encoding
+at \(K\); the converse is bounded soundness. The bound depends
+on the system's permitted executions and not on the size or
+temporal depth of \(h\). This makes explicit the bounded-loop
+case discussed in Section~5.2 \cite[\S5.2]{BiereCimattiClarkeZhu1999}.
+
+For a deterministic total transition relation, let \(N=|S|\).
+Following the unique successor from an initial state gives a
+first repetition within \(N+1\) visited states. If it repeats
+position \(i\) at position \(j\), \(0\leq i<j\leq N\),
+determinism forces all subsequent states to repeat with
+period \(j-i\). The stem and one period together therefore
+contain \(j\leq N\) states. Regardless of which initial
+state is selected, lasso padding gives the uniform bound
+\[
+ K=N-1
+\]
+for every LTL formula. This uses a bound on the sum of the
+stem and period lengths; it does not add their separate
+worst-case bounds. At \(N=1\), the self-loop at horizon
+zero still supplies the successor positions needed to
+interpret arbitrarily many nested next operators.
+
+Finiteness alone does not give this property for every
+nondeterministic execution. A graph with states \(0,1\)
+and all four transitions can follow
+\(0\,1\,00\,1\,000\,1\,0000\,1\cdots\), which is not
+ultimately periodic: its visits to \(1\) have unbounded
+gaps. General finite-state LTL verification still has
+lasso witnesses through the automaton-product argument,
+but their uniform bound may depend on the formula's
+acceptance obligations.
+
+\paragraph{A linear witness bound for the \(F,G\) fragment.}
+Suppose \(h\) is built from constants, literals, conjunction,
+disjunction, and only the temporal operators \(F,G\).
+Let \(m\) count its distinct temporal subformulas and put
+\(N=|S|\geq1\). A sufficient bound is
+\[
+ K=2(m+1)N-2,\qquad
+ M\models_E h
+ \quad\Longleftrightarrow\quad
+ \llbracket M,h\rrbracket_K\text{ is satisfiable}.
+\]
+The following construction proves an explicit linear
+bound of the kind considered in Section~5.2; it does
+not assert that this coefficient is optimal
+\cite[\S5.2]{BiereCimattiClarkeZhu1999}.
+
+\emph{Divide a witness into intervals.}
+Assume an initial infinite path \(\pi\) satisfies \(h\).
+Along that path, the truth of any \(F\theta\) can change
+only from true to false, since later suffixes have fewer
+possible future witnesses. The truth of \(G\theta\)
+can change only from false to true. Record the truth
+values of all \(m\) temporal subformulas at each position.
+There are at most \(m+1\) consecutive intervals with a
+constant record, the last of which is infinite.
+Within each finite interval, erase cycles from its
+state sequence while keeping the first and last states.
+If these coincide, one occurrence can serve both roles.
+At most \(N\) states remain, and each retains the interval's
+record. The original edge across every interval boundary
+still connects the retained endpoint states.
+
+\emph{Build a short recurring suffix.}
+Let \(Z\) be the nonempty set of states occurring infinitely
+often in the final interval. Beyond some point, only
+states of \(Z\) occur. Between sufficiently late occurrences
+of any two of its states the original path stays in \(Z\),
+so its induced graph is strongly connected. Every state
+in \(Z\) also has a positive closed walk.
+
+For every subformula \(F\theta\) whose final recorded
+value is true, \(\theta\) must hold infinitely often:
+otherwise \(F\theta\) would eventually be false. Choose
+a recurring state witnessing \(\theta\).
+For every \(G\theta\) whose final value is false, choose
+a recurring state witnessing \(\neg\theta\), which must
+likewise occur infinitely often. There are at most \(m\)
+such obligations. Once a temporal record is fixed, the
+value of a subformula is determined by that record
+and the state's atomic labels, so these choices give
+the required values at all sufficiently late occurrences
+of the chosen states.
+
+Connect the selected witnesses cyclically by shortest
+paths inside \(Z\). With \(r\geq1\) witnesses the total
+length is at most \(r(N-1)\), unless all connecting
+paths have length zero. In that case use a shortest
+positive cycle through their common state, of length
+at most \(N\). With no obligations, choose any simple
+positive cycle in \(Z\). Thus there is a nonempty
+closed walk of length
+\[
+ b\leq\max\{1,m\}N
+\]
+that supplies every recurring obligation.
+From the start of the final interval, follow the
+original path to its chosen cycle-entry state and
+erase cycles. This contributes at most \(N\) vertices.
+Together with the retained finite intervals, the stem,
+excluding its cycle-entry vertex, has at most
+\[
+ a\leq(m+1)N-1
+\]
+states. Append infinite repetition of the chosen closed
+walk. Every edge is an edge of \(M\).
+
+\emph{Preserve temporal truth.}
+Assign each retained stem position its interval record
+and every new cycle position the final record. Structural
+induction shows that the recorded values are its actual
+subformula values on the new path. Atomic and Boolean
+clauses follow from the retained state labels. For
+\(F\theta\) recorded false, every later original position
+satisfies \(\neg\theta\). This covers both the retained
+later stem positions and the recurring states used by
+the new loop; induction therefore makes the eventuality
+false on the new path.
+
+For \(F\theta\) recorded true, if its final value is true,
+the loop supplies a \(\theta\)-witness. Otherwise,
+\(\theta\) holds at the last position before that
+eventuality changes to false. That position is an
+interval endpoint, whose state and record were kept.
+Induction supplies the corresponding future witness.
+For \(G\theta\) recorded true, every later original
+position satisfies \(\theta\), and induction preserves
+that fact at all retained stem and loop positions.
+For \(G\theta\) recorded false, either its value stays
+false and the loop supplies a \(\neg\theta\)-witness,
+or it changes to true. In the latter case \(\theta\)
+is false at the last position before the change,
+again a retained interval endpoint.
+These four cases prove the induction, including nested
+\(F,G\) operators. In particular the new initial path
+still satisfies \(h\).
+
+Its natural lasso horizon satisfies
+\[
+ a+b-1
+ \leq (m+1+\max\{1,m\})N-2
+ \leq 2(m+1)N-2.
+\]
+Padding gives a witness at exactly \(K\); bounded
+soundness proves the converse implication of the theorem.
+At \(m=0,N=1\), this gives \(K=0\), with the required
+self-loop. Next is excluded from the fragment because
+the deletion of intermediate states does not in general
+preserve its meaning.
+
+\paragraph{Branching certificates for existential CTL.}
+\label{sec:p09-n-c-017-biere-ectl-certificates}
+For existential CTL, different subformulas may require
+different paths. The state-certificate clauses below are a
+handbook construction, separate from the report's unprinted
+bounded ECTL semantics. They use the state-formula grammar
+\[
+ \theta::=\top\mid\bot\mid p\mid\neg p
+ \mid\theta\land\theta\mid\theta\lor\theta
+ \mid EX\theta\mid E[\theta\,U\,\theta]\mid EG\theta.
+\]
+Negation occurs only at atoms. Ordinary state semantics
+is the CTL semantics already given: until has a finite
+target-reaching prefix with the left operand before
+the target, and \(EG\) has an infinite witness through
+states satisfying its operand. Define
+\(EF\alpha:=E[\top\,U\,\alpha]\).
+Existential release is also expressible:
+\[
+ E[\alpha\,R\,\beta]
+ \equiv EG\beta\lor E[\beta\,U\,(\alpha\land\beta)].
+\]
+The two alternatives are respectively an infinite
+\(\beta\)-path or an \(\alpha\)-witness with \(\beta\)
+holding through its endpoint.
+
+Write \(M,s\Vdash_k\theta\) for the following certificate
+relation, with \(k\geq0\). Its constants and literals
+have their ordinary state meanings; its Boolean clauses
+use \(\Vdash_k\) on the children. The temporal clauses are
+\[
+\begin{aligned}
+ M,s\Vdash_k EX\alpha
+ \quad\Longleftrightarrow\quad&
+ k\geq1\ \land\
+ \exists t\in S\,[T(s,t)\land M,t\Vdash_k\alpha],\\
+ M,s\Vdash_k E[\alpha\,U\,\beta]
+ \quad\Longleftrightarrow\quad&
+ \exists r\in\{0,\ldots,k\}\ \exists s_0,\ldots,s_r\in S:\\
+ &s_0=s\ \land\
+   \bigwedge_{j=0}^{r-1}T(s_j,s_{j+1})\\
+ &{}\land M,s_r\Vdash_k\beta\
+   \land\bigwedge_{j=0}^{r-1}M,s_j\Vdash_k\alpha,\\
+ M,s\Vdash_k EG\alpha
+ \quad\Longleftrightarrow\quad&
+ \exists r\in\{0,\ldots,k\}\
+ \exists\ell\in\{0,\ldots,r\}\
+ \exists s_0,\ldots,s_r\in S:\\
+ &s_0=s\ \land\
+   \bigwedge_{j=0}^{r-1}T(s_j,s_{j+1})\
+   \land T(s_r,s_\ell)\\
+ &{}\land\bigwedge_{j=0}^{r}M,s_j\Vdash_k\alpha.
+\end{aligned}
+\]
+The horizon is local to each temporal certificate;
+recursive calls retain \(k\) but use proper subformulas.
+The definition is consequently well founded by formula
+size, not by decrementing the horizon. Each child
+occurrence can have its own witnesses.
+At \(k=0\), \(EX\) is false, until requires its right
+operand at the starting state, and \(EG\) requires a
+self-loop and its operand certificate.
+This explicitly defined state-certificate relation
+is distinct from the earlier bounded LTL path relation.
+
+For every \(k\), certificates are sound:
+\[
+ M,s\Vdash_k\theta\quad\Longrightarrow\quad M,s\models\theta.
+\]
+Prove this simultaneously at all states by structural
+induction. Next supplies an actual edge to a true child.
+Until supplies its finite true prefix and target;
+totality extends it to an infinite path. The \(EG\)
+certificate supplies a lasso whose every state satisfies
+the operand by induction. Positive Boolean combinations
+preserve the implication.
+
+Let \(d=\operatorname{recdiam}(S,T)\). For every
+\(k\geq\max\{1,d\}\), the converse holds as well.
+The next case has a one-edge witness. For until,
+choose a shortest witness satisfying its state constraints.
+A repeated state would permit cycle deletion without
+losing those constraints, so its length is at most \(d\).
+For \(EG\), choose a simple cycle within the operand's
+state set and a shortest path from the given state
+to that cycle's vertex set inside the same set.
+The stem and cycle are disjoint before entry; omitting
+the repeated closing vertex leaves a simple path of
+length at most \(d\). In each case the induction
+hypothesis supplies all child certificates at the
+same \(k\). Thus
+\[
+ M,s\models\theta
+ \quad\Longleftrightarrow\quad M,s\Vdash_k\theta
+ \qquad(k\geq\max\{1,d\}).
+\]
+Increasing \(k\) only enlarges the permitted witness
+families, so it also preserves certificate truth.
+The positive lower bound \(1\) accounts for the explicit
+next clause when \(d=0\).
+
+For Boolean state encodings, compile these clauses
+recursively to propositional formulas. Next introduces
+a fresh successor vector; until disjoins over the
+possible lengths and introduces its path vectors;
+\(EG\) additionally disjoins over loop entries and
+checks the closing edge. Each child occurrence gets
+private fresh witness variables. All witness quantifiers
+are existential and positive, so after renaming they
+can be moved to the front and left implicit in a
+SAT query. Structural induction gives exact correspondence
+with \(\Vdash_k\). This is a correctness construction;
+naive expansion is not claimed to have polynomial size.
+
+Conjoin \(I(s)\) and existentially choose the starting
+state to search for an initial ECTL witness. Negating
+an ACTL property into this existential negation-normal
+form gives its initial counterexample query, which is
+complete at the displayed bound. The construction
+makes the branching required by existential CTL
+explicit \cite[\S5.1]{BiereCimattiClarkeZhu1999}.
+For example, \(EXp\land EXq\) can hold at a state
+with one \(p\)-only successor and one \(q\)-only successor,
+although no single successor satisfies \(p\land q\).
+Requiring the two conjuncts to share a path would
+change the property.
+
+\paragraph{The implementation and positive verification experiments.}
+\label{sec:p09-n-c-017-biere-positive-experiments}
+The prototype \textsc{BMC} accepts a subset of SMV's input
+language and can emit an SMV program or propositional formulas.
+Its SAT outputs support DIMACS input for \textsc{SATO}, based on
+the Davis--Putnam procedure, and the input format of
+\textsc{PROVE}, based on St\aa lmarck's method
+\cite[\S6]{BiereCimattiClarkeZhu1999}.
+
+One benchmark checks a sequential shift-and-add multiplier
+against the combinational C6288 reference on the same input
+words. The operands have sixteen bits each; the experiment
+retains sixteen result bits and an overflow bit, checking the
+corresponding outputs individually when the sequential
+multiplier finishes. A second benchmark rotates a register
+file and verifies an invariant relating it to another file:
+equal contents in two registers imply equal contents in their
+respective neighbors. The authors also checked a finite bound
+for that rotation model. These experiments show bounded SAT
+reasoning used for complete verification when its stopping
+bound is established, as well as for finding counterexamples.
+Their timings compare particular encodings, solver settings,
+and BDD implementations; they are not a worst-case complexity
+improvement \cite[\S6 and tables~1--2]{BiereCimattiClarkeZhu1999}.
+
+\paragraph{Interpreting a bounded experiment.}
+In the distributed-mutual-exclusion experiment,
+the liveness claim that every request is eventually acknowledged depends on a
+fairness constraint for each asynchronous gate.  Because no maximum
+counterexample length was known, the authors could not verify the correct
+design completely; they established only the absence of counterexamples at
+\(k=5\) and \(k=10\).  Removing fairness constraints from the buggy design
+produced a two-loop counterexample immediately.  This source therefore
+supports fast bounded bug finding and a completeness theorem quantified over
+\(k\), not an unbounded proof from one finite \(\mathsf{UNSAT}\) result
+\cite[\S\S5--6 and tables~3--4]{BiereCimattiClarkeZhu1999}.
+
+\subsubsection{Clarke et al.'s counterexample-guided refinement}
+\label{sec:p09-n-c-017-cegar}
+
+The source is the 43-page \emph{Journal of the ACM} article, pp.~752--794, not
+merely its preliminary CAV~2000 version.
+Its first page carries ACM's conditional personal/classroom copying notice,
+not an open-content licence.  The reconstruction below states the mathematical
+objects and proof boundaries without reproducing the article
+\cite{ClarkeEtAl2003}.
+
+\paragraph{Concrete structures, ACTL*, and simulation.}
+In the notation used for the construction, a concrete Kripke structure is
+\[
+ M=(S,I,R,L),
+\]
+where \(S\) is finite, \(\varnothing\ne I\subseteq S\),
+\(R\subseteq S\times S\) is total, and \(L:S\to2^{\mathcal A}\).  A path is
+an infinite sequence \(s_0s_1\ldots\) with \(R(s_i,s_{i+1})\) at every
+position.  ACTL* is the fragment of CTL* in which path quantification is
+universal and negation occurs only before atomic formulas.  The restriction is
+essential: the preservation result below is not a theorem for arbitrary CTL*.
+The component order \(M=(S,I,R,L)\) is used throughout this treatment.
+
+For Kripke structures \(M\) over \(\mathcal A\) and \(M'\) over
+\(\mathcal A'\subseteq\mathcal A\), a relation
+\(H\subseteq S\times S'\) is a simulation relation when, for every
+\((s,s')\in H\),
+\[
+\begin{aligned}
+ L(s)\cap\mathcal A'&=L'(s'),\\
+ R(s,t)&\Longrightarrow
+   \exists t'\in S'\;\bigl(R'(s',t')\land(t,t')\in H\bigr).
+\end{aligned}
+\]
+The structure \(M'\) simulates \(M\), written \(M\preceq M'\), when such an
+\(H\) also relates every concrete initial state to some abstract initial state.
+Theorem~2.3 states the one-way preservation law
+\[
+ M\preceq M'\ \land\ M'\models\varphi
+ \quad\Longrightarrow\quad
+ M\models\varphi
+ \qquad(\varphi\in\mathrm{ACTL}^*).
+\]
+
+The proof is simultaneous induction on ACTL* state and path formulas.
+The atomic case is the displayed label equality; conjunction and disjunction
+use the induction hypothesis.  From a related pair of states, the transition
+clause lifts each concrete path step by step to a pointwise related abstract
+path.  If every abstract path satisfies a path formula, the lifted path does;
+the clauses for next, until, release, eventually, and always follow from the
+induction hypotheses at corresponding positions.  Atomic-only negation is
+preserved by label equality.  Universal quantification then yields the state
+clause.  Existential path quantification fails for a different reason: an
+abstract existential witness can use added behaviour and need not have a
+concrete realization.  Unrestricted negation can reverse a preservation
+implication by taking complements.  ACTL* excludes both failure mechanisms
+\cite[\S2.4 and thm.~2.3]{ClarkeEtAl2003}.
+
+\paragraph{Existential abstraction and appropriateness.}
+An abstraction function is a surjection
+\[
+ h:S\twoheadrightarrow\widehat S.
+\]
+It induces \(d\equiv_h e\) exactly when \(h(d)=h(e)\).  The abstract structure
+\(\widehat M_h=(\widehat S,\widehat I_h,\widehat R_h,\widehat L_h)\) is
+defined componentwise by
+\[
+\begin{aligned}
+ \widehat I_h(\widehat d)
+  &\iff\exists d\in S\;(h(d)=\widehat d\land d\in I),\\
+ \widehat R_h(\widehat d_1,\widehat d_2)
+  &\iff\exists d_1,d_2\in S\;
+       \bigl(h(d_1)=\widehat d_1\land h(d_2)=\widehat d_2
+             \land R(d_1,d_2)\bigr),\\
+ \widehat L_h(\widehat d)
+  &=\bigcup_{h(d)=\widehat d}L(d).
+\end{aligned}
+\]
+The existential transition clause is the exact source of added behaviour: two
+successive abstract edges may be witnessed by incompatible concrete states in
+their shared block.
+
+For a specification \(\varphi\), the paper calls \(h\) appropriate when every
+atomic subformula of \(\varphi\) is constant on each \(\equiv_h\)-class:
+\[
+ d\equiv_h e
+ \quad\Longrightarrow\quad
+ \bigl(d\models f\iff e\models f\bigr)
+ \quad\text{for every atomic }f\text{ in }\varphi.
+\]
+On the proposition set occurring in \(\varphi\), appropriateness makes the
+union label of an abstract block equal to the common label of each represented
+concrete state.  The graph
+\[
+ H_h=\{(s,h(s)):s\in S\}
+\]
+is then a simulation relation, because every concrete transition itself
+witnesses the corresponding abstract transition and concrete initial states
+map into \(\widehat I_h\).  Lemma~3.2 and Theorems~2.3 and~3.3 therefore give
+\[
+ \widehat M_h\models\varphi
+ \quad\Longrightarrow\quad
+ M\models\varphi.
+\]
+The converse is not valid: existential abstraction can add paths
+\cite[\S3 and thm.~3.3]{ClarkeEtAl2003}.
+
+\paragraph{Exact abstraction versus symbolic approximations.}
+Computing the exact existential transition relation \(\widehat R_h\) can itself
+be prohibitively expensive.  The article therefore defines an
+\emph{approximation} to be the Kripke structure
+\[
+ \widetilde M=(\widehat S,\widetilde I,\widetilde R,\widehat L_h)
+ \quad\text{such that}\quad
+ \widehat I_h\subseteq\widetilde I
+ \ \text{ and }\
+ \widehat R_h\subseteq\widetilde R.
+\]
+This term names an overapproximating structure on the same abstract state set,
+not another abstraction function.  Its necessity is computational, and it is
+nonredundant with \(\widehat M_h\): the latter contains exactly the existentially
+induced initial states and transitions, whereas \(\widetilde M\) may add more.
+The identity relation simulates \(\widehat M_h\) in \(\widetilde M\), so
+Theorem~3.5 gives
+\[
+ M\preceq\widehat M_h\preceq\widetilde M.
+\]
+Consequently, a successful ACTL* check on \(\widetilde M\) is still sound.
+A transition in
+\(\widetilde R\setminus\widehat R_h\) is a \emph{virtual transition}: unlike a
+spurious path already possible in exact existential abstraction, it was added
+by this further approximation.  Both kinds must later be checked against the
+concrete relation \(R\).
+
+The source applies existential abstraction to individual Boolean blocks before
+conjoining them.  The block notation must be typed before that rule can be
+used.  For an initial-predicate block \(B\) and a transition-relation block
+\(Q\), define their existential images by
+\[
+\begin{aligned}
+ (B)_h(\widehat s)
+   &\iff \exists s\in S\;
+      \bigl(h(s)=\widehat s\land B(s)\bigr),\\
+ (Q)_h(\widehat s,\widehat t)
+   &\iff \exists s,t\in S\;
+      \bigl(h(s)=\widehat s\land h(t)=\widehat t
+             \land (s,t)\in Q\bigr).
+\end{aligned}
+\]
+Thus \((B)_h\) is a predicate on \(\widehat S\), whereas \((Q)_h\) is a
+relation on \(\widehat S\times\widehat S\); neither is a new abstraction
+function.  If the Boolean encodings are partitioned as
+\[
+ I=I_1\land\cdots\land I_r,
+ \qquad
+ R=R_1\land\cdots\land R_q,
+\]
+the source's \emph{early approximation} is exactly
+\[
+\begin{aligned}
+ \mathcal T(I)
+   &=\{\widehat s\in\widehat S:
+       \bigwedge_{\ell=1}^{r}(I_\ell)_h(\widehat s)\},\\
+ \mathcal T(R)
+   &=\{(\widehat s,\widehat t)\in\widehat S^2:
+       \bigwedge_{j=1}^{q}(R_j)_h(\widehat s,\widehat t)\}.
+\end{aligned}
+\]
+These definitions make the initial component as well as the transition
+component eliminable.  The full structure is
+\[
+ \widetilde M_h^{early}
+   =(\widehat S,\mathcal T(I),\mathcal T(R),\widehat L_h).
+\]
+Because
+\[
+ \widehat I_h\subseteq\mathcal T(I),
+ \qquad
+ \widehat R_h\subseteq\mathcal T(R),
+\]
+this is a full approximation in the preceding sense and
+\[
+ M\preceq\widehat M_h\preceq\widetilde M_h^{early}.
+\]
+Abstracting the blocks before conjoining them can be cheaper, but may add virtual
+transitions---and, if the first inclusion is strict, extra abstract initial
+states---that exact abstraction of the conjunction would exclude
+\cite[\S3.1 and thm.~3.5; pp.~763--765]{ClarkeEtAl2003}.
+
+The source's smallest example is a traffic light with the concrete cycle
+\[
+ red\longrightarrow green\longrightarrow yellow\longrightarrow red.
+\]
+Let \(h(red)=\widehat{red}\) and
+\(h(green)=h(yellow)=\widehat{go}\).  The concrete system satisfies
+\(\mathsf{AG\,AF}(state=red)\), but the abstract block
+\(\widehat{go}\) has a self-loop witnessed by \(green\to yellow\).  Hence the
+abstract trace
+\(\widehat{red}\,\widehat{go}^{\,\omega}\) violates the formula.  Because no
+concrete execution can remain forever among \(green,yellow\), that trace is
+spurious.  This example exhibits the failure of the converse preservation
+direction rather than a failure of Theorem~3.3
+\cite[ex.~3.4 and fig.~2]{ClarkeEtAl2003}.
+
+\paragraph{Guarded programs and their transition relation.}
+A guarded finite-state program \(P\) has a finite state-variable set and
+nonempty finite variable domains:
+\[
+ V=\{v_1,\ldots,v_n\},
+ \qquad
+ \varnothing\ne D_v\quad(v\in V),
+ \qquad
+ S=\prod_{v\in V}D_v.
+\]
+Each variable \(v_i\) has a nonempty initial-value set \(I_i\subseteq D_{v_i}\)
+and an ordered list of guarded updates
+\[
+ (C_i^1,A_i^1),\ldots,(C_i^{k_i},A_i^{k_i}),\qquad k_i\geq1.
+\]
+Each \(C_i^j:S\to\{\mathsf{false},\mathsf{true}\}\) is a predicate on the
+current state. Each \(A_i^j:S\to
+\mathcal P(D_{v_i})\setminus\{\varnothing\}\) gives the permitted next values.
+A deterministic expression denotes its singleton value set; a finite
+set-valued assignment permits any member. All expressions are interpreted
+by total functions of the declared finite types.
+
+Require at least one guard in each list to hold at every state. An explicit
+last guard \(\mathsf{true}\) supplies a default when necessary.
+The effective guard for branch \(j\) is
+\[
+ G_i^j(s):=C_i^j(s)\land
+                \bigwedge_{\ell=1}^{j-1}\neg C_i^\ell(s).
+\]
+Exactly one effective guard holds. Thus the first applicable branch,
+not an arbitrary true branch, supplies the update. Define
+\[
+\begin{aligned}
+ T_i(s,t)&\iff
+   \bigvee_{j=1}^{k_i}
+       \bigl(G_i^j(s)\land t(v_i)\in A_i^j(s)\bigr),\\
+ I&=\{s\in S:\forall i\in\{1,\ldots,n\}\;s(v_i)\in I_i\},\\
+ R(s,t)&\iff\bigwedge_{i=1}^{n}T_i(s,t).
+\end{aligned}
+\]
+All right-hand sides are evaluated in the same current state \(s\).
+The conjunction implements simultaneous updates; one block does not read
+another block's newly chosen next value. For example,
+\(A_i^1(s)=\{s(v_j)\}\) with guard \(\mathsf{true}\) copies the current value
+of \(v_j\) when \(D_{v_j}\subseteq D_{v_i}\), while
+\(A_i^1(s)=\{0,1\}\) for a Boolean variable permits both
+next values independently.
+
+The initial set is nonempty because every \(I_i\) is nonempty. For each
+current state, choose one permitted value from the unique effective branch
+of each variable. The resulting tuple is a successor, proving that \(R\)
+is total. At \(n=0\), the state space is the singleton empty tuple, both
+empty conjunctions are true, and the transition is its self-loop. This gives
+the required finite total Kripke structure for the program
+\cite[\S\S2.2, 4.2.1]{ClarkeEtAl2003}.
+
+\paragraph{The initial abstraction.}
+Let \(\operatorname{Atoms}(P)\) contain the atomic formulas in the
+specification and in the control-flow conditions of the program's transition
+blocks, and label each state by
+\[
+ L(s)=\{a\in\operatorname{Atoms}(P):s\models a\}.
+\]
+Here satisfaction of a program predicate evaluates its expressions on the
+current variable assignment and combines the atomic truth values by the
+usual Boolean clauses. Definition~4.1 says that, for any formula set \(F\),
+\[
+ d\equiv_F e
+ \iff
+ d,e\in S\ \land\
+ \forall f\in F\;\bigl(d\models f\iff e\models f\bigr).
+\]
+The corresponding abstraction is the quotient map
+\[
+ h_F:S\twoheadrightarrow S/{\equiv_F},
+ \qquad
+ h_F(d)=[d]_{\equiv_F}.
+\]
+The map definition is necessary: the kernel alone determines a quotient only
+up to renaming of its classes.  If
+\(F\supseteq\operatorname{Atoms}(\varphi)\), Proposition~4.2 proves that
+\(h_F\) is appropriate: a distinguishing specification atom would itself be
+an element of \(F\), contradicting \(F\)-equivalence.  Definition~4.3 then
+sets
+\[
+ init:=h_{\operatorname{Atoms}(P)}.
+\]
+The source chooses the program's control atoms as well as the specification
+atoms so that the first abstract model retains the control-flow distinctions
+visible in the program.  Proposition~4.2 also makes clear that this choice is a
+design decision, not a necessary new semantic primitive
+\cite[defs.~4.1, 4.3 and prop.~4.2; pp.~768--769]{ClarkeEtAl2003}.
+
+\paragraph{The product representation required by symbolic refinement.}
+The later refinement algorithm operates on coordinate equivalences, so it
+requires more structure than the arbitrary surjection \(h_F\).  Suppose
+\[
+ S=D_1\times\cdots\times D_m,\qquad
+ h_j:D_j\twoheadrightarrow\widehat D_j,
+\]
+and define
+\[
+\begin{aligned}
+ h&=(h_1,\ldots,h_m),\\
+ h(d_1,\ldots,d_m)
+   &=(h_1(d_1),\ldots,h_m(d_m)),\\
+ a\equiv_j b&\iff h_j(a)=h_j(b).
+\end{aligned}
+\]
+Then \(h\) is a \emph{composite abstraction function}, a restricted kind of
+abstraction function whose standing is a product map, not a new state or
+transition relation.  Its full equivalence is eliminable:
+\[
+ (d_1,\ldots,d_m)\equiv_h(e_1,\ldots,e_m)
+ \iff
+ \bigwedge_{j=1}^{m}d_j\equiv_j e_j.
+\]
+The distinction is nonredundant because a general \(h_F\) can couple
+coordinates and need not factor this way; the later componentwise refinement
+operation would then be undefined.
+
+The article constructs the required product representation of \(init\) rather
+than assuming it.  For an atomic formula \(f\), let
+\(\operatorname{var}(f)\) be the variables occurring in \(f\), and put
+\[
+ V_{\mathrm{obs}}
+   =\bigcup_{f\in\operatorname{Atoms}(P)}\operatorname{var}(f).
+\]
+The source grammar permits an atom with
+\(\operatorname{var}(f)=\varnothing\).  Its truth value is independent of the
+state: every \(d,e\in S\) agree on all zero variables, so
+\(d\models f\iff e\models f\).  Its conjunct in \(\equiv_{init}\) is therefore
+tautological.  Such atoms remain in \(\operatorname{Atoms}(P)\) and in the
+labelling, but are omitted when forming the product coordinates because they
+cannot induce a variable coordinate and cannot distinguish two states.
+This omission preserves \(\equiv_{init}\) exactly
+\cite[\S4.2.1, p.~767; \S4.2.3, p.~770]{ClarkeEtAl2003}.
+
+On the remaining atoms, two atoms \emph{interfere} exactly when their variable
+sets intersect.  A \emph{formula cluster} is an equivalence class of the
+reflexive-transitive closure of that interference relation on
+\[
+ \{f\in\operatorname{Atoms}(P):
+     \operatorname{var}(f)\ne\varnothing\}.
+\]
+Two
+variables in \(V_{\mathrm{obs}}\) are equivalent when they occur in atoms in
+the same formula cluster; the resulting equivalence classes are the
+\emph{variable clusters}.  Thus formula clusters partition precisely the
+variable-bearing atoms, variable clusters partition \(V_{\mathrm{obs}}\), and
+neither name denotes an additional semantic object.
+
+For each unobserved variable \(v\in V\setminus V_{\mathrm{obs}}\), adjoin the
+separate coordinate and empty formula family
+\[
+ VC_v=\{v\},
+ \qquad
+ FC_v=\varnothing.
+\]
+Separate coordinates are required here because the later refinement is
+componentwise; grouping all unobserved variables into one coordinate would
+permit coupled refinements not available when the variables are kept
+independent. After adjoining these product factors and reindexing, write
+\[
+ FC_1,\ldots,FC_m,\qquad
+ VC_1,\ldots,VC_m,\qquad
+ D_j=\prod_{v\in VC_j}D_v.
+\]
+Let \(\pi_{VC_j}:S\to D_j\) be coordinate restriction to \(VC_j\).  Full-state
+satisfaction is typed on \(S\), so a projected tuple needs an explicitly
+restricted evaluation.  For \(f\in FC_j\), define the Boolean map
+\(f^{(j)}:D_j\to\{\bot,\top\}\) by
+\[
+ f^{(j)}(x)=
+ \begin{cases}
+  \top,&d\models f,\\
+  \bot,&d\not\models f,
+ \end{cases}
+ \qquad
+ \text{for any }d\in S\text{ with }\pi_{VC_j}(d)=x.
+\]
+Such an extension \(d\) exists because every \(D_v\) is nonempty.  The value
+is independent of the extension: if two full states have the same
+\(VC_j\)-projection, they agree on every variable in
+\(\operatorname{var}(f)\subseteq VC_j\), and hence give \(f\) the same truth
+value.  Thus \(f^{(j)}\) is only the restriction of concrete formula
+evaluation, introduced because the component quotient below uses it; it is not
+a new satisfaction relation.
+
+Define the component equivalence, quotient, and map by
+\[
+ x\equiv_j y
+ \iff
+ x,y\in D_j\ \land\
+ \forall f\in FC_j\;
+    \bigl(f^{(j)}(x)=f^{(j)}(y)\bigr),
+ \qquad
+ \widehat D_j=D_j/{\equiv_j},
+ \qquad
+ h_j:D_j\twoheadrightarrow\widehat D_j,
+ \quad h_j(x)=[x]_{\equiv_j}.
+\]
+For each empty family the universal condition is vacuous, so
+its equivalence is universal, its quotient is a singleton, and its component
+map is constant.  The product equivalence therefore still ignores precisely
+the coordinates ignored by \(init\), while retaining separate coordinates for
+possible later refinements.  All components are actual surjections with
+specified codomains, not merely kernels.
+Theorem~4.8 states
+\[
+ \widehat M_h\cong\widehat M_{init}.
+\]
+Indeed,
+\[
+\begin{aligned}
+ d\equiv_{init}e
+ &\iff
+   \forall f\in\operatorname{Atoms}(P)\;
+      (d\models f\iff e\models f)\\
+ &\iff
+   \forall f\in\operatorname{Atoms}(P)\text{ with }
+      \operatorname{var}(f)\ne\varnothing\;
+      (d\models f\iff e\models f)\\
+ &\iff
+   \bigwedge_{j=1}^{m}
+     \pi_{VC_j}(d)\equiv_j\pi_{VC_j}(e)\\
+ &\iff d\equiv_he.
+\end{aligned}
+\]
+Equal equivalence classes induce isomorphic exact abstract structures, which
+is the promised bridge from the extensional \(init\) definition to the
+component representation used below.
+
+Example~4.7 makes the construction concrete.  For
+\(x,y\in\{0,1,2\}\), Boolean \(reset\), and
+\[
+ \operatorname{Atoms}(P)
+  =\{reset=TRUE,\ x=y,\ x<y,\ y=2\},
+\]
+the formula clusters are
+\(\{x=y,x<y,y=2\}\) and \(\{reset=TRUE\}\), inducing variable clusters
+\(\{x,y\}\) and \(\{reset\}\).  The \(x,y\)-component has the five classes
+\[
+\begin{gathered}
+ \{(0,0),(1,1)\},\quad \{(0,1)\},\quad
+ \{(0,2),(1,2)\},\\
+ \{(1,0),(2,0),(2,1)\},\quad \{(2,2)\},
+\end{gathered}
+\]
+while the \(reset\)-component is the identity
+\cite[\S4.2.3, ex.~4.7, and thm.~4.8; pp.~769--771]{ClarkeEtAl2003}.
+
+\paragraph{Combining exact and early transition abstraction.}
+Let
+\[
+ R=T_1\cap\cdots\cap T_q,\qquad T_j\subseteq S\times S,\quad q\geq1.
+\]
+The blocks may correspond to variables or to groups of variables. They are
+relations on full states, so a block may depend on current variables outside
+the group whose next values it constrains. Fix a selection
+\(J\subseteq\{1,\ldots,q\}\). The selected blocks share one concrete witness;
+the remaining blocks are abstracted separately. Define
+\[
+\begin{split}
+ \widetilde R_{h,J}(\widehat s,\widehat t)
+ \iff{}&
+ \exists s,t\in S\,
+ \left(h(s)=\widehat s\land h(t)=\widehat t
+       \land\bigwedge_{j\in J}T_j(s,t)\right)\\
+ &{}\land
+ \bigwedge_{j\notin J}(T_j)_h(\widehat s,\widehat t).
+\end{split}
+\]
+Every term in this formula has the abstract domain
+\(\widehat S\times\widehat S\); \((T_j)_h\) is the existential image already
+defined above. Equivalently, the formula is
+\[
+ \left(\bigcap_{j\in J}T_j\right)_h
+       \cap\bigcap_{j\notin J}(T_j)_h,
+\]
+where the empty concrete intersection is \(S\times S\).
+Because \(h\) is surjective, its image is
+\(\widehat S\times\widehat S\).
+This is a precise combination of exact and early abstraction
+\cite[\S\S3.1, 6]{ClarkeEtAl2003}.
+
+The defining inclusions are
+\[
+ \widehat R_h\subseteq\widetilde R_{h,J}\subseteq\mathcal T(R).
+\]
+For the first inclusion, a concrete edge witnessing \(\widehat R_h\)
+satisfies every \(T_j\), hence witnesses both the selected conjunction and
+each unselected image. For the second, a witness satisfying all selected
+blocks is separately a witness for each of their images. The other images
+are explicit conjuncts. This proves both inclusions.
+The extremes are
+\[
+ \widetilde R_{h,\varnothing}=\mathcal T(R),\qquad
+ \widetilde R_{h,\{1,\ldots,q\}}=\widehat R_h.
+\]
+Moreover, if \(J\subseteq K\), then
+\(\widetilde R_{h,K}\subseteq\widetilde R_{h,J}\): the shared \(K\)-witness
+also witnesses \(J\), and every block in \(K\setminus J\) has its required
+separate image. Enlarging the selection therefore never adds transitions.
+
+Use the exact initial image and form the full structure
+\[
+ \widetilde M_{h,J}
+   =(\widehat S,\widehat I_h,\widetilde R_{h,J},\widehat L_h).
+\]
+It has a nonempty initial set and a total transition relation, because
+the exact abstract structure does and its transitions are included.
+For an appropriate \(h\), the concrete-to-abstract simulation and the
+identity simulations on \(\widehat S\) give
+\[
+ M\preceq\widehat M_h
+   \preceq\widetilde M_{h,J}
+   \preceq\widetilde M_h^{early}.
+\]
+Thus satisfaction of the ACTL* specification in
+\(\widetilde M_{h,J}\) proves satisfaction in \(M\).
+The selection \(J\) affects precision and computational cost, but every
+choice has the same proved direction of preservation.
+
+For example, let states be Boolean triples \((x,y,z)\), let
+\(h(x,y,z)=(x,z)\), and put
+\[
+ T_1(s,t)\iff t(x)=s(y),\qquad
+ T_2(s,t)\iff t(z)=s(y),\qquad
+ T_3(s,t)\iff t(y)=s(y).
+\]
+With initial states \(\{(0,0,0),(0,1,0)\}\), every reachable state satisfies
+\(x=z\). The exact abstract relation permits exactly the targets
+\((x',z')\) with \(x'=z'\). Each separate image \((T_j)_h\), however, is
+universal: its hidden \(y\)-witness can be chosen independently.
+Early abstraction therefore permits unequal next values.
+Selecting \(J=\{1,2\}\) forces the first two blocks to use the same current
+\(y\), recovers \(x'=z'\), and gives
+\(\widetilde R_{h,J}=\widehat R_h\). This exhibits precisely the information
+retained by a shared witness.
+
+\paragraph{The refinement loop.}
+The exact method to which Theorem~4.24 belongs starts from the composite
+representative \(h\) of \(init\) and repeats exactly three decisions.
+\begin{enumerate}
+\item Model-check \(\widehat M_h\) against \(\varphi\).  If it satisfies the
+formula, Theorem~3.3 proves the concrete system correct.
+\item If the abstract checker returns a finite or lasso-shaped counterexample,
+determine symbolically, against the concrete relation \(R\), whether it has a
+concrete realization.  If it has a realization, return the concrete
+counterexample.
+\item If it does not, properly split the failure class so that no new class
+mixes a state reached by the validated concrete prefix with a state enabling
+the failed continuation. Replace \(h\) by the refined abstraction and
+model-check again.
+\end{enumerate}
+The concrete validation and separating refinements are defined below
+\cite[\S4.1]{ClarkeEtAl2003}.
+For a combined approximation, use the exact-recheck policy proved below
+before taking a partition-refinement step.
+
+\paragraph{Exact validation of a finite abstract path.}
+Let \(n\geq1\) and let
+\(\widehat T=\langle\widehat s_1,\ldots,\widehat s_n\rangle\)
+be a finite abstract counterexample for a specification whose violation is
+witnessed by such a path. Appropriateness of \(h\) ensures that a concrete
+realization has the same specification-atom labels.
+Its concrete path set is
+\[
+\begin{split}
+ h^{-1}_{path}(\widehat T)=
+ \{\langle s_1,\ldots,s_n\rangle:\;&s_1\in I,\ 
+ h(s_i)=\widehat s_i\ (1\le i\le n),\\
+ &R(s_i,s_{i+1})\ (1\le i<n)\}.
+\end{split}
+\]
+For \(X\subseteq S\), define the one-step concrete forward image
+\[
+ \operatorname{Img}(X,R)
+   =\{t\in S:\exists s\in X\;R(s,t)\}.
+\]
+This is a state-set operation on the concrete relation, distinct from the
+inverse abstraction image \(h^{-1}\) and from the abstract relation
+\(\widehat R_h\); it is needed at every validation step.  Define
+\[
+ S_1=h^{-1}(\widehat s_1)\cap I,
+ \qquad
+ S_i=\operatorname{Img}(S_{i-1},R)
+       \cap h^{-1}(\widehat s_i)
+ \quad(1<i\le n).
+\]
+Lemma~4.10 proves the equivalence of:
+\[
+\begin{array}{ll}
+\text{(i)}&\widehat T\text{ corresponds to a concrete counterexample},\\
+\text{(ii)}&h^{-1}_{path}(\widehat T)\ne\varnothing,\\
+\text{(iii)}&S_i\ne\varnothing\text{ for every }1\le i\le n.
+\end{array}
+\]
+The first two clauses are equivalent by the definition of concretization.  A
+concrete path contributes its \(i\)-th state to every \(S_i\), proving
+(ii)\(\Rightarrow\)(iii).  Conversely, choose \(s_n\in S_n\).  The definition
+of image lets one choose \(s_{i-1}\in S_{i-1}\) with
+\(R(s_{i-1},s_i)\) recursively backward to \(S_1\); the resulting sequence is
+in \(h^{-1}_{path}(\widehat T)\).  This proves the criterion, not merely one
+ direction of it \cite[lem.~4.10; pp.~772--773]{ClarkeEtAl2003}.
+
+For a counterexample in the exact abstract structure,
+\(\widehat s_1\in\widehat I_h\), hence
+\(S_1=h^{-1}(\widehat s_1)\cap I\ne\varnothing\).  This also eliminates the
+algorithm name \textsc{SplitPath}.  If
+\[
+ r=\min\{i\in\{2,\ldots,n\}:S_i=\varnothing\},
+\]
+then the procedure returns failure position \(r-1\) and
+\(S_{\mathrm{prev}}=S_{r-1}\); if the set defining \(r\) is empty, the path is
+concrete.  Thus \textsc{SplitPath} is precisely the recurrence plus this first-
+empty-index output contract, not an additional semantic primitive
+\cite[fig.~7; p.~773]{ClarkeEtAl2003}.
+The combined structures defined above also use exactly \(\widehat I_h\), so
+their validation starts with the same nonempty \(S_1\).
+
+The paper's own Example~4.11 takes
+\(D=\{1,\ldots,12\}\) and
+\[
+ h(x)=\left\lfloor\frac{x-1}{3}\right\rfloor+1.
+\]
+The four abstract blocks are
+\[
+ \{1,2,3\},\quad\{4,5,6\},\quad
+ \{7,8,9\},\quad\{10,11,12\}.
+\]
+For the abstract path
+\(\widehat T=\langle\widehat{1},\widehat{2},\widehat{3},\widehat{4}\rangle\),
+Figure~6 gives
+\(I\cap\{1,2,3\}=\{1,2,3\}\) and the displayed concrete arrows
+\[
+ 1R4,\quad 1R5,\quad 3R6,\quad
+ 4R9,\quad 5R9,\quad 7R12.
+\]
+The recurrence is therefore reproducible:
+\[
+\begin{aligned}
+ S_1&=I\cap\{1,2,3\}=\{1,2,3\},\\
+ S_2&=\operatorname{Img}(S_1,R)\cap\{4,5,6\}
+       =\{4,5,6\},\\
+ S_3&=\operatorname{Img}(S_2,R)\cap\{7,8,9\}
+       =\{9\},\\
+ S_4&=\operatorname{Img}(\{9\},R)\cap\{10,11,12\}
+       =\varnothing.
+\end{aligned}
+\]
+Thus \(\widehat{3}\), the abstract state at the last index whose propagated
+reachable set \(S_i\) is nonempty, is the failure state.  The otherwise
+unreachable state \(7\) supplies the misleading abstract edge through
+\(7R12\), while the reached state \(9\) cannot continue.  The source's
+symbolic procedure computes this first empty step and the preceding set; it
+does not infer spuriousness from the abstract edges alone
+\cite[ex.~4.11 and fig.~6]{ClarkeEtAl2003}.
+
+\paragraph{What the refinement must separate.}
+At a finite-path failure between \(\widehat s_i\) and
+\(\widehat s_{i+1}\), the source partitions the concrete states represented by
+\(\widehat s_i\) into
+\[
+\begin{aligned}
+ S_D&=S_i,\\
+ S_B&=\{s\in h^{-1}(\widehat s_i):
+       \exists t\in h^{-1}(\widehat s_{i+1})\ R(s,t)\},\\
+ S_I&=h^{-1}(\widehat s_i)\setminus(S_D\cup S_B).
+\end{aligned}
+\]
+The standing meanings and distinctions are now exact.  States in \(S_D\) are
+reachable along the validated prefix but have no continuation into the next
+abstract block.  States in \(S_B\) supply the misleading abstract transition
+but were not reached by that prefix. States in \(S_I\) do neither.
+The separating refinement used here requires that no new abstract class
+contain both an \(S_D\)-state and an \(S_B\)-state. This disconnects the
+validated concrete prefix from the failed continuation within the new class.
+It guarantees a proper partition refinement; a subsequent abstract check
+may still find a different infeasible path with the same old coarse
+projection.
+
+In Example~4.11, these three parts of the failure block are
+\[
+ S_D=\{9\},\qquad S_B=\{7\},\qquad S_I=\{8\}.
+\]
+Splitting \(9\) from \(7\) removes the counterexample: the refined block reached
+by the prefix has no edge to \(\widehat4\), whereas the refined block retaining
+that edge is not reached by the prefix.  The state \(8\) may be placed on
+either side without changing this argument.  Model checking then resumes on
+the refined abstraction \cite[ex.~4.15 and \S4.4]{ClarkeEtAl2003}.
+
+For the composite \(h\) defined above, a componentwise refinement consists of
+equivalences \(\equiv'_j\) satisfying
+\[
+ =_{D_j}\ \subseteq\ \equiv'_j\ \subseteq\ \equiv_j
+ \qquad(1\le j\le m),
+\]
+with \(\equiv'_h\) again their product. It is separating when no
+\(d\in S_D\) and \(b\in S_B\) remain \(\equiv'_h\)-equivalent. Write the
+failure class as
+\[
+ C=h^{-1}(\widehat s_i)=E_1\times\cdots\times E_m,
+\]
+where each \(E_j\) is one old \(\equiv_j\)-class. The size of a refinement
+at this failure is
+\[
+ \bigl|C/{\equiv'_h}\bigr|
+   =\prod_{j=1}^{m}\bigl|E_j/{\equiv'_j}\bigr|.
+\]
+Thus minimizing size means minimizing the number of rectangular product
+blocks replacing \(C\). A coarsest refinement in the order of relation
+inclusion would be stronger: it would contain every separating refinement.
+Such a greatest relation need not exist when \(S_I\ne\varnothing\).
+Finding a minimum-size separating product refinement is NP-hard
+\cite[thm.~4.17 and \S5]{ClarkeEtAl2003}.
+
+\paragraph{Why minimum-size product refinement is hard.}
+A finite matrix with entries \(0,1,*\) represents a two-coordinate failure
+class: rows and columns are the coordinate domains, \(0\)-cells form \(S_D\),
+\(1\)-cells form \(S_B\), and \(*\)-cells form \(S_I\). Initially each
+coordinate has one equivalence class. A pair of row and column partitions
+is separating precisely when none of its rectangular blocks contains both
+a \(0\) and a \(1\); the symbol \(*\) imposes no constraint. Its size is
+the number of row classes times the number of column classes.
+
+First reduce clique partition to column partition with all rows fixed.
+For an undirected graph \(G=(\{1,\ldots,n\},E)\), \(n\geq1\), and a
+threshold \(1\leq K\leq n\), form
+\[
+ M_{ij}=
+ \begin{cases}
+  1,&i=j,\\
+  0,&i\ne j\text{ and }\{i,j\}\notin E,\\
+  *,&i\ne j\text{ and }\{i,j\}\in E.
+ \end{cases}
+\]
+Two columns are compatible if no row places a \(0\) in one and a \(1\)
+in the other. Distinct columns \(i,j\) are compatible exactly when
+\(\{i,j\}\in E\). Indeed, their only possible conflicts occur in rows
+\(i,j\), since those are the only rows containing a \(1\) in either
+column. A group of columns is compatible exactly when all its pairs are
+compatible: any forbidden \(0/1\) pair already lies in two columns.
+Consequently a column group is compatible exactly when its vertices form
+a clique. The graph admits a partition into at most \(K\) cliques if and
+only if \(M\) admits at most \(K\) compatible column groups. Clique
+partition is the graph-colouring problem on the complement graph, so this
+is an NP-hard decision problem.
+
+We must still prevent row partitions from making the size problem easier.
+The following construction does so for any \(n\times p\) column instance
+\(M\), with \(n,p\geq1\). Put
+\[
+ t=\lceil\log_2 n\rceil,\qquad q=t+1.
+\]
+Append \(q\) columns whose entries in original row \(i\) are
+\[
+ \bigl(1,\operatorname{bin}_t(i-1)\bigr),
+\]
+where \(\operatorname{bin}_t(a)\) is the \(t\)-bit binary representation
+of \(a\), including leading zeros. Append one further row with \(1\) in
+every original column and \(0\) in every appended column. Denote the
+resulting \((n+1)\times(p+q)\) matrix by \(B(M)\).
+Its additional row and columns have four properties.
+\begin{enumerate}
+\item Distinct original rows conflict in an appended binary column, because
+their identifiers differ.
+\item Every original row conflicts with the additional row in the first
+appended column.
+\item Every appended column conflicts with every original column in the
+additional row.
+\item Appended columns conflict pairwise. The leading column differs from
+each binary column in row \(1\), whose identifier is zero. Two distinct
+binary columns differ in a row with identifier \(2^r\) for one of their
+bit positions \(r\). This row exists: for \(n>1\),
+\(2^r\leq2^{t-1}\leq n-1\). For \(n=1\), there are no binary columns,
+and the single leading column suffices.
+\end{enumerate}
+A conflicting pair cannot belong to a common row or column class in any
+separating product partition, irrespective of what happens in the other
+coordinate: its two conflicting cells would then lie in the same
+rectangle. Thus all \(n+1\) rows remain separate, all \(q\) appended
+columns remain separate, and an appended column cannot join an original
+column. The additional row gives equal entries to the original columns,
+so it introduces no new compatibility constraint between them. The only
+remaining choice is the compatible partition of the original columns.
+It follows that
+\[
+ \begin{split}
+ M\text{ has at most }K\text{ compatible column groups}
+ \quad\Longleftrightarrow\quad
+ B(M)\text{ has a separating product partition}\\
+ \text{of size at most }(n+1)(K+q).
+ \end{split}
+\]
+Both the construction and its threshold have polynomial size. Interpreting
+the entries of \(B(M)\) as \(S_D,S_B,S_I\) completes the reduction to
+minimum-size separating product refinement, already for two coordinate
+domains given by explicit finite tables
+\cite[thm.~4.17 and \S5]{ClarkeEtAl2003}.
+
+\paragraph{A coarsest refinement for separation from the complement.}
+There is a simpler problem with an explicit solution: separate
+\(A\subseteq C\) from all of \(C\setminus A\), rather than leaving the
+placement of \(S_I\) unconstrained. Assume \(m\geq1\).
+
+The polynomial operation needs one further typed map.  For
+\(X\subseteq D_1\times\cdots\times D_m\), \(a\in D_j\), define
+\[
+\begin{split}
+ \operatorname{proj}(X,j,a)=
+ \{(d_1,\ldots,d_{j-1},d_{j+1},\ldots,d_m):\;&\\
+ (d_1,\ldots,d_{j-1},a,d_{j+1},\ldots,d_m)&\in X\}.
+\end{split}
+\]
+This projection deletes coordinate \(j\) after fixing its value; it is
+different from the variable-cluster coordinate restriction
+\(\pi_{VC_j}\) above and is used only to compare slices of a failure block.
+For \(m=1\), the product over the remaining coordinates is the singleton
+\(\{()\}\), so a slice is either empty or \(\{()\}\).
+Define the component update
+\[
+ a\equiv'_j b
+ \iff
+ a\equiv_j b
+ \ \land\
+ \operatorname{proj}(A,j,a)
+   =\operatorname{proj}(A,j,b)
+ \qquad(1\le j\le m).
+\]
+Its product is the unique greatest product refinement separating \(A\)
+from \(C\setminus A\).
+
+\emph{Proof.}
+Equality of slices is an equivalence relation; intersecting it with
+\(\equiv_j\) gives an equivalence contained in \(\equiv_j\). Hence the
+product update is an equivalence refining the old one.
+For separation, suppose \(x\in A\) and \(x\equiv'_h y\). Replace the
+coordinates of \(x\) successively:
+\[
+ x^{(0)}=x,\qquad
+ x^{(j)}=(y_1,\ldots,y_j,x_{j+1},\ldots,x_m).
+\]
+At step \(j\), equality of the slices for \(x_j,y_j\), evaluated at
+the other currently fixed coordinates, gives
+\[
+ x^{(j-1)}\in A\quad\Longleftrightarrow\quad x^{(j)}\in A.
+\]
+Induction gives \(y\in A\), proving separation.
+
+Now let \(\approx_h\) be any other separating product refinement with
+component relations \(\approx_j\subseteq\equiv_j\). Suppose
+\(a\approx_j b\) but their \(A\)-slices differ. After interchanging
+\(a,b\) if necessary, take
+\[
+ z\in\operatorname{proj}(A,j,a)
+       \setminus\operatorname{proj}(A,j,b).
+\]
+Insert \(a\), respectively \(b\), into coordinate \(j\) of \(z\) to form
+full states \(x,y\). Then \(x\in A\subseteq C\). Since \(C\) is the
+rectangle \(\prod_\ell E_\ell\), all other coordinates of \(z\) lie in
+their \(E_\ell\), and \(a\in E_j\). The implication
+\(a\approx_j b\Rightarrow a\equiv_j b\) puts \(b\) in the same \(E_j\);
+thus \(y\in C\setminus A\). But \(x\approx_h y\), using
+\(a\approx_j b\) in coordinate \(j\) and reflexivity elsewhere, contrary
+to separation. Therefore every pair in \(\approx_j\) has equal slices:
+\[
+ \approx_j\subseteq\equiv'_j\quad\text{for every }j,
+ \qquad
+ \approx_h\subseteq\equiv'_h.
+\]
+The update is itself separating and contains every separating product
+refinement, which proves greatestness and uniqueness. \(\square\)
+
+Because \(C\) is finite, every proper refinement of its partition has
+strictly more blocks. The greatestness just proved therefore also gives
+the unique minimum partition on \(C\). The coordinate update can also
+split other old product classes that use the same coordinate values.
+Additional splits beyond this update cannot improve the local size
+objective; uniqueness of the minimum on \(C\) does not by itself
+prohibit extra global splits outside \(C\).
+
+Apply the update with \(A=S_D\). This is the operation
+\textsc{PolyRefine}. When \(S_I=\varnothing\), its complement in \(C\)
+is exactly \(S_B\), so the result is the coarsest separating refinement
+and has minimum size. When \(S_I\ne\varnothing\), it solves the
+stronger problem of separating \(S_D\) from \(S_B\cup S_I\).
+It still separates \(S_D,S_B\), but need not minimize the size required
+by that weaker condition
+\cite[lems.~4.18--4.19, cors.~4.20, 4.22, and rem.~4.23;
+pp.~779--781]{ClarkeEtAl2003}.
+
+For example, start with universal coordinate equivalences on
+\(C=\{0,1\}^2\) and take
+\[
+ S_D=\{(0,0)\},\qquad S_B=\{(1,1)\},\qquad
+ S_I=\{(0,1),(1,0)\}.
+\]
+Splitting only the first coordinate separates \(S_D,S_B\) with two
+blocks; splitting only the second does the same. These two equivalences
+are incomparable. Any product equivalence containing both must be
+universal in each coordinate and hence fails separation, so the weaker
+problem has no greatest separating refinement. The slice update splits
+both coordinates, giving four blocks. This is necessary for separating
+\(S_D\) from its entire complement, but not for separating it from
+\(S_B\) alone.
+
+The update is polynomial when the coordinate domains and state sets are
+given as explicit finite tables: form each slice, compare these finite
+tables, and group equal slices within each old coordinate class. This
+statement is about the explicit representation size, not the number of
+Boolean variables in a succinct encoding and not the size of arbitrary
+intermediate BDDs.
+
+At an exact abstract failure, \(S_D\ne\varnothing\) by choice of the
+first empty propagation step. Also \(S_B\ne\varnothing\), since the
+failed abstract edge has a concrete witness in the exact existential
+image. The two sets are disjoint, or the propagation would not have
+failed. Any separating update therefore separates two states formerly
+in the same \(C\), so it properly refines the global state partition.
+
+\paragraph{Validation of an abstract lasso.}
+For \(n\geq1\) and \(0\leq i<n\), write an abstract lasso as
+\[
+ \widehat T=
+ \langle\widehat s_1,\ldots,\widehat s_i\rangle
+ \langle\widehat s_{i+1},\ldots,\widehat s_n\rangle^\omega
+\]
+and put
+\[
+ m=\min_{i+1\le j\le n}
+      \lvert h^{-1}(\widehat s_j)\rvert.
+\]
+Let \(\widehat T^{unwind}\) be the finite abstract path consisting of the
+whole prefix followed by \(m+1\) copies of the loop segment:
+\[
+ \widehat T^{unwind}
+ =
+ \langle\widehat s_1,\ldots,\widehat s_i\rangle
+ \langle\widehat s_{i+1},\ldots,\widehat s_n\rangle^{m+1}.
+\]
+Theorem~4.13 proves
+\[
+ \widehat T\text{ has a concrete lasso realization}
+ \iff
+ h^{-1}_{path}(\widehat T^{unwind})\ne\varnothing.
+\]
+The forward implication takes a finite prefix of a concrete infinite
+realization.  For the reverse implication, choose
+\[
+ M\in\{i+1,\ldots,n\}
+ \quad\text{with}\quad
+ \lvert h^{-1}(\widehat s_M)\rvert=m.
+\]
+The unwound concrete path visits that same loop coordinate once in each of the
+\(m+1\) whole loop copies, so two occurrences contain the same concrete
+state.  Their positions differ by an integral number of complete loop
+traversals.  The concrete segment between them is therefore a cycle projecting
+to complete copies of the abstract loop; repeating it produces a concrete
+lasso of the required abstract shape.  This pigeonhole argument is why a
+bounded number of unwindings suffices even though the eventual period of the
+reachable-set sequence can be exponential.
+
+The source's \textsc{SplitLoop} name can also be eliminated.  For a position
+\(q\) in the unwound word, define its abstract loop index by
+\[
+ \lambda(q)=
+ \begin{cases}
+  q,&q\le n,\\
+  i+1+\bigl((q-i-1)\bmod(n-i)\bigr),&q>n.
+ \end{cases}
+\]
+Run the same concrete-image recurrence along
+\(\widehat T^{unwind}\).  If \(r\) is its first empty index, the procedure
+returns
+\[
+ S_{\mathrm{prev}}=S_{r-1},\qquad
+ p=\lambda(r-1),\qquad k=\lambda(r),
+\]
+and these outputs satisfy
+\[
+\begin{aligned}
+ S_{\mathrm{prev}}&\subseteq h^{-1}(\widehat s_p),\\
+ S_{\mathrm{prev}}&\text{ is reachable from }
+   h^{-1}(\widehat s_1)\cap I\text{ along the unwound prefix},\\
+ k&=p+1\quad(p<n),\qquad k=i+1\quad(p=n),\\
+ \operatorname{Img}(S_{\mathrm{prev}},R)
+   \cap h^{-1}(\widehat s_k)&=\varnothing.
+\end{aligned}
+\]
+Hence \(\widehat s_p\) is the failure state.  Refinement takes
+\(S_D=S_{\mathrm{prev}}\) and computes \(S_B,S_I\) against the successor block
+\(\widehat s_k\); the name does not conceal an additional operation
+\cite[ex.~4.12, thm.~4.13, and fig.~9; pp.~774--776]{ClarkeEtAl2003}.
+
+\paragraph{Termination and completeness of exact refinement.}
+Let \(M\) be finite, with nonempty state set \(S\), and let \(\varphi\)
+be an ACTL* specification in a fragment for which a failed model check
+returns a finite-path or lasso counterexample. The counterexample
+representation must witness violation: every concrete realization with
+the same specification-atom labels is a concrete refutation.
+Assume the model checker and the finite symbolic set operations terminate.
+Then the exact refinement loop terminates with a correct verdict and an
+abstract model \(\widehat M_h\) satisfying
+\[
+ \widehat M_h\models\varphi
+ \quad\Longleftrightarrow\quad
+ M\models\varphi.
+\]
+
+\emph{Proof.}
+The initial product abstraction is appropriate. A refinement never
+identifies states that were previously distinct, so it cannot identify
+states disagreeing on a specification atom. Appropriateness is therefore
+invariant. The simulation-preservation theorem consequently applies at
+every iteration.
+
+Put \(N=|S|\) and let \(b(h)=|S/{\equiv_h}|\) be the number of current
+abstract state classes. At a spurious finite counterexample, validation
+finds a first empty set after a nonempty one. At a spurious lasso, the
+finite unwinding criterion gives exactly the same kind of failure.
+The exact initial image rules out an empty first set. Since the failed
+edge belongs to the exact abstract relation, both \(S_D\) and \(S_B\)
+are nonempty, disjoint subsets of one old class. The separating product
+update just proved is therefore proper: it increases \(b(h)\) and
+never merges any other classes. Thus \(N-b(h)\) is a nonnegative
+integer that strictly decreases at every refinement.
+
+There can be at most \(N-b(h_0)\) refinements, where \(h_0\) is the
+initial abstraction. No spurious counterexample can require a further
+split once \(b(h)=N\): every class is then a singleton, and the exact
+abstract structure is isomorphic to \(M\). Equivalently, the two
+nonempty disjoint sets needed for a failure could not both lie in a
+singleton. Hence the loop must reach a terminating branch.
+
+If an abstract check succeeds, simulation proves \(M\models\varphi\).
+If validation succeeds, its finite-path or lasso construction supplies
+a concrete counterexample, proving \(M\not\models\varphi\). In that
+branch the current abstract check also failed. Both terminating branches
+therefore give the stated equivalence. \(\square\)
+
+This establishes the finite-state completeness assertion for the
+path-or-lasso counterexample fragment
+\cite[thm.~4.24]{ClarkeEtAl2003}. A specification whose refutation
+requires a branching counterexample is outside these hypotheses; its
+validator and progress argument would have to treat that branching
+object.
+
+\paragraph{A terminating policy for combined approximation.}
+The combined relation can contain an edge with no concrete witness at all.
+At such an edge the validation set \(S_B\) may be empty, so a requested
+separation from \(S_D\) would not force a proper partition refinement.
+Use the following exact-recheck policy with
+\(\widetilde M_{h,J}\), retaining its exact initial image.
+\begin{enumerate}
+\item Check \(\widetilde M_{h,J}\). If it satisfies \(\varphi\),
+return success. Otherwise validate its finite-path or lasso
+counterexample against \(R\). If validation succeeds, return the
+concrete counterexample.
+\item If validation fails and \(J\ne\{1,\ldots,q\}\), set
+\(J=\{1,\ldots,q\}\) and check again at the same \(h\).
+This check uses \(\widehat R_h\). Keep this exact selection until
+the current partition changes; the exact recheck may succeed or may
+produce a different counterexample.
+\item If validation fails with \(J=\{1,\ldots,q\}\), apply the proper
+separating product refinement. At the new \(h\), a new selection \(J\)
+may be chosen, and the process repeats.
+\end{enumerate}
+In particular, a partition split is attempted only after validation of
+a counterexample in the exact abstract structure. The method can use
+early abstraction at each partition without depending on it to supply
+the witnesses needed for partition progress
+\cite[\S6]{ClarkeEtAl2003}.
+
+\emph{Termination and correctness.}
+Under the same finite-state and counterexample hypotheses, define
+\[
+ \epsilon(J)=
+ \begin{cases}
+  1,&J\ne\{1,\ldots,q\},\\
+  0,&J=\{1,\ldots,q\}.
+ \end{cases}
+\]
+Order pairs of nonnegative integers lexicographically, comparing the
+first coordinate first. At every nonterminating update the pair
+\[
+ \bigl(N-b(h),\epsilon(J)\bigr)
+\]
+strictly decreases. An exact recheck keeps \(h\) fixed and changes
+\(\epsilon\) from \(1\) to \(0\). An exact spurious counterexample
+properly increases \(b(h)\), decreasing the first coordinate even if a
+new approximate selection resets \(\epsilon\) to \(1\). Since the
+second coordinate is always \(0\) or \(1\), there is no infinite
+descending sequence, so the policy terminates.
+
+At every selection,
+\(M\preceq\widehat M_h\preceq\widetilde M_{h,J}\); a successful
+combined check therefore proves the concrete specification. A validated
+counterexample proves its concrete failure by the same realization
+criterion as before. At the identity partition an exact recheck has
+neither extra transitions nor extra initial states, so no nonterminating
+case remains. These facts prove completeness of this specified combined
+policy. They require no assumption that an arbitrary unsuccessful
+approximation heuristic will eventually improve itself. \(\square\)
+
+\paragraph{The industrial experiment.}
+On a 200\,MHz
+PentiumPro with 1\,GB RAM, the Fujitsu case began from about 61,500 lines of
+Verilog; after engineers removed irrelevant units and abstracted the datapath,
+the verification model had about 500 latches and was translated into about
+9,500 lines of SMV.  The method abstracted 144 symbolic variables, used three
+refinement steps, and exposed a previously undiscovered bug after the compared
+NuSMV and Yang SMV runs failed to verify the design.  The authors had added
+cone-of-influence reduction to NuSMV but not to Yang's SMV, so those two
+comparison configurations were not symmetric.
+Those numbers report one industrial experiment; they are not a general
+complexity guarantee \cite[\S7.2]{ClarkeEtAl2003}.

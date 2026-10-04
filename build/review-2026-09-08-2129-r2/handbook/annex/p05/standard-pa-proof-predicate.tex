@@ -1,0 +1,315 @@
+\begin{annexitem}{annex:p5.direct-pa-axioms}{thm:p05-direct-pa-axioms}{Exact PA axiom recognition and presentation transport}
+This proof uses the actual \(\mathsf{ND}_{\mathsf{FOL}}\) tree rules, including its
+formula-specific labelled discharge and the all-variable freshness condition
+for \(\exists E\).  All coding assertions in this item are statements
+about natural numbers.  No arithmetic representing formula is being selected
+or proved to satisfy D2 or D3 here.
+
+\paragraph{The seven arithmetic sentences and literal conventions.}
+Decode each \(q_j\) in the body using the constructor table.  Tags
+\(0,1,2,3,4,5,7,10,11,12\) mean respectively variable, zero,
+successor, addition, multiplication, equality, negation, implication,
+universal and existential quantification.  The decoded formulas are
+\[
+\begin{aligned}
+ &\forall x_0\,\neg(Sx_0=0),\\
+ &\forall x_0\,\forall x_1\,(Sx_0=Sx_1\to x_0=x_1),\\
+ &\forall x_0\,(\neg(x_0=0)\to\exists x_1\,(x_0=Sx_1)),\\
+ &\forall x_0\,(x_0+0=x_0),\\
+ &\forall x_0\,\forall x_1\,(x_0+Sx_1=S(x_0+x_1)),\\
+ &\forall x_0\,(x_0\times0=0),\\
+ &\forall x_0\,\forall x_1\,
+                  (x_0\times Sx_1=(x_0\times x_1)+x_0).
+\end{aligned}
+\]
+These are precisely the seven active \(\mathsf Q\) axioms under the
+declared choice \(x=x_0,y=x_1\) for the source's schematic variable
+names, with the displayed universal-closing order.  Their codes are the
+fully specified constructor expressions in the body, not metavariables
+standing for unspecified axiom codes.  Every one is a sentence.  In the
+third axiom the existential variable is distinct from the outer variable;
+the encoding does not accidentally bind the argument of the predecessor
+assertion.
+
+For the three two-variable arithmetic axioms, either order of their two
+universal closures has exactly the same variable-occurrence set.  The
+closure-transport proof below applies to such an order change as well.
+Bound names in a displayed closed axiom may be renamed by the actual alpha
+rule after making them fresh from its matrix.  For example, rename all
+binders first to pairwise distinct variables absent from both expressions,
+and then compare the binding positions; this yields an alpha derivation
+between two closed renamings of the same binding pattern.  Such a derived
+variant is not silently made one of the seven literal accepted constants.
+The source-name convention is fixed before assigning the seven codes.
+
+\paragraph{Substitution identities used by induction.}
+For every formula \(\theta\), the specified substitution satisfies
+\(\theta[x_i/x_i]=\theta\) literally.  Prove this by induction on
+terms and formulas.  It is immediate at variables and commutes with the
+nonbinding constructors.  At a binder for \(x_i\), substitution stops;
+at another binder \(x_j\), \(j\ne i\) and
+\(x_j\notin\operatorname{Var}(x_i)\), so it commutes without renaming.
+These are all quantifier cases of the actual definition.
+
+For the replacements \(0\) and \(Sx_i\) in the induction constructor,
+no binder is renamed either.  The zero term has no variables.  The only
+variable of \(Sx_i\) is \(x_i\): a binder for it stops substitution,
+and every other binder is absent from that replacement term.  Thus the
+third, least-fresh-variable clause is never invoked in either of these
+two substitutions.  Structural induction gives
+\[
+\begin{aligned}
+ \FV(\theta[0/x_i])&=\FV(\theta)\setminus\{x_i\},\\
+ \FV(\theta[Sx_i/x_i])&=\FV(\theta),
+\end{aligned}
+\]
+including when \(x_i\) is absent freely or occurs only under another
+\(x_i\) binder.  In particular, substitution never changes a bound
+occurrence that the induction schema leaves untouched.
+
+Let \(\theta\) be coded by \(m\), and write \(\mathcal I(\theta,i)\)
+for the formula coded by \(J(m,i)\).  Direct decoding gives
+\[
+ \mathcal I(\theta,i)=
+ \bigl(\theta[0/x_i]\land
+       \forall x_i(\theta\to\theta[Sx_i/x_i])\bigr)
+         \to\forall x_i\theta.
+\]
+The preceding identities prove
+\[
+ \FV(\mathcal I(\theta,i))=\FV(\theta)\setminus\{x_i\},
+ \qquad
+ \operatorname{Var}(\mathcal I(\theta,i))
+                       =\operatorname{Var}(\theta)\cup\{x_i\}.
+\]
+For the second equality, the unchanged occurrences of \(\theta\)
+in the step antecedent and conclusion retain every old variable, the
+quantifiers add \(x_i\), and the substitution clauses add no other
+variable.  Canonical closure adds only free variables already in this
+set, so it leaves that all-occurrence set unchanged.  This last equality
+will be needed when replacing axiom leaves under \(\exists E\).
+
+\paragraph{Primitive recursion and exact recognition.}
+In a valid term or formula code, each variable index is below its variable
+constructor code, or below the argument-list code of the binder at which
+it occurs, and hence below the complete expression code.  This proves
+the bound used by the scan defining \(F(m)\).  Membership in the already
+computed finite free-variable list is primitive recursive.  Scanning
+\(j<m\) in order includes each free index once, so it gives exactly the
+increasing list claimed.  The invalid-input default is specified separately.
+
+The closure operation \(U\) uses one reversal and exactly the input list's
+length many constructor updates.  The two substitution operations used by
+\(J\) are the previously proved primitive recursive operations.  Filtering
+out \(i\), applying the fixed constructor expression for \(J\), and
+wrapping the result by \(U\) are therefore primitive recursive.  This
+proves totality and primitive recursiveness of \(\mathsf{IndAx}\) for
+all numerical inputs, including its zero value on a nonformula matrix.
+
+Every \(\mathsf{IndAx}(m,i)\) for a valid \(m\) is a sentence, by
+the free-variable calculation.  Its leading quantifiers are exactly the
+canonical parameter prefix; the next constructor is an implication.
+Its right child is \(N_{11}(i,m)\).  Thus stripping the maximal leading
+universal prefix recovers this implication, its right child recovers
+\(i,m\), and the recognizer reconstructs precisely the original code.
+It accepts every such induction axiom, including those with no parameters
+and those with an absent induction variable.  The explicit fixed-constant
+test accepts all seven arithmetic axioms.
+
+Conversely, an accepted input is either one of those constants, or the
+last test establishes literal equality with
+\(\mathsf{IndAx}(m,i)\) for the recovered formula code \(m\).
+There is no inference from semantic or alpha equivalence in this direction.
+The recovered \(m\) is a proper subtree of the input, and \(i\) is a
+proper constructor argument, so both are below the input code \(a\).
+The stripping loop has at most \(a\) updates; the free-index scan has
+bound \(m<a\).  The substitution traversals have the fixed primitive
+recursive bounds already supplied in the syntax construction.  All other
+tests are exact tags, arities and equalities.  Hence this is a primitive
+recursive recognizer, with no unbounded search for a matrix or an induction
+variable.  Numerical values produced during reconstruction may be large;
+primitive recursion imposes no separate bound on their magnitude.
+
+The two explicit left-side comparisons test the exact base and step
+instances.  They reject a step using another binder, a changed matrix
+copy, or a substitution that entered a shadowing binder.  Literal equality
+of the prefix with \(F(m)\setminus[i]\) rejects a reordered, repeated,
+omitted or extra parameter.  In particular a true or derivable noncanonical
+closure is not automatically an axiom.  This proves the recognition and
+sentence assertions of \cref{thm:p05-direct-pa-axioms}.
+
+\paragraph{Actual ND transport between closing conventions.}
+Let \(\eta\) be any formula, and let \(P,Q\) be two lists of variable
+indices such that \(U(P,\ulcorner\eta\urcorner)\) and
+\(U(Q,\ulcorner\eta\urcorner)\) code sentences.  From an assumption
+of the first sentence, apply \(\forall E\) to its outside binder using
+that very variable as the supplied term.  The literal identity
+\(\theta[x_j/x_j]=\theta\), proved above, removes that binder without
+changing the remaining matrix.  Repeat through \(P\) to obtain \(\eta\).
+Now apply \(\forall I\) in the reverse order of \(Q\), obtaining its
+closure with the prescribed outside-in order.  The only open assumption
+is the original closed sentence, so each \(\forall I\) side condition
+is satisfied.  This uses precisely \(\ell(P)+\ell(Q)\) quantifier
+inferences and one assumption leaf, including either empty list.
+Exchanging \(P,Q\) gives the reverse derivation.  Repeated or vacuous
+binders, if present in a source closure, are removed and introduced by
+exactly the same valid rules; they are not inserted into the canonical
+axiom recognizer.
+
+Apply this with \(\eta=\mathcal I(\theta,i)\).  The source induction
+axiom is the closure of exactly this formula for its given \(\theta\),
+induction variable and parameter list.  The canonical list is
+\(F(\ulcorner\theta\urcorner)\setminus[i]\).  Thus each source
+induction closure is derivable from the corresponding canonical axiom,
+and the canonical axiom is itself an allowed source induction instance.
+If a source fixes another permutation of exactly the free parameters,
+the reverse quantifier derivation instead produces the canonical closure
+from that fixed source representative.  The seven arithmetic axioms coincide
+with the fixed representatives declared in the body; changing only their
+two-variable closing order uses the same transport.
+
+To transport a whole derivation, replace only its surviving open axiom
+occurrences by these finite derivations of the same formulas.  All new
+axiom leaves may be unmarked, and the inserted derivations have no discharge
+rules.  Every old conclusion formula and rule parameter is retained.
+For source-to-canonical induction transport, the new canonical leaf has
+variable-occurrence set
+\(\operatorname{Var}(\theta)\cup\{x_i\}\), which is a subset of that
+of the source closure it replaces.  In the reverse direction choose the
+source closure of exactly the free parameter set; then the occurrence sets
+are equal.  The arithmetic-axiom closing-order changes have equal occurrence
+sets as well.  Every new axiom leaf is a sentence.
+
+These facts check every possible effect on an old inference.  Propositional,
+equality, substitution and alpha rules retain their exact premise and
+conclusion formulas.  An original surviving occurrence was not discharged
+by any rule on its path to the root, and new leaves are unmarked, so no
+new discharge occurs and no old nonvacuity witness is removed.  The
+\(\forall I\) test still holds because the new open leaves are closed.
+For \(\exists E\), the eigenvariable was absent from every old remaining
+open formula; it remains absent from the all-variable subset at each
+replacement leaf.  Its major formula and conclusion are unchanged.
+Hence its stronger all-occurrence freshness test also survives.  The
+quantifier rules inserted in the transport were verified in the preceding
+paragraph.  This gives actual ND derivation transports in both directions,
+not just a comparison of models or of individual axiom truth values.
+
+The transport is effective and uses bounded operations on the input
+derivation: parse each open axiom, recover its matrix and parameter prefix,
+and insert the displayed finite quantifier chain.  Induction on the original
+tree constructs the resulting tree.  If numerical records are desired,
+list its nodes in postorder and recompute the premise indices.  Closure
+chains have lengths bounded by the original formula-code and the recovered
+free-index scan bounds.  The original finite row list bounds the number of
+insertions.  More explicitly, for an input proof-record code \(p\), every
+row formula code is below \(p\), and a replacement has at most \(2p\)
+quantifier steps.  With \(n\) original rows, the resulting tree has at
+most \(n(1+2p)\) rows.  Compute transformed child blocks in the original
+postorder and concatenate them with shifted local premise indices.  Append
+a copy of their parent row whose premise list names those rebuilt child
+roots; its other fields are unchanged.  At an open axiom leaf use its
+explicit quantifier chain instead.  This is an \(n\)-step accumulated-row computation with
+the already defined primitive recursive list operations.  Malformed
+records or unrecognized source axiom shapes may return zero.  Thus a
+total primitive recursive implementation agrees with the transport on
+every valid input; no unbounded search for an ND proof is involved.
+
+This completes the derivability assertion of
+\cref{thm:p05-direct-pa-axioms}.  The proof is for the literal seven
+representatives fixed before coding and for the active induction scheme.
+It does not equate differently serialized closed formulas as numbers.
+\end{annexitem}
+
+\begin{annexitem}{annex:p5.standard-pa-checker}{thm:p05-standard-pa-numerical-proof}{Numerical PA proof checking and its source bridge}
+Use the recognition and transport just proved in
+\cref{annex:p5.direct-pa-axioms}.
+\paragraph{The direct proof checker is primitive recursive.}
+All outer tag, list-length and equality tests are primitive recursive.
+For \(n\) rows, the inherited procedure computes its row table by
+primitive recursion on \(j<n\).  The fixed rule-arity list, in tag order,
+is
+\[
+ 0,2,1,1,1,1,3,1,2,1,2,1,1,1,1,1,2,1,0,2.
+\]
+The parameter-list lengths, in the same order, are
+\[
+ 0,0,0,0,0,0,2,1,0,1,0,0,1,3,3,1,4,0,1,4.
+\]
+These lengths are supplemented by exactly the type, formula and side-condition
+tests in the existing twenty-rule definition.  In particular, they are not
+used alone as a substitute for those tests.  The parent counts are finite
+sums over the premise lists, each of arity at most three.  The open lists
+are computed by the existing concatenation and discharge operations.
+
+Once the tree checks pass, the final open list has at most \(n\) entries,
+all distinct assumption-leaf positions.  Apply the primitive recursive axiom
+recognizer to their formula codes and multiply its zero-one answers.
+An empty product has value one.  The remaining root and empty-field tests
+are primitive recursive.  On malformed input an error flag returns zero;
+each traversal still has its stated list or syntactic bound.  This proves
+primitive recursiveness of the complete \(\mathsf{StdProof}_{\PA}\)
+relation.  All rows are actual annotated trees, so no rule matrix or term
+witness is inferred by searching over arbitrary formulas.
+
+\paragraph{Both standard-model proof-meaning directions.}
+Suppose \(\mathsf{StdProof}_{\PA}(p,\ulcorner\sigma\urcorner)\) holds.
+The inherited row induction reconstructs exactly one finite ND tree with
+root \(\sigma\), and its computed open lists are exactly its surviving
+assumption occurrences.  Every one passes the direct axiom recognizer,
+so the proved recognition theorem puts it in \(\PA^{\rm d}\).
+This is a \(\PA^{\rm d}\)-derivation.  The preceding transport supplies
+the required source \(\PA\)-derivation of \(\sigma\).
+
+Conversely, take a source \(\PA\)-derivation of the sentence \(\sigma\).
+Transport its surviving axiom leaves to the canonical presentation as
+proved above.  Encode the resulting actual tree in postorder, retaining
+its inference witnesses, variable indices, formula/term parameters and
+discharge labels.  Every local check and parent count succeeds by the
+same row induction, and the final open list contains only canonical axiom
+leaves.  Put the record in \(N_{19}(N_{15}(R),0)\).  Its direct axiom
+checks and root check succeed, giving the required standard proof code.
+When the tree has no open assumptions, the axiom product is empty and the
+same construction works.  A one-row \(=I\) proof of \(0=0\) is a
+concrete instance of this case.  Extra certificate data are rejected even
+then, because the second outer field must be zero.
+
+\paragraph{Bridge to the c.e.-certificate convention.}
+Fix an index whose domain is exactly the codes of the chosen source
+\(\PA\) axiom set, as required for the earlier certified relation.
+A successful certified code supplies an ND derivation with source axiom
+leaves by the established Comp theorem and numerical proof equivalence.
+Apply the just-described leaf transport and use outer tag \(19\) and
+empty certificate field to obtain a successful direct code.  Where its
+open axioms already use canonical representatives, only the outer tag and
+certificate field need change; in general the closure chains must be
+inserted as well.
+
+Conversely, a successful direct code supplies the source derivation by
+the other transport.  Each of its finitely many open source axiom leaves
+lies in the domain of the fixed index.  The accepted bounded-verification
+theorem gives an accepting history for each such leaf.  In their computed
+open-list order, place these histories in \(W\) and use outer tag \(16\).
+This is a successful earlier certified proof code.  With no open leaves,
+take \(W=0\).  No bound on the search for those accepting histories is
+claimed for an arbitrary chosen index; finite existence is all this direction
+uses.  A compiler of certificates with PA-provable behavior is a separate
+internal task.
+
+Outer tags \(19\) and \(16\) are distinct under the injective constructor
+coding, so the two positive proof-code sorts are disjoint.  Their existential
+proof meanings agree as proved; their numerical predicates are not identical,
+and this bridge does not assert arithmetic equivalence between any selected
+representing formulas.
+
+\paragraph{What remains for a standard arithmetic formula.}
+The direct axiom recognizer fixes all numerical choices: matrix recovery,
+substitution, parameter ordering, constant axioms and rejected shapes.
+The direct proof procedure fixes the outer tag, empty certificate field,
+all twenty row tests and final leaf test.  To use the graph-formula theorem,
+one must now fix its finite description and the descriptions implementing
+these library operations, and verify the relevant invariants inside \(\PA\).
+The present proof establishes no PA theorem merely because one of these
+numerical operations is primitive recursive.  The standard-formula selection,
+internal modus ponens, and evidence-to-proof construction remain at that
+subsequent scope.
+\end{annexitem}

@@ -1,0 +1,385 @@
+%% parts/p12/sat-and-certificates.tex --- Part 12.1
+\chapter{SAT Search and Certificates}
+\label{sec:p12-sat-and-certificates}
+
+\noindent\emph{Reader note.}
+This chapter is a separately authored editorial correction and expansion after
+the exact inherited Automated Reasoning chapter.  Its residual-state DPLL
+presentation and annex proof retain their own labels and evidence standing;
+they neither replace nor alter the source's clause-set presentation, literal
+pseudocode, theorem, or inline proof.
+
+The canonical clause and CNF definitions are in
+Section~\ref{sec:prop-syntax-semantics-04}.  The exact inherited
+equisatisfiability distinction and worked Tseitin constraints are in
+Section~\ref{sec:automated-reasoning-02}.  The boundary used here is therefore
+explicit: a Tseitin output is an expanded-signature equisatisfiable clause set,
+never silently promoted to same-signature formula equivalence.
+
+\section{The displayed DPLL logical core}
+
+\begin{hbdefinition}{def:p12-dpll-state}{Residual state and unit propagation}
+Let \(F\) be a finite set of finite propositional clauses.  In this setting,
+\(\operatorname{Var}(F)\defeq
+\bigcup_{C\in F}\operatorname{Var}(C)\); keep this original variable set
+fixed throughout the search.  A \emph{residual state} is a
+pair \((G,u)\), where \(u:\operatorname{Var}(F)\rightharpoonup\{0,1\}\) is a
+consistent partial truth assignment.  For each original clause not already
+satisfied by \(u\), its \emph{residual} is obtained by deleting exactly the
+literals that \(u\) makes false; \(G\) is the set of all and only those
+residuals.  A \emph{unit-propagation step} selects
+a singleton clause \(\{L\}\), extends \(u\) so that \(L\) is true, deletes
+clauses containing \(L\), and deletes the complementary literal from every
+remaining clause.  The residual-state name is necessary to distinguish the
+changing search object from the immutable input \(F\); it is metalinguistic,
+not a new clause syntax, and the distinction is used in the correctness
+statement and annex proof.  Pure-literal elimination is a different
+satisfiability-preserving optimization: if an unassigned variable occurs in
+the finite residual clause set with only one polarity, assign it the value that
+satisfies those occurrences and delete every clause containing them.  It is an
+optional SAT simplification, not unit propagation, because its assignment is
+licensed by one-sided occurrence rather than forced by a singleton clause.
+The distinction is used in Theorem~\ref{thm:p12-dpll-correctness}, whose exact
+displayed core excludes pure-literal elimination.
+\index{residual state}\index{unit propagation}\index{pure-literal elimination}
+\end{hbdefinition}
+
+\begin{hbmethod}{def:p12-dpll}{DPLL logical core}
+\index{DPLL}
+The identifier \(\mathsf{DPLL}\) is needed for this exact finite-clause search
+method; it names only the unit-propagation and binary-branching operations
+displayed here.  Starting from
+\((F,\varnothing)\), repeatedly unit-propagate.  If no residual clauses remain,
+extend \(u\) arbitrarily to every still-unassigned member of
+\(\operatorname{Var}(F)\) and return that total valuation.  If the empty clause
+appears, report failure of the current branch.  Otherwise choose a previously
+unassigned original variable \(p\), search the state obtained by setting
+\(p\) true, and, if that branch fails, search the state obtained by setting
+\(p\) false.  Thus \(\mathsf{DPLL}\) stands as an algorithmic method over the
+Part-2 clause semantics, not as an inference calculus; its exact distinction
+from the later conflict-analysis apparatus is used in
+Table~\ref{tab:p12-dpll-cdcl}.
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p12-dpll-correctness}{proved=annex:p12.sat.1}{Correctness of the displayed DPLL logical core}
+For every finite clause set \(F\), Method~\ref{def:p12-dpll} terminates.  It
+returns a total valuation of the fixed set \(\operatorname{Var}(F)\) satisfying
+\(F\) if and only if \(F\) is satisfiable, and it reports failure at the root if
+and only if \(F\) is unsatisfiable.  This status covers unit propagation and
+binary branching exactly as displayed; it does not cover pure-literal
+elimination or any added search, certificate, or implementation mechanism.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p12-dpll-trace}{A unit-propagation refutation trace}
+For
+\[
+ F=\bigl\{\{p,q\},\{\neg p,r\},\{\neg q,r\},\{\neg r\}\bigr\},
+\]
+the first unit clause fixes \(r\) false.  The second and third clauses become
+the unit clauses \(\{\neg p\}\) and \(\{\neg q\}\).  Propagating them fixes
+\(p\) and \(q\) false, turning the first clause into the empty clause.  The
+exhausted root search therefore reports unsatisfiable.  This trace checks this
+one finite instance; it is not a completeness proof for DPLL.
+\end{hbexample}
+
+\section{Certificates and practical status}
+
+\begin{hbdefinition}{def:p12-sat-certificate-boundary}{SAT and UNSAT evidence}
+A \emph{SAT certificate} for \(F\) is a total valuation whose direct clause
+check accepts.  An \emph{UNSAT certificate} is a finite refutation log in a
+declared proof-logging format accepted by its independently specified checker.  These
+names are needed because a solver's response token, a model, a checked
+refutation, and trust in solver code establish different facts.  They are
+metalinguistic evidence objects rather than new semantic truth values, and the
+distinction controls the solver-audit method in
+  Chapter~\ref{ch:formal-practice}.
+\index{SAT certificate}\index{UNSAT certificate}\index{proof logging}
+\end{hbdefinition}
+
+Under the fixed effective encoding used in Parts~2 and~4,
+\(\mathsf{SAT}\) is NP-complete under polynomial-time many-one reductions
+(Theorems~\ref{thm:p02-sat-np-complete} and~\ref{thm:p04-cook-levin};
+\cite{Cook1971}).  This does not say that every instance is hard, that DPLL is
+exponential on every input, or that \(\mathsf P\ne\mathsf{NP}\).  A
+polynomial-time algorithm for all SAT instances would prove
+\(\mathsf P=\mathsf{NP}\); success on structured benchmarks proves neither
+direction.
+
+Horn-SAT and 2-SAT remain homed at Theorems~\ref{thm:p02-horn-sat} and
+\ref{thm:p02-two-sat}; XOR-SAT is Theorem~\ref{thm:p02-xor-sat}.  The master
+algorithm-and-complexity comparison is Table~\ref{tab:p02-tractable-sat}, not
+a duplicate P12 table.  A \emph{random \(k\)-SAT
+distribution} fixes a variable count, a probability law for generating
+\(k\)-literal clauses, and a clause-density parameter; it stands as a benchmark
+distribution, not a worst-case complexity class.  The name is needed to keep a
+distributional phase-transition claim distinct from a worst-case complexity
+claim, and is used here only to route the empirical literature
+\cite{MitchellSelmanLevesque1992}.
+\index{random k-SAT distribution}
+
+\section{Decision diagrams and related problems}
+
+\begin{hbdefinition}{def:p12-robdd}{Reduced ordered binary decision diagram}
+Fix a finite variable set \(X\), a Boolean function
+\(f:\{0,1\}^{X}\to\{0,1\}\), and a total order on \(X\).  An \emph{ordered
+binary decision diagram} is a rooted acyclic decision graph in which variable
+labels strictly increase along every root-to-terminal path in that order, so
+no variable is tested twice on one path.  Each nonterminal node is labelled by
+a variable and has exactly two ordered successors, its low child and high
+child.  Given a total assignment, evaluation follows the low child when the
+node's variable has value \(0\) and the high child when it has value \(1\).
+The graph represents \(f\) exactly when, for every total assignment to \(X\),
+the reached terminal's label equals the value of \(f\) on that assignment.
+Terminal nodes are labelled by truth values, there is at most one
+terminal carrying each truth-value label, and every node of the diagram is
+reachable from its root.  A constant function is represented by the single
+corresponding terminal root.
+It is \emph{reduced} when no node has identical children
+and no two distinct nodes have the same variable and the same ordered pair of
+children.  The fixed order is necessary: without it the representation is not
+canonical, and different orders can have exponentially different graph sizes.
+Such a reduced ordered binary decision diagram is abbreviated \emph{ROBDD}.
+The object is a data representation of a Boolean function, not a new logic;
+its canonicity is used below, and its symbolic-model-checking application is
+treated in Section~\ref{sec:p09-model-checking}.
+\index{binary decision diagram}\index{reduced ordered binary decision diagram}
+\index{ROBDD|see{reduced ordered binary decision diagram}}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-robdd-canonicity}{cited=Bryant1986}{ROBDD canonicity}
+For every finite variable set \(X\), every total order on \(X\), and every
+function \(f:\{0,1\}^{X}\to\{0,1\}\), there is, up to rooted labelled graph
+isomorphism, exactly one reduced ordered binary decision diagram representing
+\(f\).
+\end{hbtheorem}
+
+The quantified Boolean formula problem is already calibrated by
+Theorem~\ref{thm:p04-tqbf-pspace}; the result is PSPACE-completeness for the
+fixed encoding, not a statement about every bounded-alternation fragment.
+
+\begin{hbdefinition}{def:p12-counting-and-maxsat}{Counting SAT and MaxSAT}
+For a formula whose finite variable set is part of the input,
+\(\#\mathsf{SAT}\) is the function returning the number of satisfying total
+valuations.  It is a counting problem, not a decision language unless a
+threshold question is added.  The class \(\#\mathsf P\) consists of functions
+that return, for each input, the number of accepting branches of a
+polynomial-time nondeterministic Turing machine.  This function-class standing
+is needed to state the counting result and is not the decision class
+\(\mathsf{NP}\).  For an unweighted finite clause multiset,
+\(\mathsf{MaxSAT}\) asks for a valuation maximizing the number of satisfied
+clauses; the threshold decision version asks whether at least \(k\) clauses
+can be satisfied.  Weighted and partial variants must be declared separately.
+For counting problems \(f\) and \(g\), a polynomial-time map \(h\) is a
+\emph{parsimonious reduction} from \(f\) to \(g\) exactly when
+\(f(x)=g(h(x))\) for every input \(x\).  It is a function-problem reduction
+that preserves the exact witness count, not merely yes/no membership, and is
+the reduction notion used by the counting theorem below.
+These names are necessary to distinguish counting and optimization from
+ordinary satisfiability, stand respectively for a function problem and an
+optimization problem, and are used in the complexity statement below.
+\index{counting SAT@\(\#\mathsf{SAT}\)}
+\index{sharp-P class@\(\#\mathsf P\) class}
+\index{parsimonious reduction}
+\index{MaxSAT}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-counting-sat-status}{cited=Valiant1979Enumeration}{Counting-SAT complexity}
+\(\#\mathsf{SAT}\) is complete for \(\#\mathsf P\) under polynomial-time
+parsimonious reductions.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p12-maxsat-status}{cited=LiManya2009}{MaxSAT decision boundary}
+The unweighted MaxSAT threshold problem is NP-complete:
+membership uses a valuation certificate, and ordinary SAT is the special case
+whose threshold is the total number of clauses.  The optimization variants
+and their algorithms require their own encoding and approximation conventions
+before a complexity or performance claim is made.
+\end{hbtheorem}
+
+\section{What the conflict-analysis apparatus does and does not supply}
+\markright{59.4.\ CONFLICT-ANALYSIS APPARATUS}
+
+\begin{hbdefinition}{def:p12-cdcl-apparatus}{Conflict-analysis vocabulary}
+The name \emph{conflict-driven clause learning} (CDCL) is needed for the search
+family that augments DPLL with learned entailed clauses and nonchronological
+backtracking; it is not an alias for Method~\ref{def:p12-dpll}.  In the
+apparatus below, an \emph{implication graph} has one node for each assigned
+literal, annotated by decision level; an edge records use of an antecedent
+clause in forcing an implied assignment; and a conflict node records a
+falsified clause.  Decision level zero contains assignments made by initial
+unit propagation before any branch decision; for \(k\geq 1\), level \(k\)
+contains the \(k\)-th active branch decision and every assignment it propagates
+before the next decision or a backtrack.  A \emph{unique implication point}
+(UIP) is a current-level
+node through which every path from the current decision to the conflict passes.
+The \emph{first UIP} is the UIP closest to the conflict.  Resolving the
+conflict explanation to a first-UIP clause yields an entailed
+learned clause.  For a literal in that clause, its level means the decision
+level of the currently assigned complementary literal that falsifies it.  A
+learned clause is \emph{asserting} when exactly one of its literals is
+falsified at the current decision level; that literal is the
+\emph{asserting literal}, and the remaining clause literals are
+\emph{nonasserting}.  The \emph{backjump level} is the greatest level among
+the assigned complements of the nonasserting literals, or zero when there is
+no such literal.  Backtracking to that level leaves the asserting literal
+unassigned while the others remain false, so the learned clause is unit.
+These clause roles are needed to determine this nonchronological return and
+are not new object-language literal forms.  Watched literals are a
+propagation data structure: two positions in a nonunit clause are monitored so
+that the clause need not be revisited until a watched literal becomes false.
+A restart discards the current partial assignment while retaining the input
+and the selected learned clauses.  For a clause \(C\), reverse unit propagation
+holds when unit propagation from the current database together with the
+complements of every literal of \(C\) reaches the empty clause.  A clause has
+the resolution-asymmetric-tautology property on a pivot \(L\in C\) when, for
+every current clause containing \(\neg L\), the corresponding resolvent passes
+that reverse-unit-propagation test.  A DRAT log is a sequence of clause
+additions satisfying one of those checks and unrestricted deletions, ending
+with addition of the empty clause; its independent checker validates the
+refutation log, not the solver implementation.  These are metalinguistic
+implementation and evidence roles, not new logical rules.  Their exact
+distinctions are needed by
+Table~\ref{tab:p12-dpll-cdcl} and Figure~\ref{fig:p12-cdcl-conflict}.
+\index{conflict-driven clause learning}\index{implication graph}
+\index{decision level}\index{unique implication point}\index{first UIP}
+\index{asserting clause}\index{asserting literal}\index{backjump level}%
+\index{nonasserting literal}\index{watched literal}\index{restart}
+\index{reverse unit propagation}
+\index{resolution-asymmetric tautology}
+\index{DRAT}
+\end{hbdefinition}
+
+\begin{longtable}{@{}p{.16\textwidth}p{.34\textwidth}p{.40\textwidth}@{}}
+\caption{DPLL and CDCL feature boundary.}
+\label{tab:p12-dpll-cdcl}\\
+\toprule
+Feature & Displayed DPLL core & CDCL family \\ \midrule
+\endfirsthead
+\toprule
+Feature & Displayed DPLL core & CDCL family \\ \midrule
+\endhead
+Propagation & Repeated unit propagation & Unit propagation, commonly
+implemented with watched literals \\ \addlinespace
+Branch failure & Chronological return to the most recent open branch &
+Conflict analysis learns an entailed clause and may backjump
+nonchronologically \\ \addlinespace
+Learning & None & Typically first-UIP or another declared conflict-analysis
+scheme; the scheme and deletion policy matter \\ \addlinespace
+Restarts & None & May restart the assignment search while retaining selected
+learned clauses; this changes search, not clause entailment \\ \addlinespace
+Certificates & A returned valuation is directly checkable; the displayed
+failure trace is an internal search result & DRAT or another declared proof log
+can support independent UNSAT checking; a log does not verify the solver code \\
+\addlinespace
+Evidence here & Theorem~\ref{thm:p12-dpll-correctness}, proved in
+Annex~\ref{annex:p12.sat.1} & Definitions and apparatus only \\
+\bottomrule
+\end{longtable}
+The learning and propagation columns are sourced to
+\cite{MarquesSilvaSakallah1999,MoskewiczEtAl2001} and
+\cite{EenSorensson2003,MarquesSilvaLynceMalik2009}; the proof-log boundary is
+sourced to \cite{WetzlerHeuleHunt2014}.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  >=Stealth,
+  decision/.style={draw,rounded corners,fill=black!8,minimum width=1.15cm},
+  implied/.style={draw,circle,minimum size=.72cm},
+  conflict/.style={draw,rectangle,rounded corners,fill=black!15,minimum width=.9cm},
+  every edge/.style={draw,->}
+]
+  \node[decision] (a) at (0,1.8) {\(a\;[1]\)};
+  \node[implied] (b) at (2,1.8) {\(b\;[1]\)};
+  \node[decision] (c) at (0,0) {\(c\;[2]\)};
+  \node[implied] (d) at (2,0) {\(d\;[2]\)};
+  \node[implied] (e) at (4,1.0) {\(e\;[2]\)};
+  \node[implied] (f) at (4,-1.0) {\(f\;[2]\)};
+  \node[implied] (g) at (6,1.0) {\(g\;[2]\)};
+  \node[conflict] (x) at (7.6,0) {\(\bot\)};
+  \path (a) edge node[above,sloped]{\scriptsize \(C_1\)} (b);
+  \path (c) edge node[below,sloped]{\scriptsize \(C_2\)} (d);
+  \path (b) edge node[above,sloped]{\scriptsize \(C_3\)} (e);
+  \path (d) edge node[below,sloped]{\scriptsize \(C_3\)} (e);
+  \path (d) edge node[below,sloped]{\scriptsize \(C_4\)} (f);
+  \path (e) edge node[above,sloped]{\scriptsize \(C_5\)} (g);
+  \path (f) edge node[below,sloped]{\scriptsize \(C_6\)} (x);
+  \path (g) edge node[above,sloped]{\scriptsize \(C_6\)} (x);
+\end{tikzpicture}
+\caption{A conflict graph with learned clause and backjump.
+The clauses are \(C_1=\neg a\lor b\), \(C_2=\neg c\lor d\),
+\(C_3=\neg b\lor\neg d\lor e\), \(C_4=\neg d\lor f\),
+\(C_5=\neg e\lor g\), and \(C_6=\neg f\lor\neg g\).
+Square nodes are decisions, circles are implications, the filled box is the
+conflict, bracketed numerals are
+decision levels, and edge labels name antecedent clauses.  The node \(d\) is
+the first UIP: every level-2 path from decision \(c\) to the conflict passes
+through it.  Resolving the conflict explanation yields the entailed clause
+\(\neg b\lor\neg d\); its nonasserting literal has level 1, so the search
+backjumps to level 1 and the learned clause asserts \(\neg d\).}
+\label{fig:p12-cdcl-conflict}
+\end{figure}
+
+\begin{hbdefinition}{def:p12-cdcl-transition}{CDCL transition state}
+A CDCL state is \((D,\tau,\rho,k)\), where \(D\) is the input clause set plus
+retained learned clauses, \(\tau\) is a consistent trail of signed assignments
+partitioned into decision levels, \(\rho\) maps each propagated literal to its
+antecedent clause, and \(k\) is the current level. The transitions are:
+\begin{itemize}
+  \item \emph{propagate}: append a literal forced by a unit clause and record
+        that clause in \(\rho\);
+  \item \emph{decide}: append an unassigned literal, incrementing \(k\);
+  \item \emph{analyze}: when a clause is falsified, resolve it with antecedent
+        clauses until an asserting entailed clause \(C\) is obtained;
+  \item \emph{learn/backjump}: add \(C\), erase trail entries above its
+        backjump level, and propagate its asserting literal;
+  \item \emph{restart}: erase the nonzero trail while retaining the selected
+        learned database;
+  \item \emph{forget}: delete a learned clause not currently serving as a
+        reason, subject to the declared certificate policy.
+\end{itemize}
+The state name is necessary because the database, trail, reasons, and level
+have different invariants. It stands as an operational transition system,
+differs from the DPLL method by learned clauses and nonchronological return,
+and is used in the correctness and termination boundaries
+\cite{MarquesSilvaSakallah1999,EenSorensson2003}.
+\index{CDCL!transition system}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p12-cdcl-invariant}{cited=MarquesSilvaLynceMalik2009}{Learned-clause and backjump invariant}
+At every transition reachable from the initial state, each learned clause in
+\(D\) is entailed by the input clause set, each propagated trail literal is
+justified by its recorded antecedent under the preceding trail, and a
+first-UIP learned clause is asserting after the prescribed backjump. Hence
+learning, backjumping, restarting, and permitted forgetting preserve the input
+models; reaching the empty clause proves unsatisfiability, while a total
+conflict-free trail satisfies the input.
+\end{hbtheorem}
+
+\noindent\emph{Proof.}
+Propagation adds only a literal whose antecedent has every other literal false.
+Decisions change the candidate assignment but not \(D\). Conflict analysis is
+a sequence of resolution steps, so its learned clause is entailed by \(D\) and
+therefore by the input, inductively. First-UIP analysis leaves exactly one
+current-level literal; erasing higher levels leaves all other learned-clause
+literals false and that literal unassigned, so unit propagation asserts it.
+Restarts only erase assignments. Forgetting an entailed learned clause enlarges
+the search state but does not change the input models. The terminal cases then
+have the stated meanings.
+
+If decisions are fair, forgetting is disabled, restarts do not prevent
+progress, and every conflict learns a previously absent non-tautological
+clause, only finitely many clauses over the fixed variable set can be learned,
+so search terminates. Production CDCL permits deletion, restarts, and heuristic
+choices and therefore needs a separate liveness policy for a termination
+claim. VSIDS, phase saving, clause activity, and restart schedules alter search
+order only; they carry no soundness premise. A DRAT/LRAT-style checker validates
+the emitted refutation independently, and a model checker validates a SAT
+assignment \cite{WetzlerHeuleHunt2014}.
+
+The omega-automata/LTL procedure formerly owed here is now supplied in
+Section~\ref{sec:p09-model-checking}, including acceptance conditions,
+LTL-to-B\"uchi translation, and finite-state fixed-point algorithms. Symbolic
+BDD model checking and its canonicity/order boundary are supplied there as
+well. The ROBDD definition in this chapter remains the representation-level
+interface and does not duplicate those Part-IX algorithms.

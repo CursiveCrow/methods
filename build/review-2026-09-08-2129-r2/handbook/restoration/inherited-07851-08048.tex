@@ -1,0 +1,261 @@
+\chapter{Universal Computation, Reductions, and Fixed Points}
+\label{ch:universal-reductions}
+
+\section{An effective numbering of programs}
+\label{sec:universal-reductions-01}
+
+Normalize every machine description as follows.  A description is
+\emph{normalized} iff its tape symbols are the numbers
+\(0,\ldots,\abs{\mathcal A_{\mathrm{tape}}}-1\) with the designated
+assignments \(\sqcup\mapsto0\), digit \(0\mapsto1\), digit \(1\mapsto2\),
+and its states are the numbers \(0,\ldots,\abs{Q}-1\) with the designated
+assignments \(q_0\mapsto0\), \(q_{\mathrm{acc}}\mapsto1\),
+\(q_{\mathrm{rej}}\mapsto2\); the remaining numbers are assigned
+arbitrarily, and the row list is the lexicographic listing, by numbered key
+\((q,a)\), of the full transition table over its non-halting domain.  (A
+clause fixing an ``order of first appearance'' instead would be circular:
+the lexicographic row order presupposes the numbering of states and
+symbols.  Without the designated assignments, ``valid code'' below would
+not be well defined.)  The following serialization fixes the entire
+description, including its alphabets, before assigning it an index.
+
+\begin{definition}[Serialization of a normalized numerical machine]
+\label{def:p04-program-serialization}
+Let \(n\geq3\) be the number of states and \(b\geq3\) the number of
+tape symbols.  Encode the input alphabet by the natural number
+\[
+ A=\sum_{a=0}^{b-1}\eta_a2^a,\qquad
+ \eta_a\in\{0,1\},\quad \eta_0=0,\quad\eta_1=\eta_2=1,
+\]
+where \(\eta_a=1\) iff symbol number \(a\) belongs to the input
+alphabet.  This is a fixed-width bitmap: digits above position \(b-1\)
+must be zero.  The powers in this numerical coding definition are
+metatheoretic operations on natural numbers; no arithmetic-language
+exponentiation symbol is introduced.
+
+There are \(m=(n-2)b\) nonhalting state/symbol keys.  Order them
+lexicographically, with states \(0,3,4,\ldots,n-1\) and symbols
+\(0,\ldots,b-1\).  For the row
+\(\delta(q,a)=(q',a',d)\), use the code
+\[
+ \rho=\operatorname{code}_5(q,a,q',a',\varepsilon),\qquad
+ \varepsilon=0\text{ for }d=L,\quad
+ \varepsilon=1\text{ for }d=R.
+\]
+Thus each row has exactly five fields, with
+\(q,q'<n\), \(a,a'<b\), \(q\notin\{1,2\}\), and
+\(\varepsilon\in\{0,1\}\).  Write the ordered row codes as
+\(\rho_0,\ldots,\rho_{m-1}\).  Each allowed key occurs exactly
+once, and no row has a halting source state.
+
+The description tuple and its index are exactly
+\[
+ \bar u=(n,b,A,\rho_0,\ldots,\rho_{m-1}),\qquad
+ k=3+m,\qquad
+ e=\operatorname{pair}_{\N}
+       \bigl(k,\operatorname{code}_k(\bar u)\bigr).
+\]
+The tuple code is the previously defined right-nested Cantor code, without
+an additional terminal marker.  A number is a valid program code iff
+decoding gives precisely this length, bitmap and full ordered row list,
+with all the displayed ranges and designated-slot conditions satisfied.
+\index{program!serialization}\index{machine code!validity}
+\end{definition}
+
+Decoding is unique and effective.  Invert the outer pairing to obtain
+\((k,c_0)\), then decode the right-nested tuple of the specified length:
+for \(k>1\), successively invert
+\(c_i=\operatorname{pair}_{\N}(u_i,c_{i+1})\) for \(i<k-1\),
+and put \(u_{k-1}=c_{k-1}\); the one-entry code is the entry itself,
+and a zero-entry tuple has code \(0\).  Tuples of length less than
+\(6\) are invalid machine descriptions because \(n,b\geq3\)
+forces \(k=3+(n-2)b\geq6\).  For the remaining tuples, read the
+first three fields as \(n,b,A\), check the required length and bitmap
+by finite binary division, decode each row by four pairing inversions,
+and check its range and its place in the full lexicographic key list.
+Every loop is finite; the effective inverse of the pairing map and
+finite integer arithmetic therefore decide validity.  Conversely, every
+normalized numerical machine supplies exactly such metadata and rows,
+and decoding its code recovers its full transition function and input
+alphabet.  This verifies the encoding/decoding interface used below.
+
+No canonical machine-to-code map is fixed: the permitted renamings of
+nondesignated states and symbols can give different indices, and indices
+need not be unique.  A natural number that is not the code of a
+valid normalized numerical-machine description denotes a machine that
+diverges on every input.  Such a description must in particular satisfy
+\(\{0,1\}\subseteq\mathcal A_{\mathrm{in}}\), read at the designated digit
+numbers \(1,2\) together with the input and output conventions fixed
+above; a normalized description whose input alphabet omits either binary
+symbol is treated as invalid by this numbering.  In a valid code the three
+designated states are pairwise distinct; a machine whose start state is
+halting, which the machine definition permits by requiring only
+\(q_{\mathrm{acc}}\neq q_{\mathrm{rej}}\), is captured up to behavior by
+the surrogate-start step in the proof of \cref{thm:enumeration} below.
+For a valid code \(e\), define
+\(\varphi_e(x)\) to be the numerical output when that machine accepts with a
+valid numerical output, and leave \(\varphi_e(x)\) undefined when it rejects,
+diverges, or halts without a valid numerical output.  A fixed wrapper simulates the decoded
+machine, copies a canonical numerical output after a valid accepting halt, and
+enters an infinite loop after either rejection or an accepting halt without a
+valid numerical output.
+
+The number \(e\) is an \emph{index} for \(\varphi_e\).  Different indices may
+compute the same partial function.  For a finite tuple \(\bar x\), the notation
+\(\varphi_e(\bar x)\), with \(\bar x\in\N^k\), denotes the behavior of indexed
+program \(e\) on the input word
+\(\operatorname{bin}(\operatorname{code}_k(\bar x))\).  This is
+arity-dependent application notation for the one fixed program numbering, not
+a second numbering and not a second application of the unary tuple code.
+
+For expressions denoting possibly undefined values, \(a\simeq b\) means that
+both sides are undefined or both are defined and equal.  For partial
+functions \(f,g:\N\rightharpoonup\N\), the notation \(f\simeq g\)
+abbreviates: \(f(x)\simeq g(x)\) for every \(x\in\N\).
+
+\begin{lemma}[Renaming invariance]
+\label{lem:renaming-invariance}
+Let \(\mathcal T\) be a Turing machine used to compute a numerical function
+and let \(\iota=(\iota_Q,\iota_A)\) bijectively rename its states and tape
+symbols, preserving the roles of
+\(q_0,q_{\mathrm{acc}},q_{\mathrm{rej}}\) and of \(\sqcup\) and the digits
+\(0,1\).  Write \(\mathcal T^{\iota}\) for the machine obtained by applying
+\(\iota\) to every component of the machine tuple, and \(C^{\iota}\) for the
+corresponding renaming of a configuration \(C\).  Then
+\(C\longrightarrow_{\mathcal T}C'\) iff
+\(C^{\iota}\longrightarrow_{\mathcal T^{\iota}}(C')^{\iota}\).  Hence, on
+every pair of input words corresponding letter by letter under \(\iota_A\),
+the machines \(\mathcal T\) and \(\mathcal T^{\iota}\) accept, reject, or
+diverge together, with corresponding tapes at every step.
+\textit{Status: complete proof.}
+\end{lemma}
+
+\begin{proof}
+For the one-step claim, read the configuration definition on both sides:
+\(\delta(q,T(h))=(q',a,d)\) holds in \(\mathcal T\) iff
+\(\delta^{\iota}(\iota_Q(q),\iota_A(T(h)))
+=(\iota_Q(q'),\iota_A(a),d)\) holds in \(\mathcal T^{\iota}\), since
+\(\delta^{\iota}\) is by construction the \(\iota\)-conjugate of \(\delta\);
+the rewritten cell and the moved head then correspond position by position.
+The claim for whole computations follows by induction on the number of
+steps.  Initial configurations correspond because \(\iota_A\) preserves
+\(\sqcup\), and halting, acceptance, and rejection correspond because
+\(\iota_Q\) preserves the designated states.  Valid numerical outputs
+correspond because \(\iota_A\) preserves the digits.
+\end{proof}
+
+\begin{theorem}[Adequacy of the numbering: enumeration theorem]
+\label{thm:enumeration}
+\begin{enumerate}[label=(\alph*)]
+\item Every \(\varphi_e\) is partial computable.
+\item For every \(k\geq1\) and every partial computable
+      \(f:\N^k\rightharpoonup\N\) there is an index \(e\) with
+      \(\varphi_e(\bar x)\simeq f(\bar x)\) for all \(\bar x\in\N^k\),
+      under the arity-\(k\) application convention fixed above.
+\end{enumerate}
+\textit{Status: complete proof.}
+\end{theorem}
+
+\begin{proof}
+(a) For a valid code \(e\), the fixed wrapper described in the numbering
+paragraph simulates the decoded machine, accepts with the canonical output
+word exactly when that machine accepts with a valid numerical output, and
+otherwise runs forever; for an invalid code, \(\varphi_e\) is the
+everywhere-undefined function, which a machine with an immediate infinite
+loop computes.  In both cases \(\varphi_e\) satisfies
+\cref{def:partial-computable}.
+
+(b) Let \(\mathcal T\) witness that \(f\) is partial computable in the sense
+of \cref{def:partial-computable}.  First,
+\(\{0,1\}\subseteq\mathcal A_{\mathrm{in}}\) holds automatically:
+\(\operatorname{code}_1\) is the identity and, for \(k\geq2\),
+\(\operatorname{code}_k\) is built from the pairing bijection, so
+\(\operatorname{code}_k\) is surjective for every \(k\geq1\) and the input
+words \(\operatorname{bin}(\operatorname{code}_k(\bar x))\) exhaust all
+binary numerals.  An initial configuration exists only for a word over
+\(\mathcal A_{\mathrm{in}}\), and \cref{def:partial-computable} demands an
+accepting or infinite computation of \(\mathcal T\) on each of these words;
+since some required numeral contains both digits, both digits lie in
+\(\mathcal A_{\mathrm{in}}\), and no alphabet extension is needed.
+
+Second, since the machine definition requires only
+\(q_{\mathrm{acc}}\neq q_{\mathrm{rej}}\), the start state of
+\(\mathcal T\) may coincide with a halting state.  In that case replace it
+by a fresh start state \(q_0'\) with \(\delta(q_0',a)=(q_0,a,R)\) for every
+tape symbol \(a\): the one extra step leaves the tape unchanged, and the
+output convention ignores the final head position and the cells outside the
+output prefix, so the accepted outputs and the divergence behavior are
+unchanged.  After this step the three designated states are pairwise
+distinct, as are the three designated symbols \(\sqcup,0,1\).
+
+Now choose any bijective renaming \(\iota\) of states and tape symbols onto
+the designated-slot numbering that preserves the six designated roles, and
+let \(\mathcal T^*\) be the resulting normalized machine;
+\cref{lem:renaming-invariance} makes \(\mathcal T^*\) behave exactly as
+\(\mathcal T\) on corresponding inputs, and the binary numerals correspond
+to themselves read at the designated digit numbers \(1,2\).  List the rows
+of \(\mathcal T^*\) lexicographically by numbered key \((q,a)\); the row
+list is the full graph of the transition function, which is total on
+non-halting pairs by the machine definition.  Encode the resulting
+description tuple of Definition~\ref{def:p04-program-serialization},
+including its state count, tape-alphabet size and input-alphabet bitmap,
+with length \(k'\), as
+\(\operatorname{pair}_{\N}(k',\operatorname{code}_{k'}(\bar n))\), obtaining
+a number \(e\).  This \(e\) is a valid code by construction.  On each input
+word \(\operatorname{bin}(\operatorname{code}_k(\bar x))\), the decoded
+machine \(\mathcal T^*\) accepts with output word
+\(\operatorname{bin}(f(\bar x))\) when \(f(\bar x)\) is defined and runs
+forever when \(f(\bar x)\) is undefined, so
+\(\varphi_e(\bar x)\simeq f(\bar x)\) for all \(\bar x\in\N^k\).
+\end{proof}
+
+Kleene's treatment of enumeration and normal form over standard numberings
+\cite{Kleene1952} is parallel reading; the in-document proof is primary
+because this numbering is bespoke: its normalization, its validity
+constraint \(\{0,1\}\subseteq\mathcal A_{\mathrm{in}}\), and its wrapper are
+fixed here rather than taken from the cited source.
+
+\begin{theorem}[Universal computation]
+\label{thm:universal-computation}
+There is a partial computable function \(U(e,x)\) such that
+\[
+  U(e,x)\simeq\varphi_e(x)
+\]
+for all \(e,x\in\N\).
+\textit{Status: proof sketch.}
+\end{theorem}
+
+\begin{proofplan}
+Decode \(e\) as a machine description.  If decoding fails, diverge.  Otherwise
+store an encoded configuration and repeatedly apply the machine's finite
+ transition table.  Return an output only when the simulated machine reaches
+its accepting state with a valid numerical output; copy that output into
+canonical form.  If it rejects or accepts without a valid numerical output,
+enter an
+ infinite loop.  Each simulation step is effective, and every finite computation is
+eventually reproduced.  Turing's original universal-machine construction is
+the historical source \cite{Turing1937}.
+\end{proofplan}
+
+\begin{theorem}[Parameter theorem]
+\label{thm:parameter}
+For every \(m,n\geq1\), there is a total computable function
+\(\mathsf{par}_n^m:\N^{m+1}\to\N\) such that, for every index \(e\), every \(\bar a\in\N^m\), and every
+\(\bar x\in\N^n\),
+\[
+  \varphi_{\mathsf{par}_n^m(e,\bar a)}(\bar x)
+  \simeq \varphi_e(\bar a,\bar x).
+\]
+\textit{Status: cited theorem.}
+\end{theorem}
+
+From \(e\) and the constants \(\bar a\), construct a normalized transition
+table for a machine that decodes its runtime input as the \(n\)-tuple
+\(\bar x\), computes
+\(\operatorname{code}_{m+n}(\bar a,\bar x)\), writes the binary word for that code,
+and then simulates program \(e\).  The established tuple encoding and decoding
+maps, state renumbering, and finite table concatenation are computable, so the
+map from \((e,\bar a)\) to the new index is total and computable.  The omitted
+verification writes the compiler's transition table and proves its simulation
+invariant.  See \cite{Kleene1952} for a complete proof of the parameter
+theorem for effective program numberings.

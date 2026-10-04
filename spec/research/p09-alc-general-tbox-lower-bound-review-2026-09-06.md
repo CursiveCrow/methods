@@ -1,0 +1,47 @@
+# Independent review of the ALC general-TBox lower bound
+
+Date: 2026-09-06 Pacific time. Actual manuscript read on 2026-09-07 at approximately 01:14–01:18 UTC.
+
+## Result and exact scope
+
+**Scoped pass: no concrete mathematical defect found.** This review read the complete actual `annex:p9.alc.3` in [the annex](../../handbook/annex/p09/alc-general-tboxes.tex), lines 135–453, and its matching `thm:p09-alc-general-exptime` statement and explanatory paragraph in [the body](../../handbook/parts/p09/alc-general-tboxes.tex), lines 149–167. It also checked the input syntax and interpretation clauses of `def:p09-alc`, host lines 291–312, and the preceding type-algorithm time estimate used for membership, annex lines 101–130. Line references describe this inspected snapshot.
+
+No other agent's review result was consulted. No manuscript file was edited, and no tests, builds, or manuscript renders were used.
+
+## Machine conventions and source bridge
+
+Annex lines 143–190 use a fixed machine for each source language, a polynomial number of tape cells, two indexed instructions per nonhalting situation, and designated halting controls. Fixed-track one-tape simulation and finite same-kind branching gadgets preserve polynomial space. Duplicating a single successor preserves both existential and universal acceptance. Replacing empty existential/universal choices by rejection/acceptance is correct for the alternative convention explicitly described; the cited source itself requires nonhalting existential and universal configurations to have at least one successor.
+
+The primary [Chandra–Kozen–Stockmeyer paper, *Alternation*](https://people.cs.umass.edu/~immerman/cs601/alternation.pdf) was checked directly. Corollary 3.6, printed p. 122, states the required `EXPTIME = APSPACE`. Definition 2.5, p. 120, defines the accepted-input space resource; Theorem 2.5, pp. 120–121, eliminates negating states without increasing that resource. Theorem 2.6(b), pp. 121–122, supplies an equivalent machine with bounded reachable configurations when the space bound is constructible. A polynomial majorant meets this condition. Its proof explicitly rejects attempted space overruns. The proof of Theorem 5.4, p. 131, also uses the one-tape, bounded-space, two-instruction convention.
+
+There is therefore support for the manuscript's all-computation space convention. **Resolved on read-back at approximately 01:19 UTC:** the actual annex now explicitly invokes Theorems 2.5 and 2.6(b) at lines 153–158, using a space-constructible polynomial bound and stating both termination of all paths and the bound on reachable configurations. This accurately supplies the bridge from the source's accepted-computation resource convention. The optional precision improvement from the first review has been incorporated; no open correction remains from that review. Later line references below describe the preceding snapshot, before these six lines were inserted.
+
+## Detailed mathematical checks
+
+- **Finite accepting-tree bound, lines 192–216.** The sets `W_i` increase. `W_1` consists exactly of accepting configurations, matching height zero. Induction gives the stated height characterization. With at most `K` configurations, either an earlier equality occurs or every one of the first `K` stages adds an element; in either case `W_K` is stable. The resulting height bound `K-1` is correct, including immediate acceptance.
+
+- **Configuration and branching GCIs, lines 236–267.** Coverage plus pairwise disjointness forces one control, one valid head position, and one symbol at every tape cell. Rejecting control is empty. Accepting controls have no successors under either role. The existential disjunction demands at least one indexed move, and the universal conjunction demands both. The roles need not be functional or disjoint.
+
+- **Transition and unchanged-cell GCIs, lines 269–294.** At each nonhalting element exactly one guard holds. Its universal target clause fixes the target control, head position, and written symbol at the old scanned cell. The negative-head guards preserve every other cell, including the cell that becomes the new head location. This also works for a stationary head and for the rejecting boundary convention. Every existing `r_j` successor has exactly the configuration prescribed by instruction `j`.
+
+- **Countdown, lines 226–234 and 296–334.** The displayed bit count gives `2^(b-1) >= K`; hence the initial all-one value is sufficient. At a positive value, bits below the least set bit change from zero to one, the least set bit changes to zero, and all higher bits are preserved. These cases follow from the four GCIs exactly as written. The separate zero clause forbids edges instead of allowing modular wraparound. At bit zero, `L_0 = top`, so only the two toggling antecedents can hold. The other two are false. No missing case arises.
+
+- **Size, lines 336–357.** The partition families contribute the stated quadratic terms; instruction guards contribute `O(|Q| s |Gamma|)`; unchanged-cell clauses contribute `O(s |Gamma|)` and are dominated by those terms. Expanding every `L_l` and its negation contributes `O(b^2)`. The initial concept has `O(s+b)` symbols before index coding. Since the machine is fixed and `s,b` are polynomial in input length, the output and its construction time are polynomial. No exponentially long numeral is emitted. The empty word causes no zero-cell case because `s >= 1`.
+
+- **Accepting computation to model, lines 359–376.** Tree nodes give a nonempty domain, indexed children give the required roles, and depth assignment `R-d` satisfies every decrement clause. Accepting leaves may have positive rank; the GCIs correctly permit this. All configuration, transition, preservation, and halting clauses hold. The existential case keeps only the selected role edge, so unused rejecting alternatives impose no existential obligation.
+
+- **Model to accepting computation, lines 378–406.** Induction on the actual natural-number rank is valid even when the original interpretation is infinite. Rank-zero nodes can have neither nonhalting control nor rejecting control, so they accept. At higher ranks, one existential witness or one witness per universal role gives strictly smaller induction instances. At most two finite subtrees are joined at a step, yielding a finite tree. Equal witnesses or configurations can be copied as distinct indexed tree nodes. This does not require role functionality or an infinite choice principle.
+
+- **Other reasoning tasks, lines 408–451.** Fresh-name concept assertions reduce concept satisfiability to knowledge-base satisfiability. The empty-ABox case gives hardness for the optional-concept task. Relative subsumption is equivalent to unsatisfiability of `C and not D`; deterministic EXPTIME is closed under complement, and the stated complement-language hardness argument uses polynomial many-one reductions correctly. Adding the negated instance assertion gives the countermodel test for instance checking. The fresh-name reduction from subsumption remains correct when the concept or TBox is inconsistent, including vacuous entailment.
+
+The theorem's combined-complexity formulation matches the reduction: the constructed general TBox and tested concept vary with the input, and the later reductions use exactly the host's arbitrary concept assertions and GCIs. No stronger description-logic constructor is introduced.
+
+## Read-back of the N-c-009 canonical model
+
+At the parent's request, a separate bounded check read the actual canonical-model argument for Proposition 4.2 in `handbook/parts/p09/presentations/n-c-009.tex`, lines 263–311, together with its six constraint semantics, simple-system restriction, clash patterns, and three completeness conditions (lines 149–262). **Scoped pass: no defect found in the corrected construction.**
+
+The domain is the set `V` of occurring individual variables when nonempty and a fresh singleton otherwise. Every role edge has both endpoints in `V`, so its interpretation is correctly typed. The displayed individual assignment is total, equals the identity on all variables occurring in constraints, and sends unused variables to the chosen domain element. Concept-variable extensions are defined for every concept variable by the membership constraints.
+
+When `V` is empty there are no membership or role-edge constraints. Every concept-variable extension is empty, so all four remaining kinds of inclusion/restriction constraint hold vacuously, including existential restrictions. Ordinary concept symbols and roles have empty extensions, while the distinguished top symbol remains the nonempty whole domain. These clauses are mutually consistent.
+
+For nonempty `V`, positive atomic inclusions follow directly from the extension definition. For an ordinary concept symbol, failure of a negative atomic inclusion would supply the second displayed clash; the separate negative-top case supplies the first clash. Existential, universal, and union constraints follow from completeness conditions 1, 2, and 3, respectively. Individual membership and role assertions hold by construction. Conversely, the first clash requires an assigned domain element to lie in the empty complement of top, and the second requires membership in both an ordinary concept and its complement. Thus both clash patterns are unsatisfiable, independently of injectivity of arbitrary assignments.

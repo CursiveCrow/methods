@@ -1,0 +1,129 @@
+% Source presentation for register row N-c-028.
+
+\subsection{McMillan's interpolation-based finite-state safety method}
+\label{sec:p09-presentation-n-c-028}
+
+For an inconsistent pair \((A,B)\), McMillan uses a Craig interpolant \(P\)
+satisfying
+\[
+ A\models P,\qquad P\land B\models\bot,\qquad
+ \operatorname{Var}(P)\subseteq
+ \operatorname{Var}(A)\cap\operatorname{Var}(B).
+\]
+The source constructs \(P\) from a resolution refutation by labelling an
+\(A\)-root with the disjunction of its shared literals, labelling a \(B\)-root
+with \(\top\), and combining predecessor labels by disjunction when the pivot
+is local to \(A\) and by conjunction otherwise
+\cite[def.~2 and thm.~2]{McMillan2003}.
+
+For the clauses
+\[
+ A=\{p\},\qquad
+ B=\{\neg p\lor q,\ \neg q\},
+\]
+resolve the two \(B\)-clauses on \(q\) to obtain \(\neg p\), then resolve with
+the \(A\)-clause to obtain the empty clause.  The formula \(P=p\) is an
+interpolant: \(A\models p\), the set \(B\cup\{p\}\) is inconsistent, and \(p\)
+is the only variable common to the two sides.  This tiny proof shows why a
+refutation-producing SAT procedure can return a state formula rather than only
+the word UNSAT.  It also calculates McMillan's labelling rule exactly: the
+\(A\)-root receives label \(p\), both \(B\)-roots receive \(\top\), resolving
+the \(B\)-roots on the \(B\)-local variable \(q\) gives
+\(\top\land\top=\top\), and the final resolution on the shared variable \(p\)
+gives \(p\land\top=p\).
+
+The transition-system presentation is
+\[
+ M=(I(V),T(V,V'),F(V)),
+\]
+with total Boolean transition relation \(T\).  A definitional CNF may introduce
+fresh variables \(U\), but it must preserve projection:
+\[
+ \exists U\,\operatorname{Cnf}(f,U)\ \leftrightarrow\ f.
+\]
+For a current reachability overapproximation \(R\) and a fixed \(k>0\), one
+interpolation iteration uses disjoint CNF auxiliary variables and the partition
+\[
+\begin{aligned}
+ A={}&\operatorname{Cnf}
+   \bigl(R(W_{-1})\land T(W_{-1},W_0),U_1\bigr),\\
+ B={}&\operatorname{Cnf}
+   \left(
+    \bigwedge_{0\leq i<k}T(W_i,W_{i+1})
+    \land\bigvee_{0\leq i\leq k}F(W_i),U_2
+   \right).
+\end{aligned}
+\]
+The two sides share only the boundary-state variables \(W_0\).  The
+\(A\)-side describes a successor of \(R\); the \(B\)-side describes a suffix of
+the fixed positive horizon containing a bad state.  Because \(T\) is total, a
+path that first reaches a bad state in at most \(k\) steps can be extended
+through the unused state copies, and every satisfying assignment to \(B\)
+contains such a prefix.  An interpolant \(P(W_0)\) therefore overapproximates
+the one-step successors of \(R\) while excluding every boundary state that can
+reach a bad state in at most \(k\) steps.
+
+Take the one-bit system
+\[
+ I(x)=\neg x,\qquad
+ T(x,x')=(x'\leftrightarrow x),\qquad
+ F(x)=x.
+\]
+For horizon \(k=1\) and current approximation \(R=I\), the first side entails
+\(\neg x_0\).  The suffix side requires
+\[
+ (x_1\leftrightarrow x_0)\land(x_0\lor x_1),
+\]
+which is inconsistent with \(\neg x_0\).  Thus \(P(x_0)=\neg x_0\) is an
+interpolant.  After renaming \(x_0\) to \(x\), the update
+\(R:=R\lor P\) changes nothing.  The fixed point proves the inductive invariant
+\(\neg x\), which contains every initial state, is closed under \(T\), and
+excludes \(F\).
+
+The invariant behind that calculation is general.  Initially \(R=I\).  From
+\(A\models P\), every one-step successor of an \(R\)-state satisfies \(P\), so
+the update \(R':=R\lor P\) still overapproximates all states reached so far.
+From \(P\land B\models\bot\), no \(P\)-state reaches \(F\) within the protected
+suffix; in particular \(P\land F\) is inconsistent.  Hence every update
+preserves \(R'\land F\models\bot\).  If the fixed-point check
+\(P\models R\) succeeds, then
+\[
+ R(V)\land T(V,V')\models P(V')\models R(V'),
+\]
+so the old \(R\) is an inductive invariant containing \(I\) and excluding
+\(F\).
+
+Three correctness cases must remain distinct
+\cite[thms.~3--4]{McMillan2003}.
+
+\begin{enumerate}
+\item A satisfying bounded formula on the first iteration supplies a real bad
+run from an initial state.
+\item At a later iteration, \(R\) may include unreachable states, so a
+satisfying suffix may be spurious; the procedure abandons that horizon rather
+than reporting a counterexample.
+\item An interpolation fixed point is an inductive invariant and therefore an
+unbounded safety proof.
+\end{enumerate}
+
+The introductory prose permits a generic \(k\geq0\), but the displayed
+\textsc{FiniteRun} procedure, Theorem 3, and the termination development use
+\(k>0\).  Definition~\ref{def:p09-interpolant-model-checking} retains the proved
+positive hypothesis.  Theorem 4 proves termination by choosing the reverse
+depth as the horizon.  To retain the procedure's positive-horizon hypothesis
+also when that depth is \(0\),
+Theorem~\ref{thm:p09-interpolant-model-checking} uses the edge-safe choice
+\(k=\max\{1,\operatorname{rd}(M,F)\}\).  Indeed, after the first unsatisfiable
+iteration the new approximation contains no state that reaches \(F\) within
+\(k\) steps.  When \(k\) is at least the reverse depth, any state that reaches
+\(F\) at all has a shortest such path of length at most \(k\); the new
+approximation therefore cannot reach \(F\) at any length.  Every later SAT
+query is consequently unsatisfiable.  Unless the fixed-point implication has
+already succeeded, \(R\lor P\) denotes a strict enlargement of \(R\).  The
+Boolean state space is finite, so only finitely many strict enlargements are
+possible and the procedure reaches a fixed point.
+
+The source theorem is about finite Boolean safety/reachability and
+resolution-derived interpolants; it is not a general temporal-logic theorem or
+a completeness claim about arbitrary interpolant choices and SAT
+implementations.

@@ -1,0 +1,459 @@
+%% General-TBox ALC: type elimination and combined complexity.
+
+\section{General-TBox \(\mathcal{ALC}\)}
+
+\begin{annexitem}{annex:p9.alc.2}{thm:p09-alc-type-elimination}{Correctness and bounds of \(\mathcal{ALC}\) type elimination}
+\begin{proof}
+Write \(\mathcal C\) for the finite closure and \(S_i\) for the
+successive type sets in Method~\ref{def:p09-alc-type-elimination}.
+The NNF complement is an involution and represents semantic
+complementation, by the recursive Boolean and modal truth clauses.
+
+\paragraph{Types realized in a model survive.}
+Suppose \(I\) satisfies the input, including \(C_0^I\ne\varnothing\)
+when a concept is tested.
+For \(x\in\Delta^I\), put
+\[
+ \operatorname{tp}_I(x)=\{E\in\mathcal C:x\in E^I\}.
+\]
+It belongs to \(S_0\): the constant, complement and Boolean conditions
+are truth clauses, and each internalized GCI is true at every
+domain element.
+We prove simultaneously for all \(x\) that
+\(\operatorname{tp}_I(x)\in S_i\) at every stage \(i\).
+If this holds at \(i\) and \(\exists r.E\in\operatorname{tp}_I(x)\),
+choose \(y\) with \((x,y)\in r^I\) and \(y\in E^I\).
+Its type is in \(S_i\) by the induction hypothesis.
+Every \(\forall r.F\) true at \(x\) has \(F\) true at \(y\),
+so
+\[
+ \operatorname{tp}_I(x)\leadsto_r\operatorname{tp}_I(y),
+ \qquad E\in\operatorname{tp}_I(y).
+\]
+The existential requirement therefore has a witness, and the type
+of \(x\) is retained at stage \(i+1\).
+
+At stabilization, all these realized types belong to \(S\).
+The domain is nonempty, so \(S\ne\varnothing\).
+Assign \(t_a=\operatorname{tp}_I(a^I)\) to each ABox name.
+Concept assertions and role assertions satisfy the two acceptance
+conditions by the same argument.
+If \(C_0\) is tested, its chosen semantic witness supplies a type
+in \(S\) containing \(\operatorname{nnf}(C_0)\).
+Thus every satisfiable input is accepted.
+
+\paragraph{The canonical interpretation.}
+Conversely, suppose the method accepts, with a witnessing assignment
+\(a\mapsto t_a\).
+Let \(I_*\) have domain \(S\), and interpret the input names by
+\[
+\begin{aligned}
+ A^{I_*}&=\{t\in S:A\in t\}
+              &&\text{for concept names occurring in the closure},\\
+ r^{I_*}&=\{(t,u)\in S^2:t\leadsto_r u\}
+              &&\text{for input role names},\\
+ a^{I_*}&=t_a
+              &&\text{for ABox individual names}.
+\end{aligned}
+\]
+Unused concept names and roles can be empty, and unused individuals
+can denote any fixed member of the nonempty set \(S\).
+No injectivity requirement is imposed on the individual assignment.
+
+For every \(E\in\mathcal C\) and \(t\in S\), we prove
+\[
+ t\in E^{I_*}\quad\Longleftrightarrow\quad E\in t.
+\]
+Induct on NNF rank, counting concept-name literals, \(\top\), and
+\(\bot\) as rank zero.
+The definition of the interpretation proves the positive-literal
+case.  Exactly one of \(A,\neg A\) belongs to a type, proving the
+negative-literal case.  The constant and Boolean cases follow from
+the corresponding type conditions.
+
+If \(\exists r.F\in t\), stability of \(S\) supplies a compatible
+\(u\in S\) containing \(F\); induction gives the required successor.
+If \(\exists r.F\notin t\), completeness of the type puts
+\(\forall r.\bar F\) in \(t\).
+Every compatible successor then contains \(\bar F\), so by induction
+and semantic complementation none satisfies \(F\).
+Thus the existential concept is false.
+
+If \(\forall r.F\in t\), every compatible successor contains \(F\)
+and satisfies it by induction, so the universal is true.
+If \(\forall r.F\notin t\), its complement
+\(\exists r.\bar F\) belongs to \(t\).
+Stability supplies a compatible successor containing \(\bar F\);
+induction makes this a counterexample to the universal.
+Both \(F\) and \(\bar F\) have lower rank than the modal concept,
+so none of these cases invokes the desired equivalence circularly.
+This completes the truth lemma.
+
+Every member of \(\mathsf{Glob}(\mathcal T)\) belongs to every type,
+so the truth lemma proves all TBox inclusions globally.
+The selected \(t_a\) satisfy the ABox concepts, and each asserted
+role edge is one of the compatible pairs used in the interpretation.
+The tested concept, when present, belongs to some surviving type
+and is therefore nonempty in this same model.
+This proves soundness of acceptance.
+Its domain has size \(|S|\leq2^m\).
+
+\paragraph{Termination and deterministic time.}
+NNF conversion visits each constructor of the input concepts once.
+Taking sub-concepts and their NNF complements yields \(m=O(N)\)
+distinct closure expressions, each with a representation of
+polynomial length.  Equivalently, use shared pointers for the
+subexpressions and one complemented copy of each.
+The number \(M\) of initial types is at most \(2^m\).
+Enumerating all subsets and checking the local conditions costs
+\(2^m\operatorname{poly}(N)\).
+
+An elementary implementation scans every remaining type, every one
+of its at most \(m\) existential requirements, and all candidate
+witness types.  Compatibility is a polynomial-time test on their
+bit-vector descriptions.
+At most \(M\) scans make a strict deletion before stabilization.
+Thus even this implementation takes at most
+\(M^3\operatorname{poly}(N)\) time.
+If \(k\) distinct individual names occur, enumerate at most \(M^k\)
+assignments and check each finite list of assertions.
+The optional-concept and nonempty-domain tests take polynomial
+time in \(M+N\).
+Overall the bound is
+\[
+ \operatorname{poly}(N)\bigl(2^{3m}+2^{mk}\bigr)
+       \leq 2^{O(N^2)},
+\]
+since \(m,k=O(N)\).
+For \(k=0\), the bound is \(2^{O(N)}\).
+In particular, the wholly empty input leaves the type containing
+\(\top\), and the nonempty-domain test accepts it.
+A TBox forcing \(\top\sqsubseteq\bot\) leaves no type and is rejected.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p9.alc.3}{thm:p09-alc-general-exptime}{Combined complexity of general-TBox \(\mathcal{ALC}\)}
+\begin{proof}
+The type-elimination bound in Theorem~\ref{thm:p09-alc-type-elimination}
+places knowledge-base satisfiability, with or without a tested concept,
+in \(\mathsf{EXPTIME}\).
+We prove hardness first for a tested concept with a general TBox and
+an empty ABox.
+
+\paragraph{The alternating-machine source problem.}
+Use the characterization
+\[
+ \mathsf{APSPACE}=\mathsf{EXPTIME}
+\]
+from \cite[Corollary~3.6, p.~122]{ChandraKozenStockmeyer1981}.
+Here alternating polynomial space uses existential and universal
+computation states.
+Fix an arbitrary language in \(\mathsf{EXPTIME}\), and choose one
+fixed alternating machine \(M\) for it, with a polynomial space bound.
+The source's space definition initially bounds an accepting computation
+tree.  Apply its Theorem~2.5 and Theorem~2.6(b), using a
+space-constructible polynomial bound, to choose an equivalent machine
+without negating states whose paths all terminate and whose reachable
+configurations all obey that bound
+\cite[pp.~120--122]{ChandraKozenStockmeyer1981}.
+On input \(w\), use an equivalent one-tape form whose tape occupies
+cells \(1,\ldots,s\), where \(s=s(|w|)\geq\max(1,|w|)\) is polynomial.
+A fixed number of tapes can be encoded by tracks and marked head
+positions on one tape; finite scans collect the symbols for a step
+and perform the selected update.  This uses polynomial space.
+
+Let the finite control set be the disjoint union
+\[
+ Q=Q_\exists\mathbin{\dot\cup}Q_\forall
+                   \mathbin{\dot\cup}\{q_{\rm acc},q_{\rm rej}\},
+\]
+and let \(\Gamma\) be the finite tape alphabet.
+Normalize every nonhalting situation to two instructions
+\[
+ \delta_j(q,\gamma)=(q',\gamma',d),
+ \qquad j\in\{0,1\},\quad d\in\{-1,0,1\}.
+\]
+Single or deterministic choices are duplicated.  Larger finite
+choices are replaced by binary trees of the same existential or
+universal kind.
+If an initial machine convention admits a nonhalting situation with
+no moves, replace an empty existential choice by rejection and an
+empty universal choice by acceptance, and then use two identical
+moves to that halting answer.
+The two designated halting controls have no instructions.
+These normalizations, together with removal of negating states,
+are compatible with the cited alternation characterization
+\cite[\S2]{ChandraKozenStockmeyer1981}.
+
+A bounded configuration is \(c=(q,i,u)\), with \(q\in Q\),
+\(1\leq i\leq s\), and \(u\in\Gamma^s\).
+If an instruction would leave the tape interval, its successor
+instead has rejecting control, the same valid head position, and
+the specified tape write.
+This gives two well-defined successors \(\tau_0(c),\tau_1(c)\)
+of every nonhalting bounded configuration.
+The chosen space bound makes this convention agree with the machine
+on its actual computations from the input.
+
+An accepting computation is a finite tree of configurations.
+Its leaves have control \(q_{\rm acc}\).
+At an existential node it has one child for one of the two
+instructions; at a universal node it has both indexed children.
+No rejecting configuration occurs.
+Two equal successor configurations may appear as distinct tree nodes.
+
+\paragraph{A finite bound on an accepting tree.}
+There are at most
+\[
+ K=|Q|\,s\,|\Gamma|^s
+\]
+bounded configurations.
+Starting with \(W_0=\varnothing\), define \(W_{i+1}\) to contain
+all accepting configurations, the existential configurations with
+at least one successor in \(W_i\), and the universal configurations
+with both successors in \(W_i\).
+Induction gives that \(W_{i+1}\) is exactly the set of configurations
+having an accepting tree of height at most \(i\), with leaves of
+height zero.
+The sequence is increasing, and an equality at one stage persists
+thereafter.  It stabilizes by \(W_K\), because its underlying
+configuration set has at most \(K\) elements.
+Thus, whenever the machine accepts, it has an accepting tree of
+height at most \(K-1\).
+
+\paragraph{Concept names for configurations.}
+Use role names \(r_0,r_1\) and concept names
+\[
+ \mathsf Q_q\ (q\in Q),\qquad
+ \mathsf H_i\ (1\leq i\leq s),\qquad
+ \mathsf A_{i,\gamma}\ (1\leq i\leq s,\ \gamma\in\Gamma).
+\]
+They record the control, head position, and tape symbols.
+Introduce \(b\) rank-bit names \(\mathsf B_0,\ldots,\mathsf B_{b-1}\),
+with bit zero least significant, where
+\[
+ b=1+\lceil\log_2|Q|\rceil+\lceil\log_2s\rceil
+                                  +s\lceil\log_2|\Gamma|\rceil.
+\]
+Then \(2^{b-1}\geq K\), so \(R=2^b-1\geq K\).
+Only the \(b\) bit names are written in the output, not a unary
+representation of \(R\).
+
+The TBox first requires exactly one control and one head position:
+\[
+\begin{gathered}
+ \top\sqsubseteq\bigsqcup_{q\in Q}\mathsf Q_q,\qquad
+ \mathsf Q_q\sqcap\mathsf Q_{q'}\sqsubseteq\bot\quad(q\ne q'),\\
+ \top\sqsubseteq\bigsqcup_{i=1}^{s}\mathsf H_i,\qquad
+ \mathsf H_i\sqcap\mathsf H_{i'}\sqsubseteq\bot\quad(i\ne i').
+\end{gathered}
+\]
+For each cell \(i\), require exactly one tape symbol:
+\[
+ \top\sqsubseteq\bigsqcup_{\gamma\in\Gamma}\mathsf A_{i,\gamma},
+ \qquad
+ \mathsf A_{i,\gamma}\sqcap\mathsf A_{i,\eta}\sqsubseteq\bot
+                                      \quad(\gamma\ne\eta).
+\]
+Each model element therefore describes one bounded configuration.
+Different elements may describe the same one.
+For halting and branching, include
+\[
+\begin{aligned}
+ \mathsf Q_{q_{\rm rej}}&\sqsubseteq\bot,\\
+ \mathsf Q_{q_{\rm acc}}&\sqsubseteq
+                   \forall r_0.\bot\sqcap\forall r_1.\bot,\\
+ \mathsf Q_q&\sqsubseteq
+                   \exists r_0.\top\sqcup\exists r_1.\top
+                         &&(q\in Q_\exists),\\
+ \mathsf Q_q&\sqsubseteq
+                   \exists r_0.\top\sqcap\exists r_1.\top
+                         &&(q\in Q_\forall).
+\end{aligned}
+\]
+
+\paragraph{Updating one cell and preserving all others.}
+For every nonhalting \(q\), head position \(i\), symbol \(\gamma\),
+and instruction index \(j\), let
+\[
+ G_{q,i,\gamma}
+       =\mathsf Q_q\sqcap\mathsf H_i\sqcap\mathsf A_{i,\gamma}.
+\]
+Compute the instruction's bounded target data \((q',i',\gamma')\),
+including the rejecting boundary convention above, and add
+\[
+ G_{q,i,\gamma}\sqsubseteq
+       \forall r_j.(\mathsf Q_{q'}\sqcap\mathsf H_{i'}
+                                      \sqcap\mathsf A_{i,\gamma'}).
+\]
+For every \(i,\gamma,j\), also add the unchanged-cell condition
+\[
+ \neg\mathsf H_i\sqcap\mathsf A_{i,\gamma}
+                     \sqsubseteq\forall r_j.\mathsf A_{i,\gamma}.
+\]
+Exactly one guard \(G_{q,i,\gamma}\) is true at a nonhalting element.
+Its update determines the new control, head and scanned cell.
+The unchanged-cell conditions determine every other cell.
+Consequently every \(r_j\)-successor describes exactly
+\(\tau_j(c)\), where \(c\) is the source configuration.
+A rejecting target is impossible because rejecting control was
+forbidden.  None of these conditions requires a role to be functional.
+
+\paragraph{Forcing a strict binary countdown.}
+Use the concept abbreviations
+\[
+ Z=\bigsqcap_{\ell<b}\neg\mathsf B_\ell,\qquad
+ L_\ell=\bigsqcap_{h<\ell}\neg\mathsf B_h,
+ \qquad L_0=\top.
+\]
+For each \(\ell<b\) and each \(r\in\{r_0,r_1\}\), include all four GCIs
+\[
+\begin{aligned}
+ L_\ell\sqcap\mathsf B_\ell
+    &\sqsubseteq\forall r.\neg\mathsf B_\ell,\\
+ L_\ell\sqcap\neg\mathsf B_\ell
+    &\sqsubseteq\forall r.\mathsf B_\ell,\\
+ \neg L_\ell\sqcap\mathsf B_\ell
+    &\sqsubseteq\forall r.\mathsf B_\ell,\\
+ \neg L_\ell\sqcap\neg\mathsf B_\ell
+    &\sqsubseteq\forall r.\neg\mathsf B_\ell.
+\end{aligned}
+\]
+Also include
+\[
+ Z\sqsubseteq\forall r_0.\bot\sqcap\forall r_1.\bot.
+\]
+At an interpretation element \(x\), define the integer
+\[
+ \rho(x)=\sum_{\ell<b}2^\ell\,
+                    \mathbf 1_{x\in\mathsf B_\ell^I}.
+\]
+If \(\rho(x)>0\), let \(\ell_0\) be its least set bit.
+For \(\ell<\ell_0\), all lower bits and bit \(\ell\) are zero,
+so the second GCI makes that successor bit one.
+At \(\ell_0\), the first GCI changes the bit from one to zero.
+For \(\ell>\ell_0\), a lower bit is already one at the source;
+the third and fourth GCIs preserve the source bit.
+These are exactly the bits of \(\rho(x)-1\).
+At rank zero, the final GCI forbids both roles.
+Thus every role edge in every model strictly decreases this
+nonnegative integer, with no wraparound.
+
+\paragraph{The initial concept and polynomial output size.}
+Let \((q_{\rm init},1,u_1\cdots u_s)\) be the initial configuration
+for \(w\), with its input followed by blanks in the chosen convention.
+Use the tested concept
+\[
+ C_{M,w}=\mathsf Q_{q_{\rm init}}\sqcap\mathsf H_1
+            \sqcap\bigsqcap_{i=1}^{s}\mathsf A_{i,u_i}
+            \sqcap\bigsqcap_{\ell<b}\mathsf B_\ell.
+\]
+Let \(\mathcal T_{M,s}\) be exactly the finite GCI families displayed
+above.  The symbols \(G_{q,i,\gamma},Z,L_\ell\) are abbreviations
+for concepts and are expanded when measuring size.
+The size is bounded by
+\[
+ O\!\left(|Q|^2+s^2+s|\Gamma|^2
+                   +|Q|s|\Gamma|+b^2\right)
+\]
+before the logarithmic encoding of indices.
+The \(b^2\) term includes all expanded lower-bit conjunctions.
+For the fixed source machine, \(s\) and \(b\) are polynomial in
+\(|w|\), so the entire TBox and initial concept are constructed
+in polynomial time.
+
+\paragraph{An accepting computation gives a model.}
+If \(M\) accepts \(w\), choose an accepting tree of height at most
+\(K-1\).  Take its nodes as the interpretation domain.
+Interpret the configuration names by their node labels.
+At an existential node include only its selected \(r_j\)-edge;
+at a universal node include the two indexed edges to its two children.
+An accepting leaf has neither edge.
+Give a node at depth \(d\) the binary value \(R-d\).
+This is nonnegative because the height is below \(K\leq R\).
+
+The configuration partitions and all branching/halting GCIs hold
+by the definition of the tree.
+The instruction and unchanged-cell GCIs hold because its children
+are the actual successors.
+The rank decreases by exactly one on every edge, so the decrement
+GCIs hold, and a rank-zero node, if present, is a leaf.
+The root satisfies \(C_{M,w}\).
+Thus \(C_{M,w}\) is satisfiable relative to \(\mathcal T_{M,s}\).
+
+\paragraph{A model gives an accepting computation.}
+Conversely, let \(I\models\mathcal T_{M,s}\) and let
+\(x_0\in C_{M,w}^I\).
+Every element describes exactly one bounded configuration, and no
+element has rejecting control.
+We prove by induction on \(\rho(x)\) that the configuration described
+by each \(x\) has a finite accepting tree.
+At rank zero there are no outgoing role edges, so the branching
+GCIs exclude both nonhalting control classes.  The control must
+be \(q_{\rm acc}\), giving an accepting leaf.
+At positive rank, an accepting control again gives a leaf.
+For an existential control choose an existing successor under one
+of the two roles.  Its configuration is the corresponding machine
+successor, and its rank is one less, so the induction hypothesis
+supplies its accepting subtree.
+For a universal control choose one successor for each role and
+attach the two accepting subtrees supplied by induction.
+These choices are finite at each stage, and the decreasing integer
+rank bounds the height of the resulting finite tree.
+The tree at \(x_0\) starts with the actual input configuration,
+so \(M\) accepts \(w\).
+
+We have proved
+\[
+ w\in L(M)\quad\Longleftrightarrow\quad
+ C_{M,w}\text{ is satisfiable relative to }\mathcal T_{M,s}.
+\]
+Since the source language was arbitrary in \(\mathsf{EXPTIME}\),
+this proves the required hardness using plain \(\mathcal{ALC}\).
+
+\paragraph{The other reasoning tasks.}
+For a fresh individual \(a_*\),
+\[
+ C\text{ is satisfiable relative to }\mathcal T
+ \quad\Longleftrightarrow\quad
+ (\mathcal T,\{C(a_*)\})\text{ is satisfiable}.
+\]
+This polynomial reduction proves knowledge-base hardness, and
+the optional-tested-concept task already contains concept
+satisfiability as its empty-ABox case.
+
+Subsumption satisfies
+\[
+ C\sqsubseteq_{\mathcal T}D
+ \quad\Longleftrightarrow\quad
+ C\sqcap\neg D\text{ is unsatisfiable relative to }\mathcal T.
+\]
+Deterministic exponential time is closed under complement.
+The complement of an \(\mathsf{EXPTIME}\)-complete language is
+also \(\mathsf{EXPTIME}\)-hard: reduce the complement of an arbitrary
+\(\mathsf{EXPTIME}\) language to the original complete language,
+then complement the equivalence.
+Thus concept unsatisfiability is \(\mathsf{EXPTIME}\)-complete,
+and its reduction to \(C\sqsubseteq_{\mathcal T}\bot\) proves
+subsumption hardness.  The displayed satisfiability reduction
+also proves subsumption membership.
+
+Finally,
+\[
+ (\mathcal T,\mathcal A)\models D(a)
+ \quad\Longleftrightarrow\quad
+ (\mathcal T,\mathcal A\cup\{\neg D(a)\})
+                         \text{ is unsatisfiable},
+\]
+where the assertion is added to the ABox.
+This gives the exponential upper bound for instance checking.
+Subsumption reduces to instance checking by taking a fresh \(a_*\),
+the knowledge base \((\mathcal T,\{C(a_*)\})\), and the query
+\(D(a_*)\).
+Every counterexample element to subsumption can interpret the fresh
+name, and every countermodel to that instance query is such a
+counterexample.  This proves hardness, including the vacuous cases
+when the concept or knowledge base is unsatisfiable.
+All the reductions are polynomial and stay within the stated input syntax.
+\end{proof}
+\end{annexitem}

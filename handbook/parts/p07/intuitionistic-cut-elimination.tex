@@ -1,0 +1,265 @@
+\section{Cut elimination in intuitionistic sequent calculus}
+\label{sec:p07-intuitionistic-cut-elimination}
+
+The intuitionistic cut-elimination theorem concerns the exact calculus
+\ref{sheet:lj}.  Its sequents have a finite-multiset antecedent and exactly
+one succedent formula.  The proof below removes both Cut and Mix, including
+cuts whose formula is contracted, quantified, or introduced by implication
+left.  It supplies the intuitionistic half of
+\ref{thm:p07-cut-elimination}.  Gentzen's applications of the Hauptsatz
+include consistency and the intuitionistic disjunction property
+\cite[IV, \S1.1 and \S1.3]{Gentzen1935b}.  The construction here is stated for this
+handbook's particular structural rules and literal substitution convention;
+the exactly-one-succedent restriction is part of that specified calculus.
+
+\subsection{The exact calculus and the induction objects}
+\label{sec:p07-lj-cut-objects}
+
+\begin{hbconvention}{def:p07-lj-cut-scope}{Logical and structural scope}
+Throughout this chapter, a derivation means a finite tree using the rules
+of \ref{sheet:lj}.  A \emph{cut-free} derivation uses neither
+\ref{rule:lj-cut} nor \ref{rule:lj-mix}.  Its formula language has
+\(\bot,\land,\lor,\to,\forall,\exists\), no equality, and defined
+negation \(\neg A\defeq A\to\bot\).  Terms and substitution are those of
+\ref{def:p02-fol-capture-avoiding-substitution}.  The initial identity is
+the uncontexted sequent \(A\Rightarrow A\); additional antecedent formulas
+require left weakening.  Exchange is already accounted for by multisets.
+There is no right weakening, right contraction, or empty-succedent sequent.
+No nonlogical initial sequents are included.  The object-variable alphabet
+is the countably infinite alphabet of \ref{def:p02-fol-signature}, so a
+fresh variable can always be chosen outside a finite collection of variables.
+\end{hbconvention}
+
+\begin{hbdefinition}{def:p07-lj-alpha-proof}{Proofs on alpha-equivalence classes}
+Write \([A]_\alpha\) for the class of a literal formula \(A\) under the
+bound-variable renaming relation \(\equiv_\alpha\) of
+\ref{def:p02-fol-alpha-equivalence}. Equality of these classes refers to
+that same syntactic relation, not semantic equivalence. An \emph{alpha-proof} is a finite
+proof tree whose formula occurrences are such classes and whose rule
+instances are the images, modulo alpha-equivalence, of the rules in
+\ref{sheet:lj}.  Antecedents remain multisets of occurrences and succedents
+still contain exactly one occurrence.  Replacing a label by another
+representative of its class is a choice of notation in this auxiliary
+representation, not an additional rule of the literal calculus.
+
+Define formula rank recursively by
+\[
+ \begin{aligned}
+ \rho(P(\vec t))&=0,\qquad \rho(\bot)=1,\\
+ \rho(B\circ C)&=1+\rho(B)+\rho(C),\\
+ \rho(QxB)&=1+\rho(B).
+ \end{aligned}
+\]
+where \(\circ\in\{\land,\lor,\to\}\) and
+\(Q\in\{\forall,\exists\}\).  Rank does not count symbols inside terms.
+Proof height \(h(D)\) is zero for an initial sequent and one plus the
+maximum premise height at an inference.  Alpha-equivalent formulas have
+the same rank.  These are the measure conventions of
+\ref{entry:p07-source-15} restricted to the present language.
+
+A finite simultaneous substitution \(\theta\) assigns terms to
+finitely many variables and fixes every other variable.  It replaces
+free occurrences simultaneously: a term inserted for a variable is
+not itself subjected again to \(\theta\) during that operation.
+Bound variables are renamed when needed to avoid capture.  The
+resulting alpha-class is independent of those fresh choices, as proved
+in the next lemma.  Write \(B\theta\) and \(t\theta\) for its action
+on a formula and on a term, respectively.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p07-lj-alpha-substitution}{proved=annex:p7.lj.alpha-substitution}{Substitution and fresh eigenparameters}
+Every literal derivation projects to an alpha-proof of the same height.
+For a cut-free alpha-proof, simultaneous capture-avoiding substitution of
+finitely many terms for free variables preserves derivability and does not
+increase height.  The eigenparameters of its quantifier inferences can
+first be chosen outside any prescribed finite set, consistently with their
+premise subtrees.  Formula rank is unchanged by these substitutions.
+\end{hblemma}
+
+\begin{hbwarning}{def:p07-lj-literal-height}{Why the auxiliary representation is needed}
+Height preservation in the preceding lemma is a statement about
+alpha-proofs.  It is not a claim about independently changing literal
+representatives in the original sheet.  For example,
+\(\forall xP(x)\Rightarrow\forall xP(x)\) is a height-zero identity,
+whereas \(\forall xP(x)\Rightarrow\forall zP(z)\), with different bound
+variable names, is not literally an identity instance.  Also, the fixed
+least-fresh convention for capture avoidance can make two successive
+substitutions agree only up to alpha-equivalence.  The final literal
+realization theorem below addresses both points without adding a rule.
+\end{hbwarning}
+
+\begin{hbdefinition}{def:p07-lj-marked-multicut}{Selected occurrences and multicut}
+Let \(D\) prove \(\Gamma\Rightarrow A\), and let \(E\) prove a sequent
+whose antecedent contains a selected list of \(n\) occurrences of \(A\).
+Write it as \(A^n,\Pi\Rightarrow C\), with the selected occurrences in
+\(A^n\) and every other occurrence in \(\Pi\).  The multiset \(\Pi\)
+may itself contain occurrences of the same formula \(A\); these remain
+unselected.  The desired result is \(\Gamma,\Pi\Rightarrow C\), with
+one copy of the whole multiset \(\Gamma\).
+
+The selection is bookkeeping on occurrences.  An occurrence introduced by
+a rule is principal for this operation only if it is selected.  A newly
+exposed constituent or discharged assumption is unselected even if it
+happens to be the same formula as \(A\).  In the induction we also allow
+\(n=0\): its conclusion is obtained simply by weakening \(\Gamma\)
+into \(E\).  The sheet's actual Mix rule still requires \(n\geq1\).
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p07-lj-context-collapse}{proved=annex:p7.lj.context-collapse}{Collapse of repeated supplied contexts}
+If a cut-free proof has endsequent \(\Gamma^m,\Pi\Rightarrow C\), with
+\(m\geq1\) designated copies of the finite multiset \(\Gamma\), left
+contraction gives a cut-free proof of \(\Gamma,\Pi\Rightarrow C\).
+Every occurrence assigned to \(\Pi\) is retained, including occurrences
+whose formula is also in \(\Gamma\).  The assertion holds for literal
+proofs and for alpha-proofs.
+\end{hblemma}
+
+\begin{hblemma}{thm:p07-lj-bottom-replacement}{proved=annex:p7.lj.bottom-replacement}{Cut-free replacement of a bottom succedent}
+If \(\Gamma\Rightarrow\bot\) has a cut-free alpha-proof, then
+\(\Gamma\Rightarrow C\) has a cut-free alpha-proof for every formula
+\(C\).  This construction uses bottom left and left inferences; it does
+not use a right weakening rule.
+\end{hblemma}
+
+\subsection{The strengthened reduction theorem}
+\label{sec:p07-lj-marked-reduction}
+
+\begin{hbtheorem}{thm:p07-lj-marked-multicut}{proved=annex:p7.lj.marked-multicut}{Marked multicut admissibility}
+For cut-free alpha-proofs \(D\) of \(\Gamma\Rightarrow A\) and \(E\)
+of \(A^n,\Pi\Rightarrow C\), with the occurrence convention of
+\ref{def:p07-lj-marked-multicut}, there is a cut-free alpha-proof of
+\(\Gamma,\Pi\Rightarrow C\).  The construction terminates by
+lexicographic induction on
+\[
+                \bigl(\rho(A),h(D)+h(E)\bigr).
+\]
+The zero-selection case is a direct weakening construction and makes no
+recursive call.  Contraction may increase the number of selected
+occurrences in a premise; it still decreases the second induction
+coordinate.  No bound on the height of the resulting proof is asserted.
+\end{hbtheorem}
+
+\begin{hbmethod}{def:p07-lj-reduction-procedure}{How to apply the reduction}
+Start with cut-free premises and carry the selected occurrences backwards
+through the final inference of each proof.  Initial sequents finish the
+construction directly.  If the last inference of the left proof does not
+introduce its succedent, move the operation to its relevant premises.  If
+the left succedent is introduced but the last right inference does not
+introduce a selected antecedent occurrence, move the operation to the right
+premises.  Restore the same inference afterwards and contract repeated
+supplied contexts where its premises split.
+
+When both final inferences introduce the selected formula, first eliminate
+every residual selected occurrence from the relevant right premises,
+using the original left proof and the strictly shorter right premise
+proofs.  Only then perform the cuts on proper constituents, or on an
+instance of a quantified matrix.  These latter calls have smaller rank,
+regardless of their proof heights.  For a contracted selected occurrence,
+select both predecessor occurrences.  For an eigenvariable inference,
+freshen its parameter before moving a proof with additional free variables
+across it.  The annex gives every structural, connective and quantifier
+case of this procedure.
+\end{hbmethod}
+
+\subsection{Returning to literal formulas}
+\label{sec:p07-lj-literal-realization}
+
+\begin{hblemma}{thm:p07-lj-alpha-identity}{proved=annex:p7.lj.alpha-identity}{Literal identity between alpha-equivalent formulas}
+If literal formulas \(A\) and \(A'\) are alpha-equivalent, there is a
+cut-free literal derivation of \(A\Rightarrow A'\) in \ref{sheet:lj}.
+The statement holds in both directions and is proved by formula-rank
+induction.  It does not assert height zero.
+\end{hblemma}
+
+\begin{hblemma}{thm:p07-lj-literal-realization}{proved=annex:p7.lj.literal-realization}{Literal realization of a cut-free alpha-proof}
+Given a cut-free alpha-proof, choose a literal representative for each
+formula occurrence of its endsequent.  The exact resulting literal
+sequent has a cut-free derivation in \ref{sheet:lj}.  In shared contexts
+the chosen representatives are used consistently in the premise
+derivations.  No height-preservation claim is required or made.
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p07-lj-exact-cut-elimination}{proved=annex:p7.lj.exact-cut-elimination}{Cut and Mix elimination for the exact intuitionistic sheet}
+Every derivation in \ref{sheet:lj} can be transformed into a derivation
+using neither Cut nor Mix and having the same literal endsequent.
+The theorem includes first-order formulas, finite-multiset antecedents,
+left contraction, the sheet's split-context implication-left rule,
+uncontexted identity, bottom left, and the stated eigenvariable and
+capture-avoiding substitution conventions.
+\end{hbtheorem}
+
+\subsection{Analyticity, consistency and witnesses}
+\label{sec:p07-lj-cut-consequences}
+
+\begin{hbdefinition}{def:p07-lj-instance-subformula}{Subformula instances}
+For a finite collection of formulas, its \emph{subformula-instance
+closure} is the smallest collection of alpha-classes containing their
+classes and closed under taking immediate connective constituents,
+taking the matrix of any quantified representative, and making finite capture-avoiding
+substitutions of terms for free variables.  This closure permits
+instances of a matrix whose bound variable has been opened by a
+quantifier rule.  It places no finite bound on the available terms.
+For a purely propositional language, use the ordinary literal subformula
+closure instead.
+\end{hbdefinition}
+
+\begin{hbcorollary}{thm:p07-lj-analyticity}{proved=annex:p7.lj.analyticity}{Exact cut-free subformula conclusions}
+Every formula occurrence in a cut-free first-order derivation belongs,
+modulo alpha-equivalence, to the subformula-instance closure of its
+endsequent.  In a propositional derivation every formula is an ordinary
+literal subformula of an endsequent formula.  Consequently every
+derivable sequent has a proof with the corresponding property.
+\end{hbcorollary}
+
+\begin{hbcorollary}{thm:p07-lj-consistency}{proved=annex:p7.lj.consistency}{Underivability of bottom from no assumptions}
+There is no derivation of \(\Rightarrow\bot\) in \ref{sheet:lj}.
+This is the consistency conclusion for its exactly-one-succedent syntax.
+\end{hbcorollary}
+
+\begin{hbcorollary}{thm:p07-lj-disjunction-property}{proved=annex:p7.lj.disjunction-property}{Disjunction property for theorems}
+If \(\Rightarrow B\lor C\) is derivable in \ref{sheet:lj}, then at
+least one of \(\Rightarrow B\) and \(\Rightarrow C\) is derivable.
+Each can be taken cut-free when it exists.  The empty-antecedent
+hypothesis is part of the assertion.
+\end{hbcorollary}
+
+\begin{hbcorollary}{thm:p07-lj-existence-property}{proved=annex:p7.lj.existence-property}{Existence property and the ground-term condition}
+If \(\Rightarrow\exists xB\) is derivable in \ref{sheet:lj}, there is
+a term \(t\) and a cut-free derivation of
+\(\Rightarrow B[t/x]\).  The term may contain free variables.
+If \(\exists xB\) is closed and the signature contains a ground term,
+one can choose a ground witness term.  Without a ground term in the
+signature, the latter conclusion is not available in that signature.
+\end{hbcorollary}
+
+\begin{hbexample}{def:p07-lj-parameter-witness}{A witness in a language with no closed terms}
+Take a signature with a unary predicate \(P\) and no constants or
+function symbols.  Identity gives \(P(y)\Rightarrow P(y)\);
+implication right gives \(\Rightarrow P(y)\to P(y)\); existential
+right with witness \(y\) gives
+\(\Rightarrow\exists x(P(x)\to P(x))\).  This is already a cut-free
+derivation, but the signature has no ground terms.  Adding a fresh
+constant would change the signature and is an explicit separate option.
+\end{hbexample}
+
+\begin{hbcorollary}{thm:p07-lj-quantifier-free-conservativity}{proved=annex:p7.lj.quantifier-free-conservativity}{Conservativity on quantifier-free sequents}
+If a quantifier-free sequent is derivable in the first-order sheet, it
+has a derivation using only its quantifier-free logical and structural
+rules.  In that derivation every formula is a literal subformula of an
+endsequent formula.  Its first-order atoms may therefore be treated as
+propositional atoms for that derivation.
+\end{hbcorollary}
+
+\begin{proofboundary}{def:p07-lj-cut-boundary}{Limits of the result}
+The proof supplies no polynomial size bound for cut elimination and no
+finite enumeration of all first-order substitution instances.  It does
+not extend the theorem to equality rules or arbitrary nonlogical axiom
+sequents.  Defined negation is covered by the implication and bottom
+cases.  Classical multiple-succedent interpolation, midsequent and
+Herbrand results in the surrounding chapters retain their own statements
+and proofs.  The disjunction property above concerns theorems: from the
+assumption \(P\lor Q\), identity proves that disjunction, while neither
+\(P\lor Q\Rightarrow P\) nor \(P\lor Q\Rightarrow Q\) is derivable
+for distinct propositional atoms.  The annex verifies this last failure
+directly by cut-free last-inference analysis.
+\end{proofboundary}

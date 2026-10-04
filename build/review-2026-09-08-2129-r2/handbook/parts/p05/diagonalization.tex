@@ -1,0 +1,349 @@
+%% parts/p05/diagonalization.tex --- Part 5: Diagonalization and the First
+%% Incompleteness Theorem (Phase-3 pilot migration of v1.1
+%% ch:first-incompleteness; load-bearing apparatus of v1.1
+%% ch:arithmetic-coding restated in Section 1).  Body = statements only;
+%% proofs live in annex/p05.tex.
+\chapter{Diagonalization and the First Incompleteness Theorem}
+\label{sec:p05-diagonalization}
+\chaptermark{Diagonalization and Incompleteness}
+
+This part separates three levels throughout: arithmetic in the standard
+structure, formal derivability in a theory \(T\), and metalogical reasoning
+about \(T\).  G\"odel's original paper is \cite{Godel1931}; modern
+treatments include \cite{Shoenfield1967,BoolosBurgessJeffrey2007}.
+
+\section{Arithmetical prerequisites}
+\label{sec:p05-diagonalization-prereq}
+
+The entries of this section restate, from the v1.1 arithmetic chapter,
+exactly the apparatus that the incompleteness results load as hypotheses:
+the language and numerals, the fixed calculus, \(\mathsf Q\) and \(\PA\),
+the registered order abbreviation with its two comparison lemmas, the
+representability vocabulary, and the fixed proof predicate.
+
+\begin{hbdefinition}{def:p05-language-arithmetic}{Arithmetic language and standard structure}
+The \emph{language of arithmetic} is \(\Lang_A=\{0,S,+,\times\}\), where
+\(0\) is a constant, \(S\) is unary, and \(+\) and \(\times\) are binary
+function symbols.  The \emph{standard structure of arithmetic} is
+\(\mathcal N_{\mathrm{ar}}=(\N,0,S,+,\times)\) with the usual operations.  For
+\(n\in\N\), the \emph{numeral} for \(n\) is the closed term
+\(\bar n=S^n0\); for a tuple \(\vec a=(a_1,\ldots,a_k)\),
+\(\overline{\vec a}\) is the tuple of numerals
+\((\bar a_1,\ldots,\bar a_k)\).
+\end{hbdefinition}
+
+\begin{hbconvention}{def:p05-turnstile}{The fixed calculus and its turnstile}
+Throughout this part, \(T\derives\sigma\) says that a finite derivation of
+\(\sigma\) from the axioms of \(T\) exists in the fixed classical explosive
+first-order calculus with equality recorded as sheet \texttt{nd-fol} in the
+calculus registry; under this declared local abbreviation the per-system
+subscript of the registered turnstile is dropped.  \(T\notderives\sigma\)
+denies it.  Soundness and semantic completeness of the fixed calculus are
+as recorded by the classical adequacy entries of the first-order part.
+\end{hbconvention}
+
+\AddToHookNext{env/definition/end}{\label{def:p05-robinson-q}}
+\input{restoration/scope-SRC-09099-09111}
+
+\begin{hbdefinition}{def:p05-peano-arithmetic}{Peano arithmetic}
+Peano arithmetic, written \(\PA\), is \(\mathsf Q\) together with every
+instance of the induction scheme
+\[
+  \bigl(\varphi(0,\vec z)\land
+  \forall x(\varphi(x,\vec z)\to\varphi(Sx,\vec z))\bigr)
+  \to\forall x\,\varphi(x,\vec z),
+\]
+where \(\varphi(x,\vec z)\) is any \(\Lang_A\)-formula and the parameters
+\(\vec z\) remain universally quantified in the closure.
+\end{hbdefinition}
+
+\begin{hbconvention}{def:p05-leq}{The registered order abbreviation}
+For arithmetic terms \(r,t\), the registered object-language abbreviation
+\(\leq\) expands as \(r\leq t\defeq\exists z\,(z+r=t)\), where \(z\) is the
+least variable absent from \(r,t\); for \(x\notin\operatorname{Var}(t)\),
+the marked bounded quantifiers
+\(\exists x\leq t\,\varphi\) and \(\forall x\leq t\,\varphi\) abbreviate
+\(\exists x\,(x\leq t\land\varphi)\) and
+\(\forall x\,(x\leq t\to\varphi)\) and are counted as bounded.  The
+witness \(z\) sits to the \emph{left} of \(+\) in \(z+r=t\): this choice
+is what lets the two comparison lemmas below rest only on the successor
+axioms and the right-recursion axioms \(x+0=x\) and \(x+Sy=S(x+y)\) for
+addition.
+\end{hbconvention}
+
+The incompleteness argument of Rosser evaluates bounded numerical
+comparisons inside \(\mathsf Q\).  The two lemmas below supply exactly
+those evaluations for the registered abbreviation \(\leq\).
+
+\begin{hblemma}{thm:p05-q-bounded-cases}{proved=annex:p5.1}{Bounded-case enumeration in \(\mathsf Q\)}
+For every \(n\in\N\),
+\[
+  \mathsf Q\derives\forall y\,\bigl(y\leq\bar n\to
+  (y=\bar0\lor y=\bar1\lor\dots\lor y=\bar n)\bigr).
+\]
+\end{hblemma}
+
+\begin{hblemma}{thm:p05-q-dichotomy}{proved=annex:p5.2}{Dichotomy in \(\mathsf Q\)}
+For every \(n\in\N\),
+\[
+  \mathsf Q\derives\forall y\,
+  \bigl(y\leq\bar n\lor\bar n\leq y\bigr).
+\]
+\end{hblemma}
+
+\begin{hbdefinition}{def:p05-numeralwise-representation}{Numeralwise representation of a relation}
+Let \(T\supseteq\mathsf Q\), and let \(R\subseteq\N^k\).  A formula
+\(\varphi_R(x_1,\ldots,x_k)\) \emph{numeralwise represents} \(R\) in \(T\)
+if, for every \(\vec n\in\N^k\): if \(R(\vec n)\) then
+\(T\derives\varphi_R(\overline{\vec n})\), and if \(\neg R(\vec n)\) then
+\(T\derives\neg\varphi_R(\overline{\vec n})\).  The two clauses concern each
+standard tuple of numerals; they do not assert that \(T\) proves a
+universally quantified decision statement.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p05-function-representation}{Representation of a function}
+Let \(T\supseteq\mathsf Q\).  A formula \(\gamma_f(\vec x,y)\)
+\emph{represents} a total function \(f:\N^k\to\N\) in \(T\) if, for every
+\(\vec n\in\N^k\),
+\[
+  T\derives\forall y\,
+  \bigl(\gamma_f(\overline{\vec n},y)
+  \leftrightarrow y=\overline{f(\vec n)}\bigr).
+\]
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p05-representability}{cited=Shoenfield1967}{Representability theorem}
+Every primitive recursive relation is numeralwise representable in
+\(\mathsf Q\) by a \(\Sigma^0_1\) formula, and every primitive recursive
+function is representable in \(\mathsf Q\).  Every computably enumerable
+relation is definable in \(\mathcal N_{\mathrm{ar}}\) by a \(\Sigma^0_1\) formula.
+\end{hbtheorem}
+
+The construction represents the initial functions directly, preserves
+representability through composition and primitive recursion by
+quantifying over coded finite computation sequences, and supplies a
+finite accepting computation as the existential witness in the computably
+enumerable case; \cite{Shoenfield1967} carries the complete coding proof.
+
+\begin{hbdefinition}{def:p05-goedel-numbering}{Godel numbering@G\"odel numbering}
+A \emph{G\"odel numbering} for the chosen formal language and calculus is
+an injective effective map from symbols, finite strings, formulas, and
+finite derivations to natural numbers such that the basic syntactic
+operations and predicates required below are primitive recursive on
+codes.
+\end{hbdefinition}
+
+The exact numerical values are conventional; the effectiveness properties
+are substantive.  Fix one such numbering.  Write \(\ulcorner E\urcorner\)
+for the code of the expression or derivation \(E\); in an arithmetic
+formula, \(\overline{\ulcorner E\urcorner}\) is the numeral denoting that
+code.
+
+\begin{hbdefinition}{def:p05-ce-theory}{Computably enumerable theory}
+Relative to the fixed G\"odel numbering, a theory
+\(T\subseteq\mathrm{Sent}(\Lang_A)\) is \emph{computably enumerable} iff
+\(\{\ulcorner\sigma\urcorner:\sigma\in T\}\) is a computably enumerable
+set of natural numbers.  This term classifies the given set of axioms
+\(T\); it does not mean that \(T\) is deductively closed, and it does not
+define \(T\) as the set of its derivable consequences.  The distinction
+is required because the proof predicate below verifies uses of members of
+\(T\) by finite enumeration-stage certificates.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p05-proof-predicate}{Proof and provability predicates}
+Let \(T\) be computably enumerable and contain \(\mathsf Q\).  Fix a
+primitive recursive relation \(\mathrm{Proof}_T(p,x)\) meaning that
+\(p\) codes a correct \(T\)-proof whose concluding sentence has code
+\(x\), with enumeration-stage certificates verifying the uses of axioms
+of \(T\).  By the \(\Sigma^0_1\) clause of
+Theorem~\ref{thm:p05-representability}, fix the same symbol for a
+specific \(\Sigma^0_1\) formula that numeralwise represents this relation
+in \(\mathsf Q\).  Define
+\[
+  \mathrm{Prov}_T(x)\defeq\exists p\,\mathrm{Proof}_T(p,x).
+\]
+The additional existential quantifier merges with the initial existential
+block of the chosen representation, so \(\mathrm{Prov}_T\) is a
+\(\Sigma^0_1\) formula by the syntactic hierarchy definition.  A single
+primitive recursive sequence coding (G\"odel's \(\beta\) function) stands
+behind the \(\Sigma^0_1\) clause, serving machine tables, computation
+histories, and proof sequences alike.
+\end{hbdefinition}
+
+\begin{hbwarning}{def:p05-mention-warning}{Mentioning a sentence inside arithmetic}
+The expression \(\mathrm{Prov}_T(\varphi)\) is ill-typed if \(\varphi\)
+is a formula rather than a number term.  The correct expression is
+\(\mathrm{Prov}_T(\overline{\ulcorner\varphi\urcorner})\), abbreviated
+only after the coding convention has been declared
+(Section~\ref{sec:p05-provability-truth-01}).
+\end{hbwarning}
+
+\paragraph{Open inherited content.}
+The exact source presentations for the nonstandard-model entries,
+provable \(\Sigma^0_1\)-completeness, the arithmetization-of-syntax proof
+sketch, the worked addition and sequence-code illustrations, and all three
+exercise prompts remain owed in their original source order, standing, and
+full content.  Chapter~\ref{sec:p05-models-and-interpretability},
+Definition~\ref{def:p04-numerical-coding},
+Lemma~\ref{thm:p04-goedel-beta},
+Theorem~\ref{thm:p04-bounded-verification}, and the entries above are useful
+cross-references but do not replace, consolidate, summarize, or discharge
+any of those inherited presentations.  Their destinations and separate
+source, static, build, visual, and human-content verification remain open.
+
+\section{The diagonal lemma}
+\label{sec:p05-diagonalization-01}
+
+Let \(\mathrm{diag}(n)\) be the code of the result of substituting the
+numeral \(\bar n\) for the distinguished free variable in the
+one-variable formula with code \(n\), with an arbitrary default value on
+nonformula codes.  The function \(\mathrm{diag}\) is primitive recursive.
+
+\begin{hbtheorem}{thm:p05-diagonal-lemma}{cited=BoolosBurgessJeffrey2007}{Diagonal lemma}
+Let \(T\) be any theory extending \(\mathsf Q\).  For every
+\(\Lang_A\)-formula \(\psi(x)\) with at most the displayed free
+variable, there is a sentence \(G\) such that
+\[
+  T\derives G\leftrightarrow
+  \psi(\overline{\ulcorner G\urcorner}).
+\]
+\end{hbtheorem}
+
+See \cite{BoolosBurgessJeffrey2007} for a complete proof, including the
+primitive-recursive verification and numeralwise representability of
+\(\mathrm{diag}\); the fixed-point construction behind the lemma is
+retained as commentary in
+\hyperref[annex:p5-diagonal-commentary]{the Part-5 annex}.
+
+\begin{hbmethod}{def:p05-diagonal-method}{The diagonal method}
+To obtain a sentence provably equivalent to a property of its own code:
+fix a formula \(D(x,y)\) representing the substitution function
+\(\mathrm{diag}\) in \(\mathsf Q\); given the target property
+\(\psi(x)\), form \(\beta(x)\defeq\exists y\,(D(x,y)\land\psi(y))\);
+and evaluate \(\beta\) at the numeral for its own code, setting
+\(G\defeq\beta(\bar b)\) with \(b=\ulcorner\beta\urcorner\).
+Representability of \(\mathrm{diag}\) then delivers
+\(\mathsf Q\derives G\leftrightarrow
+\psi(\overline{\ulcorner G\urcorner})\).  The construction is spelled
+out in \hyperref[annex:p5-diagonal-commentary]{the Part-5 annex}.
+\end{hbmethod}
+
+\begin{hbwarning}{def:p05-selfreference}{Self-reference without self-inscription}
+The diagonal lemma does not create a sentence that literally contains its
+own inscription.  It creates a sentence provably equivalent to the result
+of applying \(\psi\) to the numeral for that sentence's code.
+\end{hbwarning}
+
+\section{Consistency and soundness conditions}
+\label{sec:p05-diagonalization-02}
+
+\begin{hbdefinition}{def:p05-consistency}{Consistency}
+A theory \(T\) is \emph{consistent} iff there is no sentence \(\sigma\)
+such that both \(T\derives\sigma\) and \(T\derives\neg\sigma\).  In the
+fixed classical explosive calculus, this is equivalent to
+\(T\notderives\bottom\).  If \(T\derives 0\ne S0\), then it is also
+equivalent to \(T\notderives 0=S0\); in particular this specialization
+applies when \(T\supseteq\mathsf Q\).  Without the displayed
+derivability hypothesis, nonderivability of \(0=S0\) is not a general
+test for consistency.
+\end{hbdefinition}
+
+A theory \(T\) is \emph{deductively complete} when, for every sentence
+\(\sigma\) in its language, either \(T\derives\sigma\) or
+\(T\derives\neg\sigma\).  This property of a theory is distinct from
+semantic completeness of a calculus, while soundness and completeness of
+the fixed calculus identify it with the corresponding quantified semantic
+condition.
+
+\begin{hbdefinition}{def:p05-sigma-soundness}{Sigma-0-1-soundness@\(\Sigma^0_1\)-soundness}
+A theory \(T\) is \emph{\(\Sigma^0_1\)-sound} iff, whenever \(\sigma\) is
+a \(\Sigma^0_1\) sentence and \(T\derives\sigma\), then
+\(\mathcal N_{\mathrm{ar}}\entails\sigma\).
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p05-omega-consistency}{Omega-consistency}
+A theory \(T\) is \emph{omega-consistent} iff there is no formula
+\(\varphi\) with \(\FV(\varphi)\subseteq\{x\}\) such that
+\[
+  T\derives\exists x\,\varphi(x)
+  \quad\text{and}\quad
+  T\derives\neg\varphi(\bar n)
+  \text{ for every }n\in\N.
+\]
+\end{hbdefinition}
+
+Both omega-consistency and \(\Sigma^0_1\)-soundness imply consistency,
+but consistency alone is weaker.  Rosser's theorem removes the stronger
+hypothesis from the incompleteness conclusion.
+
+\section{The G\"odel sentence}
+\label{sec:p05-diagonalization-03}
+
+Let \(T\) be a computably enumerable theory extending \(\mathsf Q\).
+Apply Theorem~\ref{thm:p05-diagonal-lemma}, in the complexity-preserving
+form discussed below display (G), to
+\(\psi(x)=\neg\mathrm{Prov}_T(x)\).  Obtain a \(\Pi^0_1\) sentence
+\(G_T\) satisfying
+\[
+  T\derives G_T\leftrightarrow
+  \neg\mathrm{Prov}_T(\overline{\ulcorner G_T\urcorner}).
+  \tag{G}
+\]
+The fixed-point biconditional is in fact derivable already in
+\(\mathsf Q\).  The complexity-preservation clause is a standard
+refinement of the coding construction: choose a suitable representation
+of substitution on codes and put the resulting fixed point back into
+prenex form.  The fixed point of a \(\Pi^0_1\) formula may then be chosen
+\(\Pi^0_1\).  This clause is cited rather than proved here; see
+\cite{Shoenfield1967}.
+
+\begin{hbtheorem}{thm:p05-goedel-first}{sketched=annex:p5.3}{Godel's first incompleteness theorem@G\"odel's first incompleteness theorem, original form}
+Let \(T\) be a computably enumerable theory extending \(\mathsf Q\).
+\begin{enumerate}
+  \item If \(T\) is consistent, then \(T\notderives G_T\).
+  \item If \(T\) is \(\Sigma^0_1\)-sound, then
+        \(T\notderives\neg G_T\).
+  \item Omega-consistency also suffices for
+        \(T\notderives\neg G_T\).
+\end{enumerate}
+Consequently, if \(T\) is omega-consistent or \(\Sigma^0_1\)-sound, it is
+not deductively complete.
+\end{hbtheorem}
+
+\begin{hbwarning}{def:p05-first-theorem-scope}{What the first theorem does not say}
+The theorem does not say that every formal theory is deductively
+incomplete, that \(G_T\) is unprovable in every stronger theory, or that
+no deductively incomplete theory can prove any consistency statement.
+The hypotheses and the subscript \(T\) are essential.
+\end{hbwarning}
+
+\section{Rosser's strengthening}
+\label{sec:p05-diagonalization-04}
+
+\begin{hbtheorem}{thm:p05-rosser}{sketched=annex:p5.4}{Rosser's theorem}
+Let \(T\) be a consistent computably enumerable theory extending
+\(\mathsf Q\).  Then there is a sentence \(R_T\) such that
+\[
+  T\notderives R_T
+  \qquad\text{and}\qquad
+  T\notderives\neg R_T.
+\]
+Thus consistency alone suffices for deductive incompleteness.
+\end{hbtheorem}
+
+The original source is \cite{Rosser1936}.  The Rosser sentence compares
+proof codes with the registered bounded order
+(Convention~\ref{def:p05-leq}); the comparison lemmas of
+Section~\ref{sec:p05-diagonalization-prereq} carry those steps inside
+\(\mathsf Q\).
+
+\begin{hbcorollary}{thm:p05-theoremhood-undecidable}{sketched=annex:p5.5}{Undecidability of theoremhood}
+If \(T\) is a consistent computably enumerable extension of
+\(\mathsf Q\), then the set of codes of theorems of \(T\) is computably
+enumerable but undecidable.
+\end{hbcorollary}
+
+An alternative proof reduces the self-application domain set to
+theoremhood by uniform representability.  The completion route taken in
+the annex makes explicit why independence of one fixed sentence does not
+by itself contradict decidability of the theorem set.

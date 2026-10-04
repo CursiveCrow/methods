@@ -1,0 +1,718 @@
+\chapter{Evidence synthesis and meta-analysis}
+\label{sec:p15-evidence-synthesis}
+
+A combined estimate answers a question only when the constituent estimates
+have an identified relation to that question. Precision cannot repair a
+change of outcome, population, intervention, time horizon or comparison.
+The evidence record of \ref{def:p19-evidence-record} supplies the study-level
+information needed before numerical synthesis. The inferential distinction
+between a confidence procedure and a posterior distribution remains the
+one in \ref{def:p19-uncertainty-terms}.
+
+The methodological presentation used here is Chapter~10 of the Cochrane
+Handbook, version~6.5, last updated November~2024, Sections~10.1--10.14
+\cite{DeeksEtAl2024Cochrane10}. The mathematical results below supply explicit
+derivations and delimit what is exact when variances are known, what remains
+a plug-in approximation when they are estimated, and what must be reported
+when studies differ. The worked studies are constructed examples, not a
+reanalysis of a clinical or psychological dataset.
+
+\section{Specify the combined question}
+\label{sec:p15-synthesis-compatibility}
+
+\begin{hbdefinition}{def:p15-synthesis-record}{A synthesis record and a common target}
+For each of \(k\geq1\) studies, record its population and recruitment,
+intervention and comparator versions, outcome definition and time horizon,
+assignment and analysis design, effect scale, estimate \(Y_i\), uncertainty
+calculation, missingness, and participants or records shared with other
+estimates. An \emph{estimand} \(\theta_i\) is the particular population
+quantity that \(Y_i\) estimates under its stated design/model assumptions.
+It is distinct from the estimate and from a causal interpretation.
+
+A common-effect synthesis asserts \(\theta_i=\theta\) for every included
+study after justified transformations. A finite weighted synthesis instead
+targets the explicit quantity \(\theta_a=\sum_i a_i\theta_i\), where
+the deterministic weights satisfy \(\sum_i a_i=1\). A random-effects
+synthesis posits a distribution of underlying study effects, with mean
+\(\mu\) and variance \(\tau^2\). These are three different targets.
+Study inclusion does not by itself identify a target population distribution
+for future studies or participants.
+\end{hbdefinition}
+
+\begin{hbmethod}{def:p15-synthesis-compatibility}{Compatibility before calculation}
+Specify the review question and eligibility criteria, identify the actual
+studies and overlapping reports, and check the data against their sources.
+Align intervention/comparator, outcome, follow-up, effect direction, target
+population and analysis design. Determine whether estimates are marginal or
+conditional on different adjustment variables. Specify a common estimand or
+the population distribution over which heterogeneous effects are to be averaged.
+Declare the transformation and its assumptions for each scale. Retain the
+study's clustering, repeated-measurement or crossover uncertainty calculation.
+Then choose a pooling model. If no meaningful shared quantity is established,
+present the separate estimates and their evidence records.
+\end{hbmethod}
+
+Clinical or task diversity can be relevant to a deliberately broad question;
+it does not automatically forbid synthesis. Conversely, similar numerical
+ranges do not establish a common measurement. In
+\ref{def:p19-composite-comparability}, a slope for a latent log-odds score and
+a slope for a proportion score have different units. Pooling them numerically
+would require a justified transformation of both estimates and uncertainties.
+Risk-of-bias differences can also produce heterogeneous observed estimates
+without identifying genuine population effect modification
+\cite[secs.~10.1, 10.10.1]{DeeksEtAl2024Cochrane10}.
+
+\begin{hbdefinition}{def:p15-synthesis-effect-scales}{Effect scales and denominators}
+For binary outcomes let \(p_T,p_C\) denote event probabilities for the
+specified treatment and comparator, at the same defined horizon. The risk
+difference is \(p_T-p_C\), the risk ratio is \(p_T/p_C\) when
+\(p_C>0\), and the odds ratio is
+\(\{p_T/(1-p_T)\}/\{p_C/(1-p_C)\}\) when both probabilities lie
+strictly between zero and one. Positive finite ratios are conventionally pooled on their
+natural-log scale and transformed back afterwards.
+
+For quantitative outcomes, the mean difference compares means in the same
+units. A standardized mean difference divides by a declared outcome standard
+deviation; that denominator is part of the estimand, not merely a change of
+display. A log mean ratio requires positive means and its own sampling model.
+A proportional-odds effect for an ordinal scale requires a specified threshold
+model. A rate ratio compares events per exposure time, while a hazard ratio
+compares instantaneous hazards among those still at risk. Neither generally
+equals a cumulative risk ratio.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p15-synthesis-scale}{proved=annex:p15.synthesis.scale}{Transformations that preserve or change the target}
+The following identities make scale compatibility testable.
+\begin{enumerate}
+\item Applying the same affine transformation \(X'=b+cX\), with
+      \(c>0\), to both groups multiplies a mean difference and its
+      standard error by \(c\); a difference standardized by the correspondingly
+      transformed outcome SD is unchanged. Changing the population SD
+      independently of measurement units need not preserve that standardized target.
+\item Replacing an event by its complement negates the risk difference and
+      reciprocates the odds ratio. The complementary risk ratio is
+      \((1-p_T)/(1-p_C)\), generally not the reciprocal risk ratio.
+\item A common risk ratio \(r\) implies a risk difference
+      \((r-1)p_C\). A common odds ratio \(o>0\) implies
+      \(p_T=op_C/(1-p_C+op_C)\). Absolute effects therefore depend on
+      comparator risk even when the relative effect is constant.
+\item A pooled log ratio \(\sum_i a_i\log r_i\) back-transforms to
+      \(\prod_i r_i^{a_i}\), not to the arithmetic mean of the ratios.
+\end{enumerate}
+\end{hbtheorem}
+
+An odds ratio conditional on covariates is not generally the same estimand as
+the marginal odds ratio. With equally frequent strata having comparator risks
+\(1/10\) and \(1/2\), a conditional odds ratio of two in both strata
+gives treatment risks \(2/11\) and \(2/3\). The marginal comparator
+risk is \(3/10\) and the marginal treatment risk is \(14/33\); the
+marginal odds ratio is \(98/57\), not two. This is a constructed
+non-collapsibility example, not evidence of confounding in a particular study.
+Its arithmetic is included in \ref{annex:p15.synthesis.scale}.
+
+\section{Weighted estimates and exact uncertainty}
+\label{sec:p15-synthesis-weights}
+
+\begin{hbdefinition}{def:p15-synthesis-linear-model}{Fixed weights, covariance and sampling assumptions}
+Let \(Y=(Y_1,\ldots,Y_k)^{\mathsf T}\) have finite second moments,
+\(E(Y_i)=\theta_i\), and covariance matrix \(\Sigma\). A fixed
+weight vector \(a\) is deterministic, chosen before the realized outcomes, and
+satisfies \(\mathbf1^{\mathsf T}a=1\). Its linear estimate is
+\(\widehat\theta_a=a^{\mathsf T}Y\). For independent estimates,
+write \(v_i=\operatorname{Var}(Y_i)>0\),
+\(w_i=1/v_i\), \(W=\sum_i w_i\), and
+\(\widehat\theta=\sum_iw_iY_i/W\). These \(v_i\) are actual,
+known sampling variances in the exact results. Reported squared standard
+errors \(s_i^2\) are estimates of them and are different objects.
+Throughout the interval calculations below, \(0<\alpha<1\).
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p15-synthesis-linear}{proved=annex:p15.synthesis.linear}{Linear pooling, covariance and optimal common-effect weights}
+For fixed \(a\),
+\[
+ E\widehat\theta_a=\sum_i a_i\theta_i,
+ \qquad \operatorname{Var}(\widehat\theta_a)=a^{\mathsf T}\Sigma a.
+\]
+If \(\theta_i=\theta\) and \(\Sigma\) is positive definite, the
+unique minimum-variance linear unbiased weight vector and its variance are
+\[
+ a_*={\Sigma^{-1}\mathbf1\over\mathbf1^{\mathsf T}\Sigma^{-1}\mathbf1},
+ \qquad V_*={1\over\mathbf1^{\mathsf T}\Sigma^{-1}\mathbf1}.
+\]
+For independent estimates these reduce to \(a_i=w_i/W\) and
+\(V_*=1/W\). If \(Y\) is multivariate normal and the covariance
+is known, then \(a_*^{\mathsf T}Y\pm z_{1-\alpha/2}\sqrt{V_*}\)
+is an exact confidence interval; in the independent case this is
+\(\widehat\theta\pm z_{1-\alpha/2}/\sqrt W\). Its coverage is exactly
+\(1-\alpha\) for \(\theta\), for
+\(0<\alpha<1\), where \(z_p\) is a standard-normal quantile.
+Without normality the same variance calculation is exact, but that normal
+interval does not automatically have the stated coverage.
+\end{hbtheorem}
+
+The precision claim for inverse-variance weighting refers to this model and
+class of linear estimators. Under heterogeneous fixed \(\theta_i\), the
+same known-weight calculation estimates their precision-weighted average.
+Its confidence interval concerns that particular average under the specified
+sampling model; it does not supply a common effect or a prediction for another
+population \cite[secs.~10.3.1, 10.10.4.1]{DeeksEtAl2024Cochrane10}.
+
+\begin{hbtheorem}{thm:p15-synthesis-estimated-weights}{proved=annex:p15.synthesis.estimated-weights}{Random weights do not inherit a fixed-weight guarantee}
+For integrable random normalized weights \(A_i(Y)\) and common mean
+\(E(Y_i)=\theta\), whenever the products are integrable,
+\[
+ E\!\left[\sum_i A_iY_i\right]-\theta
+       =\sum_i\operatorname{Cov}(A_i,Y_i).
+\]
+An estimator chosen by giving almost all weight to the larger of two
+independent \(N(\theta,1)\) observations can therefore be biased despite
+positive weights. In the limiting selection rule, its mean is
+\(\theta+1/\sqrt\pi\). For a positive definite fixed covariance
+matrix, misspecifying its entries also invalidates the nominal variance
+unless the resulting weight vector and actual covariance are used together.
+\end{hbtheorem}
+
+Using \(1/s_i^2\) may give a useful large-sample procedure when study
+estimates and standard errors are sufficiently well behaved. The exact theorem
+above does not establish its bias or coverage: the weights can depend on the
+same observations as the effects, and estimated small variances can be unstable.
+Zero or undefined variance estimates must be investigated; they are not infinite
+amounts of independent evidence. The approximate log-risk-ratio, log-odds-ratio
+and standardized-difference calculations need their actual within-study
+models, sample sizes and uncertainty formulas.
+
+\section{Outcome-specific analysis and sparse evidence}
+\label{sec:p15-synthesis-outcomes}
+
+\begin{hbmethod}{def:p15-synthesis-outcome-methods}{Choose a procedure for the recorded outcome}
+For a quantitative outcome on a common scale, pool comparable mean differences
+with their design-correct standard errors. For different instruments measuring
+the same intended construct, assess whether a standardized difference has a
+common meaning; standardization cannot establish construct validity.
+
+For binary outcomes distinguish inverse-variance, Mantel--Haenszel and Peto
+procedures. Mantel--Haenszel pools arm-level tables with an effect-specific
+weighting scheme. Peto's one-step method pools score/information quantities to
+approximate a log odds ratio; it is not a generic risk-ratio procedure.
+Sparse events, strongly unequal arms and large effects require particular
+care with those approximations. Applying a fixed continuity correction to
+zero cells changes estimates and their uncertainties, rather than recovering
+unobserved events. A study with no events in either arm does not establish a
+relative effect of one. Its absolute rarity information and review membership
+must still be retained.
+
+For ordinal data, use a common declared dichotomy, a justified quantitative
+scale, or an appropriate proportional-odds model. For recurrent events retain
+exposure time and within-person dependence. For time-to-event data retain the
+actual censoring/analysis assumptions and distinguish log-rank from Cox
+model summaries. A reported \(O-E\) score and its information produce a
+one-step effect on the scale of that score's model. The notation alone does
+not identify an odds ratio or hazard ratio.
+\end{hbmethod}
+
+These procedure distinctions are those of Sections~10.4--10.9
+\cite{DeeksEtAl2024Cochrane10}; they do not assert that every procedure is
+appropriate for every effect scale. A standard error must correspond to the
+same estimate, rather than to a different adjusted model or outcome.
+
+\begin{hbdefinition}{def:p15-synthesis-binary-tables}{Binary tables and the conditional odds model}
+In study \(i\), let \(a_i,b_i,c_i,d_i\) be event/non-event counts
+in the treatment and comparator arms, respectively. Put
+\(n_{Ti}=a_i+b_i\), \(n_{Ci}=c_i+d_i\),
+\(n_i=n_{Ti}+n_{Ci}\), and \(m_i=a_i+c_i\); both arms are nonempty.
+The Mantel--Haenszel odds-ratio and risk-ratio estimates are
+\[
+ {\sum_i a_id_i/n_i\over\sum_i b_ic_i/n_i},\qquad
+ {\sum_i a_in_{Ci}/n_i\over\sum_i c_in_{Ti}/n_i},
+\]
+when their denominators are positive. These are ratios of table-weighted
+totals, not inverse-variance averages of study log ratios. Their uncertainty
+is not supplied by the known-weight theorem for a different estimator.
+
+For the conditional odds model, assume independent Bernoulli observations
+within arms and independent studies, with a common log odds ratio \(\delta\)
+but separate comparator risks strictly between zero and one. Conditional on the arm sizes and total events,
+the treatment event count \(A_i\) has mass proportional to
+\[
+ {n_{Ti}\choose x}{n_{Ci}\choose m_i-x}e^{\delta x},
+ \quad \max(0,m_i-n_{Ci})\leq x\leq\min(n_{Ti},m_i).
+\]
+Write \(Z_i(\delta)\) for the finite sum of these weights. At
+\(\delta=0\), define
+\[
+ E_i={n_{Ti}m_i\over n_i},\qquad
+ V_i={n_{Ti}n_{Ci}m_i(n_i-m_i)\over n_i^2(n_i-1)}.
+\]
+The table formulas and Peto calculation are recorded in the May~2022
+formula supplement \cite[pp.~2, 4--5, 7]{DeeksHiggins2022RevMan}; this older
+formula source is used here for those specific binary calculations. The
+November~2024 chapter supplies the distinct current random-effects discussion.
+Peto's binary one-step calculation is
+\(\widehat\delta_P=\sum_i(a_i-E_i)/\sum_iV_i\), with approximate
+SE \((\sum_iV_i)^{-1/2}\), when \(\sum_iV_i>0\).
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p15-synthesis-score}{proved=annex:p15.synthesis.score}{The score calculation and its approximation boundary}
+The conditional log likelihood has score
+\(U(\delta)=\sum_i\{a_i-E_\delta(A_i)\}\) and negative second
+derivative \(I(\delta)=\sum_i\operatorname{Var}_\delta(A_i)\).
+At zero, its score/information are \(\sum_i(a_i-E_i)\) and
+\(\sum_iV_i\). The displayed Peto estimate is one Newton step from
+zero towards a conditional maximum-likelihood solution. Under the conditional
+null its score has exactly mean zero and variance \(I(0)\); a normal
+confidence interval for the one-step estimate remains an approximation.
+Studies with no events in either arm have zero score and zero information
+in this conditional relative-effect model. Their exclusion from that
+calculation does not establish zero risk or no absolute treatment effect.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p15-synthesis-table-delta}{proved=annex:p15.synthesis.table-delta}{A declared large-arm uncertainty calculation for table ratios}
+For independent Bernoulli arms, suppose the number of studies is fixed,
+\(n_{gi}/n\to\lambda_{gi}>0\) as \(n\to\infty\), and every
+event probability is fixed strictly between zero and one. If the odds ratio
+is common, the Mantel--Haenszel odds-ratio estimate is consistent for it.
+If the risk ratio is common, the corresponding risk-ratio estimate is
+consistent for it. A delta-method variance calculation for either log ratio
+\(f=\log(R/S)\) is
+\[
+ \widehat V_f=\sum_i\left\{
+       f_{a_i}^2 n_{Ti}\widehat p_{Ti}(1-\widehat p_{Ti})
+      +f_{c_i}^2 n_{Ci}\widehat p_{Ci}(1-\widehat p_{Ci})\right\},
+\]
+where \(\widehat p_{gi}\), \(g\in\{T,C\}\), is the observed arm
+event proportion: \(\widehat p_{Ti}=a_i/n_{Ti}\) and
+\(\widehat p_{Ci}=c_i/n_{Ci}\). The derivatives are evaluated
+at the observed counts. For the odds-ratio totals
+\(R=\sum a_i(n_{Ci}-c_i)/n_i\),
+\(S=\sum(n_{Ti}-a_i)c_i/n_i\), they are
+\[
+ f_{a_i}={n_{Ci}-c_i\over n_iR}+{c_i\over n_iS},\qquad
+ f_{c_i}=-{a_i\over n_iR}-{n_{Ti}-a_i\over n_iS}.
+\]
+For the risk-ratio totals \(R=\sum a_in_{Ci}/n_i\),
+\(S=\sum c_in_{Ti}/n_i\), they are
+\(f_{a_i}=n_{Ci}/(n_iR)\), \(f_{c_i}=-n_{Ti}/(n_iS)\).
+The standardized log-estimation error is asymptotically standard normal
+using \(\widehat V_f\). This is a specified independent-arm, large-arm
+delta procedure, not an assertion of exact small-sample coverage or identity
+with every finite-sample variance formula in the software supplement.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p15-synthesis-change}{proved=annex:p15.synthesis.change}{Changes, final values and a declared conversion model}
+Let \(X_0,X_1\) be baseline and final measurements. Then
+\[
+ \operatorname{Var}(X_1-X_0)
+ =\operatorname{Var}(X_1)+\operatorname{Var}(X_0)
+                   -2\operatorname{Cov}(X_0,X_1).
+\]
+If randomized groups have equal population baseline means, their difference
+in mean changes equals their difference in final means. Their estimated
+precision need not be equal. Standardizing by a change SD and by a final-value
+SD generally gives different targets.
+
+For a continuous latent outcome with equal-scale logistic laws
+\(F_g(x)=\{1+\exp(-(x-m_g)/s)\}^{-1}\), \(s>0\), define the
+event as exceeding a common threshold. Its log odds ratio is
+\((m_T-m_C)/s\). If that logistic scale has outcome SD
+\(s\pi/\sqrt3\), the standardized mean difference is
+\((\sqrt3/\pi)\log\mathrm{OR}\). The conversion requires this
+latent distribution and equal-variability model; a shared outcome label alone
+does not establish it. A standard error transforms by the same constant only
+within the assumed conversion.
+\end{hbtheorem}
+
+Post-intervention and change-score MDs may thus estimate the same randomized
+comparison while their SDs remain different. The required standard errors
+use the corresponding data. Post-intervention and change-score SMDs cannot
+be combined merely because both are called standardized differences. Medians,
+means, arithmetic means of raw values and means of logarithms are also distinct.
+Skewed small-sample data can make mean/SD summaries inadequate. A bounded-scale
+mean-to-SD diagnostic is a warning signal, not proof of normality; transforming
+or retrieving appropriate summaries may be necessary
+\cite[secs.~10.5--10.6]{DeeksEtAl2024Cochrane10}.
+
+\section{Heterogeneous effects and the uncertainty in heterogeneity}
+\label{sec:p15-synthesis-heterogeneity}
+
+\begin{hbdefinition}{def:p15-synthesis-random-model}{The normal random-effects model}
+For \(k\geq2\), posit
+\[
+ \Theta_i\sim N(\mu,\tau^2),\qquad
+ Y_i=\Theta_i+e_i,\qquad e_i\sim N(0,v_i),
+\]
+with all effects and errors independent, \(v_i>0\), and
+\(\tau^2\geq0\). The degenerate \(\tau^2=0\) case has
+\(\Theta_i=\mu\). For a specified heterogeneity variance \(u\geq0\),
+write
+\[
+ w_i(u)={1\over v_i+u},\quad W(u)=\sum_iw_i(u),\quad
+ M(u)={\sum_iw_i(u)Y_i\over W(u)},\quad
+ Q(u)=\sum_iw_i(u)(Y_i-M(u))^2.
+\]
+The source's random-effects summary concerns the mean of a modelled
+distribution of study effects. Systematic bias is not made mean zero by naming
+it a random effect. Generalization requires a reason to relate that modelled
+distribution to the intended setting.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p15-synthesis-random-known}{proved=annex:p15.synthesis.random-known}{Known heterogeneity, mean estimation and prediction}
+Under the preceding model with known \(v_i\) and known \(\tau^2\),
+\(M(\tau^2)\) is unbiased for \(\mu\), normally distributed with
+variance \(1/W(\tau^2)\). Its normal confidence interval for the mean
+has exact coverage. For an independent new effect
+\(\Theta_*\sim N(\mu,\tau^2)\),
+\[
+ M(\tau^2)\ \pm\ z_{1-\alpha/2}
+            \sqrt{\tau^2+1/W(\tau^2)}
+\]
+is an exact \(1-\alpha\) prediction procedure for \(\Theta_*\).
+For a future noisy estimate with independent normal error of variance \(v_*\),
+add \(v_*\) under the square root. A confidence interval for \(\mu\)
+alone is not this prediction interval.
+\end{hbtheorem}
+
+For equal within-study variances \(v_i=v\), the variance of the estimated
+mean is \((v+\tau^2)/k\), tending to zero as the number of studies grows.
+The future-effect prediction variance is \(\tau^2+(v+\tau^2)/k\),
+tending to \(\tau^2\). Precision about the mean can therefore increase
+while genuine effect variation remains.
+
+\begin{hbtheorem}{thm:p15-synthesis-q}{proved=annex:p15.synthesis.q}{Dispersion, moment estimation and a known-variance confidence set}
+Put \(w_i=w_i(0)\), \(W=W(0)\), and
+\(C=W-\sum_iw_i^2/W>0\). Under independent effects/errors with
+the random model's means and variances, without requiring normality,
+\[
+                    E Q(0)=k-1+\tau^2C.
+\]
+The moment estimate is therefore
+\[
+ \widehat\tau_{\rm DL}^2
+    =\max\{0,(Q(0)-(k-1))/C\}.
+\]
+The truncated estimate is not asserted to be unbiased. Under the full normal
+model and known \(v_i\), \(Q(\tau^2)\sim\chi^2_{k-1}\), and
+\(Q(u)\) is nonincreasing for \(u\geq0\). Hence
+\[
+ \{u\geq0:q_{\alpha/2,k-1}\leq Q(u)
+                         \leq q_{1-\alpha/2,k-1}\}
+\]
+has exact \(1-\alpha\) coverage for \(\tau^2\); here
+\(q_{p,d}\) is a chi-squared quantile. The set may be empty for a
+realized dataset. Replacing the \(v_i\) by estimated variances does not
+preserve this exact coverage claim automatically.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p15-synthesis-reml}{proved=annex:p15.synthesis.reml}{The restricted normal likelihood}
+In the known-within-variance normal model, a restricted log likelihood for
+\(u=\tau^2\geq0\), up to an additive constant, is
+\[
+ \ell_R(u)=-\tfrac12\left\{
+       \sum_i\log(v_i+u)+\log W(u)+Q(u)\right\}.
+\]
+Its derivative is
+\[
+ \ell_R'(u)=\tfrac12\left\{
+  \sum_iw_i(u)^2(Y_i-M(u))^2
+       -\sum_iw_i(u)+{\sum_iw_i(u)^2\over W(u)}\right\}.
+\]
+A global maximizer on \([0,\infty)\) exists when \(k\geq2\).
+It may be at zero; uniqueness is not asserted. This is not the profile
+likelihood obtained simply by substituting the best-fitting mean into the
+full likelihood. Practical REML with estimated within-study variances remains
+a plug-in normal-model procedure.
+\end{hbtheorem}
+
+The November~2024 presentation distinguishes REML from the
+DerSimonian--Laird moment procedure and treats uncertainty in the estimated
+between-study variance explicitly. An estimated \(\tau^2=0\), a
+nonsignificant dispersion test, or a small \(I^2\) does not establish that
+all effects are equal. Few studies give little information about a variance.
+A dispersion test with many precise studies can detect differences too small
+to matter to the review question
+\cite[secs.~10.10.2, 10.10.4.4--10.10.4.5]{DeeksEtAl2024Cochrane10}.
+
+\begin{hbdefinition}{def:p15-synthesis-inconsistency}{Two related inconsistency summaries}
+The Q-based summary is
+\[
+ I_Q^2=100\max\{0,(Q(0)-(k-1))/Q(0)\}\ \%,
+\]
+with zero assigned when \(Q(0)=0\). Put
+\(\widetilde v=(k-1)/C\). The tau-based summary is
+\[
+ I_\tau^2=100{\widehat\tau^2\over\widehat\tau^2+\widetilde v}\ \%.
+\]
+Here the factor 100 gives the percentage number: for example, a ratio of
+\(1/2\) is 50 percent. With the DL estimate the two summaries are identical.
+Write \(I_{\rm DL}^2\) for the tau-based summary using DL.
+With another heterogeneity estimator, such as REML, they need not be identical.
+They describe dispersion relative to within-study precision, not the proportion
+of studies that are biased or the probability that heterogeneity is present.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p15-synthesis-inconsistency}{proved=annex:p15.synthesis.inconsistency}{The moment-based identity and a precision limit}
+For the definitions above, \(I_{\rm DL}^2=I_Q^2\). For a fixed
+positive \(\widehat\tau^2\), the tau-based percentage tends to 100
+as \(\widetilde v\downarrow0\), without any increase in the absolute
+heterogeneity variance. Thus a universal magnitude interpretation from
+\(I^2\) alone is unavailable.
+\end{hblemma}
+
+\section{Estimated intervals and posterior uncertainty}
+\label{sec:p15-synthesis-intervals}
+
+\begin{hbdefinition}{def:p15-synthesis-hksj}{Wald and HKSJ calculations}
+After estimating \(u\) and replacing \(v_i\) by the reported
+\(s_i^2\) where needed, calculate \(w_i(u),W(u),M(u)\) by the
+same formulas. The Wald calculation uses \(s_M^2=1/W(u)\) and
+\(M(u)\pm z_{1-\alpha/2}s_M\). The HKSJ calculation uses
+\[
+ q_H={\sum_iw_i(u)(Y_i-M(u))^2\over k-1},\qquad
+ s_H^2={q_H\over W(u)},\qquad
+ M(u)\pm t_{k-1,1-\alpha/2}s_H.
+\]
+A variance safeguard sometimes replaces \(q_H\) by \(\max\{1,q_H\}\);
+that is a separate modified procedure. Estimated weights and estimated
+heterogeneity make these model-dependent approximate confidence calculations,
+not instances of the exact known-variance theorem. In particular HKSJ can
+be narrower than Wald when \(q_H\) is small, and its t multiplier can be
+very large with two or three studies.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p15-synthesis-fixed-shape-t}{proved=annex:p15.synthesis.fixed-shape-t}{When a weighted Student interval really is exact}
+For \(k\geq2\), if deterministic positive weights \(w_i\) are known and the observations
+are independent \(N(\mu,c/w_i)\) with a common unknown \(c>0\),
+then \(q_H/c\sim\chi^2_{k-1}/(k-1)\), independently of the weighted
+mean, and \((M-\mu)/\sqrt{q_H/W}\sim t_{k-1}\). The displayed
+weighted Student interval is therefore exact under this fixed-shape model.
+Choosing weights by estimating \(\tau^2\) from those same observations
+does not satisfy that premise in general.
+\end{hbtheorem}
+
+The chapter's simple approximate prediction calculation is
+\(M\pm t_{k-1,1-\alpha/2}\sqrt{\widehat\tau^2+s_M^2}\).
+Its implementation discussion also distinguishes using the normal multiplier
+when Wald is selected and the t multiplier when HKSJ is selected; the associated
+summary standard error must match the chosen procedure. Neither version is
+an exact prediction guarantee for estimated heterogeneity. Report the
+estimator, interval method, number of studies, heterogeneity estimate and its
+uncertainty together. More studies can make the mean precise while genuine
+effect variation stays large \cite[secs.~10.10.4.2--10.10.4.5]{DeeksEtAl2024Cochrane10}.
+
+\begin{hbtheorem}{thm:p15-synthesis-bayes}{proved=annex:p15.synthesis.bayes}{Proper-prior normal synthesis and predictive variance}
+In the normal model, give \((\mu,u)\), \(u\geq0\), a proper
+prior probability measure \(\Pi_{\rm syn}\) with finite second moment for \(\mu\) and finite
+mean for \(u\). The posterior has kernel
+\[
+ \Pi_{\rm syn}(d\mu,du)\prod_i(v_i+u)^{-1/2}
+       \exp\!\left[-\tfrac12\sum_i{(Y_i-\mu)^2\over v_i+u}\right].
+\]
+Its normalizing constant is finite and strictly positive. For an independent
+new effect from the model,
+\[
+ E(\Theta_*\mid Y)=E(\mu\mid Y),\qquad
+ \operatorname{Var}(\Theta_*\mid Y)
+    =E(u\mid Y)+\operatorname{Var}(\mu\mid Y).
+\]
+The prior and model, including their heterogeneity uncertainty, are part of
+this posterior statement. Reusing the same study evidence in the prior and
+likelihood without modelling that dependence counts it twice.
+\end{hbtheorem}
+
+Bayesian intervals concern posterior mass, with sensitivity to priors and
+likelihood assumptions; frequentist coverage concerns repetition under a
+specified sampling model. A uniform density over an unbounded parameter
+range is not a proper probability distribution. An improper-prior analysis
+requires its own posterior-propriety argument. The mathematical proposition
+here uses a proper prior and supplies that argument
+\cite[sec.~10.13]{DeeksEtAl2024Cochrane10}.
+
+\section{Dependence, subgroups and missing information}
+\label{sec:p15-synthesis-dependence}
+
+\begin{hbtheorem}{thm:p15-synthesis-dependence}{proved=annex:p15.synthesis.dependence}{Duplicated records and a shared comparator}
+Two reports of the same unbiased estimate \(Y\) with variance \(v>0\)
+have average \(Y\), with variance \(v\), not \(v/2\). If independent
+treatment-arm sample means share one comparator mean, their contrasts have
+covariance equal to the comparator mean's variance. For two common-mean
+estimates of variance \(v\) and correlation \(r\in[-1,1]\), the
+equally weighted mean has variance \(v(1+r)/2\). Assuming independence
+without evidence can thus substantially understate or overstate uncertainty.
+\end{hbtheorem}
+
+Use the study/participant as the appropriate independent unit. Link multiple
+reports from the same study, choose a predeclared outcome/time-point rule,
+combine compatible arms within the original design, or model their covariance.
+Splitting a shared comparator's sample size among contrasts may be a particular
+approximation; it does not make the original observations independent.
+An unknown covariance needs a justified model or a sensitivity range constrained
+to valid covariance matrices. Analyses of cluster-randomized and crossover
+studies must retain the within-study dependence adjustment before their estimates
+are combined. One cannot infer a covariance matrix from separate standard errors
+alone \cite[secs.~10.3.3, 10.12.1]{DeeksEtAl2024Cochrane10}.
+
+\begin{hbtheorem}{thm:p15-synthesis-subgroups}{proved=annex:p15.synthesis.subgroups}{A subgroup contrast is a separate comparison}
+Partition independent known-variance estimates into \(G\geq2\) nonempty
+groups. Write \(W_g=\sum_{i\in g}w_i\),
+\(M_g=\sum_{i\in g}w_iY_i/W_g\). Then
+\[
+ Q(0)=\sum_g\sum_{i\in g}w_i(Y_i-M_g)^2
+                    +\sum_gW_g(M_g-M(0))^2.
+\]
+Under a common normal effect, the between-group term has
+\(\chi^2_{G-1}\) law. For two group summaries with actual variances
+\(V_1,V_2\) and covariance \(c_{12}\), the difference has variance
+\(V_1+V_2-2c_{12}\). A significant result within one group and a
+nonsignificant result within another does not establish a group difference.
+\end{hbtheorem}
+
+For example, constructed independent group summaries \(1.0\) with SE
+\(0.4\) and \(0.9\) with SE \(0.5\) have null standardized
+statistics 2.5 and 1.8, on opposite sides of the usual 1.96 threshold.
+Their difference is 0.1 with SE \(\sqrt{0.41}\), giving only about
+0.156 standardized units. Comparing the two significance labels would
+claim an interaction unsupported by the actual contrast.
+
+Study-level subgroup analyses are observational comparisons even when each
+trial randomized its own participants. Meta-regression needs a predeclared
+covariate model, enough studies and covariate variation, appropriate weights,
+and residual heterogeneity. Confounded covariates can make explanations
+non-identifiable. Equal study mean ages do not rule out within-study age
+modification: a model with effects increasing with age and a model with a
+constant effect can have the same study-level averages. Prognostic factors
+need not modify an intervention effect. Dose-response conclusions from
+randomized within-study dose contrasts have a different evidential standing
+from associations across study doses. Searching many covariates or cutpoints
+changes the false-positive opportunity; a selected explanation requires
+confirmation \cite[sec.~10.11]{DeeksEtAl2024Cochrane10}.
+
+\begin{hbdefinition}{def:p15-synthesis-missing}{Missingness and the retained denominator}
+Missing studies, unreported outcomes, missing summary variances, missing
+participant outcomes and missing moderator values are different problems.
+For participant data, let \(R\) record what is observed. Missing completely
+at random means independence of \(R\) from the complete data; missing at
+random means that, conditional on observed data and covariates, the missingness
+law does not depend on the unobserved values. Neither statement by itself
+justifies every complete-case analysis. The required model and conditioning
+variables must be supplied. Missing not at random permits dependence on the
+unobserved values after that conditioning.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p15-synthesis-missing-bounds}{proved=annex:p15.synthesis.missing-bounds}{Finite missing-outcome bounds}
+In a group with \(N=n+m>0\) allocated participants, \(n\) observed
+outcomes, \(m\) missing outcomes and \(e\) observed events,
+the full-sample event proportion lies in
+\([e/N,(e+m)/N]\). For two groups its risk difference therefore lies in
+\[
+ \left[{e_T\over N_T}-{e_C+m_C\over N_C},
+             {e_T+m_T\over N_T}-{e_C\over N_C}\right].
+\]
+Both endpoints are attainable by assigning the missing binary outcomes.
+These are deterministic bounds for the allocated sample, not population
+confidence limits. A sensitivity model assigning event risks to the missing
+participants supplies additional assumptions, whose uncertainty must be retained.
+\end{hbtheorem}
+
+Request missing information where possible, retain eligible studies in the
+review even when they cannot enter a numerical synthesis, and state every
+imputation assumption. Filling a missing SD or event count with a chosen
+number does not make it observed. Treating imputed quantities as known can
+understate uncertainty. Single imputation, multiple imputation with uncertainty,
+and a full missing-data model have different inferential requirements.
+The separate assessment of selectively unavailable studies/results belongs
+to missing-evidence methodology; a pooled estimate alone cannot detect or
+correct that selection \cite[sec.~10.12]{DeeksEtAl2024Cochrane10}.
+
+\section{A complete pooling calculation and sensitivity}
+\label{sec:p15-synthesis-example}
+
+\begin{hbtheorem}{thm:p15-synthesis-sensitivity}{proved=annex:p15.synthesis.sensitivity}{Fixed-weight sensitivity identities}
+For positive deterministic \(w_i\), let \(W=\sum_iw_i\) and
+\(M=\sum_iw_iY_i/W\). If \(W>w_j\), deleting study \(j\)
+without changing the other weights gives
+\[
+ M_{-j}-M={w_j\over W-w_j}(M-Y_j),\qquad
+ {\partial M\over\partial w_j}={Y_j-M\over W}.
+\]
+If study bias shifts satisfy \(|b_i|\leq B_i\), the pooled shift
+is bounded by \(\sum_i(w_i/W)B_i\), with both extremes attainable.
+Deleting a study and re-estimating heterogeneity changes all weights, so the
+deletion identity alone does not compute that random-effects sensitivity.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p15-synthesis-complete-example}{Three compatible studies and two stated models}
+Suppose three independent estimates on the same difference scale are
+\(Y=(-2,-1,2)\), with \emph{known} variances \(v=(1,1,4)\).
+No actual study is claimed. The common-effect weights are
+\((1,1,1/4)\), \(W=9/4\), and
+\[
+ M(0)=-10/9\approx-1.1111,\quad
+ \operatorname{Var}M(0)=4/9,\quad Q(0)=29/9.
+\]
+Under the common normal model, the 95 percent mean interval is approximately
+\([-2.4178,0.1955]\). The data also permit a heterogeneous interpretation;
+the dispersion estimate does not select a model automatically.
+Here \(C=4/3\) and \(\widehat\tau_{\rm DL}^2=11/12\).
+The resulting random-effects plug-in weights are
+\((12/23,12/23,12/59)\), with
+\[
+ W=1692/1357,\qquad M=-131/141\approx-0.9291,
+ \qquad s_M^2=1357/1692\approx0.8020.
+\]
+The plug-in Wald interval is approximately \([-2.6843,0.8262]\).
+It is not the exact known-heterogeneity interval because \(11/12\) was
+estimated from these three observations. The HKSJ and prediction calculations,
+as well as removal of the third estimate, are completed in
+\ref{annex:p15.synthesis.example}; with only three studies their uncertainty
+must be interpreted cautiously.
+
+If the third estimate is actually another report from the same participants
+as the first, these independence weights are invalid. If it measures a different
+construct or time horizon without an identified bridge, the numerical mean
+answers no established shared question. If its positive sign makes it an
+unwanted outlier, removing it for that reason would select the conclusion;
+report the declared sensitivity and its rationale.
+\end{hbexample}
+
+\begin{hbtheorem}{thm:p15-synthesis-example}{proved=annex:p15.synthesis.example}{Worked intervals and failure constructions}
+The displayed three-study calculation follows from the stated formulas.
+The same formulas produce distinct common-effect, estimated-heterogeneity,
+HKSJ and prediction summaries. A duplicated estimate falsely treated as
+independent understates its standard error by a factor \(\sqrt2\).
+The displayed group estimates give incompatible significance labels without
+a significant subgroup contrast. Twenty independent level-0.05 null comparisons
+have probability \(1-0.95^{20}\approx0.642\) of at least one rejection;
+without independence the union bound is at most one. A pair of study-level
+average effects does not identify an unreported within-study effect modifier.
+\end{hbtheorem}
+
+\begin{hbmethod}{def:p15-synthesis-report}{Report the synthesis and the decisions that can change it}
+State the target and compatible study set, effect scale and direction,
+independent units and overlap handling, estimate/SE extraction, weighting
+procedure, heterogeneity estimator, interval method and any prediction target.
+Report the constituent effects with their uncertainties, the number of studies,
+the pooled estimate and interval, absolute heterogeneity and its uncertainty,
+and the extent of missing information. Keep confidence and prediction intervals
+distinct. Where appropriate, translate the result to an absolute scale at a
+stated comparator risk, retaining uncertainty about that risk.
+
+Compare justified alternative eligibility boundaries, outcome times, bias
+assessments, missing-data assumptions, variance/correlation imputations,
+effect measures, common/random-effects procedures, heterogeneity estimators
+and small-sample intervals. Specify prior choices in a Bayesian analysis.
+A sensitivity analysis examines alternative ways of estimating the declared
+target; a subgroup analysis estimates and compares distinct group targets.
+Report important changes in magnitude, sign and uncertainty together with
+the assumptions producing them. Agreement across the chosen analyses does
+not establish robustness to an unexamined selection or measurement failure.
+\end{hbmethod}
+
+\begin{proofboundary}{def:p15-synthesis-boundary}{Limits of the combined conclusion}
+The exact normal, fixed-weight and covariance results require their explicit
+premises. Practical estimated weights, sparse-event approximations, unknown
+heterogeneity, selective availability and unmeasured biases retain their own
+uncertainties. A random-effects mean does not correct a systematically biased
+corpus. A nonsignificant heterogeneity or interaction test does not establish
+absence. The chapter supplies no causal transport theorem from an average
+across observed studies to every new population, and no general guarantee
+that a selected subgroup explanation is the cause of observed differences.
+\end{proofboundary}

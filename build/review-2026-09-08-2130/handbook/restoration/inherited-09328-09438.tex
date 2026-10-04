@@ -1,0 +1,552 @@
+\section{G\"odel coding}
+\label{sec:arithmetic-coding-04}
+
+\begin{definition}[G\"odel numbering]
+A \emph{G\"odel numbering} is an injective effective encoding of the
+specified syntactic objects by natural numbers.  Primitive recursiveness of
+recognition and of the operations on these codes is a property to be proved,
+not an additional hypothesis used to obtain arithmetization.
+\end{definition}
+
+We use the following numbering for the primitive arithmetic language
+\(\Lang_A=\{0,S,+,\times\}\), with equality logical, and the actual
+\(\ND_{\FOL}\) calculus of \cref{sec:fol-deduction-01} and
+\cref{sheet:nd-fol}.  Thus \(T\derives\sigma\) in this section means
+\(T\derives_{\ND_{\FOL}}\sigma\).  This fixes the effective-calculus
+choice in the earlier use of \(\derives\); it includes the classical rule
+\(\mathsf{RAA}\), equality, and explicit alpha conversion.  We encode
+fully expanded formulas: numerals, infix function notation, comparisons,
+and marked bounded quantifiers are the previously declared abbreviations.
+The program numbering and computation-history coding of Part IV are unchanged.
+Write \(\ulcorner E\urcorner\) for the code in its declared syntactic
+sort; \(\overline{\ulcorner E\urcorner}\) is its arithmetic numeral.
+
+\paragraph{Lists and constructor codes.}
+Put
+\[
+ C(a,b)=1+\operatorname{pair}_{\N}(a,b),\qquad
+ []=0,\qquad [a_0,\ldots,a_{k-1}]=C(a_0,[a_1,\ldots,a_{k-1}]).
+\]
+Here \(\operatorname{pair}_{\N}(a,b)=(a+b)(a+b+1)/2+b\) is the
+already fixed numerical pairing.  For \(c>0\), let \(h(c),t(c)\)
+be the unique pair with \(C(h(c),t(c))=c\), and put
+\(h(0)=t(0)=0\).  Both components are less than \(c\).
+Consequently every natural number is the code of exactly one finite list;
+zero codes its empty list.  Define its length and entries by
+\[
+ \ell(c)=\min\{j\le c:t^j(c)=0\},\qquad
+ (c)_j=\begin{cases}h(t^j(c)),&j<\ell(c),\\0,&j\ge\ell(c).
+ \end{cases}
+\]
+The superscript here means iteration.  Define
+\(N_k(a_0,\ldots,a_{r-1})=C(k,[a_0,\ldots,a_{r-1}])\).
+The outer constructor tag and its argument list are uniquely recoverable.
+
+The following table is the complete tree grammar; each child displayed as a
+term or formula must itself have that type, and the argument list must have
+exactly the displayed length.  Variable indices \(i\) range over \(\N\).
+\[
+\begin{array}{c|c@{\qquad}c|c}
+ \text{object}&\text{code}&\text{object}&\text{code}\\\hline
+ x_i&N_0(i)&0&N_1()\\
+ S(r)&N_2(\ulcorner r\urcorner)&+(r,t)&N_3(\ulcorner r\urcorner,\ulcorner t\urcorner)\\
+ \times(r,t)&N_4(\ulcorner r\urcorner,\ulcorner t\urcorner)&r=t&N_5(\ulcorner r\urcorner,\ulcorner t\urcorner)\\
+ \bottom&N_6()&\neg\varphi&N_7(\ulcorner\varphi\urcorner)\\
+ \varphi\land\psi&N_8(\ulcorner\varphi\urcorner,\ulcorner\psi\urcorner)&
+ \varphi\lor\psi&N_9(\ulcorner\varphi\urcorner,\ulcorner\psi\urcorner)\\
+ \varphi\to\psi&N_{10}(\ulcorner\varphi\urcorner,\ulcorner\psi\urcorner)&
+ \forall x_i\varphi&N_{11}(i,\ulcorner\varphi\urcorner)\\
+ \exists x_i\varphi&N_{12}(i,\ulcorner\varphi\urcorner)&&
+\end{array}
+\]
+Each proper child code is less than its parent.  Zero, a wrong tag, a wrong
+arity, or a child of the wrong type is not a term or formula code.  In
+particular a nullary function and the empty list are different objects.
+
+For literal symbols assign token numbers \(0,\ldots,14\), in this order,
+to \(0,S,+,\times,=,\bottom,\neg,\land,\lor,\to,\forall,\exists,(,),\text{comma}\);
+assign \(15+i\) to \(x_i\).  A symbol has code \(N_{13}(a)\), where
+\(a\) is its token number; a string of tokens \(a_0\cdots a_{k-1}\)
+has code \(N_{14}([a_0,\ldots,a_{k-1}])\).  These sorts are disjoint
+from tree codes.  A formula's governing code is its tree code, not its
+string code.  Its canonical spelling is exactly the prefix term and
+parenthesized formula grammar of \cref{ch:fol-syntax-semantics}:
+\(S(r),+(r,t),\times(r,t),r=t,\bottom,\neg\varphi,
+(\varphi\mathbin\circ\psi),Qx_i\varphi\).
+Spaces are not tokens.  The empty string is a valid string but no expression.
+For a symbol code require outer tag \(13\) and one argument, then use the
+finite token table to test a logical, punctuation, or function-symbol kind;
+a token at least \(15\) is a variable, with index its token minus \(15\).
+For a string require outer tag \(14\) and one list argument.  Constructor
+injectivity and induction on tree formation prove injectivity in each
+syntactic sort; the distinct outer tags separate symbols and strings from
+terms and formulas.
+
+\paragraph{Primitive-recursive implementation of the coding.}
+The following elementary closure details specify the bounds used below.
+Truncated subtraction is obtained by recursion using predecessor; zero tests,
+order tests, and equality tests follow from it.  Bounded sums and products
+are primitive recursions, and a bounded least search is a bounded sum using
+the tests that all earlier candidates fail (with a specified default on
+failure).  These observations use precisely the class defined in
+\cref{sec:turing-machines-02}.  The triangular numbers satisfy
+\(u(0)=0, u(n+1)=u(n)+n+1\), so the displayed pairing is primitive
+recursive without adding division as an initial operation.  Its inverse
+uses two searches bounded by \(c\) for \(C(a,b)=c\).  Iteration of
+\(t\), length, entry, and all fixed-length constructor projections are
+therefore primitive recursive.
+
+Reversing a list repeatedly removes its head and prepends it to an
+accumulator, for exactly \(\ell(c)\) iterations; concatenation reverses
+the first list and prepends its entries to the second.  Filtering, bounded
+membership, and finite union have the same bounded-loop form.  A loop whose
+state is a coded list, whose single update is primitive recursive, and
+whose iteration bound is a primitive-recursive function of its inputs is
+primitive recursive: first iterate its update by primitive recursion on a
+separate counter, then substitute the bound.  No bound on the numerical
+size of intermediate states is needed for this closure argument.
+
+Course-of-values computations on codes are implemented by a list of the
+already computed rows \(0,\ldots,c-1\).  At step \(c\), earlier rows are
+retrieved by bounded list access and the new row is appended.  Thus any
+specified primitive-recursive update using only proper child codes defines
+a primitive-recursive function.  Apply this simultaneously to the two type
+tests in the table: at row \(c\) test its tag and arity and consult the
+required earlier term/formula tests.  This proves recognition, rather than
+assuming it.  The same construction computes canonical spelling, tree-node
+count, and lists of all and of free variable indices.  At \(Qx_i\varphi\),
+the all-variable list includes \(i\), and the free-variable list removes
+\(i\) from that of \(\varphi\).  A sentence is a formula with empty
+free-variable list.  All these functions return zero on an invalid input
+tree; their uses always include the appropriate type test.
+
+For completeness, recognition starting from a string also has an explicit
+primitive-recursive bound.  Set
+\[
+ L_0(b)=0,\quad L_{j+1}(b)=C(b,L_j(b)),\quad
+ B(0,q)=q+16,\quad
+ B(k+1,q)=B(k,q)+1+C(14,L_2(B(k,q))).
+\]
+If a string has \(k\) tokens, all at most \(q\), its expression tree,
+if any, has at most \(k\) nodes and code at most \(B(k,q)\).
+Indeed variable indices are at most \(q\), tags are at most \(12\),
+arities at most two, and an argument list of length at most two with
+entries at most \(b\) is at most \(L_2(b)\).  Induction on tree height,
+using monotonicity of pairing, gives the bound.  Search all tree codes up
+to \(B(k,q)\) for the required type and identical canonical spelling.
+Unique readability makes the result unique.  Use \(q=0\) for the empty
+string and return zero when the search fails.  This supplies primitive-
+recursive conversion in both directions, with explicit malformed cases.
+
+\paragraph{Substitution and alpha conversion.}
+Let \(\nu(0)=N_1()\) and \(\nu(n+1)=N_2(\nu(n))\); thus
+\(\nu(n)=\ulcorner\overline n\urcorner\) by induction on \(n\).
+For numeral substitution in a tree, replace \(N_0(i)\) by \(\nu(n)\),
+leave other variables and \(0,\bottom\) unchanged, and commute with every
+function, equality, and Boolean constructor.  At a quantifier with binder
+\(i\), leave its entire subtree unchanged; at any other binder recur on
+the matrix without renaming.  A numeral has no variables, so these are
+exactly all applicable clauses of the book's capture-avoiding substitution.
+The course-of-values construction just given proves this total function
+primitive recursive, with value zero on malformed input.
+
+The rule checker also needs arbitrary term substitution.  Reject an input
+that is not a term or formula, or a replacement that is not a term, and
+return zero in those cases.  Use the precise
+three quantifier clauses of \cref{sec:fol-syntax-semantics-04}, including
+the least fresh index when renaming is required.  Here is a bounded
+implementation, which also proves primitive recursiveness of that operation.
+Traverse the input using a stack of constructor frames, processing children
+from left to right and assembling the result when their frames return.
+An entry frame records the current tree, substitution index, replacement
+term, and mode (main substitution or fresh renaming).  A return frame
+records the constructor, its binder index if any, its unprocessed children,
+and the already returned child codes.  Both are fixed-field list records;
+the stack is a list of them.  Entering a nonterminal constructor replaces
+its entry by a return frame and the first child's entry.  Returning a
+child appends its result to that return frame and either enters the next
+child or returns the constructor assembled from the completed list.  A
+terminal return propagates its code to the waiting frame; an empty waiting
+stack marks completion.  These operations specify the traversal update
+using only the list operations already constructed.
+At a variable return the replacement term or the unchanged variable; the
+constant and constructor cases are as above.  At \(Qx_j\psi\), stop
+if \(j=i\).  If \(j\ne i\) and \(j\) is absent from the replacement
+term, process \(\psi\).  Otherwise find the least index \(z\) absent
+from \(\operatorname{Var}(\psi)\cup\operatorname{Var}(t)\cup\{i,j\}\),
+first replace the free occurrences of \(x_j\) in \(\psi\) by \(x_z\),
+and then process that renamed matrix with the original replacement request.
+For this case a continuation frame saves the original request and binder
+\(z\), enters the preliminary renaming mode, and on its return enters
+main mode on the returned matrix before assembling that quantifier.
+The search for \(z\) is bounded by one plus the largest index in that
+finite union.  The preliminary renaming stops beneath another \(x_j\)
+binder.  Because \(z\) is absent from the whole matrix, this preliminary
+pass requires no further renaming, and changes no tree shape.
+
+Every main-traversal call concerns one node of the original tree with only
+variable names possibly changed; an inserted copy of \(t\) is returned
+as a code and is not processed again.  There are at most \(n\) main node
+visits, where \(n\) is the input's node count.  Each of at most \(n\)
+preliminary renamings visits at most \(n\) nodes.  Entering or returning
+from a frame and moving to the next child require a fixed number of stack
+operations, as all constructors have at most two children.  For example
+\(20(n+1)^2\) iterations suffice if a frame step performs its tag test,
+list projections, variable-list calculation, and bounded fresh search in
+one update; each of these updates is already primitive recursive.
+After termination make the update leave the final state fixed.  Iterating
+for this bound gives the result by the bounded-loop principle.  An induction
+on the processed tree, with the preliminary renaming clause just verified,
+identifies it with the defined capture-avoiding substitution, including a
+renaming even when the substituted variable does not occur freely.
+
+For alpha equivalence, traverse a formula with the list of enclosing binder
+indices, most recent first.  Replace each bound variable occurrence by the
+position of its first matching entry, each free occurrence by its original
+index with a distinct free-variable tag, and each binder by its quantifier
+tag alone.  More precisely use \(N_{18}(j)\) for a bound occurrence at
+zero-based stack position \(j\), \(N_{17}(i)\) for a free \(x_i\),
+and \(N_{11}(b)\) or \(N_{12}(b)\) for a binder with matrix record
+\(b\); retain all other constructor tags and child positions.
+These are comparison records, not formula codes.  Stack operations and searches
+through at most \(n\) enclosing binders give a bounded primitive-recursive
+traversal.  Two formulas are alpha-equivalent exactly when these records
+agree.  To justify both directions, each generating fresh renaming in the
+definition preserves the record, as do equivalence and constructor
+congruence.  Conversely, for equal records choose distinct variable indices
+for corresponding binder positions, all absent from both original formulas.
+Rename binders from outside inward to these indices.  Each step is a
+permitted generating fresh renaming; nearest-binder positions and free
+indices then make the two resulting formulas literally identical.  There
+are finitely many binders, so this proves the converse without an appeal
+to semantic equivalence.  Reject nonformulas before performing this test.
+
+\paragraph{Exact derivation records.}
+A derivation record is \(N_{15}(R)\), where \(R\) is a nonempty list of
+rows in postorder.  Row \(j\) has exactly five fields
+\([r,a,J,U,l]\): a rule tag, concluding formula code, ordered list of
+premise-row indices, list of rule parameters, and assumption marker.
+The marker is \(0\) for an unmarked assumption and \(i+1\) for label
+\(i\); it must be zero at other rules.  Every premise index is less than
+\(j\), every nonlast row occurs exactly once among all premise lists,
+and the last row occurs zero times.  These requirements encode a tree,
+not shared subderivations: following parent edges strictly increases the
+index and must end at the sole row without a parent.  Thus every row is
+connected to the last row.  The empty list is not a derivation.
+
+Assign tags \(0,\ldots,19\), respectively, to
+\[
+\begin{gathered}
+ \mathsf{assumption},\ \land I,\ \land E_1,\ \land E_2,\
+ \lor I_1,\ \lor I_2,\ \lor E,\ \to I,\ \to E,\
+ \neg I,\ \neg E,\ \bottom E,\ \mathsf{RAA},\\
+ \forall E,\ \exists I,\ \forall I,\ \exists E,\ \alpha,\ =I,\ =E.
+\end{gathered}
+\]
+All other rule tags are rejected.  Parameters are empty unless specified
+below.  Reject any wrong list length, wrong type, extra parameter, or
+failure of a displayed condition.  Every row formula must be a formula.
+
+Maintain at each row the list \(O_j\) of its open assumption-leaf indices.
+An assumption has no premises, empty parameters, and \(O_j=[j]\).
+For any non-discharge rule take the concatenation of the premise lists;
+\(=I\) has no premises and hence the empty open list.  For a list \(O\),
+write \(D_i^\theta(O)\) for removal of all leaves whose marker is
+\(i+1\) and whose formula is literally \(\theta\).  Whenever a rule
+calls this removal, require at least one such leaf.  This implements the
+book's nonvacuous, formula-specific labelled discharge; it does not remove
+an occurrence in a different premise branch merely because its marker agrees.
+
+The following complete list specifies the row checks.  Letters for formulas
+and terms below denote decoded objects, so all equalities in these checks
+are literal syntactic equality except the stated alpha test.
+\begin{enumerate}
+\item \(\land I\) has premises \(\varphi,\psi\) and conclusion
+\(\varphi\land\psi\).  The two eliminations select the indicated child
+of the sole conjunctive premise.  The two disjunction introductions have
+one premise equal to the indicated child of their disjunctive conclusion.
+\item \(\lor E\) has parameters \([i,j]\), premises
+\(\varphi\lor\psi,\chi,\chi\), and conclusion \(\chi\).  Its open
+list is the major premise's open list, followed by
+\(D_i^\varphi(O_{\rm second})\) and \(D_j^\psi(O_{\rm third})\).
+\item \(\to I\) has parameter \([i]\), premise \(\psi\), and
+conclusion \(\varphi\to\psi\); its open list is
+\(D_i^\varphi(O_{\rm premise})\).  The \(\to E\) premise order is
+\(\varphi,\varphi\to\psi\), with conclusion \(\psi\), as in the
+body rule display.  The rule sheet displays the opposite premise order;
+exchanging those two child positions is the exact encoding translation.
+\item \(\neg I\) has parameter \([i]\), premise \(\bottom\),
+conclusion \(\neg\varphi\), and removes \(\varphi^i\).
+\(\neg E\) has premises \(\varphi,\neg\varphi\) and concludes
+\(\bottom\).  The rule \(\bottom E\) has sole premise \(\bottom\)
+and any formula as conclusion.  The rule \(\mathsf{RAA}\) has parameter
+\([i]\), premise \(\bottom\), conclusion \(\varphi\), and removes
+\((\neg\varphi)^i\).
+\item \(\forall E\) has parameters \([i,b,t]\), where \(b\) codes
+\(\varphi\) and \(t\) a term; its premise is \(\forall x_i\varphi\)
+and conclusion is the computed \(\varphi[t/x_i]\).  The rule
+\(\exists I\) uses the same parameters, premise \(\varphi[t/x_i]\),
+and conclusion \(\exists x_i\varphi\).
+\item \(\forall I\) has parameter \([i]\), premise \(\varphi\),
+conclusion \(\forall x_i\varphi\), and requires \(i\) absent from
+the free-variable list of every open premise assumption.
+\item \(\exists E\) has parameters \([i,b,y,k]\), where \(b\)
+codes \(\varphi\); its premises are \(\exists x_i\varphi\) and
+\(\psi\), and its conclusion is \(\psi\).  Remove
+\(D_k^{\varphi[x_y/x_i]}\) from the minor open list and concatenate
+the remaining list with the major open list.  Require \(y\) absent
+from the all-variable lists of \(\psi\), \(\exists x_i\varphi\),
+and every remaining open assumption.  This is the source's absence
+condition, which is stronger than merely not being free.
+\item \(\alpha\) has one premise alpha-equivalent to its conclusion.
+The rule \(=I\) has parameter \([t]\), no premises, and conclusion
+\(t=t\).  The rule \(=E\) has parameters \([r,t,b,i]\), where
+\(b\) codes \(\varphi\), premises \(r=t,\varphi[r/x_i]\), and
+conclusion \(\varphi[t/x_i]\).  No occurrence of \(x_i\) in
+\(\varphi\) is required.
+\end{enumerate}
+There is no additional repetition, arbitrary equivalence, logical-axiom,
+or implicit substitution rule.  A use of a universally quantified
+nonlogical axiom is an assumption of that sentence followed by the actual
+\(\forall E\) steps.  Thus for a fixed finite axiom set
+\(T=\{\tau_0,\ldots,\tau_{m-1}\}\), the axiom-leaf test is the
+finite disjunction \(a=\ulcorner\tau_j\urcorner\), \(j<m\).
+Its instances with supplied terms are checked by the substitution and
+\(\forall E\) tests just specified, not treated as a new axiom schema.
+This also covers \(m=0\): no open assumption is then permitted.  The
+universal closures in the definition of \(\mathsf Q\), for example,
+are its seven axiom sentences, rather than an unspecified collection of
+logical or substitution axioms.
+
+\begin{definition}[Computably enumerable theory]
+Relative to the fixed G\"odel numbering, a theory
+\(T\subseteq\Sent(\Lang_A)\) is \emph{computably enumerable} iff
+\[
+  \set{\ulcorner\sigma\urcorner:\sigma\in T}
+\]
+is a computably enumerable set of natural numbers.  This term classifies the
+given set of axioms \(T\); it does not mean that \(T\) is deductively closed,
+and it does not define \(T\) as the set of its derivable consequences.  The
+distinction is required because the proof predicate below verifies uses of
+members of \(T\) by finite accepting-computation certificates.  Fix a
+program index \(e_T\) in the existing Part IV numbering whose partial
+function has domain exactly this set of axiom codes.  This is the
+domain convention for a c.e. set; an enumeration presentation gives such
+an index through \cref{thm:enumeration}.
+\end{definition}
+
+\paragraph{Certified axiom leaves.}
+Write \(V(e,a,s)\) for the numerical truth value of the already fixed
+bounded formula \(\mathsf{Comp}(\overline e,\overline a,\overline s)\)
+in \(\mathcal N\).  The arguments here are numbers; \(V\) is a
+metamathematical characteristic function, not an added arithmetic symbol.
+It is primitive recursive.  Indeed evaluate each fixed term by its
+\(0,S,+,\times\) operations, an atomic equality by numerical comparison,
+and each Boolean connective by its Boolean truth table.  For a marked
+bounded existential use a bounded sum followed by a positivity test, and
+for a marked bounded universal use a bounded product.  Substitute the
+primitive-recursively evaluated bound into that recursion.  Its bound
+variable is absent from the bounding term.  Empty existential ranges give
+zero, and empty universal ranges give one.  Structural induction on this
+one fixed formula in its accepted marked-bounded presentation, expanding
+its relational abbreviations while retaining the marked bounds for this
+evaluation, proves the claim.  The meanings of the bounded-quantifier
+abbreviations identify this value with truth of their full first-order
+expansion.  This argument asserts no uniform truth predicate for
+arbitrary unbounded arithmetic formulas.
+
+A \(T\)-proof code is \(N_{16}(d,W)\), where \(d=N_{15}(R)\)
+passes all the derivation checks and has a sentence as root formula.
+If its root open list is \([j_0,\ldots,j_{u-1}]\), require
+\(W=[s_0,\ldots,s_{u-1}]\) of exactly that length.  For each \(v<u\),
+the leaf formula \(a_{j_v}\) must be a sentence and satisfy
+\(V(e_T,a_{j_v},s_v)=1\).  Discharged temporary assumptions need no
+axiom certificate.  When \(u=0\), \(W=0\) is required and there is
+no call to an axiom-membership test.  Define the numerical relation
+\(\mathsf{Proof}_T(p,x)\) by these checks together with equality of
+\(x\) and the root formula code.  Every other number is rejected.
+For a fixed finite \(T\), one may instead use \(N_{16}(d,0)\) and
+apply its finite membership test to all root open leaves; the selected
+convention must remain fixed when naming a proof predicate.
+
+\begin{example}[A finite-sequence code]
+One illustrative component code assigns to
+\((a_0,\ldots,a_{k-1})\) the natural number
+\[
+  \operatorname{pair}_{\N}\left(k,\prod_{i<k}p_i^{a_i+1}\right),
+\]
+where \(p_i\) is the \(i\)-th prime.  For \((2,0,1)\), the product is
+\[
+  2^3\cdot3^1\cdot5^2=600,
+\]
+so the complete code is \(\operatorname{pair}_{\N}(3,600)\).  The
+exponent \(a_i+1\) rather than \(a_i\) is what distinguishes trailing
+zeros; pairing with \(k\) additionally makes the length available by a
+projection rather than by factoring.  This is a separate prime-power
+illustration; the governing syntax and derivation codes in this section
+are the constructor/list codes above, and the computation witnesses retain
+the Part IV \(\beta\) coding.
+\end{example}
+
+\begin{theorem}[Arithmetization of syntax]
+For the explicit numbering above, symbol-kind, term, formula, and sentence
+recognition; conversions between canonical strings and trees; numeral
+formation; capture-avoiding substitution (in particular numeral
+substitution); alpha equivalence; finite-axiom membership and explicitly
+specified axiom instantiations; and correctness of the specified finite
+\(\ND_{\FOL}\) derivation records are primitive recursive.  Correctness
+from a fixed finite set of nonlogical axioms is primitive recursive.
+For every fixed c.e. axiom set \(T\), the certified relation
+\(\mathsf{Proof}_T\) is primitive recursive and, for every sentence
+\(\sigma\),
+\[
+ T\derives\sigma
+ \quad\Longleftrightarrow\quad
+ \exists p\in\N\;\mathsf{Proof}_T(p,\ulcorner\sigma\urcorner).
+\]
+On the right is the numerical relation just defined.  This is a
+standard-model coding theorem, without a claim about what \(\mathsf Q\)
+proves concerning all codes.
+\end{theorem}
+
+\begin{proof}
+The list inverses, child-code recursion, string bound, substitution
+traversals, and alpha-record argument above prove the assertions about
+syntax, including their total defaults.  In particular none follows merely
+from termination of an unspecified search.
+
+For a derivation code, loop through its \(\ell(R)\) rows.  Each row has
+fixed length, each premise list is checked for the required rule arity,
+and each reference is earlier than its row.  Parent counts are bounded
+sums over these lists.  Compute \(O_j\) from already computed rows,
+using list concatenation and the indicated discharge filters.  Each local
+rule test is a finite combination of constructor decoding, the proved
+substitution and alpha tests, and a loop over the current open list for
+freshness or discharge.  These are all primitive recursive.  Store the
+open lists in the accumulated row table, so the whole computation is
+primitive recursion on \(\ell(R)\), followed by its root check.
+Malformed or empty records return false.  Finite-axiom membership adds
+only its finite disjunction; certified c.e. membership adds a loop of
+length \(\ell(W)\) through the primitive-recursive function
+\(V(e_T,a,s)\).  Thus both versions of the proof relation are primitive
+recursive, even though membership in a c.e. axiom set need not be decidable.
+
+It remains to prove that the checker recognizes the intended derivations.
+Induct over the postorder rows.  An assumption row is exactly an open
+assumption leaf; an \(=I\) row is exactly the premise-free identity rule.
+At each other row the child subtrees are disjoint, the checked formula
+pattern is the corresponding displayed rule, and concatenation lists
+exactly their open assumption occurrences.  Each discharge filter removes
+exactly the marked occurrences specified for its premise and formula and
+checks nonvacuity.  The remaining lists therefore are precisely the open
+assumptions of the new subtree.  The \(\forall I\) free-variable test
+and the \(\exists E\) all-occurrence test are exactly their respective
+side conditions.  The substitution and alpha tests have already been
+identified with the book's syntactic operations.  This proves the
+induction invariant, not just matching of the concluding formulas.
+Connectedness makes the last row's subtree the whole recorded tree.
+
+Suppose now that \(\mathsf{Proof}_T(p,\ulcorner\sigma\urcorner)\)
+holds.  The preceding induction extracts a genuine
+\(\ND_{\FOL}\) derivation of \(\sigma\).  For every open leaf,
+\cref{thm:bounded-verification} turns its successful \(V\) test into
+an accepting numerical computation of program \(e_T\) on its formula
+code.  By the choice of \(e_T\) that sentence belongs to \(T\).
+Consequently the extracted derivation proves \(T\derives\sigma\).
+
+Conversely, take a finite \(\ND_{\FOL}\) derivation of \(\sigma\)
+with open assumptions in \(T\).  List its actual tree nodes in postorder,
+put the displayed rule witnesses (terms, matrices, indices, discharge
+labels) into their parameter lists, and use the existing assumption labels
+with the stated marker convention.  The rule-by-rule induction in the
+other direction shows that all row and open-list checks succeed.  There
+are finitely many root open leaves.  For each, its membership in \(T\)
+means that \(\varphi_{e_T}\) is defined on its code; the other direction
+of \cref{thm:bounded-verification} provides a finite witness \(s_v\).
+Choosing witnesses for this finite list requires only finite successive
+existential instantiation.  Their list \(W\), or the empty list when
+there are no open leaves, produces the required proof code.  The finite
+axiom version has the identical argument with direct membership checks.
+\end{proof}
+
+\begin{definition}[Proof and provability predicates for the certified presentation]
+\label{def:fixed-proof-predicate}
+Let \(T\) be computably enumerable and contain \(\mathsf Q\).  Use the
+certified primitive-recursive numerical relation \(\mathsf{Proof}_T(p,x)\)
+just constructed, with its fixed index \(e_T\).  By the
+\(\Sigma^0_1\) clause of \cref{thm:representability}, fix the same symbol
+for a
+specific \(\Sigma^0_1\) formula that numeralwise represents this relation in
+\(\mathsf Q\).  Define
+\[
+  \mathsf{Prov}_T(x)\defeq\exists p\,\mathsf{Proof}_T(p,x).
+\]
+The declared \(\Sigma^0_1\) class is closed under unbounded existential
+quantification, so \(\mathsf{Prov}_T\) is a \(\Sigma^0_1\) formula by
+the syntactic hierarchy definition.  The
+\(\beta\) coding of \cref{lem:goedel-beta} supplies the computation
+histories inside the axiom certificates; the surrounding syntax trees
+and proof sequences use the explicitly different list codes above.
+The numeralwise representing formula is supplied by
+\cref{thm:representability}, in addition to the numerical checker theorem.
+This definition retains the certified presentation and its chosen formula.
+The standard \(\PA\) development separately specifies the direct formula
+\(\mathsf{Prv}^{19}_{\PA}\) in
+\cref{def:p05-selected-direct-pa-graph}; its internal derivability
+conditions are proved in
+\cref{thm:p05-direct-pa-internal-mp,thm:p05-direct-pa-d3}.
+Those constructions do not identify an arbitrary numeralwise representative
+with the direct formula inside arithmetic.
+\end{definition}
+
+\begin{lemma}[The first derivability condition from numeralwise representation]
+\label{lem:p05-numeralwise-d1}
+For every computably enumerable \(T\supseteq\mathsf Q\) and every
+sentence \(\sigma\), the predicate just defined satisfies
+\[
+ T\derives\sigma\quad\Longrightarrow\quad
+ T\derives\mathsf{Prov}_T(\overline{\ulcorner\sigma\urcorner}).
+\]
+\end{lemma}
+\begin{proof}
+Suppose \(T\derives\sigma\).  The numerical direction of
+\cref{thm:arithmetization-syntax} supplies a standard number \(p\) for
+which the numerical relation
+\(\mathsf{Proof}_T(p,\ulcorner\sigma\urcorner)\) holds.
+The positive clause of numeralwise representation therefore gives an actual
+\(\mathsf Q\)-derivation of the arithmetic formula
+\[
+ \mathsf{Proof}_T(\bar p,\overline{\ulcorner\sigma\urcorner}).
+\]
+Every open axiom of that derivation belongs to \(T\), since
+\(\mathsf Q\subseteq T\).  It is consequently a \(T\)-derivation.
+Apply the actual \(\exists I\) rule with the closed term \(\bar p\)
+to obtain the required \(\mathsf{Prov}_T\) instance.  This argument uses
+the cited numeralwise representation clause in addition to the numerical
+checker theorem; it proves the displayed metatheoretic implication.
+\end{proof}
+
+\begin{warning}[Mentioning a sentence inside arithmetic]
+The expression \(\mathsf{Prov}_T(\varphi)\) is ill-typed if \(\varphi\) is a
+formula rather than a number term.  The correct expression is
+\(\mathsf{Prov}_T(\overline{\ulcorner\varphi\urcorner})\), often abbreviated
+only after the coding convention has been declared.
+\end{warning}
+
+\begin{exercise}
+\label{ex:arithmetic-coding-02}
+Define a primitive recursive relation saying that a finite sequence is a
+correct addition computation
+\(a,a+1,\ldots,a+b\).  Explain how the relation supports representability of
+addition.
+\end{exercise}
+
+\begin{exercise}
+\label{ex:arithmetic-coding-03}
+Distinguish the following three assertions by giving their types:
+\(T\derives\sigma\),
+\(\mathcal N\entails\mathsf{Prov}_T(\overline{\ulcorner\sigma\urcorner})\),
+and
+\(T\derives\mathsf{Prov}_T(\overline{\ulcorner\sigma\urcorner})\).
+State one hypothesis that connects each adjacent pair.
+\end{exercise}

@@ -1,0 +1,182 @@
+\section{Relative computation and Post's theorem}
+\label{sec:decision-hierarchy-03}
+
+Many-one reducibility compares sets by a total computable translation of
+questions.  Relative computation compares them by permitting one
+computation to consult a fixed set during its run.
+
+\begin{definition}[Oracle Turing machine and Turing reducibility]
+An \emph{oracle Turing machine} with oracle \(B\subseteq\N\) is a
+deterministic single-tape Turing machine augmented with a distinguished
+query operation: at a query, the machine computes a number \(n\) and
+control passes to one of two designated states according as \(n\in B\) or
+\(n\notin B\).  The run is otherwise governed by the fixed machine
+definition.  An oracle Turing machine \emph{computes} a partial numerical
+function by the input and output discipline fixed for ordinary machines,
+read verbatim with the oracle present: on the input word
+\(\operatorname{bin}(x)\), its value is the numerical output when the run
+halts accepting with a valid numerical output, and its value is undefined
+when the run rejects, diverges, or accepts without a valid numerical
+output.  A set \(A\subseteq\N\) is \emph{Turing reducible} to
+\(B\), written \(A\leq_T B\), iff some oracle Turing machine with oracle
+\(B\) decides \(A\).  A set is \emph{computably enumerable relative to}
+\(B\) iff it is the domain of a partial function computed by some oracle
+Turing machine with oracle \(B\).
+\end{definition}
+
+Every many-one reduction yields a Turing reduction: translate the input and
+query the oracle once.  The converse fails: \(\N\setminus K\leq_T K\) by
+a single query with the answer reversed, while
+\(\N\setminus K\not\leq_m K\), because computable enumerability is
+preserved downward by many-one reductions, \(K\) is computably enumerable,
+and \(\N\setminus K\) is not.
+
+\begin{definition}[Turing jump]
+\label{def:turing-jump}
+Fix an effective numbering of oracle Turing machines analogous to the
+fixed machine numbering: the same designated-slot normalization, with the
+query rows included in the row list, and with every number that is not a
+valid code denoting an oracle machine that diverges on every input.  For
+a valid code \(e\) and an oracle \(B\subseteq\N\), let \(\varphi^B_e(x)\)
+be the numerical output when the decoded machine with oracle \(B\), on
+the input word \(\operatorname{bin}(x)\), halts accepting with a valid
+numerical output, and leave \(\varphi^B_e(x)\) undefined when that run
+rejects, diverges, or accepts without a valid numerical output.  The
+\emph{Turing jump} of \(B\subseteq\N\) is
+\[
+  B'\defeq\set{e\in\N:\varphi^B_e(e)\text{ is defined}}.
+\]
+Define \(B^{(0)}\defeq B\) and
+\(B^{(n+1)}\defeq(B^{(n)})'\); in particular \(\varnothing^{(n)}\) is the
+\(n\)-th jump of the empty set.
+\end{definition}
+
+\begin{lemma}[Relativized adequacy]
+\label{lem:relativized-adequacy}
+For every oracle \(B\subseteq\N\):
+\begin{enumerate}[label=(\alph*)]
+\item every partial function computed by an oracle Turing machine with
+      oracle \(B\) occurs as \(\varphi^B_e\) for some valid code \(e\);
+\item there is a fixed oracle machine computing a function
+      \(U^B(e,x)\simeq\varphi^B_e(x)\) for all \(e,x\in\N\); and
+\item for every \(m,n\geq1\) there is a total computable function
+      \(\mathsf{par}_n^m:\N^{m+1}\to\N\), not depending on \(B\), with
+      \(\varphi^B_{\mathsf{par}_n^m(e,\bar a)}(\bar x)
+      \simeq\varphi^B_e(\bar a,\bar x)\) for every index \(e\), all
+      argument tuples, and every oracle \(B\) simultaneously.
+\end{enumerate}
+\textit{Status: proof sketch.}
+\end{lemma}
+
+\begin{proofplan}
+Clause (a) relativizes the proof of \cref{thm:enumeration}: renaming
+commutes with the step relation with the query rows included, the
+surrogate-start and automatic-alphabet arguments are unchanged, and the
+designated-slot normalization applies to the extended row list.  Clause
+(b) relativizes the universal simulation behind
+\cref{thm:universal-computation}, passing each query of the simulated
+machine through to the oracle.  Clause (c) relativizes the compiler
+construction given for \cref{thm:parameter}, copying the query rows
+unchanged; the compiled table transformation does not consult the oracle,
+which gives the simultaneous claim.  The omitted verifications are
+exactly those of the results being relativized.
+\end{proofplan}
+
+By \cref{lem:relativized-adequacy}(a), a set is computably enumerable
+relative to \(B\) iff it is the domain of some \(\varphi^B_e\).
+
+\begin{theorem}[Jump theorem]
+\label{thm:jump}
+For every \(B\subseteq\N\):
+\begin{enumerate}[label=(\alph*)]
+\item \(B'\) is computably enumerable relative to \(B\); and
+\item \(B'\not\leq_T B\).
+\end{enumerate}
+\textit{Status: proof sketch.}
+\end{theorem}
+
+\begin{proofplan}
+(a) \(B'\) is the domain of the partial function
+\(e\mapsto U^B(e,e)\), which an oracle machine with oracle \(B\) computes
+by \cref{lem:relativized-adequacy}(b).
+
+(b) Relativized diagonal.  Suppose some oracle machine with oracle \(B\)
+decides \(B'\), and let \(h^B\) be its total characteristic function,
+with \(h^B(e)=1\) iff \(e\in B'\).  Define
+\[
+  d^B(e)\simeq
+  \begin{cases}
+    0, & h^B(e)=0,\\
+    \text{undefined}, & h^B(e)=1.
+  \end{cases}
+\]
+Then \(d^B\) is computed by an oracle machine with oracle \(B\): run the
+decider, then write \(0\) and accept, or enter an infinite loop.  By
+\cref{lem:relativized-adequacy}(a), fix \(b\) with
+\(\varphi^B_b\simeq d^B\).  Then \(b\in B'\) iff \(\varphi^B_b(b)\) is
+defined iff \(h^B(b)=0\) iff \(b\notin B'\), a contradiction.
+
+The displayed diagonal calculation is complete, but clause (a) rests on
+the relativized universal machine and clause (b) on the occurrence clause
+of \cref{lem:relativized-adequacy}, both proof sketches; the status
+policy of the front matter forbids complete-proof status over a sketch
+dependency, which is why this theorem is a proof sketch.
+\end{proofplan}
+
+\begin{theorem}[Post]
+For every \(n\in\N\) and every \(A\subseteq\N\):
+\begin{enumerate}
+  \item \(A\in\boldsymbol{\Sigma}^0_{n+1}\) iff \(A\) is computably
+        enumerable relative to \(\varnothing^{(n)}\); and
+  \item \(A\in\boldsymbol{\Delta}^0_{n+1}\) iff
+        \(A\leq_T\varnothing^{(n)}\).
+\end{enumerate}
+\textit{Status: cited theorem.}
+\end{theorem}
+
+See \cite{Shoenfield1967} for a complete proof; the handbook treatment in
+\cite{Barwise1977} develops the relativized machinery in full.  The cited
+proofs classify relations through prefix-form formulas;
+\cref{thm:prefix-normal-form} transfers those classifications to the
+classes fixed here.  Post's
+theorem ties the syntactic hierarchy to iterated jumps, and the first
+three clauses of the strictness theorem above follow from it together with
+the jump theorem, \cref{thm:jump}:
+\(\varnothing^{(n+1)}\) is computably enumerable relative to
+\(\varnothing^{(n)}\) but not Turing reducible to it, so
+\(\boldsymbol{\Sigma}^0_{n+1}\ne\boldsymbol{\Delta}^0_{n+1}\).  The
+final inclusion clause additionally uses the join of
+\(\varnothing^{(n)}\) with its complement and the completeness of
+\(\varnothing^{(n)}\) among sets computably enumerable relative to
+\(\varnothing^{(n-1)}\); those steps are part of the cited proof.
+
+\begin{remark}[Convention bridge for the jump]
+\label{rem:jump-convention}
+Write \(A\equiv_m B\), \emph{many-one equivalence}, iff
+\(A\leq_m B\) and \(B\leq_m A\); the standing is a metalinguistic relation
+between subsets of \(\N\), and it is used only in this remark and the
+results that cite it.  Four computable table transformations align this
+jump with the conventions of the cited sources.  (i)
+\(K\equiv_m\varnothing'\): an
+ordinary transition table embeds as a query-free oracle table, and an
+oracle machine with oracle \(\varnothing\) is simulated by answering
+every query negatively.  (ii) The halting-based jump of the cited sources
+is \(\equiv_m\) the present \(B'\): the map \(e\mapsto e^*\), where
+\(e^*\) simulates \(e\) and, on any halt of the simulation, writes \(0\)
+and accepts, reduces halting to definedness; the map
+\(e\mapsto e^{**}\), where \(e^{**}\) diverges unless the simulated halt
+is accepting with a valid numerical output, reduces definedness to
+halting.  All four maps are computable table transformations, made
+uniform in their inputs by \cref{thm:parameter}.  Jump monotonicity ---
+\(A\leq_T B\) implies \(A'\leq_m B'\) --- is used explicitly in this
+alignment: replace each \(A\)-query of an oracle machine with oracle
+\(A\) by a run of a fixed oracle-\(B\) decider for \(A\), then align the
+self-application indices by the relativized parameter theorem,
+\cref{lem:relativized-adequacy}(c), with padding.  Hence Post's theorem
+is insensitive to the choice between the two conventions, and the
+citations stand.
+\textit{Status: proof sketch --- the four table transformations are
+elementary, but the monotonicity step runs through
+\cref{lem:relativized-adequacy}(c), itself a proof sketch.}
+\end{remark}
+

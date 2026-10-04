@@ -1,0 +1,493 @@
+\chapter{Computable Function Operators}
+\label{sec:p04-function-operators}
+
+Computing with a function requires a name of the function, not
+only the assertion that each of its values exists.
+This chapter develops evaluation, integration, differentiation and
+zero finding in the name/realizer framework of
+\cref{sec:p04-represented-spaces}.
+Its primary source is the corrected second version, July 1995,
+of Weihrauch's \emph{A Simple Introduction to Computable Analysis},
+Chapters 6--7, pages 42--54 \cite{Weihrauch1995IntroductionRS}.
+Its source-native representations and operand types are retained
+below. Local reconstructions supply proofs where that text
+explicitly omits one.
+
+\section{Names of continuous functions}
+\label{sec:p04-fo-names}
+
+\begin{hbconvention}{def:p04-fo-native-notation}{Source alphabet, rational words and typed operands}
+In the July 1995 presentation, \(\Sigma\) is a sufficiently
+large finite alphabet, \(\Sigma^*\) consists of finite words
+and \(\Sigma^\omega\) of infinite symbol streams.
+Its separators are \(\#\) and the distinct cent character
+\(\text{\textcent}\).
+The notation \(\nu_{\mathrm{bin}}\) reads the word \(0\)
+or a binary word beginning with \(1\) as a natural number.
+The native \(\nu_{\mathbb Q}:\Sigma^*\rightharpoonup\mathbb Q\)
+reads such nonnegative integer words, their nonzero negatives,
+and signed reduced fractions \(u/v\), with nonzero numerator,
+denominator greater than one, and relatively prime numerator
+and denominator. It is undefined on other finite words
+(Appendix C, Definition C1).
+Write \(\bar u=\nu_{\mathbb Q}(u)\) on its domain.
+This finite-word notation and the host numerical rational
+decoder in \cref{def:p04-rs-rational-code} have different
+input types; the shared glyph does not identify them.
+
+Write \(C[0,1]\) for real-valued continuous functions on
+\([0,1]\), \(C(\mathbb R)\) for those on \(\mathbb R\), and
+\(\mathrm{Pg}\) for functions linear between successive
+rational vertices, with domain endpoints zero and one.
+Define \(\lVert h\rVert_\infty
+=\max_{0\leq t\leq1}|h(t)|\) and
+\(d(f,g)=\lVert f-g\rVert_\infty\).
+Throughout the native clauses below, \(\rho_C\) names a
+scalar real, \(\delta_C\) names a function on \([0,1]\),
+and \(\delta_{\mathbb R}\) names a function on \(\mathbb R\).
+In contrast, host \(\delta_{\mathrm C}\) consumes a Baire
+stream of numerical rational codes and names a scalar real.
+Every operand's domain and codomain, not subscript typography,
+determines the representation being used.
+\end{hbconvention}
+
+\begin{hbdefinition}{def:p04-fo-native-scalar}{Native scalar Cauchy names: \(\rho_C\)}
+The source Definition 3.1 defines
+\(\rho_C:\Sigma^\omega\rightharpoonup\mathbb R\) by
+\[
+ \rho_C(p)=x
+ \quad\text{iff}\quad
+ p=u_0\#u_1\#\cdots,\quad
+ (\forall n)(\forall j>n)\ |\bar u_j-\bar u_n|<2^{-n},
+ \quad x=\lim_n\bar u_n,
+\]
+with every \(u_n\in\dom(\nu_{\mathbb Q})\).
+The pairwise clause implies
+\(|\bar u_n-x|\leq2^{-n}\) by taking the limit;
+the source error-to-limit consequence is not a replacement
+for its strict pairwise clause.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p04-fo-native-functions}{Native function names: \(\delta_C\) and \(\delta_{\mathbb R}\)}
+Source Definition 6.5 first defines
+\(\alpha:\Sigma^*\rightharpoonup\mathrm{Pg}\):
+the word \(w=u_0\#v_0\#\cdots\#u_m\#v_m\)
+names the linear polygon with vertices
+\((\bar u_0,\bar v_0),\ldots,(\bar u_m,\bar v_m)\),
+provided every word is a valid rational word and
+\(0=\bar u_0<\cdots<\bar u_m=1\).
+Then \(\delta_C:\Sigma^\omega\rightharpoonup C[0,1]\)
+is defined by
+\[
+ \begin{split}
+ \delta_C(p)=f\quad\text{iff}\quad&
+ p=w_0\text{\textcent}w_1\text{\textcent}\cdots,\
+ w_n\in\dom(\alpha),\\
+ &(\forall n)(\forall j>n)\
+ d(\alpha(w_j),\alpha(w_n))<2^{-n},\\
+ &(\forall n)\ d(f,\alpha(w_n))\leq2^{-n}.
+ \end{split}
+\]
+Equivalently the last clause can be stated as
+\(f=\lim_n\alpha(w_n)\); the strict pairwise clause then
+implies the displayed limit-error bounds.
+
+Source Definition 6.1 defines
+\(\delta_{\mathbb R}:\Sigma^\omega\rightharpoonup C(\mathbb R)\).
+A name has complete records
+\[
+ p=u_0\#v_0\#x_0\#y_0\text{\textcent}\,
+   u_1\#v_1\#x_1\#y_1\text{\textcent}\cdots
+\]
+of valid rational words and denotes \(f\) exactly when,
+for all rational \(a,b,c,d\),
+\[
+ f([a,b])\subseteq(c,d)
+ \quad\Longleftrightarrow\quad
+ (\exists i)\ (a,b,c,d)
+ =(\bar u_i,\bar v_i,\bar x_i,\bar y_i).
+\]
+No natural-index padding convention is part of this native
+record syntax. Reversed domain intervals are empty;
+their vacuous properties are included in the source clause.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p04-fo-polygons}{Uniform polygon names}
+Write \(C[0,1]\) for the real-valued continuous functions on
+\([0,1]\), and
+\(\lVert f\rVert_\infty=\max_{0\leq x\leq1}\lvert f(x)\rvert\).
+A rational polygon has vertices
+\((t_0,y_0),\ldots,(t_m,y_m)\), where
+\(0=t_0<\cdots<t_m=1\) and all coordinates are rational;
+it is linear between successive vertices.
+Use an effective finite code recording the number of vertices
+and their rational codes from \cref{def:p04-rs-rational-code}.
+Valid codes are decidably recognizable. Reserve code zero for
+the zero polygon.
+
+The representation \(\gamma_{\mathrm P}\) interprets a Baire
+stream of valid polygon codes \(P_n\) as \(f\) exactly when
+\[
+ \lVert P_n-f\rVert_\infty\leq2^{-n}\quad\text{for every }n.
+\]
+Only valid names are promised; checking all these inequalities
+is not part of the representation.
+\end{hbdefinition}
+
+Rational polygons are dense: uniform continuity gives a fine
+rational partition on which variation is small, and rational
+approximations to its vertex values give a uniformly close
+linear interpolant. This proves existence of names, not a
+computable modulus for an unnamed continuous function.
+The annex makes the construction and uniqueness explicit.
+
+Define the separate host \(\gamma_{\mathrm{pair}}\) on
+Baire streams of numerical polygon codes by both the strict
+pairwise and limit-error clauses of native \(\delta_C\).
+This is a representation bridge, not a new name for the
+source-native \(\delta_C:\Sigma^\omega\rightharpoonup C[0,1]\).
+
+\begin{hbdefinition}{def:p04-fo-boxes}{Compact-range information}
+A local box-name of \(f\in C[0,1]\) lists exactly all rational
+quadruples \((a,b,c,d)\), with
+\(0\leq a\leq b\leq1\), \(c<d\), for which
+\[
+ f([a,b])\subseteq(c,d).
+\]
+Encode their indices plus one, with zero padding and arbitrary
+order/repetition, and call this representation
+\(\gamma_{\mathrm B}\).
+For \(C(\mathbb R)\), use the same property on every ordered
+rational compact interval without restricting \(a,b\);
+call it \(\gamma_{\mathbb R}\).
+This host index representation is compared with the native
+finite-word records by the following theorem.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p04-fo-naming}{proved=annex:p04-fo-naming}{Function-name bridges with both directions}
+The representations \(\gamma_{\mathrm P}\),
+\(\gamma_{\mathrm{pair}}\) and \(\gamma_{\mathrm B}\) are
+computably equivalent. Native \(\delta_C\) is computably
+equivalent to them by explicit finite-word/code translators;
+native \(\delta_{\mathbb R}\) is computably equivalent to
+host \(\gamma_{\mathbb R}\).
+Native scalar \(\rho_C\) is computably equivalent to the
+host scalar \(\delta_{\mathrm C}\).
+Restriction from a
+\(\gamma_{\mathbb R}\)-named global function to \([0,1]\)
+is computable. Conversely, a \(\gamma_{\mathrm P}\)-name
+computably gives a global box-name of the constant-endpoint
+extension \(x\mapsto f(\min(1,\max(0,x)))\).
+Thus the restricted-global representation of source
+Theorem 6.6 and the host representation are equivalent.
+\end{hbtheorem}
+
+\begin{hbconvention}{def:p04-fo-native-operators}{Native operator input and output representations}
+The source evaluation signature is
+\((\delta_{\mathbb R},\rho_C,\rho_C)\):
+its first operand is a global function name, its second
+a scalar argument name, and its output a scalar value name.
+Differentiation has signature \((\delta_C,\delta_C)\)
+on \(C^1[0,1]\): both operands name functions.
+Global integration has signature
+\((\delta_{\mathbb R},\rho_C,\rho_C,\rho_C)\),
+with two scalar limits and a scalar output;
+the unit-interval integral has \((\delta_C,\rho_C)\).
+The native zero relation has \((\delta_C,\rho_C)\),
+from a named function to a scalar zero.
+The host algorithms below are transferred to these native
+signatures by the two-way bridges just stated.
+\end{hbconvention}
+
+The source's strict pairwise clause needs a precision shift;
+mere convergence is not enough. The box-to-polygon proof
+searches for an actual finite cover by small-range boxes.
+It does not receive a modulus for free.
+For a polygon \(P\), its maximum, slope bound, and minimum
+of \(\lvert P\rvert\) on a finite union of rational compact
+intervals are computable rational data: inspect vertices,
+endpoints and any linear zero crossings.
+
+\section{Evaluation, a modulus and integration}
+\label{sec:p04-fo-integration}
+
+\begin{hbtheorem}{thm:p04-fo-evaluation}{proved=annex:p04-fo-evaluation}{Evaluation and effective compact control}
+Evaluation \( (f,x)\mapsto f(x)\) is computable from
+\(\gamma_{\mathrm P}\)-names and scalar Cauchy names,
+on the domain \(x\in[0,1]\).
+A name also computes a modulus \(\mu\) satisfying
+\[
+ |x-y|\leq2^{-\mu(n)}
+ \ \Longrightarrow\
+ |f(x)-f(y)|\leq2^{-n}.
+\]
+It computes \(\max_{[0,1]}f\) as a scalar real.
+The modulus and precision choices may depend on the name;
+the evaluated value and maximum do not.
+\end{hbtheorem}
+
+The source proves a compact modulus construction in
+Theorem 6.4 and Corollary 6.7 and a maximum-value algorithm
+in Theorem 6.8. The host proof obtains its modulus directly
+from the finite slope bound of an approximating polygon.
+This is extra available information in a uniform name;
+pointwise values at rationals without a supplied error control
+are not being substituted for that name.
+
+\begin{hbtheorem}{thm:p04-fo-integration}{proved=annex:p04-fo-integration}{Integration with scalar and function output}
+From a \(\gamma_{\mathrm P}\)-name one can compute
+\(\int_0^1f(t)\,dt\) as a scalar and
+\[
+ Jf(x)=\int_0^x f(t)\,dt
+\]
+as a \(\gamma_{\mathrm P}\)-named function.
+The scalar approximation \(\int_0^1P_n\) is rational and
+has error at most \(2^{-n}\).
+Integration between any two Cauchy-named limits in
+\([0,1]\) is computable, including reversed or equal limits.
+For global input \(\gamma_{\mathbb R}\), integration between
+arbitrary finite real limits is computable.
+\end{hbtheorem}
+
+Source Theorem 6.10 states the global integration result but
+omits its proof. The annex supplies exact polygon integrals,
+the function-output interpolation error, and the computable
+restriction/rescaling for arbitrary real limits.
+It neither assumes a global bound on the input function
+nor decides equality of the integration limits.
+In the native presentation
+\(\operatorname{Int}:C(\mathbb R)\times\mathbb R\times
+\mathbb R\to\mathbb R\),
+\(\operatorname{Int}(f,a,b)=\int_a^bf(x)\,dx\), is
+\((\delta_{\mathbb R},\rho_C,\rho_C,\rho_C)\)-computable.
+The preceding bridges transfer the supplied construction
+to precisely those native operand types.
+
+\begin{hbexample}{def:p04-fo-integral-case}{Value accuracy and area accuracy}
+For \(f(x)=x^2\), interpolation on a uniform rational grid
+of mesh \(h\) has error at most \(h^2/4\), since on one
+cell its excess is \((x-a)(b-x)\).
+Its integral approximates \(1/3\) with at most the same
+uniform-error bound. The value \(Jf(x)=x^3/3\) is a
+function output, not a single numerical area.
+A continuous function need not be differentiable for either
+integration algorithm to work.
+\end{hbexample}
+
+\section{Derivative information is a different promise}
+\label{sec:p04-fo-differentiation}
+
+\begin{hbtheorem}{thm:p04-fo-differentiation}{proved=annex:p04-fo-differentiation}{Failure of uniform differentiation}
+On the domain \(C^1[0,1]\), the derivative operator
+\(f\mapsto f'\), using \(\gamma_{\mathrm P}\) for both
+input and output, has no continuous realizer and hence
+no computable realizer. Even the scalar operation
+\(f\mapsto f'(0)\) has no continuous realizer.
+Endpoint derivatives are one-sided, with continuous extension
+of the derivative to the closed interval.
+\end{hbtheorem}
+
+The native source operator
+\(\operatorname{Diff}:C[0,1]\rightharpoonup C[0,1]\),
+with domain \(C^1[0,1]\) and value \(f'\), is not
+\((\delta_C,\delta_C)\)-continuous (Theorem 6.9).
+Both occurrences of \(\delta_C\) name functions here.
+The native countersequence in source Theorem 6.9 is
+\(f_n(x)=\sin(n\pi x)/n\): function values tend uniformly
+to zero, while \(f_n'(0)=\pi\).
+The annex also gives a rational-polynomial version
+\(h_m(x)=x(1-x)^m\), with uniform size at most
+\(1/(m+1)\) and \(h_m'(0)=1\).
+A finite low-amplitude function-name prefix can therefore
+hide a large derivative at a point.
+This is failure of a uniform operator. It is not, by itself,
+a proof that one specified computable function has a
+noncomputable derivative.
+
+\begin{hbdefinition}{def:p04-fo-derivative-data}{Stronger derivative representations}
+A \(C^1\)-pair name consists of names of \(f\) and \(g\)
+with the semantic promise \(g=f'\).
+Projection of the second name computes differentiation in
+this stronger representation.
+Alternatively, supply a \(\gamma_{\mathrm P}\)-name of
+\(f\in C^1[0,1]\) and a Baire name of a modulus \(\mu'\)
+for its derivative:
+\[
+ |s-t|\leq2^{-\mu'(n)}
+ \ \Longrightarrow\ |f'(s)-f'(t)|\leq2^{-n}.
+\]
+This is additional input information. Neither its validity
+nor its computability follows from the ordinary name of \(f\).
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p04-fo-derivative-promise}{proved=annex:p04-fo-derivative-promise}{Differentiation with an explicit derivative modulus}
+Differentiation is computable from the second strengthened
+input above. At output position \(n\), choose
+\(r\geq\mu'(n+2)\), put \(h=2^{-r}\), and use
+\(P_{n+r+3}\) to compute rational forward secants at
+the grid points \(0,h,\ldots,1-h\).
+Use the last backward secant at \(1\), and interpolate the
+secant values linearly on that grid.
+The resulting polygon approximates \(f'\) within \(2^{-n}\).
+\end{hbtheorem}
+
+\section{Existence, relation solutions and root selection}
+\label{sec:p04-fo-zeros}
+
+For a multivalued zero problem a realizer must output a name
+of some allowed zero on every promised input name.
+It need not select the same zero on two different names
+of the same function. A single-valued root selector has
+that additional decoded extensionality requirement.
+These are different computational questions.
+
+\begin{hbtheorem}{thm:p04-fo-general-zero}{proved=annex:p04-fo-general-zero}{General zero finding is not continuously realizable}
+On the domain of functions in \(C[0,1]\) with a nonempty
+zero set, the relation asking for any zero has no continuous
+realizer. This remains true on the subclass with
+\(f(0)<0<f(1)\). Sign change guarantees existence but does
+not alone supply a uniform algorithm.
+\end{hbtheorem}
+
+The source-native obstruction uses polygons \(G_t\) with
+vertices \((0,-1),(1/3,t),(2/3,t),(1,1)\).
+At \(t=0\) a whole interval is zero; positive and negative
+small perturbations force roots to opposite sides of it.
+The annex expresses this as a finite-name-prefix obstruction,
+including name-dependent relation outputs
+\cite[Theorem 7.2]{Weihrauch1995IntroductionRS}.
+
+\begin{hbdefinition}{def:p04-fo-sign-change-class}{The no-zero-interval promise}
+Let \(\mathcal F_{\mathrm{nd}}\) consist of continuous functions
+having opposite signs at some two points and not vanishing
+identically on any nondegenerate open subinterval of \([0,1]\).
+Rational sign witnesses can then be found by strict
+semidecision. The no-zero-interval condition is a semantic
+promise, not a decidable preliminary test.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p04-fo-nonextensional}{proved=annex:p04-fo-nonextensional}{Computable relation without an extensional selector}
+For \(\mathcal F_{\mathrm{nd}}\), the relation asking for
+any zero is computable, but it has no continuous single-valued
+root selector, and hence no computable one.
+A positive algorithm finds rational sign brackets and
+repeatedly searches for an interior opposite-sign pair of
+at most half the previous width, preserving the signs at
+the old endpoints. Its fast limit is a zero.
+\end{hbtheorem}
+
+The source Theorem 7.3 establishes both clauses.
+The annex proves the shrinking-pair search actually succeeds:
+it cannot silently stall forever at a zero plateau.
+It also reconstructs the source selector counterfamily
+with vertices \((0,-1),(1/3,t),(2/3,t-1),(1,1)\).
+Its moving roots rule out an extensional continuous choice,
+although a name-dependent relation solution is possible.
+
+\begin{hbtheorem}{thm:p04-fo-unique-zero}{proved=annex:p04-fo-unique-zero}{Unique and supplied isolated roots}
+On the domain of functions with exactly one zero in
+\([0,1]\), that zero is computable from a uniform name.
+No sign change, lower slope bound or supplied isolation
+modulus is needed. At precision \(n\), search for rational
+\(u<v\), \(v-u<2^{1-n}\), and \(k\) such that
+\[
+ \min_{[0,1]\setminus(u,v)}|P_k|>2^{-k},
+\]
+and output \((u+v)/2\). An empty complement satisfies the
+test vacuously.
+An explicitly supplied rational interval containing exactly
+one zero gives the analogous local algorithm, even if
+other zeros exist outside it. A singleton interval promised
+to contain a zero returns its endpoint.
+\end{hbtheorem}
+
+Allow \(u<0\) or \(v>1\); then a root at an endpoint is
+not accidentally included in the excluded complement.
+The source Theorem 7.5 uses a stronger exclusion margin
+\(2\cdot2^{-k}\); either positive margin tends to zero and
+permits a correct search. The annex verifies the host clause
+and explains the source margin separately.
+Source Corollary 7.6 gives individual computability of an
+isolated zero of a computable function: existence of a rational
+isolating interval allows it to be fixed in that one program.
+It does not uniformly find such an interval from an arbitrary
+function name.
+
+Strictly increasing functions with
+\(f(0)\leq0\leq f(1)\) have a unique zero by the intermediate
+value theorem, so the unique-root algorithm applies.
+Nondecreasing functions can have a zero plateau; uniqueness
+must not be inferred from that weaker word.
+For global strictly increasing functions onto \(\mathbb R\),
+the same bracketing principle computes the inverse:
+
+\begin{hbtheorem}{thm:p04-fo-inverse}{proved=annex:p04-fo-inverse}{A promised global monotone inverse}
+On the domain of \(\gamma_{\mathbb R}\)-named strictly
+increasing functions with range \(\mathbb R\), both
+\((f,y)\mapsto f^{-1}(y)\) and the inverse function as a
+\(\gamma_{\mathbb R}\)-output are computable.
+Strictness and surjectivity are promises, not established
+by sampling finitely many values.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p04-fo-approximate-zero}{proved=annex:p04-fo-approximate-zero}{Residual error is not root-location error}
+Given a name of \(f\) and \(n\), one can find rational
+\(s\in[0,1]\) with \(|f(s)|<2^{-n}\) whenever such a
+point exists. Search for a certificate
+\[
+ |P_k(s)|+2^{-k}<2^{-n}.
+\]
+In particular, the search succeeds when \(f\) has a zero.
+Without additional separation information this supplies
+no bound on the distance from \(s\) to a zero.
+\end{hbtheorem}
+
+The printed search in source Theorem 7.7 lacks the precision
+control needed to transfer a small polygon value to the
+true function. The displayed certificate supplies it.
+This is an explicit corrected host algorithm, not a claim
+that the source printed the same test.
+
+\begin{hbexample}{def:p04-fo-zero-cases}{Four different zero questions}
+The function \(f(x)=x\) has its unique root at an endpoint.
+The function \((x-1/2)^2\) has a unique interior root but
+does not change sign; the unique-root exclusion algorithm
+still applies. A three-root polynomial
+\((x-1/4)(x-1/2)(x-3/4)\) permits different legitimate
+relation answers; an isolating interval is extra data.
+The constant function \(f(x)=\epsilon>0\), with
+\(\epsilon<2^{-n}\), has approximate residuals everywhere
+but no exact root. Small residual is not an existence proof.
+For the zero function every point is a root: it lies in the
+general relation domain but neither the unique-root nor
+no-zero-interval domain.
+\end{hbexample}
+
+\begin{hbtheorem}{thm:p04-fo-no-computable-zero}{proved=annex:p04-fo-no-computable-zero}{Existence need not include a computable zero}
+There is a computable continuous function on \([0,1]\)
+with a nonempty zero set and no computable zero.
+It follows that there is a computable continuous function
+with a computable maximum value but no computable maximum
+point.
+\end{hbtheorem}
+
+The proof constructs an effectively enumerated open cover
+of all computable reals with a small total interval-length
+budget, then uses the source's weighted nonnegative tent
+functions to make its complement the zero set
+\cite[Theorem 7.1 and following cited boundary]{Weihrauch1995IntroductionRS}.
+The source cites an external Specker construction rather
+than giving that construction in full; the annex supplies
+a direct small-cover and tent-function proof.
+
+\begin{proofboundary}{def:p04-fo-source-boundary}{Declared extent}
+All displayed positive algorithms and obstructions have full
+local annex proofs under the named representations and promises.
+The 1995 universal characterization of evaluation, its broader
+set/image/composition results and its source-admissibility
+assertion retain their original omitted/cited boundaries unless
+explicitly reconstructed here.
+The constructed algorithms establish only their stated
+representations and promises; they do not identify
+topological continuity with computability.
+\end{proofboundary}

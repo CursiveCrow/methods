@@ -1,0 +1,366 @@
+%% ED26-METHOD-minimum-description-length, original Automatica1978 allocation.
+\chapter{Rissanen's Structural and Numerical Parameter Arguments}
+\label{sec:p15-rissanen-structural-and-numerical-inference}
+
+Rissanen's 1978 proposal estimates a time-series model's integer structure
+and real parameters by accounting for the description of both the data and
+the fitted model. The selected presentation is the complete original
+article, not the later universal-integer-prior or normalized-maximum-
+likelihood theories \cite{Rissanen1978Modeling}. Its concrete calculation is
+for scalar linear models with Gaussian innovations. The resulting score
+uses approximations to coding cost and to the effect of finite precision;
+those approximations must remain visible when the score is used.
+
+The introduction contrasts this route with Akaike's MAICE expression
+\(N\log r+2k\), where the fit term is minimized negative log likelihood
+up to a constant and \(k\) counts parameters. Rissanen accepts the role
+of Kullback discrepancy but questions deriving the structural penalty
+from a bias adjustment. His alternative charges for actually describing
+the structure and its fitted numbers. That historical objection is not a
+proof that every bias-corrected selection rule fails.
+He also distinguishes his earlier 1976 entropy-based proposals, reporting
+their failure for autoregressive order estimation and seeking a more direct
+description interpretation. Those earlier works and their guarantees are
+not proved or silently adopted here. Increasing a model's flexibility can
+improve its raw fit while adding parameters whose transmission has been
+ignored; the source's structural-estimation objection concerns that
+unpenalized use, not a theorem about every possible likelihood-based rule.
+
+\section{What the entropy and coding arguments establish}
+\label{sec:p15-rmdl-coding}
+
+\begin{hbdefinition}{def:p15-rmdl-lengths}{Data, models, code units and ideal lengths}
+The observed sequence is \(x=(x_1,\ldots,x_N)\), with \(N\geq1\).
+An agreed decoder and representation language distinguish a structure
+description from a numerical parameter description and a conditional data
+description. A real numerical value requires a finite precision, not an
+infinitely long expansion. Binary code lengths are measured in bits;
+\(-\log_2 q\) is an ideal information length. Gaussian calculations
+below use nats, with \(1\) bit equal to \(\ln2\) nats. An ideal real
+length need not be an integer or the length of an actual prefix code.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p15-rmdl-gibbs}{proved=annex:p15.rmdl.gibbs}{The source Gibbs inequality with countable safeguards}
+Let \((p_i),(q_i)\) be nonnegative masses on a finite or countable index
+set with the same finite total \(M\). Zero-weight entropy and
+cross-entropy terms are defined to be zero. Put
+\(D(p,q)=\sum_{i:p_i>0}p_i\ln(p_i/q_i)\), taking a term with
+\(q_i=0<p_i\) as \(+\infty\). Its negative part is summable,
+\(D(p,q)\geq0\), and equality holds exactly when \(p=q\).
+For probability masses with finite entropy
+\(H_2(p)=-\sum_i p_i\log_2p_i\),
+\[
+ -\sum_i p_i\log_2q_i=H_2(p)+D(p,q)/\ln2.
+\]
+The right side may be infinite. If both entropies are infinite, equality
+of infinite cross-entropies is not a uniqueness statement.
+\end{hbtheorem}
+
+The paper's Section~2 uses this inequality first for an independent-symbol
+source. The true distribution minimizes expected ideal length, not the
+length of every individual realized string. If prefix lengths \(l_i\)
+satisfy \(W=\sum_i2^{-l_i}\leq1\), normalizing their weights gives
+\(q_i=2^{-l_i}/W\); the expected length is
+\(H_2(p)+D(p,q)/\ln2-\log_2W\). Hence unused coding mass cannot
+improve the entropy lower bound. The paper refers to arithmetic coding to
+approach fractional ideal lengths; it does not supply that coding algorithm
+or prove a later minimax-regret theorem.
+
+\begin{hbtheorem}{thm:p15-rmdl-types}{proved=annex:p15.rmdl.types}{The exact type-class size and its limiting role}
+For an alphabet of fixed size \(a\geq1\) and counts
+\(k_1+\cdots+k_a=N\), the number of strings with those counts is
+\(S=N!/\prod_i k_i!\). For distinct arbitrary binary descriptions,
+including the empty word, their least possible uniform mean length is
+\[
+ b-\frac{2^{b+1}-b-2}{S},\qquad b=\lfloor\log_2(S+1)\rfloor.
+\]
+It is at least \(\log_2S-3\). Prefix descriptions have mean at least
+\(\log_2S\). A finite enumerative prefix description specifies the
+counts and then a rank within their type, with length at most
+\(\lceil a\log_2(N+1)\rceil+\lceil\log_2S\rceil\).
+Furthermore
+\[
+ \frac{\log_2S}{N}
+ =H_2(k_1/N,\ldots,k_a/N)+O_a(\log(N+1)/N).
+\]
+Thus frequency convergence gives the type-class limit \(H_2(p)\).
+It does not make a dependent process's entropy rate equal to its one-symbol
+entropy: a stationary ergodic random-phase alternating binary process has
+one-symbol entropy \(1\) but block entropy \(1\) for every \(N\).
+\end{hbtheorem}
+
+This supplies the full finite counting argument behind the source's sketch.
+Its finite assertion that one arbitrary code must have at least
+\(\log_2S\) bits needs the prefix/fixed-block convention: for \(S=3\),
+the empty word, \(0\), and \(1\) are an injective nonprefix assignment.
+The asymptotic per-symbol conclusion survives the constant-size correction.
+Under an independent source, strings of one type are equiprobable; frequency
+convergence alone does not establish that premise for a dependent source.
+
+\section{Structure, innovations and the cost of numerical precision}
+\label{sec:p15-rmdl-structure}
+
+The source first proposes an invertible dynamic representation
+\(x_t=f_\alpha(x_{t-1},\ldots,x_{t-n},e_t,\ldots,e_{t-m})\),
+with zero initial conditions. Its observed-input version also contains
+past \(u\)'s; the article then suppresses that input to focus on the
+coding question. Invertibility means that innovations can be recovered
+recursively from the observations and earlier innovations. It does not
+mean that the innovations are independent. A statistical model for them
+is an additional part of the description.
+
+Write \(\theta=(s,\xi)\), with integer structure \(s\), such as the
+orders \((n,m)\), and real parameters \(\xi\), including distribution
+parameters. If innovations have \(q\) coordinates, resolution
+\(\varepsilon\) and modeled density \(p_\beta\), the source's
+conditional-length approximation is
+\[
+ L(e\mid\theta)=-\sum_{t=1}^N\ln\bigl(\varepsilon^q p_\beta(e_t)\bigr),
+ \qquad L(x,\theta)=L(e\mid\theta)+L(\theta).
+\]
+This is a small-cell density approximation, not the exact cell probability.
+The positive sign printed in source equation~(3.4) is repaired here:
+negative log probability agrees with its Gibbs discussion and Gaussian
+equation~(4.3). A density alone is not a dimensionless event probability.
+
+The article approximates the parameter part by
+\[
+ L(\theta)\approx\ln\bigl((n+1)(m+1)\bigr)
+                  +\sum_i\ln\frac{\lvert\xi_i\rvert}{\delta_i},
+\]
+with \(\delta_i\) the parameter's resolution. The absolute-value bars
+here denote numerical magnitude, not cardinality. The source explicitly
+omits sign costs and acknowledges a zero-indicator cost when a small
+coordinate is omitted. Its reconstruction/code algorithms are omitted as
+fixed overhead; they can be cancelled only when genuinely common to the
+candidate descriptions. A larger model whose added parameter costs a
+positive amount without reducing the data part has a larger total length.
+That observation motivates nonredundant parameterizations, not a theorem
+that every model representation has one canonical global optimum.
+
+\begin{hbwarning}{def:p15-rmdl-code-boundary}{The approximate costs are not an unrestricted universal code}
+The source's analogy assigns an integer \(j\) weight \(1/j\).
+These weights do not normalize on all positive integers: each block
+\(2^h\leq j<2^{h+1}\) has sum at least \(1/2\). On a declared
+finite range \(1,\ldots,J\), normalized weights are
+\(1/(j\sum_{h=1}^J1/h)\); the extra normalizer matters if the range
+changes. Likewise the structure weights
+\(1/((n+1)(m+1))\) do not form a probability on unbounded orders.
+Signs, delimiters, zero flags and decoder specifications must be supplied
+for a literal code. This 1978 approximation is not the later universal
+integer code or normalized maximum-likelihood construction.
+\end{hbwarning}
+
+The source also suggests coding the parameter for a new batch conditional
+on previous fitted parameters, motivated by near-Gaussian estimator laws.
+It explicitly does not develop that alternative. It is not a justified
+Gaussian prior for the single-batch calculation that follows.
+
+\begin{hbtheorem}{thm:p15-rmdl-dependence}{proved=annex:p15.rmdl.dependence}{The dependence identity and the needed comparison condition}
+For finite-valued innovations with joint law \(P\),
+\[
+ D\bigl(P,\prod_tP_t\bigr)/\ln2
+       =\sum_tH_2(P_t)-H_2(P)\geq0,
+\]
+with equality exactly for independence. If each candidate innovation
+transformation is a bijection on the same finite observation space,
+\(H_2(P)\) is the same for every candidate; minimizing the marginal-
+entropy sum then minimizes dependence. More generally, if their joint
+entropies differ from one common value by at most \(\eta\), a minimizer
+of the marginal-entropy sum has dependence within \(2\eta\) of any
+candidate's dependence. This is an additive comparison, not mere convergence
+of entropy ratios to one.
+\end{hbtheorem}
+
+This is the exact finite counterpart of source equations~(3.5)--(3.6).
+Invertibility before rounding does not ensure a bijection afterwards.
+For instance, scaling \(\{0,1,2,3\}\) by a sufficiently small positive
+factor is invertible, but rounding to unit bins can collapse all four
+points. Their observed distinctions cannot then be recovered at the
+original resolution. Nor does a relative entropy error tending to zero
+force its absolute error to vanish when the common entropy grows.
+The source's small-resolution and almost-sure limiting discussion therefore
+requires suitable quantization and stochastic convergence assumptions;
+Gibbs' inequality by itself does not establish its general minimizer limit.
+
+\section{The original scalar Gaussian calculation}
+\label{sec:p15-rmdl-gaussian}
+
+\begin{hbdefinition}{def:p15-rmdl-arma}{The source recurrence and length surrogate}
+For nonnegative orders \(n,m\), set \(p=n+m\) and use
+\[
+ x_t+\sum_{j=1}^na_jx_{t-j}
+      =e_t+\sum_{j=1}^mb_je_{t-j},\qquad x_t=e_t=0\ (t\leq0).
+\]
+The numerical vector is \(\xi=(r,\eta)\), where
+\(\eta=(a_1,\ldots,a_n,b_1,\ldots,b_m)\) and \(r>0\) is innovation
+variance. The recurrence defines \(e_t(\eta)\) and
+\(E_N(\eta)=\sum_te_t(\eta)^2\). Put
+\(\kappa_{n,m}=\ln((n+1)(m+1))\) and
+\(K_N=N\ln(2\pi/\varepsilon^2)/2\). On an active-coordinate region
+with every \(\eta_i\ne0\), the source's Gaussian length approximation is
+\[
+ L_\delta(r,\eta)=K_N+\frac N2\ln r+
+ \frac{E_N(\eta)}{2r}+\ln\frac r{\delta_0}
+       +\sum_{i=1}^p\ln\frac{\lvert\eta_i\rvert}{\delta_i}+\kappa_{n,m}.
+\]
+All precisions are positive. The formula is a real-valued local surrogate,
+not a claim that these are integer lengths of a completed prefix code.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p15-rmdl-variance}{proved=annex:p15.rmdl.variance}{The numerical variance estimate is not ordinary ML}
+For fixed \(\eta,\delta\) with \(E_N(\eta)>0\), the unique minimizer
+over \(r>0\) is
+\(\rho(\eta)=E_N(\eta)/(N+2)\). Its profiled value is
+\[
+ K_N+\frac{N+2}{2}(1+\ln\rho(\eta))-\ln\delta_0
+        +\sum_{i=1}^p\ln\frac{\lvert\eta_i\rvert}{\delta_i}+\kappa_{n,m}.
+\]
+If \(E_N=0\), there is no positive minimizer: the surrogate tends to
+\(-\infty\) as \(r\downarrow0\). A zero-variance Gaussian or a
+boundary-constrained precision regime needs a different treatment.
+\end{hbtheorem}
+
+The \(+2\) comes from transmitting \(r\): ordinary Gaussian ML without
+that term gives \(E_N/N\). Source~(4.6) differs from this direct substitution
+into~(4.4) by a printed, model-independent \(-1/2\); that shift does not
+change its minimizer but is not an exact equality with~(4.4).
+
+\begin{hbtheorem}{thm:p15-rmdl-precision}{proved=annex:p15.rmdl.precision}{What the rounding calculation actually minimizes}
+Let \(\Phi:O\to\mathbb R\) be \(C^3\) on an open
+\(O\subseteq\mathbb R^d\), at a stationary fit \(\widehat\xi\).
+Assume its rounding box
+\(\widehat\xi+\prod_i[-\delta_i/2,\delta_i/2]\) lies in \(O\),
+the third derivative norm there is bounded by \(M\), and the Hessian
+diagonal entries \(h_i\) at the fit are positive. Independent errors
+\(A_i\) uniform on \([-\delta_i/2,\delta_i/2]\) give
+\[
+ \mathbb E\Phi(\widehat\xi+A)=\Phi(\widehat\xi)
+       +\sum_i h_i\delta_i^2/24+R,
+ \qquad |R|\leq M(\sum_i\delta_i^2)^{3/2}/48.
+\]
+For the leading surrogate adding precision cost \(-\sum_i\ln\delta_i\),
+the unique unconstrained minimizing widths satisfy
+\(\delta_i^2=12/h_i\). This minimizes the declared quadratic surrogate,
+not the exact expectation including \(R\).
+
+In the paper's curvature approximation put \(d=p+1\),
+\(G_i=\partial_{\eta_i}^2\ln\rho\) at the fitted \(\widehat\eta\),
+\(h_0=(N+2)/(2\rho^2)\), and \(h_i=(N+2)G_i/2\).
+If every \(G_i>0\), the source widths are
+\[
+ \delta_0=\rho\sqrt{24/(N+2)},\qquad
+ \delta_i=\sqrt{24/((N+2)G_i)}.
+\]
+Define the published score
+\[
+ U_R=N\ln\rho+\sum_{i=1}^p\ln(\widehat\eta_i^2G_i)
+                +d\ln(N+2)+2\kappa_{n,m}.
+\]
+Here the source-approximated rounding objective is explicitly
+\[
+ Q(\delta)=L_\delta(\rho,\widehat\eta)+\frac{N+2}{48}
+       \left(\frac{\delta_0^2}{\rho^2}+\sum_{i=1}^pG_i\delta_i^2\right).
+\]
+The optimized quadratic surrogate \(Q_*\) instead satisfies exactly
+\[
+ 2Q_*=U_R+2K_N+(N+2)+d(1-\ln24).
+\]
+Thus suppressing the last \(d\)-dependent term is not subtraction of
+one common constant when different dimensions are compared.
+\end{hbtheorem}
+
+The article models truncation error as uniform and uses leading likelihood
+curvature in~(4.7)--(4.9). Deterministic rounding does not automatically
+have that error law, and the derivatives of magnitude-code costs need not
+be negligible. The theorem states the approximation being optimized rather
+than calling all the source's Hessian replacements exact identities.
+The widths must also remain within the region supporting the Taylor bound.
+If a \(G_i\) is zero or negative, there is no finite positive width from
+that formula. For the variance width to satisfy \(\rho/\delta_0>1\)
+requires \(N>22\); small samples need a boundary/actual-code analysis.
+
+Source~(4.10) sets a coordinate to zero when
+\(\lvert\widehat\eta_i\rvert/\delta_i<1\), removes its magnitude term
+and reduces the active parameter count. The omitted zero flag still costs
+something. A changed coordinate changes the recurrence and residual sum;
+recomputing those is necessary before treating the reduced description as
+a fitted alternative. This is not a universal significance test.
+
+\begin{hbmethod}{def:p15-rmdl-procedure}{A defensible use of the source criterion}
+Fix the observation resolution, decoder, candidate orders and admissible
+numerical regions. For each order, compute innovations by the recurrence,
+profile the variance, and fit the remaining parameters using the declared
+length surrogate. Check positive residual sum, an interior active fit,
+positive curvature and a valid small rounding region. Compute the widths,
+check zero/precision branches, and recompute changed descriptions. Compare
+the published score if that historical approximation is intended; compare
+the constant-retaining surrogate if that is the intended objective.
+For a literal finite code search, enumerate the specified finite candidate
+messages and choose a shortest one. That finite minimum exists; it is not
+an algorithmic guarantee of a global continuous or unrestricted structural
+minimum. The paper also suggests joint minimization of its score, which
+need not coincide with its staged, locally derived fitting calculation.
+\end{hbmethod}
+
+\section{Representation, BIC and the different Occam guarantee}
+\label{sec:p15-rmdl-comparisons}
+
+Coordinatewise nonzero scaling \(\psi_i=c_i\eta_i\) preserves
+\(\eta_i^2G_i\), since \(G_i\) scales by \(c_i^{-2}\), and scales
+the width by \(\lvert c_i\rvert\). Translation does not preserve the
+magnitude code: \(\psi_i=\eta_i+b\) keeps the second derivative under
+a linear translation but changes the product to \((\eta_i+b)^2G_i\).
+The zero branch changes too. This is a concrete dependence on representation,
+not a coordinate-free Fisher-volume or universal-coding theorem.
+
+\begin{hblemma}{thm:p15-rmdl-leading}{proved=annex:p15.rmdl.leading}{A conditional leading penalty, not an MDL–BIC identity}
+For a fixed order and active dimension, suppose along a sequence of fits
+\(E_N/N\to v>0\), \(\widehat\eta_i\to c_i\ne0\), and
+\(G_i\to g_i>0\). Then
+\[
+ U_R=N\ln(E_N/N)+d\ln N
+      +\sum_i\ln(c_i^2g_i)+2\kappa_{n,m}-2+o(1).
+\]
+No consistency theorem for structural selection, varying dimension or
+unrestricted model classes is asserted by this algebraic limit.
+\end{hblemma}
+
+The first and dimension terms resemble Schwarz's leading score, as the
+original article notes. They do not make the objectives identical.
+The Bayesian result at Theorem~\ref{thm:p15-bic-leading-order} starts from
+proper prior densities and uniform Laplace conditions, retains different
+constant-order terms, and concerns integrated evidence. This source instead
+prices a transmitted fit with a sensitivity-dependent resolution. Neither
+its \(1/j\) analogy nor a matching \(d\ln N\) term proves a posterior
+truth probability. The entropy theorem likewise concerns a fixed outcome
+description, not a justification for changing the coding language after
+seeing the data.
+
+\begin{hbtheorem}{thm:p15-rmdl-occam-case}{proved=annex:p15.rmdl.occam-case}{Exact short coding without the independent-sample guarantee}
+Let \(X=\{0,1\}\), with uniform future input, true target \(f(x)=x\),
+and fixed hypotheses \(h_0=0,h_1=1,f\). With \(N\geq1\) and the input
+sequence known to the decoder, encode these hypotheses by \(0,10,110\),
+respectively, and arbitrary label sequences by \(111\) followed by
+\(N\) literal bits. This is a prefix code for a two-part description.
+Selecting the shortest consistent description returns \(h_0\) on all-zero
+labels, \(h_1\) on all-one labels, and \(f\) otherwise.
+If all training inputs repeat one random uniform input, its future error
+is exactly \(1/2\) with probability one, for every \(N\).
+For genuinely independent uniform training inputs, the probability of that
+error is instead \(2^{1-N}\). Realizability and a fixed representation
+hold in both cases; independence is the premise that changes.
+\end{hbtheorem}
+
+This is an editorial comparison case, not a dataset or example claimed
+printed by Rissanen. It separates a true minimum-code statement from the
+uniform sampling guarantee of Theorem~\ref{thm:p15-occam-compression}.
+The article's dynamic data may be dependent and noisy, whereas that PAC
+theorem has specified independent inputs and noiseless target labels.
+A short model/data description alone does not supply those hypotheses.
+Rissanen's original conclusion is a structure-sensitive fitting proposal,
+not a claim that compression identifies the true model on every sample.
+
+\index{minimum description length!Rissanen1978}
+\index{parameter precision!description length}
+\index{structural estimation}

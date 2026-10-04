@@ -1,0 +1,442 @@
+% Source presentations for register row N-c-019.
+
+\subsection{Five source presentations behind Hoare logic and weakest preconditions}
+\label{sec:p09-presentation-n-c-019}
+
+\subsubsection{Floyd's flowchart assertions}
+
+Floyd's program is a sequential flowchart.  Assertions are attached to selected
+edges, and each assignment, test, branch, or join produces a local verification
+condition.  If the entry assertion holds and every traversed edge preserves the
+next assertion, then every execution which reaches the exit satisfies its exit
+assertion.  The proof is induction along the finite traversed path
+\cite[pp.~19--24]{Floyd1967}.  This is partial correctness: reaching the exit is
+a hypothesis of the conclusion.
+
+Termination is a separate construction.  Floyd attaches values in a
+well-ordered set and requires strict descent around every relevant cycle.  An
+infinite execution would produce an infinite descending sequence, which is
+impossible.  The flowchart assertions and the descent values have different
+roles; the first do not imply the second \cite[pp.~26--31]{Floyd1967}.  The
+countdown derivation in Example~\ref{def:p09-hoare-counter} is the structured-
+language descendant of this two-part method, not a claim that Floyd printed a
+modern Hoare derivation.
+
+\paragraph{A complete local reconstruction.}
+Here is the argument in a small editorial flowchart rather than in modern
+triple notation.  Fix an input integer \(n\geq 0\), initialize \(i:=0\) and
+\(S:=0\), test \(i<n\), and, on the true edge, execute \(i:=i+1\) followed by
+\(S:=S+i\) before returning to the test.  Put on the test edge the assertion
+
+\[
+ I\;\equiv\;0\leq i\leq n\ \land\ 2S=i(i+1).
+\]
+
+This assertion has one standing only: it is the formula assigned to that
+control edge.  Initialization establishes it because both program variables
+are zero.  On the true edge, write \(i'=i+1\) and \(S'=S+i'\) for the values
+after the two assignments.  From \(I\land i<n\), integrality gives
+\(i'=i+1\leq n\), and
+
+\[
+ 2S'=2S+2(i+1)=i(i+1)+2(i+1)=(i+1)(i+2)=i'(i'+1).
+\]
+
+Thus the body returns to the test edge with \(I\) again.  On the false edge,
+\(I\land\neg(i<n)\) and \(i\leq n\) give \(i=n\), hence
+\(2S=n(n+1)\).  These are exactly the entry, cycle, and exit verification
+conditions needed for partial correctness.  Termination is an additional
+argument: while the true edge is taken, the natural number \(n-i\) is positive
+and the body replaces it by \(n-i-1\).  An infinite traversal would therefore
+give an infinite strictly descending sequence of natural numbers.  This
+reconstruction exposes, on one program, Floyd's separation between edge-
+assertion preservation and well-founded descent
+\cite[pp.~24--31]{Floyd1967}.
+
+\subsubsection{Hoare's partial-correctness calculus}
+
+Hoare's 1969 typography is \(P\{Q\}R\): \(P,R\) are assertions and the program
+fragment \(Q\) is written inside the braces.  The paper gives assignment,
+consequence, composition, conditional, and invariant-based while rules
+\cite[pp.~576--578]{Hoare1969}.  The handbook uses the now-standard
+\(\{P\}\,Q\,\{R\}\), but the semantics remains partial correctness.
+
+Soundness of the modern registered rules is proved in
+Annex~\ref{annex:p9.hoare.1}.  Its proof follows the semantic cases: assignment
+evaluates the updated state; sequence supplies the intermediate state;
+conditionals split on the guard; and the while case inducts on the finite number
+of iterations.  This local proof is not back-attributed as a metatheorem
+contained in Hoare's short article.  Hoare also warns that overflow, expression
+side effects, range limits, and language-specific parameter behavior can
+invalidate mathematical assignment axioms; the exact command language in
+Definition~\ref{def:p09-hoare-triple} is therefore part of every theorem.
+
+Hoare's Table~III makes the rule interaction explicit on successive
+subtraction.  In the source all variables range over nonnegative integers, and
+the program is
+
+\[
+ r:=x;\quad q:=0;\quad
+ \mathbf{while}\ y\leq r\ \mathbf{do}\ 
+      (r:=r-y;\ q:=1+q).
+\]
+
+The loop assertion is \(x=r+yq\).  Initialization establishes it in two
+assignment steps: \(x=x+y0\), then \(r:=x\), then \(q:=0\).  If
+\(x=r+yq\land y\leq r\), the arithmetic equality
+
+\[
+ r+yq=(r-y)+y(1+q)
+\]
+
+is the substituted precondition for the two body assignments, so composition
+restores \(x=r+yq\).  Hoare's iteration rule and one final composition step
+therefore derive
+
+\[
+ \{\top\}\quad r:=x;\quad q:=0;\quad
+ \mathbf{while}\ y\leq r\ \mathbf{do}\ 
+      (r:=r-y;\ q:=1+q)\quad
+ \{r<y\land x=r+yq\}.
+\]
+
+This is the source's twelve-line partial-correctness derivation in compressed
+modern typography — not a termination proof
+\cite[pp.~578--579, Table~III]{Hoare1969}.  Over the handbook's unbounded
+integers, the stronger precondition \(x\geq0\land y>0\), invariant
+\(y>0\land r\geq0\land x=r+yq\), and variant \(r\) do yield total correctness:
+whenever \(y\leq r\), the next value \(r-y\) is nonnegative and is strictly
+smaller than the old \(r\).  That final sentence is an explicitly modern
+extension using the registered total-while rule; Hoare states that his 1969
+rules themselves provide no basis for successful termination
+\cite[p.~579]{Hoare1969}.
+
+\subsubsection{Dijkstra's demonic guarded commands}
+
+Dijkstra's alternative has the form
+\[
+ \mathbf{if}\ B_1\to S_1\ []\ \cdots\ []\ B_n\to S_n\ \mathbf{fi}.
+\]
+If several guards are true, any corresponding command may be selected; if none
+is true, the alternative aborts.  This command is necessary to express
+nondeterministic choice under total correctness.  It is a program command,
+differs from the deterministic conditional in the registered while language,
+and is used by the source's weakest-precondition equation
+\[
+ \operatorname{wp}(\mathbf{if}\ \cdots\ \mathbf{fi},R)
+ =\left(\bigvee_i B_i\right)
+   \land
+   \bigwedge_i\bigl(B_i\to\operatorname{wp}(S_i,R)\bigr).
+\]
+The conjunction over enabled alternatives gives the demonic reading: every
+permitted choice must terminate properly in an \(R\)-state
+\cite[\S\S2--3.1]{Dijkstra1975}.
+
+Dijkstra first records four laws which constrain this reading:
+
+\[
+\begin{aligned}
+ \operatorname{wp}(S,\bot)&=\bot,\\
+ P\Rightarrow Q&\quad\Longrightarrow\quad
+   \operatorname{wp}(S,P)\Rightarrow\operatorname{wp}(S,Q),\\
+ \operatorname{wp}(S,P\land Q)
+   &=\operatorname{wp}(S,P)\land\operatorname{wp}(S,Q),\\
+ \operatorname{wp}(S,P\lor Q)
+   &=\operatorname{wp}(S,P)\lor\operatorname{wp}(S,Q)
+   \qquad\text{when \(S\) is deterministic.}
+\end{aligned}
+\]
+
+The final equality is not asserted for a nondeterministic command.  For
+example, take
+\(R\equiv(m=x\lor m=y)\land m\geq x\land m\geq y\).  Assignment substitution
+gives
+
+\[
+ \operatorname{wp}(m:=x,R)=x\geq y,
+ \qquad
+ \operatorname{wp}(m:=y,R)=y\geq x.
+\]
+
+Those two weakest preconditions become the guards of Dijkstra's maximum
+program.  Their disjunction is valid in a total order, so the alternative
+cannot abort; if both hold, either assignment establishes \(R\).  The example
+therefore derives the guards from the required result rather than guessing a
+deterministic branch order \cite[\S4]{Dijkstra1975}.
+
+The analogous guarded repetition stops only when every guard is false.
+Let \(DO\) denote a fixed repetition and \(IF\) the same guarded-command set
+enclosed as an alternative, and put \(BB\equiv\bigvee_i B_i\).  Here \(DO\)
+and \(IF\) name commands, while \(BB\) is merely the formula saying that at
+least one branch is enabled.  For a postcondition \(R\), define predicate
+abbreviations
+
+\[
+ H_0(R)\equiv R\land\neg BB,
+ \qquad
+ H_k(R)\equiv
+   \operatorname{wp}(IF,H_{k-1}(R))\lor H_0(R)\quad(k>0).
+\]
+
+\(H_k(R)\) is the weakest precondition guaranteeing termination in an
+\(R\)-state after at most \(k\) selections.  It is neither a new command nor an
+asserted invariant; the indexed abbreviation is needed to retain the finite
+selection bound, and differs from the unbounded repetition transformer used
+immediately in
+
+\[
+ \operatorname{wp}(DO,R)\equiv\exists k\geq0\,H_k(R).
+\]
+
+The exact invariant--variant hypothesis says that every state satisfying
+\(P\land BB\) has \(t\geq0\), and that \(IF\) is guaranteed to terminate from
+that state with \(P\) true and its final integer value of \(t\) at most the old
+value minus one.  Under that hypothesis, Dijkstra's theorem concludes
+
+\[
+ P\Rightarrow\operatorname{wp}(DO,P\land\neg BB).
+\]
+
+Here is the finite-approximant proof omitted from the article.  First,
+\(H_j(R)\Rightarrow H_{j+1}(R)\) for every \(j\): the case \(j=0\) follows
+from the \(H_0(R)\) disjunct in \(H_1(R)\), and the induction step follows
+from monotonicity of \(\operatorname{wp}(IF,-)\).  Now use strong induction on
+the nonnegative old value \(n\) of \(t\).  From a
+\(P\land BB\land t=0\)-state, every outcome of \(IF\) has \(P\) and
+\(t'\leq-1\).  Such an outcome cannot still satisfy \(BB\), since the
+hypothesis at an enabled \(P\)-state would require \(t'\geq0\).  Every outcome
+therefore satisfies \(H_0(P\land\neg BB)\), and the initial state satisfies
+\(H_1(P\land\neg BB)\).
+
+For the strong-induction step, start with
+\(P\land BB\land t=n\), where \(n>0\).  Every outcome has \(P\) and an integer
+\(t'\leq n-1\).  A disabled outcome satisfies \(H_0(P\land\neg BB)\).  At an
+enabled outcome the hypothesis gives \(t'\geq0\); the induction hypothesis
+places it in \(H_{t'+1}(P\land\neg BB)\), hence in
+\(H_n(P\land\neg BB)\) by the monotonicity just proved.  Thus every outcome of
+\(IF\) satisfies \(H_n(P\land\neg BB)\), and guaranteed termination gives
+\(H_{n+1}(P\land\neg BB)\).  Finally, an arbitrary \(P\)-state is either
+already disabled and in \(H_0(P\land\neg BB)\), or is enabled with some
+nonnegative integer value \(n\) and lies in
+\(H_{n+1}(P\land\neg BB)\).  The defining existential over \(k\) proves the
+displayed conclusion.  This reconstruction supplies the induction behind the
+source's stated theorem; it does not turn \(\operatorname{wp}\) into the later
+weakest liberal precondition \cite[\S3.3]{Dijkstra1975}.
+
+The source's Euclidean derivation supplies all three obligations.  For fixed
+positive \(X,Y\), initialize \(x:=X;y:=Y\), maintain
+
+\[
+ P\equiv \gcd(X,Y)=\gcd(x,y)\land x>0\land y>0,
+ \qquad t\equiv x+y,
+\]
+
+and repeat either \(x>y\to x:=x-y\) or
+\(y>x\to y:=y-x\).  The equalities
+\(\gcd(x,y)=\gcd(x-y,y)\) and
+\(\gcd(x,y)=\gcd(x,y-x)\) preserve the gcd component; the guards preserve
+positivity; and either subtraction strictly decreases \(t\).  At exit neither
+guard holds, so \(x=y\), and \(P\) gives
+\(x=y=\gcd(X,Y)\).  This is a total-correctness derivation even though the
+choice of an enabled branch may be nondeterministic \cite[\S4]{Dijkstra1975}.
+
+The distinction is visible in one line.  Let
+\(C=\mathbf{while}\ \top\ \mathbf{do}\ \mathbf{skip}\).  The partial triple
+\(\{\top\}\,C\,\{\bot\}\) is valid because \(C\) never terminates, while
+\(\operatorname{wp}(C,\bot)=\bot\) because no initial state guarantees proper
+termination.  Thus \(\operatorname{wlp}\) and Dijkstra's \(\operatorname{wp}\)
+cannot share one theorem statement.
+
+\subsubsection{Cook's relative completeness}
+
+Cook fixes a deterministic ALGOL-like language with assignments,
+conditionals, loops, blocks, and restricted nonrecursive procedures.  His
+semantics is partial correctness.  The completeness theorem assumes both that
+all valid implications of the assertion theory are available and that the
+assertion language can express the strongest post-relations required by the
+program constructs \cite[\S\S2--6]{Cook1978}.
+
+The expressibility hypothesis is exact.  Given an assertion \(P\), a command
+\(A\), and a tuple \(\vec x\) containing every variable free in \(P\) or in
+\(A\), the \emph{post relation} of \(P\) through \(A\) contains precisely those
+tuples \(\vec d\) for which some initial state satisfies \(P\), execution of
+\(A\) terminates, and the final values of \(\vec x\) are \(\vec d\).  This is a
+relation on value tuples, not yet an assertion formula.  The name is necessary
+because the completeness induction needs the exact set of reachable outputs,
+not an arbitrary sufficient postcondition; it differs from such a
+postcondition by requiring both directions of the displayed semantic
+description.  Cook calls the assertion language expressive when every one of
+these relations is definable by a formula in that language.  The relation is
+used immediately as the intermediate assertion for composition
+\cite[pp.~85--86]{Cook1978}.
+
+The proof of completeness proceeds by induction after repeatedly replacing
+procedure calls by parameter-substituted bodies and renaming local variables
+to prevent capture.  This preliminary expansion terminates because Cook's
+language excludes recursive procedures.  For a compound
+\(\mathbf{begin}\ A;A^*\ \mathbf{end}\), a formula defining the post relation
+of \(P\) through \(A\) is the intermediate assertion: both component triples
+are semantically true and are shorter induction cases.  For \(x:=e\), the
+assignment axiom supplies \(Q[e/x]\), and semantic validity of the original
+triple supplies the implication from \(P\) needed by consequence.
+
+The loop case shows why mere first-order consequence completeness is not
+enough.  Suppose
+\(\{P\}\,\mathbf{while}\ R\ \mathbf{do}\ A\,\{Q\}\) is semantically true, and
+let \(\vec y=(y_1,\ldots,y_n)\) list the variables involved.  The required
+loop-head relation consists of the states reachable from a \(P\)-state after
+some finite number of executions of \(A\), with \(R\) true before each one.
+Precisely, let \(\mathcal C_0\) be the relation of \(P\)-state value tuples and
+let \(\mathcal C_{k+1}\) contain exactly the final tuples of terminating
+executions of \(A\) begun in an \(R\)-state whose tuple is in
+\(\mathcal C_k\).  The \(\mathcal C_k\) are metalinguistic relations on value
+tuples, not formulas or commands.  They are needed to distinguish the exact
+number \(k\) of completed body executions; their union
+\(\bigcup_{k\geq0}\mathcal C_k\), used below as the invariant relation, forgets
+that exact count.  The proof may not simply add this generally infinitary
+union as a disjunction to the assertion language.
+Choose fresh variables \(\vec z=(z_1,\ldots,z_n)\), which are not changed by
+\(A\), and form the auxiliary command
+
+\[
+ W_{\vec z}\equiv
+ \mathbf{while}\!
+ \left(R\land\bigvee_{i=1}^{n}y_i\neq z_i\right)
+ \mathbf{do}\ A.
+\]
+
+This notation is eliminable: \(W_{\vec z}\) abbreviates only the displayed
+while command and is used once in the construction.  If
+\(\Phi(\vec y,\vec z)\) is a formula expressing the post relation of \(P\)
+through \(W_{\vec z}\), then
+
+\[
+ J(\vec y)\equiv\exists z_1\cdots\exists z_n\,
+                    \Phi(\vec y,\vec z)
+\]
+
+defines exactly the finite-reachability relation above.  Here \(J\) is an
+assertion formula, not a new program construct: choosing \(\vec z\) equal to a
+desired reachable loop-head tuple makes the auxiliary loop stop there, while
+every terminating run of the auxiliary loop consists only of genuine body
+iterations.  The zero-iteration case proves \(P\Rightarrow J\); one more body
+step proves \(\{J\land R\}\,A\,\{J\}\); and semantic truth of the original
+triple proves \(J\land\neg R\Rightarrow Q\).  The while and consequence rules
+then finish this induction case \cite[pp.~86--87]{Cook1978}.
+
+Procedure calls require the remaining source rules: fresh renamings remove
+formal/actual clashes, parameter substitution instantiates the proved body
+property, and additional fresh variables retain values which must survive the
+substitution.  Those restrictions are part of the theorem's language, not
+administrative decoration \cite[pp.~87--89]{Cook1978}.
+
+The result is relative because neither the truth of the assertion theory nor
+the required expressibility is supplied by the Hoare rules.  Cook makes the
+first obstruction precise: if the assertion proof system is axiomatic, its
+derivable triples are recursively enumerable, whereas
+\(\{\top\}\,A\,\{\bot\}\) is true exactly when \(A\) fails to halt for every
+initial assignment to its global variables.  In a language with an
+undecidable halting problem, all true triples therefore cannot be recursively
+enumerable.  Theorem~\ref{thm:p09-hoare-relative-completeness} does not claim a
+decision procedure, total correctness, or completeness for a different
+language \cite[pp.~85--86]{Cook1978}.
+
+\subsubsection{Apt's language-fragment calibration}
+
+Apt's 1981 survey distinguishes partial from total correctness and tracks how
+soundness and completeness change when the command language gains procedures,
+local variables, and different parameter mechanisms \cite{Apt1981}.  Its role
+is comparative: it does not make every earlier rule or proof an Apt result.
+
+For total correctness of a while loop, Apt prints a rule which the survey
+explicitly says was formulated by Harel.  Let \(p(n)\) be an assertion whose
+free variable \(n\) ranges over the natural numbers and does not occur in the
+body \(S\).  Every triple in this paragraph has total-correctness standing.
+The rule is
+
+\[
+\frac{
+ p(n+1)\Rightarrow e
+ \qquad
+ \{p(n+1)\}\,S\,\{p(n)\}
+ \qquad
+ p(0)\Rightarrow\neg e
+}{
+ \{\exists n\,p(n)\}\,
+ \mathbf{while}\ e\ \mathbf{do}\ S\,
+ \{p(0)\}
+}.
+\tag{Harel's while Rule II}
+\]
+
+The indexed assertion family has an exact standing here: \(p(n)\) is an
+assertion formula parameterized by a rigid natural-number value, not a family
+of commands or a new semantic relation.  The index is necessary to count the
+remaining body executions; it differs from an ordinary invariant because each
+body execution must lower the index from \(n+1\) to \(n\), and the rule uses
+that distinction in its middle premise.  This is not the
+decreasing-integer-variant rule on the handbook sheet.
+
+Apt applies the indexed rule to the same successive-subtraction division
+program.  Write
+
+\[
+ r\equiv a\,y+b=x\land b\geq0,
+ \qquad
+ p(n)\equiv r\land ny\leq b<(n+1)y .
+\]
+
+Under the standard integer interpretation and \(y>0\), \(r\) implies
+\(\exists n\,p(n)\).  From \(p(n+1)\) one has \(b\geq y\); after
+\(b:=b-y;a:=a+1\), the equality \(a\,y+b=x\) is preserved and
+\(ny\leq b<(n+1)y\), so \(p(n)\) holds.  Finally \(p(0)\) gives
+\(0\leq b<y\), hence the guard \(b\geq y\) is false.  These are exactly the
+three premises of the printed rule
+\cite[pp.~441--442]{Apt1981}.
+
+The interpretation restriction matters.  Apt observes that
+\(\mathbf{while}\ x>0\ \mathbf{do}\ x:=x-1\) terminates over the standard
+natural numbers but need not terminate in a nonstandard model of arithmetic.
+Consequently, no proof system can both be totally sound over all
+interpretations and prove even this standard countdown from the full set of
+standard arithmetic truths.  The subsequent soundness and completeness result
+therefore restricts attention to arithmetical interpretations containing a
+standard natural-number part and, for completeness, a definable coding of
+finite sequences \cite[pp.~442--443]{Apt1981}.  Elsewhere in the survey,
+auxiliary variables have the separate purpose of retaining program-variable
+values across procedure calls; that substitution discipline must not be
+confused with the natural index in the total-while rule
+\cite[p.~448]{Apt1981}.
+
+\begin{table}[htbp]
+\centering\scriptsize
+\begin{tabularx}{\textwidth}{@{}l X X X X@{}}
+\toprule
+Source & Command language & Termination standing & Assertion basis &
+Source status and exact role \\
+\midrule
+Floyd 1967 & sequential flowcharts; formulas label selected edges &
+partial correctness; separate well-ordered descent & assertions over machine
+states at control points & local preservation and descent method with worked
+flowcharts \\
+Hoare 1969 & simple structured sequential commands and triples &
+partial while rule only & mathematical assertions, valid implications, and
+chosen arithmetic axioms & rule schemas and a twelve-line worked derivation;
+no general metatheoretic soundness proof \\
+Dijkstra 1975 & demonic guarded alternatives and repetitions &
+proper termination is part of \(\operatorname{wp}\) & predicates on the full
+state space satisfying the transformer laws & exact equations and stated
+repetition theorems, followed by maximum and gcd derivations \\
+Cook 1978 & deterministic ALGOL-like fragment with nonrecursive procedures &
+partial correctness & semantically complete assertion theory plus definability
+of every required post relation & formal rule soundness and relative-
+completeness proofs \\
+Apt 1981 & separately surveyed while, procedure, local-variable, and parameter
+fragments & partial and total kept separate & fragment-specific interpretation
+hypotheses; arithmetical interpretations for the displayed total system &
+survey proofs and proof sketches, with Harel attribution for while Rule~II \\
+\bottomrule
+\end{tabularx}
+\caption{Noninterchangeable source roles for Floyd--Hoare reasoning.}
+\label{tab:p09-hoare-source-roles}
+\end{table}

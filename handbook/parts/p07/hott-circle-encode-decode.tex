@@ -1,0 +1,255 @@
+\section{The circle's loop space: the 2013 encode--decode construction}
+\label{sec:p07-hott-circle-encode-decode}
+
+This section develops the main circle encode--decode construction of
+\cite[\S8.1]{HoTT2013PublicReleaseFoundations},
+at the public-release commit
+\texttt{e0aa8e9d16858fc0ce01aacd43b24da0bd765ae3} of 19 June 2013.
+It uses the circle eliminator of Definition~\ref{def:p07-hit-circle}, not a
+judgmental computation rule for the loop. The path, transport, function-path,
+univalence and equivalence interfaces are those already established in the
+preceding HoTT foundations. Write \(p\cdot q\) for first traversing \(p\) and
+then \(q\), and \(T_P(p,u)\) for transport. The notation \(=\) denotes an
+identity type; \(\equiv_{\mathrm j}\) denotes judgmental equality.
+
+\begin{hbconvention}{def:p07-circle-standing}{Universes and ordinary integers}
+Work in the intensional dependent theory of
+Definition~\ref{def:p07-hott-core}, with ordinary natural numbers
+\(\mathbb N\), constructors \(0,\mathsf S\), their dependent eliminator and
+judgmental constructor computations. Use finite sums and their dependent
+eliminators. Funext and univalence are explicit assumptions, as in
+Definitions~\ref{def:p07-hott-funext} and \ref{def:p07-hott-univalence}.
+The circle has \(\mathsf{base}:S^1\) and
+\(\mathsf{loop}:\mathsf{base}=\mathsf{base}\). A universe containing the
+integers is used as a target of circle recursion in the next larger universe.
+No UIP for \(S^1\), choice, resizing, or judgmental univalence is assumed.
+\end{hbconvention}
+
+\begin{hbdefinition}{def:p07-circle-integer-normalization}{The source's integer presentation}
+Let \(C=1+\mathbb N+\mathbb N\), with tags
+\(\mathsf z,\mathsf{pos}(k),\mathsf{neg}(k)\), representing \(0,k+1,-(k+1)\).
+Define \(g:\mathbb N^2\to C\) by simultaneous cancellation:
+\[
+g(0,0)=\mathsf z,\quad g(\mathsf Sa,0)=\mathsf{pos}(a),\quad
+g(0,\mathsf Sb)=\mathsf{neg}(b),\quad
+g(\mathsf Sa,\mathsf Sb)=g(a,b).
+\]
+Let \(j(\mathsf z)=(0,0)\), \(j(\mathsf{pos}(a))=(\mathsf Sa,0)\),
+\(j(\mathsf{neg}(b))=(0,\mathsf Sb)\), and \(r=jg\). We use
+\[
+\mathbb Z=\sum_{x:\mathbb N^2}(r(x)=x),\qquad
+E(c)=(j(c),\sigma_c),\qquad G(x,h)=g(x),\qquad
+q(x)=E(g(x)).
+\]
+Here \(\sigma_c:r(j(c))=j(c)\) is defined by tag induction, with
+reflexivity in each constructor case. It is not asserted to be reflexivity
+judgmentally for a free variable \(c\).
+This is the fixed-point presentation of the idempotent canonicalizer in
+\cite[\S6.10]{HoTT2013PublicReleaseFoundations}; the source's
+relation on pairs is \((a,b)\sim(c,d)\) iff \(a+d=b+c\).
+Put \(0=E(\mathsf z)\). Signed induction below means induction through
+the equivalence \(E:C\simeq\mathbb Z\), not an extra axiom about the circle.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p07-circle-integer-presentation}{proved=annex:p07-circle-integer-presentation}{Canonical integers are the source quotient and are a set}
+The type \(\mathbb N\) is a set, \(C\) and \(\mathbb Z\) are sets,
+\(E\) and \(G\) are inverse equivalences, and
+\[
+g(a,b)=g(c,d)\quad\Longleftrightarrow\quad a+d=b+c.
+\]
+The map \(q\) has the universal property of the quotient by \(\sim\) into
+sets. Thus the signed presentation does not replace the source integers by
+an unrelated assumed type.
+\end{hblemma}
+
+\begin{hbdefinition}{def:p07-circle-integer-steps}{Successor, predecessor, and addition}
+Define the following maps on \(C\):
+\[
+\begin{array}{c|cccc}
+c&\mathsf z&\mathsf{pos}(k)&\mathsf{neg}(0)&\mathsf{neg}(\mathsf Sk)\\ \hline
+s(c)&\mathsf{pos}(0)&\mathsf{pos}(\mathsf Sk)&\mathsf z&\mathsf{neg}(k)
+\end{array}
+\]
+\[
+\begin{array}{c|cccc}
+c&\mathsf z&\mathsf{neg}(k)&\mathsf{pos}(0)&\mathsf{pos}(\mathsf Sk)\\ \hline
+t(c)&\mathsf{neg}(0)&\mathsf{neg}(\mathsf Sk)&\mathsf z&\mathsf{pos}(k).
+\end{array}
+\]
+Set \(\mathsf{succ}=EsG\), \(\mathsf{pred}=EtG\) on \(\mathbb Z\).
+Integer addition is the descended pair operation
+\[
+q(a,b)+q(c,d)=q(a+c,b+d).
+\]
+All comparisons on arbitrary fixed-point pairs, including the preceding
+formula, are propositional; they are not additional judgmental rules.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p07-circle-integer-steps}{proved=annex:p07-circle-integer-steps}{The successor equivalence and additive recurrences}
+There is an equivalence \(e_{\mathsf{succ}}:\mathbb Z\simeq\mathbb Z\)
+with forward map \(\mathsf{succ}\) and inverse \(\mathsf{pred}\).
+Addition is well defined and satisfies
+\[
+m+0=m,\quad m+\mathsf{succ}(n)=\mathsf{succ}(m+n),\quad
+m+\mathsf{pred}(n)=\mathsf{pred}(m+n).
+\]
+It also satisfies \(0+n=n\).
+\end{hblemma}
+
+\begin{hbdefinition}{def:p07-circle-powers}{Signed powers with occurrence-sensitive computation}
+For a loop \(\ell:a=a\), define \(P_\ell:C\to(a=a)\) by
+\[
+\begin{aligned}
+P_\ell(\mathsf z)&=\mathsf{refl}_a,&
+P_\ell(\mathsf{pos}(0))&=\mathsf{refl}_a\cdot\ell,&
+P_\ell(\mathsf{pos}(\mathsf Sk))&=P_\ell(\mathsf{pos}(k))\cdot\ell,\\
+P_\ell(\mathsf{neg}(0))&=\mathsf{refl}_a\cdot\ell^{-1},&
+P_\ell(\mathsf{neg}(\mathsf Sk))&=P_\ell(\mathsf{neg}(k))\cdot\ell^{-1}.
+\end{aligned}
+\]
+Write \(\ell^n=P_\ell(G(n))\). In particular
+\(\ell^0\equiv_{\mathrm j}\mathsf{refl}_a\), whereas
+\(\ell^1=\ell\) is generally only propositional. These are the source's
+positive, zero and negative powers, with its two signed recursions made
+explicit \cite[\S6.10; \S8.1]{HoTT2013PublicReleaseFoundations}.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p07-circle-power-coherence}{proved=annex:p07-circle-power-coherence}{The predecessor coherence is a proved path}
+For every \(n:\mathbb Z\) and loop \(\ell\),
+\[
+\ell^{\mathsf{succ}(n)}=\ell^n\cdot\ell,\qquad
+\ell^{\mathsf{pred}(n)}=\ell^n\cdot\ell^{-1},\qquad
+\ell^{\mathsf{pred}(n)}\cdot\ell=\ell^n.
+\]
+These are propositional identities, including at the two sign boundaries.
+\end{hblemma}
+
+\begin{hbdefinition}{def:p07-circle-code}{The univalent code family}
+Circle recursion defines \(\mathrm{code}:S^1\to\mathcal U\) by
+\[
+\mathrm{code}(\mathsf{base})\equiv_{\mathrm j}\mathbb Z,\qquad
+\operatorname{ap}_{\mathrm{code}}(\mathsf{loop})
+ =\operatorname{ua}(e_{\mathsf{succ}}).
+\]
+The second equation is the propositional path computation of circle recursion.
+The nondependent codomain \(\mathcal U\) does not turn it into a judgmental rule.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p07-circle-monodromy}{proved=annex:p07-circle-monodromy}{Transport is successor and inverse transport is predecessor}
+For \(n:\mathbb Z\),
+\[
+T_{\mathrm{code}}(\mathsf{loop},n)=\mathsf{succ}(n),\qquad
+T_{\mathrm{code}}(\mathsf{loop}^{-1},n)=\mathsf{pred}(n).
+\]
+\end{hblemma}
+
+\begin{hbdefinition}{def:p07-circle-encode}{Encoding by transport}
+For \(x:S^1\) and \(p:\mathsf{base}=x\), put
+\[
+\mathrm{encode}_x(p)=T_{\mathrm{code}}(p,0).
+\]
+In particular \(\mathrm{encode}_{\mathsf{base}}(\mathsf{refl})
+\equiv_{\mathrm j}0\).
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p07-circle-decoder}{proved=annex:p07-circle-decoder}{A decoder with its actual circle-induction lift}
+There is a dependent function
+\[
+\mathrm{decode}:\prod_{x:S^1}
+ \bigl(\mathrm{code}(x)\to(\mathsf{base}=x)\bigr)
+\]
+with \(\mathrm{decode}_{\mathsf{base}}(n)
+\equiv_{\mathrm j}\mathsf{loop}^{n}\).
+Its supplied loop lift is the function path whose component at \(n\) is
+\[
+T_{x\mapsto(\mathrm{code}(x)\to(\mathsf{base}=x))}
+   (\mathsf{loop},\mathsf{loop}^{(-)})(n)
+ =\mathsf{loop}^{\mathsf{pred}(n)}\cdot\mathsf{loop}
+ =\mathsf{loop}^{n}.
+\]
+The first comparison uses function transport and inverse monodromy; the
+second uses the proved signed coherence, not an assumed decoder.
+\end{hblemma}
+
+\begin{hblemma}{thm:p07-circle-winding}{proved=annex:p07-circle-winding}{Signed transport and the winding calculation}
+For every \(m,n:\mathbb Z\),
+\[
+T_{\mathrm{code}}(\mathsf{loop}^{n},m)=m+n,\qquad
+\mathrm{encode}_{\mathsf{base}}(\mathsf{loop}^{n})=n.
+\]
+The zero case is transport reflexivity; the positive cases iterate successor
+and the negative cases iterate predecessor.
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p07-circle-decode-encode}{proved=annex:p07-circle-decode-encode}{The first inverse homotopy}
+For \(x:S^1\) and \(p:\mathsf{base}=x\),
+\[
+\eta_x(p):\mathrm{decode}_x(\mathrm{encode}_x(p))=p.
+\]
+This is based identity elimination with a variable endpoint \(x\), not
+identity elimination on a fixed loop type.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p07-circle-encode-decode}{proved=annex:p07-circle-encode-decode}{The second inverse homotopy with circle coherence}
+For \(x:S^1\) and \(c:\mathrm{code}(x)\),
+\[
+\epsilon_x(c):\mathrm{encode}_x(\mathrm{decode}_x(c))=c.
+\]
+The circle-induction motive is a family of function types of identity proofs,
+and its loop lift is supplied explicitly in the annex.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p07-circle-loop-equivalence}{proved=annex:p07-circle-loop-equivalence}{The loop space is the integers}
+The encoder and decoder give, for every \(x:S^1\),
+\[
+(\mathsf{base}=x)\simeq\mathrm{code}(x);
+\quad\text{in particular}\quad
+\Omega(S^1,\mathsf{base})\simeq\mathbb Z.
+\]
+The loop space is a set. The pointed comparison sends reflexivity to \(0\),
+and \(\mathrm{encode}(p\cdot q)=\mathrm{encode}(p)+\mathrm{encode}(q)\).
+Thus it identifies loop concatenation with the source's integer addition.
+\end{hbtheorem}
+
+\begin{hbcorollary}{thm:p07-circle-cover-contractible}{proved=annex:p07-circle-cover-contractible}{The total code space is contractible}
+The type \(\sum_{x:S^1}\mathrm{code}(x)\) is contractible with center
+\((\mathsf{base},0)\).
+\end{hbcorollary}
+
+\paragraph{Worked paths and limits of computation.}
+Here \(1=E(\mathsf{pos}(0))\), \(2=E(\mathsf{pos}(1))\),
+\(-1=E(\mathsf{neg}(0))\), and \(-2=E(\mathsf{neg}(1))\);
+the indices \(1\) in the tags are natural-number successors of zero.
+The loops \(\mathsf{loop}^{2}\) and \(\mathsf{loop}^{-2}\) encode as \(2\)
+and \(-2\): their transports are respectively
+\(\mathsf{succ}(\mathsf{succ}(0))\) and
+\(\mathsf{pred}(\mathsf{pred}(0))\).
+Transport along \(\mathsf{loop}^{-1}\cdot\mathsf{loop}\) first subtracts
+one and then adds one, giving \(0\). Its equality with reflexivity is the
+path inverse law; it is not a new syntactic reduction rule. Decoding \(-1\)
+gives \(\mathsf{refl}\cdot\mathsf{loop}^{-1}\), propositionally
+\(\mathsf{loop}^{-1}\). If a path
+\(\mathsf{loop}=\mathsf{refl}\) existed, applying the encoder and monodromy
+would identify \(1\) and \(0\), contradicting the disjoint canonical integer
+tags proved in the annex. In contrast, the encoder does not assert that
+all proofs of the univalence axiom are judgmentally equal.
+
+\begin{proofboundary}{def:p07-circle-native-scope}{Native scope and distinct proof routes}
+The two inverse homotopies above complete the main encode--decode route of
+the June 2013 \S8.1. The source also gives a second route using the general
+flattening lemma and a third route using the identity-system eliminator.
+The derived total-space contraction here is a consequence of the two
+inverse homotopies. The separate coequalizer flattening and identity-system
+routes, with their own dependent path calculations, are supplied in
+Section~\ref{sec:p07-hott-identity-systems-and-flattening}; they are not
+inferred merely from those two inverse homotopies.
+The source's statements about \(\pi_1\) and higher \(\pi_n\) additionally
+use its truncation and iterated-loop interfaces; no general sphere
+calculation, general homotopy-group functor, or completion of all of
+Chapters 6 and 8 is inferred from this circle equivalence.
+Without univalence the particular universe loop defining \(\mathrm{code}\)
+has not been supplied; without the HIT path computation or funext the
+decoder lift above has not been obtained. A merely typed decoder function,
+a citation of the winding theorem, or fixed-endpoint path induction would
+not discharge these obligations.
+\end{proofboundary}
