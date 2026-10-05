@@ -4837,6 +4837,10 @@ def normalize_check_output(text: str) -> list[str]:
         line = re.sub(r":\d+(:\d+)?", "", line)
         # symbols-csv / glyph-collision findings: 'line 6053: ...', 'lines 79/6052: ...'.
         line = re.sub(r"\b(lines?) \d+(?:/\d+)*", r"\1", line)
+        # notation-scope: the finding is (file, glyph); the list of registered scopes and the use
+        # lines/count in the message follow registry state, so a new row elsewhere must not make an
+        # old finding look new.
+        line = re.sub(r"^(  - notation-scope: [^:]+: .+?) is registered only in scopes .*$", r"\1 (out of scope)", line)
         lines.append(line)
     return sorted(lines, key=lambda s: s.encode("utf-8"))
 
@@ -6873,6 +6877,10 @@ def selftest_round8(temp: Path) -> None:
     after = normalize_check_output("  - symbols-csv: line 6060: bad\n"
                                    "  - glyph-collision: lines 79/6059: clash\n")
     assert before == after == ["  - glyph-collision: lines: clash", "  - symbols-csv: line: bad"], before
+    # notation-scope: a new registry row elsewhere changes the scope list, not the finding.
+    old = normalize_check_output("  - notation-scope: parts/a.tex: \\mathcal{D} is registered only in scopes S1 (lines,3)\n")
+    new = normalize_check_output("  - notation-scope: parts/a.tex: \\mathcal{D} is registered only in scopes S1, S2 (lines,3,9) (2 uses)\n")
+    assert old == new == ["  - notation-scope: parts/a.tex: \\mathcal{D} (out of scope)"], old
 
 
 def selftest_round9(temp: Path) -> None:
