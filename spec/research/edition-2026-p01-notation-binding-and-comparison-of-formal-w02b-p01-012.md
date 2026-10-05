@@ -34,10 +34,21 @@ Packet: work/waves/w02b/packets/w02b-p01-012.json (block 1, base 32de15c). label
 - Old chapter w02-p01-024 body 1-60, 270-310, 2191-2300, 2388-2470, 2906-3093; symbol-registry.tex 50-58,
   100-170, 326-345.
 
+- Block 2 (assessment A-166-C01 on the count claim and the unranked modal/epistemic rows): read symbols.csv rows
+  3365, 3389-3390, 3600-3601, 4036-4044 and every Part 8 row with precedence n/a (361 rows, listed with
+  tools/symbol_registry.read_rows and scope part 8). Handbook P8 text read: src-025-501.tex 1-120
+  (def:p08-bvb501-language), 1355-1440 (def:p08-bvb501-universal and its theorems), 1676-1800 (def:p08-bvb501-pdl,
+  def:p08-bvb501-mu, thm:p08-bvb501-mu-constructions); presentations/n-b-006-01.tex 1-40, 100-295
+  (def:p08-sa-domains, def:p08-sa-concepts, def:p08-sa-operators, thm:p08-sa-universal-quantifiers,
+  def:p08-sa-binding); presentations/n-b-006-02.tex 160-200, 285-305 (Montague language and predicate names);
+  rationality-2-6.tex 80-230 (def:p08-rat26-epistemic-update, thm:p08-rat26-hard-update, def:p08-rat26-soft-update,
+  thm:p08-rat26-soft-update); klm-preferential-representation.tex 32-46 (def:p08-klm-assertions). No new source
+  citation; readings rest on these handbook definitions and their printed formulas.
+
 ## Decisions
 
-- Ranks: ? 3 prefix; <\ ] 3 prefix; @_i (bvb501-hybrid) 3 prefix; U_s 3.5 infix none; inquisitive-or 5 infix left;
-  inquisitive tensor 5 infix left; > (bvb501-conditional) 6 infix none; U_exists(psi,theta), U(phi,psi),
+- Ranks: ? 3 prefix; <\ ] 3 prefix; @_i (sec:p08-bvb501-hybrid) 3 prefix; U_s 3.5 infix none; inquisitive-or 5 infix left;
+  inquisitive tensor 5 infix left; > (sec:p08-bvb501-conditional) 6 infix none; U_exists(psi,theta), U(phi,psi),
   S(phi,psi): no rank, delimiter-fixed. Basis: the handbook's own usage of each operator (listed above), the
   existing rank rows for @_iA (3), U (3.5) and A>B (6), and the Ciardelli priority statement. The source groups
   conjunction with the disjunctions; the handbook keeps conjunction at 4. Stated as limitation item 1 of
@@ -51,6 +62,22 @@ Packet: work/waves/w02b/packets/w02b-p01-012.json (block 1, base 32de15c). label
 - Role paraphrase: symbols.csv row with role "velocity potential of the linear surface-wave model" printed as
   "velocity potential of the linearized free-surface flow model" (the guard word list rejects the token "wave");
   the body convention def:p01-w02b-p01-012-selection states the paraphrase. All scope cells are verbatim.
+
+- Block 2 ranks: <m>,[m] 3; E,A,D 3; Scott boxed P 3 (P_i is not an operator); Scott Box, boxed rho, boxed <-> 3;
+  Scott dotted quantifiers 3; K_i 3; C 3; [!phi] box 3 (announced formula bracket-delimited); B, B^chi 3 (condition
+  superscript-delimited); upgrades: action formers inside box brackets, box rank 3; PDL test: postfix, operand =
+  longest formula before ?; PDL constructors on a separate program scale (* 1 postfix, ; 2 left, cup 3 left);
+  mu p., nu p. rank-3 prefix binders by clause 5 of def:p01-w02-p01-024-fixity; defined classical lor in InqB 5 left;
+  term binders (Scott I, I_., $; Montague T G phi, hat forms): no rank, body = shortest formula after the bound
+  variable (hat phi: formula under the accent; $: bracket-delimited). Class items 24-27: application/bracket/accent
+  forms (rank 1), relations (rank 2), semantic and logic operations (no rank, combinations need parentheses),
+  consequence/assertion signs (meta; KLM assertion is a pair, def:p08-klm-assertions).
+- Count: 41 operators in 30 rows (9 old rows/10 ops; 13 modal-epistemic rows/18 ops; 4 dynamic/fixed-point/lor
+  rows/7 ops; 4 term-binder rows/6 ops). Every other P8 n/a row was classified by reading the 361-row list.
+- New lemmas: thm:p01-w02b-p01-012-epistemic-reading (announcement law; nu identity), proved from clauses 1 and 4
+  of the fixity convention; thm:p01-w02b-p01-012-program-bracketing (iterated ; and cup), proved by induction on
+  bracketing trees from the two relation clauses of def:p08-bvb501-pdl.
+- Patch ops 18-30: registry precedence for the thirteen newly ranked rows; op 9 text updated (no count).
 
 ## Existing treatments (A9)
 
@@ -98,11 +125,37 @@ tables = {'greek': [r for r in rows if GREEK_RE.search(r['glyph'])],
 - The extracts are a snapshot of 8118 registry rows. Any merge of new rows makes the "every row" statement stale;
   rerun the generator before integration (or move it into tools/symbols2tex.py so the tables are regenerated with
   handbook/generated/; tools are outside this packet).
-- Overfull boxes in the unit build: 32 (long glyph cells in the generated tables).
+- Overfull boxes in the unit build: 26 (long glyph cells in the generated tables).
+- Unregistered glyph seen while reading: single-agent knowledge K in def:p08-rat26-soft-update (used as neg K neg
+  phi in thm:p08-rat26-soft-update) has no registry row of its own; the convention does not rank it. A P8 owner
+  would add the row.
 
 ## Continuation
 
-Block 1 finished. Written: all four extracts and counts (A-026-C01/C02, A-161-C01/C02), the Part 8 readings
-convention, table, two lemmas with annex proofs, example and limits (A-166-C01/C03). Remaining outside owned files:
-patch ops 1-17 (lead). unit-compile ok (overfull 32); find_fused_spaces clean; check.py --tree shows no finding for
-these files.
+Block 2 written: A-166-C01 rewritten for the assessment's unranked rows (items 10-23, class items 24-27, table,
+paragraph of printed readings, two new lemmas with annex proofs, examples 7-11, limits 6-8); count corrected to
+41 operators / 30 rows in the intro, section paragraph and relationships. Patch ops 18-30 added. unit-compile ok
+(overfull 26); find_fused_spaces clean; check.py --tree shows no finding for these files.
+
+Block 3 (guard fixes): G8 hits at lines 50-51 of this note fixed (the bare scope fragments are now the full scope
+labels sec:p08-bvb501-hybrid and sec:p08-bvb501-conditional); find_fused_spaces clean on all owned files. G1 names
+four untracked files of packets w02b-p01-014 and w02b-p02-036 (spec/research/edition-2026-p01-symbol-registry-
+w02b-p01-014{.md,-return.json}, spec/research/edition-2026-p02-fol-metatheorem-table-and-nd-cpl-sheet-w02b-p02-036
+{.md,-return.json}); this packet did not write them and may not modify them (A8), so the guard needs the lead to
+attribute them to their own packets. Registry recount at the re-rooted HEAD: 8118 rows; Greek 2262, Fraktur 64,
+blackboard 86, global/P1/P2 1125, matching the extracts. unit-compile ok (overfull 26); check.py --tree shows no
+finding for these files.
+
+Block 4 (r3 continuation): A-161: the three rows symbols.csv 6846-6848 (e(\mathfrak A), E(A), \mathsf{NP}_1, scope
+def:p02-w02-p02-036-fagin-encoding) resolve to Part 3 in tools/symbol_registry.py because the convention is declared in
+handbook/parts/p03/finite-model-theory.tex:80 (cited from p02 w02-p02-036 file line 157). They were the only rows whose
+scope label carries a p01-/p02- identifier but is declared in a later part (checked over all 8118 rows). Selection item 4
+now also takes such rows; they form a final group of the Parts 1-2 table; counts now 1128 (55/292/778/3). Generator
+change: parts12 = part in (global,1,2) OR scope matches ^(sec|def|thm|annex|tab|eq|lem|ex):p0[12]- . Patch op 6 text
+updated; ops 6 and 7 already cover symbol-registry.tex 54-56 and 335 (lead-owned).
+A-166: Kripke Considerations binders (x), exists x (symbols.csv 3872, precedence object) ranked 3 prefix as item 28 of
+def:p01-w02b-p01-012-p8-readings, with the argument-list rule for (x) after a letter; table row; lemma
+thm:p01-w02b-p01-012-considerations-reading (readings of n-b-009-02.tex 83-85, 107-108, 122-123, 164 plus a model
+separating the narrow and wide readings of the instantiation assertion), annex proof; example and limit items. Other P8
+object/relation rows checked by reading the 109-row list: none is a formula operator. Patch op 31: row 3872 precedence
+object -> 3. unit-compile ok (overfull 28); find_fused_spaces clean; check.py --tree shows no finding for these files.

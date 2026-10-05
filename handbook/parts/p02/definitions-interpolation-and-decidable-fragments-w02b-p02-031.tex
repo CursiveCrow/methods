@@ -5,13 +5,17 @@
 \emph{Purpose.}  \Cref{sec:p02-w02-p02-036-finite-validity} sorts the
 first-order formulas into the finitely satisfiable ones, the infinity axioms
 and the unsatisfiable ones, and proves that the three classes are pairwise
-recursively inseparable.  This section adds two results from the same
+recursively inseparable.  This section adds further results from the same
 development of Börger, Grädel and Gurevich
-\cite[Sect.~2.1.2, pp.~36--38]{BorgerGradelGurevich1997}.  The first shows
+\cite[Sect.~2.1.2, pp.~36--38]{BorgerGradelGurevich1997}.  The first group
+proves the same inseparability with formulas that describe two-register
+machines, and uses those formulas for one reduction that preserves
+satisfiability and finite satisfiability together, with values in two prefix
+classes of Krom and Horn sentences.  The next result shows
 that unrestricted validity, although it is a different question from finite
 satisfiability, can be decided by anyone who can decide finite
 satisfiability: there is a computable translation that sends the valid
-formulas, and only those, to finitely satisfiable sentences.  The second
+formulas, and only those, to finitely satisfiable sentences.  The last group
 introduces the semi-conservative reductions, which are required to respect
 only the unsatisfiable and the finitely satisfiable formulas, and shows what
 such a reduction does and does not carry over.
@@ -30,7 +34,18 @@ is \emph{valid} when it is satisfied in every structure for its signature
 under every assignment.  As in the source, ``recursive'' means
 ``decidable'' for sets and ``total computable'' for functions.
 
-\emph{Conclusions.}  For every finite relational signature \(\Lang\) with a
+\emph{Conclusions.}  Two-register machines simulate Turing machines with the
+halting state recorded (\cref{thm:p02-w02b-p02-031-two-register-simulation});
+the register-machine formulas reduce the halting problems to unsatisfiability,
+finite satisfiability and infinity axioms
+(\cref{thm:p02-w02b-p02-031-register-reduction}); this gives Trakhtenbrot's
+theorem again (\cref{thm:p02-w02b-p02-031-ex-2-1-32}) and a conservative
+reduction of all formulas into each of the classes
+\([\exists\forall\exists\forall]\cap\mathrm{KROM}\cap\mathrm{HORN}\) and
+\([\forall\exists\exists\forall]\cap\mathrm{KROM}\cap\mathrm{HORN}\) with only
+binary predicate symbols
+(\cref{thm:p02-w02b-p02-031-ex-2-1-34,thm:p02-w02b-p02-031-ex-2-1-37}).
+For every finite relational signature \(\Lang\) with a
 binary relation symbol there is a computable map from first-order formulas
 to \(\Lang\)-sentences that sends exactly the valid formulas into
 \(\mathrm{Fin\text{-}sat}(\operatorname{Sent}(\Lang))\)
@@ -39,8 +54,325 @@ carries the recursive inseparability of the unsatisfiable and the finitely
 satisfiable formulas from its domain to its target
 (\cref{thm:p02-w02b-p02-031-semi-inseparable}).  A semi-conservative
 reduction between arbitrary recursive classes need not be accompanied by a
-conservative one (\cref{thm:p02-w02b-p02-031-semi-not-conservative}).  All
-proofs are in the annex.
+conservative one (\cref{thm:p02-w02b-p02-031-semi-not-conservative}), but
+one out of the class \(\mathrm{FO}\) of all formulas always is
+(\cref{thm:p02-w02b-p02-031-gurevich}); the proof runs through effective
+inseparability and an embedding theorem of recursion theory
+(\cref{thm:p02-w02b-p02-031-eff-classes,thm:p02-w02b-p02-031-embedding}).
+All proofs are in the annex.
+
+\subsection{Register-machine formulas and Krom--Horn conservative reduction classes}
+\label{sec:p02-w02b-p02-031-register}
+
+The source gives a second proof of Trakhtenbrot's theorem, in which the
+formulas describe two-register machines instead of Turing machines
+(its Exercise~2.1.32).  Applied to one fixed machine that searches at the same
+time for a refutation and for a finite model of a given formula, the same
+formulas give a single reduction that respects satisfiability and finite
+satisfiability together (Exercise~2.1.34), and its values lie in two prefix
+classes of Krom and Horn sentences (Exercise~2.1.37)
+\cite[Sect.~2.1.2, pp.~36--37]{BorgerGradelGurevich1997}.  The machines and the
+shape of the formulas are those of the source's Theorem~2.1.15 and
+Corollary~2.1.16 \cite[Sect.~2.1.1, pp.~27--29]{BorgerGradelGurevich1997}.
+
+\emph{Purpose and inputs.}  The subsection needs the Turing machines of
+\cref{sec:turing-machines-01}, the machine codes \(V\), \(M_e\) and the halting
+problems \(H_1\), \(H_2\), \(H_\infty\) of
+Definition~\ref{def:p02-w02-p02-036-halting}, the classes of
+Definition~\ref{def:p02-w02-p02-036-classes}, and the index constructions of
+\cref{thm:p02-w02b-p02-031-code-constructions}.  Its conclusions are a
+reduction property for the register-machine formulas
+(\cref{thm:p02-w02b-p02-031-register-reduction}), and from it
+Trakhtenbrot's theorem in the source's register-machine form
+(\cref{thm:p02-w02b-p02-031-ex-2-1-32}), the simultaneous reduction
+(\cref{thm:p02-w02b-p02-031-ex-2-1-34}) and the two conservative reduction
+classes (\cref{thm:p02-w02b-p02-031-ex-2-1-37}).
+
+\begin{hbdefinition}{def:p02-w02b-p02-031-two-register}{Two-register machines}
+A \emph{two-register machine program} \(M\) has a finite set
+\(Q_M\subseteq\mathbb N\) of states with \(0,1,2\in Q_M\).  The states \(1\)
+and \(2\) are the \emph{stop states} and carry no instruction; every other
+state \(i\in Q_M\) carries exactly one instruction \(I_i\), of one of two
+kinds \cite[Sect.~2.1.1, pp.~27--29]{BorgerGradelGurevich1997}:
+\begin{itemize}
+\item an \emph{addition instruction} \(I_i=(i,r,j)\) with \(r\in\{1,2\}\) and
+      \(j\in Q_M\): at state \(i\), add \(1\) to register \(r\) and go to
+      state \(j\);
+\item a \emph{subtraction instruction} \(I_i=(i,r,j,k)\) with \(r\in\{1,2\}\)
+      and \(j,k\in Q_M\): at state \(i\), if register \(r\) contains \(0\), go
+      to state \(j\); otherwise subtract \(1\) from register \(r\) and go to
+      state \(k\).
+\end{itemize}
+A \emph{configuration} is a triple \((i,m,n)\in Q_M\times\mathbb N\times
+\mathbb N\): state \(i\), content \(m\) of register \(1\) and content \(n\) of
+register \(2\).  The instruction of a state other than \(1\) and \(2\)
+determines a unique next configuration; a configuration in a stop state has
+none.  The \emph{computation} of \(M\) from a configuration \(C\) is the unique
+maximal finite or infinite sequence of configurations that begins with \(C\)
+and proceeds by next configurations.  It \emph{halts} if it is finite, that
+is, if it reaches a stop state.  Write \(C\Rightarrow_M D\) if \(D\) occurs in
+the computation from \(C\).  The \emph{register contents} of a computation are
+the numbers \(m\) and \(n\) of its configurations \((i,m,n)\).
+\index{register machine!two-register}\index{two-register machine}
+\end{hbdefinition}
+
+The source allows halting states in general and restricts attention to
+programs with the two stop states \(1\) and \(2\) for this application
+\cite[Sect.~2.1.2, p.~34]{BorgerGradelGurevich1997}; the definition builds
+that restriction in.
+
+\begin{hbdefinition}{def:p02-w02b-p02-031-krom-horn}{Krom and Horn formulas; prefix classes}
+A \emph{clause} is a disjunction of atomic and negated atomic formulas.  A
+\emph{Horn clause} is a clause with at most one non-negated atom; it can be
+written as an implication \(\alpha\to\beta\) in which \(\alpha\) is a
+conjunction of atoms and \(\beta\) is an atom or the constant
+\(\mathit{false}\).  A \emph{Krom clause} is a clause with at most two
+constituents.  \(\mathrm{HORN}\) (respectively \(\mathrm{KROM}\)) is the
+class of first-order formulas in prenex normal form whose quantifier-free part
+is a conjunction of Horn (respectively Krom) clauses
+\cite[Sect.~2.1.1, Def.~2.1.14, p.~27]{BorgerGradelGurevich1997}.  For a
+string \(w\) of quantifier symbols, \([w]\) is the class of prenex sentences of
+first-order logic without equality and without function symbols whose
+quantifier prefix is \(w\), as in the prefix-vocabulary classes of
+\cite[Sect.~1.3, Def.~1.3.1, p.~8]{BorgerGradelGurevich1997}.  The phrase
+``with only binary predicate symbols'' restricts a class to sentences all of
+whose predicate symbols are binary.
+\index{Krom formula}\index{Horn formula}\index{prefix class}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p02-w02b-p02-031-two-register-simulation}{proved=annex:p02-w02b-p02-031-two-register-simulation}{Two-register machines simulate Turing machines}
+For every Turing machine \(\mathcal T\) there are a two-register machine
+program \(M_{\mathcal T}\) and a map \(w\mapsto m_{\mathcal T}(w)\) on input
+words, both computable from the transition table of \(\mathcal T\), such that
+for every input word \(w\) the computation of \(M_{\mathcal T}\) from
+\((0,m_{\mathcal T}(w),0)\) has the following properties.
+\begin{enumerate}
+\item It reaches \((1,0,0)\) if and only if the computation of \(\mathcal T\)
+      on \(w\) reaches \(q_{\mathrm{rej}}\).
+\item It reaches \((2,0,0)\) if and only if the computation of \(\mathcal T\)
+      on \(w\) reaches \(q_{\mathrm{acc}}\).
+\item Every configuration of it in a stop state is \((1,0,0)\) or \((2,0,0)\).
+\item If the computation of \(\mathcal T\) on \(w\) never halts, then it never
+      halts and its register contents are unbounded.
+\end{enumerate}
+Moreover \(m_{\mathcal T}(\varepsilon)=1\) for the empty word
+\(\varepsilon\), and there is a program \(M^{0}_{\mathcal T}\), computable from
+the table of \(\mathcal T\), whose computation from \((0,0,0)\) has
+properties 1--4 for \(w=\varepsilon\).
+\end{hbtheorem}
+
+The source takes the universality of two-register machines from the
+literature \cite[Sect.~2.1.1, p.~28]{BorgerGradelGurevich1997}; the annex proves
+the form needed here, in which the stop state records the halting state of
+\(\mathcal T\), the registers are emptied before stopping, and a
+non-halting computation drives the registers to infinity.  The last property
+is the register-machine counterpart of the source's sharpened stop condition,
+by which a computation that does not halt never becomes cyclic
+\cite[Sect.~2.1.2, p.~35]{BorgerGradelGurevich1997}.
+
+\begin{hbdefinition}{def:p02-w02b-p02-031-register-formulas}{The register-machine reduction formulas}
+Let \(M\) be a two-register machine program and \(m\in\mathbb N\).  The
+signature consists of binary predicate symbols \(K\), \(K_i\) for \(i\in
+Q_M\), and, when \(m\geq1\), \(A_0,\ldots,A_m\).  A configuration
+\((i,a,b)\) is described by the atom \(\underline{(i,a,b)}\defeq K_iab\), the
+register contents being read as elements
+\cite[Sect.~2.1.1, p.~28]{BorgerGradelGurevich1997}.  Let
+\(\alpha_{M,m}(u,x,v,y)\) be the conjunction of the following clauses, in
+which \(u\) plays the part of the number \(0\) and \(v\) that of the successor
+of \(x\).
+\begin{enumerate}
+\item \(\mathrm{STEP}_M\): for each addition instruction \((i,1,j)\) the clause
+      \(K_ixy\to K_jvy\), and for each \((i,2,j)\) the clause
+      \(K_iyx\to K_jyv\); for each subtraction instruction \((i,1,j,k)\) the
+      clauses \(K_ivy\to K_kxy\) and \(K_iuy\to K_juy\), and for each
+      \((i,2,j,k)\) the clauses \(K_iyv\to K_kyx\) and \(K_iyu\to K_jyu\).
+\item \(\mathrm{START}_m\): for \(m=0\) the atom \(K_0uu\); for \(m\geq1\) the
+      atom \(A_0uu\), the clauses \(A_lxy\to A_{l+1}vy\) for \(l<m\), and the
+      clause \(A_mxy\to K_0xy\).
+\item \(\mathrm{NOSTOP}\): the clause \(\neg K_1uu\).
+\item \(\prec_{K,M}\): the clauses \(\neg Kxx\) and \(Kyx\to Kyv\), and for
+      each \(i\in Q_M\) the clauses \(K_ixy\to Kxv\) and \(K_iyx\to Kxv\).
+\end{enumerate}
+Put
+\[
+ \beta_{M,\prec,m}\defeq\exists u\,\forall x\,\exists v\,\forall y\;
+   \alpha_{M,m},
+ \qquad
+ \beta^{+}_{M,\prec,m}\defeq\forall x\,\exists u\,\exists v\,\forall y\;
+   \alpha_{M,m},
+\]
+and \(\psi_{M,\prec}\defeq\beta_{M,\prec,0}\).  In the source's notation
+\(\beta_{M,\prec,m}\) is \(\beta_{M,\prec,C,D}\) with \(C=(0,m,0)\) and
+\(D=(1,0,0)\) \cite[Sect.~2.1.2, p.~36]{BorgerGradelGurevich1997}.
+\index{reduction formula!register machine}
+\end{hbdefinition}
+
+Eliminating the existential quantifiers from left to right, as in the source's
+Skolemization \cite[Sect.~2.1.1, Thm.~2.1.8 and Lemma~2.1.9,
+pp.~25--26]{BorgerGradelGurevich1997}, replaces \(u\) by a new constant \(0\)
+and \(v\) by a term \(x'\) in \(\beta_{M,\prec,m}\), and \(u\) by a term
+\(x^{+}\) and \(v\) by \(x'\) in \(\beta^{+}_{M,\prec,m}\).  So
+\(\psi_{M,\prec}\) has the Skolem normal form
+\[
+ \forall x\,\forall y\,\bigl(\mathrm{STEP}_M\land\underline{(0,0,0)}\land
+ \neg\underline{(1,0,0)}\land\prec_{K,M}\bigr)
+\]
+displayed in the source's Exercise~2.1.32, with
+\(\prec_{K,M}=\neg Kxx\land(Kyx\to Kyx')\land\bigwedge_i\bigl((K_ixy\to
+Kxx')\land(K_iyx\to Kxx')\bigr)\)
+\cite[Sect.~2.1.2, p.~36]{BorgerGradelGurevich1997}.  The source prints
+\(u\) in place of \(x'\) in this display; in a Skolem normal form with the
+variables \(x,y\) only, the letter can only stand for the successor term, as in
+the source's relativized axiom \(\forall x\,\exists u\,\forall y(\ldots)\) on
+p.~35, where \(u\) is the witness that follows \(x\).  For \(m\geq1\) the
+source writes the start atom \(\underline{(0,m,0)}\) with the term
+\(0^{(m)}\) for \(m\); a prenex sentence with prefix \(\exists\forall\exists\forall\)
+has no such term, and the clauses with \(A_0,\ldots,A_m\) derive that atom
+instead.
+
+Every conjunct of \(\alpha_{M,m}\) is a Krom clause and a Horn clause, all
+predicate symbols are binary, and there are no function symbols and no
+equality.  So
+\(\beta_{M,\prec,m}\in[\exists\forall\exists\forall]\cap\mathrm{KROM}\cap
+\mathrm{HORN}\) and \(\beta^{+}_{M,\prec,m}\in[\forall\exists\exists\forall]
+\cap\mathrm{KROM}\cap\mathrm{HORN}\), both with only binary predicate
+symbols.  Each conjunct mentions either none of \(u\) or none of \(x,v\);
+this is what lets one matrix serve both prefixes.
+
+\begin{hbtheorem}{thm:p02-w02b-p02-031-register-reduction}{proved=annex:p02-w02b-p02-031-register-reduction}{Reduction property of the register-machine formulas}
+Let \(M\) be a two-register machine program and \(m\in\mathbb N\), and assume
+that the computation of \(M\) from \((0,m,0)\) satisfies: every configuration
+of it in a stop state is \((1,0,0)\) or \((2,0,0)\); and if it never halts,
+its register contents are unbounded.  Let \(\beta\) be
+\(\beta_{M,\prec,m}\) or \(\beta^{+}_{M,\prec,m}\).  Then:
+\begin{enumerate}
+\item \((0,m,0)\Rightarrow_M(1,0,0)\) if and only if \(\beta\) is
+      contradictory;
+\item \((0,m,0)\Rightarrow_M(2,0,0)\) if and only if \(\beta\) is finitely
+      satisfiable; in that case \(\beta\) has a model with \(N+2\) elements,
+      where \(N\) is the largest register content of the computation;
+\item the computation never halts if and only if \(\beta\) is an infinity
+      axiom.
+\end{enumerate}
+\end{hbtheorem}
+
+For \(m=0\), items 1 and~2 are the source's reduction property for
+\(\psi_{M,\prec}\) with the halting problems of register machines in place of
+those of Turing machines \cite[Sect.~2.1.2, p.~34]{BorgerGradelGurevich1997}.
+
+\begin{hbcorollary}{thm:p02-w02b-p02-031-ex-2-1-32}{proved=annex:p02-w02b-p02-031-ex-2-1-32}{Trakhtenbrot's theorem with register-machine formulas}
+For \(e\in V\) let \(\psi_e\defeq\psi_{M^{0}_{M_e},\prec}\), with
+\(M^{0}_{M_e}\) as in \cref{thm:p02-w02b-p02-031-two-register-simulation}.
+Then \(e\in H_1\), \(e\in H_2\) and \(e\in H_\infty\) hold according as
+\(\psi_e\) is contradictory, finitely satisfiable or an infinity axiom.
+Consequently, for every recursive class \(Y\) of formulas that contains every
+\(\psi_e\), in particular for \(Y=\mathrm{FO}\) and for
+\(Y=[\exists\forall\exists\forall]\cap\mathrm{KROM}\cap\mathrm{HORN}\) with
+only binary predicate symbols, the sets \(\mathrm{Fin\text{-}sat}(Y)\),
+\(\mathrm{Non\text{-}sat}(Y)\) and \(\mathrm{Inf\text{-}axioms}(Y)\) are
+pairwise recursively inseparable
+\cite[Sect.~2.1.2, Thm.~2.1.30 and Exercise~2.1.32]{BorgerGradelGurevich1997}.
+\end{hbcorollary}
+
+The source's logic machine of Corollary~2.1.16 recognizes the unsatisfiable
+formulas.  For the simultaneous reduction it is enriched so that it also
+recognizes the finitely satisfiable ones, with the two halting problems
+\(H'_{M,i}=\{\psi:C(\psi)\Rightarrow_M(i,0,0)\}\) for \(i=1,2\), where
+\(C(\psi)=(0,m(\psi),0)\) \cite[Sect.~2.1.2, p.~36]{BorgerGradelGurevich1997}.
+
+\begin{hbtheorem}{thm:p02-w02b-p02-031-logic-machine}{proved=annex:p02-w02b-p02-031-logic-machine}{A logic machine for unsatisfiability and finite satisfiability}
+There are a two-register machine program \(M_L\) and a computable map
+\(\psi\mapsto m(\psi)\) on \(\mathrm{FO}\) such that for every first-order
+formula \(\psi\) the computation of \(M_L\) from \(C(\psi)\defeq(0,m(\psi),0)\)
+reaches \((1,0,0)\) if \(\psi\in\mathrm{Non\text{-}sat}\), reaches \((2,0,0)\)
+if \(\psi\in\mathrm{Fin\text{-}sat}\), and never halts, with unbounded register
+contents, if \(\psi\in\mathrm{Inf\text{-}axioms}\); every configuration of it
+in a stop state is \((1,0,0)\) or \((2,0,0)\).  So
+\(H'_{M_L,1}=\mathrm{Non\text{-}sat}\) and \(H'_{M_L,2}=\mathrm{Fin\text{-}sat}\).
+\end{hbtheorem}
+
+\begin{hbcorollary}{thm:p02-w02b-p02-031-ex-2-1-34}{proved=annex:p02-w02b-p02-031-ex-2-1-34}{The refined logic-machine formulas reduce both problems at once}
+With \(M_L\) and \(m\) as in \cref{thm:p02-w02b-p02-031-logic-machine}, put
+\(g(\psi)\defeq\beta_{M_L,\prec,m(\psi)}\), whose Skolem normal form is
+\(\forall x\,\forall y\,(\mathrm{STEP}_{M_L}\land\mathrm{START}_{m(\psi)}\land
+\neg\underline{(1,0,0)}\land\prec_{K,M_L})\).  For every first-order formula
+\(\psi\):
+\begin{enumerate}
+\item \(\psi\) is satisfiable if and only if \(g(\psi)\) is satisfiable;
+\item \(\psi\) is finitely satisfiable if and only if \(g(\psi)\) is finitely
+      satisfiable;
+\item more precisely, \(g\) maps \(\mathrm{Non\text{-}sat}\),
+      \(\mathrm{Fin\text{-}sat}\) and \(\mathrm{Inf\text{-}axioms}\) into the
+      classes of the same names.
+\end{enumerate}
+The map \(g\) is computable \cite[Sect.~2.1.2, Exercise~2.1.34]{BorgerGradelGurevich1997}.
+\end{hbcorollary}
+
+\begin{hbcorollary}{thm:p02-w02b-p02-031-ex-2-1-37}{proved=annex:p02-w02b-p02-031-ex-2-1-37}{Two conservative reduction classes of Krom and Horn sentences}
+The classes \([\exists\forall\exists\forall]\cap\mathrm{KROM}\cap
+\mathrm{HORN}\) and \([\forall\exists\exists\forall]\cap\mathrm{KROM}\cap
+\mathrm{HORN}\) with only binary predicate symbols are conservative reduction
+classes in the sense of Definition~\ref{def:p02-w02-p02-036-conservative}:
+\(g\) of \cref{thm:p02-w02b-p02-031-ex-2-1-34} is a conservative reduction from
+\(\mathrm{FO}\) to the first, and
+\(g^{+}(\psi)\defeq\beta^{+}_{M_L,\prec,m(\psi)}\) is one to the second
+\cite[Sect.~2.1.2, Exercise~2.1.37]{BorgerGradelGurevich1997}.
+\end{hbcorollary}
+
+By \cref{thm:p02-w02-p02-036-conservative}, the sets
+\(\mathrm{Non\text{-}sat}(X)\), \(\mathrm{Fin\text{-}sat}(X)\) and
+\(\mathrm{Inf\text{-}axioms}(X)\) are pairwise recursively inseparable for
+each of these two classes \(X\).  For the second class, the source's
+Exercise~2.1.17 suggests the same device in the plain reduction-class setting:
+the term \(x^{+}\) serves as the number \(0\)
+\cite[Sect.~2.1.1, p.~29]{BorgerGradelGurevich1997}.
+
+\begin{hbexample}{def:p02-w02b-p02-031-register-example}{Three small register machines}
+Let \(M\) have the states \(0,1,2,3\) with \(I_0=(0,1,3)\) and
+\(I_3=(3,1,2,3)\).  From \((0,0,0)\) it computes \((0,0,0)\), \((3,1,0)\),
+\((3,0,0)\), \((2,0,0)\), and halts in the stop state \(2\) with empty
+registers; the largest register content is \(N=1\).  The matrix of
+\(\psi_{M,\prec}\) consists of \(K_0xy\to K_3vy\), \(K_3vy\to K_3xy\),
+\(K_3uy\to K_2uy\), \(K_0uu\), \(\neg K_1uu\) and the clauses of
+\(\prec_{K,M}\).  The model built in the annex has \(N+2=3\) elements
+\(0,1,2\), with \(u\) interpreted by \(0\), the witness for \(v\) at \(x\)
+equal to \(x+1\) for \(x\leq1\) and to \(2\) for \(x=2\),
+\(K=\{(0,1),(0,2),(1,2)\}\), \(K_0=\{(0,0)\}\), \(K_3=\{(1,0),(0,0)\}\),
+\(K_2=\{(0,0)\}\) and \(K_1=\varnothing\).  For instance, the clause
+\(K_3vy\to K_3xy\) has a true premise only at \(x=0\), \(y=0\), where the
+witness for \(v\) is \(1\) and \(K_3(0,0)\) holds.
+
+If instead \(I_3=(3,1,1,3)\), the computation ends in \((1,0,0)\), and
+\(\psi_{M,\prec}\) is contradictory: in any model, \(K_0uu\) and the step
+clauses give \(K_3\) at the pair (witness of \(v\) at \(u\), \(u\)), then
+\(K_3uu\), then \(K_1uu\), against \(\neg K_1uu\).  If instead
+\(I_3=(3,1,3)\), register \(1\) grows forever, and \(\psi_{M,\prec}\) is an
+infinity axiom by \cref{thm:p02-w02b-p02-031-register-reduction}(3).
+\end{hbexample}
+
+\begin{hbwarning}{def:p02-w02b-p02-031-register-limits}{What the hypotheses and the formulas do not give}
+\begin{enumerate}
+\item The hypothesis of \cref{thm:p02-w02b-p02-031-register-reduction} on
+  unbounded registers cannot be dropped.  Let \(M\) have
+  \(I_0=(0,1,3,3)\) and \(I_3=(3,1,3,3)\).  From \((0,0,0)\) it moves to
+  \((3,0,0)\) and stays there for ever, so it never halts.  Yet
+  \(\psi_{M,\prec}\) has a two-element model: domain \(\{0,1\}\), \(u\)
+  interpreted by \(0\), the witness for \(v\) equal to \(1\) at both
+  elements, \(K=\{(0,1)\}\), \(K_0=K_3=\{(0,0)\}\) and \(K_1=K_2=\varnothing\).
+  This is why the source sharpens the stop condition before relativizing the
+  infinity axiom \cite[Sect.~2.1.2, p.~35]{BorgerGradelGurevich1997}, and why
+  \cref{thm:p02-w02b-p02-031-two-register-simulation}(4) is part of the
+  simulation.
+\item The formulas are frugal: a model may make \(K_i\) true at pairs that the
+  computation never visits.  The proofs only use that every visited
+  configuration is true in every model.
+\item The reduction \(g\) is computable, but \(m(\psi)\) is a power of \(3\)
+  whose exponent is a numerical code of the binary numeral of the code of
+  \(\psi\), and \(g(\psi)\) has \(m(\psi)+1\) predicate symbols \(A_l\).  The
+  construction gives no useful bound on the size of \(g(\psi)\) or of its
+  finite models.
+\end{enumerate}
+\end{hbwarning}
 
 \subsection{An effective reduction of validity to finite satisfiability}
 \label{sec:p02-w02b-p02-031-val-to-finsat}
@@ -165,8 +497,10 @@ The second item of the source's Exercise~2.1.40 asks for a recursive
 reduction \(f\) from \(X\) to \(Y\)
 \cite[Sect.~2.1.2, Exercise~2.1.40(2)]{BorgerGradelGurevich1997}.  Read for
 arbitrary recursive classes \(X\) and \(Y\), that claim is false, as the next
-lemma shows; the source's Theorem~2.1.39, attributed to Gurevich, treats
-the case \(X=\mathrm{FO}\).
+lemma shows.  For \(X=\mathrm{FO}\) it is true: it is the content of the
+source's Theorem~2.1.39, attributed to Gurevich, which is proved in
+\cref{sec:p02-w02b-p02-031-gurevich}
+(\cref{thm:p02-w02b-p02-031-gurevich,thm:p02-w02b-p02-031-ex-2-1-40-2}).
 
 \begin{hblemma}{thm:p02-w02b-p02-031-semi-not-conservative}{proved=annex:p02-w02b-p02-031-semi-not-conservative}{A semi-conservative reduction without a conservative one}
 Let \(K\) be a binary relation symbol, let \(\prec_K\) be the infinity axiom
@@ -185,7 +519,196 @@ for trivial reasons: a conservative reduction \(G\) from \(\mathrm{FO}\) to
 \(Y\), restricted to \(X\), is a map of the required kind, and it is recursive
 on \(X\) because \(G\) halts on every member of \(\mathrm{FO}\).
 
-\emph{Relationships.}  \Cref{thm:p02-w02b-p02-031-val-to-finsat} reuses the
+\subsection{Effective inseparability and Gurevich's theorem}
+\label{sec:p02-w02b-p02-031-gurevich}
+
+The source's Theorem~2.1.39 says that, for reductions out of the class of
+all formulas, the semi-conservative requirement costs nothing: whenever a
+recursive class \(X\) receives a semi-conservative reduction from
+\(\mathrm{FO}\), it also receives a conservative one.  The source indicates
+the proof in three moves \cite[Sect.~2.1.2, pp.~37--38]{BorgerGradelGurevich1997}:
+a strengthening of recursive inseparability, called effective
+inseparability; the observation that \(\mathrm{Non\text{-}sat}\) and
+\(\mathrm{Fin\text{-}sat}\), and with them their images in \(X\), are
+effectively inseparable; and an embedding theorem of recursion theory, by
+which any disjoint pair of computably enumerable sets can be pulled back
+exactly from an effectively inseparable computably enumerable pair.  This
+subsection states the three moves for the machine model and coding of
+\cref{sec:p02-w02-p02-036-inseparability}; the annex proves each of them.
+
+\begin{hbconvention}{def:p02-w02b-p02-031-we}{Indices of computably enumerable sets}
+Let \(V\) be the decidable set of valid machine codes and \(M_e\) the machine
+decoded from \(e\in V\), as in the paragraph before
+Definition~\ref{def:p02-w02-p02-036-halting}.  For \(e\in\mathbb N\) put
+\[
+\begin{aligned}
+ W_e\defeq\{n\in\mathbb N:{}& e\in V\text{ and the computation of }M_e\
+   &\text{on }\operatorname{bin}(n)\text{ reaches }q_{\mathrm{acc}}\}.
+\end{aligned}
+\]
+So \(W_e\) is the set recognized by \(M_e\), and \(W_e=\varnothing\) for an
+invalid code.  The number \(e\) is called an \emph{index} of \(W_e\).
+Tuples of numbers are coded by the bijective codes \(\operatorname{code}_k\)
+of \cref{sec:turing-machines-01}, whose inverses are computable.
+\index{index!of a computably enumerable set}
+\end{hbconvention}
+
+\begin{hbdefinition}{def:p02-w02b-p02-031-effectively-inseparable}{Effective inseparability}
+Two disjoint sets \(A,B\subseteq\mathbb N\) are \emph{effectively
+inseparable} if there is a total computable function
+\(p:\mathbb N^{2}\to\mathbb N\) such that for all \(i,j\in\mathbb N\):
+\[
+ A\subseteq W_i,\quad B\subseteq W_j,\quad W_i\cap W_j=\varnothing
+ \quad\Longrightarrow\quad p(i,j)\notin W_i\cup W_j
+\]
+\cite[Sect.~2.1.2, p.~37]{BorgerGradelGurevich1997}.  The function \(p\) is a
+\emph{witness} of the effective inseparability.
+\index{effective inseparability}\index{inseparability!effective}
+\end{hbdefinition}
+
+Informally, \(p\) turns any pair of disjoint computably enumerable
+approximations from outside, one containing \(A\) and the other \(B\), into a
+number that both of them miss.  Recursive inseparability only says that the
+two approximations cannot together cover \(\mathbb N\); effective
+inseparability asks for an explicit uncovered number, computed from the
+indices.
+
+\begin{hblemma}{thm:p02-w02b-p02-031-code-constructions}{proved=annex:p02-w02b-p02-031-code-constructions}{Index constructions}
+\begin{enumerate}
+\item Every computably enumerable set is \(W_e\) for some \(e\in V\).
+\item For every total computable \(h:\mathbb N^{2}\to\mathbb N\) there is a
+      total computable \(a:\mathbb N^{2}\to\mathbb N\) such that
+      \(W_{a(i,c)}=\{n\in\mathbb N:h(c,n)\in W_i\}\) for all
+      \(i,c\in\mathbb N\).
+\item There is a total computable \(d:\mathbb N^{2}\to V\) such that for all
+      \(i,j,n\in\mathbb N\): if \(n\in W_i\setminus W_j\), the computation of
+      \(M_{d(i,j)}\) on \(\operatorname{bin}(n)\) reaches \(q_{\mathrm{acc}}\);
+      if \(n\in W_j\setminus W_i\), it reaches \(q_{\mathrm{rej}}\); if
+      \(n\notin W_i\cup W_j\), it never halts.
+\item (Fixed point.)  For every computably enumerable
+      \(\Theta\subseteq\mathbb N\) there is \(k\in V\) such that
+      \(W_k=\{z\in\mathbb N:\operatorname{code}_2(k,z)\in\Theta\}\).
+\end{enumerate}
+\end{hblemma}
+
+Item~4 is a form of Kleene's recursion theorem
+(\cref{thm:recursion-theorem}) for the indices of
+Convention~\ref{def:p02-w02b-p02-031-we}; the annex derives it from items 1
+and~2 and does not use the recursion theorem.
+
+\begin{hblemma}{thm:p02-w02b-p02-031-eff-transfer}{proved=annex:p02-w02b-p02-031-eff-transfer}{Elementary properties of effective inseparability}
+Let \(A\) and \(B\) be effectively inseparable, with witness \(p\).
+\begin{enumerate}
+\item \(B\) and \(A\) are effectively inseparable, with witness
+      \((i,j)\mapsto p(j,i)\).
+\item \(A\) and \(B\) are recursively inseparable.
+\item If \(A\subseteq A'\), \(B\subseteq B'\) and \(A'\cap B'=\varnothing\),
+      then \(A'\) and \(B'\) are effectively inseparable, with witness \(p\).
+\item If \(h:\mathbb N\to\mathbb N\) is total computable, \(h(A)\subseteq C\),
+      \(h(B)\subseteq D\) and \(C\cap D=\varnothing\), then \(C\) and \(D\) are
+      effectively inseparable.
+\end{enumerate}
+\end{hblemma}
+
+\begin{hblemma}{thm:p02-w02b-p02-031-eff-halting}{proved=annex:p02-w02b-p02-031-eff-halting}{Effectively inseparable halting problems}
+Put \(D_{\mathrm{rej}}\defeq\{e\in V:M_e\text{ on }\operatorname{bin}(e)
+\text{ reaches }q_{\mathrm{rej}}\}\) and \(D_{\mathrm{acc}}\defeq\{e\in V:
+M_e\text{ on }\operatorname{bin}(e)\text{ reaches }q_{\mathrm{acc}}\}\).  The
+sets \(D_{\mathrm{rej}}\) and \(D_{\mathrm{acc}}\) are effectively
+inseparable, and so are the halting problems \(H_1\) and \(H_2\) of
+Definition~\ref{def:p02-w02-p02-036-halting}.
+\end{hblemma}
+
+The source asserts the second half for its halting problems and transfers it
+along its reduction property \cite[Sect.~2.1.2, p.~38]{BorgerGradelGurevich1997}.
+
+\begin{hbtheorem}{thm:p02-w02b-p02-031-eff-classes}{proved=annex:p02-w02b-p02-031-eff-classes}{Unsatisfiable and finitely satisfiable formulas are effectively inseparable}
+Let \(\Lang\) be a finite relational signature containing a binary relation
+symbol.  The sets \(\mathrm{Non\text{-}sat}(\operatorname{Sent}(\Lang))\) and
+\(\mathrm{Fin\text{-}sat}(\operatorname{Sent}(\Lang))\) are effectively
+inseparable, and so are \(\mathrm{Non\text{-}sat}\) and
+\(\mathrm{Fin\text{-}sat}\).  The sets \(\mathrm{Non\text{-}sat}\) and
+\(\mathrm{Fin\text{-}sat}\) are computably enumerable.  If \(X\subseteq
+\mathrm{FO}\) is recursive and \(f\) is a semi-conservative reduction from
+\(\mathrm{FO}\) to \(X\), then \(\mathrm{Non\text{-}sat}(X)\) and
+\(\mathrm{Fin\text{-}sat}(X)\) are computably enumerable and effectively
+inseparable.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p02-w02b-p02-031-embedding}{proved=annex:p02-w02b-p02-031-embedding}{Embedding into an effectively inseparable pair}
+Let \(P_1,P_2\subseteq\mathbb N\) be disjoint computably enumerable sets, and
+let \(R_1,R_2\subseteq\mathbb N\) be disjoint, computably enumerable and
+effectively inseparable.  Then there is a total computable
+\(g:\mathbb N\to\mathbb N\) with
+\[
+ P_1=g^{-1}(R_1)\qquad\text{and}\qquad P_2=g^{-1}(R_2).
+\]
+\end{hbtheorem}
+
+This is the recursion-theoretic argument the source invokes for
+Theorem~2.1.39 \cite[Sect.~2.1.2, p.~37]{BorgerGradelGurevich1997}.  The
+map \(g\) does more than a many-one reduction of \(P_1\) to \(R_1\): it sends
+every number outside \(P_1\cup P_2\) outside \(R_1\cup R_2\).
+
+\begin{hbtheorem}{thm:p02-w02b-p02-031-gurevich}{proved=annex:p02-w02b-p02-031-gurevich}{Gurevich: semi-conservative reductions from FO suffice}
+If there exists a semi-conservative reduction from the set \(\mathrm{FO}\) of
+all first-order formulas to a recursive class \(X\subseteq\mathrm{FO}\), then
+\(X\) is a conservative reduction class
+\cite[Sect.~2.1.2, Thm.~2.1.39]{BorgerGradelGurevich1997}.
+\end{hbtheorem}
+
+\begin{hbcorollary}{thm:p02-w02b-p02-031-ex-2-1-40-2}{proved=annex:p02-w02b-p02-031-ex-2-1-40-2}{The second item of Exercise 2.1.40 for \(X=\mathrm{FO}\)}
+Let \(Y\subseteq\mathrm{FO}\) be a recursive class and \(f\) a
+semi-conservative reduction from \(\mathrm{FO}\) to \(Y\).  Then there is a
+recursive function \(g:\mathrm{FO}\to Y\) such that every \(\psi\in
+\mathrm{FO}\) is satisfiable if and only if \(g(\psi)\) is satisfiable, and
+finitely satisfiable if and only if \(g(\psi)\) is finitely satisfiable
+\cite[Sect.~2.1.2, Exercise~2.1.40(2)]{BorgerGradelGurevich1997}.
+\end{hbcorollary}
+
+\begin{hbexample}{def:p02-w02b-p02-031-gurevich-example}{What the conservative reduction does with an infinity axiom}
+Let \(f\) be a semi-conservative reduction from \(\mathrm{FO}\) to a recursive
+\(X\), and let \(\prec_K\) be the infinity axiom of
+Example~\ref{def:p02-w02-p02-036-infinity-axiom}.  Nothing in
+Definition~\ref{def:p02-w02b-p02-031-semi-conservative} constrains
+\(f(\prec_K)\): it may be unsatisfiable, finitely satisfiable, or an infinity
+axiom.  The conservative reduction \(G\) built in the proof of
+\cref{thm:p02-w02b-p02-031-gurevich} sends \(\prec_K\) to a member of
+\(\mathrm{Inf\text{-}axioms}(X)\).  So every recursive class that receives a
+semi-conservative reduction from \(\mathrm{FO}\) contains an infinity axiom.
+The construction of \(G\) gives no description of which formula of \(X\) this
+is: \(G(\prec_K)\) is the number \(p(i,j)\) produced by the witness \(p\) of
+effective inseparability for indices \(i,j\) obtained from a fixed point.
+\end{hbexample}
+
+\begin{hbwarning}{def:p02-w02b-p02-031-gurevich-limits}{Limits of Gurevich's theorem}
+\begin{enumerate}
+\item The theorem concerns reductions out of \(\mathrm{FO}\).  For an
+  arbitrary recursive domain class in place of \(\mathrm{FO}\) the
+  corresponding conclusion fails
+  (\cref{thm:p02-w02b-p02-031-semi-not-conservative}).
+\item The conservative reduction \(G\) is computable, but it is obtained from
+  a fixed point (\cref{thm:p02-w02b-p02-031-code-constructions}(4)); it does
+  not preserve the syntactic shape of formulas and gives no bound on the size
+  of finite models.
+\item The proof uses that \(\mathrm{Non\text{-}sat}(X)\) and
+  \(\mathrm{Fin\text{-}sat}(X)\) are computably enumerable, which holds
+  because \(X\) is recursive.
+\end{enumerate}
+\end{hbwarning}
+
+\emph{Relationships.}  \Cref{thm:p02-w02b-p02-031-register-reduction} is the
+register-machine counterpart of \cref{thm:p02-w02-p02-036-refined}: there the
+time and the tape cells are elements of the model, here the register contents
+are, and the time disappears.  \Cref{thm:p02-w02b-p02-031-ex-2-1-37} answers,
+for two Krom--Horn prefix classes, the question which classes are conservative
+reduction classes in the sense of
+Definition~\ref{def:p02-w02-p02-036-conservative}; with
+\cref{thm:p02-w02-p02-036-conservative} it gives pairwise recursive
+inseparability of the three countermodel classes inside each of them.  The
+logic machine of \cref{thm:p02-w02b-p02-031-logic-machine} is built from the
+index constructions of \cref{sec:p02-w02b-p02-031-gurevich}.
+\Cref{thm:p02-w02b-p02-031-val-to-finsat} reuses the
 run sentence, the path translation and the renaming of
 \cref{sec:p02-w02-p02-036-finite-validity} and the enumerability of validity
 (\cref{thm:fol-validity-enumerable}); it complements
@@ -193,11 +716,29 @@ run sentence, the path translation and the renaming of
 \(K\) of \cref{sec:universal-reductions-03} to finite satisfiability.
 \Cref{thm:p02-w02b-p02-031-semi-inseparable} is the semi-conservative analogue
 of \cref{thm:p02-w02-p02-036-conservative}, with one pair of classes in place
-of three.
+of three.  \Cref{thm:p02-w02b-p02-031-eff-halting} strengthens
+Lemma~\ref{thm:p02-w02-p02-036-halting} for the pair \(H_1\), \(H_2\), and
+\cref{thm:p02-w02b-p02-031-eff-classes} strengthens the pair
+\(\mathrm{Non\text{-}sat}\), \(\mathrm{Fin\text{-}sat}\) of
+\cref{thm:p02-w02-p02-036-inseparable}.  The fixed-point item of
+\cref{thm:p02-w02b-p02-031-code-constructions} plays the part of Kleene's
+recursion theorem (\cref{thm:recursion-theorem}), and the index
+constructions use the parameter idea of \cref{thm:parameter} for machine
+codes.
 
-\emph{Sources.}  Exercise~2.1.33 (p.~36), Definition~2.1.38, Theorem~2.1.39
-(both p.~37) and Exercise~2.1.40 (p.~38) of
-\cite[Sect.~2.1.2]{BorgerGradelGurevich1997}.  The proofs in the annex are
-written for this handbook's machine model and coding; the proof of
+\emph{Sources.}  Definition~2.1.14 (p.~27), Theorem~2.1.15 and
+Corollary~2.1.16 with their formulas (pp.~28--29) and Exercise~2.1.17
+(p.~29) of \cite[Sect.~2.1.1]{BorgerGradelGurevich1997}; Exercises 2.1.32 and
+2.1.34 with the refined formulas (p.~36) and Exercise~2.1.37 (p.~37) of
+\cite[Sect.~2.1.2]{BorgerGradelGurevich1997}; the prefix-vocabulary classes of
+\cite[Sect.~1.3, Def.~1.3.1, p.~8]{BorgerGradelGurevich1997}.  The simulation
+of Turing machines by two-register machines, which the source takes from the
+literature, is proved in the annex for this handbook's machine model.
+Exercise~2.1.33 (p.~36), Definition~2.1.38, Theorem~2.1.39
+with its proof outline (pp.~37--38) and Exercise~2.1.40 (p.~38) of
+\cite[Sect.~2.1.2]{BorgerGradelGurevich1997}.  The source names effective
+inseparability and the embedding theorem and says how they combine; the
+proofs of \cref{thm:p02-w02b-p02-031-code-constructions,thm:p02-w02b-p02-031-eff-transfer,thm:p02-w02b-p02-031-eff-halting,thm:p02-w02b-p02-031-eff-classes,thm:p02-w02b-p02-031-embedding}
+in the annex are written for this handbook's machine model and coding; the proof of
 \cref{thm:p02-w02b-p02-031-val-to-finsat} does not follow the source's hint
 through Herbrand's theorem.

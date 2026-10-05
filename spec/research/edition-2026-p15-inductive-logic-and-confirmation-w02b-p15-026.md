@@ -50,4 +50,25 @@ None of these is attributed to Milton or to the historical authors.
   arguments, the (a)-(d) diagram and formulas above ten words.
 - Host edit: one cross-reference sentence in parts/p15/hume-and-the-problem-of-induction.tex (lines 32-33).
 - 1002 C001--C003: blocked_source (Lange chapter not held).
+- r2 (assessment gaps, C002): added Sextus date and Milton's verdict on Diogenes/Sextus (printed p. 8, body 440-446);
+  Bacon NO II.16 opening quotation (p. 26, body 1065-1069); Milton's empirics/beasts gloss (p. 34, body 1441-1443);
+  Nizolius closing step on countless unexamined cases (p. 35, body 1480-1483). Locators re-read from the held PDF this session.
 - Open: collation of the camera-ready text against the final 2011 publisher PDF.
+- r3 (guard G13, copied prose): the 12-word overlap scan against the held Milton PDF found 13 runs
+  (longest 44, the Wallis horned-animals quotation). Rewritten in own words or shortened to brief
+  attributed quotations: planets syllogism (schematic form, p. 5), Posterior Analytics 71b20-2 premise
+  list, Diogenes' dog/ox step (pp. 8-9), note 7 on probabilis (pp. 11-12), Ockham's three rules (p. 18),
+  divided-sense modal induction (p. 19), Buridan's bona consequentia (p. 20), Agricola's wall/house
+  example (p. 21), Bacon NO II.16 opening (p. 26; quotation cut to "a kind of divine fire"),
+  Descartes Rule VII (p. 27), Gassendi's animals (p. 30), Wallis's horned animals (p. 33),
+  New Essays IV.vi.13 sentence (p. 34). Re-scan: no run of 12 or more words remains.
+- r3 G1: the two remaining G1 hard items (spec/research/edition-2026-p01-symbol-registry-w02b-p01-014*.md/-return.json,
+  and the p02-036 pair) are files of other packets, untracked and created by other agents; this
+  packet did not touch them and may not modify them.
+- r4 (assessment dispute on C003): part (4) of thm:p15-w02b-p15-026-exclusion was not provable as stated, since
+  survival coincides with satisfying the form conditions on I. Restated: Omega = all instances, I a finite
+  subset; 'agrees with g on J' (A1-A2); 'form of g' = agreement on Omega; new part (0) survival iff agreement
+  on I; part (4) = without the form hypothesis a non-form can be the unique survivor (countercase
+  Omega={i,i'}, I={i}), and only when Omega minus I is non-empty. Body 1111-1164, annex 80-133. Symbol
+  intake row Omega added. The reconstruction is editorial; Milton (p. 26) is the source for the form's
+  presence/absence/degree description it models. Driver insertion still pending (lead).

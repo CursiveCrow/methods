@@ -103,7 +103,85 @@ not in held-sources.json (no file found under source/references by title or DOI)
 
 ## Continuation
 
-Block 1 written: body handbook/parts/p02/propositional-languages-valuations-and-truth-functions-w02b-p02-001.tex
-1-270, annex 1-255; unit compile ok (0 overfull); fused-space check clean; patch file written.
-Next: (a) proof of Barwise 4.14 for G by the completeness route (item 1), to be hosted where the lead decides
-(the G material lives in the w02-p02-005 files); (b) lead applies patches 1-2 and the held-sources mapping.
+Block 1 (earlier): body 1-270, annex 1-255 (readability, recursion, coincidence, truth tables).
+
+Continuation (this session, gap ED26-SRC-001-001-DEVELOPMENT, Barwise 4.14):
+- Held file re-opened: page images of printed pp. 21, 22, 37, 38, 39, 40 (PDF pp. 37, 38, 53-56) of
+  source/references/acq-r1-ACQ-2026-10-0497/schwichtenberg-1977-proof-theory-applications-cut-elimination.pdf
+  (110 dpi), plus text layer of PDF 53-57. Locators used: p. 21 (term coincidence remark), p. 22 (substitution
+  assumption and renaming remark), p. 37 (sequents, Gamma,phi = union, propositional rules), p. 38 (proof of 4.12,
+  truth assignment on an end node), p. 39 (equality axioms and rule, quantifier rules, eigenvariable condition,
+  G and G+), p. 40 (4.14 and the route via a direct completeness proof for G, Smullyan 1968).
+- Written: body sec:p02-w02b-p02-001-g-completeness (lines 272-556): def g-valid, convention g-reading, lemma
+  g-substitution, method g-search, thm g-completeness, cor g-cut-elimination (Barwise 4.14 for sequents that
+  separate their variables, and 4.13 with G in place of G+ for sentences without same-variable nesting), example
+  g-example, warning g-limit. Annex sec:annex-p02-w02b-p02-001-g-completeness (lines 257-682): annexitems
+  g-substitution, g-completeness, g-cutfree.
+- Decision (recorded in reader as def g-reading and def g-limit): under Barwise's p. 22 convention plus the host's
+  reading of phi(y) in (|-forall)/(exists|-), the sequent {forall z R(z), S(y)} |- forall y (R(y) & forall y R(y))
+  is valid but no (|-forall) instance concludes it. The written completeness proof therefore carries the
+  hypothesis "separates its variables" (no variable both quantified and free in the sequent; no same-variable
+  quantifier nesting). Remaining, in the duty's words: "every sequent true in all structures is derivable in G"
+  and "4.14 ... any sequent with a derivation using cut has one without cut" are not established for sequents
+  that do not separate their variables; settling them needs either a proof for those sequents or a lead decision
+  on the reading of phi(y) (alpha-renaming) in G.
+- Proof route: semantic (non-derivability saturation with a fair schedule; equality handled only by the
+  right-side backward use of the equality rule; countermodel on U/~ where ~ is interchangeability in atomic
+  right-side formulas). Soundness of G+ is taken from the annex proof of thm:p02-w02-p02-005-bw-completeness-g.
+- Patch request added: work/waves/w02b/patches/w02b-p02-001.json entry 3 (w02-p02-005 body line 1075
+  "Neither route is carried out ..." -> cross-reference to the new section).
+- Symbol intake written (local notation of the proof).
+- Checks: unit-compile ok, 0 overfull; fused-space check clean; check.py --tree handbook shows no finding in
+  this packet's files.
+Next: lead applies the three patches and the held-sources mapping; open item above (sequents not separating
+variables) awaits a decision or further proof.
+
+Continuation (r3 session, gap ED26-SRC-001-001-DEVELOPMENT, annex proofs for the general case of 4.14):
+- An intervening session had added body subsection sec:p02-w02b-p02-001-g-variants (body 607-705: thm
+  g-clean-failure, def g-variant, def g-variant-reading, lemma g-variants, thm g-variant-cut-elimination) and
+  updated def g-limit, but wrote no annexitems; the proved= targets were undefined.
+- Written now in the annex, subsection sec:annex-p02-w02b-p02-001-g-variants (annex 684-1000):
+  annex:p02-w02b-p02-001-g-clean-failure (validity; explicit G+ derivation with one cut on
+  forall x forall z P(xz), lines L1-L5, R1-R3, C; no G derivation via a least-height argument over the class of
+  sequents with left side in A = {chi_0} u {forall y P(ty): y not in t} u {P(tt'): y not in t}, right side within
+  {P(yy)}); annex:p02-w02b-p02-001-g-variants (renaming step preserves satisfaction via clean-substitution part 4
+  and lem:fol-coincidence; replacement by induction; variant construction by induction with FV preserved;
+  separating variant of a sequent); annex:p02-w02b-p02-001-g-variant-cutfree ((ii)=>(i) trivial, (i)=>(iii)
+  soundness through variants, (iii)=>(ii) relabel the root of the derivation from g-completeness; consequence for
+  T |= phi via 4.13).
+- No new locators introduced (only cross-references); annexitem title of g-variant-cutfree shortened to avoid
+  an overfull line.
+- Patch 3 text updated to name the clean-failure and renaming-reading theorems.
+- Symbol intake: QV, phi^*, mathcal C added (annex-local scopes).
+- Checks: unit-compile ok, 0 overfull; find_fused_spaces clean; check.py --tree handbook shows no finding in this
+  packet's files.
+Next: lead applies patches 1-3, the held-sources mapping and the driver insertion (placement in the return JSON).
+Remaining open in DEVELOPMENT: Barwise 5.7 (Lindstrom) proof route, source Barwise 1974 not held.
+
+Continuation (r4 session, gap ED26-SRC-001-001-DEVELOPMENT, Barwise 5.7):
+- Hard guard G1 (files changed outside the owned set): the four flagged files
+  spec/research/edition-2026-p01-symbol-registry-w02b-p01-014{.md,-return.json} and
+  spec/research/edition-2026-p02-fol-metatheorem-table-and-nd-cpl-sheet-w02b-p02-036{.md,-return.json} are untracked
+  files owned by packets w02b-p01-014 and w02b-p02-036 (timestamps 2026-10-04 18:23 and 22:05). This packet never
+  wrote them and did not touch them in this session; reverting or deleting them would destroy another agent's work.
+  The attribution is the guard's; the lead should re-attribute.
+- Held file re-opened: text layer of PDF pp. 26, 27, 33, 61, 62 and page images of printed pp. 10 and 45
+  (PDF 26, 61) of the held whole-book scan. Locators used: p. 10 (2.4, 2.5, remark on finite or countable L),
+  p. 17 (L of any size; function, relation, constant symbols), p. 45 (5.6 informal notion of logic, referral to
+  Barwise 1974, the LS theorem with kappa = aleph_0 for other logics, L(Q) with Q = uncountable, 5.7 statement).
+- Found on the route: thm:p03-lindstrom (handbook/parts/p03/preservation-abstract-logic.tex 458, proved by
+  annex:p3.abstract.3 in handbook/annex/p03/editorial-proofs.tex 358 ff.), the relational regular-abstract-logic
+  notion of sec:p02-fol-metatheorem-summary, and thm:p03-keisler-q-one (cited). The host w02-p02-005 refers only
+  to the cited thm:lindstrom and says 5.7 is not proved.
+- Written: body sec:p02-w02b-p02-001-lindstrom (lines 742-898): def lindstrom-reading, cor barwise-lindstrom,
+  lemma lindstrom-sharp, example lindstrom-example, warning lindstrom-limit. Annex
+  sec:annex-p02-w02b-p02-001-lindstrom (1001-1083): annex barwise-lindstrom (hypotheses of thm:p03-lindstrom from
+  2.4 and 2.5 with kappa = aleph_0), annex lindstrom-sharp (Qx(x=x) not first-order; failure of 2.4 for L(Q) over
+  P plus aleph_1 constants).
+- Patch request 4 added: host sentence "neither 5.7 nor that theorem is proved in this section" -> cross-reference.
+- Symbol intake: \mathcal L^{\ast} (overlap with the P2 clausal-composition registry row; keep scoped), c_alpha.
+- Remaining in DEVELOPMENT: (a) Barwise's own proof route for 5.7 (Barwise 1974, not held); (b) 5.7 for a logic
+  with only the closure properties Barwise names (no relativization) is not established; (c) the passage from
+  relational signatures to Barwise's signatures with function symbols is not carried out.
+- Checks: unit-compile ok, 0 overfull; find_fused_spaces clean; check.py --tree handbook shows no finding in this
+  packet's files.

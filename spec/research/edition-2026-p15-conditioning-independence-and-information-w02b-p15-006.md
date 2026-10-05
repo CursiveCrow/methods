@@ -28,9 +28,31 @@
   Lemma 2.1.5 (p. 45), Theorem 2.1.7 (p. 46).
 - `source/references/grinstead-snell-chance-2006/prob-2006-07-04.pdf`
   (CHANCE version 4 July 2006). Printed page = PDF page - 8.
-  Read sec. 4.1: Definition 4.2 (p. 141), Exercise 8 (p. 151),
+  Read sec. 4.1: Definition 4.2 (p. 141), the remark that the full
+  n-fold product equation does not give mutual independence (p. 141,
+  pointing to Exercise 8), Definition 4.4 (p. 142), Exercise 8 (p. 151),
   Exercise 33 (p. 155). Source complement notation: tilde A.
 
 ## Continuation
 
-- Status: body, annex, symbol intake and bib intake being written.
+- Session 2 (4 October 2026): re-verified with pdftotext every locator
+  in the body: Durrett pp. 43-46 (Theorems 2.1.1-2.1.3, the
+  infinite-collection sentence on p. 44, Example 2.1.4 p. 45,
+  Theorem 2.1.7 p. 46); Grinstead-Snell pp. 141, 142, 151, 155.
+- Fixed the Exercise 8 array (row ends were single backslashes, which
+  broke the unit build).
+- Added item 7 of thm:p15-w02b-p15-006-arbitrary-transfer (point-mass
+  criterion for countably-valued variables over any index set, with
+  Grinstead-Snell Definition 4.4, p. 142) and its annex proof (7), which
+  reduces to the countable-value clause of thm:p15-independent-product-law.
+- Added the p. 141 remark citation in def:p15-w02b-p15-006-complement-examples.
+- Unit compile ok; check.py shows no finding in owned files. Three
+  overfull boxes come from long annex labels in the unit headings.
+- Open for the owner of the finite-probability unit (w02b-p15-001):
+  the entry in handbook/parts/p15/finite-probability.tex lines 231-235
+  still defines independence of two random variables only; it can
+  cross-reference thm:p15-w02b-p15-006-arbitrary-transfer item 7 and
+  thm:p15-w02b-p15-006-complement-form.
+- Placement: own chapter inserted after
+  parts/p15/uniform-integrability-and-conditional-limits (body) and
+  annex/p15/uniform-integrability-and-conditional-limits (annex).

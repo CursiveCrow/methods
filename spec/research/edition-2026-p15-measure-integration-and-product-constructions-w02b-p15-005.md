@@ -65,3 +65,14 @@ unlisted existing treatment found.
   components: no gap assigned; existing treatment located and reported.
 - Remaining: lead to insert driver lines (parts/p15.tex after line 36,
   annex/p15.tex after line 35) and apply the three patch requests.
+- r2 block 1 (C009 confirm dispute: host proof lacks an F=G nonzero witness):
+  added part (6) to thm:p15-w02b-p15-005-stieltjes-excess (body item after
+  part (5)) with annex proof paragraph (6): every nonzero admissible F with
+  G=F represents the zero signed measure, Jordan parts zero, mu_F=mu_G=rho
+  nonzero. Added an insert_after patch for the host annex proof
+  annex:p15.signed-cdf-variation carrying a self-contained witness paragraph,
+  and rewrote the C009 body patch to state the witness inline. Anchors
+  verified unique in both hosts. unit-compile ok; fused-spaces no hits;
+  check.py --tree no finding naming these files.
+- Remaining for C009: lead applies the patch file entries and inserts the
+  driver lines (blocked_policy).

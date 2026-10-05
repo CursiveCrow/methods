@@ -1,0 +1,457 @@
+%% toc: P15 173 173.9,173.10,173.11,173.12
+\chapter{Computed and Simulated Values in Approximate Conclusions}
+\label{sec:p15-w02b-p15-074}
+
+\Cref{sec:p15-approximate-quantitative-inference} treats an approximation
+as a stated relation between an exact model value and a simpler expression.
+In use, the simpler expression, or the exact model itself, is evaluated by
+a program, and the number the program returns is a further object: a
+computed value. This chapter states how a computed or simulated value enters
+a sign, ordering, threshold or regime argument. The rule is bookkeeping.
+Each error term refers to one explicit difference between two named
+quantities, each term is bounded on its own premises, and the bounds are
+combined only afterwards. Arithmetic error, discretization error,
+approximation error, input uncertainty and the discrepancy between a model
+and its target are different differences. A bound on one of them says
+nothing about another, and making one of them small leaves the others in
+the conclusion.
+
+\emph{Inputs.} A target quantity and a strict comparison to be decided;
+an exact model and, where used, an approximant with a remainder bound on a
+stated domain; a recorded input with an enclosure of the input the model
+should receive; a computed value with a bound on its arithmetic and, for a
+discretized calculation, discretization error; for a sampled simulation, a
+number of independent runs. \emph{Conclusions.} An interval certified to
+contain the target, a certified strict comparison or a justified abstention,
+a certified regime condition, and, for a sampled simulation, a decision
+rule with a stated error probability. When a comparison is not certified,
+the analysis also identifies which term prevents it.
+
+\emph{Dependencies.} The approximation relations of
+\cref{def:p15-approximation-relations}, the interval certificates of
+\cref{thm:p15-approximation-certificates} and the remainder bounds of
+\cref{thm:p15-approximation-rational} are used as stated there. From
+\cref{part:p12}, the chapter uses the finite radix format and nearest
+rounding of \cref{def:p12-numerical-format,def:p12-numerical-rounding},
+the half-ulp bound of \cref{thm:p12-numerical-nearest}, the sign and
+ordering certificates of \cref{thm:p12-numerical-certification}, the
+separation of input uncertainty from arithmetic error in
+\cref{thm:p12-numerical-data-budget}, the scalar error chain of
+\cref{def:p12-simulation-error-chain,thm:p12-simulation-error-chain}, the
+distinctions of \cref{def:p12-simulation-vv} and the Euler results
+\cref{thm:p12-simulation-decay-euler,thm:p12-simulation-arithmetic-propagation}.
+The sampling result uses \cref{thm:p15-expectation-bounds},
+\cref{thm:p15-independent-blocks} and \cref{thm:p15-independent-moments}.
+Within the chapter, \cref{thm:p15-w02b-p15-074-ledger} rests only on the
+triangle inequality; \cref{thm:p15-w02b-p15-074-regime} applies it to a
+regime parameter; the two worked theorems
+\cref{thm:p15-w02b-p15-074-four-thresholds,thm:p15-w02b-p15-074-euler}
+apply both; and \cref{thm:p15-w02b-p15-074-sampled,thm:p15-w02b-p15-074-tie}
+are independent of the deterministic results except for the rounding model.
+
+\section{The ledger of separate differences}
+\label{sec:p15-w02b-p15-074-ledger}
+
+\begin{hbdefinition}{def:p15-w02b-p15-074-ledger}{An error ledger for a computed value}
+Let \(Y\) be a real target quantity in stated units. Let \(F\) be a real
+model function on an input set \(S\), and let \(x_*\in S\) denote the
+unknown input that the model should receive, so that \(F(x_*)\) is the
+model value. Let \(A\) be an approximant, a real function on \(S\) intended
+to replace \(F\); when the model itself is evaluated, \(A=F\). Let
+\(\widehat x\in S\) be the recorded input, \(B\subseteq S\) an
+\emph{input enclosure} containing both \(x_*\) and \(\widehat x\), and
+\(\widehat A\) the number returned by a computation intended to evaluate
+\(A(\widehat x)\). An \emph{error ledger} consists of nonnegative numbers
+\(E_{\rm model}\), \(E_{\rm input}\), \(E_{\rm comp}\) and real numbers
+\(\ell_{\rm appr}\leq r_{\rm appr}\) such that
+\[
+\begin{aligned}
+ &|Y-F(x_*)|\leq E_{\rm model},&&
+ \ell_{\rm appr}\leq F(x)-A(x)\leq r_{\rm appr}\ \ (x\in B),\\
+ &|A(x)-A(\widehat x)|\leq E_{\rm input}\ \ (x\in B),&&
+ |A(\widehat x)-\widehat A|\leq E_{\rm comp}.
+\end{aligned}
+\]
+In the symmetric case \(\ell_{\rm appr}=-E_{\rm appr}\) and
+\(r_{\rm appr}=E_{\rm appr}\); when \(A=F\), both are zero. If the
+computation is a discretized calculation whose exact-real result
+\(A_h(\widehat x)\) satisfies \(|A(\widehat x)-A_h(\widehat x)|\leq
+E_{\rm disc}\) and \(|A_h(\widehat x)-\widehat A|\leq E_{\rm arith}\),
+then \(E_{\rm comp}=E_{\rm disc}+E_{\rm arith}\) is admissible.
+
+Each entry is a separate claim with its own evidence. The model entry
+concerns correspondence between the model and its target; the
+approximation entry is a remainder theorem holding on all of \(B\), not
+only at \(\widehat x\); the input entry combines an enclosure of \(x_*\)
+with a sensitivity bound for \(A\); the arithmetic entry is a rounding
+analysis of the operations actually executed, under the range conditions
+of \cref{def:p12-numerical-format}; the discretization entry is a
+convergence or error theorem for the discrete method. A bound that has not
+been established is recorded as unavailable. It is not set to zero.
+\index{error ledger}\index{arithmetic error!separated from model error}
+\end{hbdefinition}
+
+The ledger arranges the four differences in a telescoping order:
+\[
+ Y-\widehat A=\bigl(Y-F(x_*)\bigr)+\bigl(F(x_*)-A(x_*)\bigr)
+ +\bigl(A(x_*)-A(\widehat x)\bigr)+\bigl(A(\widehat x)-\widehat A\bigr).
+\]
+It differs from the chain of \cref{def:p12-simulation-error-chain} in two
+respects: it inserts an approximant with a possibly one-sided remainder,
+and it applies the input perturbation to the approximant, the function
+actually evaluated. Either order is legitimate provided the terms refer to
+explicit differences and none is counted twice.
+
+\begin{hbtheorem}{thm:p15-w02b-p15-074-ledger}{proved=annex:p15-w02b-p15-074-ledger}{A ledger as a threshold certificate}
+Under the premises of \cref{def:p15-w02b-p15-074-ledger}, put
+\(E=E_{\rm model}+E_{\rm input}+E_{\rm comp}\). Then
+\[
+ \widehat A+\ell_{\rm appr}-E\;\leq\;Y\;\leq\;\widehat A+r_{\rm appr}+E.
+\]
+\begin{enumerate}
+\item For a real threshold \(c\), the inequality
+\(\widehat A+\ell_{\rm appr}-E>c\) certifies \(Y>c\), and
+\(\widehat A+r_{\rm appr}+E<c\) certifies \(Y<c\).
+\item For two targets \(Y_1,Y_2\) with ledgers indexed accordingly,
+\(\widehat A_1+r_{1}+E_1<\widehat A_2+\ell_{2}-E_2\) certifies
+\(Y_1<Y_2\), where \(r_1\) and \(\ell_2\) are the respective
+approximation endpoints.
+\item Regard the four premises as constraints on the five real numbers
+\(Y\), \(F(x_*)\), \(A(x_*)\), \(A(\widehat x)\), \(\widehat A\), with
+\(\widehat A\) fixed. The set of values of \(Y\) compatible with them is
+exactly the displayed closed interval. Hence, if \(c\) lies in that
+interval, the premises alone certify neither \(Y>c\) nor \(Y<c\).
+\item In the symmetric case, if at least two of \(E_{\rm model}\),
+\(E_{\rm appr}\), \(E_{\rm input}\), \(E_{\rm comp}\) are positive, the
+root-sum-square of the four is strictly smaller than their sum and is
+exceeded by \(|Y-\widehat A|\) for some assignment satisfying the premises.
+It is therefore not a valid worst-case bound under these premises.
+\end{enumerate}
+\end{hbtheorem}
+
+When \(A=F\) and \(E_{\rm model}=E_{\rm input}=0\), the first item reduces
+to the sign certificate of \cref{thm:p12-numerical-certification}; when
+\(A=F\) and the computation is discretized, the inequality reduces to
+\cref{thm:p12-simulation-error-chain}. A root-sum-square combination can be
+justified as a statement about standard deviations under a probability
+model with uncorrelated terms; it is then a different kind of claim, as
+\cref{sec:p15-measurement-uncertainty} explains, and it does not certify a
+strict comparison by itself.
+
+A computed value is also used to decide which approximation applies at all.
+The terminal-speed check of \cref{def:p15-approximation-drag} substitutes a
+computed speed into a Reynolds number, and the remainder bound of
+\cref{thm:p15-approximation-rational} holds only for inputs up to one half.
+Such a regime condition is a threshold statement about the input the model
+should receive, so it is decided by the same certificate applied to the
+regime parameter.
+
+\begin{hbcorollary}{thm:p15-w02b-p15-074-regime}{proved=annex:p15-w02b-p15-074-regime}{A regime is certified on the enclosure, not at the computed value}
+Let \(\varphi\) be a real function on \(S\), \(\rho\) a real bound, and
+\(D=\{x\in S:\varphi(x)\leq\rho\}\) the domain on which a remainder bound
+has been proved. Suppose \(|\varphi(x)-\varphi(\widehat x)|\leq H_{\rm input}\)
+for every \(x\in B\), and a computed value \(\widehat\varphi\) satisfies
+\(|\varphi(\widehat x)-\widehat\varphi|\leq H_{\rm arith}\). If
+\[
+ \widehat\varphi+H_{\rm input}+H_{\rm arith}\leq\rho,
+\]
+then \(B\subseteq D\), and the remainder bound may serve as the
+approximation entry of the ledger on \(B\). The weaker premise
+\(\widehat\varphi\leq\rho\) does not imply \(B\subseteq D\), even when
+\(\widehat\varphi=\varphi(\widehat x)\) exactly.
+\end{hbcorollary}
+
+The corollary needs a numerical bound \(\rho\). A regime described only as
+``small'' or ``large'' supplies no threshold to certify against. In the
+falling-sphere example the computed Reynolds number is about \(0.016\).
+Against a stated bound \(\rho=1\), the corollary needs only that the input
+and arithmetic entries for the Reynolds number sum to at most
+\(1-\widehat\varphi\), roughly \(0.98\). The certificate still requires
+those entries to be bounded and the bound \(\rho\) to be stated.
+
+\section{Four thresholds and the term that blocks each}
+\label{sec:p15-w02b-p15-074-four}
+
+The following calculation keeps every entry of the ledger explicit. Its
+arithmetic uses the decimal format of precision three that Goldberg uses
+throughout his discussion of ulps and relative error
+\cite[Section D.3.2]{GoldbergOracle8193693}, with the nearest rounding
+\(R\) of \cref{def:p12-numerical-rounding}. A small precision makes each
+rounding visible; nothing in the argument depends on that choice.
+
+\begin{hbtheorem}{thm:p15-w02b-p15-074-four-thresholds}{proved=annex:p15-w02b-p15-074-four-thresholds}{One computed value, four thresholds}
+Let \(x_*\) be a dimensionless ratio, \(F(x)=1/(1-x)\) and
+\(A(x)=1+x\). Suppose the recorded value is \(\widehat x=0.123\), with
+\(|x_*-\widehat x|\leq0.002\), so \(B=[0.121,0.125]\). Let
+\(\widehat A=R(1+0.123)\), one nearest-rounded addition in decimal
+precision three. Take the target to be \(Y=F(x_*)\), so
+\(E_{\rm model}=0\), except in item 6.
+\begin{enumerate}
+\item \(\widehat A=1.12\). A ledger holds with \(E_{\rm comp}=0.005\),
+\(E_{\rm input}=0.002\), \(\ell_{\rm appr}=0\) and
+\(r_{\rm appr}=1/32\), and \(B\subseteq[0,1/2]\). The certified interval
+is \([1.113,\,1.15825]\).
+\item The ledger certifies \(Y>1.10\).
+\item The interval contains \(1.12\), so this ledger certifies neither
+strict comparison with \(1.12\). Replacing \(\widehat A\) by the exact
+value \(A(\widehat x)=1.123\), so that \(E_{\rm comp}=0\), gives the interval
+\([1.121,\,1.15625]\) and certifies \(Y>1.12\).
+\item With \(E_{\rm comp}=0\) the interval still contains \(1.13\).
+Evaluating \(F\) itself on \(B\) gives
+\(F(B)=[1000/879,\,8/7]\), whose lower endpoint exceeds \(1.137\);
+this certifies \(Y>1.13\).
+\item The value \(1.14\) lies in \(F(B)\). The inputs \(0.121\) and
+\(0.125\) both satisfy the input premise, and \(F\) takes values below and
+above \(1.14\) at them. No reduction of the arithmetic or approximation
+entries decides the comparison of \(Y\) with \(1.14\).
+\item If instead \(Y\) is a target quantity with
+\(|Y-F(x_*)|\leq E_{\rm model}\), the certificate in item 2 persists
+exactly when \(E_{\rm model}<0.013\), and that in item 4 exactly when
+\(E_{\rm model}<673/87900\), approximately \(0.00766\).
+\end{enumerate}
+\end{hbtheorem}
+
+\begin{hbexample}{def:p15-w02b-p15-074-four-reading}{Reading the four outcomes}
+In item 3 the printed value \(1.12\) equals the threshold. That
+coincidence is not evidence for equality or for either strict inequality:
+a computed value supports no comparison until its ledger is attached. The rounding error actually committed is \(0.003\),
+smaller than the budget \(0.005\); a pessimistic budget yields abstention,
+never a false certificate.
+
+The four thresholds are blocked by different terms. At \(1.10\) every
+generic bound leaves margin. At \(1.12\) only the arithmetic entry blocks,
+and exact evaluation of the same approximant suffices, because the input
+entry alone leaves a margin of \(0.001\). At \(1.13\) the first-order
+approximant fails even when evaluated exactly: more digits cannot repair
+an approximation entry. The exact model, or the sharper lower remainder
+\(x^2/(1-x)\geq x^2\), which gives \(1.121+0.121^2=1.135641\), supplies
+the missing margin. At \(1.14\) only better information about \(x_*\), a
+narrower enclosure, can help. Item 6 shows the remaining entry: a
+certificate about \(F(x_*)\) transfers to a measured target only through a
+model-to-target bound, and a small one can already undo it.
+
+If \(\widehat x\) had itself been computed, for instance as a rounded
+quotient of two recorded quantities, that rounding error would enlarge the
+enclosure \(B\) before the regime check of
+\cref{thm:p15-w02b-p15-074-regime} and before every later entry.
+The same separation is the point of the discriminant example in
+\cref{thm:p12-numerical-data-budget,def:p12-numerical-certification-cases}:
+an exact final subtraction can expose rounding committed earlier, the
+catastrophic cancellation that Goldberg distinguishes from the benign case
+of subtracting exactly known operands
+\cite[Section D.3.4]{GoldbergOracle8193693}.
+\end{hbexample}
+
+\section{A simulated value in a threshold argument}
+\label{sec:p15-w02b-p15-074-simulation}
+
+A deterministic simulation returns a computed value of a discretized
+calculation. Its ledger therefore has both a discretization and an
+arithmetic entry, and the regime conditions of the discretization theorem
+are among the premises. The NASA simulation document lists finite-precision
+arithmetic beside discretization, incomplete iterative convergence and
+numerical approximation as numerical errors whose estimates should be
+recorded for a computational model's results, and it places solution
+verification at each use of a model
+\cite[Sections 4.2.3--4.2.4]{NASA7009B2024}. Its uncertainty
+characterization keeps input uncertainty, numerical error in the
+implementation and propagation to outputs as distinct aspects
+\cite[Section E.4.4]{NASA7009B2024}. The following theorem shows those
+distinctions at work on the exact decay model of
+\cref{def:p12-simulation-decay}.
+
+\begin{hbtheorem}{thm:p15-w02b-p15-074-euler}{proved=annex:p15-w02b-p15-074-euler}{Thresholds from an Euler calculation}
+Consider \(q'=-q\), \(q(0)=1\), whose model value at time one is
+\(q(1)\), and treat that value as unknown. Let \(v_N=(1-1/N)^N\) be the
+exact-real Euler iterate with \(N\) steps of size \(h=1/N\), and let
+\(\widehat v_{j+1}=R(0.95\,\widehat v_j)\), \(\widehat v_0=1\), be the
+recurrence for \(N=20\) computed in decimal precision three.
+\begin{enumerate}
+\item \(0.35848<v_{20}\leq q(1)\leq\tfrac{38}{37}v_{20}<0.36818\).
+\item \(\widehat v_{20}=0.358\), and
+\(|\widehat v_{20}-v_{20}|\leq0.01\,(1-v_{20})<0.0065\).
+\item The computed value certifies \(q(1)>0.35\). With this arithmetic
+budget it does not certify \(q(1)>0.355\), whereas the exact-real iterate
+\(v_{20}\) does.
+\item At \(N=20\), even exact-real iteration certifies neither strict
+comparison of \(q(1)\) with \(0.365\). With \(N=100\), \(v_{100}>0.365\)
+certifies \(q(1)>0.365\).
+\end{enumerate}
+\end{hbtheorem}
+
+In item 4 the comparison \(q(1)>0.365\) is true, since
+\(q(1)=e^{-1}\approx0.3679\); the abstention at \(N=20\) is a statement
+about what the discretization bound establishes, not about the value. The
+step size satisfies the regime condition \(0<\lambda h<1\) of
+\cref{thm:p12-simulation-decay-euler} with \(\lambda=1\) known exactly; with an uncertain
+rate, that condition would itself require the enclosure argument of
+\cref{thm:p15-w02b-p15-074-regime}. Every item concerns the mathematical
+model. A conclusion about a physical decay needs a model-to-target entry,
+and \cref{thm:p12-simulation-regime-change} exhibits two trajectories that
+agree exactly up to time one and lie on opposite sides of \(0.1\) at time
+two. Refining the step or the arithmetic converges to the model's value,
+whichever trajectory the target follows.
+
+\section{Sampled simulations near a threshold}
+\label{sec:p15-w02b-p15-074-sampled}
+
+A stochastic simulation often estimates the probability that a model
+output reaches a threshold, by the frequency of runs in which the computed
+output does so. Two further differences then enter: the computed indicator
+can differ from the exact one, and the sampled frequency differs from the
+probability it estimates. The first is controlled by arithmetic error and by
+how much probability lies near the threshold; the second by the number of
+runs.
+
+\begin{hbtheorem}{thm:p15-w02b-p15-074-sampled}{proved=annex:p15-w02b-p15-074-sampled}{A sampled frequency with computed indicators}
+Let \(\xi\) be a random element of a measurable space \(S\), let
+\(G,\widehat G:S\to\mathbb R\) be measurable, let \(a\) be real, and
+suppose \(|\widehat G(s)-G(s)|\leq E\) for every \(s\in S\). Put
+\[
+ p=\mathbb P(G(\xi)\geq a),\qquad
+ \widetilde p=\mathbb P(\widehat G(\xi)\geq a),\qquad
+ \omega(E)=\mathbb P(|G(\xi)-a|\leq E).
+\]
+\begin{enumerate}
+\item \(|\widetilde p-p|\leq\omega(E)\).
+\item If \(\xi_1,\ldots,\xi_n\) are independent with the law of \(\xi\)
+and \(\widehat p_n\) is the fraction of indices \(i\) with
+\(\widehat G(\xi_i)\geq a\), then for every \(t>0\),
+\[
+ \mathbb P\bigl(|\widehat p_n-\widetilde p|\geq t\bigr)\leq\frac1{4nt^2}.
+\]
+\item For a probability threshold \(p_0\), if \(p\leq p_0\) then
+\(\mathbb P\bigl(\widehat p_n>p_0+t+\omega(E)\bigr)\leq1/(4nt^2)\);
+if \(p\geq p_0\) then
+\(\mathbb P\bigl(\widehat p_n<p_0-t-\omega(E)\bigr)\leq1/(4nt^2)\).
+\end{enumerate}
+\end{hbtheorem}
+
+Item 3 is a decision rule with a stated error probability, not a
+worst-case certificate: declaring \(p>p_0\) when
+\(\widehat p_n>p_0+t+\omega(E)\) errs with probability at most
+\(1/(4nt^2)\) whenever \(p\leq p_0\). The sampling bound concerns
+\(\widetilde p\), the probability for the computed indicator. More runs
+shrink the sampling margin \(t\) at fixed error probability; they do
+not shrink \(\omega(E)\). Bounding \(\omega(E)\) needs information about
+the law of \(G(\xi)\) near \(a\); a density bounded by \(K\) on
+\([a-E,a+E]\), for instance, gives \(\omega(E)\leq2KE\). An atom at the
+threshold gives no such bound, as the next result shows.
+
+\begin{hbtheorem}{thm:p15-w02b-p15-074-tie}{proved=annex:p15-w02b-p15-074-tie}{A tie at the threshold, decided by rounding}
+Let \(\xi\) be uniform on \(\{1,2,3\}\), \(G(s)=(s/3)\cdot3\) and
+\(a=1\), so that \(p=1\). Let \(\widehat G(s)=R\bigl(R(s/3)\cdot3\bigr)\)
+in decimal precision three. Then \(\widehat G(1)=0.999\),
+\(\widehat G(2)=2\) and \(\widehat G(3)=3\); the uniform arithmetic
+bound \(E=0.001\) holds, \(\widetilde p=2/3\) and \(\omega(E)=1/3\),
+so item 1 of \cref{thm:p15-w02b-p15-074-sampled} holds with equality.
+For the threshold \(p_0=0.9\) and any \(t>0\), the rule of item 3
+never declares \(p>0.9\), and it declares \(p<0.9\) with probability at
+most \(1/(4nt^2)\). If \(\omega(E)\) is omitted from the rule and
+\(0<t<7/30\), it declares the false \(p<0.9\) with probability at least
+\(1-1/\bigl(4n(7/30-t)^2\bigr)\).
+\end{hbtheorem}
+
+The last bound tends to one as \(n\) grows: more runs make the error
+from ignoring \(\omega(E)\) more likely, not less, because the
+frequencies concentrate near \(2/3\). The arithmetic entry here is
+one unit in the third digit, yet it moves a third of the probability,
+because that probability sits exactly at the threshold.
+
+\section{Limits of the ledger and a procedure}
+\label{sec:p15-w02b-p15-074-limits}
+
+\begin{hbwarning}{def:p15-w02b-p15-074-limits}{What the ledger does not supply}
+\begin{enumerate}
+\item A standard uncertainty is not an error bound
+(\cref{def:p15-measurement-error}). Using \(ku\) as \(E_{\rm input}\)
+turns a dispersion statement into a stipulated enclosure. The resulting
+certificate holds conditionally on that enclosure containing \(x_*\), with
+whatever probability the enclosure's own interpretation supports
+(\cref{thm:p15-measurement-coverage-models}).
+\item Generic rounding bounds hold under the range conditions of
+\cref{def:p12-numerical-format}. Overflow, underflow, exceptional values
+and flush-to-zero behavior require a separate analysis.
+\item Agreement between two runs, two compilers or two machines is not an
+arithmetic-error bound: the same rounding errors can repeat. Agreement of
+leading digits as the step size shrinks suggests convergence; it is a
+discretization bound only when a theorem or a stated error estimate
+connects it to the exact-real result.
+\item The probability in \cref{thm:p15-w02b-p15-074-sampled} assumes
+independent draws with the law of \(\xi\). A pseudo-random generator
+produces a deterministic sequence; treating it as such draws is a modeling
+premise, not a consequence of the theorem.
+\item Solution verification bounds the computation entries. It supplies no
+model-to-target entry; that requires validation evidence in the sense of
+\cref{def:p12-simulation-vv}.
+\item An asymptotic relation \(f\sim g\) or \(f=g+O(h)\)
+(\cref{def:p15-approximation-relations}) supplies no approximation entry
+until its constants and its domain are stated. A computed value of \(g\)
+then has no certified relation to \(f\) at a finite input.
+\end{enumerate}
+\end{hbwarning}
+
+The worst-case ledger can be pessimistic, as item 3 of
+\cref{thm:p15-w02b-p15-074-four-thresholds} shows. Sharper statements
+need sharper premises: an exact evaluation, a better remainder, a narrower
+enclosure, or a probability model for the errors. A probabilistic rounding
+model makes a different claim from the bounds used here and needs its own
+justification.
+
+\begin{hbmethod}{def:p15-w02b-p15-074-procedure}{Entering a computed or simulated value into an approximate conclusion}
+\begin{enumerate}
+\item State the target, its units and the strict comparison to be decided.
+\item Name the model, the approximant and the relation between them in the
+sense of \cref{def:p15-approximation-relations}; obtain a remainder bound
+with numerical constants on a stated domain.
+\item Record the inputs and an enclosure of the inputs the model should
+receive, including rounding committed in deriving the recorded inputs.
+\item Certify every regime condition on the enclosure by
+\cref{thm:p15-w02b-p15-074-regime}.
+\item Bound the arithmetic error of the executed operations and, for a
+discretized calculation, the discretization error, separately.
+\item State the model-to-target entry, or record it as unavailable and
+restrict the conclusion to the model value.
+\item Combine the entries by \cref{thm:p15-w02b-p15-074-ledger} and apply
+the certificate. If the interval contains the threshold, compare each
+entry with the margin to find the one that blocks, and improve that one,
+or report the comparison as undecided.
+\item For a sampled simulation, add the indicator band of
+\cref{thm:p15-w02b-p15-074-sampled} and report the decision with its
+error probability.
+\end{enumerate}
+This extends \cref{def:p15-approximation-procedure} by the computation and
+regime entries, and \cref{def:p12-numerical-inference-procedure} by the
+approximation entry.
+\index{threshold decision!computed value}\index{simulation!threshold decision}
+\end{hbmethod}
+
+\section{Relationships and sources}
+\label{sec:p15-w02b-p15-074-relations}
+
+The certificates of \cref{thm:p15-approximation-certificates} and
+\cref{thm:p12-numerical-certification} are the special cases of
+\cref{thm:p15-w02b-p15-074-ledger} with a single entry. The threshold
+reversals of \cref{thm:p15-approximation-rational} and the nonuniform
+convergence of \cref{thm:p15-approximation-nonuniform} concern the
+approximation entry; the corollary on regimes adds that an input near a
+transition must be enclosed, not merely computed, before a remainder bound
+applies. The range estimate of \cref{sec:p15-w02b-p15-073} computes the
+exact image of an input box, which is the input entry made exact for a
+monotone model. The probabilistic treatment of input uncertainty is in
+\cref{sec:p15-measurement-uncertainty}. In \cref{part:p12},
+\cref{sec:p12-numerical-error-and-inference} develops the arithmetic
+entry, and \cref{sec:p12-simulation-results-as-evidence} develops the
+discretization, verification, validation and transfer questions,
+including \cref{thm:p12-simulation-finite-comparisons} on why finitely many
+agreements give no uniform prediction bound.
+
+Sources: the decimal precision-three format and the half-ulp and
+relative-error measures follow \cite[Section D.3.2]{GoldbergOracle8193693};
+the distinction between catastrophic and benign cancellation follows
+\cite[Section D.3.4]{GoldbergOracle8193693}. The classification of numerical
+errors and the place of solution verification follow
+\cite[Sections 4.2.3--4.2.4 and E.4.4]{NASA7009B2024}. The ledger, its
+certificate and sharpness, the regime corollary, the worked thresholds, the
+Euler threshold calculation and the two sampling results are derivations
+of this handbook.

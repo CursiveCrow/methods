@@ -72,28 +72,52 @@ ED26-SRC-063-1009 (Niiniluoto, HHL 10 ch. 9, pp. 311--356).
 9. Niiniluoto p. 347: PAT>0 iff P(g^eps)>0 stated unconditionally; proved in the
    conditional form P(g^eps/e)>0.
 10. (11) printed with "=" after the turnstile; written as equivalence.
+11. Niiniluoto p. 329: "K - w" nomic constituents compatible with C^w; by (29),(10)
+    they are B_CT with CT a superset of CT_w, 2^(K-w) of them (thm:p15-w02b-p15-030-uchii
+    part 3). Printed count kept as wording; discrepancy stated in reader text.
 
 ## Not proved (reported from the chapter with attribution)
 
 Hintikka--Niiniluoto K-dimensional representation (parameters, (26), product formula),
 (27), (28), derivation of (3),(4) from (27); (19) and (25) for general lambda and the
 alpha -> infinity limit of the whole lambda-alpha continuum (gamma-ratio asymptotics for
-non-integer shifts not supplied); approximations (21), (24), (56); (31); n0 threshold
+non-integer shifts not supplied); approximations (21), (24), (56); n0 threshold
 formula; (43); Hilpinen/Tuomela/Uchii/Kuipers/Niiniluoto--Tuomela results;
 Reichenbach's convergence theorems (1)--(4) and the faster-convergence claim; van
 Fraassen's result; Creary's analysis.
 
 ## Continuation
 
-- ED26-SRC-063-1010-C001/C002/C003 and MP-0 (164.7): body
-  handbook/parts/p15/inductive-logic-and-confirmation-w02b-p15-030.tex lines 73--1250
-  (sec:p15-w02b-p15-030-eg and subsections); annex items flat-prior, russell-primes,
-  ravens (annex lines 4--95).
-- ED26-SRC-063-1009-C001/C003 and MP-0 (164.8) written; C002 partial (unproved list above and item 4): body lines 1252--2921
-  (sec:p15-w02b-p15-030-nn and subsections); annex lines 96--582 (14 items).
-- Unit compile ok; check.py shows no finding for these files (Niiniluoto key resolved
-  via the packet intake bib).
-- Driver insertion requested in work/waves/w02b/patches/w02b-p15-030.json.
-- Open items: items 4 and the unproved list above; final 2011 publisher-byte identity of
-  both camera-ready copies unverified; p. 389 of Eberhardt--Glymour not in the copy
-  (bibliography only).
+- Session 2 (gap closure after assessment): Eberhardt--Glymour p.387 Notes on
+  Sources and the closing "remained at loss" qualification added (body lines
+  1237--1255; held txt lines 1460--1474). Niiniluoto: abductive confirmation and
+  abductive criterion defined, (38) tied to thm:...-relevance parts 1--2 (body
+  2294--2307); purpose of corr (40) for weak generalizations (2320--2328); p.314
+  quasi-psychological counterparts, Stegmuller 1973, Lakatos 1968b (1419--1427);
+  p.333--334 advisors-vs-truth-seekers and Peircean fallibilist acceptance
+  (2383--2400); the dropped chronology citations restored inline by author-year
+  at the pages they occur (listed in the return file).
+- ED26-SRC-063-1010-C001/C002/C003 and MP-0 (164.7): body lines 73--1272;
+  annex lines 4--95.
+- ED26-SRC-063-1009-C001/C003 and MP-0 (164.8): body lines 1274--2989; annex
+  lines 96--582. C002 partial: the unproved list above and item 4.
+- Unit compile ok; fused-space check clean; check.py no finding for these files.
+- Lead items: driver insertion patch work/waves/w02b/patches/w02b-p15-030.json;
+  held-sources.json does not map the two held chapter copies to SRC-063 and the
+  packet held_paths omit them.
+- Session 3 (assessment gaps on ED26-SRC-063-1009, held txt
+  source/references/p15-hintikka/niiniluoto-hintikka-program-author-copy.txt
+  lines 880-916 and 1715-1792 reopened): probable verisimilitude defined from
+  p.346 (def:p15-w02b-p15-030-nn-pv; no formula or abbreviation in the chapter,
+  the displayed sum is the reading), its p.347 non-zero-at-zero-posterior
+  property proved (thm:...-pat part 2) and computed in
+  def:p15-w02b-p15-030-nn-pat-worked; ESC extension of PAT convergence (p.347
+  "similar modifications") proved as thm:...-pat parts 5-6 (forms not stated
+  in the chapter; marked as the forms proved here); ESC definition moved
+  before the theorem. Uchii (p.329): two assumptions, two-sided condition,
+  strength rationale, Plenitude, Niiniluoto's fluctuating-actual vs
+  permanent-nomic rationale added; thm:p15-w02b-p15-030-uchii proves (31)
+  (removed from the not-proved list), the two-sided reduction, the
+  compatibility count 2^{K-w} (source decision 11: printed K-w), the
+  elimination of rival nomic constituents and Plenitude => P(B^c/C^c)=1.
+  Unit compile ok; fused-space and check.py clean for these files.

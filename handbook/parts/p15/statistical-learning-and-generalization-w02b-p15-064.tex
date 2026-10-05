@@ -1,0 +1,393 @@
+%% toc: P15 171 171.1,171.2,171.3,171.4
+\chapter{Statistical Learning and Generalization}
+\label{sec:p15-w02b-p15-064-prediction-risk}
+
+\Cref{sec:p15-bounded-concentration-learning} measures a candidate by its
+average loss, but only for a loss with values in \([0,1]\) attached to the
+members of a class fixed in advance, and \cref{sec:p15-occam-learning}
+works with the misclassification loss of a binary or finite-label problem.
+Neither chapter states a prediction problem in general form, and neither
+compares a learned predictor with the best predictor that exists at all.
+This chapter supplies both. It states a prediction problem with arbitrary
+input and output spaces and a nonnegative loss that may be unbounded, such
+as squared loss for real-valued prediction; it defines risk, empirical risk
+and the minimum achievable risk over all measurable predictors; it
+identifies the minimizers for squared loss and for misclassification loss;
+and it separates the excess risk over the best member of a class, which is
+what \cref{thm:p15-conc-finite-learning} controls, from the excess risk over
+the minimum achievable risk, which no sample size can reduce below the gap
+between the class and that minimum.
+
+The general set-up and the vocabulary of Bayes classifier, empirical risk,
+consistency, Bayes-consistency, estimation error and approximation error
+follow von Luxburg and Sch\"olkopf's presentation
+\cite[Sections~2.2--2.4, pp.~2--9]{LuxburgScholkopf2008Author}, which
+develops them for binary classification and mentions squared loss for
+regression. The statements for an unbounded loss, the squared-loss
+decomposition, the excess-risk formula for misclassification, the finite
+second-moment uniform bound, the worked examples and the failure cases are
+proved in full in the annex.
+
+\emph{Inputs.} Measurable input and output spaces; a joint law of one
+input--output record; a measurable loss with values in \([0,\infty)\);
+an independent sample of records with that law; a class of predictors.
+\emph{Conclusions.} Risk as an extended nonnegative number; empirical risk
+as an unbiased estimate of the risk of a predictor fixed before sampling,
+with a uniform finite-class bound under finite second moments; the minimum
+achievable risk and its minimizers for squared and misclassification loss;
+the decomposition of excess risk; and the exact condition under which
+in-class guarantees become guarantees relative to the minimum achievable
+risk.
+
+\section{Prediction problems, loss, risk and empirical risk}
+\label{sec:p15-w02b-p15-064-loss-risk}
+
+\begin{hbdefinition}{def:p15-w02b-p15-064-prediction-problem}{Prediction problem, predictor and loss}
+A \emph{prediction problem} consists of
+\begin{enumerate}
+\item an input space \((\mathcal X,\mathcal A_{\mathcal X})\) and an output
+      space \((\mathcal Y,\mathcal A_{\mathcal Y})\), both measurable spaces;
+\item a probability law \(P\) on the product space
+      \(\mathcal X\times\mathcal Y\), the law of one record \((X,Y)\);
+\item a measurable \emph{loss}
+      \(\ell:\mathcal X\times\mathcal Y\times\mathcal Y\to[0,\infty)\),
+      where \(\ell(x,y,a)\) is the cost of predicting \(a\) at input \(x\)
+      when the output is \(y\).
+\end{enumerate}
+A \emph{predictor} is a measurable map \(f:\mathcal X\to\mathcal Y\).
+The set of all predictors is \(\mathcal F_{\mathrm{all}}\); a \emph{class}
+is a nonempty subset \(\mathcal F\subseteq\mathcal F_{\mathrm{all}}\).
+No restriction is placed on \(P\): the output need not be a function of the
+input.
+
+Two losses recur. The \emph{squared loss}, for \(\mathcal Y=\mathbb R\)
+with its Borel sets, is \(\ell(x,y,a)=(y-a)^2\); it is unbounded.
+For \(\mathcal Y=\{-1,+1\}\) with all subsets measurable,
+\emph{misclassification loss} (zero--one loss) is
+\(\ell(x,y,a)=\mathbf1_{\{a\neq y\}}\).
+\index{prediction problem}\index{loss function}\index{squared loss}\index{zero--one loss}
+\end{hbdefinition}
+
+The loss is required to be nonnegative so that its expectation is always
+defined. A loss bounded below by a constant \(-c\) becomes nonnegative after
+adding \(c\), which shifts every risk below by the same \(c\) and changes no
+comparison between predictors. The source writes the loss as
+\(\ell(X,Y,f(X))\) and adopts the convention that zero is the loss of a
+perfect prediction \cite[Section~2.2, p.~4]{LuxburgScholkopf2008Author};
+it identifies the predictors with the measurable maps from inputs to
+outputs \cite[Section~2.2, p.~5]{LuxburgScholkopf2008Author}.
+
+\begin{hbdefinition}{def:p15-w02b-p15-064-risk}{Risk, empirical risk and the minimum achievable risk}
+In a prediction problem, the \emph{risk} of a predictor \(f\) is
+\[
+ R(f)=E\,\ell(X,Y,f(X))=\int\ell(x,y,f(x))\,P(dx,dy)\in[0,\infty].
+\]
+Let \((X_1,Y_1),\ldots,(X_n,Y_n)\), \(n\geq1\), be independent records,
+each of law \(P\). The \emph{empirical risk} of \(f\) is
+\[
+ \widehat R_n(f)=\frac1n\sum_{i=1}^n\ell(X_i,Y_i,f(X_i)).
+\]
+The source writes \(R_{\mathrm{emp}}(f)\) for this quantity
+\cite[Section~2.3, p.~5]{LuxburgScholkopf2008Author}.
+For a class \(\mathcal F\), put
+\[
+ R_{\mathcal F}=\inf_{f\in\mathcal F}R(f),\qquad
+ R^{*}=R_{\mathcal F_{\mathrm{all}}}=\inf_{f\in\mathcal F_{\mathrm{all}}}R(f).
+\]
+\(R^{*}\) is the \emph{minimum achievable risk}, or \emph{Bayes risk}, of the
+problem. A predictor \(f\) with \(R(f)=R^{*}\) is a \emph{Bayes predictor};
+its existence is not part of the definition. When \(R^{*}<\infty\), the
+\emph{excess risk} of \(f\) is \(R(f)-R^{*}\), and its excess risk
+\emph{relative to \(\mathcal F\)} is \(R(f)-R_{\mathcal F}\) whenever
+\(R_{\mathcal F}<\infty\).
+\index{risk}\index{empirical risk}\index{Bayes risk}\index{excess risk}
+\end{hbdefinition}
+
+A predictor \(\widehat f_n\) produced from the sample is itself random.
+Its risk is then computed for a fresh record independent of the sample:
+\(R(\widehat f_n)\) is the function of the sample obtained by evaluating
+\(R\) at the realized predictor. When the output of a procedure is jointly
+measurable in the input and the sample, this function is measurable by
+Tonelli's theorem, and it is assumed below whenever a probability of an
+event about \(R(\widehat f_n)\) is written.
+
+\begin{hbdefinition}{def:p15-w02b-p15-064-consistency}{Consistency and Bayes-consistency}
+Let \((X_i,Y_i)_{i\geq1}\) be independent records of law \(P\), and for each
+\(n\) let \(\widehat f_n\) be the predictor a procedure computes from the
+first \(n\) records, with \(R(\widehat f_n)\) measurable. Let
+\(\mathcal F\) be a class with \(R_{\mathcal F}<\infty\). The procedure is
+\emph{consistent with respect to \(\mathcal F\) and \(P\)} if
+\(P\{R(\widehat f_n)-R_{\mathcal F}>\varepsilon\}\to0\) for every
+\(\varepsilon>0\), and \emph{Bayes-consistent with respect to \(P\)} if
+\(R^{*}<\infty\) and \(P\{R(\widehat f_n)-R^{*}>\varepsilon\}\to0\) for every
+\(\varepsilon>0\).
+\index{consistency!relative to a class}\index{Bayes-consistency}
+\end{hbdefinition}
+
+This is the source's Definition~1, parts~1 and~2
+\cite[Section~2.3, p.~7]{LuxburgScholkopf2008Author}, with one change of
+form. The source assumes for simplicity that a unique best member of the
+class exists and compares with its risk; the infimum \(R_{\mathcal F}\) is
+used here, which equals that risk whenever such a member exists. The source
+also defines universal consistency, consistency for every law \(P\), and
+notes that these are statements of convergence in probability.
+
+\subsection{Empirical risk as an estimate}
+
+\begin{hbtheorem}{thm:p15-w02b-p15-064-empirical-estimate}{proved=annex:p15-w02b-p15-064-empirical-estimate}{Unbiasedness for a fixed predictor and a finite-class bound under finite second moments}
+Let \(f\) be a predictor that does not depend on the sample. Then
+\(E\,\widehat R_n(f)=R(f)\) in \([0,\infty]\). If moreover
+\(\sigma^2(f)=\operatorname{Var}\ell(X,Y,f(X))<\infty\), then for every
+\(\varepsilon>0\)
+\[
+ P\{|\widehat R_n(f)-R(f)|\geq\varepsilon\}\leq\frac{\sigma^2(f)}{n\varepsilon^2}.
+\]
+Let \(\mathcal F=\{f_1,\ldots,f_r\}\) be a finite class fixed before sampling,
+with \(\sigma^2(f_j)<\infty\) for every \(j\). Then
+\[
+ P\Bigl\{\max_{1\leq j\leq r}|\widehat R_n(f_j)-R(f_j)|\geq\varepsilon\Bigr\}
+ \leq\frac{1}{n\varepsilon^2}\sum_{j=1}^r\sigma^2(f_j).
+\]
+On the complementary event, every \(\gamma\)-approximate empirical-risk
+minimizer \(\widehat f\) over \(\mathcal F\), \(\gamma\geq0\), satisfies
+\(R(\widehat f)<R_{\mathcal F}+2\varepsilon+\gamma\).
+\end{hbtheorem}
+
+The tolerance written \(\gamma\) here is the one written \(\eta\) in
+\cref{def:p15-conc-learning}; the letter \(\eta\) is reserved in this chapter
+for a conditional probability. The bound needs no range condition on the
+loss, so it covers squared loss whenever \(E(Y-f_j(X))^4<\infty\) for each
+\(j\), but its
+dependence on the failure probability is polynomial: driving the right side
+below \(\delta\) needs \(n\geq\sum_j\sigma^2(f_j)/(\delta\varepsilon^2)\),
+where the bounded-loss route needs only a logarithm of \(1/\delta\). It also
+needs the variances, or bounds for them, which the law of the records
+determines and which are unknown in practice.
+
+\begin{hbcorollary}{thm:p15-w02b-p15-064-bounded-rescaling}{proved=annex:p15-w02b-p15-064-bounded-rescaling}{Losses with a known finite range}
+In the setting of \cref{def:p15-conc-learning}, replace the range \([0,1]\)
+of the loss by \([0,B]\) for a known constant \(B>0\). For \(0<\delta<1\),
+with \(b_n\) as in \cref{thm:p15-conc-finite-learning}, with probability at
+least \(1-\delta\) every \(h\in\mathcal H\) satisfies
+\(|\widehat R_n(h)-R(h)|\leq Bb_n\), and on the same event every
+\(\eta\)-approximate minimizer \(\widehat h\) satisfies
+\(R(\widehat h)\leq\min_hR(h)+2Bb_n+\eta\).
+\end{hbcorollary}
+
+Squared loss with outputs and predictions confined to an interval of length
+\(L\) has range \([0,L^2]\) and is covered by this corollary with
+\(B=L^2\). Without a known range, the corollary has no constant to use.
+
+\subsection{The minimum achievable risk for two losses}
+
+\begin{hbtheorem}{thm:p15-w02b-p15-064-squared-bayes}{proved=annex:p15-w02b-p15-064-squared-bayes}{Squared loss: the regression function and the risk decomposition}
+Take \(\mathcal Y=\mathbb R\) and squared loss, and assume \(EY^2<\infty\).
+Choose a measurable \(m:\mathcal X\to\mathbb R\) with \(m(X)\) a version of
+\(E(Y\mid X)\), as \cref{thm:p15-conditional-factorization} permits. Then
+\(E\,m(X)^2<\infty\), and for every predictor \(f\),
+\[
+ R(f)=E\bigl(Y-m(X)\bigr)^2+E\bigl(f(X)-m(X)\bigr)^2
+\]
+as an identity in \([0,\infty]\). Consequently
+\(R^{*}=R(m)=E(Y-m(X))^2<\infty\), \(m\) is a Bayes predictor, and a
+predictor \(f\) is a Bayes predictor exactly when \(f(X)=m(X)\) almost
+surely. The excess risk of \(f\) is \(E(f(X)-m(X))^2\).
+\end{hbtheorem}
+
+\(m\) is called the regression function. The source states that the terms
+bias and variance were first used for regression with squared loss
+\cite[Section~2.4, p.~9]{LuxburgScholkopf2008Author}; the identity above is
+the exact form of the squared-loss comparison with the best predictor and
+is proved directly from the definition of conditional expectation.
+
+\begin{hbtheorem}{thm:p15-w02b-p15-064-classification-bayes}{proved=annex:p15-w02b-p15-064-classification-bayes}{Misclassification loss and the Bayes classifier}
+Take \(\mathcal Y=\{-1,+1\}\) and misclassification loss. Choose a measurable
+\(\eta:\mathcal X\to[0,1]\) with \(\eta(X)\) a version of
+\(P(Y=1\mid X)\), and define
+\[
+ f_{\mathrm{Bayes}}(x)=\begin{cases}+1,&\eta(x)\geq1/2,\\-1,&\eta(x)<1/2.\end{cases}
+\]
+For every predictor \(f\),
+\[
+ R(f)-R(f_{\mathrm{Bayes}})
+ =E\bigl[\,|2\eta(X)-1|\,\mathbf1_{\{f(X)\neq f_{\mathrm{Bayes}}(X)\}}\bigr]\geq0.
+\]
+Hence \(f_{\mathrm{Bayes}}\) is a Bayes predictor and
+\(R^{*}=E\min\{\eta(X),1-\eta(X)\}\). A predictor \(f\) is a Bayes
+predictor exactly when \(f(X)=f_{\mathrm{Bayes}}(X)\) almost surely on the
+event \(\{\eta(X)\neq1/2\}\). The same statements hold for labels
+\(\{0,1\}\), with \(0\) in place of \(-1\) and \(\eta(X)\) a version of
+\(P(Y=1\mid X)\).
+\end{hbtheorem}
+
+The function \(\eta\) and the rule \(f_{\mathrm{Bayes}}\) are the source's
+equations~(1) and~(2) \cite[Section~2.2, pp.~3 and~5]{LuxburgScholkopf2008Author},
+where the rule is called the Bayes classifier and described as the best
+classifier that exists. The formula above gives the proof of that description
+and the size of the loss incurred by disagreeing with it.
+
+\subsection{Excess risk relative to a class and relative to the minimum}
+
+\begin{hbtheorem}{thm:p15-w02b-p15-064-decomposition}{proved=annex:p15-w02b-p15-064-decomposition}{Estimation and approximation error, and what a class can reach}
+Let \(\mathcal F\) be a class and assume \(R^{*}<\infty\) and
+\(R_{\mathcal F}<\infty\). For every \(f\in\mathcal F\),
+\[
+ R(f)-R^{*}=\bigl(R(f)-R_{\mathcal F}\bigr)+\bigl(R_{\mathcal F}-R^{*}\bigr),
+\]
+and both terms are nonnegative. The second term depends only on
+\(\mathcal F\), the loss and \(P\); it does not depend on the sample or on
+\(n\). Consequently, for every procedure whose predictors lie in
+\(\mathcal F\):
+\begin{enumerate}
+\item \(R(\widehat f_n)-R^{*}\geq R_{\mathcal F}-R^{*}\) for every \(n\) and
+      every sample;
+\item if \(R(\widehat f_n)-R_{\mathcal F}\leq\varepsilon\) on an event, then
+      \(R(\widehat f_n)-R^{*}\leq\varepsilon+(R_{\mathcal F}-R^{*})\) on that
+      event;
+\item if \(R_{\mathcal F}>R^{*}\), the procedure is not Bayes-consistent with
+      respect to \(P\); indeed
+      \(P\{R(\widehat f_n)-R^{*}>\varepsilon\}=1\) for every \(n\) and every
+      \(0<\varepsilon<R_{\mathcal F}-R^{*}\);
+\item if \(R_{\mathcal F}=R^{*}\), then consistency with respect to
+      \(\mathcal F\) and \(P\) coincides with Bayes-consistency with
+      respect to \(P\).
+\end{enumerate}
+\end{hbtheorem}
+
+The two terms are the source's estimation error and approximation error,
+its equation~(4) \cite[Section~2.4, p.~9]{LuxburgScholkopf2008Author}.
+The source attributes the first to the randomness of the sample and the
+second to the choice of class; item~1 is the exact sense in which the second
+is untouched by sampling.
+
+\begin{hbcorollary}{thm:p15-w02b-p15-064-finite-class-bayes}{proved=annex:p15-w02b-p15-064-finite-class-bayes}{What the finite-class theorem says about the minimum achievable risk}
+In a prediction problem, let \(\mathcal H=\{h_1,\ldots,h_r\}\) be a finite
+class fixed before sampling with \(\ell(x,y,h(x))\in[0,1]\) for all
+\(x,y\) and \(h\in\mathcal H\), so that \(\ell(h,(x,y))=\ell(x,y,h(x))\)
+satisfies \cref{def:p15-conc-learning}. Let \(R^{*}\) be the minimum
+achievable risk of the problem, and \(0<\delta<1\). On the event of
+probability at least \(1-\delta\) given by
+\cref{thm:p15-conc-finite-learning}, every \(\eta\)-approximate
+empirical-risk minimizer \(\widehat h\) satisfies
+\[
+ \min_{h\in\mathcal H}R(h)-R^{*}
+ \leq R(\widehat h)-R^{*}
+ \leq\Bigl(\min_{h\in\mathcal H}R(h)-R^{*}\Bigr)+2b_n+\eta .
+\]
+Exact empirical-risk minimization over \(\mathcal H\) is consistent with
+respect to \(\mathcal H\) and \(P\) for every law \(P\). It is
+Bayes-consistent with respect to \(P\) if and only if some member of
+\(\mathcal H\) is a Bayes predictor for \(P\).
+\end{hbcorollary}
+
+\Cref{thm:p15-conc-finite-learning} is therefore a statement about excess
+risk relative to its class. Its sample-size condition guarantees an excess
+over \(\min_hR(h)\) of at most \(\varepsilon\); it guarantees an excess over
+\(R^{*}\) of at most \(\varepsilon\) only when the class reaches the minimum
+achievable risk, and otherwise the excess over \(R^{*}\) is at least the
+fixed gap \(\min_hR(h)-R^{*}\) at every sample size. The same reading applies
+to \cref{thm:p15-conc-weighted-learning}, with the infimum of the penalized
+risks in place of the minimum, and to the realizable statements of
+\cref{sec:p15-occam-learning}, where the target concept is a member of the
+class and has risk zero, so that the class reaches the minimum achievable
+risk by assumption.
+
+\subsection{Worked examples}
+
+\begin{hbtheorem}{thm:p15-w02b-p15-064-squared-example}{proved=annex:p15-w02b-p15-064-squared-example}{A regression problem whose class misses the regression function}
+Let \(X\) be uniform on \([0,1]\), let \(\xi\) be independent of \(X\) with
+\(E\xi=0\) and \(E\xi^2=1\), let \(\sigma>0\), and put
+\(Y=X^2+\sigma\xi\). Use squared loss. Then \(m(x)=x^2\) is a regression
+function and \(R^{*}=\sigma^2\). For the class \(\mathcal F_c\) of constant
+predictors \(f\equiv c\), \(c\in\mathbb R\),
+\[
+ R(c)=\sigma^2+\tfrac4{45}+\bigl(c-\tfrac13\bigr)^2,\qquad
+ R_{\mathcal F_c}=\sigma^2+\tfrac4{45}.
+\]
+Empirical-risk minimization over \(\mathcal F_c\) selects the unique
+minimizer \(c=\overline Y_n=n^{-1}\sum_iY_i\). Its excess risk relative to
+the class is \((\overline Y_n-1/3)^2\), with expectation
+\((\sigma^2+4/45)/n\), while its excess risk over \(R^{*}\) equals
+\(4/45+(\overline Y_n-1/3)^2\geq4/45\) for every \(n\) and every sample.
+\end{hbtheorem}
+
+The in-class error vanishes at rate \(1/n\) in expectation, and the procedure
+is consistent with respect to the constants; the distance \(4/45\) to the
+minimum achievable risk is the approximation error and is the same for one
+record and for a million.
+
+\begin{hbtheorem}{thm:p15-w02b-p15-064-classification-example}{proved=annex:p15-w02b-p15-064-classification-example}{The noisy binary example of the finite-class chapter}
+Take the law of \cref{thm:p15-conc-noisy-example}: \(X,Y\in\{0,1\}\),
+\(P(X=0)=P(X=1)=1/2\), \(P(Y=1\mid X=0)=1/4\), \(P(Y=1\mid X=1)=3/4\), with
+misclassification loss. The identity predictor \(f(x)=x\) is the Bayes
+classifier and \(R^{*}=1/4\). For the class \(\mathcal H=\{0,1\}\) of the two
+constant predictors, \(\min_hR(h)=1/2\). Every predictor selected from
+\(\mathcal H\), by any rule, has excess risk \(0\) relative to \(\mathcal H\)
+and excess risk exactly \(1/4\) over \(R^{*}\). For the four-predictor class
+of \cref{thm:p15-conc-noisy-example} the two excess risks coincide.
+\end{hbtheorem}
+
+\subsection{Failure cases}
+
+\begin{hbtheorem}{thm:p15-w02b-p15-064-failures}{proved=annex:p15-w02b-p15-064-failures}{Data-chosen predictors and unbounded risk}
+\begin{enumerate}
+\item \emph{Empirical risk of a data-chosen predictor.} Let \(X\) be uniform
+      on \([0,1]\) and \(Y\) independent of \(X\), uniform on \(\{-1,+1\}\),
+      with misclassification loss. From the sample, define
+      \(\widehat f_n(x)=Y_i\) if \(x=X_i\) for some \(i\), using the smallest
+      such \(i\), and \(\widehat f_n(x)=+1\) otherwise. Then almost surely
+      \(\widehat R_n(\widehat f_n)=0\) and \(R(\widehat f_n)=1/2=R^{*}\).
+      Thus \(E\,\widehat R_n(\widehat f_n)=0\neq1/2=E\,R(\widehat f_n)\):
+      the unbiasedness of \cref{thm:p15-w02b-p15-064-empirical-estimate}
+      fails for a predictor chosen with the same records.
+\item \emph{Infinite minimum risk.} With squared loss, suppose \(X\) and
+      \(Y\) are independent and \(EY^2=\infty\). Then \(R(f)=\infty\) for
+      every predictor \(f\), so \(R^{*}=\infty\); excess risk is undefined
+      and no comparison of predictors by risk is possible.
+\end{enumerate}
+\end{hbtheorem}
+
+In the first case the training error is \(0\) while the risk is \(1/2\); the
+source singles out an empirical risk much smaller than the true risk as the
+damaging case for using the former to estimate the latter
+\cite[Section~2.3, p.~6]{LuxburgScholkopf2008Author}. Here the predictor is
+nonetheless a Bayes predictor, because no predictor can do better than
+\(1/2\) when the output is independent of the input; the failure lies in the
+estimate of its risk, not in its risk. The second case shows that the
+moment condition \(EY^2<\infty\) in
+\cref{thm:p15-w02b-p15-064-squared-bayes} cannot be dropped.
+
+\begin{hbmethod}{def:p15-w02b-p15-064-method}{From a prediction problem to a statement about excess risk}
+\begin{enumerate}
+\item State \(\mathcal X\), \(\mathcal Y\), the loss and the sampling
+      assumption; check that the loss is nonnegative and measurable.
+\item Determine whether the loss has a known finite range. If so,
+      \cref{thm:p15-conc-finite-learning}, rescaled by
+      \cref{thm:p15-w02b-p15-064-bounded-rescaling}, or
+      \cref{thm:p15-conc-weighted-learning} gives in-class guarantees with
+      a logarithmic dependence on the failure probability. If not, and
+      second moments are finite with known bounds,
+      \cref{thm:p15-w02b-p15-064-empirical-estimate} gives a finite-class
+      guarantee with polynomial dependence.
+\item Report the guarantee as an excess over \(R_{\mathcal F}\). Claim an
+      excess over \(R^{*}\) only with a separate argument that
+      \(R_{\mathcal F}-R^{*}\) is zero or bounded, as in
+      \cref{thm:p15-w02b-p15-064-decomposition}.
+\item Do not use the empirical risk of a predictor selected with the same
+      records as an estimate of its risk without a uniform bound covering
+      the selection, or an independent validation sample as in
+      \cref{thm:p15-conc-validation}.
+\end{enumerate}
+\end{hbmethod}
+
+\paragraph{Relationships.}
+Every in-class guarantee of \cref{sec:p15-bounded-concentration-learning}
+(\cref{thm:p15-conc-finite-learning,thm:p15-conc-weighted-learning}, resting
+on Hoeffding's inequalities as compared in
+\cref{thm:p15-w02b-p15-063-chebyshev-comparison,thm:p15-w02b-p15-063-normal-benchmark})
+and of \cref{sec:p15-occam-learning}
+(\cref{thm:p15-occam-finite,thm:p15-occam-weighted,thm:p15-occam-compression})
+bounds the excess over \(R_{\mathcal F}\), not over \(R^{*}\), in the sense
+of \cref{thm:p15-w02b-p15-064-decomposition}; the minimum description length
+principle of \cref{sec:p15-rissanen-structural-and-numerical-inference}
+selects a model by total code length and is not such a risk bound.

@@ -1,0 +1,415 @@
+%% toc: P15 171 171.11
+\chapter{Generalization Failure under High Capacity or Distribution Shift}
+\label{sec:p15-w02b-p15-066}
+
+A sampling guarantee for a learned predictor rests on two separate
+hypotheses. The first concerns the sample: the selection rule chooses
+from a class fixed in advance whose capacity is small relative to the
+number of observations. The second concerns the future: the law under
+which the predictor will be used is the law that produced the sample.
+\Cref{sec:p15-bounded-concentration-learning,sec:p15-occam-learning,sec:p15-vc-dimension-and-uniform-learning}
+prove guarantees under both hypotheses and record several isolated
+cases in which one of them fails. This chapter treats the two failures
+as a subject in their own right. For high capacity it identifies, for
+each earlier capacity counterexample, the fixed class that actually
+contains every output the selection rule can return, and shows that the
+counterexample is an instance of a class too rich for the sample used. For distribution
+shift it proves how a guarantee obtained under the training law
+transfers to a changed law, shows by examples that each transfer
+inequality is attained, and proves that no amount of training data
+from the old law can replace an assumption linking the two laws.
+
+\emph{Inputs.} A measurable space of records, a training law \(P\),
+an evaluation law \(Q\) on the same space, a loss with values in
+\([0,1]\), a candidate class, a selection rule and an independent
+training sample from \(P\).
+\emph{Conclusions.} For each earlier capacity failure, the fixed class that
+actually contains every possible output and the reason its guarantee is
+uninformative; transfer inequalities from \(P\) to \(Q\) in terms of
+total variation and of a bounded density ratio, each with an attaining
+example; and the impossibility of a certificate for a changed law that
+uses the training sample alone.
+
+The framework sentence that training and test laws coincide, and the
+remark that they can differ, are those of von Luxburg and
+Sch\"olkopf's list of assumptions
+\cite[Section~2.2, pp.~3--4]{LuxburgScholkopf2008Author}, whose
+memorizing classifier \cite[Section~4.2, pp.~13--14]{LuxburgScholkopf2008Author}
+is already treated in \cref{thm:p15-vcl-examples}. Their no-free-lunch
+discussion \cite[Section~8, pp.~30--32]{LuxburgScholkopf2008Author}
+states, as Theorem~9 on p.~32, that for each sample size and each
+classifier some law of Bayes risk zero gives expected risk above one
+half minus any fixed margin; they state it with reference to other
+works and do not prove it there. That theorem is not proved in this
+book; the weaker lower bounds inside a class of large dimension that the
+book does prove are those of \cref{sec:p15-w02b-p15-065-lower}. The
+results of this chapter are the book's own and are proved in the annex.
+
+\section{The two hypotheses behind a sampling guarantee}
+\label{sec:p15-w02b-p15-066-hypotheses}
+
+\begin{hbdefinition}{def:p15-w02b-p15-066-two-laws}{Two laws and an enclosing class}
+Let \((\mathcal Z,\mathcal B)\) be a measurable space of records and let
+\(P\) and \(Q\) be probability measures on it: \(P\) is the
+\emph{training law}, which produces an independent sample
+\(Z_1,\ldots,Z_n\), \(n\geq1\), and \(Q\) is the \emph{evaluation law},
+under which a chosen predictor is used. For a candidate \(h\) with
+measurable loss \(\ell(h,\cdot):\mathcal Z\to[0,1]\), put
+\[
+ R_P(h)=\int\ell(h,z)\,P(dz),\qquad
+ R_Q(h)=\int\ell(h,z)\,Q(dz),
+\]
+\[
+ \widehat R_n(h)=\frac1n\sum_{i=1}^n\ell(h,Z_i).
+\]
+Thus \(R_P\) is the risk \(R\) of \cref{def:p15-conc-learning}; the
+second argument of \(R_P(h,f)\) in \cref{def:p15-occam-model} is the
+target, which here is absorbed into the loss. The distance between the
+two laws is the event-supremum total variation
+\(\|P-Q\|_{\mathrm{TV}}\) of \cref{def:p15-weak-total-variation}.
+\emph{Distribution shift} means \(Q\neq P\).
+
+When records are pairs \(z=(x,y)\) with a finite label set, \(Q\)
+differs from \(P\) by \emph{covariate shift} when the two laws have the
+same conditional label probabilities \(p(y\mid x)\) and different input
+marginals \(P_{\mathcal X},Q_{\mathcal X}\); precisely, there are
+measurable \(p(y\mid\cdot)\geq0\) with \(\sum_yp(y\mid x)=1\) and, for
+every measurable \(C\subseteq\mathcal X\times\mathcal Y\),
+\[
+ \begin{aligned}
+ P(C)&=\int\sum_{y}\mathbf1_C(x,y)\,p(y\mid x)\,P_{\mathcal X}(dx),\\
+ Q(C)&=\int\sum_{y}\mathbf1_C(x,y)\,p(y\mid x)\,Q_{\mathcal X}(dx).
+ \end{aligned}
+\]
+It differs by \emph{label shift} or \emph{concept change} when the
+conditional label probabilities themselves change.
+
+A selection rule maps the sample, and possibly independent internal
+randomness, to a predictor. Its \emph{enclosing class} is a class fixed
+before sampling that contains every predictor the rule can return.
+The finite-class, weighted and capacity guarantees of
+\cref{thm:p15-conc-finite-learning,thm:p15-occam-finite,thm:p15-occam-weighted,thm:p15-vcl-erm}
+apply to the selected predictor only through such a class, and only
+for the risk under the training law.
+\index{distribution shift}\index{covariate shift}\index{generalization!failure}
+\end{hbdefinition}
+
+A guarantee can therefore fail in two distinct ways. It fails by
+\emph{capacity} when the smallest enclosing class is so rich that its
+uniform deviation is not small at the sample size used; the training
+error of the selected predictor then says little about its risk even
+under \(P\). It fails by \emph{shift} when \(Q\neq P\): the guarantee
+concerns \(R_P\) and is silent about \(R_Q\) until some assumption
+links \(Q\) to \(P\). The two failures are independent of each other.
+\Cref{thm:p15-occam-boundaries}, item~1, records a third, a failure of
+independent sampling, which this chapter does not treat further.
+
+\section{High capacity: fits that certify nothing}
+\label{sec:p15-w02b-p15-066-capacity}
+
+The upper bounds of \cref{thm:p15-vcl-samples} show that finite
+dimension suffices for learning at every law. The matching necessity is
+proved in \cref{sec:p15-w02b-p15-065-lower}: a class that shatters many
+points defeats every learner, whatever its selection rule, on some law
+under which the class contains a perfect predictor
+(\cref{thm:p15-w02b-p15-065-lower-realizable}), and a class of infinite
+dimension admits no distribution-free sample size at all
+(\cref{thm:p15-w02b-p15-065-lower-infinite}). The lower bound of
+\cref{thm:p15-occam-unseen-labels} is the instance of the same averaging
+argument for the class of all binary functions on a finite domain.
+
+The four capacity counterexamples proved earlier are now seen to share
+one cause: in each, the predictor returned after seeing the sample lies
+in no fixed class small enough for its sample size.
+
+\begin{hbtheorem}{thm:p15-w02b-p15-066-enclosing}{proved=annex:p15-w02b-p15-066-enclosing}{The enclosing classes of the earlier capacity failures}
+\begin{enumerate}
+\item \emph{Searching many features}
+      (\cref{thm:p15-conc-selection-example}). With \(K\) predictors and
+      \(n\) records, fix \(0<\delta<1\). If
+      \(K\geq2^n\ln(1/\delta)\), then with probability at least
+      \(1-\delta\) some predictor has empirical risk zero, and on that
+      event every exact empirical-risk minimizer \(\widehat h\) satisfies
+      \(R(\widehat h)-\widehat R_n(\widehat h)=1/2\).
+      If \(K\geq2^n\), the radius \(b_n\) of
+      \cref{thm:p15-conc-finite-learning} exceeds \(1/2\) for every
+      \(\delta\in(0,1)\), so that theorem remains valid and reports no
+      useful bound. If \(\delta\) is fixed and \((\ln K)/n\to0\), then
+      \(b_n\to0\).
+\item \emph{All binary targets}
+      (\cref{thm:p15-occam-unseen-labels}). On an \(N\)-point domain the
+      class of all binary functions has dimension \(N\), so
+      \cref{thm:p15-w02b-p15-065-lower-realizable} applies to it as
+      well.
+\item \emph{A class chosen after the data}
+      (\cref{thm:p15-occam-boundaries}, item~3). On an \(N\)-point domain
+      \(\mathcal X\) with \(N\geq m\) and the uniform input law, the
+      smallest fixed class containing the target \(f=0\) and every
+      possible output \(h_S\) is
+      \[
+       H_m=\{f\}\cup\{\mathbf1_{\mathcal X\setminus O}:O\subseteq\mathcal X,\ 1\leq|O|\leq m\}.
+      \]
+      Its size \(r\) satisfies \(\ln r\geq m\ln(N/m)\), and if
+      \(N\geq m+2\) its dimension is \(m+1\). If \(N\geq2m\), the sufficient condition
+      of \cref{thm:p15-occam-finite} for this class at sample size \(m\)
+      holds only when \(\varepsilon>1/2\), in agreement with the actual
+      error at least \(1-m/N\geq1/2\).
+\item \emph{Memorizing the sample}
+      (\cref{thm:p15-vcl-examples}, item~3). Every classifier the
+      memorizer can return has the form
+      \(\mathbf1_{[0,1]\setminus F}\) with \(F\subseteq[0,1/2)\) finite.
+      The class of all such functions shatters every finite subset of
+      \([0,1/2)\), so it has infinite dimension, and
+      \cref{thm:p15-w02b-p15-065-lower-infinite} applies to it.
+\item \emph{Finite subsets of the integers}
+      (\cref{thm:p15-vcl-examples}, item~2). Their indicators form a
+      class of infinite dimension; besides the discrepancy failure
+      proved there, \cref{thm:p15-w02b-p15-065-lower-infinite}
+      gives the corresponding failure of every learner.
+\end{enumerate}
+\end{hbtheorem}
+
+Items~1 and~3 show how the finite-class theorems behave when applied
+honestly to the enclosing class: they remain true and become
+uninformative exactly when the actual failure occurs. The failure in
+item~1 depends on \(\ln K\) being comparable to \(n\); in item~3 on the
+data-dependent class being treated as though it had two members rather
+than up to \(1+\sum_{j=1}^m\binom Nj\). Items~4 and~5 concern laws fixed in
+advance; the lower bounds of \cref{sec:p15-w02b-p15-065-lower}
+instead choose a bad law for each learner, so a failure for some law does not mean failure for
+every law, as the point-mass case of \cref{thm:p15-vcl-examples},
+item~2, shows.
+
+\section{Distribution shift: transporting a guarantee to a changed law}
+\label{sec:p15-w02b-p15-066-shift}
+
+Every guarantee of
+\cref{sec:p15-bounded-concentration-learning,sec:p15-occam-learning,sec:p15-vc-dimension-and-uniform-learning}
+concerns \(R_P\). To speak about \(R_Q\) one needs an inequality between
+the two risks that holds for every candidate, because the selected
+candidate is random. The next two theorems supply such inequalities
+under two different assumptions about \(Q\).
+
+\begin{hbtheorem}{thm:p15-w02b-p15-066-tv-transport}{proved=annex:p15-w02b-p15-066-tv-transport}{Transport by total variation}
+Let \(d=\|P-Q\|_{\mathrm{TV}}\).
+\begin{enumerate}
+\item For every measurable \(f:\mathcal Z\to[0,1]\),
+      \[
+       \left|\int f\,dQ-\int f\,dP\right|\leq d .
+      \]
+      There is \(A\in\mathcal B\) with \(Q(A)-P(A)=d\), so equality holds
+      for \(f=\mathbf1_A\). In particular \(|R_Q(h)-R_P(h)|\leq d\) for
+      every candidate, with equality for a loss equal to
+      \(\mathbf1_A\).
+\item In the finite-class setting of \cref{def:p15-conc-learning}, with
+      the sample from \(P\), on the event of probability at least
+      \(1-\delta\) given by \cref{thm:p15-conc-finite-learning}, every
+      \(h\) satisfies \(|\widehat R_n(h)-R_Q(h)|\leq b_n+d\), and every
+      \(\eta\)-approximate empirical minimizer satisfies
+      \[
+       R_Q(\widehat h)\leq\min_{h\in\mathcal H}R_Q(h)+2b_n+2d+\eta .
+      \]
+      In the setting of \cref{thm:p15-vcl-erm}, on any event where the
+      uniform discrepancy under \(P\) is at most \(u\), every
+      \(\eta\)-approximate empirical minimizer satisfies
+      \(R_Q(\widehat h)\leq\inf_{h\in H}R_Q(h)+2u+2d+\eta\).
+      In the realizable setting of \cref{thm:p15-occam-finite}, with
+      input laws \(P\) and \(Q\) on \(\mathcal X\) and \(d\) their
+      distance, every consistent hypothesis has
+      \(R_Q(h,f)\leq\varepsilon+d\) on the event of that theorem.
+\item Under covariate shift with a finite label set,
+      \(\|P-Q\|_{\mathrm{TV}}=\|P_{\mathcal X}-Q_{\mathcal X}\|_{\mathrm{TV}}\).
+\end{enumerate}
+\end{hbtheorem}
+
+The term \(d\) is not random and does not shrink with \(n\): more data
+from \(P\) reduce \(b_n\) and leave \(d\) untouched. The factor \(2\) in
+front of \(d\) in item~2 arises because the selected candidate can lose
+\(d\) and the best candidate under \(Q\) can gain \(d\);
+\cref{thm:p15-w02b-p15-066-shift-attained} shows both losses occurring
+together.
+
+Total variation charges a shift at its largest effect on any event. A
+multiplicative assumption is more useful when the risk under \(P\) is
+already small, as in the realizable theorems.
+
+\begin{hbtheorem}{thm:p15-w02b-p15-066-density-transport}{proved=annex:p15-w02b-p15-066-density-transport}{Transport by a bounded density ratio}
+Suppose there is a measurable \(w:\mathcal Z\to[0,B]\), \(B<\infty\),
+with \(Q(A)=\int_Aw\,dP\) for every \(A\in\mathcal B\). Then \(B\geq1\),
+and for every measurable \(f\geq0\),
+\[
+ \int f\,dQ=\int fw\,dP\leq B\int f\,dP .
+\]
+Hence \(R_Q(h)\leq B\,R_P(h)\) for every candidate. In the setting of
+\cref{thm:p15-occam-finite}, with \(Q\) a law on inputs having such a
+density relative to \(P\), every consistent hypothesis has
+\(R_Q(h,f)\leq B\varepsilon\) on the event of that theorem.
+The factor \(B\) cannot be lowered: for \(0<\varepsilon\leq1/B\), the
+input laws on \(\{0,1\}\) with \(P\{1\}=\varepsilon\) and
+\(Q\{1\}=B\varepsilon\), target \(f=0\) and hypothesis \(h(x)=x\) give
+\(R_P(h,f)=\varepsilon\), \(R_Q(h,f)=B\varepsilon\) and a density
+bounded by \(B\). If \(Q(A)>0=P(A)\) for some \(A\), no such \(w\)
+exists.
+\end{hbtheorem}
+
+The next theorem shows that both transfer inequalities are attained, that
+the factor \(2\) in the excess-risk transfer is needed, and that without
+an assumption on \(Q\) no use of the training sample can certify the
+risk under \(Q\).
+
+\begin{hbtheorem}{thm:p15-w02b-p15-066-shift-attained}{proved=annex:p15-w02b-p15-066-shift-attained}{Shift examples that attain the transfer bounds}
+\begin{enumerate}
+\item \emph{Covariate shift with a consistent hypothesis.} On
+      \(\mathcal X=\{0,1\}\) with target \(f=0\) and \(h(x)=x\), let
+      \(P=\delta_0\) and \(Q\{1\}=d\), \(0\leq d\leq1\). Then
+      \(\|P-Q\|_{\mathrm{TV}}=d\), \(h\) is consistent with every
+      training sample, \(R_P(h,f)=0\) and \(R_Q(h,f)=d\). The case
+      \(d=1\) is \cref{thm:p15-occam-boundaries}, item~2.
+\item \emph{The factor \(2\) for the selected candidate.} Let a single
+      input carry a label \(Y\in\{0,1\}\), with \(P\{Y=1\}=1/2+\gamma\)
+      and \(Q\{Y=1\}=1/2+\gamma-d\), where \(0<\gamma\leq1/2\) and
+      \(\gamma<d\leq1/2+\gamma\). For the constant predictors \(h_1=1\) and
+      \(h_2=0\), in that order, \(\|P-Q\|_{\mathrm{TV}}=d\),
+      \(h_1\) is the unique minimizer of \(R_P\), and
+      \[
+       R_Q(h_1)-\min\{R_Q(h_1),R_Q(h_2)\}=2(d-\gamma).
+      \]
+      The empirical minimizer with this tie order returns \(h_1\) with
+      probability at least \(1-e^{-2n\gamma^2}\).
+\item \emph{No certificate from the training sample alone.} Let \(h\)
+      be a candidate and \(z_1\in\mathcal Z\) a record with
+      \(\ell(h,z_1)=1\). For \(0\leq d\leq1\), the law
+      \(Q_d=(1-d)P+d\delta_{z_1}\) satisfies
+      \(\|P-Q_d\|_{\mathrm{TV}}\leq d\) and
+      \(R_{Q_d}(h)=(1-d)R_P(h)+d\). Hence if a function \(T\) of the
+      training sample satisfies \(P^{\otimes n}\{R_Q(h)\leq T\}\geq1-\delta\)
+      for every \(Q\) with \(\|P-Q\|_{\mathrm{TV}}\leq d\), then
+      \(P^{\otimes n}\{T\geq(1-d)R_P(h)+d\}\geq1-\delta\). If the
+      requirement is imposed for every law \(Q\), then
+      \(P^{\otimes n}\{T\geq1\}\geq1-\delta\).
+\item \emph{Total variation ignores geometry.} On the real line let
+      \(P=\delta_0\), \(Q=\delta_t\), \(t>0\), with label \(0\), and
+      \(h_s(x)=\mathbf1_{\{x\geq s\}}\). Then
+      \(\|P-Q\|_{\mathrm{TV}}=1\); \(R_Q(h_s)-R_P(h_s)=1\) for
+      \(0<s\leq t\) and \(=0\) otherwise.
+\end{enumerate}
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p15-w02b-p15-066-worked}{proved=annex:p15-w02b-p15-066-worked}{A worked comparison of capacity, covariate shift and concept change}
+\begin{enumerate}
+\item In \cref{thm:p15-conc-selection-example} take \(n=10\) and
+      \(K=3068\geq2^{10}\ln20\). With probability at least \(19/20\)
+      some predictor has empirical risk zero, so the empirical minimizer
+      has training error \(0\) and risk \(1/2\). For \(\delta=1/20\) the
+      finite-class radius is \(b_{10}=\sqrt{\ln(122720)/20}>1/2\).
+\item In \cref{thm:p15-conc-noisy-example} the training law has
+      \(X\) uniform on \(\{0,1\}\) with
+      \(P(Y=1\mid X=0)=1/4\) and \(P(Y=1\mid X=1)=3/4\); with
+      \(n=1016\) and \(\delta=1/20\), on the event of
+      \cref{thm:p15-conc-finite-learning} the empirical minimizer is the
+      predictor \(x\), whose risk under \(P\) is \(1/4\).
+      \begin{enumerate}
+      \item Under covariate shift to \(Q\{X=1\}=q\), \(0\leq q\leq1\),
+            with the same conditional label law, the risks of
+            \(0,1,x,1-x\) are \(1/4+q/2,\ 3/4-q/2,\ 1/4,\ 3/4\), and
+            \(\|P-Q\|_{\mathrm{TV}}=|q-1/2|\). The selected \(x\) stays
+            optimal under every such \(Q\), its risk unchanged, while
+            the transfer bound only gives
+            \(R_Q(x)\leq1/4+1/10+2|q-1/2|\).
+      \item Under the concept change \(Q'(Y=1\mid X=0)=3/4\),
+            \(Q'(Y=1\mid X=1)=1/4\), with \(X\) still uniform, the risks
+            are \(1/2,1/2,3/4,1/4\) and \(\|P-Q'\|_{\mathrm{TV}}=1/2\).
+            The selected \(x\) has \(R_{Q'}(x)-R_P(x)=1/2\), attaining
+            the bound of \cref{thm:p15-w02b-p15-066-tv-transport},
+            item~1, and excess risk \(1/2\) under \(Q'\).
+      \end{enumerate}
+\end{enumerate}
+\end{hbtheorem}
+
+\section{How the failures relate}
+\label{sec:p15-w02b-p15-066-relations}
+
+The capacity failures and the shift failures attack different terms of
+one inequality. For a selected \(\widehat h\) and any candidate \(h\),
+\[
+ R_Q(\widehat h)\leq
+ \underbrace{\widehat R_n(\widehat h)}_{\text{fit}}
+ +\underbrace{\sup_{g}|R_P(g)-\widehat R_n(g)|}_{\text{capacity}}
+ +\underbrace{\|P-Q\|_{\mathrm{TV}}}_{\text{shift}},
+\]
+where the supremum runs over an enclosing class; this is
+\cref{thm:p15-w02b-p15-066-tv-transport}, item~1, combined with the
+trivial bound of the selected deviation by the supremum. The capacity
+term is controlled by sampling and is the subject of
+\cref{thm:p15-conc-finite-learning,thm:p15-vcl-uniform}; its failures
+are those of \cref{thm:p15-w02b-p15-066-enclosing}. The shift term is
+not a sampling quantity at all: by
+\cref{thm:p15-w02b-p15-066-shift-attained}, item~3, it must be bounded
+by an assumption, or by data drawn from \(Q\) itself. Independent
+validation data from \(Q\) can be used through
+\cref{thm:p15-conc-validation} with \(Q\) in place of \(P\), because
+that theorem only requires independence from the training object and
+the stated law for the validation records. A validation sample from
+\(P\) removes the selection effect, because it bounds
+\(|R_P(\widehat h)-\widehat R_{\mathrm{val}}(\widehat h)|\) for the
+validation average \(\widehat R_{\mathrm{val}}\), but, as the remark after
+\cref{thm:p15-vcl-examples} notes, it concerns the law it was drawn
+from and leaves the shift term as it was.
+
+High capacity also interacts with shift. In
+\cref{thm:p15-w02b-p15-066-shift-attained}, item~4, a threshold between
+the supports of \(P\) and \(Q\) turns a tiny shift into a total loss,
+while a threshold outside that interval loses nothing. Richer classes
+contain more functions that separate the regions where \(P\) and \(Q\)
+put their mass, so the bound \(|R_Q(h)-R_P(h)|\leq d\) is attained by
+more of their members.
+
+\begin{hbmethod}{def:p15-w02b-p15-066-diagnosis}{Locating a generalization failure}
+\begin{enumerate}
+\item Write down the selection rule and an enclosing class fixed before
+      sampling. If the class was narrowed after the data were seen, use
+      the class of all outputs the rule could have produced, as in
+      \cref{thm:p15-w02b-p15-066-enclosing}, item~3.
+\item Compute the capacity of that class: \(\ln r\) for a finite class,
+      the weights of \cref{thm:p15-conc-weighted-learning} for a
+      countable one, or the dimension for an infinite one. Compare it
+      with the sample size through the applicable theorem. If the
+      class shatters many more points than the sample contains, the
+      lower bounds of \cref{sec:p15-w02b-p15-065-lower} show that no
+      learner can do better without assumptions on the law.
+\item Name the evaluation law. If it is the training law, the
+      sampling guarantee applies as proved. If not, state a linking
+      assumption, a bound on \(\|P-Q\|_{\mathrm{TV}}\) or on a density
+      ratio, and add the corresponding term from
+      \cref{thm:p15-w02b-p15-066-tv-transport} or
+      \cref{thm:p15-w02b-p15-066-density-transport}.
+\item If no linking assumption can be justified, obtain an independent
+      sample from the evaluation law and use the validation bound of
+      \cref{thm:p15-conc-validation}; otherwise report that no
+      guarantee for the evaluation law has been established.
+\end{enumerate}
+\end{hbmethod}
+
+\begin{hbwarning}{def:p15-w02b-p15-066-limits}{What these results do not establish}
+The capacity diagnosis of \cref{thm:p15-w02b-p15-066-enclosing} shows
+that a guarantee is uninformative, not that learning fails for the law at
+hand. For a fixed law a high-capacity class may still be learned, as the
+point-mass case of \cref{thm:p15-vcl-examples}, item~2, shows; the lower
+bounds that hold for every learner choose the law after the learner, as
+\cref{def:p15-w02b-p15-065-minimax-warning} explains.
+
+The total-variation transfer is sharp as a statement over all losses with
+values in \([0,1]\), but for a particular loss it can be loose by a large
+factor, as in the covariate shift of
+\cref{thm:p15-w02b-p15-066-worked}, item~2(a). It equals one for laws
+with disjoint supports however close those supports are. The density-ratio
+transfer requires that \(Q\) give no mass to events that are null under
+\(P\). The training sample has the same law whatever \(Q\) is, so it
+carries no information about either quantity;
+\cref{thm:p15-w02b-p15-066-shift-attained}, item~3, turns this into the
+impossibility of a certificate for \(R_Q\) without an assumption on
+\(Q\).
+Transfer under other distances between laws, and methods that reweight
+the training data toward \(Q\), need their own assumptions and theorems
+and are not treated here.
+\end{hbwarning}

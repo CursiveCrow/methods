@@ -7,7 +7,8 @@ INPUT_RE = re.compile(r"\\input\{([^}]+)\}")
 
 
 def rel_input(path):
-    p = path.replace("\\", "/")
+    m = INPUT_RE.search(path)  # some returns give the whole \input{...} line
+    p = (m.group(1) if m else path).replace("\\", "/")
     if p.startswith("handbook/"):
         p = p[len("handbook/"):]
     return p[:-4] if p.endswith(".tex") else p
@@ -24,6 +25,8 @@ def fix(pl, problems, where):
     pl = dict(pl)
     if not pl.get("input") and pl.get("file"):
         pl["input"] = rel_input(pl["file"])
+    if pl.get("input"):
+        pl["input"] = rel_input(pl["input"])
     if not pl.get("after_input") and pl.get("before_input"):
         host = pl.get("host", "")
         seq = inputs_in(host) if os.path.isfile(host) else []
@@ -54,6 +57,15 @@ def main(outdir, paths):
                         pl[k] = dict(pl[k], input=rel_input(files[0]))  # W0 returns: the group's own file
                 g["placement"] = {k: (fix(v, problems, f"{os.path.basename(p)}:{k}") if k in ("body", "annex") else v)
                                   for k, v in pl.items()}
+        # files_written entries annotated with prose ("path (lines 3-9 ...)") keep only the path
+        if isinstance(r.get("files_written"), list):
+            r["files_written"] = [w.split()[0] for w in r["files_written"] if isinstance(w, str) and w.strip()]
+        # note must name the research note file; prose goes to note_text
+        note = r.get("note")
+        if isinstance(note, str) and not os.path.isfile(note):
+            default = p.replace("-return.json", ".md")
+            r["note_text"], r["note"] = note, (default.replace("\\", "/") if os.path.isfile(default) else None)
+            problems.append(f"{os.path.basename(p)}: note was prose; moved to note_text")
         out = os.path.join(outdir, os.path.basename(p))
         json.dump(r, open(out, "w", encoding="utf-8", newline="\n"), ensure_ascii=False, indent=1)
     print(len(paths), "returns normalized;", len(problems), "problems")

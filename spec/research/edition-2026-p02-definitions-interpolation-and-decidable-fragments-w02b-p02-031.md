@@ -52,27 +52,64 @@ inseparability argument of Thm. 2.1.39, not yet used); `handbook/parts/p04/machi
 116-147 (`def:p04-shepherdson-sturgis-urm`, Shepherdson-Sturgis URM; no two-register universality theorem anywhere in
 the handbook); `restoration/inherited-08144-08186.tex` (`thm:recursion-theorem`, sketch only).
 
+## Block 2 (4 October 2026): item (f)
+
+- Pages re-read this session from the held BGG file (text layer + PNG at 120-130 dpi): PDF 27-33 (book pp. 20-26,
+  Church-Turing reduction formulae, START/NONSTOP/ORDER, Skolemization), PDF 34-45 (book pp. 27-38). Locators used:
+  Thm. 2.1.39 and its proof outline pp. 37-38; effective inseparability definition p. 37; Ex. 2.1.40(2) p. 38.
+- Written: Convention W_e (machine-code indices), Def. effective inseparability, Lemma index constructions (incl. a
+  fixed-point item proved from items 1-2, not from the sketched recursion theorem), Lemma elementary properties
+  (symmetry, implies recursive inseparability, supersets, transfer along computable maps), Lemma D_rej/D_acc and
+  H_1/H_2 effectively inseparable, Thm Non-sat/Fin-sat effectively inseparable and c.e. (also for X under a
+  semi-conservative f), embedding theorem, Thm 2.1.39, Cor. Ex. 2.1.40(2) for X = FO, example, limits warning.
+- Proof dependencies outside this file and their standing: thm:universal-computation (proof sketch in the handbook;
+  used in index-construction item 3 for step-by-step simulation), thm:ce-equivalent-forms, many-one preservation lemma
+  of sec:universal-reductions-02, parts (a) and (b) of annex:p02-w02-p02-036-halting (code normalization and the
+  write-the-code-first map w), thm:fol-validity-enumerable. thm:parameter (cited) and thm:recursion-theorem (sketch)
+  are only mentioned in Relationships; the proofs do not use them.
+- Notation: the source names the witness function f; renamed p (f is the semi-conservative reduction here). Recorded
+  in the symbol intake.
+- Source reference [485, Chap. V] in BGG's proof is not identified in this note (bibliography page not read); the text
+  does not name it.
+
+## Block 3 (4 October 2026): items (b), (d), (e)
+
+- Pages re-read this session from the held BGG file (text layer, and PNG at 130-200 dpi): PDF 27-45 text;
+  rendered PDF 34-36 (book pp. 27-29: Def. 2.1.14, Thm. 2.1.15, Cor. 2.1.16, Ex. 2.1.17-2.1.19), PDF 40-44
+  (book pp. 33-37), and PDF 14-17 text (book pp. 7-10, Def. 1.3.1 prefix-vocabulary classes, p. 8).
+- Written (body sec:p02-w02b-p02-031-register, annex items from annex:p02-w02b-p02-031-two-register-simulation
+  on): Def. two-register machines; Def. Krom/Horn/prefix classes (Def. 2.1.14 p. 27, Def. 1.3.1 p. 8);
+  Thm. TM -> two-register simulation with stop-state record, emptied registers and unbounded registers for
+  non-halting runs (proved through a four-register program: base-s tape halves, MOVE/ADD/DIVMOD loops, prime-power
+  coding 2^L 3^R 5^A 7^C with a step counter in the exponent of 7); Def. formulas alpha_{M,m}, beta_{M,prec,m},
+  beta^+_{M,prec,m}, psi_{M,prec}; Thm. reduction property (both prefixes); Cor. Ex. 2.1.32; Thm. logic machine
+  M_L (from index constructions items 1 and 3; item 3 extended with "never halts outside W_i cup W_j", statement
+  and proof); Cor. Ex. 2.1.34; Cor. Ex. 2.1.37 (both classes); example with three machines; warning incl. a
+  never-halting machine with bounded registers whose formula has a 2-element model.
+- Source readings recorded: (1) in Ex. 2.1.32 the display of prec_{K,M} uses u inside a Skolem form
+  forall x forall y; read as the successor term x' (written so in the text, with the reason). (2) For m(psi) >= 2 the
+  start atom (0,m(psi),0) needs the term 0^(m); a prenex exists-forall-exists-forall sentence has no such term,
+  so the text derives the atom with auxiliary binary symbols A_0..A_m (Krom-Horn clauses). (3) For the
+  forall-exists-exists-forall class the zero is the Skolem term x^+, as in the hint of Ex. 2.1.17 (p. 29); every
+  conjunct of the matrix contains either no u or neither x nor v, which is what makes one matrix serve both.
+  (4) The source's sharpened stop condition (p. 35) appears as property 4 of the simulation theorem (unbounded
+  registers), and the warning shows it is needed.
+- Patch request: work/waves/w02b/patches/w02b-p02-031.json replaces w02-p02-036 body lines 691-695 ("neither of
+  those results is proved") by pointers to thm:p02-w02b-p02-031-ex-2-1-34 and -ex-2-1-37.
+- Universality of two-register machines: the source cites [393, 469] (p. 28); not identified or opened; the text
+  names no reference for it and proves it.
+
 ## Continuation
 
-State at return of block 1 (4 October 2026). Written: Ex. 2.1.33 (theorem, example, limits warning, annex proof),
-Def. 2.1.38, Ex. 2.1.40(1) with proof, the counterexample to the literal Ex. 2.1.40(2). Unit compile ok (7 overfull
-boxes); fused-space check clean; check.py --tree shows no finding in these files.
+State at return of block 3 (4 October 2026). Written in blocks 1-3: Ex. 2.1.33, Def. 2.1.38, Thm. 2.1.39,
+Ex. 2.1.40, items (b), (d), (e) as above. Unit compile ok (29 overfull boxes, mostly pre-existing annex
+displays); fused-space check clean; check.py --tree shows no finding in these files.
 
-Not yet written (next block, in this order):
+Not yet written:
 
-1. (a) Ex. 2.1.31: needs a relational Büchi-type encoding of a binary-alphabet Turing machine in
-   ∃xZx ∧ ∀x∃u∀yβ with only H, T_0, K binary. Obstacle found: a head move relates (t,c) to (t+1,c±1), while β only
-   gives one successor (u of x); a construction (e.g. a 45-degree re-indexing of the space-time diagram or a machine
-   model whose moves avoid the diagonal) must be designed and proved; Büchi 1962 ([64]) is not held. Then the Remark
-   (∃yHyy).
-2. Two-register machine universality with halting-state preservation (needed by (b), (d), (e)): not in the handbook;
-   must be proved in the annex (TM -> counter machines -> two registers via 2^a 3^b 5^c 7^d coding), together with the
-   "logic machine" of Cor. 2.1.16 refined to halt in (1,0,0) on Non-sat and (2,0,0) on Fin-sat.
-3. (b) Ex. 2.1.32 with ≺_{K,M} as displayed (u read as x'); (d) g(ψ) and Ex. 2.1.34; (e) Ex. 2.1.37 for both prefix
-   classes (relational prenex forms of the Skolem normal forms; Krom/Horn clause check; ∃∀∃∀ via u:=0, v:=x';
-   ∀∃∃∀ variant must be designed).
-4. (f) Thm. 2.1.39: effective inseparability (definition, H_1/H_2 effectively inseparable, transfer along reductions)
-   and the embedding theorem (disjoint c.e. P_1, P_2; effectively inseparable c.e. R_1, R_2 => recursive g with
-   P_i = g^{-1}(R_i)). Needs a parameter (s-m-n) theorem and a double recursion theorem for the handbook's machine
-   model; the handbook has the recursion theorem only as a sketch. An alternative self-referential proof (machine
-   searching for unsatisfiability/finite models of ψ and of f(θ_ψ)) also needs the recursion theorem.
+1. (a) Ex. 2.1.31: rho_{M,prec} as exists x Zx and forall x exists u forall y beta, beta with variables x,u,y only
+   and binary symbols H, T_0, K only, plus the following Remark (source p. 36 prints exists y Hyy and the subformula
+   "Zxx -> Hxx"). Design notes: head moves (t,c) -> (t+1,c+1) need a two-step transposition through pairs above
+   the diagonal ((t,c) -> (c,t+1) -> (t+1,c+1); a premise on (u,y) gives the predecessor direction for left
+   moves); the open point is persistence of non-head cells, which needs "y is not the head cell at time x" with
+   H as the only head relation and no fourth variable. Buechi 1962 (BGG [64]) is not held.

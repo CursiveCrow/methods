@@ -4,8 +4,9 @@
 
 A marginal likelihood is an integral, and its numerical approximation is
 a further operation with its own error conditions. This chapter develops
-the Laplace, one-step Newton, Schwarz/BIC, direct Monte Carlo, importance,
-harmonic-mean, mixture, bridge, Laplace--Metropolis, Savage--Dickey and
+the Laplace, one-step Newton, adaptive quadrature, Schwarz/BIC, direct
+Monte Carlo, importance, harmonic-mean, mixture, bridge (including the
+optimal bridge function), Laplace--Metropolis, Savage--Dickey and
 latent-data methods described by Kass and Raftery
 \cite[Sec.~4, pp.~777--781]{KassRaftery1995BayesFactors}.
 The model and data-measure conventions are those of
@@ -262,6 +263,166 @@ The third item computes one instance of that improvement. It is not a
 general comparison theorem. The formula uses the prior precision \(G\)
 in place of the negative Hessian of the log prior. Those agree for a
 normal prior, and the error bound does not require them to agree.
+
+\section{Adaptive Gauss--Hermite quadrature}
+\label{sec:p15-w02b-p15-056-adaptive-quadrature}
+
+Kass and Raftery describe a more efficient scheme based on adaptive
+Gaussian quadrature for integrals peaked around a dominant mode, effective
+when the parameter dimension is modest
+\cite[Sec.~4.2, p.~779]{KassRaftery1995BayesFactors}. Their description is
+verbal. This section fixes one precise construction of that kind. The
+integrand is recentred at the mode, rescaled by the curvature there,
+divided by the Gaussian factor, and summed against a product
+Gauss--Hermite rule. The inputs are the integral \(I_n\) of
+\cref{def:p15-laplace-family}, its mode \(\theta_n\), its curvature
+\(J_n\) and a number \(K\) of nodes in each coordinate. The conclusions
+are the exact polynomial property of the rule, the identity of the
+one-node rule with the Laplace value, and the large-\(n\) relative error
+for each fixed \(K\). The construction and the error theorem are stated
+and proved here; they are not a transcription of a published algorithm.
+
+\begin{hbdefinition}{def:p15-w02b-p15-056-gauss-hermite}{Gauss--Hermite rules and the adaptive rule}
+Fix an integer \(K\geq1\).
+\begin{enumerate}
+\item The Hermite polynomials \(\mathrm{He}_0,\mathrm{He}_1,\ldots\) are
+the monic polynomials, \(\mathrm{He}_k\) of degree \(k\), obtained by the
+Gram--Schmidt process from \(1,x,x^2,\ldots\) in the inner product
+\(\langle f,g\rangle=\int_{\mathbb R}f(x)g(x)e^{-x^2/2}\,dx\).
+\item The \(K\)-point Gauss--Hermite rule has nodes \(x_1<\cdots<x_K\),
+the zeros of \(\mathrm{He}_K\), and weights
+\(\omega_k=\int_{\mathbb R}\ell_k(x)e^{-x^2/2}\,dx\). Here \(\ell_k\) is
+the Lagrange polynomial of degree \(K-1\) with \(\ell_k(x_k)=1\) and
+\(\ell_k(x_j)=0\) for \(j\neq k\).
+\item On \(\mathbb R^d\), for
+\(\mathbf k=(k_1,\ldots,k_d)\in\{1,\ldots,K\}^d\), the product rule has
+node \(z_{\mathbf k}=(x_{k_1},\ldots,x_{k_d})\) and weight
+\(\Omega_{\mathbf k}=\omega_{k_1}\cdots\omega_{k_d}\). For a function
+\(g\) on \(\mathbb R^d\) write
+\[
+ \mathcal G(g)=\int_{\mathbb R^d}g(z)e^{-\|z\|^2/2}\,dz,\qquad
+ \mathcal R_K(g)=\sum_{\mathbf k}\Omega_{\mathbf k}\,g(z_{\mathbf k}),
+\]
+the first whenever the integral exists.
+\item In the setting of \cref{def:p15-laplace-family}, put
+\(F_n(\theta)=e^{nh_n(\theta)}a_n(\theta)\) for \(\theta\in\Theta_n\)
+and \(F_n(\theta)=0\) otherwise. Let \(J_n^{-1/2}\) be the positive
+definite square root of \(J_n^{-1}\), and put
+\(\theta_n(z)=\theta_n+n^{-1/2}J_n^{-1/2}z\) and
+\[
+ g_n(z)=e^{-nh_n(\theta_n)}F_n(\theta_n(z))\,e^{\|z\|^2/2}.
+\]
+The adaptive \(K\)-point rule for \(I_n\) is
+\[
+ Q_{n,K}=e^{nh_n(\theta_n)}\,n^{-d/2}(\det J_n)^{-1/2}\,
+          \mathcal R_K(g_n).
+\]
+\end{enumerate}
+The change of variables \(\theta=\theta_n(z)\) gives the exact formula
+\[
+ I_n=e^{nh_n(\theta_n)}n^{-d/2}(\det J_n)^{-1/2}\mathcal G(g_n),
+\]
+and \(Q_{n,K}\) replaces \(\mathcal G\) by \(\mathcal R_K\) in it. The rule
+uses \(K^d\) values of the integrand besides the mode and the curvature.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p15-w02b-p15-056-gauss-hermite-exactness}{proved=annex:p15-w02b-p15-056-ghexact}{Exactness, positivity and symmetry of the rules}
+For every \(K\geq1\) the following hold.
+\begin{enumerate}
+\item \(\mathrm{He}_K\) has \(K\) distinct real zeros, every weight
+\(\omega_k\) is positive, and \(\sum_k\omega_k=\sqrt{2\pi}\).
+\item \(\sum_k\omega_kP(x_k)=\int_{\mathbb R}P(x)e^{-x^2/2}\,dx\) for every
+polynomial \(P\) of degree at most \(2K-1\). The equality fails for
+\(P=\mathrm{He}_K^2\), of degree \(2K\).
+\item \(x_{K+1-k}=-x_k\) and \(\omega_{K+1-k}=\omega_k\).
+\item \(\mathcal R_K(P)=\mathcal G(P)\) for every polynomial \(P\) on
+\(\mathbb R^d\) of degree at most \(2K-1\) in each variable, in
+particular of total degree at most \(2K-1\). If \(P(-z)=-P(z)\), then
+\(\mathcal R_K(P)=\mathcal G(P)=0\) for every \(K\).
+\end{enumerate}
+Moreover \(\mathrm{He}_1=x\), \(\mathrm{He}_2=x^2-1\),
+\(\mathrm{He}_3=x^3-3x\) and \(\mathrm{He}_4=x^4-6x^2+3\). The one-point
+rule is the node \(0\) with weight \(\sqrt{2\pi}\). The two-point rule is
+the nodes \(\pm1\) with weights \(\sqrt{2\pi}/2\). The three-point rule is
+the nodes \(-\sqrt3,0,\sqrt3\) with weights
+\(\sqrt{2\pi}/6,\,2\sqrt{2\pi}/3,\,\sqrt{2\pi}/6\).
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p15-w02b-p15-056-adaptive-quadrature}{proved=annex:p15-w02b-p15-056-agq}{Relative error of the adaptive rule}
+Assume \cref{def:p15-laplace-family} and fix \(K\geq1\).
+\begin{enumerate}
+\item \(Q_{n,1}=\widehat I_n\), the Laplace value of
+\cref{thm:p15-laplace-relative-error}.
+\item \(Q_{n,K}>0\) for all large \(n\), and
+\(I_n/Q_{n,K}=1+O(n^{-1})\).
+\item Assume further that, on the ball \(B(\theta_n,\rho)\), \(h_n\) is
+\(C^6\) and \(a_n\) is \(C^4\), with the operator norms of
+\(D^5h_n,D^6h_n,D^3a_n,D^4a_n\) at most \(A\). For \(k\geq3\) and
+\(k\geq1\) respectively put
+\[
+ t_{n,k}(z)=\frac{D^kh_n(\theta_n)[J_n^{-1/2}z]^k}{k!},\qquad
+ g_{n,k}(z)=\frac{D^ka_n(\theta_n)[J_n^{-1/2}z]^k}{k!\,a_n(\theta_n)},
+\]
+where \([v]^k\) repeats the argument \(v\) \(k\) times, and
+\[
+ P_{n,2}=t_{n,4}+\tfrac12t_{n,3}^2+g_{n,1}t_{n,3}+g_{n,2},
+\]
+\[
+ \Delta_{n,K}=(2\pi)^{-d/2}\{\mathcal G(P_{n,2})-\mathcal R_K(P_{n,2})\}.
+\]
+Then \(\Delta_{n,K}\) is bounded in \(n\) and
+\[
+ \frac{I_n}{Q_{n,K}}=1+\frac{\Delta_{n,K}}n+O(n^{-2}).
+\]
+For \(K\geq4\), \(\Delta_{n,K}=0\) and \(I_n/Q_{n,K}=1+O(n^{-2})\).
+\end{enumerate}
+The implied constants depend only on \(K\), \(d\) and the uniform bounds.
+For two integrals that satisfy the hypotheses, the ratio of their adaptive
+values approximates \(B_{10}\) with the same relative orders.
+\end{hbtheorem}
+
+The rule evaluates the integrand at finitely many points, all within
+distance \(O(n^{-1/2})\) of \(\theta_n\). Mass away from the mode reaches
+the error bound only through the tail condition of
+\cref{def:p15-laplace-family}, never through the nodes. The third item
+gives the gain in order over the Laplace value when \(K\geq4\). For
+\(K=2\) and \(K=3\) the coefficient \(\Delta_{n,K}\) can exceed that of the
+one-point rule, as the first example below computes. The theorem uses the
+exact mode and curvature, and it makes no claim when they are replaced by
+computed approximations. It concerns fixed \(K\) and \(d\) as
+\(n\to\infty\); it asserts nothing about \(K\to\infty\) for fixed \(n\).
+The product rule needs \(K^d\) evaluations, which limits the dimension in
+which it is practical. The source's figure for the method it describes is
+fewer than about nine dimensions
+\cite[Sec.~4.2, p.~779]{KassRaftery1995BayesFactors}.
+
+\begin{hbtheorem}{thm:p15-w02b-p15-056-adaptive-quadrature-example}{proved=annex:p15-w02b-p15-056-agqex}{A gamma integral, node counts that do not help, and a missed mode}
+\begin{enumerate}
+\item Let \(d=1\), \(\Theta_n=(0,\infty)\),
+\(h_n(\theta)=\log\theta-\theta\) and \(a_n=1\), so that
+\(I_n=\int_0^\infty\theta^ne^{-n\theta}\,d\theta=n!/n^{n+1}\). The
+hypotheses of the third item of
+\cref{thm:p15-w02b-p15-056-adaptive-quadrature} hold with
+\(\theta_n=1\), \(J_n=1\), \(\rho=1/2\), \(c_0=1/3\), \(A=7680\),
+\(\eta=\tfrac12-\log\tfrac32\) and \(A_T=7/2\). Here
+\(P_{n,2}(z)=z^6/18-z^4/4\), and
+\[
+ \Delta_{n,1}=\tfrac1{12},\qquad\Delta_{n,2}=\tfrac5{18},\qquad
+ \Delta_{n,3}=\tfrac13,\qquad\Delta_{n,K}=0\quad(K\geq4).
+\]
+So the relative errors of the one-, two- and three-point rules are of
+exact order \(n^{-1}\), and to that order the two- and three-point rules
+are less accurate than the Laplace value. The first case is the expansion
+\(n!=n^ne^{-n}\sqrt{2\pi n}\,\{1+1/(12n)+O(n^{-2})\}\).
+\item Let \(d=1\), \(\Theta_n=\mathbb R\), \(a_n=1\) and
+\(h_n(\theta)=-\tfrac12\min\{\theta^2,(\theta-3)^2\}\). Every condition of
+\cref{def:p15-laplace-family} except the tail condition holds with
+\(\theta_n=0\), \(J_n=1\) and \(\rho=1\). For every \(K\) and all
+\(n>4x_K^2/9\), with \(x_K\) the largest node,
+\(I_n/Q_{n,K}=2\Phi(\tfrac32\sqrt n)\to2\). Here \(\Phi\) is the standard
+normal distribution function.
+\end{enumerate}
+\end{hbtheorem}
 
 \section{The precise fixed-dimensional BIC consequence}
 \label{sec:p15-bic-consequence}
@@ -541,11 +702,11 @@ but the harmonic estimate is forever \(1/4\) or \(3/4\), never \(1/2\).
 \end{enumerate}
 \end{hbtheorem}
 
-All simulation convergence statements above use the integrable i.i.d.
-strong law, not an unstated MCMC theorem. For dependent output one needs
-a theorem giving the required ergodic averages, with its actual hypotheses.
-Approximate posterior draws also need an approximation-error argument.
-Stationarity alone is insufficient, as the last example proves.
+The simulation convergence statements of this section and the next two use
+the integrable i.i.d. strong law. Markov chain output is treated separately
+in \cref{sec:p15-w02b-p15-056-dependent-averages}, whose hypotheses are
+stated there. Approximate posterior draws also need an approximation-error
+argument. Stationarity alone is insufficient, as the last example proves.
 
 \section{Mixture, bridge, Laplace--Metropolis and ratio estimators}
 \label{sec:p15-w02b-p15-056-further-estimators}
@@ -664,10 +825,120 @@ the same identity gives \(B_{10}=c_1/c_2\) directly.
 \end{hbtheorem}
 
 Kass and Raftery note that Meng and Wong considered an optimal choice of
-\(f\), computed iteratively, and that their framework applies to ratios
-of integrals \cite[Sec.~4.3, p.~780]{KassRaftery1995BayesFactors}. The
-identity above is the basic relation that such choices build on. The
-optimal choice itself and its iteration are not derived in this chapter.
+\(f\), computed iteratively from an initial guess, and that their framework
+applies to ratios of integrals
+\cite[Sec.~4.3, p.~780]{KassRaftery1995BayesFactors}. The definition and
+theorems below give one precise form of that statement for the identity
+above. The criterion is the variance of the normal limit of the relative
+error. The optimum follows from the Cauchy--Schwarz inequality, and the
+unknown ratio that appears in it is removed by a fixed-point iteration.
+These statements and their proofs are written for this chapter; they are
+not a transcription of the cited paper, which is not reproduced here.
+
+\begin{hbdefinition}{def:p15-w02b-p15-056-bridge-estimator}{Bridge estimators, their criterion and the iteration}
+Keep the setting of \cref{thm:p15-w02b-p15-056-bridge-identity} and put
+\(r=c_1/c_2\). Let \(\theta_1,\theta_2,\ldots\) be i.i.d. from \(p_1\)
+and \(\theta'_1,\theta'_2,\ldots\) i.i.d. from \(p_2\), the two sequences
+independent. Sample sizes \(M_1,M_2\) depend on an index \(M\to\infty\)
+with \(M_j/M\to s_j\), where \(s_1,s_2>0\) and \(s_1+s_2=1\); the estimators
+use \(\theta_1,\ldots,\theta_{M_1}\) and \(\theta'_1,\ldots,\theta'_{M_2}\).
+\begin{enumerate}
+\item For a bridge function \(\alpha\) as in the identity, the bridge
+estimator is
+\[
+ \widehat r_\alpha=\frac{M_2^{-1}\sum_{j\leq M_2}\alpha q_1(\theta'_j)}
+                         {M_1^{-1}\sum_{i\leq M_1}\alpha q_2(\theta_i)} .
+\]
+\item Such an \(\alpha\) is \emph{square-integrable} if also
+\(\int\alpha^2q_1q_2(q_1+q_2)\,d\mu<\infty\). Its criterion is
+\[
+ \mathcal V(\alpha)=\frac1{s_1s_2}\left\{
+ \frac{\int\alpha^2p_1p_2(s_1p_1+s_2p_2)\,d\mu}
+      {\bigl(\int\alpha p_1p_2\,d\mu\bigr)^2}-1\right\}.
+\]
+\item The overlap is
+\(\mathcal H=\int_Sp_1p_2/(s_1p_1+s_2p_2)\,d\mu\), where
+\(S=\{q_1q_2>0\}\).
+\item For \(x>0\) let \(\alpha_x=1/(s_1q_1+s_2xq_2)\) where the
+denominator is positive and \(\alpha_x=0\) elsewhere. The iteration
+starts from any \(\widehat r^{(0)}>0\) and sets
+\(\widehat r^{(t+1)}=\mathcal T_M(\widehat r^{(t)})\), where
+\(\mathcal T_M(x)=\widehat r_{\alpha_x}\).
+\end{enumerate}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p15-w02b-p15-056-optimal-bridge}{proved=annex:p15-w02b-p15-056-optbridge}{The optimal bridge function}
+Assume \(\mu(S)>0\).
+\begin{enumerate}
+\item For square-integrable \(\alpha\),
+\(\sqrt M(\widehat r_\alpha-r)/r\Rightarrow
+\operatorname{normal}(0,\mathcal V(\alpha))\).
+\item \(0<\mathcal H\leq1\), with \(\mathcal H=1\) exactly when
+\(p_1=p_2\) \(\mu\)-almost everywhere. The function \(\alpha_r\) is
+square-integrable, and every square-integrable \(\alpha\) satisfies
+\[
+ \mathcal V(\alpha)\geq\mathcal V(\alpha_r)
+ =\frac1{s_1s_2}\Bigl(\frac1{\mathcal H}-1\Bigr),
+\]
+with equality exactly when \(\alpha=\lambda_0\alpha_r\) \(\mu\)-almost
+everywhere on \(S\) for a constant \(\lambda_0\neq0\). Values of \(\alpha\)
+off \(S\) do not affect \(\widehat r_\alpha\) almost surely.
+\item Fix a sample in which \(q_1(\theta_i)>0\) for every \(i\leq M_1\),
+\(q_2(\theta'_j)>0\) for every \(j\leq M_2\), \(q_2(\theta_i)>0\) for at
+least one \(i\), and \(q_1(\theta'_j)>0\) for at least one \(j\). Then
+\(\mathcal T_M\) has exactly one fixed point \(\widehat r_*\) in
+\((0,\infty)\). It is the unique root of the strictly increasing function
+\[
+\begin{aligned}
+ \Psi^{\rm b}_M(x)={}&\frac1{M_1}\sum_{i\leq M_1}
+ \frac{xq_2(\theta_i)}{s_1q_1(\theta_i)+s_2xq_2(\theta_i)}\\
+ &-\frac1{M_2}\sum_{j\leq M_2}
+ \frac{q_1(\theta'_j)}{s_1q_1(\theta'_j)+s_2xq_2(\theta'_j)} .
+\end{aligned}
+\]
+From every \(\widehat r^{(0)}>0\) there is a \(\lambda<1\), depending on
+the sample and on \(\widehat r^{(0)}\), with
+\(|\log\widehat r^{(t)}-\log\widehat r_*|
+\leq\lambda^t|\log\widehat r^{(0)}-\log\widehat r_*|\) for every \(t\).
+\item Almost surely the conditions of the third item hold for all large
+\(M\), and \(\widehat r_*\to r\). Moreover
+\(\sqrt M(\widehat r_*-r)/r\Rightarrow
+\operatorname{normal}(0,\mathcal V(\alpha_r))\). The iterated estimator
+attains the minimum of the second item without knowledge of \(r\).
+\end{enumerate}
+\end{hbtheorem}
+
+The criterion is the variance of a normal limit. It is not a
+finite-sample mean squared error, and the optimum is relative to the
+fixed allocation \((s_1,s_2)\) and to independent samples. The theorem makes
+no optimality claim for Markov chain output, whose limit variances have
+the kernel-dependent form of \cref{thm:p15-w02b-p15-056-chain-clt}. Where
+\(q_1\) and \(q_2\) are positive, \(\alpha_x\) tends to \(1/q_1\) as
+\(s_2\to0\) and to \(1/(xq_2)\) as \(s_1\to0\). These limits are the bridge
+functions of the two special cases of
+\cref{thm:p15-w02b-p15-056-bridge-identity}, which are not themselves
+covered by the theorem because it requires \(s_1,s_2>0\). If \(\mu(S)=0\),
+no bridge function has \(\kappa\neq0\). Almost surely every
+\(\theta'_j\) then has \(q_1(\theta'_j)=0\) and every \(\theta_i\) has
+\(q_2(\theta_i)=0\), so both sums in \(\mathcal T_M\) vanish, the
+iteration is undefined, and the samples carry no information about \(r\).
+
+\begin{hbtheorem}{thm:p15-w02b-p15-056-bridge-example}{proved=annex:p15-w02b-p15-056-bridgeex}{Four bridge functions for two exponential kernels}
+On \((0,\infty)\) with Lebesgue measure let \(q_1(\theta)=e^{-\theta}\)
+and \(q_2(\theta)=e^{-2\theta}\), so that \(c_1=1\), \(c_2=1/2\) and
+\(r=2\), and let \(s_1=s_2=1/2\). Then
+\(\mathcal H=2-\log3\) and
+\[
+ \mathcal V(\alpha_2)=\frac4{2-\log3}-4\approx0.4376 .
+\]
+The geometric bridge \(\alpha=(q_1q_2)^{-1/2}\) has
+\(\mathcal V=1/2\). The bridge \(\alpha=1/q_1\), for which
+\(\widehat r_\alpha\) is the reciprocal of the sample mean of
+\(q_2/q_1\) over the \(p_1\)-sample, has \(\mathcal V=2/3\). The bridge
+\(\alpha=1/q_2\), for which \(\widehat r_\alpha\) is the sample mean of
+\(q_1/q_2\) over the \(p_2\)-sample, is not square-integrable, and
+\(\operatorname{Var}_{p_2}(q_1/q_2)=\infty\).
+\end{hbtheorem}
 
 \begin{hbtheorem}{thm:p15-w02b-p15-056-laplace-metropolis}{proved=annex:p15-w02b-p15-056-lapmet}{When Laplace--Metropolis inherits Laplace accuracy}
 Assume the posterior-mode construction of
@@ -799,16 +1070,245 @@ The third item is one precise form of the source's remark that, when
 reduces to the harmonic-mean estimator of \(\mathrm{pr}(D\mid H_1)\)
 \cite[Sec.~4.3, p.~780]{KassRaftery1995BayesFactors}. The source
 simulates the \(z^{(i)}\) by Markov chain methods. The convergence
-statements here assume independent draws, and the limitation stated
-below applies.
+statements here assume independent draws; their Markov chain versions are
+part of \cref{thm:p15-w02b-p15-056-dependent-estimators}.
 
-Three developments described in Section~4 of the source are not
-established here. The first is error bounds for adaptive Gaussian
-quadrature, which the source describes as effective for peaked integrals
-of modest dimension, roughly less than nine
-\cite[Sec.~4.2, p.~779]{KassRaftery1995BayesFactors}. The second is the
-optimal bridge function. The third is ergodic averaging for Gibbs,
-Metropolis or weighted-likelihood-bootstrap output. Every simulation
-limit above assumes independent draws. For dependent output, the
-stationary identity chain of \cref{thm:p15-mc-evidence-boundaries} shows
-that correct marginals alone do not yield these limits.
+Adaptive Gaussian quadrature is treated in
+\cref{sec:p15-w02b-p15-056-adaptive-quadrature}, and the optimal bridge
+function in \cref{thm:p15-w02b-p15-056-optimal-bridge}. Averages of Markov
+chain output are treated in the next section. Weighted-likelihood-bootstrap
+output is neither independent exact posterior sampling nor a Markov chain
+with a stated invariant law, and no limit is proved for it here.
+
+\section{Averages of dependent simulation output}
+\label{sec:p15-w02b-p15-056-dependent-averages}
+
+Gibbs and Metropolis samplers produce a Markov chain, not independent
+draws. This section states hypotheses on the chain under which every
+average used above has the same almost-sure limit as under independent
+sampling, and under which the normal limits of
+\cref{thm:p15-evidence-mc-clt,thm:p15-w02b-p15-056-mixture-estimators,thm:p15-w02b-p15-056-latent-ratio}
+hold with a different variance. The inputs are a transition kernel, its
+invariant law, an initial law and the averaged function. The conclusions
+are an ergodic average theorem, a normal limit with an explicit variance
+series, and their consequences for each estimator. The stationary
+identity chain of \cref{thm:p15-mc-evidence-boundaries} fails both
+hypotheses below, which is why correct marginals did not suffice there.
+
+\begin{hbdefinition}{def:p15-w02b-p15-056-chain-hypotheses}{Chain output and two averaging hypotheses}
+Let \(\Theta\) be a countable set or a Borel subset of \(\mathbb R^d\),
+with its Borel sets \(\mathcal A\). A transition probability \(K\) assigns
+to each \(x\in\Theta\) a probability \(K(x,\cdot)\) on \(\mathcal A\),
+with \(x\mapsto K(x,A)\) measurable for each \(A\in\mathcal A\). For an
+initial law \(\mu\), \(\mathbb P_\mu\) is the law on the path space
+\(\Theta^{\{0,1,\ldots\}}\) of the canonical chain
+\(X_0,X_1,\ldots\) with \(X_0\sim\mu\) and transition probability \(K\);
+\(\mathbb P_x\) is the case \(\mu=\delta_x\), so that
+\(\mathbb P_\mu(E)=\int\mathbb P_x(E)\,\mu(dx)\), and \(\vartheta\) is the
+shift \((\omega_0,\omega_1,\ldots)\mapsto(\omega_1,\omega_2,\ldots)\)
+\cite[Sec.~5.2, p.~273]{DurrettPTEAuthor2019}. Write
+\(Ku(x)=\int u(y)K(x,dy)\), \(\mu K(A)=\int K(x,A)\,\mu(dx)\), and
+\(K^k\) for the \(k\)-step kernel. A probability \(\gamma\) is invariant
+if \(\gamma K=\gamma\). An event \(E\) of the path space is
+shift-invariant if \(\vartheta^{-1}E=E\). For measurable real \(f\),
+\[
+ \bar f_M=\frac1M\sum_{t=0}^{M-1}f(X_t).
+\]
+The two hypotheses on a chain with invariant law \(\gamma\) are:
+\begin{enumerate}
+\item[(E)] every shift-invariant event has \(\mathbb P_\gamma\)-probability
+\(0\) or \(1\), and the initial law \(\mu\) satisfies \(\mu\ll\gamma\);
+\item[(D)] there are \(\varepsilon\in(0,1]\) and a probability \(\zeta\)
+on \(\mathcal A\) with \(K(x,A)\geq\varepsilon\zeta(A)\) for every
+\(x\in\Theta\) and \(A\in\mathcal A\); the initial law is arbitrary.
+\end{enumerate}
+Condition (D) is a one-step minorization of every row of the kernel by
+the same measure. A bounded measurable \(b\) is \(K\)-harmonic if
+\(Kb(x)=b(x)\) for every \(x\).
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p15-w02b-p15-056-doeblin}{proved=annex:p15-w02b-p15-056-doeblin}{Consequences of the minorization}
+Assume (D) with invariant law \(\gamma\).
+\begin{enumerate}
+\item Every bounded \(K\)-harmonic function is constant.
+\item Every shift-invariant event \(E\) satisfies
+\(\mathbb P_x(E)=\mathbb P_\gamma(E)\in\{0,1\}\) for every \(x\). In
+particular (E) holds for every initial law \(\mu\ll\gamma\).
+\item \(\gamma\geq\varepsilon\zeta\).
+\item If \(f\in L^2(\gamma)\) and \(\gamma f=0\), then
+\(\|K^kf\|_{L^2(\gamma)}\leq(1-\varepsilon)^{k/2}\|f\|_{L^2(\gamma)}\)
+for every \(k\geq0\).
+\end{enumerate}
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p15-w02b-p15-056-ergodic-averages}{proved=annex:p15-w02b-p15-056-ergodic}{Almost-sure limits of chain averages}
+Let \(\gamma\) be invariant for \(K\).
+\begin{enumerate}
+\item Under (E), for every \(f\in L^1(\gamma)\),
+\(\bar f_M\to\gamma f\) \(\mathbb P_\mu\)-almost surely. More generally,
+if \(F\) is a real measurable function on the path space with
+\(\mathbb E_\gamma|F|<\infty\), then
+\(M^{-1}\sum_{t=0}^{M-1}F\circ\vartheta^t\to\mathbb E_\gamma F\)
+\(\mathbb P_\mu\)-almost surely.
+\item Under (D), both conclusions hold \(\mathbb P_\mu\)-almost surely for
+every initial law \(\mu\), including every fixed starting point.
+\item If \(\mu=\gamma\), then \(\mathbb E_\gamma\bar f_M=\gamma f\) for
+every \(M\).
+\end{enumerate}
+No second moment is used.
+\end{hbtheorem}
+
+The function \(F\) in the first item covers averages of
+\(F(X_t,X_{t+1})\), which the normal-limit proof needs. The first item
+rests on Birkhoff's ergodic theorem for the shift, proved in the annex by
+the maximal-inequality route of Durrett's Lemma~6.2.2 and
+Theorem~6.2.1 \cite[Sec.~6.2, pp.~335--336]{DurrettPTEAuthor2019},
+followed by a transfer from \(\mathbb P_\gamma\) to \(\mathbb P_\mu\).
+
+\begin{hblemma}{thm:p15-w02b-p15-056-martingale-clt}{proved=annex:p15-w02b-p15-056-mgclt}{A normal limit for martingale-difference rows}
+For each \(n\), let
+\(\mathcal F_{n,0}\subseteq\cdots\subseteq\mathcal F_{n,k_n}\) be
+sigma-algebras and let \(Y_{n,j}\), \(1\leq j\leq k_n\), be
+square-integrable and \(\mathcal F_{n,j}\)-measurable, with
+\(\mathbb E(Y_{n,j}\mid\mathcal F_{n,j-1})=0\). Suppose
+\begin{enumerate}
+\item \(\sup_n\mathbb E\max_jY_{n,j}^2<\infty\);
+\item \(\max_j|Y_{n,j}|\to0\) in probability;
+\item \(\sum_jY_{n,j}^2\to1\) in probability.
+\end{enumerate}
+Then \(\sum_{j=1}^{k_n}Y_{n,j}\Rightarrow\operatorname{normal}(0,1)\).
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p15-w02b-p15-056-chain-clt}{proved=annex:p15-w02b-p15-056-chainclt}{Normal limits for minorized chains}
+Assume (D) with invariant law \(\gamma\), let \(f\in L^2(\gamma)\), and
+put \(f^{\rm c}=f-\gamma f\). Then the series
+\(u_f=\sum_{k\geq0}K^kf^{\rm c}\) converges in \(L^2(\gamma)\),
+\(u_f-Ku_f=f^{\rm c}\) \(\gamma\)-almost everywhere, and
+\[
+ \sigma^2_K(f)=\gamma(u_f^2)-\gamma\bigl((Ku_f)^2\bigr)
+ =\operatorname{Var}_\gamma f
+ +2\sum_{k\geq1}\operatorname{Cov}_{\mathbb P_\gamma}\bigl(f(X_0),f(X_k)\bigr),
+\]
+the series converging absolutely, with
+\(0\leq\sigma^2_K(f)\leq\{(1+r)/(1-r)\}\operatorname{Var}_\gamma f\) for
+\(r=(1-\varepsilon)^{1/2}\). For every initial law \(\mu\),
+\[
+ \sqrt M(\bar f_M-\gamma f)\Rightarrow\operatorname{normal}(0,\sigma^2_K(f)).
+\]
+\end{hbtheorem}
+
+For independent draws from \(\gamma\), the covariance terms vanish and
+\(\sigma^2_K(f)=\operatorname{Var}_\gamma f\). Under dependence the
+covariance series can make the variance larger or smaller; the two-state
+chain below makes it smaller.
+
+\begin{hbtheorem}{thm:p15-w02b-p15-056-dependent-estimators}{proved=annex:p15-w02b-p15-056-depest}{The evidence estimators under chain sampling}
+In each estimator of
+\cref{sec:p15-evidence-monte-carlo,sec:p15-harmonic-evidence,sec:p15-w02b-p15-056-further-estimators},
+replace the independent draws from the sampled law \(\gamma\) by
+\(X_0,\ldots,X_{M-1}\) from a chain with invariant law \(\gamma\)
+satisfying (E) or (D). The sampled law is \(\Pi\) for direct simulation,
+\(Q\) for importance sampling, \(P\) for harmonic means and
+\(\widehat{\rm pr}_4\), \(Q_\delta\) for \(\widehat{\rm pr}_3\),
+\(p_1\) and \(p_2\) for the two bridge samples, and \(P^z_0\) for the
+latent-data ratio. Keep the support and first-moment premises of the
+independent theorems.
+\begin{enumerate}
+\item Almost surely: the direct and ordinary importance averages converge
+to \(I\); the self-normalized ratio is eventually defined and converges to
+\(I\); \(A_M\to1/I\) and \(A_M^{-1}\to I\), or for the classical harmonic
+mean with \(\Pi(L>0)=s\), \(A_M\to s/I\); \(\widehat{\rm pr}_3\) is
+eventually defined and converges to \(I\); \(\widehat{\rm pr}_4\) is
+eventually defined and converges to \(p_\delta\); the bridge ratio converges to \(c_1/c_2\) as
+\(M_1,M_2\to\infty\), for two chains each meeting (E) or (D) for its own
+law, independent of each other or not; and the latent-data average
+converges to \(B_{10}P^z_1(p_0>0)\).
+\item Under (D) and the second-moment premises of the independent
+theorems, for every initial law, with \(Z\) the averaged weight,
+\(U=W(L-I)\), \(H\) the reciprocal weight and
+\(g'(I)=E_{Q_\delta}[L/\{\delta I+(1-\delta)L\}^2]\):
+\[
+\begin{gathered}
+ \sqrt M(\widehat I_M-I)\Rightarrow\operatorname{normal}(0,\sigma^2_K(Z)),\\
+ \sqrt M(\widetilde I_M-I)\Rightarrow\operatorname{normal}(0,\sigma^2_K(U)),\\
+ \sqrt M(A_M^{-1}-I)\Rightarrow\operatorname{normal}(0,I^4\sigma^2_K(H)),\\
+ \sqrt m(\widehat{\rm pr}_3-I)\Rightarrow
+ \operatorname{normal}\bigl(0,\sigma^2_K(\psi_I)/g'(I)^2\bigr).
+\end{gathered}
+\]
+When \(p_1=0\) \(\nu\)-almost everywhere on \(\{p_0=0\}\), the
+latent-data average \(\bar B_M\) of the \(B_{10}(z_t)\) satisfies
+\[
+ \sqrt M(\bar B_M-B_{10})\Rightarrow
+ \operatorname{normal}\bigl(0,\sigma^2_K(B_{10}(\cdot))\bigr).
+\]
+Each \(\sigma^2_K\) is computed for the chain that samples the
+corresponding law.
+\item The direct, ordinary importance, reciprocal and latent-data averages
+have the expectation of their independent versions at every \(M\) when
+\(X_0\sim\gamma\). From another initial law that need not hold.
+\end{enumerate}
+No normal limit is asserted for the bridge ratio or for
+\(\widehat{\rm pr}_4\), since none is asserted for their independent
+versions, and none is asserted under (E) without (D).
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p15-w02b-p15-056-two-state-chain}{proved=annex:p15-w02b-p15-056-twostate}{Two chains that meet the minorization and one that does not}
+\begin{enumerate}
+\item Take two parameter values, prior \((1/2,1/2)\) and likelihood
+\((1/4,3/4)\), so that \(I=1/2\) and \(P=(1/4,3/4)\). The Metropolis
+chain that always proposes the other value has
+\[
+ K(1,1)=0,\quad K(1,2)=1,\quad K(2,1)=1/3,\quad K(2,2)=2/3 .
+\]
+It has invariant law \(P\) and satisfies (D) with \(\varepsilon=2/3\) and
+\(\zeta\) the point mass at the second value. For \(H=1/L=(4,4/3)\),
+\(\operatorname{Var}_PH=4/3\),
+\(\operatorname{Cov}_{\mathbb P_P}(H(X_0),H(X_k))=(4/3)(-1/3)^k\) and
+\(\sigma^2_K(H)=2/3\). Hence, from every initial law,
+\(\sqrt M(A_M^{-1}-1/2)\Rightarrow\operatorname{normal}(0,1/24)\), while
+independent posterior draws give \(\operatorname{normal}(0,1/12)\).
+Started at the first value,
+\(\mathbb E_1A_M=2+\frac3{2M}\{1-(-1/3)^M\}\), which exceeds \(1/I=2\)
+for every \(M\).
+\item Let \(\Theta\subseteq\mathbb R^d\) carry Lebesgue measure, let
+\(p\) be a target probability density, and let \(q\) be a proposal
+density with \(p\leq w^*q\) for a finite constant \(w^*\). Put
+\(w=p/q\) on \(\{q>0\}\) and \(w=0\) elsewhere. The independence
+Metropolis kernel
+\[
+ K(x,A)=\int_Aq(y)\alpha(x,y)\,dy+\rho(x)\mathbf 1_A(x),
+\]
+with \(\alpha(x,y)=\min\{1,w(y)/w(x)\}\) when \(w(x)>0\), \(\alpha(x,y)=1\) when \(w(x)=0\) and
+\(\rho(x)=1-\int q(y)\alpha(x,y)\,dy\), has invariant law
+\(p(y)\,dy\) and satisfies (D) with \(\varepsilon=1/w^*\) and
+\(\zeta=p(y)\,dy\).
+\item The identity kernel of \cref{thm:p15-mc-evidence-boundaries}
+satisfies neither (D) nor (E): the shift-invariant event that the path is
+eventually at the first value has \(\mathbb P_P\)-probability \(1/4\).
+\end{enumerate}
+\end{hbtheorem}
+
+\begin{hbwarning}{def:p15-w02b-p15-056-dependence-limits}{What the chain hypotheses do not cover}
+Condition (E) is a property of the stationary path law and must be proved
+for the sampler in use; a correct invariant law does not imply it, as the
+identity kernel shows. Condition (D) is uniform over all starting points.
+A sampler that does not satisfy it receives no normal limit from
+\cref{thm:p15-w02b-p15-056-chain-clt}, and its almost-sure limits come
+from \cref{thm:p15-w02b-p15-056-ergodic-averages} only once (E) is
+established and the initial law is absolutely continuous with respect to
+\(\gamma\). The variance \(\sigma^2_K\) is a property of the chain, not
+only of the sampled law, so a variance estimate that ignores the
+covariance series does not estimate it. After an arbitrary start a finite
+run also carries an initial-state bias, which the limit statements do not
+quantify beyond the two-state calculation.
+\end{hbwarning}
+
+The chain theorems supply the averaging step that the Markov chain
+versions of equations (10) and (12) and of the latent-data estimator
+require \cite[Secs.~4.2--4.3]{KassRaftery1995BayesFactors}. They use only the
+chain construction and Markov property of
+\cite[Sec.~5.2, Theorems~5.2.1 and~5.2.3, pp.~274--275]{DurrettPTEAuthor2019},
+the maximal-inequality proof of the ergodic theorem
+\cite[Sec.~6.2, pp.~335--336]{DurrettPTEAuthor2019}, and
+\cref{thm:p15-characteristic-continuity-theorem,thm:p15-clt-perturbation,thm:p15-finite-coordinate-approximation}.
