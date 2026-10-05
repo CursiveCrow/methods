@@ -649,6 +649,21 @@ class RestorationScopeStaticTests(unittest.TestCase):
 
 @unittest.skipUnless(PDFLATEX, "pdflatex is required for TeX scope tests")
 class RestorationScopeTeXTests(unittest.TestCase):
+    def assert_references_defined_in_handbook(self, log: str) -> None:
+        """A fixture compiles a few captures alone. A corrected capture (version-4 record) may
+        link to a proof in a routed handbook file outside the fixture; such a reference is
+        unresolved in the fixture but must be defined somewhere in the handbook."""
+        flat = log.replace("\n", "")  # TeX wraps log lines at 79 columns without spaces
+        labels = set(re.findall(r"LaTeX Warning: (?:Hyper reference|Reference) `([^']+)'", flat))
+        if not labels:
+            return
+        defined: set[str] = set()
+        for path in HANDBOOK_TEX.rglob("*.tex"):
+            text = path.read_text(encoding="utf-8", errors="replace")
+            defined.update(label for label in labels if "{" + label + "}" in text
+                           and re.search(r"(?:\\label|\\begin\{\w+\*?\})\s*\{" + re.escape(label) + r"\}", text))
+        self.assertEqual(sorted(labels - defined), [], "references defined nowhere in the handbook")
+
     def compile_with_outputs(
         self, body: str, runs: int = 1
     ) -> tuple[subprocess.CompletedProcess[str], Path]:
@@ -2265,7 +2280,7 @@ class RestorationScopeTeXTests(unittest.TestCase):
 
         log = (build / "fixture.log").read_text(encoding="utf-8", errors="replace")
         self.assertNotIn("multiply defined", log)
-        self.assertNotRegex(log, r"LaTeX Warning: (?:Hyper reference|Reference)")
+        self.assert_references_defined_in_handbook(log)
 
     def test_exact_constructibility_forcing_chapter_compiles_with_source_surface(self) -> None:
         wrappers = (
@@ -2314,7 +2329,7 @@ class RestorationScopeTeXTests(unittest.TestCase):
 
         log = (build / "fixture.log").read_text(encoding="utf-8", errors="replace")
         self.assertNotIn("multiply defined", log)
-        self.assertNotRegex(log, r"LaTeX Warning: (?:Hyper reference|Reference)")
+        self.assert_references_defined_in_handbook(log)
 
     def test_part5_governed_label_toc_bookmark_and_public_title(self) -> None:
         from pypdf import PdfReader
@@ -2442,7 +2457,7 @@ class RestorationScopeTeXTests(unittest.TestCase):
             self.assertEqual(aux.count(rf"\newlabel{{{label}}}"), 1, label)
         log = (build / "fixture.log").read_text(encoding="utf-8", errors="replace")
         self.assertNotIn("multiply defined", log)
-        self.assertNotRegex(log, r"LaTeX Warning: (?:Hyper reference|Reference)")
+        self.assert_references_defined_in_handbook(log)
 
         from pypdf import PdfReader
 
@@ -2487,7 +2502,7 @@ class RestorationScopeTeXTests(unittest.TestCase):
             self.assertEqual(aux.count(rf"\newlabel{{{label}}}"), 1, label)
         log = (build / "fixture.log").read_text(encoding="utf-8", errors="replace")
         self.assertNotIn("multiply defined", log)
-        self.assertNotRegex(log, r"LaTeX Warning: (?:Hyper reference|Reference)")
+        self.assert_references_defined_in_handbook(log)
 
         from pypdf import PdfReader
 
@@ -2545,7 +2560,7 @@ class RestorationScopeTeXTests(unittest.TestCase):
             self.assertEqual(aux.count(rf"\newlabel{{{label}}}"), 1, label)
         log = (build / "fixture.log").read_text(encoding="utf-8", errors="replace")
         self.assertNotIn("multiply defined", log)
-        self.assertNotRegex(log, r"LaTeX Warning: (?:Hyper reference|Reference)")
+        self.assert_references_defined_in_handbook(log)
 
         from pypdf import PdfReader
 
@@ -2636,7 +2651,7 @@ class RestorationScopeTeXTests(unittest.TestCase):
         self.assertNotIn(r"\newlabel{part:formal-practice}", aux)
         log = (build / "fixture.log").read_text(encoding="utf-8", errors="replace")
         self.assertNotIn("multiply defined", log)
-        self.assertNotRegex(log, r"LaTeX Warning: (?:Hyper reference|Reference)")
+        self.assert_references_defined_in_handbook(log)
 
         from pypdf import PdfReader
 
@@ -3508,7 +3523,7 @@ class RestorationScopeTeXTests(unittest.TestCase):
 
         log = (build / "fixture.log").read_text(encoding="utf-8", errors="replace")
         self.assertNotIn("multiply defined", log)
-        self.assertNotRegex(log, r"LaTeX Warning: (?:Hyper reference|Reference)")
+        self.assert_references_defined_in_handbook(log)
 
         from pypdf import PdfReader
 
@@ -3561,7 +3576,7 @@ class RestorationScopeTeXTests(unittest.TestCase):
 
         log = (build / "fixture.log").read_text(encoding="utf-8", errors="replace")
         self.assertNotIn("multiply defined", log)
-        self.assertNotRegex(log, r"LaTeX Warning: (?:Hyper reference|Reference)")
+        self.assert_references_defined_in_handbook(log)
 
         from pypdf import PdfReader
 
@@ -3645,14 +3660,18 @@ class RestorationScopeTeXTests(unittest.TestCase):
 
         log = (build / "fixture.log").read_text(encoding="utf-8", errors="replace")
         self.assertNotIn("multiply defined", log)
-        self.assertNotRegex(log, r"LaTeX Warning: (?:Hyper reference|Reference)")
+        self.assert_references_defined_in_handbook(log)
 
         from pypdf import PdfReader
 
         text = "\n".join(
             page.extract_text() or "" for page in PdfReader(build / "fixture.pdf").pages
         )
-        self.assertEqual(re.sub(r"\s+", " ", text).count("Proof sketch."), 1)
+        # The one source "Proof sketch." (capture 12415-12536) became a complete "Proof." under the
+        # recorded W02B-lead-corrections version-4 record: the full proof is routed in Part 2.
+        flat_text = re.sub(r"\s+", " ", text)
+        self.assertEqual(flat_text.count("Proof sketch."), 0)
+        self.assertRegex(flat_text, r"Proof\. ?The complete proof, including the effectiveness of the reduction")
 
 if __name__ == "__main__":
     unittest.main()
