@@ -40,7 +40,10 @@ for spec in specs:
             duties = [{"duty_id": f"MP-{i}", "duty": duty_text(x)} for i, x in enumerate(row.get("missing_pieces") or [])]
             duties += [{"duty_id": f"US-{i}", "duty": duty_text(x)} for i, x in enumerate(row.get("unassessed_scope") or [])]
             pid = r["id"].split(".")[0]
-            pk = packets.setdefault(pid, {"id": pid, "path": f"work/waves/w02/packets/{pid}.json", "mode": "accounting",
+            found = glob.glob(f"work/waves/*/packets/{pid}.json")
+            if len(found) != 1:
+                sys.exit(f"packet {pid}: expected one packet file, found {found}")
+            pk = packets.setdefault(pid, {"id": pid, "path": found[0].replace(chr(92), "/"), "mode": "accounting",
                                            "sections": [], "max_blocks": 0, "keys": {}})
             pk["sections"].append(sid)
             pk["keys"][sid] = {"components": owed, "duties": duties}
