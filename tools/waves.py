@@ -2716,6 +2716,18 @@ def _is_source_blocked(
     unit_ids = _dedupe(unit_id for row in rows for unit_id in _unit_ids_for_row(row))
     if not unit_ids:
         return False
+    # Absent sources block a packet only when nothing else is owed: every open row has been
+    # assessed (no unassessed scope) and every recorded duty is itself blocked_source. A
+    # writable duty (e.g. a wrong locator in a held source), an assessment dispute or an
+    # untyped legacy duty still needs an author or an assessor.
+    for row in rows:
+        if row.get("status") == AU:
+            continue
+        duties = row.get("missing_pieces") or []
+        if row.get("status") == "unassessed" or row.get("unassessed_scope") or not duties:
+            return False
+        if any(not (isinstance(d, dict) and d.get("kind") == "blocked_source") for d in duties):
+            return False
     for unit_id in unit_ids:
         # A facet unit missing from the queue has unknown sources: treat it as
         # absent (fail closed) unless the census says otherwise.
@@ -5779,7 +5791,9 @@ def _selftest_integrity(base: Path) -> None:
     empty = HeldIndex(available=True)
 
     def gate_rows(*unit_ids: str) -> list[dict[str, Any]]:
-        return [{"section_id": "9.1", "source_facets": [{"unit_id": unit_id} for unit_id in unit_ids]}]
+        return [{"section_id": "9.1", "status": "partial",
+                 "missing_pieces": [{"kind": "blocked_source", "duty": "source not held"}],
+                 "source_facets": [{"unit_id": unit_id} for unit_id in unit_ids]}]
 
     for unit_id in ("UF", "UH", "UK"):
         assert not _is_source_blocked(gate_rows(unit_id), units, empty, {}), unit_id
@@ -7474,12 +7488,22 @@ def _selftest() -> None:
                 "source_presentations": [{"benchmark_id": "B1", "title": "Benchmark Chapter"}],
             }
             missing_unit = {"unit_id": "UM", "source_presentations": [{"title": "Missing Chapter"}]}
-            gate_row = {"section_id": "1.8", "source_facets": [{"unit_id": "UC"}]}
+            GATE_DUTY = {"kind": "blocked_source", "duty": "d"}
+            # Absent sources block only rows whose every duty is blocked_source and that have no
+            # unassessed scope: a writable duty, an untyped duty or an unassessed row is not blocked.
+            for row in ({"status": "partial", "missing_pieces": [GATE_DUTY, {"kind": "writable", "duty": "w"}]},
+                        {"status": "partial", "missing_pieces": ["legacy untyped duty"]},
+                        {"status": "partial", "missing_pieces": []},
+                        {"status": "unassessed", "missing_pieces": [GATE_DUTY]},
+                        {"status": "partial", "missing_pieces": [GATE_DUTY], "unassessed_scope": ["u"]}):
+                assert not _is_source_blocked([{**row, "section_id": "1.8", "source_facets": [{"unit_id": "UM"}]}],
+                                              {"UM": missing_unit}, gate_held, {}), row
+            gate_row = {"section_id": "1.8", "status": "partial", "missing_pieces": [GATE_DUTY], "source_facets": [{"unit_id": "UC"}]}
             assert not _is_source_blocked([gate_row], {"UC": citation_unit}, gate_held, {})
             assert _packet_units([gate_row], {"UC": citation_unit}, gate_held)[0]["held_paths"] == ["source/s.txt"]
-            gate_row = {"section_id": "1.8", "source_facets": [{"unit_id": "UBM"}]}
+            gate_row = {"section_id": "1.8", "status": "partial", "missing_pieces": [GATE_DUTY], "source_facets": [{"unit_id": "UBM"}]}
             assert not _is_source_blocked([gate_row], {"UBM": benchmark_unit}, gate_held, {})
-            gate_row = {"section_id": "1.8", "source_facets": [{"unit_id": "UM"}]}
+            gate_row = {"section_id": "1.8", "status": "partial", "missing_pieces": [GATE_DUTY], "source_facets": [{"unit_id": "UM"}]}
             assert _is_source_blocked([gate_row], {"UM": missing_unit}, gate_held, {})
             assert not _is_source_blocked([gate_row], {"UM": missing_unit}, gate_held, {"UM": "partial"})
             # A presentation recorded as missing stays absent although its
@@ -7488,28 +7512,28 @@ def _selftest() -> None:
                 "unit_id": "URM",
                 "source_presentations": [{"source_id": "S", "body_state": "identified_missing"}],
             }
-            gate_row = {"section_id": "1.8", "source_facets": [{"unit_id": "URM"}]}
+            gate_row = {"section_id": "1.8", "status": "partial", "missing_pieces": [GATE_DUTY], "source_facets": [{"unit_id": "URM"}]}
             assert _is_source_blocked([gate_row], {"URM": recorded_missing}, gate_held, {})
             assert not _is_source_blocked([gate_row], {"URM": recorded_missing}, gate_held, {"S": "full"})
             # A facet unit absent from the queue is unknown, hence absent.
-            gate_row = {"section_id": "1.8", "source_facets": [{"unit_id": "UNOTQUEUED"}]}
+            gate_row = {"section_id": "1.8", "status": "partial", "missing_pieces": [GATE_DUTY], "source_facets": [{"unit_id": "UNOTQUEUED"}]}
             assert _is_source_blocked([gate_row], {}, gate_held, {})
             # Unresolvable identities fail closed; an artifact hash or a
             # bibliographic-record key resolves.
             unresolvable = {"unit_id": "UX", "source_presentations": [{"version": "1957", "extent": "all"}]}
-            gate_row = {"section_id": "1.8", "source_facets": [{"unit_id": "UX"}]}
+            gate_row = {"section_id": "1.8", "status": "partial", "missing_pieces": [GATE_DUTY], "source_facets": [{"unit_id": "UX"}]}
             assert _is_source_blocked([gate_row], {"UX": unresolvable}, gate_held, {})
             by_hash = {"unit_id": "UH", "source_presentations": [{"artifacts": [{"path": "elsewhere.pdf", "sha256": "ABC123"}]}]}
-            gate_row = {"section_id": "1.8", "source_facets": [{"unit_id": "UH"}]}
+            gate_row = {"section_id": "1.8", "status": "partial", "missing_pieces": [GATE_DUTY], "source_facets": [{"unit_id": "UH"}]}
             assert not _is_source_blocked([gate_row], {"UH": by_hash}, gate_held, {})
             by_record = {"unit_id": "UR", "source_presentations": [{"bibliographic_record": {"key": "K"}}]}
-            gate_row = {"section_id": "1.8", "source_facets": [{"unit_id": "UR"}]}
+            gate_row = {"section_id": "1.8", "status": "partial", "missing_pieces": [GATE_DUTY], "source_facets": [{"unit_id": "UR"}]}
             assert not _is_source_blocked([gate_row], {"UR": by_record}, gate_held, {})
             nested_title = {
                 "unit_id": "UT",
                 "source_presentations": [{"container_record": {"title": "Benchmark Chapter"}}],
             }
-            gate_row = {"section_id": "1.8", "source_facets": [{"unit_id": "UT"}]}
+            gate_row = {"section_id": "1.8", "status": "partial", "missing_pieces": [GATE_DUTY], "source_facets": [{"unit_id": "UT"}]}
             assert _is_source_blocked([gate_row], {"UT": nested_title}, gate_held, {})
 
             # Open components: the ledger's explicit notation, plus fallbacks.
