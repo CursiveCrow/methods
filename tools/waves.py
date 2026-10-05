@@ -525,14 +525,20 @@ def _unit_component_ids(unit: dict[str, Any]) -> list[str]:
 
 
 def _evidence_stale(row: dict[str, Any]) -> bool:
-    """Some reader_evidence entry has no sha256 (a non-dict entry has none),
-    or one that differs from the current file (a missing file differs)."""
+    """Some file's latest reader_evidence entry has no sha256 or one that differs from the
+    current file (a missing file differs), or an entry is not an object (no sha256: fail
+    closed). reader_evidence is append-only, so an older entry for a file is superseded by a
+    later one for the same file (e.g. a post-routing re-assessment pair)."""
+    latest: dict[str, Any] = {}
     for evidence in row.get("reader_evidence") or []:
         if not isinstance(evidence, dict):
-            return True  # no recorded sha256: fail closed
+            return True
         rel = _try_normalize_repo_path(evidence["path"]) if isinstance(evidence.get("path"), str) else None
-        recorded = evidence.get("sha256")
-        current = _cached_sha256(rel) if rel else None
+        if rel is None:
+            return True
+        latest[_path_key(rel)] = (rel, evidence.get("sha256"))
+    for rel, recorded in latest.values():
+        current = _cached_sha256(rel)
         if not isinstance(recorded, str) or current is None or recorded.strip().lower() != current:
             return True
     return False
@@ -6491,6 +6497,11 @@ def _selftest_accounting(base: Path) -> None:
     )
     assert _au_accounting_reasons(rows[0], {"U1": linked[0]}) == ["parked_scope"]
     assert _au_accounting_reasons(rows[1], {"U2": linked[1]}) == ["stale_evidence"]
+    # A later entry for the same file supersedes a stale one; a stale latest entry still counts.
+    superseded = dict(rows[1], reader_evidence=evidence("00" * 32, ["C2"]) + evidence(sha, ["C2"]))
+    assert _au_accounting_reasons(superseded, {"U2": linked[1]}) == []
+    regressed = dict(rows[1], reader_evidence=evidence(sha, ["C2"]) + evidence("00" * 32, ["C2"]))
+    assert _au_accounting_reasons(regressed, {"U2": linked[1]}) == ["stale_evidence"]
     assert _au_accounting_reasons(rows[2], {"U3": linked[2]}) == ["no_component_accounting"]
     assert _au_accounting_reasons(rows[3], {"U4": linked[3]}) == []
     # A non-dict evidence entry carries no sha256: stale (fail closed).
