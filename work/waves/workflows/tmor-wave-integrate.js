@@ -48,8 +48,9 @@ Write ${W}/lead/applied-${key}.json with [{patch_file, index, decision, reason}]
   { model: 'opus', effort: 'high', label: `lead:${key}`, phase: 'Lead' })
 
 const leadJobs = []
-if (args.tools) leadJobs.push(leadJob('tools', args.tools.file, 'tools/check.py, tools/symbols2tex.py, tools/symbol_registry.py and their test files',
-  `These requests add enforcement that the duties named in their reasons require (e.g. a generated-table staleness check, a notation lint, a first_use check, generator layout). Implement them as one coherent change, not as literal text substitution if the anchors moved. Each new check has a self-test under the tool's --selftest; run python -B tools/check.py --selftest, python -B tools/symbols2tex.py --selftest (if it exists) and python -B tools/symbol_registry.py --selftest (if it exists) and make them pass. New finding categories that the requests define as non-hard stay non-hard (hard only under --strict). Then run python -B tools/check.py --tree handbook, and report the counts of the new categories it now emits. Do not regenerate handbook/generated/ (the lead does).`))
+// the tools job changes tools/check.py, which every other job runs on its own edits: it runs after them
+const toolsJob = args.tools ? leadJob('tools', args.tools.file, 'tools/check.py, tools/symbols2tex.py, tools/symbol_registry.py and their test files',
+  `These requests add enforcement that the duties named in their reasons require (e.g. a generated-table staleness check, a notation lint, a first_use check, generator layout). Implement them as one coherent change, not as literal text substitution if the anchors moved. Each new check has a self-test under the tool's --selftest; run python -B tools/check.py --selftest, python -B tools/symbols2tex.py --selftest (if it exists) and python -B tools/symbol_registry.py --selftest (if it exists) and make them pass. New finding categories that the requests define as non-hard stay non-hard (hard only under --strict). Then run python -B tools/check.py --tree handbook, and report the counts of the new categories it now emits. Do not regenerate handbook/generated/ (the lead does).`) : null
 if (args.sty) leadJobs.push(leadJob('sty', args.sty.file, 'handbook/handbook.sty',
   `Before and after the edit, compile a scratch document that inputs each restoration scope using the changed macros (the requests name them), under tmp/sty-check/ with latexmk -r C:/Dev/the-methods-of-reason/tools/texlive.latexmkrc -pdf, from a copy of handbook/ preamble; report whether every scope compiles and how the output changed. If a change breaks a scope, fix it within handbook.sty or leave that request skipped with the reason.`))
 if (args.frontmatter) leadJobs.push(leadJob('frontmatter', args.frontmatter.file, 'handbook/frontmatter.tex', 'Keep the reader text free of workflow language.'))
@@ -63,8 +64,9 @@ Iterate the dry run until it reports 0 errors and 0 decisions-needed. Do NOT pas
   { model: 'opus', effort: 'high', label: `adopt:${args.wave}`, phase: 'Adopt' }) : null
 
 const jobs = [...hostJobs, ...captureJobs, ...leadJobs, ...(adoptJob ? [adoptJob] : [])]
-log(`${args.wave} integrate: ${hostJobs.length} hosts, ${captureJobs.length} captures, ${leadJobs.length} lead jobs, adopt ${adoptJob ? 'yes' : 'no'}`)
+log(`${args.wave} integrate: ${hostJobs.length} hosts, ${captureJobs.length} captures, ${leadJobs.length} lead jobs, adopt ${adoptJob ? 'yes' : 'no'}, tools ${toolsJob ? 'after' : 'no'}`)
 const results = await parallel(jobs)
+const toolsResult = toolsJob ? await toolsJob() : null
 const nH = hostJobs.length, nC = captureJobs.length, nL = leadJobs.length
 const sum = rs => rs.filter(Boolean).reduce((a, r) => ({ applied: a.applied + (r.applied || 0), skipped: a.skipped + (r.skipped || 0) }), { applied: 0, skipped: 0 })
 const missing = results.map((r, i) => r ? null : i).filter(i => i !== null)
@@ -72,4 +74,5 @@ if (missing.length) log(`MISSING RESULTS for job indexes ${missing.join(', ')} (
 return { hosts: sum(results.slice(0, nH)), captures: sum(results.slice(nH, nH + nC)),
   lead: results.slice(nH + nC, nH + nC + nL).map(r => typeof r === 'string' ? r.slice(-2500) : r),
   adopt: adoptJob ? (typeof results[jobs.length - 1] === 'string' ? results[jobs.length - 1].slice(-2500) : results[jobs.length - 1]) : null,
-  missing_jobs: missing }
+  tools: typeof toolsResult === 'string' ? toolsResult.slice(-2500) : toolsResult,
+  missing_jobs: missing.concat(toolsJob && !toolsResult ? ['tools'] : []) }
