@@ -92,3 +92,10 @@ Open each URL in your browser, save the full PDF into the folder shown, then tel
 | ACQ-2026-10-0533 | Tarski, Grundzuege des Systemenkalkuels. Erster Teil, 1935 | https://www.impan.pl/en/publishing-house/journals-and-series/fundamenta-mathematicae/all/25/0/93255 | source/references/acq-r1-ACQ-2026-10-0533/ |
 | ACQ-2026-10-0549 | Ulam, Stanislaw, Zur Masstheorie in der allgemeinen Mengenlehre (1930) | https://impan.pl/en/publishing-house/journals-and-series/fundamenta-mathematicae/all/16/0/92858/zur-masstheorie-in-der-allgemeinen-mengenlehre | source/references/acq-r1-ACQ-2026-10-0549/ |
 | ACQ-2026-10-0562 | Veblen, Oswald, 'Continuous Increasing Functions of Finite and Transfinite Ordinals', Transactions of the Amer | https://www.ams.org/journals/tran/1908-009-03/S0002-9947-1908-1500814-9/S0002-9947-1908-1500814-9.pdf | source/references/acq-r1-ACQ-2026-10-0562/ |
+
+## Added 2026-10-05 (acquisition list r3, approved; hosts block automated download)
+
+| ACQ | Work | URL | Save into |
+|---|---|---|---|
+| ACQ-2026-10-0623 | A. Stoughton, 'Interdefinability of parallel operations in PCF', Theoretical Computer Science 79(2) (1991), pp. 357-358, DOI 10.1016/0304-3975(91)90337-2 | https://www.sciencedirect.com/science/article/pii/0304397591903372 | source/references/acq-r3-ACQ-2026-10-0623/ |
+| ACQ-2026-10-0632 | P. Diaconis and D. Freedman, 'Finite Exchangeable Sequences', Annals of Probability 8(4) (1980), pp. 745-764, DOI 10.1214/aop/1176994663 | https://projecteuclid.org/journals/annals-of-probability/volume-8/issue-4/Finite-Exchangeable-Sequences/10.1214/aop/1176994663.full | source/references/acq-r3-ACQ-2026-10-0632/ |
