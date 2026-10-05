@@ -1,0 +1,19 @@
+# W2-b corrections to restoration capture SRC-04713-04920
+
+This capture was corrected twice during the W2-b wave-end integration (2026-10-05), under the correction policy of spec/EDITION-2026-CONTRACT.md ("Reader-facing content and corrections") and handbook/CONVENTIONS.md (2026-09-06). The first set of edits is also described in spec/research/edition-2026-w02b-restoration-corrections.md; the second came from check-delta fix round 1 (work/waves/w02b/fix1/applied-10.json).
+
+## SRC-04713-04920
+
+thm:fol-completeness assumed the Axiom of Choice for every signature, although the countable case needs no choice principle. The statement now assumes AC only when the set of function and relation symbols of the signature is not countable in the sense of sec:set-prerequisites-05; for countable signatures, finite ones included, no choice principle is assumed. Under AC the statement is unchanged, so existing uses remain valid. The countable case is proved choice-free by cor:fol-completeness-countable in the same section.
+
+The proof of thm:fol-completeness did not cover the newly choice-free countable case. It now begins by sending that case to cor:fol-completeness-countable. It also notes that the corollary's proof reruns only the contrapositive argument, with explicit inputs, and does not appeal to the theorem. In the remaining case the AC-based argument applies as before. The dependency is not circular, because the corollary's proof cites only lem:henkin-lindenbaum, lem:transfinite-lindenbaum, cor:syntax-counting, cor:cardinal-assignment, thm:infinite-cardinal-finite-coding, lem:new-constant-elimination, lem:witness-extension, lem:equality-congruence, lem:reduct-invariance and the truth lemma.
+
+The proof of cor:fol-completeness-countable said it ran "the proof of thm:fol-completeness unchanged". That proof now opens by appealing to the corollary, so the corollary now names "the contrapositive argument of the proof of thm:fol-completeness". This keeps the dependency one-directional and matches the corollary's existing closing sentence, which already refers to the contrapositive argument.
+
+thm:fol-lk-completeness assumed AC for every signature, although its only appeal to completeness concerns a finite set of formulas. The statement now reads "Let L be any signature; no choice principle is assumed." The proof correction below justifies this.
+
+Step 2 of the proof of thm:fol-lk-completeness invoked the AC-dependent thm:fol-completeness. It now restricts to the finite signature L_S of the symbols that occur in the finite set S. Unsatisfiability of S transfers from L-structures to L_S-structures by an expansion argument: fix one element of the nonempty domain, interpret the remaining symbols as constant functions and empty relations, and apply lem:reduct-invariance (expansion is defined in restoration/inherited-03429-03518.tex). The step then applies the choice-free cor:fol-completeness-countable to L_S. It lifts the resulting derivation back to L, because the ND_FOL rules of sec:fol-deduction-01 and the substitution order of sec:fol-syntax-semantics-04 do not depend on the signature.
+
+The proof of thm:fol-lk-completeness did not say why it needs no choice principle. A closing sentence now states it: the only completeness theorem invoked is cor:fol-completeness-countable for the finite signature L_S; the expansion fixes one element of a nonempty set; and the remaining steps transform finitely many given derivations and formulas.
+
+Fix round 1 (notation). In the satisfiability argument (reader lines 184-189) the structure domain was written with absolute-value bars, |M_0|, which the registry reserves for cardinality. It now reads \dom\Meta_0, the registered structure-domain form (sec:p01-symbol-registry; the bars-around-a-structure bridge is stated there), and the power |M_0|^n becomes (\dom\Meta_0)^n. The mathematics is unchanged.
