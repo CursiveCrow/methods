@@ -40,6 +40,15 @@ mirroring the source-tree behaviour; the rest print as findings):
   env-grammar            unparseable environment/macro argument lists
   symbols-csv            registry/symbols.csv structural problems
   missing-infra          registry/symbols.csv or bib/handbook.bib absent
+  symbols-generated-stale  a generated Part 1 table differs from its
+                         rendering of registry/symbols.csv (always hard)
+  notation-role          bars around a structure or around bars where no
+                         in-scope bar row records a domain role (always hard)
+  notation-unregistered  typeface letter in routed math with no registry row
+  notation-scope         typeface letter registered only outside the use's
+                         reader scope
+  first-use-late         a row's symbol is used inside its scope before its
+                         first_use declaration
 
 Handbook metrics (always printed): stub count per part, status-form
 distribution, entry-card field coverage, bib entry/stub counts.
@@ -270,9 +279,12 @@ HB_CATEGORY_ORDER = (
     "glyph-collision",
     "entry-fields", "zero-cite-chapter", "bib-key", "fused-number",
     "stub-marker", "env-grammar", "symbols-csv", "missing-infra",
+    "symbols-generated-stale", "notation-role", "notation-unregistered",
+    "notation-scope", "first-use-late",
 )
 HB_ALWAYS_HARD = {
-    "duplicate-label", "dangling-ref", "pending-inherited-ref", "bib-key"
+    "duplicate-label", "dangling-ref", "pending-inherited-ref", "bib-key",
+    "symbols-generated-stale", "notation-role",
 }
 
 
@@ -1574,6 +1586,31 @@ def _hb_check_symbols(path: Path, data: _HBData) -> None:
     for error in symbol_registry.collision_check(rows):
         data.flag("glyph-collision" if "glyph-role collision" in error
                   else "symbols-csv", error)
+    # The generated tables and the routed text exist only for the registry of
+    # a handbook tree (handbook/registry/symbols.csv), the same base that
+    # read_rows infers; a bare CSV has neither.
+    in_tree = path.parent.name == "registry"
+    if in_tree and not errors:
+        try:
+            from . import symbols2tex
+        except ImportError:
+            import symbols2tex
+        out = path.parent.parent / "generated" / "symbols-tables.tex"
+        for stale in symbols2tex.stale_outputs(rows, out):
+            data.flag("symbols-generated-stale",
+                      f"{stale} differs from its rendering of {path}; run tools/symbols2tex.py")
+    if in_tree:
+        lint = symbol_registry.notation_lint(rows)
+        for kind, message in lint:
+            data.flag(kind, message)
+        print(f"[metric] notation lint: {len(lint)} finding(s) "
+              f"({sum(k == 'notation-role' for k, _ in lint)} role, "
+              f"{sum(k == 'notation-unregistered' for k, _ in lint)} unregistered, "
+              f"{sum(k == 'notation-scope' for k, _ in lint)} out of scope)")
+        late = symbol_registry.first_use_lint(rows)
+        for kind, message in late:
+            data.flag(kind, message)
+        print(f"[metric] first-use check: {len(late)} first_use anchor(s) after an earlier use")
     by_glyph = {re.sub(r"\s+", "", row["glyph"]) for row in rows}
     print(f"[metric] symbol registry: {len(rows)} rows, "
           f"{len(by_glyph)} distinct glyphs")
@@ -1795,6 +1832,13 @@ Similarly for the remaining cases.
     assert "similarly for the remaining cases" in annex_markers
     assert "todo" not in annex_markers
     assert "tbd" not in annex_markers
+
+    try:
+        from . import symbol_registry
+    except ImportError:
+        import symbol_registry
+    symbol_registry._notation_lint_selftest()
+    symbol_registry._first_use_selftest()
 
 
 def main() -> int:

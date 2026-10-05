@@ -152,4 +152,22 @@ class SymbolRegistryTests(unittest.TestCase):
         self.assertEqual(data.findings['glyph-collision'],registry.collision_check(rows))
 
 
+    def test_checker_reads_tree_registry_against_generated_tables_and_routed_text(self):
+        rows,errors=self.read(self.row(glyph=r'\(\mathfrak Q\)'))
+        self.assertEqual(errors,[])
+        data=check._HBData()
+        with contextlib.redirect_stdout(io.StringIO()):check._hb_check_symbols(self.path,data)
+        self.assertEqual(len(data.findings['symbols-generated-stale']),4)
+        out=self.base/'generated/symbols-tables.tex';out.parent.mkdir()
+        for path,text in symbols2tex.expected_outputs(rows,out).items():
+            path.write_text(text,encoding='utf-8',newline='\n')
+        with (self.base/'parts/p08/source.tex').open('a',encoding='utf-8') as stream:
+            stream.write('\\(\\mathfrak Z\\)\n')
+        data=check._HBData()
+        with contextlib.redirect_stdout(io.StringIO()):check._hb_check_symbols(self.path,data)
+        self.assertNotIn('symbols-generated-stale',data.findings)
+        self.assertEqual(len(data.findings['notation-unregistered']),1)
+        self.assertIn('mathfrak{Z}',data.findings['notation-unregistered'][0])
+
+
 if __name__=='__main__':unittest.main()

@@ -1,0 +1,3 @@
+## SRC-04576-04712
+
+The definition of the term structure wrote its domain with vertical bars, \(\abs{\Meta_\Delta}\), while the structure definition this capture depends on (\cref{sec:fol-semantics-01}, restoration/inherited-03429-03518.tex) introduces the domain of a structure as \(\dom\Meta\), and the symbol registry (parts/p01/symbol-registry.tex) reserves vertical bars for set cardinality and \(\dom\mathcal M\) for structure domains. The displayed equation now reads \(\dom\Meta_\Delta=\Term(\Lang^H)/{\sim_\Delta}\). This is a notation alignment only: the set defined, the quotient, and every claim about it are unchanged; the operator \(\dom\) is the registered macro defined in handbook.sty.

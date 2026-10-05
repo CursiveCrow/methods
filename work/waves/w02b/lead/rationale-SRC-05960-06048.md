@@ -1,0 +1,3 @@
+## SRC-05960-06048
+
+Exercise `ex:fol-cardinality-normalforms-02` (line 14) wrote the domain of the structure \(\Meta\) as \(\abs{\Meta}\). That gave the vertical bars two jobs: structure domain and cardinality. It also made the cardinality of a domain come out as nested bars. The corrected text reads \(A\subseteq\dom\Meta\) and uses the registered domain operator `\dom` from `handbook/handbook.sty` line 209 ("structure domains: \dom\mathcal{M}"). This leaves the bars with the single meaning, cardinality, that the symbol registry assigns them. The change is notation only: the set \(A\), its countability hypothesis and the exercise's mathematics are unchanged.

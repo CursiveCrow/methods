@@ -1,0 +1,9 @@
+## SRC-05043-05131
+
+The statement of downward Löwenheim--Skolem (`thm:downward-ls`) wrote structure domains with vertical bars: `A ⊆ |M|`, `A ⊆ |N|`, and the cardinality bound as the nested-bars form `||N||`. Bars therefore carried two roles, domain and cardinality. The corrected statement writes `A ⊆ dom M`, `A ⊆ dom N` and `|dom N| ≤ max(|A|, |L|, ℵ₀)`. The mathematics is unchanged: by the registry note in `handbook/parts/p01/symbol-registry.tex`, bars around a structure in the inherited text denote its domain, so `||N||` is exactly `|dom N|`. The `\dom` operator is the registered structure-domain notation (`handbook/handbook.sty`), so bars now mean cardinality only.
+
+The proof of `thm:downward-ls` chose `m_0 ∈ |M|` and witness functions `F_φ : |M|^k → |M|`. The corrected proof writes `m_0 ∈ dom M` and `F_φ : (dom M)^k → dom M`, with the same justification as above. This is a notation change only, and the bars that remain in the proof (`|A|`, `|L|`, `|A_n|`, `|N|`) are cardinalities of sets.
+
+The proof of upward Löwenheim--Skolem (`thm:upward-ls`) ended its counting step with `||N*|| = κ`. The corrected text writes `|dom N*| = κ`, which is the same cardinal in the registered notation.
+
+After the closing remark comparing the two theorems, the section left its set-theoretic steps and the cited results of `sec:set-prerequisites-06` (well-ordering, cardinal assignment, finite coding, syntax counting) without a pointer to complete proofs. The added sentence says that every set-theoretic step of the two proofs, and the cited results of `sec:set-prerequisites-06`, are proved in `sec:p02-w02b-p02-029-ls-prerequisites`. That section is routed through `handbook/parts/p02.tex` (`parts/p02/first-order-completeness-compactness-and-cardinality-w02b-p02-029`). Its introduction states this exact scope: it records where each cited result is proved in full and proves every further set-theoretic step of `thm:downward-ls` and `thm:upward-ls`.

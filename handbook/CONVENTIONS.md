@@ -230,8 +230,14 @@ type and standing must be declared before use and every genuine typed role must
 be recorded honestly rather than renamed to fit a house notation. Seed
 contents: the 34 v1.1
 registered-notation rows, RE-HOMED under the Phase-1 glyph rulings
-(`|·|` cardinality only; domains `\dom`; `≡` elementary equivalence only; `⇔`
-formula equivalence; `:≡` definitional; single forcing macro `\forces`), plus
+(the house defaults for newly introduced editorial notation: `|·|` cardinality;
+domains `\dom`; `≡` elementary equivalence; `⇔` formula equivalence; `:≡`
+definitional; forcing macro `\forces`. An identified source presentation keeps
+its own notation and may reuse one of these glyphs for another role, for
+example bars around a structure for its domain, provided the role and its
+scope are defined before use and recorded in the registry, and the typed
+distinction and any valid bridge are stated where the meanings meet:
+spec/decisions/edition-2026-coverage-policy-resolution.md section 7), plus
 every symbol the audits listed as unregistered (Parts IV–IX list and the Part-X
 list: ⊩, □, ◇, X U F G, K_i E_G C_G, ⊗ ⊸ 1 !, Routley–Meyer W N R *, matrix
 V D f_c, per-system turnstiles, ⌜·⌝, numeral bar, ≤_m ≤_T, φ_e, ∅⁽ⁿ⁾, V_α, rk,

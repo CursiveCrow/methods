@@ -7,6 +7,7 @@ Unknown text is never interpreted as global or as a disjoint namespace.
 """
 from __future__ import annotations
 
+import bisect
 import csv
 from dataclasses import dataclass, field
 import json
@@ -127,6 +128,9 @@ class ReaderIndex:
         self.active: list[str] = []
         self.current_part = None
         self.current_zone = ''
+        # One record per routed file visit: stripped text plus (offset,
+        # position, chapter) marks, used by notation_lint to place a use.
+        self.visits: list[dict] = []
         if (self.base/'main.tex').is_file():
             self._visit('main.tex', None)
             self._close_headings(0)
@@ -165,10 +169,12 @@ class ReaderIndex:
             self.current_part,self.current_zone=part,zone
         file_start=self.position
         self.active.append(rel)
-        consumed=0
+        consumed=0;marks=[]
         for match in self.COMMAND.finditer(text):
             if match.start()<consumed:
                 continue
+            # State in effect for the text before this command.
+            marks.append((match.start(),self.position,self.counts.get(part) if zone=='parts' else None))
             command=match[1];cursor=match.end()
             if cursor<len(text) and text[cursor]=='*':cursor+=1
             if cursor<len(text) and text[cursor]=='[':
@@ -217,6 +223,8 @@ class ReaderIndex:
                     self._add(value,rel,line,part,chapter,'label',self.position)
             elif command in {'calculussheet','hbrule'}:
                 self._add(value,rel,line,part,chapter,command,self.position)
+        marks.append((len(text),self.position,self.counts.get(part) if zone=='parts' else None))
+        self.visits.append({'path':rel,'text':text,'marks':marks,'part':part,'zone':zone})
         self.position+=1
         self.files.setdefault(rel,[]).append(Region(file_start,self.position,part,self.counts.get(part) if zone=='parts' else None,rel))
         self.active.pop()
@@ -437,3 +445,327 @@ def scope_tex(row):
     # allowed to break the literal wrapper; the explicit binding owns the name.
     escapes={'\\':r'\textbackslash{}','{':r'\{','}':r'\}','_':r'\_','%':r'\%','&':r'\&','#':r'\#','$':r'\$','^':r'\textasciicircum{}','~':r'\textasciitilde{}'}
     return ''.join(escapes.get(c,c) for c in value)
+
+
+# Body notation lint.  The reader index records, for every routed file, the
+# reader position and chapter in effect between consecutive commands, so a
+# notation use inside a file is located in the same order as the declarations
+# that bound registry scopes.  Coverage is stated by the two atom classes the
+# lint checks: typeface letters (\mathcal, \mathfrak, \mathbb, \mathscr, with
+# \Meta read as \mathcal M) against the registry's macro column, and bar
+# expressions against the roles of the in-scope bar rows.
+FONT_ATOM = re.compile(r'\\(mathcal|mathfrak|mathbb|mathscr)\s*(?:\{\s*([A-Za-z])\s*\}|([A-Za-z]))')
+META_ATOM = re.compile(r'\\Meta(?![A-Za-z])')
+MATH_SPAN = re.compile(
+    r'\\\((?P<a>.*?)\\\)|\\\[(?P<b>.*?)\\\]|\$\$(?P<c>.*?)\$\$|(?<![\\$])\$(?P<d>[^$]+?)\$'
+    r'|\\begin\{(?P<env>equation|align|alignat|gather|multline|flalign|eqnarray|displaymath|math)(?P<star>\*?)\}'
+    r'(?P<e>.*?)\\end\{(?P=env)(?P=star)\}', re.S)
+STRUCTURE_ROLE = re.compile(r'\bstructures?\b', re.I)
+# A bar row records a domain role when its role names the value of the bars
+# as a domain, universe or carrier (for example 'universe of a parameter
+# system'); a role that merely mentions a domain elsewhere does not.
+DOMAIN_ROLE = re.compile(r'^\s*(?:the\s+)?(?:domains?|universes?|carriers?)\b', re.I)
+OPEN_BAR = re.compile(r'\\abs\s*\{|\\left\s*(?:\\lvert(?![A-Za-z])|\\vert(?![A-Za-z])|\|)|\\lvert(?![A-Za-z])')
+RAW_BAR_ATOM = re.compile(
+    r'(?<![\\|])\|\s*((?:\\Meta(?![A-Za-z])|\\(?:mathcal|mathfrak|mathbb|mathscr)\s*(?:\{\s*[A-Za-z]\s*\}|[A-Za-z]))'
+    r'(?:\s*[_^]\s*(?:\{[^{}]*\}|\\?[A-Za-z0-9]))*)\s*\|(?!\|)')
+
+
+def notation_atoms(text):
+    """(offset, atom) for every typeface-letter atom in text."""
+    for match in FONT_ATOM.finditer(text):
+        yield match.start(), '\\%s{%s}' % (match[1], match[2] or match[3])
+    for match in META_ATOM.finditer(text):
+        yield match.start(), '\\mathcal{M}'
+
+
+def math_spans(text):
+    for match in MATH_SPAN.finditer(text):
+        for group in 'abcde':
+            if match.group(group) is not None:
+                yield match.start(group), match.group(group)
+                break
+
+
+def _bar_operands(math):
+    """(offset, operand, form) for bar expressions whose extent is certain."""
+    for match in OPEN_BAR.finditer(math):
+        if match[0].startswith('\\abs'):
+            args, _ = _grammar().scan_braced_args(math, match.end() - 1, 1)
+            if args:
+                yield match.start(), args[0], '\\abs'
+            continue
+        left = match[0].startswith('\\left')
+        closer = re.compile(r'\\right\s*(?:\\rvert(?![A-Za-z])|\\vert(?![A-Za-z])|\|)' if left else r'\\rvert(?![A-Za-z])')
+        opener = re.compile(r'\\left\s*(?:\\lvert(?![A-Za-z])|\\vert(?![A-Za-z])|\|)' if left else r'\\lvert(?![A-Za-z])')
+        depth, cursor = 1, match.end()
+        while depth:
+            o, c = opener.search(math, cursor), closer.search(math, cursor)
+            if c is None:
+                break
+            if o is not None and o.start() < c.start():
+                depth, cursor = depth + 1, o.end()
+            else:
+                depth, cursor = depth - 1, c.end()
+                if not depth:
+                    yield match.start(), math[match.end():c.start()], '\\left|' if left else '\\lvert'
+    for match in RAW_BAR_ATOM.finditer(math):
+        yield match.start(), match[1], '|'
+
+
+def _locate(marks, offset):
+    keys = [m[0] for m in marks]
+    return marks[min(bisect.bisect_left(keys, offset), len(marks) - 1)]
+
+
+def _in_scope(row, visit, mark):
+    scope = row.get('_scope')
+    if scope is None:
+        return False
+    _, position, chapter = mark
+    if scope.interval:
+        if scope.interval == GLOBAL:
+            return True
+        part = visit['part']
+        if part is None:
+            return False
+        if chapter is None:
+            # Annex and apparatus files carry no body chapter number; a part
+            # interval is matched at part level.
+            return scope.interval[0] // 1000 <= part <= scope.interval[1] // 1000
+        return scope.interval[0] <= part * 1000 + chapter <= scope.interval[1]
+    return any(r.start <= position < r.end for r in scope.regions)
+
+
+def notation_lint(rows):
+    """Check routed body and annex notation against the registry.
+
+    Returns (kind, message) pairs.  Kinds: notation-unregistered (a typeface
+    letter no row registers), notation-scope (registered only in scopes that
+    do not contain the use), notation-role (bars around a structure or around
+    bars where no in-scope bar row records a domain role).
+    """
+    if not rows:
+        return []
+    index = rows[0]['_resolver'].index
+    if index is None:
+        return [('notation-scope', 'no reader index; the notation lint did not run')]
+    by_atom, bar_rows = {}, []
+    for row in rows:
+        # The macro column names the symbol; a row whose macro is a handbook
+        # command (such as the natural-number macro) is indexed by the
+        # typeface letters of its glyph.
+        atoms = {a for _, a in notation_atoms(row['macro'])} or {a for _, a in notation_atoms(row['glyph'])}
+        for atom in atoms:
+            by_atom.setdefault(atom, []).append(row)
+        if '\\abs' in row['macro'] or '\\lvert' in row['glyph'] or re.search(r'(?<!\\)\|', row['glyph']):
+            bar_rows.append(row)
+    found = {}
+
+    def note(kind, visit, offset, key, message):
+        line = visit['text'].count('\n', 0, offset) + 1
+        slot = found.setdefault((kind, visit['path'], key), [line, 0, message])
+        slot[1] += 1
+
+    for visit in index.visits:
+        text, marks = visit['text'], visit['marks']
+        for start, math in math_spans(text):
+            for offset, atom in notation_atoms(math):
+                mark = _locate(marks, start + offset)
+                candidates = by_atom.get(atom, [])
+                if not candidates:
+                    note('notation-unregistered', visit, start + offset, atom,
+                         f'{atom} has no registry row')
+                elif not any(_in_scope(r, visit, mark) for r in candidates):
+                    note('notation-scope', visit, start + offset, atom,
+                         f'{atom} is registered only in scopes '
+                         + ', '.join(sorted({r["scope"] for r in candidates})[:4])
+                         + ' (lines ' + ','.join(str(r['_line']) for r in candidates[:4]) + ')')
+            for offset, operand, form in _bar_operands(math):
+                mark = _locate(marks, start + offset)
+                in_scope = [r for r in bar_rows if _in_scope(r, visit, mark)]
+                if any(DOMAIN_ROLE.search(r['role']) for r in in_scope):
+                    continue
+                roles = '; '.join(sorted({f'{r["role"]} (line {r["_line"]})' for r in in_scope})[:3]) or 'none'
+                nested = OPEN_BAR.search(operand) or RAW_BAR_ATOM.search(operand)
+                core = re.sub(r'(?:\s*[_^]\s*(?:\{[^{}]*\}|\\?[A-Za-z0-9]))+$', '', operand.strip().strip('{}').strip())
+                atoms = list(notation_atoms(core))
+                structure = (len(atoms) == 1 and re.fullmatch(r'\\Meta|\\(?:mathcal|mathfrak|mathbb|mathscr)\s*(?:\{\s*[A-Za-z]\s*\}|[A-Za-z])', core)
+                             and any(STRUCTURE_ROLE.search(r['role']) and _in_scope(r, visit, mark) for r in by_atom.get(atoms[0][1], [])))
+                if nested:
+                    note('notation-role', visit, start + offset, 'nested:' + operand.strip(),
+                         f'nested bars {form}{{{operand.strip()}}}; in-scope bar roles: {roles}')
+                elif structure:
+                    note('notation-role', visit, start + offset, 'structure:' + core,
+                         f'bars {form} enclose the structure {core}; in-scope bar roles: {roles}; write \\dom{core} or register a typed scoped domain role')
+    return [(kind, f'{path}:{line}: {message}' + (f' ({count} uses)' if count > 1 else ''))
+            for (kind, path, _), (line, count, message) in sorted(found.items(), key=lambda item: (item[0][1], item[1][0]))]
+
+
+def _notation_lint_selftest():
+    class _Res:
+        index = None
+    visit = {'path': 'parts/p02/x.tex', 'part': 2, 'zone': 'parts',
+             'text': r'a \(\abs{\Meta}\) and \(\abs{\abs{\mathcal N}}\) and \(\abs{\dom\mathcal M}\) and \(\mathfrak Q\)',
+             'marks': [(10 ** 6, 5, 1)]}
+
+    class _Index:
+        visits = [visit]
+    res = _Res(); res.index = _Index()
+    glob = Scope('global', interval=GLOBAL)
+    rows = [
+        {'glyph': r'\(|X|\)', 'macro': r'\abs', 'role': 'cardinality', 'scope': 'global', '_scope': glob, '_line': 41, '_resolver': res},
+        {'glyph': r'\(\mathcal M,\mathcal N\)', 'macro': r'\mathcal M,\mathcal N', 'role': 'structures', 'scope': 'global', '_scope': glob, '_line': 22, '_resolver': res},
+    ]
+    out = notation_lint(rows)
+    kinds = sorted(k for k, _ in out)
+    assert kinds == ['notation-role'] * 3 + ['notation-unregistered'], out
+    rows.append({'glyph': r'\(|A|\)', 'macro': r'|A|', 'role': 'universe of a structure', 'scope': 'global', '_scope': glob, '_line': 99, '_resolver': res})
+    assert sorted(k for k, _ in notation_lint(rows)) == ['notation-unregistered']
+
+
+# First-use check.  A row's first_use anchor is genuine when no routed use of
+# the row's symbol inside the row's scope comes before the anchor's
+# declaration in reader order.  A use is attributed to a row only when that
+# row is the single in-scope row for the atom, so uses that a more local row
+# could own are not read as uses of the broader one.  Atoms: the typeface
+# letters of the row (as in notation_lint) and the handbook-defined commands
+# named in its macro column.
+HANDBOOK_COMMAND = re.compile(
+    r'\\(?:newcommand|renewcommand|providecommand|DeclareMathOperator|NewDocumentCommand|DeclareDocumentCommand)\*?\s*\{?\s*\\([A-Za-z]+)')
+CONTROL_WORD = re.compile(r'\\([A-Za-z]+)')
+
+
+def handbook_commands(base):
+    """Handbook-defined command names, each with the typeface atom its body
+    consists of (for example the natural-number macro), or None."""
+    names = {}
+    for path in sorted(Path(base).glob('*.sty')):
+        text = path.read_text(encoding='utf-8-sig')
+        for match in HANDBOOK_COMMAND.finditer(text):
+            args, _ = _grammar().scan_braced_args(text, match.end() + (1 if text[match.end():match.end() + 1] == '}' else 0), 1)
+            # A restoration-only spelling (an error outside inherited scopes)
+            # spells the letter that follows its guard.
+            body = re.sub(r'(?<!\\)%[^\n]*', '', args[0] if args else '')
+            body = re.sub(r'\\ifhb@inheritedrestoration.*?\\fi', '', body, flags=re.S).strip()
+            atoms = [a for _, a in notation_atoms(body)]
+            letter = atoms[0] if len(atoms) == 1 and FONT_ATOM.fullmatch(body) else None
+            names.setdefault(match[1], letter)
+    return names
+
+
+def _row_atoms(row, commands):
+    """The row's own symbol: typeface letters of its macro column, else the
+    handbook commands it names (with the letter such a command spells)."""
+    # Only bare letters name the row's symbol: a decorated letter such as a
+    # letter with a superscript, or a quotient of letters, is another symbol.
+    items = [item.strip() for item in row['macro'].split(',')]
+    atoms = {a for item in items if FONT_ATOM.fullmatch(item) for _, a in notation_atoms(item)}
+    if atoms or any(notation_atoms(row['macro'])):
+        return atoms
+    for name in CONTROL_WORD.findall(row['macro']):
+        if name in commands and name != 'Meta':
+            atoms.add('\\' + name)
+            if commands[name]:
+                atoms.add(commands[name])
+    return atoms
+
+
+def _span_atoms(math, commands):
+    yield from notation_atoms(math)
+    for match in CONTROL_WORD.finditer(math):
+        if match[1] in commands and match[1] != 'Meta':
+            yield match.start(), '\\' + match[1]
+            if commands[match[1]]:
+                # A command whose body is one typeface letter spells that letter.
+                yield match.start(), commands[match[1]]
+
+
+def _innermost_label(index, position):
+    """Label of the innermost labelled heading or environment containing a
+    reader position, or None."""
+    best = None
+    for label, sites in index.labels.items():
+        if len(sites) == 1 and sites[0].kind != 'label' and sites[0].start <= position < sites[0].end:
+            if best is None or sites[0].start > best[1].start:
+                best = (label, sites[0])
+    return best[0] if best else None
+
+
+def first_use_lint(rows, commands=None):
+    """(kind, message) pairs: first-use-late when a row's symbol is used in its
+    scope before its first_use declaration; the message names the earliest use
+    and the innermost labelled declaration containing it."""
+    if not rows:
+        return []
+    index = rows[0]['_resolver'].index
+    if index is None:
+        return [('first-use-late', 'no reader index; the first-use check did not run')]
+    commands = handbook_commands(index.base) if commands is None else commands
+    by_atom = {}
+    for row in rows:
+        for atom in _row_atoms(row, commands):
+            by_atom.setdefault(atom, []).append(row)
+    earliest = {}
+    for visit in index.visits:
+        text, marks = visit['text'], visit['marks']
+        for start, math in math_spans(text):
+            for offset, atom in _span_atoms(math, commands):
+                candidates = by_atom.get(atom)
+                if not candidates:
+                    continue
+                mark = _locate(marks, start + offset)
+                in_scope = [r for r in candidates if _in_scope(r, visit, mark)]
+                if len(in_scope) != 1:
+                    continue
+                key = in_scope[0]['_line']
+                if key not in earliest or mark[1] < earliest[key][0]:
+                    earliest[key] = (mark[1], visit['path'], text.count('\n', 0, start + offset) + 1, atom, in_scope[0])
+    out = []
+    for key in sorted(earliest):
+        position, path, line, atom, row = earliest[key]
+        if not LABEL_RE.fullmatch(row['first_use']):
+            continue
+        try:
+            anchor = index.unique(row['first_use'])
+        except RegistryError:
+            continue  # read_rows reports an unresolved first_use
+        if position >= anchor.start:
+            continue
+        target = _innermost_label(index, position)
+        try:
+            ok = target is not None and row['_resolver'].contains(row['_scope'], target)
+        except RegistryError:
+            ok = False
+        hint = f'; earliest containing declaration {target}' if ok else '; no labelled declaration in scope contains it'
+        out.append(('first-use-late', f'registry line {key}: {atom} is used at {path}:{line} '
+                    f'before first_use {row["first_use"]} ({anchor.path}:{anchor.line}){hint}'))
+    return out
+
+
+def _first_use_selftest():
+    early = Declaration('sec:early', 'parts/p01/x.tex', 1, 1, 1, 5, 9, 'section')
+    late = Declaration('sec:late', 'parts/p01/x.tex', 9, 1, 1, 20, 30, 'section')
+
+    class _Index:
+        base = Path('first-use-selftest-has-no-files')
+        labels = {'sec:early': [early], 'sec:late': [late]}
+        visits = [{'path': 'parts/p01/x.tex', 'part': 1, 'zone': 'parts',
+                   'text': r'a \(\dom\mathcal M\) b', 'marks': [(10 ** 6, 6, 1)]}]
+
+        def unique(self, label):
+            return ReaderIndex.unique(self, label)
+    res = Resolver(index=_Index())
+    glob = Scope('global', interval=GLOBAL)
+    dom = {'glyph': r'\(\operatorname{dom}X\)', 'macro': r'\dom', 'role': 'domain operator', 'scope': 'global',
+           'first_use': 'sec:late', '_scope': glob, '_line': 23, '_resolver': res}
+    out = first_use_lint([dom], commands={'dom': None})
+    assert [k for k, _ in out] == ['first-use-late'] and 'sec:early' in out[0][1], out
+    assert first_use_lint([dict(dom, first_use='sec:early')], commands={'dom': None}) == []
+    # Two in-scope rows for one letter: the use is attributed to neither.
+    structures = {'glyph': r'\(\mathcal M\)', 'macro': r'\mathcal M', 'role': 'structures', 'scope': 'global',
+                  'first_use': 'sec:late', '_scope': glob, '_line': 22, '_resolver': res}
+    other = dict(structures, role='another role', _line=99)
+    assert first_use_lint([structures, other], commands={}) == []
+    assert [k for k, _ in first_use_lint([structures], commands={})] == ['first-use-late']
+

@@ -1,0 +1,3 @@
+## SRC-14871-14931
+
+In the formal-logical audit step of the sample-implication example, the expanded universal satisfaction clause quantified over the structure's domain written as \(\abs{\mathcal M}\), giving vertical bars a second meaning beside their registered role of cardinality. The corrected text reads \(\forall a\in\dom\mathcal M (P^{\mathcal M}(a)\to Q^{\mathcal M}(a))\), using the registered structure-domain operator \dom defined in handbook/handbook.sty (line 209, "structure domains: \dom\mathcal{M}"). The change is notational only; the quantified set, the instantiation at \(s(x)\), and the conclusion are unchanged.

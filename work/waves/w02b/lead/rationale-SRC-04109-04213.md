@@ -1,0 +1,5 @@
+## SRC-04109-04213
+
+In the \(\forall I\) case of the natural-deduction soundness proof, the arbitrary element was written \(a\in\abs{\Meta}\), using vertical bars for the domain of the structure \(\Meta\). The corrected text reads "arbitrary \(a\in\dom\Meta\)". This is a notation alignment only: the handbook writes structure domains with the registered operator \(\dom\) (handbook/handbook.sty, `\dom`, "structure domains: \dom\mathcal{M}"), reserving vertical bars for cardinality, so that the cardinality of a domain is written with bars around \(\dom\Meta\) rather than nested bars. The mathematics is unchanged.
+
+In the \(\forall\)-right case of the sequent-calculus soundness proof, the witness supplied by the universal satisfaction clause was likewise written \(a\in\abs{\Meta}\). The corrected text reads "supplies an element \(a\in\dom\Meta\)", for the same reason: the registered domain operator \(\dom\) of handbook/handbook.sty replaces the bar notation, which the handbook keeps for cardinality. The mathematics is unchanged.
