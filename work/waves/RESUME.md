@@ -5,7 +5,10 @@ and the W2-b procedure recorded in output/manuscript-status/wave-02b-report.md. 
 Check usage first (mcp__ccd_session_mgmt__get_usage); every workflow halts cleanly on limits and resumes
 from its cache (resumeFromRunId) in the same session.
 
-## 1. Finish the Part 15 confirmation audit (in progress at the 2026-10-05 usage limit)
+## 1. Finish the Part 15 confirmation audit — DONE 2026-10-10
+
+Result: 71 audited (28 recovered from run wf_e89adb4b-109's journal, 43 re-run), 34 failed and returned to partial with writable duties; 69 unit residual records. authored_unreviewed 785 -> 751.
+
 
 - Run `wf_e89adb4b-109`: `Workflow({scriptPath: "work/waves/workflows/tmor-upgrade-audit.js", resumeFromRunId: "wf_e89adb4b-109", args: <work/waves/w02b/args-audit3.json>})`.
 - Save results to work/waves/w02b/results-audit3.json; `python -B work/waves/tooling/audit_downgrades.py w02b-audit3 work/waves/w02b/proposals-audit3.jsonl work/waves/w02b/results-audit3.json`; `ledger_patch.py apply --apply`; append the failed components to unit-residuals.jsonl as writable (as in commit 2aaab256); `ledger_patch.py check`; commit.

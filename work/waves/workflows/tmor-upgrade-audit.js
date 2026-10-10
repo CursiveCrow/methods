@@ -14,6 +14,12 @@ Owed components (each queue unit's required_components in spec/coverage/edition-
 Rules: you assess coverage only (is each component present in complete form at cited lines), not correctness, and you admit nothing. "covered" needs every element of the success_condition present at lines you cite and no failure_condition holding. A proof counts only if its steps are written; "standard", "similarly", a citation in place of an owed proof, or a sketch means partial. A source-specific component needs the held source (spec/coverage/edition-2026/held-sources.json; source/formal-logic-reference.tex is the held FLRV1 Version 1.0) opened at two cited locators. Do not open spec/research/*, *-return.json files, ledger prose or other assessment files.
 Write ${DIR}/CA-${args.wave}-${s.section}-audit.json: {"schema":"coverage-assessment/1","assessment_id":"CA-${args.wave}-${s.section}-audit","section_id":"${s.section}","assessor":{"family":"anthropic","model":"opus","role":"audit","context_id":"${args.wave}-${s.section}-audit"},"inputs":{"tex":[{"path","sha256"}],"sources_opened":[{"path","sha256","pages"}]},"components":[exactly one {"component_id","verdict","evidence":[{"path","line_start","line_end","label"}],"gap"} per owed component],"duties":[],"defect_observations":[...]}.
 Return section_id, all_covered (true only if every owed component is covered), failures (each non-covered key with verdict and the gap in the success condition's own terms) and assessment_id.`
+// at most 12 concurrent agents (edition-2026 contract)
+const LIMIT = Math.min(12, args.maxConcurrent || 12)
+let active = 0; const waiters = []
+const acquire = () => active < LIMIT ? (active++, Promise.resolve()) : new Promise(r => waiters.push(r))
+const release = () => { const n = waiters.shift(); if (n) n(); else active-- }
+const run = async (p, o) => { await acquire(); try { return await agent(p, o) } finally { release() } }
 phase('Audit')
-const res = await parallel(args.sample.map(s => () => agent(prompt(s), { model: 'opus', effort: 'max', schema: SCHEMA, label: `audit:${s.section}`, phase: 'Audit' })))
+const res = await parallel(args.sample.map(s => () => run(prompt(s), { model: 'opus', effort: 'max', schema: SCHEMA, label: `audit:${s.section}`, phase: 'Audit' })))
 return { wave: args.wave, results: res }
