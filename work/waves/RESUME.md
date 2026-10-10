@@ -15,7 +15,7 @@ Result: 71 audited (28 recovered from run wf_e89adb4b-109's journal, 43 re-run),
 
 ## 2. W2-c: Parts 1, 2, 15 continuation
 
-Status 2026-10-10: packetized (w02ca 83 packets, w02cb 82); w02ca snapshots committed, tag `w02ca-base` (1160357); w02ca run 1 (`wf_6b25aa9b-ba9`) halted on the session limit: 36 closed, 47 carry-over (results-r1.json). Run r2 (args-r2.json) launched as `wf_e369201c-abb` (session c1ff47f6). 30 bot-protected acquisitions were downloaded 2026-10-10 (not yet verified or registered in held-sources; do that after the run): see work/waves/w01/DOWNLOADS-STATUS-2026-10-10.md. For w02cb, leave out the 14 unit_accounting packets whose units are already fully covered in unit-residuals.jsonl.
+Status 2026-10-10: packetized (w02ca 83 packets, w02cb 82); w02ca snapshots committed, tag `w02ca-base` (1160357); w02ca run 1 (`wf_6b25aa9b-ba9`) halted on the session limit: 36 closed, 47 carry-over (results-r1.json). Run r2 (`wf_e369201c-abb`) halted on the session limit: 9 closed, 38 carry-over (results-r2.json). Run r3 (args-r3.json) launched as `wf_144f5d83-6f6` (session c1ff47f6). Weekly usage after r2: 54%; each w02ca run uses about 27%. 30 bot-protected acquisitions were downloaded 2026-10-10 (not yet verified or registered in held-sources; do that after the run): see work/waves/w01/DOWNLOADS-STATUS-2026-10-10.md. For w02cb, leave out the 14 unit_accounting packets whose units are already fully covered in unit-residuals.jsonl.
 
 
 1. `python -B tools/waves.py packetize w02c --parts P1,P2,P15 --census work/waves/w01/census.json --apply` (splits into w02ca / w02cb).
