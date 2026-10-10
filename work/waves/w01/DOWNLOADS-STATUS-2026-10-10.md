@@ -2,7 +2,7 @@
 
 Downloaded through the built-in browser (no challenge solved). Files need identity/version/extent verification and held-sources registration after the w02ca run (spec/coverage is guarded while it runs).
 
-Downloaded 30; blocked by a site check 52; other 7.
+Downloaded 33; blocked by a site check 52; other 7.
 
 | ACQ | Work | Status |
 |---|---|---|
@@ -73,7 +73,7 @@ Downloaded 30; blocked by a site check 52; other 7.
 | ACQ-2026-10-0391 | Paulin-Mohring, Christine; Introduction to the Calculus of Inductive C | downloaded |
 | ACQ-2026-10-0393 | Pentus, Mati, 'Lambek Calculus Is {NP}-Complete', Theoretical Computer | ScienceDirect CAPTCHA: needs you to clear it once in the browser pane |
 | ACQ-2026-10-0396 | A. Pillay and C. Steinhorn, Definable sets in ordered structures I, Tr | Cloudflare check did not clear with the browser pane hidden: retry with the pane visible |
-| ACQ-2026-10-0403 | Post, Emil L., Recursively Enumerable Sets of Positive Integers and Th | Cloudflare check did not clear with the browser pane hidden: retry with the pane visible |
+| ACQ-2026-10-0403 | Post, Emil L., Recursively Enumerable Sets of Positive Integers and Th | downloaded |
 | ACQ-2026-10-0421 | Robinson, J. A., 'A Machine-Oriented Logic Based on the Resolution Pri | Cloudflare check did not clear with the browser pane hidden: retry with the pane visible |
 | ACQ-2026-10-0424 | RoutleyMeyer1973 | Cloudflare check did not clear with the browser pane hidden: retry with the pane visible |
 | ACQ-2026-10-0430 | The Recursively Enumerable Degrees | ScienceDirect CAPTCHA: needs you to clear it once in the browser pane |
@@ -87,11 +87,11 @@ Downloaded 30; blocked by a site check 52; other 7.
 | ACQ-2026-10-0517 | Skolem, Thoralf (1934). {\"U}ber die Nicht-charakterisierbarkeit der Z | downloaded |
 | ACQ-2026-10-0523 | Stockmeyer, Larry J., The Polynomial-Time Hierarchy (1976), DOI 10.101 | ScienceDirect CAPTCHA: needs you to clear it once in the browser pane |
 | ACQ-2026-10-0524 | Stockmeyer, Larry J. and Meyer, Albert R.; Word Problems Requiring Exp | Cloudflare check did not clear with the browser pane hidden: retry with the pane visible |
-| ACQ-2026-10-0525 | Stone, The Theory of Representations for Boolean Algebras, Trans. AMS  | Cloudflare check did not clear with the browser pane hidden: retry with the pane visible |
+| ACQ-2026-10-0525 | Stone, The Theory of Representations for Boolean Algebras, Trans. AMS  | downloaded |
 | ACQ-2026-10-0526 | Stouppa, Phiniki, 'A Deep Inference System for the Modal Logic {S5}',  | Springer redirects the PDF to the paywalled article page |
 | ACQ-2026-10-0527 | Suslin, Mikhail Ya., 'Sur une d{\'e}finition des ensembles mesurables  | Cloudflare check did not clear with the browser pane hidden: retry with the pane visible |
 | ACQ-2026-10-0533 | Tarski, Grundzuege des Systemenkalkuels. Erster Teil, 1935 | downloaded |
 | ACQ-2026-10-0549 | Ulam, Stanislaw, Zur Masstheorie in der allgemeinen Mengenlehre (1930) | downloaded |
-| ACQ-2026-10-0562 | Veblen, Oswald, 'Continuous Increasing Functions of Finite and Transfi | Cloudflare check did not clear with the browser pane hidden: retry with the pane visible |
+| ACQ-2026-10-0562 | Veblen, Oswald, 'Continuous Increasing Functions of Finite and Transfi | downloaded |
 | ACQ-2026-10-0623 | A. Stoughton, 'Interdefinability of parallel operations in PCF', Theor | ScienceDirect CAPTCHA: needs you to clear it once in the browser pane |
 | ACQ-2026-10-0632 | P. Diaconis and D. Freedman, 'Finite Exchangeable Sequences', Annals o | downloaded |

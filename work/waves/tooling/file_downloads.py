@@ -9,7 +9,7 @@ import glob, hashlib, json, os, shutil, sys
 DL = os.path.expanduser("~/Downloads")
 sizes = {int(k): v for k, v in json.load(open(sys.argv[1], encoding="utf-8")).items()}
 folders = {r["acq"]: r["folder"] for r in json.load(open("tmp/user-downloads.json", encoding="utf-8"))}
-for path in sorted(glob.glob(os.path.join(DL, "*.tmp")) + glob.glob(os.path.join(DL, "ACQ-2026-10-*.pdf"))):
+for path in sorted(glob.glob(os.path.join(DL, "*.tmp")) + glob.glob(os.path.join(DL, "*.pdf"))):
     data = open(path, "rb").read()
     name = os.path.basename(path)
     acq = name[:16] if name.startswith("ACQ-2026-10-") else sizes.get(len(data))
@@ -23,5 +23,5 @@ for path in sorted(glob.glob(os.path.join(DL, "*.tmp")) + glob.glob(os.path.join
     if not os.path.isfile(target):
         shutil.copyfile(path, target)
         print("filed", acq, len(data), hashlib.sha256(data).hexdigest()[:12])
-    if name.startswith("ACQ-2026-10-"):
+    if name.startswith("ACQ-2026-10-") or name.endswith(".pdf"):
         os.remove(path)
