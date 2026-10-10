@@ -15,6 +15,9 @@ Result: 71 audited (28 recovered from run wf_e89adb4b-109's journal, 43 re-run),
 
 ## 2. W2-c: Parts 1, 2, 15 continuation
 
+Status 2026-10-10: packetized (w02ca 83 packets, w02cb 82); w02ca snapshots committed, tag `w02ca-base` (1160357); w02ca run 1 launched as workflow run `wf_6b25aa9b-ba9` (session c1ff47f6). For w02cb, leave out the 14 unit_accounting packets whose units are already fully covered in unit-residuals.jsonl.
+
+
 1. `python -B tools/waves.py packetize w02c --parts P1,P2,P15 --census work/waves/w01/census.json --apply` (splits into w02ca / w02cb).
 2. Snapshot every w02ca packet (`waves.py snapshot`, about 20 min), commit, set base_sha in work/waves/w02ca/args.json, commit, tag `w02ca-base`. Do not change handbook/, spec/research/ or spec/coverage/ while a run is live (G1).
 3. Launch `work/waves/workflows/tmor-authoring-wave.js` with w02ca args (runTag only for continuations). Continue halted packets with runTag r2, r3 ... until every packet closes or reaches max_blocks.
