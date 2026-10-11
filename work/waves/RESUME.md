@@ -32,7 +32,8 @@ The user directed that sources not held locally be read online (TOOLING-SPEC sec
 
 The user approved running disjoint waves alongside each other (up to 24 agents: two workflows at 12 each) to raise writing throughput. `waves.py verify` treats files of packets in other launched, not yet integrated waves as findings, not hard failures. A wave may launch alongside another only if none of its packets' owned/editable/readonly hosts are owned or editable in the other's live packets.
 
-- W3 packetized 2026-10-11: w03a (76 P3 packets; tag `w03a-base`) launched as `wf_f2512cd0-7de` (session f9ed69c4) alongside w02ca r5; w03b (153 packets, P3/P16/P17) overlaps w02ca hosts on P16 and waits until w02ca r5 has ended (then snapshot, base_sha, launch).
+- w02ca r5 ended (results-r5.json: 1 drafted, 8 blocked on lead-owned integration items, 10 carry-over); r6 (args-r6.json, 10 packets; accounting packets get 3 blocks) launched as `wf_f84cd1d7-5b0`.
+- W3 packetized 2026-10-11: w03a (76 P3 packets; tag `w03a-base`) launched as `wf_f2512cd0-7de` (session f9ed69c4) alongside w02ca r5; run 1 halted on the 5-hour limit (results-r1.json: 8 drafted, 68 carry-over) and was resumed from its cache under the same run id; w03b (153 packets, P3/P16/P17) overlaps w02ca hosts on P16 and waits until w02ca r5 has ended (then snapshot, base_sha, launch).
 
 ## 3. Later waves (PROGRAM-PLAN.md table)
 
