@@ -28,6 +28,12 @@ Status 2026-10-10: packetized (w02ca 83 packets, w02cb 82); w02ca snapshots comm
 
 The user directed that sources not held locally be read online (TOOLING-SPEC section 14). Runs launched after commit of this note use it; sections left blocked_source by earlier runs should be re-packetized (packetize no longer withholds them) and re-attempted, starting with the next wave of each part.
 
+## Concurrent waves (user decision 2026-10-11)
+
+The user approved running disjoint waves alongside each other (up to 24 agents: two workflows at 12 each) to raise writing throughput. `waves.py verify` treats files of packets in other launched, not yet integrated waves as findings, not hard failures. A wave may launch alongside another only if none of its packets' owned/editable/readonly hosts are owned or editable in the other's live packets.
+
+- W3 packetized 2026-10-11: w03a (76 P3 packets; tag `w03a-base`) launched as `wf_f2512cd0-7de` (session f9ed69c4) alongside w02ca r5; w03b (153 packets, P3/P16/P17) overlaps w02ca hosts on P16 and waits until w02ca r5 has ended (then snapshot, base_sha, launch).
+
 ## 3. Later waves (PROGRAM-PLAN.md table)
 
 W3 P3, P16, P17; W4 P4, P5; W5 P6, P7; W6 P8, P10, P18; W7 P9, P19; W8 P11, P12, P13; then W9 (packets unblocked by acquired sources, carry-over) and W10 (P14 apparatus, reorder, final checks). Before each wave: scout and list new acquisition requests for the user's approval (tmor-acq-r3-scout.js pattern); downloads only after approval.
