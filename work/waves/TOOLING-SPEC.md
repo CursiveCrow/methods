@@ -497,7 +497,10 @@ not held locally is therefore read online when a legitimate, freely accessible c
 be reached (publisher open access or open archive, arXiv or other preprint servers, author or institutional
 pages, digital libraries; WebSearch/WebFetch). Never shadow libraries, paywall bypass or bot-check bypass.
 Authors record such copies under `sources_read_online` {url, version or edition, pages or sections read}
-(rule A3; locators per A4); assessors verify at two locators against the held file or such a copy (S6). Another
-version counts only if the packet or a decided POL record accepts it. `blocked_source` remains only for works
-with no reachable legitimate copy of the required version. `waves.py packetize` no longer withholds open rows
+(rule A3; locators per A4); assessors verify at two locators against the held file or such a copy (S6). Second directive (user, 2026-10-11): "read materials from online if there arent local copies and cite them
+correctly." When the required version is not freely reachable but another version of the work is (preprint,
+report, other edition, reprint), the author writes from that version and cites exactly that version (own intake bib
+entry, its own locators, one reader-text statement of which version is followed); assessors judge completeness
+against the cited version (A3, S6, confirm). `blocked_source` remains only for works with no reachable legitimate
+copy of any version. `waves.py packetize` no longer withholds open rows
 whose sources are not held: they are packetized with `sources_held: false`.
