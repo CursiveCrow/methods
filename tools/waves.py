@@ -3757,7 +3757,7 @@ def packetize(args: argparse.Namespace) -> int:
     print(f"unit-only units: {sum(len(u.get('units') or []) for u in packet_records if _packet_mode(u) == 'unit_accounting')}")
     no_sources = [p["id"] for p in packet_records if _packet_mode(p) in ACCOUNTING_MODES and p.get("sources_held") is False]
     if no_sources:
-        print(f"accounting packets whose sources are absent (assess only; no authoring without sources): {len(no_sources)}")
+        print(f"accounting packets whose sources are not held locally (read online, rule A3): {len(no_sources)}")
     unplaced_reasons = {unit_id: _unplaced_reason(unlinked_units[unit_id]) for unit_id in unplaced_units}
     if unplaced_units:
         print(
@@ -5238,6 +5238,27 @@ def verify(args: argparse.Namespace) -> int:
             if normalized:
                 other_packets[_path_key(normalized)].append(str(other_id))
     assessments = f"{COVERAGE.as_posix()}/assessments/{wave}"
+    # Packets of other launched waves that are not integrated yet (snapshots taken, no INTEGRATED
+    # marker) run concurrently: their files and assessments change like this wave's other packets
+    # (lead, 2026-10-11).
+    concurrent_assessments: list[str] = []
+    for other_dir in sorted(_root(WAVES_ROOT).iterdir()):
+        if (
+            other_dir.name == wave
+            or (other_dir / "INTEGRATED").is_file()
+            or not any((other_dir / "snapshots").glob("*.json"))
+        ):
+            continue
+        concurrent_assessments.append(f"{COVERAGE.as_posix()}/assessments/{other_dir.name}")
+        for other_path in sorted((other_dir / "packets").glob("*.json")):
+            try:
+                other = json.loads(other_path.read_text(encoding="utf-8-sig"))
+            except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+                continue
+            for item in list(other.get("owned_files") or []) + list(other.get("editable_hosts") or []):
+                normalized = _try_normalize_repo_path(item) if isinstance(item, str) else None
+                if normalized:
+                    other_packets[_path_key(normalized)].append(str(other.get("id") or other_path.stem))
 
     baseline_tree = snapshot_data.get("tree")
     baseline_tree = baseline_tree if isinstance(baseline_tree, dict) else {}
@@ -5252,7 +5273,12 @@ def verify(args: argparse.Namespace) -> int:
             if changed:
                 new_sha = _sha256_file(_root(rel))
                 changed = new_sha != old.get("sha256")
-        if not changed or _path_key(rel) in allowed or _path_has_prefix(rel, assessments):
+        if (
+            not changed
+            or _path_key(rel) in allowed
+            or _path_has_prefix(rel, assessments)
+            or any(_path_has_prefix(rel, a) for a in concurrent_assessments)
+        ):
             continue
         owners = other_packets.get(_path_key(rel))
         if owners:
