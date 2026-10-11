@@ -489,3 +489,15 @@ write its components (author rule A14); its assessor files a non-covered readonl
 `lead_owned` "owned by <owner>" (assessor rule S10). Lanes therefore join packets only through shared
 editable hosts and owned files, not through shared units. The post-routing keyed re-assessment judges every
 section against the merged text.
+
+## 14. Sources read online (user directive 2026-10-11)
+
+The user directed: "just write the manuscript. read the content as needed from the internet." A source that is
+not held locally is therefore read online when a legitimate, freely accessible copy of the required version can
+be reached (publisher open access or open archive, arXiv or other preprint servers, author or institutional
+pages, digital libraries; WebSearch/WebFetch). Never shadow libraries, paywall bypass or bot-check bypass.
+Authors record such copies under `sources_read_online` {url, version or edition, pages or sections read}
+(rule A3; locators per A4); assessors verify at two locators against the held file or such a copy (S6). Another
+version counts only if the packet or a decided POL record accepts it. `blocked_source` remains only for works
+with no reachable legitimate copy of the required version. `waves.py packetize` no longer withholds open rows
+whose sources are not held: they are packetized with `sources_held: false`.

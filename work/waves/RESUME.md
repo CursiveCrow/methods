@@ -24,6 +24,10 @@ Status 2026-10-10: packetized (w02ca 83 packets, w02cb 82); w02ca snapshots comm
 4. Wave-end integration exactly as W2-b: ownership audit; normalize_returns + fixups; `integrate_wave collect --wave N --apply`; route; group_patches + group_lead; tmor-wave-integrate.js; restoration_correct.py for edited captures; adopt (dry, then --apply); symbols2tex; check-delta against a fresh baseline taken with the current tools on the wave base (`git worktree` + `check-delta --init`); fix rounds until 0 new; full TeX Live build (`latexmk -r tools/texlive.latexmkrc`) compared with the previous build summary; keyed post-routing re-assessment (keyed_reassess_args.py; keys come from packets); wave_proposals; ledger_patch apply; 1-in-20 audit, and if any sampled upgrade fails, audit every upgrade; report; tag. Commit spec/provenance with handbook changes.
 5. Repeat for w02cb.
 
+## Sources read online (2026-10-11)
+
+The user directed that sources not held locally be read online (TOOLING-SPEC section 14). Runs launched after commit of this note use it; sections left blocked_source by earlier runs should be re-packetized (packetize no longer withholds them) and re-attempted, starting with the next wave of each part.
+
 ## 3. Later waves (PROGRAM-PLAN.md table)
 
 W3 P3, P16, P17; W4 P4, P5; W5 P6, P7; W6 P8, P10, P18; W7 P9, P19; W8 P11, P12, P13; then W9 (packets unblocked by acquired sources, carry-over) and W10 (P14 apparatus, reorder, final checks). Before each wave: scout and list new acquisition requests for the user's approval (tmor-acq-r3-scout.js pattern); downloads only after approval.

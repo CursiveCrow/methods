@@ -3367,13 +3367,12 @@ def packetize(args: argparse.Namespace) -> int:
                 sources_absent.add(id(packet_rows))
             unblocked_packets.append(packet_rows)
         elif _is_source_blocked(packet_rows, queue_units, held, census):
-            # Only the open rows are blocked; the packet's authored_unreviewed
-            # rows still go to accounting (sources absent).
-            blocked.append(_blocker_record(wave, [r for r in packet_rows if r.get("status") != AU], queue_units))
-            au_rows = [r for r in packet_rows if r.get("status") == AU]
-            if au_rows:
-                sources_absent.add(id(au_rows))
-                unblocked_packets.append(au_rows)
+            # User directive 2026-10-11: a source not held locally is read online (a legitimate,
+            # freely accessible copy of the required version; authoring rule A3). The packet is
+            # authored as usual and flagged sources_held false; authors report blocked_source only
+            # when no such copy can be reached.
+            sources_absent.add(id(packet_rows))
+            unblocked_packets.append(packet_rows)
         else:
             unblocked_packets.append(packet_rows)
     for chapter_rows in chapters_of(blocker_au_rows):
