@@ -16,6 +16,7 @@ import csv
 import hashlib
 import importlib.util
 import io
+import functools
 import json
 import math
 import os
@@ -4229,6 +4230,28 @@ def _git_blobs(sha: str, rels: list[str]) -> dict[str, bytes | None]:
     return result
 
 
+def _lead_committed_paths(base_sha: str) -> set[str]:
+    """Path keys that commits after `base_sha` changed and whose working copy equals HEAD.
+    Authors never commit, so such a change is the lead's (integration of another wave while this
+    one runs; lead, 2026-10-12)."""
+    proc = subprocess.run(
+        ["git", "-C", str(ROOT), "diff", "--name-only", "--no-renames", f"{base_sha}..HEAD"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        timeout=300,
+    )
+    if proc.returncode != 0:
+        return set()
+    rels = [line for line in proc.stdout.decode("utf-8", "replace").splitlines() if line]
+    result: set[str] = set()
+    for rel, blob in _git_blobs("HEAD", rels).items():
+        path = _root(rel)
+        current = path.read_bytes() if path.is_file() else None
+        if blob == current:
+            result.add(_path_key(rel))
+    return result
+
+
 def _wave_base_sha(wave_dir: Path) -> tuple[str | None, str]:
     """The wave-base commit recorded as base_sha in the wave's args.json,
     resolved to a full SHA; it must be a commit that HEAD contains. Returns
@@ -5241,6 +5264,7 @@ def verify(args: argparse.Namespace) -> int:
     # Packets of other launched waves that are not integrated yet (snapshots taken, no INTEGRATED
     # marker) run concurrently: their files and assessments change like this wave's other packets
     # (lead, 2026-10-11).
+    lead_committed = functools.lru_cache(maxsize=1)(lambda: _lead_committed_paths(base_sha))
     concurrent_assessments: list[str] = []
     for other_dir in sorted(_root(WAVES_ROOT).iterdir()):
         if (
@@ -5259,6 +5283,17 @@ def verify(args: argparse.Namespace) -> int:
                 normalized = _try_normalize_repo_path(item) if isinstance(item, str) else None
                 if normalized:
                     other_packets[_path_key(normalized)].append(str(other.get("id") or other_path.stem))
+        # Hosts its patch requests name are edited by the lead's integration of that wave.
+        for patch_path in sorted((other_dir / "patches").glob("*.json")):
+            try:
+                requests = json.loads(patch_path.read_text(encoding="utf-8-sig"))
+            except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+                continue
+            for request in requests if isinstance(requests, list) else [requests]:
+                host = request.get("host") if isinstance(request, dict) else None
+                normalized = _try_normalize_repo_path(host) if isinstance(host, str) else None
+                if normalized:
+                    other_packets[_path_key(normalized)].append(f"{other_dir.name} integration")
 
     baseline_tree = snapshot_data.get("tree")
     baseline_tree = baseline_tree if isinstance(baseline_tree, dict) else {}
@@ -5286,6 +5321,8 @@ def verify(args: argparse.Namespace) -> int:
                 f"G1 {rel} changed: a file of packet {', '.join(sorted(set(owners)))}, not of {packet.get('id')} "
                 "(a cross-packet edit if this packet made it)"
             )
+        elif _path_key(rel) in lead_committed():
+            findings.append(f"G1 {rel} changed by a lead commit after the wave base")
         else:
             hard.append(f"G1 changed outside owned/editable set: {rel}")
 
@@ -5296,7 +5333,10 @@ def verify(args: argparse.Namespace) -> int:
         path = _root(rel)
         current = _sha256_file(path) if path.is_file() else None
         if current != (hashlib.sha256(base_bytes).hexdigest() if base_bytes is not None else None):
-            hard.append(f"G2 frozen file changed since the wave-base commit {base_sha[:12]}: {rel}")
+            if _path_key(rel) in lead_committed():
+                findings.append(f"G2 frozen file {rel} changed by a lead commit after the wave base")
+            else:
+                hard.append(f"G2 frozen file changed since the wave-base commit {base_sha[:12]}: {rel}")
 
     intake_keys: set[str] = set()
     for rel in packet.get("owned_files", []):
@@ -6066,7 +6106,13 @@ def _selftest_integrity(base: Path) -> None:
     _record_snapshot_digest(snap_path)
     rc, verdict = run_verify()
     assert rc == 1 and f"G1 changed outside owned/editable set: {outside_rel}" in verdict["hard"], verdict
+    # The same change committed after the wave base is the lead's (authors never commit): a finding.
+    subprocess.run(git + ["add", outside_rel], check=True, capture_output=True)
+    subprocess.run(git + ["commit", "-q", "-m", "lead edit"], check=True, capture_output=True)
+    rc, verdict = run_verify()
+    assert not verdict["hard"] and f"G1 {outside_rel} changed by a lead commit after the wave base" in verdict["findings"], verdict
     write(outside_rel, "outside\n")
+    subprocess.run(git + ["commit", "-q", "-am", "lead revert"], check=True, capture_output=True)
     # G2 compares frozen files with the wave-base commit.
     write("handbook/main.tex", "edited driver\n")
     rc, verdict = run_verify()
