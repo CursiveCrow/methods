@@ -37,6 +37,8 @@ The user approved running disjoint waves alongside each other (up to 24 agents: 
 - 2026-10-12: held-sources rebuilt (the 61 verified downloads registered); live packets of w02ca and w03a re-snapshotted, base_sha ed1abec4^ (53573796); both runs resumed from cache (w02ca r6 `wf_f84cd1d7-5b0`, w03a `wf_f2512cd0-7de`).
 - verify now treats lead commits after the wave base and other waves' patch-request hosts as findings, so w02ca can be integrated while w03a/w03b run. While a run is live, commit each integration step promptly and add only the paths that step changed (never `git add -A handbook`).
 
+- 2026-10-13: weekly usage 81% (reset 2026-10-17 03:00 UTC). w02ca r6 and w03a resumed; w03b held until the reset. w02ca integration started alongside: returns normalized (+ tmp/w02ca-fixups.py), batch 13 collected (35 groups) and routed (62 inserts), committed, tag `w02ca-routed`; full build of the committed tree running in tmp/builds/w02ca. Next (after the reset, agents): adopt repairs (55 malformed intake rows, 25 overlap decisions) via tmor-wave-integrate.js with group_patches/group_lead host and lead requests; symbols2tex; check-delta against tmp/integration/w02ca-base-newtools; keyed re-assessment; proposals; ledger; audit; report.
+
 ## 3. Later waves (PROGRAM-PLAN.md table)
 
 W3 P3, P16, P17; W4 P4, P5; W5 P6, P7; W6 P8, P10, P18; W7 P9, P19; W8 P11, P12, P13; then W9 (packets unblocked by acquired sources, carry-over) and W10 (P14 apparatus, reorder, final checks). Before each wave: scout and list new acquisition requests for the user's approval (tmor-acq-r3-scout.js pattern); downloads only after approval.
