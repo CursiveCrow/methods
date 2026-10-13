@@ -23,6 +23,11 @@ def fix(pl, problems, where):
     if not isinstance(pl, dict):
         return pl
     pl = dict(pl)
+    # patch-request shape: {host, operation: insert_after, anchor_quote: "\input{A}", text: "\input{B}"}
+    if pl.get("operation", "insert_after") == "insert_after" and not pl.get("after_input") and INPUT_RE.search(pl.get("anchor_quote") or ""):
+        pl["after_input"] = pl["anchor_quote"]
+    if not pl.get("input") and INPUT_RE.search(pl.get("text") or ""):
+        pl["input"] = pl["text"]
     if not pl.get("input") and pl.get("file"):
         pl["input"] = rel_input(pl["file"])
     if pl.get("input"):
@@ -55,8 +60,12 @@ def main(outdir, paths):
                 for k, files in (("body", g.get("bodies")), ("annex", g.get("annexes"))):
                     if isinstance(pl.get(k), dict) and not pl[k].get("input") and files:
                         pl[k] = dict(pl[k], input=rel_input(files[0]))  # W0 returns: the group's own file
+                # collect reads body/annex placements (and a note); other keys move aside
+                extra = {k: v for k, v in pl.items() if k not in ("body", "annex", "note")}
+                if extra:
+                    g["placement_extra"] = extra
                 g["placement"] = {k: (fix(v, problems, f"{os.path.basename(p)}:{k}") if k in ("body", "annex") else v)
-                                  for k, v in pl.items()}
+                                  for k, v in pl.items() if k in ("body", "annex", "note")}
         # files_written entries annotated with prose ("path (lines 3-9 ...)") keep only the path
         if isinstance(r.get("files_written"), list):
             r["files_written"] = [w.split()[0] for w in r["files_written"] if isinstance(w, str) and w.strip()]

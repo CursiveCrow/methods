@@ -1325,7 +1325,7 @@ def conventional_intakes(stem: str, kind: str) -> list[str]:
 
 OWNED_KINDS = (("bodies", "parts/", ".tex"), ("annexes", "annex/", ".tex"),
                ("bibliography_intakes", "bib/", ".bib"), ("symbol_intakes", "registry/", ".csv"))
-PACKET_ID_RE = re.compile(r"w\d{2}[a-z]?-p\d{2}-\d{3}(?:\.\d+)*")
+PACKET_ID_RE = re.compile(r"w\d{2}[a-z]{0,2}-p\d{2}-\d{3}(?:\.\d+)*")
 
 
 def owned_kind(rel: str) -> str | None:

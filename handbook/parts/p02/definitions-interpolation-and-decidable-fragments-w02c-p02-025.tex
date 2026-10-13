@@ -1,0 +1,574 @@
+%% toc: P2 21 21.8
+\section{B\"uchi's prefix form of the refined reduction formula}
+\label{sec:p02-w02c-p02-025-buchi-form}
+
+\emph{Purpose.}  The refined reduction formula \(\rho_{M,\prec}\) of
+\cref{sec:p02-w02-p02-036-refined} carries Trakhtenbrot's theorem in its
+inseparable form, but it spends a binary successor symbol \(S\), one binary
+tape symbol for every tape letter, and the prefix
+\(\forall x\,\exists u\,\exists v\,\forall y\) in its relativized infinity
+axiom.  The source's Exercise~2.1.31 asks for much less
+\cite[Sect.~2.1.2, Exercise~2.1.31, pp.~35--36]{BorgerGradelGurevich1997}:
+show that \(\rho_{M,\prec}\) can be chosen as a formula of the form
+\[
+ \exists x\,Zx\;\land\;\forall x\,\exists u\,\forall y\,\beta ,
+\]
+where \(Z\) is a monadic predicate symbol and \(\beta\) is a formula whose only
+variables are \(x\), \(u\) and \(y\) and whose only predicate symbols are the
+three binary symbols \(H\), \(T_0\), \(K\) and finitely many monadic ones.  The
+source's hint is to use Turing machines with the binary alphabet \(\{0,1\}\),
+to read \(Zx\) as \(x=0\), and to place \(\mathrm{START}\) inside \(\beta\) as
+\(Zy\to\mathrm{START}[0/y]\).  This section carries the exercise out in full,
+with \(\beta\) quantifier-free and without equality, and proves the refined
+reduction property for the resulting formulas.  It also proves the remark that
+follows the exercise in the source: every model of such a formula satisfies
+\(\exists y\,Hyy\).
+
+\emph{Inputs.}  The Turing machines of \cref{sec:turing-machines-01}, with
+their two-way tape, and their computations on the empty input;
+the program codes \(e\), the decidable set \(V\) of valid codes and the decoded
+machines \(M_e\) of \cref{sec:universal-reductions-01}; the halting sets
+\(H_1\), \(H_2\), \(H_\infty\) of
+Definition~\ref{def:p02-w02-p02-036-halting}; the classes
+\(\mathrm{Fin\text{-}sat}\), \(\mathrm{Non\text{-}sat}\) and
+\(\mathrm{Inf\text{-}axioms}\) of
+Definition~\ref{def:p02-w02-p02-036-classes}; and recursive inseparability
+(Definition~\ref{def:p02-w02-p02-036-inseparable}).  Structures have nonempty
+domains.  No formula below contains the equality sign.
+
+\emph{Conclusions.}  For every valid code \(e\) there is a sentence
+\(\rho^{\mathrm B}_{e}\) of the displayed form, computable from \(e\), such that
+\(M_e\) on the empty input rejects exactly when \(\rho^{\mathrm B}_e\) is
+unsatisfiable, accepts exactly when \(\rho^{\mathrm B}_e\) has a finite model, and
+diverges exactly when \(\rho^{\mathrm B}_e\) is an infinity axiom
+(\cref{thm:p02-w02c-p02-025-exercise}).  Consequently the finitely
+satisfiable, the unsatisfiable and the only infinitely satisfiable sentences of
+this prefix form are pairwise recursively inseparable
+(\cref{thm:p02-w02c-p02-025-inseparable}).  The route passes through binary
+one-way programs that move slowly
+(Definition~\ref{def:p02-w02c-p02-025-program}), to which every Turing
+machine reduces with its halting behaviour preserved
+(\cref{thm:p02-w02c-p02-025-universality}).  All proofs are in the annex.
+
+\subsection{Binary one-way programs}
+\label{sec:p02-w02c-p02-025-programs}
+
+The source's machines in Sect.~2.1 have a one-way infinite tape with cells
+\(0,1,2,\ldots\), may leave the head where it is, and start in state \(0\) at
+the left end of the empty tape; for the halting problems \(H_1\) and \(H_2\)
+they have exactly the two stop states \(1\) and \(2\)
+\cite[Sect.~2.1.1, p.~20; Sect.~2.1.2, p.~34]{BorgerGradelGurevich1997}.  The
+next definition fixes that format for the binary alphabet and adds one timing
+condition that the formula below needs.
+
+\begin{hbdefinition}{def:p02-w02c-p02-025-program}{Binary one-way program and admissibility}
+A \emph{binary one-way program} is a pair \(P=(r,\delta_P)\) with \(r\geq2\) and
+\[
+ \delta_P:\bigl(\{0,\ldots,r\}\setminus\{1,2\}\bigr)\times\{0,1\}
+ \longrightarrow\{0,\ldots,r\}\times\{0,1\}\times\{L,N,R\}.
+\]
+Its states are \(0,\ldots,r\); state \(0\) is the start state and \(1\), \(2\)
+are the stop states.  The letter \(0\) is the blank.  A \emph{configuration} is
+a triple \((p,B,h)\) with \(p\) a state, \(h\in\mathbb N\) and
+\(B:\mathbb N\to\{0,1\}\) zero outside a finite set.  If \(p\notin\{1,2\}\) and
+\(\delta_P(p,B(h))=(p',b,d)\), put \(B'\defeq B[h\mapsto b]\) and
+\(h'\defeq h-1,h,h+1\) for \(d=L,N,R\); when \(h'\geq0\) the configuration
+\((p,B,h)\) has the successor \((p',B',h')\).  A configuration in a stop state,
+and one whose step would move the head left from cell \(0\), has no
+successor.  The \emph{computation} of \(P\) is the maximal sequence
+\(c_0,c_1,\ldots\) of configurations with \(c_0=(0,\bar0,0)\), where
+\(\bar0\) is the all-zero tape, and \(c_{t+1}\) the successor of \(c_t\).  Write
+\(c_t=(q_t,B_t,h_t)\) and let \(d_t\) be the move of step \(t\).  \(P\)
+\emph{halts in state \(i\)} (\(i=1,2\)) when some \(q_s=i\).
+
+\(P\) is \emph{admissible} when its computation has the following two
+properties:
+\begin{enumerate}
+\item[(N1)] no configuration of the computation fails to have a successor
+  except one in a stop state, that is, the head never moves left from cell
+  \(0\);
+\item[(N2)] whenever \(d_t=R\), then \(h_t\leq t-2\).
+\end{enumerate}
+\index{binary one-way program}\index{admissible program}
+\end{hbdefinition}
+
+The letters of the tape are \(0\) and \(1\) only; the symbol \(T_0\) of the
+formula below will record the letter \(0\), and its negation the letter \(1\).
+Condition (N2) says that the head travels to the right only well behind the
+current time; it is what lets one binary symbol hold two kinds of information
+on the two sides of the diagonal.
+
+\begin{hblemma}{thm:p02-w02c-p02-025-admissible}{proved=annex:p02-w02c-p02-025-admissible}{Elementary bounds for admissible programs}
+Let \(P\) be admissible with computation \((q_t,B_t,h_t)_t\).  For every \(t\)
+for which \(c_t\) exists: \(h_t\leq t\); \(h_t<t\) if \(t\geq1\); and
+\(B_t(c)=0\) for every cell \(c\geq t\).
+\end{hblemma}
+
+\begin{hbdefinition}{def:p02-w02c-p02-025-simulation}{Block simulation of a Turing machine}
+Let \(M=(Q,\mathcal A_{\mathrm{in}},\mathcal A,\delta,q_0,q_{\mathrm{acc}},
+q_{\mathrm{rej}})\) be a Turing machine with tape alphabet \(\mathcal A\), and
+put \(Q^{\circ}\defeq Q\setminus\{q_{\mathrm{acc}},q_{\mathrm{rej}}\}\).  Choose
+the least \(m\geq1\) with \(2^m\geq\lvert\mathcal A\rvert\), an injective
+\(\gamma:\mathcal A\to\{0,1\}^m\) with \(\gamma(\sqcup)=0^m\), and put
+\(k\defeq2m+1\).  For a two-way tape \(T:\mathbb Z\to\mathcal A\) and \(j\geq0\),
+the \emph{block} of \(T\) at \(j\) is the word
+\(\operatorname{blk}_T(j)\defeq f_j\,\gamma(T(j))\,\gamma(T(-j-1))\in\{0,1\}^k\),
+where \(f_j=1\) if \(j=0\) and \(f_j=0\) otherwise; the binary tape
+\(\operatorname{enc}(T)\) has \(\operatorname{enc}(T)(kj+i)\) equal to the
+letter number \(i\) (counting from \(0\)) of \(\operatorname{blk}_T(j)\).
+For \(h\in\mathbb Z\) put \(\operatorname{pos}(h)\defeq(h,+)\) if \(h\geq0\)
+and \(\operatorname{pos}(h)\defeq(-h-1,-)\) if \(h<0\).  For a word
+\(v\in\{0,1\}^k\) write \(v_i\) for its letter number \(i\), and call \(v=f\,x\,y\)
+with \(\lvert x\rvert=\lvert y\rvert=m\) \emph{proper} if
+\(x,y\in\gamma[\mathcal A]\).
+
+The program \(\operatorname{Sim}(M)\) has the states
+\(\iota\) (start), \(\bot_1\), \(\bot_2\) (stop), \(\lambda\), and
+\begin{itemize}
+\item \(\mathrm{rd}(q,\sigma,w)\) for \(q\in Q^{\circ}\), \(\sigma\in\{+,-\}\)
+  and \(w\in\{0,1\}^{<k}\);
+\item \(\mathrm{wr}(v,i,q',\sigma',\Delta)\) for \(v\in\{0,1\}^k\),
+  \(0\leq i\leq k-2\), \(q'\in Q^{\circ}\), \(\sigma'\in\{+,-\}\) and
+  \(\Delta\in\{-1,0,1\}\);
+\item \(\mathrm{tr}(D,q',\sigma',n)\) for \(D\in\{L,R\}\),
+  \(1\leq n\leq k-1\), \(q'\in Q^{\circ}\) and \(\sigma'\in\{+,-\}\).
+\end{itemize}
+Its transitions, for each letter \(a\in\{0,1\}\), are:
+\begin{enumerate}
+\item \(\iota\): to \((\bot_1,1,N)\) if \(q_0=q_{\mathrm{rej}}\), to
+  \((\bot_2,1,N)\) if \(q_0=q_{\mathrm{acc}}\), and otherwise to
+  \((\mathrm{rd}(q_0,+,\varepsilon),1,N)\).
+\item \(\mathrm{rd}(q,\sigma,w)\) with \(\lvert w\rvert<k-1\): to
+  \((\mathrm{rd}(q,\sigma,wa),a,R)\).
+\item \(\mathrm{rd}(q,\sigma,w)\) with \(\lvert w\rvert=k-1\): let
+  \(v\defeq wa=f\,x\,y\).  If \(v\) is not proper, to \((\lambda,a,N)\).
+  Otherwise let \(a^{*}\defeq\gamma^{-1}(x)\) if \(\sigma=+\) and
+  \(a^{*}\defeq\gamma^{-1}(y)\) if \(\sigma=-\), and let
+  \(\delta(q,a^{*})=(q',b,d)\).  If \(q'=q_{\mathrm{rej}}\), to
+  \((\bot_1,a,N)\); if \(q'=q_{\mathrm{acc}}\), to \((\bot_2,a,N)\).  Otherwise
+  let \(v'\defeq f\,\gamma(b)\,y\) if \(\sigma=+\) and
+  \(v'\defeq f\,x\,\gamma(b)\) if \(\sigma=-\), let \((\Delta,\sigma')\) be
+  given by the table
+  \[
+  \begin{array}{c|c|c|c}
+   \sigma & d & f & (\Delta,\sigma')\\\hline
+   + & R & 0,1 & (+1,+)\\
+   + & L & 0 & (-1,+)\\
+   + & L & 1 & (0,-)
+  \end{array}
+  \qquad
+  \begin{array}{c|c|c|c}
+   \sigma & d & f & (\Delta,\sigma')\\\hline
+   - & L & 0,1 & (+1,-)\\
+   - & R & 0 & (-1,-)\\
+   - & R & 1 & (0,+)
+  \end{array}
+  \]
+  and go to \((\mathrm{wr}(v',k-2,q',\sigma',\Delta),v'_{k-1},L)\).
+\item \(\mathrm{wr}(v',i,q',\sigma',\Delta)\) with \(i\geq1\): to
+  \((\mathrm{wr}(v',i-1,q',\sigma',\Delta),v'_i,L)\).
+\item \(\mathrm{wr}(v',0,q',\sigma',\Delta)\): to
+  \((\mathrm{rd}(q',\sigma',\varepsilon),v'_0,N)\) if \(\Delta=0\), to
+  \((\mathrm{tr}(R,q',\sigma',k-1),v'_0,R)\) if \(\Delta=+1\), and to
+  \((\mathrm{tr}(L,q',\sigma',k-1),v'_0,L)\) if \(\Delta=-1\).
+\item \(\mathrm{tr}(D,q',\sigma',n)\) with \(n\geq2\): to
+  \((\mathrm{tr}(D,q',\sigma',n-1),a,D)\).
+\item \(\mathrm{tr}(D,q',\sigma',1)\): to
+  \((\mathrm{rd}(q',\sigma',\varepsilon),a,D)\).
+\item \(\lambda\): to \((\lambda,a,N)\).
+\end{enumerate}
+The program \(\operatorname{Slow}(P')\) of a program \(P'\) with start state
+\(\iota'\) and stop states \(\bot_1,\bot_2\) has the states \(a_0\) (start),
+\(a_1\), \(\bot_1\), \(\bot_2\), and \((p,0)\), \((p,1)\) for every non-stop
+state \(p\) of \(P'\), with the transitions, for \(a\in\{0,1\}\):
+\(a_0\mapsto(a_1,a,N)\); \(a_1\mapsto((\iota',0),a,N)\);
+\((p,1)\mapsto((p,0),a,N)\); and, if \(\delta_{P'}(p,a)=(p',b,d)\),
+\((p,0)\mapsto(p',b,d)\) when \(p'\) is a stop state and
+\((p,0)\mapsto((p',1),b,d)\) otherwise.  For a valid code \(e\), the program
+\(P_e\) is \(\operatorname{Slow}(\operatorname{Sim}(M_e))\) with its states
+numbered \(0,\ldots,r\) in a fixed computable order that sends \(a_0\) to
+\(0\), \(\bot_1\) to \(1\) and \(\bot_2\) to \(2\).  Configurations, successor
+steps and computations of \(\operatorname{Sim}(M)\) and of
+\(\operatorname{Slow}(P')\) are defined as in
+Definition~\ref{def:p02-w02c-p02-025-program}, with the named start and stop
+states in place of \(0\), \(1\), \(2\).
+\index{block simulation}
+\end{hbdefinition}
+
+The program \(\operatorname{Sim}(M)\) folds the two-way tape: block \(j\) holds
+the cells \(j\) and \(-j-1\) of \(M\) in two tracks, the flag \(f_0=1\) marks
+the block where the fold turns, and the sign \(\sigma\) in the state records
+the track on which \(M\)'s head stands.  One step of \(M\) costs \(k\) reading
+steps, \(k-1\) writing steps and, unless the head stays in its block,
+\(k-1\) further travelling steps.  The program \(\operatorname{Slow}(P')\) inserts two idle
+steps at the start and one idle step after each step of \(P'\), so that every
+move happens at an even time \(t\geq2\).
+
+\begin{hbtheorem}{thm:p02-w02c-p02-025-universality}{proved=annex:p02-w02c-p02-025-universality}{Binary admissible programs simulate Turing machines}
+For every valid code \(e\), the program \(P_e\) is admissible and is computable
+from \(e\), and on the empty input:
+\begin{enumerate}
+\item \(M_e\) rejects if and only if \(P_e\) halts in state \(1\);
+\item \(M_e\) accepts if and only if \(P_e\) halts in state \(2\);
+\item \(M_e\) diverges if and only if the computation of \(P_e\) is infinite.
+\end{enumerate}
+Hence \(e\in H_1\), \(e\in H_2\), \(e\in H_\infty\) according as \(P_e\) halts
+in state \(1\), halts in state \(2\), or never halts.
+\end{hbtheorem}
+
+This is the universality of binary-alphabet machines that the source's hint
+invokes, in the form needed here: it keeps apart the two stop states and the
+non-halting case, it uses the one-way tape and the empty start, and it adds the
+timing condition (N2).
+
+\subsection{The formula}
+\label{sec:p02-w02c-p02-025-formula}
+
+\begin{hbdefinition}{def:p02-w02c-p02-025-formula}{The formula \(\rho^{\mathrm B}_{P}\)}
+Let \(P=(r,\delta_P)\) be a binary one-way program.  The signature
+\(\Lang^{\mathrm B}_P\) consists of the binary relation symbols \(H\), \(T_0\),
+\(K\) and the monadic relation symbols \(Z\), \(I_0,\ldots,I_r\).  Write
+\([0]vw\defeq T_0vw\) and \([1]vw\defeq\neg T_0vw\) for variables \(v,w\), and
+\(\mathrm{Act}\,x\defeq\bigvee_{p\notin\{1,2\}}I_px\).  Let \(\beta_P\) be the
+conjunction of the following quantifier-free formulas in the variables
+\(x,u,y\).
+\begin{enumerate}
+\item[(\(\beta\)1)] \(\mathrm{START}\):\quad
+  \(Zy\to\bigl(I_0y\land Hyy\land T_0yx\bigr)\).
+\item[(\(\beta\)2)] \(\mathrm{BLANK}\):\quad \(T_0xx\).
+\item[(\(\beta\)3)] \(\mathrm{OFFDIAG}\):\quad \((Zx\land Kxy)\to\neg Hyy\).
+\item[(\(\beta\)4)] \(\mathrm{STEP}_P\): for each state \(p\notin\{1,2\}\) and
+  letter \(a\) with \(\delta_P(p,a)=(p',b,d)\),
+  \[
+   \bigl(Hxy\land\neg Kxy\land I_px\land[a]xy\bigr)\to
+   \bigl(I_{p'}u\land[b]uy\bigr),
+  \]
+  and, according to \(d\),
+  \[
+  \begin{aligned}
+   d=N:&\quad\bigl(Hxy\land\neg Kxy\land I_px\land[a]xy\bigr)\to Huy,\\
+   d=R:&\quad\bigl(Hyx\land\neg Kyx\land I_py\land[a]yx\bigr)\to Huy,\\
+   d=L:&\quad\bigl(Hyu\land\neg Kyu\land I_py\land[a]yu\bigr)\to Hxy.
+  \end{aligned}
+  \]
+\item[(\(\beta\)5)] \(\mathrm{MOVE}\):\quad \((Hyx\land Kyx)\to Huy\).
+\item[(\(\beta\)6)] \(\mathrm{FRAME}\):\quad
+  \((\neg Kxy\land\neg Hxy\land T_0xy)\to T_0uy\) and
+  \((\neg Kxy\land\neg Hxy\land\neg T_0xy)\to\neg T_0uy\).
+\item[(\(\beta\)7)] \(\mathrm{ONEHEAD}\): the three formulas
+  \((Hyx\land\neg Kyx)\to T_0xy\), \((T_0uy\land Kuy)\to T_0xy\) and
+  \(\neg(T_0uy\land Kuy\land Hyx)\).
+\item[(\(\beta\)8)] \(\mathrm{NONSTOP}\):\quad \(\neg I_1x\).
+\item[(\(\beta\)9)] \(\prec_{K,P}\) and activity:
+  \[
+   \neg Kxx\land(Hyx\to Kxu)\land(Kyx\to Kyu)\land
+   (\mathrm{Act}\,x\to Kxu).
+  \]
+\end{enumerate}
+Put
+\[
+ \rho^{\mathrm B}_P\;\defeq\;\exists x\,Zx\;\land\;\forall x\,\exists u\,
+ \forall y\,\beta_P ,
+\]
+and, for a valid code \(e\), \(\rho^{\mathrm B}_e\defeq\rho^{\mathrm B}_{P_e}\)
+with \(P_e\) as in Definition~\ref{def:p02-w02c-p02-025-simulation}.
+\index{reduction formula!B\"uchi form}
+\end{hbdefinition}
+
+The intended model has as domain an initial segment of \(\mathbb N\), reads
+\(Zx\) as \(x=0\), \(Kxy\) as \(x<y\), and takes \(u\) to be \(x+1\).  One
+element serves both as a moment of time and as a tape cell, and the
+order \(K\) splits the pairs \((v,w)\) into three regions, each carrying its own
+information.
+\begin{itemize}
+\item Below the diagonal (\(w<v\)): \(Hvw\) says that at time \(v\) the head is
+  on cell \(w\); \(T_0vw\) says that at time \(v\) cell \(w\) holds \(0\).
+\item On the diagonal (\(w=v\)): \(Hvv\) says that at time \(v\) the head is on
+  cell \(v\), which happens only for \(v=0\); \(T_0vv\) always holds, since cell
+  \(v\) is still blank at time \(v\).
+\item Above the diagonal (\(v<w\)): \(Hvw\) says that the step at time \(w\)
+  moves the head and leaves it on cell \(v\) at time \(w+1\); \(T_0vw\) says
+  that \(v\) is at most the head position at time \(w\).
+\end{itemize}
+By Lemma~\ref{thm:p02-w02c-p02-025-admissible}, a cell at or to the right of
+the current time is still blank and the head stands strictly left of the
+current time after time \(0\); so the lower region and the diagonal hold the
+whole configuration, and the upper region is free for two auxiliary records.
+The conjuncts read as follows.  \(\mathrm{START}\) is the source's
+\(\mathrm{START}=I_0(0)\land H(0,0)\land\forall x\,T_0(0,x)\)
+\cite[Sect.~2.1.1, p.~22]{BorgerGradelGurevich1997} with \(0\) replaced by
+\(y\) under the hypothesis \(Zy\); its quantifier \(\forall x\) is supplied
+by the outer \(\forall x\) of \(\rho^{\mathrm B}_P\), since the conjunct does
+not mention \(u\).  In the upper region, \(T_0(0,w)\) says that cell \(0\) is
+not to the right of the head at time \(w\), which is true.  \(\mathrm{STEP}_P\)
+takes the place of the source's step formulas (2.1)--(2.3)
+\cite[Sect.~2.1.1, pp.~20--21]{BorgerGradelGurevich1997}, with the successor
+relation \(S\) replaced by the witness \(u\) and the letter \(1\) written as
+\(\neg T_0\).  A move is made in two stages because a
+single instance of \(\beta_P\) sees the pairs \((x,y)\), \((u,y)\), \((y,x)\)
+and \((y,u)\) but never a pair whose both entries are successors: the head
+position after a move is first written into the upper region by
+\(\mathrm{STEP}_P\) (cell \(x+1\) or cell \(u-1\), at time \(y\)) and then
+copied down into the next row by \(\mathrm{MOVE}\).  \(\mathrm{FRAME}\) is
+the source's ``no change outside the head cell'' (2.3) with the unavailable
+inequality \(y\neq x\) replaced by \(\neg Hxy\).  \(\mathrm{ONEHEAD}\) marks, at
+each time, the cells at or left of a head and forbids a head with a mark to its
+right; together with \(\mathrm{OFFDIAG}\) it makes the head unique, which is
+what makes \(\neg Hxy\) in \(\mathrm{FRAME}\) mean ``not the head cell''.
+\(\mathrm{NONSTOP}\) is the source's.  The first three conjuncts of
+(\(\beta\)9) are the source's relativized infinity axiom
+\(\prec_{K,M}=\forall x\,\exists u\,\forall y\,(\neg Kxx\land(Hyx\to Kxu)\land
+(Kyx\to Kyu))\) \cite[Sect.~2.1.2, p.~35]{BorgerGradelGurevich1997}; the
+added \(\mathrm{Act}\,x\to Kxu\) extends the existential claim from visited
+cells to the moments before the program halts, because here the moments are
+elements of the same order.
+
+\begin{hblemma}{thm:p02-w02c-p02-025-shape}{proved=annex:p02-w02c-p02-025-shape}{Shape of \(\rho^{\mathrm B}_P\)}
+For every binary one-way program \(P\), the sentence \(\rho^{\mathrm B}_P\) has
+the form \(\exists x\,Zx\land\forall x\,\exists u\,\forall y\,\beta_P\) with
+\(Z\) monadic and \(\beta_P\) quantifier-free; the only variables of
+\(\beta_P\) are \(x\), \(u\), \(y\); the only binary predicate symbols in
+\(\rho^{\mathrm B}_P\) are \(H\), \(T_0\), \(K\), and the others are the
+\(r+2\) monadic symbols \(Z,I_0,\ldots,I_r\); equality does not occur.  The
+map \(P\mapsto\rho^{\mathrm B}_P\) is computable, and so is
+\(e\mapsto\rho^{\mathrm B}_e\) on \(V\).
+\end{hblemma}
+
+\begin{hblemma}{thm:p02-w02c-p02-025-remark}{proved=annex:p02-w02c-p02-025-remark}{The remark: every model satisfies \(\exists y\,Hyy\)}
+For every binary one-way program \(P\), every model of \(\rho^{\mathrm B}_P\)
+satisfies \(\exists y\,Hyy\).
+\end{hblemma}
+
+The source states this remark after the exercise, for use in its next chapter
+\cite[Sect.~2.1.2, p.~36]{BorgerGradelGurevich1997}, and attributes it to the
+subformula that makes the initial head position diagonal; in \(\beta_P\) that
+subformula is the conjunct \(Zy\to Hyy\) of \(\mathrm{START}\).  The next
+chapter of the source uses it in Step~1 of its proof of the
+Kalm\'ar--Sur\'anyi theorem, where formulas
+\(\exists v\,\alpha\land\forall x\,\exists u\,\forall y\,\beta\) of this kind
+are called B\"uchi formulas and the remark is quoted as giving \(\exists v\,Hvv\)
+in every model \cite[Sect.~3.2, pp.~115--116]{BorgerGradelGurevich1997}.
+
+\subsection{Simulation and the refined reduction property}
+\label{sec:p02-w02c-p02-025-reduction}
+
+\begin{hbdefinition}{def:p02-w02c-p02-025-intended}{The intended structure}
+Let \(P\) be an admissible program whose computation
+\((q_t,B_t,h_t)_t\) does not reach state \(1\).  Let \(D\defeq\{0,\ldots,s\}\)
+if it halts in state \(2\) at time \(s\), and \(D\defeq\mathbb N\) if it never
+halts.  The structure \(\mathfrak A_P\) has domain \(D\) and
+\[
+\begin{aligned}
+ Z&=\{0\},\qquad K=\{(v,w)\in D^2:v<w\},\qquad I_p=\{t\in D:q_t=p\},\\
+ H&=\{(t,h_t):t\in D\}\cup\{(h_{t+1},t):t+1\in D,\ d_t\neq N\},\\
+ T_0&=\{(t,c):c<t,\ B_t(c)=0\}\cup\{(t,t):t\in D\}\cup
+     \{(c,t):c<t,\ c\leq h_t\},
+\end{aligned}
+\]
+all pairs ranging over \(D\).  Its witness map is \(g(v)\defeq v+1\) if
+\(v+1\in D\) and \(g(v)\defeq v\) otherwise.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p02-w02c-p02-025-intended}{proved=annex:p02-w02c-p02-025-intended}{The intended structure is a model}
+In the setting of Definition~\ref{def:p02-w02c-p02-025-intended},
+\(\mathfrak A_P\entails\beta_P[v,g(v),w]\) for all \(v,w\in D\), so
+\(\mathfrak A_P\entails\rho^{\mathrm B}_P\).  If the computation halts at time
+\(s\), the model has exactly \(s+1\) elements.
+\end{hblemma}
+
+\begin{hblemma}{thm:p02-w02c-p02-025-simulation}{proved=annex:p02-w02c-p02-025-simulation}{Simulation lemma for \(\rho^{\mathrm B}_P\)}
+Let \(P\) be admissible with computation \((q_t,B_t,h_t)_{t<\ell}\), where
+\(\ell\in\mathbb N\cup\{\infty\}\) is its length, let
+\(\mathfrak A\entails\rho^{\mathrm B}_P\), and let \(z\in Z^{\mathfrak A}\).
+Then there are elements \(\tau_0=z,\tau_1,\tau_2,\ldots\) of \(\mathfrak A\)
+such that \(\neg K^{\mathfrak A}(\tau_b,\tau_a)\) for all \(a\leq b\), and for
+every \(t<\ell\):
+\begin{enumerate}
+\item \(\mathfrak A\entails I_{q_t}[\tau_t]\);
+\item \(K^{\mathfrak A}(\tau_a,\tau_b)\) for all \(a<b\leq t\); in particular
+      \(\tau_0,\ldots,\tau_t\) are pairwise distinct;
+\item \(\mathfrak A\entails H[\tau_t,\tau_{h_t}]\), and
+      \(\mathfrak A\entails\neg H[\tau_t,\tau_c]\) for every \(c\leq t\) with
+      \(c\neq h_t\);
+\item for every \(c\leq t\), \(\mathfrak A\entails T_0[\tau_t,\tau_c]\) if and
+      only if \(B_t(c)=0\).
+\end{enumerate}
+\end{hblemma}
+
+The lemma is the source's Simulation Lemma, its Lemma~2.1.2
+\cite[Sect.~2.1.1, p.~20]{BorgerGradelGurevich1997}, in this setting, with one difference forced by the alphabet.  The source's formulas are
+frugal: a model may contain more than the intended facts, for instance two
+letters in one cell.  With the letter \(1\) written as \(\neg T_0\), a cell
+holds exactly one letter, so the model must agree with the computation exactly
+on the tape; the uniqueness of the head in item~3 is what secures this.
+
+\begin{hbtheorem}{thm:p02-w02c-p02-025-reduction}{proved=annex:p02-w02c-p02-025-reduction}{Refined reduction property for \(\rho^{\mathrm B}_P\)}
+For every admissible binary one-way program \(P\):
+\begin{enumerate}
+\item \(P\) halts in state \(1\) if and only if \(\rho^{\mathrm B}_P\) is
+      unsatisfiable;
+\item \(P\) halts in state \(2\) if and only if \(\rho^{\mathrm B}_P\) has a
+      finite model; if it halts at time \(s\), \(\rho^{\mathrm B}_P\) has a model
+      with exactly \(s+1\) elements;
+\item \(P\) never halts if and only if \(\rho^{\mathrm B}_P\) is satisfiable
+      and has only infinite models.
+\end{enumerate}
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p02-w02c-p02-025-exercise}{proved=annex:p02-w02c-p02-025-exercise}{The source's Exercise~2.1.31}
+The refined reduction formula can be chosen in the form
+\(\exists x\,Zx\land\forall x\,\exists u\,\forall y\,\beta\) with \(Z\)
+monadic, \(\beta\) quantifier-free in the variables \(x,u,y\), and only the
+binary predicate symbols \(H\), \(T_0\), \(K\) besides finitely many monadic
+ones: for every valid code \(e\), the sentence \(\rho^{\mathrm B}_e\) has this
+form, \(e\mapsto\rho^{\mathrm B}_e\) is computable on \(V\), and
+\begin{enumerate}
+\item \(e\in H_1\) if and only if \(\rho^{\mathrm B}_e\) is contradictory;
+\item \(e\in H_2\) if and only if \(\rho^{\mathrm B}_e\) is finitely
+      satisfiable;
+\item \(e\in H_\infty\) if and only if
+      \(\rho^{\mathrm B}_e\in\mathrm{Inf\text{-}axioms}\).
+\end{enumerate}
+\end{hbtheorem}
+
+Items 1 and~2 are the source's reduction property (i) and (ii) for
+\(\rho_{M,\prec}\) \cite[Sect.~2.1.2, p.~34]{BorgerGradelGurevich1997}, now for
+formulas of the prefix form the exercise asks for; item~3 follows from them
+because \(H_1\), \(H_2\), \(H_\infty\) partition \(V\).
+
+\begin{hbcorollary}{thm:p02-w02c-p02-025-inseparable}{proved=annex:p02-w02c-p02-025-inseparable}{Trakhtenbrot's theorem for the B\"uchi form}
+Let \(\mathcal B\) be the set of sentences
+\(\exists x\,Zx\land\forall x\,\exists u\,\forall y\,\beta\) with \(\beta\)
+quantifier-free in the variables \(x,u,y\), built without equality from the
+binary symbols \(H\), \(T_0\), \(K\) and monadic symbols from the list
+\(Z,I_0,I_1,\ldots\).  Then \(\mathrm{Fin\text{-}sat}(\mathcal B)\),
+\(\mathrm{Non\text{-}sat}(\mathcal B)\) and
+\(\mathrm{Inf\text{-}axioms}(\mathcal B)\) are pairwise recursively
+inseparable.
+\end{hbcorollary}
+
+In the source's notation for prefix-vocabulary classes this is the class
+\([\exists\land\forall\exists\forall,(\omega,3)]\) of B\"uchi formulas with
+monadic and three binary predicates
+\cite[Sect.~3.2, p.~115]{BorgerGradelGurevich1997}.  The corollary does not
+say that this class is a conservative reduction class in the sense of
+Definition~\ref{def:p02-w02-p02-036-conservative}; that stronger property,
+which the source asserts for it on the same page, needs a reduction of all
+first-order formulas, not only of the three halting problems.
+
+\subsection{Worked example}
+\label{sec:p02-w02c-p02-025-example}
+
+\begin{hbexample}{def:p02-w02c-p02-025-example}{A three-step program}
+Let \(r=4\) and let \(P\) have
+\[
+\begin{aligned}
+ \delta_P(0,a)&=(3,1,N), & \delta_P(3,a)&=(4,1,N),\\
+ \delta_P(4,1)&=(2,0,R), & \delta_P(4,0)&=(4,0,N)
+\end{aligned}
+\]
+for \(a\in\{0,1\}\).  Its computation is
+\[
+ (0,\bar0,0),\quad(3,1\bar0,0),\quad(4,1\bar0,0),\quad(2,\bar0,1),
+\]
+writing \(1\bar0\) for the tape with \(1\) in cell \(0\) and \(0\) elsewhere.
+It halts in state \(2\) at time \(s=3\).  The only move is \(d_2=R\) with
+\(h_2=0\leq 2-2\), so \(P\) is admissible.  The intended model of
+Definition~\ref{def:p02-w02c-p02-025-intended} has domain \(\{0,1,2,3\}\),
+witness map \(0\mapsto1\mapsto2\mapsto3\mapsto3\), \(K={<}\), \(Z=\{0\}\),
+\(I_0=\{0\}\), \(I_3=\{1\}\), \(I_4=\{2\}\), \(I_2=\{3\}\), \(I_1=\varnothing\), and
+\[
+\begin{aligned}
+ H&=\{(0,0),(1,0),(2,0),(3,1)\}\cup\{(1,2)\},\\
+ T_0&=\{(2,1),(3,0),(3,1),(3,2)\}\cup\{(0,0),(1,1),(2,2),(3,3)\}\\
+   &\qquad\cup\{(0,1),(0,2),(0,3),(1,3)\}.
+\end{aligned}
+\]
+The pair \((1,2)\) of \(H\) is the upper record of the move at time \(2\): the
+instance \(x=0\), \(u=1\), \(y=2\) of the \(d=R\) clause has the premises
+\(H(2,0)\), \(\neg K(2,0)\), \(I_4(2)\) and \(\neg T_0(2,0)\), and yields
+\(H(1,2)\); the instance \(x=2\), \(u=3\), \(y=1\) of \(\mathrm{MOVE}\) then
+yields the head position \(H(3,1)\).  The pairs \((1,0)\) and \((2,0)\) are
+missing from \(T_0\) because cell \(0\) holds \(1\) at times \(1\) and \(2\).
+The upper pairs of \(T_0\) are the marks of \(\mathrm{ONEHEAD}\): at time \(3\)
+the head is on cell \(1\), so cells \(0\) and \(1\) are marked,
+\((0,3),(1,3)\in T_0\), and \((2,3)\notin T_0\).  The model has
+\(s+1=4\) elements, as Theorem~\ref{thm:p02-w02c-p02-025-reduction} states.
+
+If \(\delta_P(4,1)\) is changed to \((1,0,R)\), the computation halts in state
+\(1\) at time \(3\), and \(\rho^{\mathrm B}_P\) becomes unsatisfiable: by
+Lemma~\ref{thm:p02-w02c-p02-025-simulation}, every model contains an element
+\(\tau_3\) with \(I_1\tau_3\), against \(\mathrm{NONSTOP}\).  If it is changed
+to \((4,1,N)\), the program stays in state \(4\) forever; the intended model
+on \(\mathbb N\) satisfies \(\rho^{\mathrm B}_P\), and every model contains
+the pairwise distinct elements \(\tau_0,\tau_1,\ldots\), so it is infinite.
+\end{hbexample}
+
+\subsection{Limits of the construction}
+\label{sec:p02-w02c-p02-025-limits}
+
+\begin{hbwarning}{def:p02-w02c-p02-025-limits}{Where the construction needs its hypotheses}
+\begin{enumerate}
+\item \emph{Admissibility is used.}  Without (N2) the two regions collide.
+  Let \(\delta_P(0,a)=(2,a,R)\) for both letters: the program halts in state
+  \(2\) at time \(1\) with the head on cell \(1\), but it moves right at time
+  \(0\) with \(h_0=0>0-2\).  In a model whose element \(\tau_0\) has the witness
+  \(\tau_1\), the \(d=R\) clause at \(x=\tau_0\), \(u=\tau_1\), \(y=\tau_0\)
+  records the move as \(H(\tau_1,\tau_0)\), which is a lower pair and so reads
+  ``at time \(1\) the head is on cell \(0\)''; and the intended position,
+  \(H(\tau_1,\tau_1)\), is excluded by \(\mathrm{OFFDIAG}\).  The proof of
+  Lemma~\ref{thm:p02-w02c-p02-025-simulation} uses (N2) at exactly this point,
+  and Lemma~\ref{thm:p02-w02c-p02-025-intended} uses it for \(\mathrm{OFFDIAG}\).
+  The slowing step of Definition~\ref{def:p02-w02c-p02-025-simulation} is what
+  makes every simulating program admissible.
+\item \emph{The monadic vocabulary is not bounded.}  The formula
+  \(\rho^{\mathrm B}_e\) has one monadic symbol for each state of \(P_e\), and
+  the number of states grows with \(M_e\).  The binary vocabulary is fixed at
+  three symbols.  Reducing the monadic symbols as well is the business of the
+  source's Chapter~3, which starts from this class
+  \cite[Sect.~3.2, pp.~115--116]{BorgerGradelGurevich1997}.
+\item \emph{The finite models are not small in the size of the machine.}  The
+  finite model for an accepting machine has one element per step of
+  \(P_e\), and one step of \(M_e\) costs \(P_e\) between \(2(2k-1)\) and
+  \(2(3k-2)\) steps, \(k\) the block length.
+\item \emph{Negation is used.}  \(\beta_P\) uses \(\neg T_0\) for the letter
+  \(1\) and negated \(K\)- and \(H\)-atoms in its premises.  The source's later
+  refinements to Krom and Horn matrices
+  \cite[Sect.~2.1.2, Exercise~2.1.37, p.~37]{BorgerGradelGurevich1997} are not
+  obtained here.
+\end{enumerate}
+\end{hbwarning}
+
+\subsection{Relationships and sources}
+\label{sec:p02-w02c-p02-025-relationships}
+
+The formula \(\rho_{M,\prec}\) of Definition~\ref{def:p02-w02-p02-036-refined}
+and the formula \(\rho^{\mathrm B}_P\) give the same reduction property
+(compare Theorem~\ref{thm:p02-w02-p02-036-refined} with
+Theorem~\ref{thm:p02-w02c-p02-025-reduction}); they differ in what they spend.
+\(\rho_{M,\prec}\) works for any Turing machine directly, with a binary symbol
+for each tape letter, an explicit successor relation \(S\) and the prefix
+\(\forall x\,\exists u\,\exists v\,\forall y\) in its infinity axiom.
+\(\rho^{\mathrm B}_P\) uses one tape symbol, no successor relation, a single
+\(\forall\exists\forall\) block, and needs the detour through binary admissible
+programs.  Either family yields Trakhtenbrot's theorem in the inseparable form
+of Theorem~\ref{thm:p02-w02-p02-036-inseparable}, since
+\(\mathcal B\subseteq\mathrm{FO}\).  The register-machine version of the same
+refinement, with Skolem normal form \(\forall x\,\forall y\), is the source's
+Exercise~2.1.32, treated in \cref{sec:p02-w02b-p02-031-register}.
+
+Sources: the exercise, its hint and the remark
+\cite[Sect.~2.1.2, Exercise~2.1.31 and Remark, pp.~35--36]{BorgerGradelGurevich1997},
+which credits the exercise to B\"uchi's 1962 paper on Turing machines and the
+Entscheidungsproblem (the source's reference~[64]); the formulas
+\(\mathrm{START}\), \(\mathrm{NONSTOP}\) and (2.1)--(2.3)
+\cite[Sect.~2.1.1, pp.~20--22]{BorgerGradelGurevich1997}; the halting problems
+\(H_1\), \(H_2\), \(H_\infty\) and the reduction property
+\cite[Sect.~2.1.2, p.~34]{BorgerGradelGurevich1997}; the relativized infinity
+axiom \(\prec_{K,M}\) \cite[Sect.~2.1.2, p.~35]{BorgerGradelGurevich1997};
+B\"uchi formulas and the class \([\exists\land\forall\exists\forall,(\omega,3)]\)
+\cite[Sect.~3.2, pp.~115--116]{BorgerGradelGurevich1997}.  The block
+simulation, the slowing step, the three-region reading of \(H\) and \(T_0\), and
+the conjuncts \(\mathrm{BLANK}\), \(\mathrm{OFFDIAG}\), \(\mathrm{MOVE}\),
+\(\mathrm{ONEHEAD}\) and \(\mathrm{Act}\,x\to Kxu\) are this handbook's
+completion of the exercise; the source leaves them to the reader.

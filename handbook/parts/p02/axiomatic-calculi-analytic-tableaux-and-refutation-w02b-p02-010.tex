@@ -45,8 +45,16 @@ of formulas built from propositional variables by \(\neg\) and \(\to\) alone.
     \emph{\(\mathsf H\)-theorem} is a formula derivable from \(\varnothing\).
   \item An \(\mathsf{ND}_{\mathsf{CPL}}\) derivation is a tree of the
     inherited derivation definition, with the rules of
-    \texttt{sheet:\allowbreak nd-cpl}; every discharge is
-    nonvacuous and applies to all open occurrences of its formula.  For a
+    \texttt{sheet:\allowbreak nd-cpl}.  Discharge is by labels: an
+    application of \(\to I\), \(\neg I\) or RAA carries a label \(i\) and
+    discharges exactly the open occurrences of its bracketed formula that
+    are marked \(i\) in the derivation of its premise, and an application
+    of \(\lor E\) carries two labels and does the same for each disjunct in
+    the derivation of the corresponding minor premise.  Each carried label
+    discharges at least one occurrence, so no discharge is vacuous; the
+    discharged occurrences may be some but not all of the open occurrences
+    of the formula, and an unmarked occurrence, or one marked with another
+    label, stays open.  For a
     derivation \(D\), \(\operatorname{oa}(D)\) is the set of formulas that
     have at least one open assumption occurrence in \(D\).  For an arbitrary
     \(\Gamma\subseteq\mathsf{Fm}_{\mathsf{CPL}}\),
@@ -54,10 +62,18 @@ of formulas built from propositional variables by \(\neg\) and \(\to\) alone.
     derivation \(D\) has root \(\varphi\) and
     \(\operatorname{oa}(D)\subseteq\Gamma\).
   \item An \(\mathsf{LK}_{\mathsf{CPL}}\) derivation is a finite tree of
-    sequents of finite multisets of full-language formulas, built from the
-    contexted initial sequents by the structural, logical and cut rules of
-    the inherited classical sequent calculus, which are the propositional
-    rows of \texttt{sheet:\allowbreak lk}.  A finite set written
+    sequents \(\Gamma\Rightarrow\Delta\) of finite multisets of
+    full-language formulas whose rules are exactly the rows of
+    \texttt{sheet:\allowbreak lk} other than the four quantifier rows, with
+    every formula in \(\mathsf{Fm}_{\mathsf{CPL}}\): the contexted initial
+    sequents id and \(\bottom L\); the structural rules \(W_L\), \(W_R\),
+    \(C_L\), \(C_R\); the logical rules \(\neg L\), \(\neg R\),
+    \(\land L\), \(\land R\), \(\lor L\), \(\lor R\), \(\to L\), \(\to R\);
+    Cut; and Mix, which from \(\Gamma\Rightarrow\Delta,\varphi^{m}\) and
+    \(\varphi^{n},\Sigma\Rightarrow\Pi\) with \(m,n\ge 1\) infers
+    \(\Gamma,\Sigma\Rightarrow\Delta,\Pi\), where \(\varphi^{k}\) is \(k\)
+    occurrences of \(\varphi\) and \(\Delta,\Sigma\) may contain further
+    occurrences of \(\varphi\).  A finite set written
     as an antecedent is the multiset with multiplicity one on each member.
   \item Fix the propositional variable \(p_0\) of
     \cref{def:p02-hilbert-translation}, and put
@@ -83,6 +99,24 @@ variables, \(\neg\) and \(\to\), each of which returns the same constructor
 applied to the translated parts.  Hence the Hilbert-to-other directions need
 no formula translation, while the directions into the Hilbert calculus must
 pass through \(\operatorname{tr}_{\mathsf H}\).
+
+The three presentations treat hypotheses differently, and the maps below
+are built around the differences.  In \(\mathsf H_{\mathsf{CPL}}\) a premise
+is a member of a set, and the only way to remove it is the deduction
+theorem, which removes the formula from the premise set as a whole.  In
+\(\mathsf{ND}_{\mathsf{CPL}}\) a hypothesis is an occurrence, and a
+discharging application removes exactly the occurrences that carry its
+label; another occurrence of the same formula may remain open below it.  So
+the open assumptions of a natural-deduction derivation are not a function
+of the formulas discharged, and the map into the Hilbert calculus tracks
+them by an inclusion, re-adding a partly discharged formula by
+monotonicity.  In \(\mathsf{LK}_{\mathsf{CPL}}\) hypotheses are antecedent
+occurrences in a multiset, initial sequents carry arbitrary contexts, and
+there is no discharge at all: \(\to R\) moves a formula from antecedent to
+succedent.  Its two rules with a cut formula, Cut and Mix, differ only in
+how many occurrences of that formula they remove, and each Mix application
+is replaced by contractions and one Cut with the same conclusion in the
+proof of \cref{thm:p02-w02b-p02-010-lk-to-hilbert}.
 
 \subsection{Hilbert axiom schemas, modus ponens and the deduction theorem}
 \label{sec:p02-w02b-p02-010-hilbert}
@@ -214,7 +248,7 @@ the two earlier trees.  Consequently
 \(\Gamma\derives_{\mathsf H_{\mathsf{CPL}}}\theta\) implies
 \(\Gamma\derives_{\mathsf{ND}_{\mathsf{CPL}}}\theta\).  The derivations
 produced use only the rules assumption, \(\land I\), \(\land E_1\),
-\(\land E_2\), \(\to I\), \(\to E\), \(\neg E\) and RAA.
+\(\to I\), \(\to E\), \(\neg E\) and RAA.
 \end{hbtheorem}
 
 \begin{hbtheorem}{thm:p02-w02b-p02-010-nd-to-hilbert}{proved=annex:p02-w02b-p02-010-nd-to-hilbert}{From natural deduction to Hilbert derivations}
@@ -250,7 +284,7 @@ in particular, for finite \(\Gamma\),
 
 \begin{hbtheorem}{thm:p02-w02b-p02-010-lk-to-hilbert}{proved=annex:p02-w02b-p02-010-lk-to-hilbert}{From sequent derivations to Hilbert derivations}
 Let \(\Gamma\Rightarrow\Delta\) be derivable in \(\mathsf{LK}_{\mathsf{CPL}}\),
-and let \(D_{\Delta}=\bigvee\Delta\) be the disjunction of
+by a derivation that may use Cut and Mix, and let \(D_{\Delta}=\bigvee\Delta\) be the disjunction of
 \cref{def:p07-sequent-nd-translation}, with \(D_{\varnothing}=\bottom\).
 Then
 \(\operatorname{tr}_{\mathsf H}[\operatorname{supp}(\Gamma)]
@@ -295,27 +329,34 @@ calculus.
 \begin{enumerate}
   \item \(\mathsf H\to\mathsf{ND}\): process lines in order; for line
     \(\theta_i\) take an assumption leaf, the fixed closed derivation of the
-    axiom instance (with the A1 case split \(\varphi\neq\psi\) or
-    \(\varphi=\psi\)), or \(\to E\) beneath copies of the trees for its two
+    axiom instance, or \(\to E\) beneath copies of the trees for its two
     MP premises, relabelled apart.
   \item \(\mathsf{ND}\to\mathsf H\): recurse from the leaves to the root of
     the tree; at a rule application, concatenate the Hilbert derivations of
     the translated premises and append the derivation of the matching item
     of \cref{thm:p02-w02b-p02-010-rule-images}; for a discharging rule, first
     apply the deduction theorem to the discharged translated assumption.
+    The deduction theorem removes that formula from the premise set as a
+    whole; when the application leaves some occurrence of it open, the
+    formula is still an open assumption of the subtree, and monotonicity
+    puts it back into the premise set.
   \item \(\mathsf H\to\mathsf{LK}\): process lines in order as in step 1,
     using identity sequents, the three fixed cut-free axiom derivations, and
     two cuts for MP; finish with left contraction and left weakening.
   \item \(\mathsf{LK}\to\mathsf H\): apply the sequent-to-natural-deduction
-    construction of \cref{annex:p7.calculi.3}, then step 2.
+    construction of \cref{annex:p7.calculi.3}, in which a Mix application
+    is treated as contractions followed by one Cut, then step 2.
   \item \(\mathsf{ND}\to\mathsf{LK}\) and \(\mathsf{LK}\to\mathsf{ND}\): the
     two constructions of \cref{annex:p7.calculi.3}.
 \end{enumerate}
-\emph{Side conditions:} every discharge in a produced natural-deduction tree
-must be nonvacuous; the constructions guarantee this by the padding detour
-of \cref{thm:p02-w02b-p02-010-nd-structural}(1) and the A1 case split.
-Discharge labels in copied subtrees must be renamed apart before grafting or
-\(\to E\).  The Hilbert side has no discharge, so no side condition arises
+\emph{Side conditions:} every discharging application in a produced
+natural-deduction tree carries a label that marks at least one open
+occurrence of its formula in the relevant premise derivation; the
+constructions guarantee this by giving each assumption to be discharged its
+own label and by the padding detour of
+\cref{thm:p02-w02b-p02-010-nd-structural}(1).  Discharge labels in copied
+subtrees must be renamed apart before grafting or \(\to E\), so that no
+application discharges an occurrence it did not discharge before.  The Hilbert side has no discharge, so no side condition arises
 there beyond the formula shapes of the schemas and of MP.
 \emph{Output:} a derivation in the target calculus of the same formula or,
 for maps into \(\mathsf H_{\mathsf{CPL}}\), of its
@@ -369,6 +410,21 @@ maps preserve the conclusion, not the derivation.
 \(\mathsf{LK}_{\mathsf{CPL}}\) derivation of
 \(\Rightarrow\neg(P\to\neg Q)\to P\) that uses Cut at every MP line, whereas
 the derivation of \(\Rightarrow(P\land Q)\to P\) in the figure is cut-free.
+
+\emph{A discharge that leaves an occurrence open.}  Let \(D\) have two
+leaves, an unmarked \(P\) and \([P]^1\), joined by \(\land I\) to
+\(P\land P\), followed by \(\land E_1\) to \(P\) and by \(\to I\) with label
+\(1\) to \(P\to P\).  The application discharges only the leaf marked \(1\),
+so \(\operatorname{oa}(D)=\{P\}\) although \(P\) is the discharged formula;
+\(D\) witnesses \(\{P\}\derives_{\mathsf{ND}_{\mathsf{CPL}}}P\to P\).  For
+the subderivation \(D_1\) above \(\to I\),
+\(\operatorname{oa}(D_1)=\{P\}\subseteq\operatorname{oa}(D)\cup\{P\}\).
+The map into the Hilbert calculus derives \(P\) from \(\{P\}\) for \(D_1\)
+(items (i) and (ii) of \cref{thm:p02-w02b-p02-010-rule-images} with
+\(A=B=P\)), applies the deduction theorem with premise set
+\(\operatorname{tr}_{\mathsf H}[\operatorname{oa}(D)]=\{P\}\), and obtains
+\(\{P\}\derives_{\mathsf H_{\mathsf{CPL}}}P\to P\), whose premise set is
+exactly \(\operatorname{tr}_{\mathsf H}[\operatorname{oa}(D)]\).
 \end{hbexample}
 
 \subsection{Limitations and a failure case}
@@ -378,16 +434,31 @@ the derivation of \(\Rightarrow(P\land Q)\to P\) in the figure is cut-free.
 The usual natural-deduction proof of the A1 instance
 \(\varphi\to(\psi\to\varphi)\) assumes \(\varphi\), discharges a never-used
 \(\psi\), and then discharges \(\varphi\).  On
-\texttt{sheet:\allowbreak nd-cpl} that is not a derivation: a
-discharge needs an open occurrence of its formula.  The padding detour
-\(\varphi,\psi\vdash\varphi\land\psi\vdash\varphi\) supplies the occurrence
-of \(\psi\) when \(\psi\neq\varphi\).  It fails for the instance
-\(P\to(P\to P)\), because the inner \(\to I\) discharges every open
-occurrence of \(P\), leaving none for the outer one.  The construction
-therefore treats \(\varphi=\psi\) separately: it conjoins the assumption
-\(P\) with the closed derivation of \(P\to P\), projects to \(P\to P\), and
-discharges \(P\) once.  A translation that ignores the side condition yields
-a tree that is not a derivation.
+\texttt{sheet:\allowbreak nd-cpl} that is not a derivation: a label carried
+by a discharging application must mark at least one open occurrence of its
+formula.  The construction instead assumes \([\varphi]^1\) and
+\([\psi]^2\), forms \(\varphi\land\psi\), projects back to \(\varphi\), and
+applies \(\to I\) first with label \(2\) and then with label \(1\).  This
+works for every pair \(\varphi,\psi\), including \(\varphi=\psi\): for the
+instance \(P\to(P\to P)\) the inner application discharges exactly the
+occurrence of \(P\) marked \(2\), and the occurrence marked \(1\) stays open
+for the outer one.  The labels are what make this possible.  Under a
+reading of discharge by which an application closes every open occurrence
+of its formula in its premise derivation, a reading the sheet does not
+adopt, the same tree for \(P\to(P\to P)\) is not a derivation: the inner
+\(\to I\) would close both occurrences of \(P\), and the outer one would be
+vacuous.  A translation into a calculus with that reading needs, for
+\(\varphi=\psi\), a different tree, for instance one that conjoins the
+assumption \(P\) with a closed derivation of \(P\to P\), projects to
+\(P\to P\), and discharges \(P\) once.  Conversely, a natural-deduction
+derivation on the sheet may discharge only some occurrences of a formula,
+so the open assumptions below a discharge are not determined by the
+formulas alone; the map into the Hilbert calculus accounts for this in
+\cref{annex:p02-w02b-p02-010-nd-to-hilbert} through the inclusion
+\(\operatorname{oa}(D_1)\subseteq\operatorname{oa}(D)\cup\{\alpha\}\), for
+a derivation \(D\) whose last application discharges occurrences of
+\(\alpha\) in its premise derivation \(D_1\), rather than through an
+equation.
 \end{hbwarning}
 
 \begin{hbwarning}{def:p02-w02b-p02-010-size}{The maps preserve conclusions, not size or proof shape}
@@ -444,6 +515,7 @@ the calculi of this book; for instance, Kleene's Axiom Schema 1b, displayed
 at \cite[\S 21, p.~92]{Kleene1952}, is A2 with its two antecedents
 interchanged.  The constructions and proofs in this section are written
 directly for \texttt{sheet:\allowbreak hilbert-cpl},
-\texttt{sheet:\allowbreak nd-cpl} and the propositional rows
-of \texttt{sheet:\allowbreak lk}; the axiom schemas follow the
+\texttt{sheet:\allowbreak nd-cpl}, with its labelled discharge, and the
+rows of \texttt{sheet:\allowbreak lk} other than the quantifier rows, Mix
+included; the axiom schemas follow the
 attribution on the sheet \cite{Mendelson1997}.
