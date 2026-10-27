@@ -169,3 +169,22 @@ argument-bearing cardinality operation are explicitly typed as in
 the source. No mathematical proof or source scope was changed.
 The source theorem numbers below refer to the retained original,
 not the independently numbered handbook environments.
+
+
+## Author correction, 26 October 2026
+
+Corrected the residual splitting argument in the proof of the countability
+characterization (annex:p3.morley.countability). A point nonisolated in an
+extension residual need not have another point in its restriction fiber.
+What the proof needs is another residual point in the open inverse image
+of the parent clopen. Nonisolation gives exactly that, after which clopen
+separation, finite parameter support, and amalgamation produce the two
+children. The theorem statement and source presentation remain unchanged.
+
+The shared label annex:p3.morley.stabilization is retained for the global
+derivative bound in this 1965 presentation. The different Scott-approximant
+result in n-a-004-02 now has annex:p03-morley-scott-stabilization. Both are
+actually routed by annex/p03.tex; this was a real navigation collision,
+not a duplicate caused solely by an all-file audit. Both stable theorem
+identities are preserved. This is an author correction, not independent
+admission of either source presentation.

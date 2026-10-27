@@ -388,3 +388,60 @@ printed pp. 244-249): M+1 remark (p. 244), "A common way to check"
   (w02ca-p15-014.json driver entries), apply entries 1-31 of this
   packet's patch file, input this packet's chapter after
   sequential-evidence in both drivers.
+
+### Session 13 (2026-10-13, block 2 of r6, gap list UI C007, C009)
+
+- Guard G1 (spec/research/edition-2026-authoring-batch-intake-13.json):
+  not edited by this packet; no working-tree change; last changed by
+  commit 6de06cc3. Nothing to revert here.
+- The gap list held only the readonly unit
+  uniform-integrability-and-conditional-limits (owner w02c-p15-014).
+  Patch file w02ca-p15-019.json gained entries 32-33 (1-based) on that
+  read-only host: 32 states adaptedness in the opening of
+  thm:p15-closed-martingale (C009, the "entry states adaptedness"
+  option, independent of entries 2-3); 33 names at annex 239-241 why the
+  F_infty-measurable limit version applies to the martingale. With 19-22
+  (submartingale entry, annex 204-206, 219-221, 234-235) and 2-3
+  (definition requires adaptedness), both C007 and C009 are covered once
+  the lead applies them. All 33 anchors verified unique; 32-33 disjoint
+  from w02ca-p15-014 indices 6, 7, 9, 10.
+- Symbol intake: added bare \mathcal G (event-comparison lemma);
+  tools/check.py now reported a soft notation-scope finding for it at
+  body 127 and annex 131 (reads only the canonical registry).
+- Checks: unit-compile ok, 0 overfull; find_fused_spaces clean; check.py
+  only soft notation-scope findings (\mathcal G here, \mathcal D at
+  maximal-inequalities body 530).
+- Remaining lead actions: apply entries 1-33 of this packet's patch file;
+  input the owner chapter (w02ca-p15-014 driver entries); input this
+  packet's chapter after sequential-evidence in both drivers; adopt the
+  symbol intake.
+
+### Session 14 (2026-10-13, block 3 of r6, gap list UI C007, C009)
+
+Held file reopened this session (pdftotext -layout): p. 217 (PDF 225),
+definition with conditions (i)-(iii), (ii) adaptedness; p. 246 (PDF 254),
+Thm 4.6.4 "For a submartingale" with (i)-(iii) and its proof, Lemmas
+4.6.5-4.6.6.
+
+- The read-only UI host is unchanged (mtimes 8 September); the owner
+  chapter limit-theorems-and-concentration-w02c-p15-014 is now input in
+  both drivers (commit 6de06cc3); this packet's chapter is not.
+- Patch file w02ca-p15-019.json entries 19-22 and 32-33 rewritten so the
+  fix no longer leans on def:p15-filtration-martingale or on entries 2-3:
+  19 opens thm:p15-submartingale-ui by assuming the submartingale adapted
+  (condition (ii), p. 217; equivalence cited to Thm 4.6.4, p. 246) and
+  reads "adapted supermartingales"; 32 does the same for
+  thm:p15-closed-martingale; 20-22 and 33 cite "adapted by hypothesis" at
+  each use (annex 204-206, 219-221, 234-235, 239-241). All 33 anchors
+  verified unique.
+- Scratch compile (tmp/agent-scratch/w02ca-r6-w02ca-p15-019-b3-author) of
+  the UI host with entries 19-33 and owner indices 6, 7, 9, 10: no error,
+  11 overfull against 12 unpatched (theorem openings reworded to start
+  with words).
+- Checks: unit-compile ok, 0 overfull; find_fused_spaces clean (owned
+  files, editable hosts, patched scratch copies); check.py only the soft
+  notation-scope findings (\mathcal G here, \mathcal D at
+  maximal-inequalities body 530).
+- Remaining lead actions: apply entries 1-33 of this packet's patch file;
+  input this packet's chapter after sequential-evidence in both drivers;
+  adopt the symbol intake.

@@ -1,0 +1,604 @@
+%% toc: P3 28 28.9
+\chapter{Decidability by Elimination and Interpretation}
+\label{sec:p03-w03-p03-022-decidability}
+
+A first-order theory is decided when an algorithm answers, for every
+sentence of its signature, whether the theory proves it. This chapter
+gives two methods for obtaining such algorithms and two matching methods
+for recognising when none exists. The first method eliminates quantifiers
+effectively and then evaluates the remaining quantifier-free sentence. The
+second translates the sentences about one structure into sentences about
+another structure whose theory is already known to be decidable.
+
+The inputs are a computable signature, a theory or a structure, and either
+an explicit elimination procedure or an explicit interpretation. The
+conclusions are decision procedures, completeness of the theory when the
+quantifier-free sentences are all settled, and computable reductions that
+carry undecidability in the opposite direction. The general notion of
+quantifier elimination and the outline of the one-quantifier method are
+in \cref{sec:qe-categoricity-01}, and the classifications that the
+procedures below establish are listed in \cref{tab:p03-qe-catalog}. The
+quotient interpretations used in the second half are those of
+\cref{def:p03-imaginaries-interpretation}, with their truth lemma
+\cref{thm:p03-imaginaries-quotient-truth}. Every proof below is given in
+full in the annex; the proofs for fields also use algebraic facts proved in
+\cref{sec:p03-w03-p03-020-fields} and the sign-table construction proved in
+\cref{sec:p03-w03-p03-037-qe}.
+
+\section{Effective elimination and decision}
+\label{sec:p03-w03-p03-022-effective}
+
+\begin{hbconvention}{def:p03-w03-p03-022-standing}{Standing conventions}
+Signatures are first-order with equality and have computably presented
+symbol sets, so formulas can be coded by natural numbers and the coding of
+syntactic operations is computable. The quantifier-free formulas include
+the two constants \(\top\) and \(\bot\). For a formula \(\varphi\),
+\(\operatorname{fv}(\varphi)\) is its set of free variables. A
+\emph{literal} is an atomic formula or the negation of one. A theory
+\(T\) is a set of sentences; \(T\entails\sigma\) and \(T\derives\sigma\)
+agree by soundness and completeness of the first-order calculus, and
+\(T\) is \emph{decidable} when \(\{\sigma: T\entails\sigma\}\) is a
+decidable set of codes. For a structure \(\mathcal A\), \(\operatorname{Th}(\mathcal A)\) is
+the set of sentences true in \(\mathcal A\); a quantifier-elimination claim
+about \(\mathcal A\) means one about \(\operatorname{Th}(\mathcal A)\).
+\end{hbconvention}
+
+\begin{hbdefinition}{def:p03-w03-p03-022-effective-qe}{Effective quantifier elimination}
+A theory \(T\) \emph{eliminates quantifiers effectively} if there is an
+algorithm that sends each formula \(\varphi\) to a quantifier-free formula
+\(\psi\) with \(\operatorname{fv}(\psi)\subseteq\operatorname{fv}(\varphi)\) and
+\(T\entails\forall\bar x\,(\varphi\leftrightarrow\psi)\), where \(\bar x\)
+lists \(\operatorname{fv}(\varphi)\). An \emph{elimination step} for \(T\)
+is an algorithm doing the same for every formula
+\(\exists y\,\theta\) in which \(\theta\) is a finite conjunction of
+literals.
+\index{quantifier elimination!effective}
+\end{hbdefinition}
+
+The free-variable condition is load-bearing. Without it a sentence could be
+``eliminated'' to a formula with new free variables, and nothing would be
+decided.
+
+\begin{hblemma}{thm:p03-w03-p03-022-one-step}{proved=annex:p03-w03-p03-022-one-step}{An elimination step suffices}
+If \(T\) has an elimination step, then \(T\) eliminates quantifiers
+effectively.
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p03-w03-p03-022-decision}{proved=annex:p03-w03-p03-022-decision}{Decision from elimination}
+Let \(T\) eliminate quantifiers effectively.
+\begin{enumerate}
+\item If the set of quantifier-free sentences \(\psi\) with
+  \(T\entails\psi\) is decidable, then \(T\) is decidable.
+\item If \(T\) is consistent and, for every atomic sentence \(\alpha\),
+  either \(T\entails\alpha\) or \(T\entails\neg\alpha\), then \(T\) is
+  complete. In particular this holds when the signature has no constant
+  symbols and no nullary relation symbols, since there are then no atomic
+  sentences.
+\item If \(T\) satisfies the hypothesis of item 2, the decision of the
+  atomic sentences is computable, and \(T\) is consistent, then \(T\) is
+  complete and decidable, and \(T\) axiomatizes \(\operatorname{Th}(\mathcal A)\) for every
+  model \(\mathcal A\) of \(T\).
+\end{enumerate}
+\end{hbtheorem}
+
+The procedure has two separate inputs. Each can hold while the other
+fails, and the theorem then gives nothing.
+
+\begin{hbwarning}{def:p03-w03-p03-022-two-inputs}{Elimination alone does not decide}
+Expand the signature \(\{0,S,+,\cdot\}\) of arithmetic by a relation symbol
+\(R_\varphi\) of arity \(n\) for each formula \(\varphi(x_1,\ldots,x_n)\),
+nullary when \(\varphi\) is a sentence, and interpret \(R_\varphi\) in
+\(\N\) as the set that \(\varphi\) defines. In the expanded structure the
+map \(\varphi\mapsto R_\varphi(x_1,\ldots,x_n)\) is a computable elimination
+for the original formulas. A formula \(\chi\) of the expanded signature is
+handled by first replacing each atom \(R_\varphi(\bar t)\) by the
+corresponding instance of \(\varphi\), which yields an original formula
+\(\chi'\) equivalent to \(\chi\) in the expanded structure, and then
+returning \(R_{\chi'}\) applied to the free variables of \(\chi\).
+Yet the quantifier-free sentence \(R_\sigma\) is true
+exactly when \(\sigma\) is true in \(\N\), so deciding quantifier-free
+sentences would decide \(\operatorname{Th}(\N;0,S,+,\cdot)\). That theory
+contains \(\mathsf Q\), which is true in \(\N\), and is consistent; if it were
+decidable it would be a consistent computably enumerable extension of
+\(\mathsf Q\) with a decidable set of theorems, contrary to
+\cref{thm:theoremhood-undecidable}. Item 1 of
+\cref{thm:p03-w03-p03-022-decision} therefore genuinely needs its second
+input.
+\end{hbwarning}
+
+\section{Elimination procedures}
+\label{sec:p03-w03-p03-022-procedures}
+
+Each procedure below is an elimination step in the sense of
+\cref{def:p03-w03-p03-022-effective-qe}: it receives
+\(\exists y\,\theta\) with \(\theta\) a conjunction of literals and returns a
+quantifier-free equivalent. Two preparatory moves are shared. A conjunct of
+\(\theta\) not containing \(y\) is moved outside the quantifier, using
+\(\exists y\,(\chi\land\eta)\leftrightarrow(\chi\land\exists y\,\eta)\) when
+\(y\notin\operatorname{fv}(\chi)\). And a quantifier distributes over a
+disjunction, so a literal that the theory makes equivalent to a finite
+disjunction of atoms may be expanded and the step applied to each disjunct.
+
+\subsection{Dense linear orders}
+
+\begin{hbmethod}{def:p03-w03-p03-022-dlo-step}{Elimination step for \(\mathsf{DLO}\)}
+The signature is \(\{<\}\) and \(\mathsf{DLO}\) is as in
+\cref{thm:dlo-qe}.
+\begin{enumerate}
+\item Replace \(\neg(u<v)\) by \(v<u\lor u=v\) and \(\neg(u=v)\) by
+  \(u<v\lor v<u\); distribute, so that each disjunct is a conjunction of
+  atoms.
+\item Delete each conjunct \(y=y\). If a conjunct \(y<y\) occurs, return
+  \(\bot\) for that disjunct.
+\item If a conjunct \(y=x\) or \(x=y\) occurs with \(x\) distinct from
+  \(y\), return the result of substituting \(x\) for \(y\) in the
+  remaining conjuncts.
+\item Otherwise the \(y\)-conjuncts are \(x_i<y\) for \(i\in L\) and
+  \(y<z_j\) for \(j\in U\). Return
+  \(\bigwedge_{i\in L}\bigwedge_{j\in U}x_i<z_j\), read as \(\top\) when
+  \(L\) or \(U\) is empty.
+\end{enumerate}
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p03-w03-p03-022-dlo-step}{proved=annex:p03-w03-p03-022-dlo-step}{Correctness and consequences for \(\mathsf{DLO}\)}
+The method of \cref{def:p03-w03-p03-022-dlo-step} is an elimination step
+for \(\mathsf{DLO}\). Hence \(\mathsf{DLO}\) eliminates quantifiers
+effectively, is complete, and is decidable. In particular
+\(\operatorname{Th}(\mathbb Q;<)\) is axiomatized by \(\mathsf{DLO}\).
+\end{hbtheorem}
+
+Item 4 uses every axiom: density when both bound sets are nonempty, the
+absence of endpoints when one is empty, and nonemptiness when both are. If
+any one is dropped, the equivalence of item 4 fails in some model; for
+example, in the two-element order \(0<1\) the formula \(\exists y\,(x<y)\)
+holds of \(0\) and fails of \(1\), while its proposed equivalent \(\top\)
+holds of both.
+
+\subsection{Successor with a named initial element}
+
+\begin{hbdefinition}{def:p03-w03-p03-022-succ-theory}{The theory \(T_{\mathrm S}\)}
+In the signature \(\{0,S\}\), with \(S\) unary, let \(S^0t=t\) and
+\(S^{k+1}t=S(S^kt)\). The theory \(T_{\mathrm S}\) has the axioms
+\[
+ \forall x\,S x\ne 0,\qquad
+ \forall x\forall y\,(Sx=Sy\to x=y),\qquad
+ \forall x\,(x\ne0\to\exists y\,Sy=x),
+\]
+and, for every \(n\ge1\), \(\forall x\,S^nx\ne x\).
+\end{hbdefinition}
+
+\begin{hbmethod}{def:p03-w03-p03-022-succ-step}{Elimination step for \(T_{\mathrm S}\)}
+Every term is \(S^kv\) with \(v\) a variable or \(0\), and every atom is
+\(S^ku=S^lv\).
+\begin{enumerate}
+\item Replace a conjunct \(S^ky=S^ly\) by \(\top\) if \(k=l\) and by
+  \(\bot\) otherwise.
+\item Let \(K\) be the largest exponent of \(y\) in the remaining
+  conjuncts. Replace each conjunct \(S^ky=S^lv\) or its negation, with
+  \(v\) other than \(y\), by \(S^Ky=S^{l+K-k}v\) or its negation.
+\item Replace \(S^Ky\) by a fresh variable \(z\), and add the conjuncts
+  \(z\ne S^j0\) for \(j<K\). The formula is now
+  \(\exists z\,\eta\) where every \(z\)-literal is \(z=t\) or \(z\ne t\)
+  with \(t\) free of \(z\).
+\item If some conjunct is \(z=t\), return the result of substituting
+  \(t\) for \(z\) in the remaining conjuncts. Otherwise return \(\top\).
+\end{enumerate}
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p03-w03-p03-022-succ}{proved=annex:p03-w03-p03-022-succ}{Elimination and decision for successor}
+The method of \cref{def:p03-w03-p03-022-succ-step} is an elimination step
+for \(T_{\mathrm S}\). Consequently \(T_{\mathrm S}\) eliminates quantifiers
+effectively and is complete and decidable. It axiomatizes the theory
+\(\operatorname{Th}(\N;0,S)\). The theory \(\operatorname{Th}(\N;S)\) in the
+signature \(\{S\}\) is decidable.
+\end{hbtheorem}
+
+\begin{hbwarning}{def:p03-w03-p03-022-succ-no-zero}{Without the named element}
+In the signature \(\{S\}\) alone, \(\operatorname{Th}(\N;S)\) does not
+eliminate quantifiers. A quantifier-free formula in the single variable
+\(x\) is a Boolean combination of atoms \(S^kx=S^lx\), each of which is
+true at every element of \(\N\) or at none. So such a formula defines
+\(\emptyset\) or \(\N\). The formula \(\exists y\,Sy=x\) defines
+\(\N\setminus\{0\}\). The decision procedure of
+\cref{thm:p03-w03-p03-022-succ} survives because a sentence in \(\{S\}\)
+is also a sentence in \(\{0,S\}\) with the same truth value in \(\N\);
+the elimination is carried out after the expansion.
+\end{hbwarning}
+
+\subsection{Atomless Boolean algebras}
+
+\begin{hbdefinition}{def:p03-w03-p03-022-aba}{Atomless Boolean algebras}
+The signature has constants \(0\) and \(1\), binary meet \(\sqcap\),
+binary join \(\sqcup\) and unary complement \(-\). \(\mathsf{BA}\) is the theory of Boolean algebras
+together with \(0\ne1\). Write \(u\le v\) for \(u\sqcap v=u\). The theory
+\(\mathsf{ABA}\) adds
+\[
+ \forall x\,\bigl(x\ne0\to\exists y\,(y\le x\land y\ne0\land y\ne x)\bigr).
+\]
+For terms \(u,v\), put \(u\triangle v=(u\sqcap -v)\sqcup(-u\sqcap v)\).
+\end{hbdefinition}
+
+\begin{hbmethod}{def:p03-w03-p03-022-aba-step}{Elimination step for \(\mathsf{ABA}\)}
+\begin{enumerate}
+\item Replace each atom \(u=v\) by \(u\triangle v=0\). Each literal is now
+  \(\tau=0\) or \(\tau\ne0\).
+\item For each term \(\tau(\bar x,y)\) put \(\tau_1=\tau(\bar x,1)\) and
+  \(\tau_0=\tau(\bar x,0)\). Combine the equations \(\tau^{(i)}=0\) into the
+  pair \(a=0\) and \(b=0\) with \(a=\bigsqcup_i\tau^{(i)}_1\) and
+  \(b=\bigsqcup_i\tau^{(i)}_0\), both \(0\) if there are no equations.
+\item Replace each \(\sigma\ne0\) by
+  \(\sigma_1\sqcap y\ne0\lor\sigma_0\sqcap-y\ne0\) and distribute. Each
+  disjunct has \(y\)-literals \(a\sqcap y=0\), \(b\sqcap-y=0\),
+  \(c_j\sqcap y\ne0\) for \(j\in J\), and \(d_k\sqcap -y\ne0\) for
+  \(k\in K\).
+\item Return
+  \(a\sqcap b=0\land\bigwedge_{j\in J}c_j\sqcap-a\ne0
+   \land\bigwedge_{k\in K}d_k\sqcap-b\ne0\).
+\end{enumerate}
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p03-w03-p03-022-aba}{proved=annex:p03-w03-p03-022-aba}{Elimination and decision for atomless Boolean algebras}
+The method of \cref{def:p03-w03-p03-022-aba-step} is an elimination step
+for \(\mathsf{ABA}\). Consequently \(\mathsf{ABA}\) eliminates quantifiers
+effectively, is complete and is decidable.
+\end{hbtheorem}
+
+The atomless axiom is used once, to split each atom of a finite partition
+in item 4, and it cannot be removed. Let \(\mathcal P\) be the algebra of
+subsets of \(\{1,2,3\}\). By induction on terms, every term \(t(x)\) in the
+single variable \(x\) takes, as a function of \(x\), one of the four forms
+\(0\), \(1\), \(x\), \(-x\) in every Boolean algebra, and whether an equation
+between two of these forms holds at an element depends only on whether the
+element is \(0\) or \(1\). Hence \(\{1\}\) and \(\{1,2\}\) satisfy the same
+quantifier-free formulas of \(\mathcal P\), while
+\(\exists y\,(y\le x\land y\ne0\land y\ne x)\) holds at \(\{1,2\}\) and
+fails at the atom \(\{1\}\). So \(\operatorname{Th}(\mathcal P)\), a complete
+extension of \(\mathsf{BA}\), does not eliminate quantifiers.
+
+\subsection{Integers and naturals with addition and congruences}
+
+\begin{hbdefinition}{def:p03-w03-p03-022-presburger}{The signatures \(\Lang_{\mathbb Z}\) and \(\Lang_{\N}\)}
+\(\Lang_{\mathbb Z}\) has constants \(0,1\), binary \(+\), unary \(-\), binary
+\(<\), and a unary relation symbol \(\mathrm D_n\) for each integer
+\(n\ge1\). The structure \(\mathcal Z\) is \(\mathbb Z\) with the usual
+interpretations and \(\mathrm D_n(m)\) iff \(n\) divides \(m\). The signature
+\(\Lang_{\N}\) omits \(-\); the structure \(\mathcal N\) is \(\N\) with the
+same interpretations. For an integer \(k\) and a term \(t\), \(kt\)
+abbreviates \(t+\cdots+t\) (\(k\) summands) for \(k>0\), \(0\) for
+\(k=0\), and \(-(|k|t)\) for \(k<0\); \(k\) alone abbreviates \(k1\).
+\end{hbdefinition}
+
+Every \(\Lang_{\mathbb Z}\)-term \(t\) has the same value in \(\mathcal Z\) as
+a unique \emph{normal term} \(\sum_ik_ix_i+c\) with integer coefficients,
+and the normal term is computed by collecting coefficients.
+
+\begin{hbmethod}{def:p03-w03-p03-022-cooper-step}{Elimination step for \(\operatorname{Th}(\mathcal Z)\)}
+\begin{enumerate}
+\item Normalize terms. Replace \(s=t\) by \(0<t-s+1\land0<s-t+1\),
+  \(s<t\) by \(0<t-s\), \(\neg(0<t)\) by \(0<1-t\), and
+  \(\neg\mathrm D_n(t)\) by \(\bigvee_{r=1}^{n-1}\mathrm D_n(t+r)\) (by
+  \(\bot\) when \(n=1\)); distribute. Each \(y\)-literal is now
+  \(0<ky+t\) or \(\mathrm D_n(ky+t)\) with \(k\ne0\) and \(t\) free of
+  \(y\).
+\item Let \(\ell\) be the least common multiple of the \(|k|\). Multiply
+  \(0<ky+t\) by \(\ell/|k|\). Replace \(\mathrm D_n(ky+t)\) by
+  \(\mathrm D_{n\ell/|k|}(\ell y+(\ell/k)t)\). Every \(y\)-occurrence is now
+  \(\ell y\) or \(-\ell y\).
+\item Replace \(\ell y\) by a fresh \(z\) and add the conjunct
+  \(\mathrm D_\ell(z)\). The \(z\)-literals are \(z<a_i\) (\(i\in I\)),
+  \(b_j<z\) (\(j\in J\)) and \(\mathrm D_{m_h}(z+c_h)\) (\(h\in H\)), with
+  \(a_i,b_j,c_h\) free of \(z\). Write \(\eta(z)\) for their conjunction.
+\item Let \(M\) be the least common multiple of the \(m_h\). If \(J\) is
+  nonempty, return \(\bigvee_{j\in J}\bigvee_{r=1}^M\eta(b_j+r)\). If
+  \(J\) is empty, return
+  \(\bigvee_{r=1}^M\bigwedge_{h\in H}\mathrm D_{m_h}(r+c_h)\).
+\end{enumerate}
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p03-w03-p03-022-presburger}{proved=annex:p03-w03-p03-022-presburger}{Elimination and decision with congruence predicates}
+The method of \cref{def:p03-w03-p03-022-cooper-step} is an elimination step
+for \(\operatorname{Th}(\mathcal Z)\). Consequently \(\operatorname{Th}(\mathcal Z)\) eliminates
+quantifiers effectively and is decidable. Moreover
+\(\operatorname{Th}(\mathcal N)\) eliminates quantifiers effectively in
+\(\Lang_{\N}\) and is decidable, and so is
+\(\operatorname{Th}(\N;0,1,+,<)\).
+\end{hbtheorem}
+
+\begin{hbexample}{def:p03-w03-p03-022-parity}{Eliminating a parity quantifier}
+Take \(\exists y\,(y+y=x)\). Item 1 gives
+\(\exists y\,(0<x-2y+1\land0<2y-x+1)\). Here \(\ell=2\); item 3 gives
+\(\exists z\,(z<x+1\land x-1<z\land\mathrm D_2(z))\), so
+\(J\) contains the single bound \(b=x-1\), \(H\) contains \(\mathrm D_2(z+0)\),
+and \(M=2\). Item 4 returns the disjunction over \(r=1,2\) of
+\(x-1+r<x+1\land x-1<x-1+r\land\mathrm D_2(x-1+r)\). Evaluating the
+order literals, the disjunct \(r=1\) reduces to \(\mathrm D_2(x)\) and the
+disjunct \(r=2\) contains \(x+1<x+1\), which is false. The result is
+equivalent to \(\mathrm D_2(x)\).
+\end{hbexample}
+
+\begin{hblemma}{thm:p03-w03-p03-022-presburger-boundary}{proved=annex:p03-w03-p03-022-presburger-boundary}{The congruence predicates are needed}
+In the signature \(\{0,1,+,<\}\), no quantifier-free formula \(\psi(x)\)
+satisfies \(\mathcal N\models\psi(m)\) exactly for the even \(m\). Hence
+\(\operatorname{Th}(\N;0,1,+,<)\) does not eliminate quantifiers in that
+signature, although it is decidable.
+\end{hblemma}
+
+\subsection{Algebraically closed fields}
+\label{sec:p03-w03-p03-022-acf}
+
+The language is the ring language \(\Lang_{\mathrm r}\) of
+\cref{sec:p03-w03-p03-020-fields}, and \(\mathsf{ACF}_p\) is the theory
+defined there. Write \(\mathsf{ACF}\) for the field axioms together with
+the root axioms \(\forall a_0\cdots\forall a_{d-1}\,\exists y\,
+(y^d+a_{d-1}y^{d-1}+\cdots+a_0=0)\) for all \(d\ge1\), with no axiom on the
+characteristic. Every \(\Lang_{\mathrm r}\)-term \(t\) denotes, in every
+commutative ring, the value of an integer polynomial \(P_t\), computed from
+\(t\) by recursion on \(t\); conversely, a term denoting a given integer
+polynomial is computed from it. For an integer polynomial \(c\), the
+formula \(c=0\) is the atom \(t=0\) with \(P_t=c\).
+
+\begin{hbconvention}{def:p03-w03-p03-022-parametric}{Parametric polynomials over a field}
+Parametric polynomials in a variable \(y\) with parameter variables
+\(\bar x\), their formal degree, formal leading coefficient and truncations
+\(F_{\le j}\) are as in \cref{def:p03-w03-p03-037-parametric}, with
+coefficients in \(\mathbb Z[\bar x]\). \emph{Padding} \(F\) to a formal
+degree \(N\) at least its own appends zero coefficients. For a field \(K\)
+and \(\bar a\in K^m\), \(F(\bar a)\in K[y]\) is obtained by evaluating the
+coefficients at \(\bar a\) through the ring homomorphism
+\(\mathbb Z\to K\). The pseudo-remainder \(\operatorname{prem}(H,F)\) is
+that of \cref{def:p03-w03-p03-037-prem}, computed by the recursion that
+proves \cref{thm:p03-w03-p03-037-prem}; that recursion also covers the
+case in which \(H\) has formal degree \(q-1\), where it returns \(H\)
+itself. So when \(F\) has formal degree
+\(q\ge1\) and formal leading coefficient \(b\), and \(H\) has formal degree
+\(N\ge q-1\), it has formal degree \(q-1\) and satisfies
+\(b^{N-q+1}H=AF+\operatorname{prem}(H,F)\) in \(\mathbb Z[\bar x][y]\) for
+some \(A\) (\cref{thm:p03-w03-p03-037-prem}). This is an identity between
+integer polynomials, so it survives evaluation in every field.
+\end{hbconvention}
+
+\begin{hbmethod}{def:p03-w03-p03-022-acf-step}{Elimination step for \(\mathsf{ACF}\)}
+\emph{Input.} \(\exists y\,\theta\) with \(\theta\) a conjunction of
+\(\Lang_{\mathrm r}\)-literals; \(\bar x\) lists the other variables of
+\(\theta\).
+
+\emph{Preparation.} For each literal \(t=s\) or \(\neg\,t=s\), compute
+\(P_t-P_s\) and read it as a parametric polynomial in \(y\) whose formal
+degree is its degree in \(y\) (formal degree \(0\) for the zero
+polynomial). Let \(F_1,\ldots,F_k\) come from the equations and
+\(G_1,\ldots,G_l\) from the negated equations, and let \(G\) be the product
+\(G_1\cdots G_l\) with the sum of their formal degrees (\(G=1\), of formal
+degree \(0\), when \(l=0\)). Return \(\operatorname{Elim}(F_1,\ldots,F_k;G)\).
+
+\emph{Recursion.} \(\operatorname{Elim}(F_1,\ldots,F_k;G)\) is given by the
+first applicable clause.
+\begin{enumerate}
+\item If \(k=0\), return \(\bigvee_c\neg\,c=0\), where \(c\) ranges over
+  the coefficients of \(G\).
+\item If some \(F_i\) has formal degree \(0\), say \(F_i=c\) with \(i\)
+  least, return
+  \(c=0\land\operatorname{Elim}(F_1,\ldots,F_{i-1},F_{i+1},\ldots,F_k;G)\).
+\item If \(k=1\), let \(F=F_1\) have formal degree \(q\ge1\) and formal
+  leading coefficient \(b\), let \(g\) be the formal degree of \(G\), let
+  \(H\) be \(G^q\) padded to formal degree \(\max(qg,q-1)\), and let
+  \(R=\operatorname{prem}(H,F)\). Return
+  \[
+  \bigl(b=0\land\operatorname{Elim}(F_{\le q-1};G)\bigr)\lor
+  \Bigl(\neg\,b=0\land\bigvee_r\neg\,r=0\Bigr),
+  \]
+  where \(r\) ranges over the coefficients of \(R\).
+\item If \(k\ge2\), let \(i\) be least such that \(F_i\) has the least
+  formal degree \(q\), and let \(b\) be its formal leading coefficient.
+  Return
+  \begin{multline*}
+  \bigl(b=0\land\operatorname{Elim}(F_1,\ldots,(F_i)_{\le q-1},\ldots,F_k;G)\bigr)\\
+  \lor\bigl(\neg\,b=0\land\operatorname{Elim}(F'_1,\ldots,F'_k;G)\bigr),
+  \end{multline*}
+  with \(F'_i=F_i\) and \(F'_j=\operatorname{prem}(F_j,F_i)\) for \(j\ne i\).
+\end{enumerate}
+Side conditions: \(\operatorname{prem}(F_j,F_i)\) is defined in item 4
+because \(F_j\) has formal degree at least \(q\). The pair (sum of the
+formal degrees of the \(F_i\), number \(k\)) decreases lexicographically
+at every recursive call, so the recursion stops. Item 3 tests whether
+\(F(\bar a)\) divides \(G(\bar a)^q\).
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p03-w03-p03-022-acf-step}{proved=annex:p03-w03-p03-022-acf-step}{Correctness of the step}
+For every model \(K\) of \(\mathsf{ACF}\), every list
+\(F_1,\ldots,F_k,G\) of parametric polynomials with parameters \(\bar x\)
+and every \(\bar a\in K^m\), the formula
+\(\operatorname{Elim}(F_1,\ldots,F_k;G)\) holds in \(K\) at \(\bar a\)
+if and only if some \(y\in K\) satisfies
+\[
+F_1(\bar a)(y)=\cdots=F_k(\bar a)(y)=0
+\quad\text{and}\quad G(\bar a)(y)\ne0 .
+\]
+Consequently the method of \cref{def:p03-w03-p03-022-acf-step} is an
+elimination step for \(\mathsf{ACF}\) and for every \(\mathsf{ACF}_p\).
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p03-w03-p03-022-acf}{proved=annex:p03-w03-p03-022-acf}{Decision for algebraically closed fields}
+Assume the Axiom of Choice. For \(p=0\) and every prime \(p\),
+\(\mathsf{ACF}_p\) eliminates quantifiers effectively in
+\(\Lang_{\mathrm r}\), is complete and decidable, and axiomatizes
+\(\operatorname{Th}(K)\) for every algebraically closed field \(K\) of
+characteristic \(p\). The theory \(\mathsf{ACF}\) eliminates quantifiers
+effectively and is decidable, but it is not complete.
+\end{hbtheorem}
+
+The choice principle enters only through
+\cref{thm:p03-w03-p03-020-closure-exists}, which supplies a model of each
+\(\mathsf{ACF}_p\); the procedure and its correctness do not use it. The
+theorem makes the elimination of \cref{thm:p03-w03-p03-020-acf-qe}
+effective; that proof runs through the one-point test and yields no
+algorithm. For \(\mathsf{ACF}\), item 1 of
+\cref{thm:p03-w03-p03-022-decision} applies while item 2 fails, since the
+atomic sentences \(\chi_p\) are left undecided.
+
+\begin{hbexample}{def:p03-w03-p03-022-acf-example}{Two runs of the step}
+Take \(\exists y\,(y\cdot y=x\land\neg\,y=0)\). Preparation gives
+\(F=y^2-x\), with coefficients \((-x,0,1)\) and formal degree \(2\), and
+\(G=y\) of formal degree \(1\). Item 3 applies with \(q=2\) and \(b=1\).
+Here \(H=y^2\) has formal degree \(2\), and the recursion of
+\cref{thm:p03-w03-p03-037-prem} performs one reduction,
+\(1\cdot H_{\le1}-1\cdot F_{\le1}=x+0\cdot y\), of formal degree \(1\); so
+\(R=x+0\cdot y\). The output is
+\((1=0\land\operatorname{Elim}(F_{\le1};G))\lor(\neg\,1=0\land(\neg\,x=0\lor\neg\,0=0))\).
+In every field the first disjunct and \(\neg\,0=0\) are false, so the
+output is equivalent to \(\neg\,x=0\): a nonzero element has a nonzero
+square root.
+
+Take \(\exists y\,(y\cdot y=1\land y=x)\), with \(F_1=y^2-1\),
+\(F_2=y-x\) and \(G=1\). Item 4 picks \(F_2\), with \(q=1\) and \(b=1\).
+Two reductions give \(\operatorname{prem}(F_1,F_2)=x^2-1\), of formal degree
+\(0\). Item 2 then outputs \(x\cdot x-1=0\) conjoined with
+\(\operatorname{Elim}(F_2;1)\). Item 3 applied to \(F_2\) and \(G=1\) gives
+\(H=R=1\) and the output
+\((1=0\land\operatorname{Elim}(-x;1))\lor(\neg\,1=0\land\neg\,1=0)\), which
+is true in every field. The whole output is therefore equivalent, in every
+field, to \(x\cdot x-1=0\).
+\end{hbexample}
+
+\begin{hbwarning}{def:p03-w03-p03-022-acf-boundary}{Where algebraic closure is used}
+The correctness proof uses the root axioms twice: to split \(F(\bar a)\)
+into linear factors in item 3, and, through the infiniteness of
+algebraically closed fields, to find a non-root of \(G(\bar a)\) in item 1.
+Neither use can be dropped. On \(\exists y\,(y\cdot y+1=0)\) item 3 returns
+\((1=0\land\operatorname{Elim}(F_{\le1};1))\lor(\neg\,1=0\land(\neg\,1=0\lor\neg\,0=0))\),
+which is true in every field, while the input fails in the ordered field
+\(\mathbb R\). On \(\exists y\,\neg\,(y^p-y=0)\), with \(y^p\) the
+\(p\)-fold product and \(p\) prime, item 1 returns a disjunction with the
+disjunct \(\neg\,1=0\), true in every field, while the input fails in the
+field with \(p\) elements, where every element is a root of \(y^p-y\):
+\(0\) trivially, and each nonzero element because its multiplicative order
+divides \(p-1\), the order of the group of nonzero elements. So the method is not an elimination step for the
+theory of fields, in agreement with \cref{def:p03-w03-p03-020-quadratic},
+which shows by preservation that no elimination exists there.
+\end{hbwarning}
+
+\subsection{Real closed fields}
+\label{sec:p03-w03-p03-022-rcf}
+
+For \(\mathsf{RCF}\) in the ordered-ring language \(\Lang_{\mathrm{or}}\) of
+\cref{def:p03-w03-p03-037-rcf}, the elimination of
+\cref{thm:p03-w03-p03-037-qe} is built from the one-step method of
+\cref{def:p03-w03-p03-037-elimination-step}. A quantifier \(\exists x\) over
+a conjunction of sign conditions is replaced by the disjunction of the
+formulas \(\theta_{\mathcal P,t}\) of \cref{thm:p03-w03-p03-037-uniform-sign}
+over the sign tables \(t\) that contain the required sign vector. Each
+\(\theta_{\mathcal P,t}\) is defined by recursion on the list
+\(\mathcal P\), from formal derivatives, coefficients and pseudo-remainders,
+through a map \(\Phi\) on finite words. The next theorem records that every
+ingredient is computable and draws the consequences.
+
+\begin{hbtheorem}{thm:p03-w03-p03-022-rcf}{proved=annex:p03-w03-p03-022-rcf}{Effective elimination and decision for real closed fields}
+The construction of \cref{thm:p03-w03-p03-037-qe} is an algorithm: it
+sends each \(\Lang_{\mathrm{or}}\)-formula \(\varphi\) to a quantifier-free
+\(\psi\) with \(\operatorname{fv}(\psi)\subseteq\operatorname{fv}(\varphi)\)
+and \(\mathsf{RCF}\entails\forall\bar x\,(\varphi\leftrightarrow\psi)\).
+Consequently \(\mathsf{RCF}\) eliminates quantifiers effectively, is
+complete and decidable, and axiomatizes \(\operatorname{Th}(K)\) for every
+real closed field \(K\). In particular
+\(\operatorname{Th}(\mathbb R;0,1,+,-,\cdot,<)\) is decidable, and so is
+\(\operatorname{Th}(\mathbb R;0,1,+,-,\cdot)\).
+\end{hbtheorem}
+
+\begin{hbexample}{def:p03-w03-p03-022-rcf-example}{The sign-table step on a linear equation}
+Take \(\exists x\,(a\cdot x+b=0)\), so \(\mathcal P=(P)\) with
+\(P=ax+b\) of formal degree \(1\), and the required sign vector is \((0)\).
+Where \(a=0\), the list \(\mathcal P^\flat=(b)\) has one-letter sign tables,
+and \(\theta_{\mathcal P^\flat,((0))}\) is \(b=0\). Where \(a\ne0\), the list
+\(\mathcal Q\) of \cref{def:p03-w03-p03-037-elimination-step} is
+\((P',a,a)\) with \(P'=a\): the formal derivative, the formal leading
+coefficient and the one coefficient of \(P'\); there are no
+pseudo-remainders, since \(P'\) has formal degree \(0\). Its sign table is
+the single letter \((s,s,s)\) with \(s=\operatorname{sgn}a\). The map
+\(\Phi\) finds no root of \(P'\), gives \(P\) the signs \(-s\) and \(s\) at
+\(-\infty\) and \(+\infty\), and the fourth case of
+\cref{thm:p03-w03-p03-037-interval} splits the line at one root; so
+\(\Phi(((s,s,s)))=((-s),(0),(s))\). Every other one-letter word \(u\) has a
+zero coordinate or two coordinates of opposite sign, so
+\(\neg\,a=0\land\theta_{\mathcal Q,u}\) is false in every ordered field.
+Deleting these false disjuncts and repeated conjuncts, the output is
+\((a=0\land b=0)\lor(\neg\,a=0\land a>0)\lor(\neg\,a=0\land a<0)\), that
+is, \(a\ne0\lor b=0\). For the sentence \(\exists x\,((1+1)\cdot x+1=0)\)
+the same run has the integers \(2\) and \(1\) in place of \(a\) and \(b\),
+and evaluating its integer atoms gives the value true; so \(\mathsf{RCF}\)
+proves the sentence.
+\end{hbexample}
+
+The procedures of this subsection and the previous one carry no time bound.
+The complexity entries of \cref{tab:p03-qe-catalog} are separate results
+and are not derived from them.
+
+\section{Interpretations and decidability transfer}
+\label{sec:p03-w03-p03-022-interpretations}
+
+\begin{hbdefinition}{def:p03-w03-p03-022-interpreted-structure}{A structure interpreted in another}
+Let \(\mathcal A\) be a \(K\)-structure and \(\mathcal B\) an \(L\)-structure,
+both one-sorted. An \emph{interpretation of \(\mathcal A\) in \(\mathcal B\)}
+is an interpretation \(I\) in the sense of
+\cref{def:p03-imaginaries-interpretation}, taken with source theory
+\(\operatorname{Th}(\mathcal B)\) and one target sort, together with an isomorphism
+\(I(\mathcal B)\cong\mathcal A\). It is \emph{computable} when \(K\) is
+computably presented and the assignment of the domain, equality, relation
+and graph formulas to the symbols of \(K\) is computable; when \(K\) is
+finite every interpretation is computable.
+\index{interpretation!decidability transfer}
+\end{hbdefinition}
+
+The parameter-free requirement is part of the definition. Parameters are
+allowed only after naming them by constants in \(L\), as in
+\cref{def:p03-imaginaries-standing}; the transfer below then concerns the
+theory of the expanded \(\mathcal B\).
+
+\begin{hbtheorem}{thm:p03-w03-p03-022-transfer}{proved=annex:p03-w03-p03-022-transfer}{Transfer of decidability and undecidability}
+Let \(I\) be a computable interpretation of \(\mathcal A\) in \(\mathcal B\).
+The map \(\sigma\mapsto\sigma^I\) of \cref{def:p03-imaginaries-translation}
+is computable on \(K\)-sentences and satisfies
+\[
+  \mathcal A\models\sigma\quad\Longleftrightarrow\quad
+  \mathcal B\models\sigma^I .
+\]
+Hence \(\operatorname{Th}(\mathcal A)\) is many-one reducible to
+\(\operatorname{Th}(\mathcal B)\). If \(\operatorname{Th}(\mathcal B)\) is decidable,
+so is \(\operatorname{Th}(\mathcal A)\); if \(\operatorname{Th}(\mathcal A)\) is
+undecidable, so is \(\operatorname{Th}(\mathcal B)\).
+\end{hbtheorem}
+
+\begin{hbexample}{def:p03-w03-p03-022-nat-in-int}{The naturals inside the integers}
+Interpret \(\mathcal N\) in \(\mathcal Z\) in dimension one with domain
+\(\neg\,x<0\), equality \(x=x'\), and the relation and graph formulas of
+\(\Lang_{\N}\) read literally in \(\Lang_{\mathbb Z}\). The identity map is
+the required isomorphism. \Cref{thm:p03-w03-p03-022-transfer} yields the
+decidability of \(\operatorname{Th}(\mathcal N)\) from that of
+\(\operatorname{Th}(\mathcal Z)\). The relativization of quantifiers to
+\(\neg\,x<0\) in the annex proof of \cref{thm:p03-w03-p03-022-presburger}
+is this translation with its term-value clauses removed, which is possible
+because the domain is closed under the operations.
+\end{hbexample}
+
+\begin{hbexample}{def:p03-w03-p03-022-int-in-nat}{The integers as differences of naturals}
+Interpret \((\mathbb Z;0,1,+,-,<)\) in \((\N;0,1,+,<)\) in dimension two.
+The domain is all pairs, the equality formula is
+\(x_1+x_2'=x_2+x_1'\), and the formulas for \(0\), \(1\), \(+\), \(-\)
+and \(<\) are \(z_1=z_2\), \(z_1=z_2+1\),
+\(z_1+x_2+y_2=z_2+x_1+y_1\), \(z_1+x_1=z_2+x_2\) and
+\(x_1+y_2<y_1+x_2\). The map \((p,q)\mapsto p-q\) is the isomorphism. Here
+the equality formula is not literal equality: distinct pairs represent the
+same integer, which is the reason quotient interpretations are needed.
+\end{hbexample}
+
+\begin{hbwarning}{def:p03-w03-p03-022-transfer-boundary}{What the transfer does not give}
+The reduction runs from \(\mathcal A\) to \(\mathcal B\) only.
+\((\N;S)\) is interpreted in \((\N;0,S,+,\cdot)\) by the identity
+translation, its theory is decidable by \cref{thm:p03-w03-p03-022-succ},
+and the theory of the larger structure is undecidable by
+\cref{thm:theoremhood-undecidable}, by the argument of
+\cref{def:p03-w03-p03-022-two-inputs}; nothing passes from the interpreted
+structure back to the interpreting one. The theorem also concerns complete
+theories of structures. For an interpretation of one incomplete theory in
+another, plain undecidability does not transfer and the stronger
+hypothesis of essential undecidability is required, as in
+\cref{thm:p05-interpretation-transfer} \cite{TMR1953}.
+\end{hbwarning}

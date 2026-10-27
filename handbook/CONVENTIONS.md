@@ -180,6 +180,14 @@ enforces: every `proved=`/`sketched=` target exists as an `annexitem`, and every
 discipline). Inside `annexitem`, ordinary `proof` environments are allowed; a
 sketch must open with `\sketchnote{<what is omitted>}`.
 
+A system-entry adequacy or decidability field may navigate to an existing
+theorem-owned annex without creating another proof owner. In that case its
+status form must match the owning result, and the same field must explicitly
+reference that exact body result. The annex still has exactly one reciprocal
+body-result backref. Entry-owned annexes remain permitted when the backref is
+the entry itself; a navigation link does not license two theorem owners, an
+unresolved annex, or a stronger proof status than the owning result carries.
+
 Stubs: `\hbstub{<one sentence: what is pending, which register rows>}` — renders
 visibly boxed and is counted by tools.  Zero stubs is only a structural metric;
 it does not establish full transcription or any source-fidelity AI,

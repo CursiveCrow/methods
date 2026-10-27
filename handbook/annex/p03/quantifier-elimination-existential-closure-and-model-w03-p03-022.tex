@@ -1,0 +1,704 @@
+%% toc: P3 28 28.9
+\section{Proofs for decidability by elimination and interpretation}
+\label{sec:annex-p03-w03-p03-022-decidability}
+
+\begin{annexitem}{annex:p03-w03-p03-022-one-step}{thm:p03-w03-p03-022-one-step}{An elimination step suffices}
+\begin{proof}
+Fix an elimination step \(\Sigma\) for \(T\). Define \(E(\varphi)\) by
+recursion on \(\varphi\). For atomic \(\varphi\), and for \(\top\) and
+\(\bot\), put \(E(\varphi)=\varphi\). Let \(E\) commute with each
+propositional connective. Put \(E(\forall y\,\varphi)=E(\neg\exists y\,\neg\varphi)\).
+For \(\exists y\,\varphi\), first compute the quantifier-free formula
+\(\psi=E(\varphi)\). Compute a disjunctive normal form
+\(\bigvee_{i<m}\theta_i\) of \(\psi\), in which each \(\theta_i\) is a
+finite conjunction of literals of \(\psi\); this is a propositional
+transformation of the atoms of \(\psi\), it introduces no variable, and
+\(\psi\leftrightarrow\bigvee_i\theta_i\) is a tautology. Here \(m=0\) when
+\(\psi\) is propositionally unsatisfiable, and the empty conjunction is
+\(\top\). Put
+\[
+  E(\exists y\,\varphi)=\bigvee_{i<m}\psi_i,\qquad
+  \psi_i=\begin{cases}\top,&\theta_i=\top,\\
+  \Sigma(\exists y\,\theta_i),&\text{otherwise.}\end{cases}
+\]
+Each clause is a computable operation on codes, so \(E\) is computable,
+and \(E(\varphi)\) is quantifier-free by construction.
+
+We prove by induction on \(\varphi\) that
+\(\operatorname{fv}(E(\varphi))\subseteq\operatorname{fv}(\varphi)\) and
+\(T\entails\forall\bar x\,(\varphi\leftrightarrow E(\varphi))\). The atomic
+case is trivial, and the propositional cases follow because truth of a
+Boolean combination at an assignment depends only on the truth of its
+components there. The universal case reduces to the negation and
+existential cases. For \(\exists y\,\varphi\), let \(\mathcal M\models T\) and
+let \(s\) be an assignment. By the induction hypothesis, for every
+\(b\in M\), \(\mathcal M\models\varphi[s(y{:}b)]\) iff
+\(\mathcal M\models\psi[s(y{:}b)]\), so \(\exists y\,\varphi\) and
+\(\exists y\,\psi\) have the same truth value at \(s\). The equivalence
+\(\exists y\bigvee_i\theta_i\leftrightarrow\bigvee_i\exists y\,\theta_i\) is
+valid. Since every structure is nonempty, \(\exists y\,\top\) is valid, and
+for the other \(i\) the step gives
+\(T\entails\exists y\,\theta_i\leftrightarrow\psi_i\). Finally
+\(\operatorname{fv}(\psi_i)\subseteq\operatorname{fv}(\exists y\,\theta_i)
+\subseteq\operatorname{fv}(\psi)\setminus\{y\}
+\subseteq\operatorname{fv}(\varphi)\setminus\{y\}
+=\operatorname{fv}(\exists y\,\varphi)\).
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-022-decision}{thm:p03-w03-p03-022-decision}{Decision from elimination}
+\begin{proof}
+Let \(E\) be the elimination algorithm.
+
+Item 1. Given a sentence \(\sigma\), compute \(\psi=E(\sigma)\). Since
+\(\operatorname{fv}(\psi)\subseteq\operatorname{fv}(\sigma)=\emptyset\), \(\psi\)
+is a quantifier-free sentence, and \(T\entails\sigma\leftrightarrow\psi\).
+Therefore \(T\entails\sigma\) iff \(T\entails\psi\), and the latter is
+decided by hypothesis.
+
+Item 2. A quantifier-free sentence \(\psi\) is a Boolean combination of
+atomic sentences and the constants \(\top,\bot\). By induction on \(\psi\),
+either \(T\entails\psi\) or \(T\entails\neg\psi\). For atoms this is the
+hypothesis, and \(\top,\bot\) are settled. If \(\psi=\neg\chi\), the two
+alternatives for \(\chi\) exchange. If \(\psi=\chi_1\land\chi_2\), then
+either both conjuncts are entailed, and so is \(\psi\), or some
+\(\neg\chi_i\) is entailed, and then so is \(\neg\psi\); the other
+connectives are definable from these. For an arbitrary sentence
+\(\sigma\), \(T\entails\sigma\leftrightarrow E(\sigma)\), so \(T\) entails
+\(\sigma\) or \(\neg\sigma\). If the signature has neither constant
+symbols nor nullary relation symbols, every term contains a variable, so
+every atomic formula has a free variable and the hypothesis on atomic
+sentences is vacuous.
+
+Item 3. Define \(v(\alpha)=1\) if \(T\entails\alpha\) and \(v(\alpha)=0\)
+otherwise, for atomic sentences \(\alpha\); this is computable by
+hypothesis. Extend \(v\) to quantifier-free sentences by truth tables. The
+induction of item 2 shows that \(v(\psi)=1\) implies \(T\entails\psi\) and
+\(v(\psi)=0\) implies \(T\entails\neg\psi\). As \(T\) is consistent, it
+does not entail both \(\psi\) and \(\neg\psi\), so \(T\entails\psi\) iff
+\(v(\psi)=1\). Thus the hypothesis of item 1 holds, and \(T\) is decidable;
+it is complete by item 2. Let \(\mathcal A\models T\). Every consequence of
+\(T\) is true in \(\mathcal A\). Conversely, if \(\mathcal A\models\sigma\),
+then \(T\) does not entail \(\neg\sigma\), because \(\mathcal A\) is a model of \(T\) in
+which \(\neg\sigma\) fails, so \(T\entails\sigma\) by completeness. Hence
+\(\operatorname{Th}(\mathcal A)=\{\sigma:T\entails\sigma\}\).
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-022-dlo-step}{thm:p03-w03-p03-022-dlo-step}{Correctness and consequences for \(\mathsf{DLO}\)}
+\begin{proof}
+Let \(\mathcal M\models\mathsf{DLO}\) and fix values for the variables other
+than \(y\). Each item replaces a formula by one with the same truth value in
+\(\mathcal M\).
+
+Item 1. In a linear order exactly one of \(u<v\), \(u=v\), \(v<u\) holds.
+Hence \(\neg(u<v)\) is equivalent to \(v<u\lor u=v\), and \(\neg(u=v)\) to
+\(u<v\lor v<u\). The existential quantifier distributes over the resulting
+disjunction.
+
+Item 2. \(y=y\) is valid, and \(y<y\) is unsatisfiable by irreflexivity,
+so a conjunction containing it has no witness.
+
+Item 3. For a variable \(x\) distinct from \(y\),
+\(\exists y\,(y=x\land\chi(y))\leftrightarrow\chi(x)\) is valid.
+
+Item 4. After items 1 to 3 and the removal of \(y\)-free conjuncts, the
+only atoms containing \(y\) are \(x_i<y\) and \(y<z_j\) with \(x_i,z_j\)
+distinct from \(y\). If \(b\) satisfies all of them, then
+\(x_i<b<z_j\), and transitivity gives \(x_i<z_j\). Conversely suppose
+\(x_i<z_j\) for all \(i\in L\), \(j\in U\). If both sets are nonempty, let
+\(l\) be the largest of the values \(x_i\) and \(u\) the smallest of the
+values \(z_j\); these exist in a linear order because the sets are finite
+and nonempty, and \(l<u\) because \(l=x_i\) and \(u=z_j\) for some
+\(i,j\). Density gives \(b\) with \(l<b<u\), and then
+\(x_i\le l<b<u\le z_j\) for all \(i,j\). If \(U\) is empty, the absence of
+a greatest element gives \(b>l\); if \(L\) is empty, the absence of a least
+element gives \(b<u\); if both are empty, nonemptiness gives some \(b\).
+In each case \(b\) witnesses the conjunction.
+
+Every item is computable and introduces no free variable, so the method is
+an elimination step, and \cref{thm:p03-w03-p03-022-one-step} gives
+effective elimination. The signature \(\{<\}\) has no constant or nullary
+relation symbols. The structure \((\mathbb Q;<)\) is a model: it is a
+nonempty linear order, \(p<\tfrac{p+q}2<q\) whenever \(p<q\), and
+\(p-1<p<p+1\). So \(\mathsf{DLO}\) is consistent, and items 2 and 3 of
+\cref{thm:p03-w03-p03-022-decision}, whose atomic hypothesis is vacuous
+here, give completeness, decidability and \(\operatorname{Th}(\mathbb Q;<)=
+\{\sigma:\mathsf{DLO}\entails\sigma\}\).
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-022-succ}{thm:p03-w03-p03-022-succ}{Elimination and decision for successor}
+\begin{proof}
+We use three consequences of \(T_{\mathrm S}\).
+
+(a) \(T_{\mathrm S}\entails S^ku=S^kv\leftrightarrow u=v\) for every \(k\).
+This is induction on \(k\) using injectivity of \(S\).
+
+(b) For \(k\ne l\), \(T_{\mathrm S}\entails\forall u\,S^ku\ne S^lu\). Say
+\(k<l\). If \(S^ku=S^lu=S^k(S^{l-k}u)\), then (a) gives \(u=S^{l-k}u\),
+which contradicts the axiom for \(n=l-k\ge1\). Similarly, for \(k<l\),
+\(S^k0=S^l0\) gives \(0=S^{l-k}0=S(S^{l-k-1}0)\) by (a), contradicting
+\(\forall x\,Sx\ne0\). So the elements \(S^k0\) are pairwise distinct and
+every model of \(T_{\mathrm S}\) is infinite.
+
+(c) For every \(K\),
+\(T_{\mathrm S}\entails\forall z\,\bigl(\exists y\,S^Ky=z\leftrightarrow
+\bigwedge_{j<K}z\ne S^j0\bigr)\). For \(K=0\) both sides are true. Assume
+the claim for \(K\). Suppose \(z=S^{K+1}y\). Then \(z\ne0\) by the first
+axiom. If \(z=S^j0\) with \(1\le j\le K\), then injectivity gives
+\(S^Ky=S^{j-1}0\) with \(j-1<K\), contrary to the claim for \(K\).
+Conversely suppose \(z\ne S^j0\) for all \(j\le K\). Since \(z\ne0\), the
+third axiom gives \(w\) with \(Sw=z\). If \(w=S^j0\) for some \(j<K\), then
+\(z=S^{j+1}0\) with \(j+1\le K\), which is excluded; so the claim for \(K\)
+gives \(y\) with \(S^Ky=w\), and then \(S^{K+1}y=z\).
+
+Now let \(\mathcal M\models T_{\mathrm S}\). Item 1 is justified by (a) and (b).
+Item 2: for \(k\le K\), applying (a) with \(K-k\) gives
+\(S^ky=S^lv\leftrightarrow S^Ky=S^{l+K-k}v\), and the same for the
+negation. After item 2 every occurrence of \(y\) is in the subterm
+\(S^Ky\), so the conjunction has the form \(\chi(S^Ky)\) where \(\chi(z)\)
+contains \(z\) only bare. Item 3 is the equivalence
+\[
+ \exists y\,\chi(S^Ky)\leftrightarrow
+ \exists z\,\bigl(\exists y\,S^Ky=z\land\chi(z)\bigr)\leftrightarrow
+ \exists z\,\Bigl(\bigwedge_{j<K}z\ne S^j0\land\chi(z)\Bigr),
+\]
+the first step being valid and the second being (c). In item 4, every
+\(z\)-literal is \(z=t\) or \(z\ne t\) with \(t\) free of \(z\), since its
+other side is \(S^lv\) with \(v\) not \(y\). If some conjunct is \(z=t\), the
+valid equivalence \(\exists z\,(z=t\land\eta)\leftrightarrow\eta(t)\)
+applies. Otherwise the \(z\)-conjuncts say that \(z\) avoids finitely many
+values, and since \(\mathcal M\) is infinite by (b) some element does so; the
+existential is then true and equivalent to \(\top\). No item introduces a
+free variable, and each is computable.
+
+By \cref{thm:p03-w03-p03-022-one-step}, \(T_{\mathrm S}\) eliminates
+quantifiers effectively. The atomic sentences are \(S^k0=S^l0\); by (b)
+\(T_{\mathrm S}\) entails it when \(k=l\) and entails its negation when
+\(k\ne l\), and which case holds is computable. The structure
+\((\N;0,S)\) with \(S(n)=n+1\) satisfies the axioms: \(n+1\ne0\),
+\(n+1=m+1\) implies \(n=m\), each \(n\ne0\) equals \((n-1)+1\), and
+\(n+k\ne n\) for \(k\ge1\). Item 3 of \cref{thm:p03-w03-p03-022-decision}
+therefore gives completeness, decidability and
+\(\operatorname{Th}(\N;0,S)=\{\sigma:T_{\mathrm S}\entails\sigma\}\).
+
+A sentence \(\sigma\) of \(\{S\}\) is also a sentence of \(\{0,S\}\), and
+its truth in \((\N;0,S)\) does not depend on the interpretation of \(0\),
+which it does not mention; so \((\N;S)\models\sigma\) iff
+\(T_{\mathrm S}\entails\sigma\), which is decidable.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-022-aba}{thm:p03-w03-p03-022-aba}{Elimination and decision for atomless Boolean algebras}
+\begin{proof}
+We use the following identities, valid in every Boolean algebra.
+\begin{enumerate}
+\item[(i)] \(u=v\) iff \(u\triangle v=0\). Indeed \(u\triangle v=0\) iff
+  \(u\sqcap-v=0\) and \(-u\sqcap v=0\), that is, iff \(u\le v\) and \(v\le u\).
+\item[(ii)] \(u\sqcup v=0\) iff \(u=0\) and \(v=0\); and \(u\le v\) iff
+  \(u\sqcap-v=0\).
+\item[(iii)] For every term \(\tau(\bar x,y)\),
+  \(\tau=(\tau_1\sqcap y)\sqcup(\tau_0\sqcap-y)\), where
+  \(\tau_1=\tau(\bar x,1)\) and \(\tau_0=\tau(\bar x,0)\).
+\end{enumerate}
+We prove (iii) by induction on \(\tau\). For \(\tau=y\) the right side is
+\((1\sqcap y)\sqcup(0\sqcap-y)=y\). For \(\tau\) not containing \(y\) it is
+\((\tau\sqcap y)\sqcup(\tau\sqcap-y)=\tau\). Write
+\(\tau=(a\sqcap y)\sqcup(b\sqcap-y)\) and \(\tau'=(a'\sqcap y)\sqcup(b'\sqcap-y)\).
+Distributivity and \(y\sqcap-y=0\) give
+\(\tau\sqcap\tau'=(a\sqcap a'\sqcap y)\sqcup(b\sqcap b'\sqcap-y)\) and
+\(\tau\sqcup\tau'=((a\sqcup a')\sqcap y)\sqcup((b\sqcup b')\sqcap-y)\).
+For the complement, De Morgan and distributivity give
+\(-\tau=(-a\sqcup-y)\sqcap(-b\sqcup y)
+=(-a\sqcap-b)\sqcup(-a\sqcap y)\sqcup(-b\sqcap-y)\), and
+\(-a\sqcap-b=(-a\sqcap-b\sqcap y)\sqcup(-a\sqcap-b\sqcap-y)\) lies below the
+other two joinands, so \(-\tau=(-a\sqcap y)\sqcup(-b\sqcap-y)\). In each case
+the coefficients are the values of the compound term at \(y=1\) and at
+\(y=0\), which proves (iii).
+
+Correctness of items 1 to 3 follows from (i) to (iii) and distributivity:
+\(\tau=0\) iff \(\tau_1\sqcap y=0\) and \(\tau_0\sqcap-y=0\); a finite family
+of equations \(\tau^{(i)}=0\) is equivalent to \(a\sqcap y=0\land b\sqcap-y=0\)
+because \(\bigsqcup_i(\tau^{(i)}_1\sqcap y)=a\sqcap y\) and similarly for
+\(b\); and \(\sigma\ne0\) iff \(\sigma_1\sqcap y\ne0\) or
+\(\sigma_0\sqcap-y\ne0\). By (ii), \(a\sqcap y=0\) says \(y\le-a\) and
+\(b\sqcap-y=0\) says \(b\le y\).
+
+It remains to show, in a model of \(\mathsf{ABA}\), that
+\[
+ \exists y\Bigl(b\le y\le-a\land\bigwedge_{j\in J}c_j\sqcap y\ne0
+   \land\bigwedge_{k\in K}d_k\sqcap-y\ne0\Bigr)
+\]
+holds iff \(a\sqcap b=0\), \(c_j\sqcap-a\ne0\) for all \(j\in J\), and
+\(d_k\sqcap-b\ne0\) for all \(k\in K\).
+
+Necessity. From \(b\le y\le-a\) we get \(b\le-a\), so \(a\sqcap b=0\).
+Also \(c_j\sqcap y\le c_j\sqcap-a\) and, since \(-y\le-b\),
+\(d_k\sqcap-y\le d_k\sqcap-b\); a nonzero element lies below each right side.
+
+Sufficiency. Put \(u=-a\sqcap-b\). From \(a\sqcap b=0\) we get \(b\le-a\) and
+\(a\le-b\), hence
+\(-a=(-a\sqcap b)\sqcup(-a\sqcap-b)=b\sqcup u\) and likewise \(-b=a\sqcup u\).
+Let \(J'\) be the set of \(j\) with \(c_j\sqcap b=0\) and \(K'\) the set of
+\(k\) with \(d_k\sqcap a=0\). For \(j\in J'\), put \(e_j=c_j\sqcap u\); then
+\(e_j=(c_j\sqcap b)\sqcup(c_j\sqcap u)=c_j\sqcap-a\ne0\). For \(k\in K'\), put
+\(f_k=d_k\sqcap u\); similarly \(f_k=d_k\sqcap-b\ne0\).
+
+Let \(G\) be the finite set of the \(e_j\) and \(f_k\), all below \(u\). For a
+sign map \(\varepsilon:G\to\{+,-\}\), put
+\(p_\varepsilon=u\sqcap\bigsqcap_{g\in G}g^{\varepsilon(g)}\), with \(g^+=g\)
+and \(g^-=-g\). Distinct sign maps differ at some \(g\), so
+\(p_\varepsilon\sqcap p_{\varepsilon'}\le g\sqcap-g=0\). Expanding
+\(u=u\sqcap\bigsqcap_{g\in G}(g\sqcup-g)\) by distributivity gives
+\(u=\bigsqcup_\varepsilon p_\varepsilon\). For \(g\in G\), since \(g\le u\),
+\(g=\bigsqcup_\varepsilon(g\sqcap p_\varepsilon)\), and \(g\sqcap p_\varepsilon\)
+is \(p_\varepsilon\) when \(\varepsilon(g)=+\) and \(0\) otherwise; so
+\(g=\bigsqcup\{p_\varepsilon:\varepsilon(g)=+\}\). Let \(P\) be the set of
+\(\varepsilon\) with \(p_\varepsilon\ne0\). For each \(\varepsilon\in P\), the
+atomless axiom gives \(q_\varepsilon\) with \(q_\varepsilon\le p_\varepsilon\),
+\(q_\varepsilon\ne0\) and \(q_\varepsilon\ne p_\varepsilon\). Put
+\(z=\bigsqcup_{\varepsilon\in P}q_\varepsilon\) (so \(z=0\) when \(P\) is
+empty) and \(y=b\sqcup z\).
+
+Then \(b\le y\), and \(y\le-a\) because \(b\le-a\) and \(z\le u\le-a\).
+
+Let \(j\in J\). If \(c_j\sqcap b\ne0\), then \(c_j\sqcap y\ge c_j\sqcap b\) is
+nonzero. Otherwise \(j\in J'\) and \(e_j\ne0\), so some \(\varepsilon\in P\)
+has \(\varepsilon(e_j)=+\), whence \(q_\varepsilon\le p_\varepsilon\le e_j\le c_j\)
+and \(q_\varepsilon\le z\le y\); thus \(0\ne q_\varepsilon\le c_j\sqcap y\).
+
+Let \(k\in K\); note \(-y=-b\sqcap-z\). If \(d_k\sqcap a\ne0\), then
+\(a\le-b\) and, since \(z\le-a\), \(a\le-z\); so
+\(d_k\sqcap a\le d_k\sqcap-y\), which is nonzero. Otherwise \(k\in K'\),
+\(f_k\ne0\), and some \(\varepsilon\in P\) has \(p_\varepsilon\le f_k\). Put
+\(w=p_\varepsilon\sqcap-q_\varepsilon\). If \(w=0\) then
+\(p_\varepsilon\le q_\varepsilon\), so \(q_\varepsilon=p_\varepsilon\), which is
+excluded; hence \(w\ne0\). Moreover \(w\le f_k\le d_k\), \(w\le u\le-b\), and
+\(w\sqcap z=\bigsqcup_{\varepsilon'\in P}(w\sqcap q_{\varepsilon'})=0\): for
+\(\varepsilon'\ne\varepsilon\), \(q_{\varepsilon'}\le p_{\varepsilon'}\) is disjoint
+from \(p_\varepsilon\ge w\), and \(w\sqcap q_\varepsilon=0\) by definition of
+\(w\). So \(w\le-z\), and \(0\ne w\le d_k\sqcap-b\sqcap-z=d_k\sqcap-y\).
+
+Thus item 4 is correct; it is computable and introduces no free variable,
+so the method is an elimination step and
+\cref{thm:p03-w03-p03-022-one-step} applies.
+
+For the decision, every closed term has value \(0\) or \(1\) in every
+Boolean algebra, and the value is computed in the two-element algebra
+\(\{0,1\}\), which is a subalgebra of every model of \(\mathsf{BA}\). So
+\(\mathsf{ABA}\) entails each atomic sentence \(t=s\) whose two values agree,
+and entails its negation otherwise, because \(0\ne1\) is an axiom. For
+consistency, let \(\mathcal R\) be the set of finite unions of intervals
+\([p,q)\) with rational \(0\le p<q\le1\), together with \(\emptyset\), under
+union, intersection and complement in \([0,1)\). The intersection of two
+such intervals is empty or such an interval, and the complement of a finite
+union of them is a finite union of them, since it is the union of the gaps
+between their sorted endpoints; so \(\mathcal R\) is a Boolean algebra of sets
+with \(\emptyset\ne[0,1)\). A nonzero element contains some \([p,q)\), and
+\([p,\tfrac{p+q}2)\) is a nonzero element below it that misses the point
+\(\tfrac{p+q}2\) of it; so \(\mathcal R\models\mathsf{ABA}\). Item 3 of
+\cref{thm:p03-w03-p03-022-decision} gives completeness and decidability.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-022-presburger}{thm:p03-w03-p03-022-presburger}{Elimination and decision with congruence predicates}
+\begin{proof}
+All equivalences below are truth in \(\mathcal Z\) at every assignment.
+Replacing a term by its normal term preserves values, since the normal
+term is computed by the ring laws of \(\mathbb Z\).
+
+Item 1. For integers, \(s=t\) iff \(|t-s|<1\), which is the stated
+conjunction; \(s<t\) iff \(0<t-s\); \(\neg(0<t)\) iff \(t\le0\) iff
+\(0<1-t\). If \(n\ge2\) and \(n\nmid t\), let \(\rho\in\{1,\ldots,n-1\}\)
+be the remainder of \(t\); then \(n\mid t+(n-\rho)\) with
+\(n-\rho\in\{1,\ldots,n-1\}\). Conversely, if \(n\mid t+r\) with
+\(1\le r\le n-1\), then \(t\equiv-r\not\equiv0\pmod n\). For \(n=1\),
+\(\mathrm D_1(t)\) always holds, so its negation is \(\bot\). Literals in
+which \(y\) has coefficient \(0\) are moved outside.
+
+Item 2. Let \(m=\ell/|k|\), a positive integer. Multiplying by \(m\)
+preserves positivity, so \(0<ky+t\) iff \(0<m(ky+t)\), whose \(y\)-term is
+\(\pm\ell y\). For divisibility, \(n\mid s\) iff \(nm\mid ms\) iff
+\(nm\mid-ms\); taking \(\pm m=\ell/k\) gives
+\(\mathrm D_n(ky+t)\leftrightarrow\mathrm D_{nm}(\ell y+(\ell/k)t)\).
+
+Item 3. \(\exists y\,\chi(\ell y)\leftrightarrow
+\exists z\,(\mathrm D_\ell(z)\land\chi(z))\): put \(z=\ell y\), and
+conversely take \(y=z/\ell\). The literal \(0<z+t\) is \(-t<z\), the literal
+\(0<-z+t\) is \(z<t\), and \(\mathrm D_N(z+s)\) is of the third form;
+\(\mathrm D_\ell(z)\) is the case \(c=0\). Thus \(H\) is nonempty.
+
+Item 4. Each \(m_h\) divides \(M\), so \(\mathrm D_{m_h}(z+c_h)\) and
+\(\mathrm D_{m_h}(z'+c_h)\) agree whenever \(z\equiv z'\pmod M\).
+
+Suppose \(J\) is nonempty. If \(\eta(b_j+r)\) holds, \(z=b_j+r\) is a
+witness. Conversely let \(\eta(z)\) hold, and choose \(j_0\) with
+\(b_{j_0}\) largest among the values \(b_j\). Then \(z-b_{j_0}\ge1\). Let
+\(r\in\{1,\ldots,M\}\) satisfy \(r\equiv z-b_{j_0}\pmod M\); then
+\(r\le z-b_{j_0}\). Put \(z'=b_{j_0}+r\). We have \(z'\le z<a_i\) for all
+\(i\), \(z'>b_{j_0}\ge b_j\) for all \(j\), and \(z'\equiv z\pmod M\), so
+\(\eta(z')\) holds, which is the disjunct for \(j_0\) and \(r\).
+
+Suppose \(J\) is empty. If \(\eta(z)\) holds, take
+\(r\in\{1,\ldots,M\}\) with \(r\equiv z\pmod M\); periodicity gives
+\(\bigwedge_h\mathrm D_{m_h}(r+c_h)\). Conversely, if that conjunction holds for
+some \(r\), choose a natural number \(N\) so large that
+\(z=r-NM<a_i\) for each of the finitely many \(i\); periodicity gives the
+congruences at \(z\), so \(\eta(z)\) holds.
+
+Each item is computable, and the output mentions only \(y\)-free terms, so
+the method is an elimination step for \(\operatorname{Th}(\mathcal Z)\). By
+\cref{thm:p03-w03-p03-022-one-step} the elimination is effective. A closed
+term has a computable integer value, and atomic sentences
+\(s<t\), \(s=t\), \(\mathrm D_n(t)\) are decided by computing with integers;
+so the quantifier-free sentences true in \(\mathcal Z\) form a decidable set,
+and item 1 of \cref{thm:p03-w03-p03-022-decision}, applied to the complete
+theory \(\operatorname{Th}(\mathcal Z)\), shows that it is decidable.
+
+For \(\mathcal N\), let \(\varphi^{\ge0}\) be the \(\Lang_{\mathbb Z}\)-formula
+obtained from an \(\Lang_{\N}\)-formula \(\varphi\) by replacing each
+\(\exists v\,\chi\) with \(\exists v\,(\neg v<0\land\chi)\) and each
+\(\forall v\,\chi\) with \(\forall v\,(\neg v<0\to\chi)\). The set \(\N\) is closed
+under \(0\), \(1\) and \(+\) in \(\mathbb Z\), and the symbols of
+\(\Lang_{\N}\) have the same meaning on it, so \(\mathcal N\) is a substructure
+of the \(\Lang_{\N}\)-reduct of \(\mathcal Z\). An induction on \(\varphi\)
+shows \(\mathcal N\models\varphi(\bar a)\) iff
+\(\mathcal Z\models\varphi^{\ge0}(\bar a)\) for all \(\bar a\) in \(\N\):
+atomic formulas have the same term values in a substructure, connectives
+commute, and relativized quantifiers range exactly over \(\N\). This is the
+translation of \cref{def:p03-w03-p03-022-nat-in-int} written without its
+redundant term-value clauses.
+
+Eliminate quantifiers from \(\varphi^{\ge0}\) in \(\mathcal Z\) to get a
+quantifier-free \(\psi\). Rewrite each atom of \(\psi\) as an
+\(\Lang_{\N}\)-atom with the same truth value at all natural-number
+arguments. Normalize the relevant difference to \(\sum_ik_ix_i+c\). The atom
+\(0<\sum_ik_ix_i+c\) becomes
+\[
+ \sum_{k_i<0}|k_i|x_i+\max(-c,0)\;<\;\sum_{k_i>0}k_ix_i+\max(c,0),
+\]
+the corresponding equation is treated in the same way, and
+\(\mathrm D_n(\sum_ik_ix_i+c)\) becomes \(\mathrm D_n(\sum_ik'_ix_i+c')\)
+with \(k'_i,c'\in\{0,\ldots,n-1\}\) the remainders of \(k_i,c\) modulo
+\(n\). Each rewriting is valid over \(\mathbb Z\), and the new atoms contain
+only nonnegative coefficients, so they are \(\Lang_{\N}\)-atoms whose truth
+in \(\mathcal N\) and \(\mathcal Z\) agree on \(\N\). The result \(\psi'\) is
+computed from \(\varphi\), has no new free variable, and satisfies
+\(\mathcal N\models\forall\bar x\,(\varphi\leftrightarrow\psi')\). Closed
+\(\Lang_{\N}\)-terms have computable values, so
+\(\operatorname{Th}(\mathcal N)\) is decidable by item 1 of
+\cref{thm:p03-w03-p03-022-decision}. A sentence of \(\{0,1,+,<\}\) is an
+\(\Lang_{\N}\)-sentence with the same truth value in \(\N\), which decides
+\(\operatorname{Th}(\N;0,1,+,<)\).
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-022-presburger-boundary}{thm:p03-w03-p03-022-presburger-boundary}{The congruence predicates are needed}
+\begin{proof}
+By induction on terms, every term in the single variable \(x\) built from
+\(0,1,+\) takes the value \(kx+c\) at \(x\in\N\), for fixed
+\(k,c\in\N\). An atom is therefore \(kx+c<k'x+c'\) or \(kx+c=k'x+c'\). If
+\(k=k'\), its truth value does not depend on \(x\). If \(k\ne k'\), then for
+\(x>|c'-c|\) the number \((k'-k)x+(c'-c)\) is nonzero with the sign of
+\(k'-k\), so the truth value is constant for all such \(x\). A
+quantifier-free \(\psi(x)\) is a Boolean combination of finitely many atoms,
+so its truth value is constant for all \(x\) beyond the largest of these
+bounds. The even numbers contain arbitrarily large elements and omit
+arbitrarily large elements, so no such \(\psi\) defines them. The formula
+\(\exists y\,(y+y=x)\) does define them in \(\mathcal N\), so
+\(\operatorname{Th}(\N;0,1,+,<)\) does not eliminate quantifiers in
+\(\{0,1,+,<\}\). Decidability is part of
+\cref{thm:p03-w03-p03-022-presburger}.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-022-acf-step}{thm:p03-w03-p03-022-acf-step}{Correctness of the step}
+\begin{proof}
+Let \(K\models\mathsf{ACF}\). Polynomials below lie in \(K[y]\), and
+degrees add under multiplication there because \(K\) has no zero divisors.
+
+\emph{Algebraic facts.} (F1) For \(f\in K[y]\) and \(\alpha\in K\) there is
+\(h\in K[y]\) with \(f=(y-\alpha)h+f(\alpha)\), and \(\deg h=\deg f-1\) when
+\(\deg f\ge1\). By induction on \(\deg f\): if \(\deg f\le0\) take \(h=0\);
+if \(f\) has degree \(d\ge1\) and leading coefficient \(e\), then
+\(f-ey^{d-1}(y-\alpha)\) has degree below \(d\), and adding
+\(ey^{d-1}\) to the quotient it receives by induction gives a quotient for
+\(f\) of degree \(d-1\) and a constant remainder; substituting
+\(y=\alpha\) shows that the remainder is \(f(\alpha)\).
+(F2) If \(\alpha_1,\ldots,\alpha_e\) are distinct roots of \(g\), then
+\(g=(y-\alpha_1)\cdots(y-\alpha_e)w\) for some \(w\). By induction on
+\(e\): by (F1), \(g=(y-\alpha_e)g_1\), and for \(r<e\) we have
+\[
+0=g(\alpha_r)=(\alpha_r-\alpha_e)\,g_1(\alpha_r),\qquad
+\alpha_r-\alpha_e\ne0,
+\]
+so \(\alpha_1,\ldots,\alpha_{e-1}\) are roots of
+\(g_1\). In particular a nonzero \(g\) has at most \(\deg g\) roots.
+(F3) Every \(f\) of degree \(d\ge1\) with leading coefficient \(b\) equals
+\(b(y-\alpha_1)\cdots(y-\alpha_d)\) for some \(\alpha_r\in K\). By induction
+on \(d\): \(b^{-1}f\) is monic of degree \(d\), so it has a root \(\alpha\)
+by the root axiom for \(d\); by (F1), \(f=(y-\alpha)h\) with \(\deg h=d-1\)
+and leading coefficient \(b\), and \(h=b\) when \(d=1\).
+(F4) \(K\) is infinite, by item 5 of \cref{thm:p03-w03-p03-020-field-algebra}.
+
+\emph{Evaluation.} Evaluation at \(\bar a\) is a ring homomorphism
+\(\mathbb Z[\bar x][y]\to K[y]\). So products, truncations and identities
+between parametric polynomials pass to \(K[y]\); padding does not change
+the evaluated polynomial; and the atom \(c=0\) holds at \(\bar a\) exactly
+when \(c(\bar a)=0\), because a term denotes the value of its integer
+polynomial.
+
+\emph{Induction.} Write
+\[
+Z(F_1,\ldots,F_k;G)=\{y\in K:F_1(\bar a)(y)=\cdots=F_k(\bar a)(y)=0,\
+G(\bar a)(y)\ne0\}.
+\]
+We prove that \(\operatorname{Elim}(F_1,\ldots,F_k;G)\) holds in \(K\) at
+\(\bar a\) iff \(Z\ne\emptyset\), by induction on the pair \(\mu\) (sum of formal degrees
+of the \(F_i\), \(k\)) in the lexicographic order of \(\N\times\N\), which is a
+well-order. Each recursive call lowers \(\mu\): in item 2 the sum is
+unchanged and \(k\) drops; a truncation lowers the sum by one; in item 4,
+each \(F_j\) with \(j\ne i\) has formal degree \(p_j\ge q\) and is replaced by
+one of formal degree \(q-1\), and there is at least one such \(j\).
+
+Item 1. Here \(Z=\{y:G(\bar a)(y)\ne0\}\). If some coefficient \(c\) of
+\(G\) has \(c(\bar a)\ne0\), then \(G(\bar a)\) is a nonzero polynomial with
+finitely many roots by (F2), and \(K\) is infinite by (F4), so
+\(Z\ne\emptyset\) and the output holds. If every \(c(\bar a)=0\), then
+\(G(\bar a)\) is the zero polynomial, \(Z=\emptyset\) and the output fails.
+
+Item 2. \(F_i(\bar a)\) is the constant \(c(\bar a)\). If
+\(c(\bar a)=0\), dropping \(F_i\) does not change \(Z\), and the induction
+hypothesis applies to the shorter list. If \(c(\bar a)\ne0\), then
+\(Z=\emptyset\) and the output fails at its first conjunct.
+
+Item 3. If \(b(\bar a)=0\), then \(F(\bar a)=F_{\le q-1}(\bar a)\), so \(Z\)
+is unchanged by the truncation, the second disjunct fails, and the
+induction hypothesis gives the claim. Let \(b(\bar a)\ne0\), and put
+\(f=F(\bar a)\), of degree exactly \(q\ge1\), and \(g=G(\bar a)\). We show
+\(Z\ne\emptyset\iff f\nmid g^q\iff R(\bar a)\ne0\); the last condition is
+the truth of the second disjunct at \(\bar a\).
+
+If \(f\mid g^q\) and \(f(y)=0\), then \(g(y)^q=0\), so \(g(y)=0\); hence
+\(Z=\emptyset\). Conversely let \(Z=\emptyset\), so every root of \(f\) is a
+root of \(g\). By (F3), \(f=b(\bar a)\prod_{r\le q}(y-\alpha_r)\). Let
+\(\beta_1,\ldots,\beta_e\) be the distinct values among the \(\alpha_r\),
+with multiplicities \(m_1,\ldots,m_e\); then
+\(f=b(\bar a)\prod_s(y-\beta_s)^{m_s}\) and \(m_s\le q\). Each \(\beta_s\) is a
+root of \(g\), so \(g=\prod_s(y-\beta_s)\,w\) by (F2), and
+\[
+g^q=\prod_s(y-\beta_s)^q\,w^q
+=f\cdot b(\bar a)^{-1}\prod_s(y-\beta_s)^{q-m_s}\,w^q ,
+\]
+so \(f\mid g^q\). Thus \(Z\ne\emptyset\) iff \(f\nmid g^q\).
+
+Let \(N=\max(qg_0,q-1)\), with \(g_0\) the formal degree of \(G\). Evaluating
+\(b^{N-q+1}H=AF+R\) gives \(b(\bar a)^{N-q+1}g^q=A(\bar a)f+R(\bar a)\). If
+\(f\mid g^q\), then \(f\mid R(\bar a)\); every nonzero multiple of \(f\) has
+degree at least \(q\), while \(R(\bar a)\) has degree at most \(q-1\), so
+\(R(\bar a)=0\). If \(R(\bar a)=0\), then \(f\) divides
+\(b(\bar a)^{N-q+1}g^q\), and multiplying the quotient by
+\(b(\bar a)^{-(N-q+1)}\) shows \(f\mid g^q\).
+
+Item 4. If \(b(\bar a)=0\), the truncation does not change \(F_i(\bar a)\)
+and the induction hypothesis applies. Let \(b(\bar a)\ne0\). For \(j\ne i\)
+let \(p_j\) be the formal degree of \(F_j\); evaluating
+\(b^{p_j-q+1}F_j=A_jF_i+F'_j\) at \(\bar a\) and at a point \(y\) with
+\(F_i(\bar a)(y)=0\) gives
+\(b(\bar a)^{p_j-q+1}F_j(\bar a)(y)=F'_j(\bar a)(y)\), so
+\(F_j(\bar a)(y)=0\) iff \(F'_j(\bar a)(y)=0\). Hence
+\(Z(F_1,\ldots,F_k;G)=Z(F'_1,\ldots,F'_k;G)\), the first disjunct fails,
+and the induction hypothesis applies to the primed list.
+
+\emph{The step.} Let \(\exists y\,\theta\) be given and prepared as in
+\cref{def:p03-w03-p03-022-acf-step}. For \(\bar a\in K^m\) and \(y\in K\),
+a literal \(t=s\) holds at \((\bar a,y)\) iff \((P_t-P_s)(\bar a,y)=0\),
+and evaluating the coefficients first and then \(y\) gives the same value.
+So \(\theta\) holds iff every \(F_i(\bar a)(y)=0\) and every
+\(G_j(\bar a)(y)\ne0\), and the latter holds iff
+\(G(\bar a)(y)=\prod_jG_j(\bar a)(y)\ne0\), because \(K\) has no zero
+divisors and the empty product is \(1\ne0\). Hence
+\(K\models\exists y\,\theta\) at \(\bar a\) iff \(Z\ne\emptyset\) iff the
+output holds at \(\bar a\). The atoms of the output are \(c=0\) with
+\(c\in\mathbb Z[\bar x]\), written with the variables of \(c\) only, so
+the output has no free variable outside
+\(\operatorname{fv}(\exists y\,\theta)\). Every operation used (the
+polynomials \(P_t\), integer polynomial arithmetic, truncation, padding, the recursion of
+\cref{thm:p03-w03-p03-037-prem}, and the passage from a polynomial to a
+term) is computable, and the recursion stops by the decrease of \(\mu\). This
+holds in every model of \(\mathsf{ACF}\), and every model of
+\(\mathsf{ACF}_p\) is one, so the method is an elimination step for both
+theories.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-022-acf}{thm:p03-w03-p03-022-acf}{Decision for algebraically closed fields}
+\begin{proof}
+By \cref{thm:p03-w03-p03-022-acf-step,thm:p03-w03-p03-022-one-step},
+\(\mathsf{ACF}\) and every \(\mathsf{ACF}_p\) eliminate quantifiers
+effectively.
+
+\emph{Characteristic.} In a field \(K\), the set
+\(\{n\in\mathbb Z:n\cdot1=0\}\) is an ideal of \(\mathbb Z\). If it is not
+\(\{0\}\), its least positive element \(m\) generates it, \(m\ne1\) because
+\(1\ne0\), and \(m\) is prime: if \(m=uv\) with \(1<u,v<m\), then
+\((u\cdot1)(v\cdot1)=0\) forces \(u\cdot1=0\) or \(v\cdot1=0\), against the
+minimality of \(m\). If \(\chi_q\) holds for a prime \(q\), then \(m\mid q\),
+so \(m=q\) and the ideal is \(q\mathbb Z\). If \(\neg\chi_q\) holds for every
+prime \(q\), the ideal is \(\{0\}\). So in every model of \(\mathsf{ACF}_p\),
+\(n\cdot1=0\) iff \(p\mid n\) when \(p\) is prime, and iff \(n=0\) when
+\(p=0\); and every field satisfies \(\mathsf{Fld}_p\) for exactly one such
+\(p\).
+
+\emph{\(\mathsf{ACF}_p\).} An atomic sentence is \(t=s\) with \(t,s\) closed
+terms, and \(P_t-P_s\) is an integer \(n\), computed from the terms; the
+atom holds in a model iff \(n\cdot1=0\). By the previous paragraph,
+\(\mathsf{ACF}_p\) entails the atom when \(p\mid n\) (resp.\ \(n=0\)) and
+entails its negation otherwise, and which case holds is computable. The
+field \(\mathbb Z/p\mathbb Z\) for \(p\) prime and the field \(\mathbb Q\)
+for \(p=0\) have characteristic \(p\), and
+\cref{thm:p03-w03-p03-020-closure-exists} embeds each in an algebraically
+closed field of the same characteristic, a model of \(\mathsf{ACF}_p\).
+So \(\mathsf{ACF}_p\) is consistent, and item 3 of
+\cref{thm:p03-w03-p03-022-decision} shows that it is complete, decidable,
+and axiomatizes \(\operatorname{Th}(K)\) for each of its models \(K\), which
+are exactly the algebraically closed fields of characteristic \(p\).
+
+\emph{\(\mathsf{ACF}\).} Each model of \(\mathsf{ACF}\) is a model of
+\(\mathsf{ACF}_p\) for its characteristic \(p\), and
+\(\mathsf{ACF}\subseteq\mathsf{ACF}_p\). Hence for every sentence
+\(\psi\), \(\mathsf{ACF}\entails\psi\) iff \(\mathsf{ACF}_p\entails\psi\)
+for every \(p\in\{0\}\cup\{\text{primes}\}\). For a quantifier-free
+sentence \(\psi\), let \(v_p(\psi)\) be its truth value when each atom with
+integer \(n\) is read as \(p\mid n\) (for \(p\) prime) or \(n=0\) (for
+\(p=0\)); by the proof of item 3 of
+\cref{thm:p03-w03-p03-022-decision}, \(\mathsf{ACF}_p\entails\psi\) iff
+\(v_p(\psi)=1\). Let \(n_1,\ldots,n_r\) be the nonzero integers of the atoms
+of \(\psi\) and \(N=\abs{n_1\cdots n_r}\) (\(N=1\) if \(r=0\)). For a prime
+\(p\nmid N\), no \(n_i\) is divisible by \(p\), so \(v_p\) and \(v_0\) agree
+on every atom and hence on \(\psi\). Therefore \(\mathsf{ACF}\entails\psi\)
+iff \(v_0(\psi)=1\) and \(v_p(\psi)=1\) for the finitely many primes
+\(p\mid N\), which are found by trial division. Given a sentence
+\(\sigma\), compute its quantifier-free equivalent \(\psi\) and apply this
+test: \(\mathsf{ACF}\) is decidable. It is not complete: \(\chi_2\) holds
+in every model of \(\mathsf{ACF}_2\) and fails in every model of
+\(\mathsf{ACF}_3\), and both theories are consistent.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-022-rcf}{thm:p03-w03-p03-022-rcf}{Effective elimination and decision for real closed fields}
+\begin{proof}
+\emph{Computability of the construction.} Restrict the construction of
+\cref{thm:p03-w03-p03-037-qe} to an input \(\exists x\,\theta\) with
+\(\theta\) a conjunction of \(\Lang_{\mathrm{or}}\)-literals. Its stages are
+the following, and each is computable.
+\begin{enumerate}
+\item Atoms. Each term \(t\) yields its integer polynomial \(P_t\) by
+  recursion on \(t\); \(t_1=t_2\) becomes \(P_{t_2}-P_{t_1}=0\) and
+  \(t_1<t_2\) becomes \(P_{t_2}-P_{t_1}>0\); \(\neg(P=0)\) and
+  \(\neg(P>0)\) are expanded by trichotomy, and the result is put in
+  disjunctive normal form. Each disjunct is a conjunction
+  \(\bigwedge_{i\le s}\operatorname{sgn}P_i=\sigma_i\), and \(\exists x\) is
+  distributed over the disjunction.
+\item Sign tables. For one disjunct, \(\mathcal P=(P_1,\ldots,P_s)\) with
+  the \(x\)-degrees as formal degrees and \(D\) their sum; the set
+  \(\mathbb T_{s,D}\) of words of length at most \(2D+1\) over
+  \(\{-1,0,1\}^s\) is finite and is listed. The output for the disjunct is
+  the disjunction of the \(\theta_{\mathcal P,t}\) over the listed \(t\)
+  having \(\sigma\) as a letter (\(0\ne0\) if there is none).
+\item The formulas \(\theta_{\mathcal P,t}\). They are computed by
+  recursion on \(\mu(\mathcal P)\) as in the annex proof of
+  \cref{thm:p03-w03-p03-037-uniform-sign}. In the base case \(\theta\) is an
+  explicit conjunction of sign conditions on coefficients, or \(0\ne0\).
+  In the step, if the last member does not have the largest formal degree,
+  move the first member of largest formal degree to the end; for the
+  resulting bijection \(\iota\) and reordered list \(\mathcal P^\iota\),
+  \cref{thm:p03-w03-p03-037-sublist} gives
+  \(\operatorname{SIGN}(\mathcal P)=\rho_{\iota^{-1}}(\operatorname{SIGN}(\mathcal P^\iota))\),
+  so \(\theta_{\mathcal P,t}\) is the disjunction of the
+  \(\theta_{\mathcal P^\iota,u}\) over the listed \(u\) with
+  \(\rho_{\iota^{-1}}(u)=t\). For a list whose last member has the largest
+  formal degree, \(\mathcal P^\flat\), \(\mathcal R\) and \(\mathcal Q\) are
+  formed by truncation, the formal derivative, extraction of coefficients
+  and the pseudo-remainder recursion of \cref{thm:p03-w03-p03-037-prem},
+  all of which are integer polynomial arithmetic, and
+  \(\theta_{\mathcal P,t}\) is the displayed combination of
+  \(\theta_{\mathcal P^\flat,t}\) and the \(\theta_{\mathcal Q,u}\) with
+  \(u\) in the listed finite set \(\mathbb T_{\mathcal Q}\) and
+  \(\Phi(u)=t\).
+\item The maps \(\rho_\iota\) and \(\Phi\). \(\rho_\iota\) is given by an
+  explicit rule on letters and positions. \(\Phi(u)\) is produced by steps
+  (a)--(e) of the proof of the claim there, each of which is a finite
+  search in \(u\) (the first member vanishing at a root, the largest index
+  of a nonzero coefficient), a table look-up of a coordinate, an
+  application of \(\rho\), a sign computation, or a choice among the four
+  cases of \cref{thm:p03-w03-p03-037-interval} by the signs
+  \(\tau_k,\tau_{k+1}\); and whether some step is undefined, in which case
+  \(\Phi(u)=u\), is decided by the same finite inspection of \(u\).
+\end{enumerate}
+By induction on \(\mu(\mathcal P)\), using that each recursive call is on
+\(\mathcal P^\flat\) or \(\mathcal Q\) with smaller \(\mu\) and that the
+reordering is applied at most once before the step, the computation of all
+\(\theta_{\mathcal P,t}\) halts. The atoms produced are sign conditions on
+polynomials in \(\mathbb Z[\bar Y]\), where \(\bar Y\) lists the variables of
+\(\theta\) other than \(x\), so the output has no free variable outside
+\(\operatorname{fv}(\exists x\,\theta)\); and
+\(\mathsf{RCF}\entails\exists x\,\theta\leftrightarrow\psi\) by the proof of
+\cref{thm:p03-w03-p03-037-qe}. This is an elimination step for
+\(\mathsf{RCF}\), so \cref{thm:p03-w03-p03-022-one-step} gives an
+algorithm for all formulas; its recursion through connectives and
+quantifiers is the reduction used in the proof of
+\cref{thm:p03-w03-p03-037-qe}.
+
+\emph{Atomic sentences.} In an ordered field, \(1\ne0\), and \(1<0\) would
+give \(0<-1\) by adding \(-1\), then \(0<(-1)(-1)=1\), contradicting
+\(1<0\); so \(0<1\). Hence \(k\cdot1>0\) for every integer \(k>0\), as a sum
+of positive elements. An atomic sentence compares closed terms \(t,s\), whose
+integer polynomials are integers \(n,m\) computed from the terms; in every
+ordered field \(s-t\) has the value \((m-n)\cdot1\), which is positive,
+zero or negative according as \(m-n\) is. So \(\mathsf{RCF}\) entails
+\(t=s\) if \(n=m\) and its negation otherwise, and entails \(t<s\) if
+\(n<m\) and its negation otherwise, and which case holds is computable.
+
+\emph{Consequences.} \(\mathsf{RCF}\) has the model \(\mathbb R\), as in the
+proof of \cref{thm:p03-w03-p03-037-complete}, so it is consistent. By item 3
+of \cref{thm:p03-w03-p03-022-decision}, \(\mathsf{RCF}\) is complete and
+decidable and axiomatizes \(\operatorname{Th}(K)\) for each real closed
+field \(K\); with \(K=\mathbb R\) this decides
+\(\operatorname{Th}(\mathbb R;0,1,+,-,\cdot,<)\). A sentence of
+\(\{0,1,+,-,\cdot\}\) is an \(\Lang_{\mathrm{or}}\)-sentence with the same
+truth value in \(\mathbb R\) and in its ring reduct, and membership in the
+set of such sentences is decidable; so
+\(\operatorname{Th}(\mathbb R;0,1,+,-,\cdot)\) is decided by the same
+procedure.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-022-transfer}{thm:p03-w03-p03-022-transfer}{Transfer of decidability and undecidability}
+\begin{proof}
+The translation of \cref{def:p03-imaginaries-translation} is defined by
+recursion on syntax, using at each atom the domain, equality, relation and
+graph formulas assigned to the symbols occurring there. When that
+assignment is computable, so is \(\sigma\mapsto\sigma^I\); bound variables
+are renamed by a fixed computable rule.
+
+Since \(I\) is an interpretation with source theory \(\operatorname{Th}(\mathcal B)\)
+and \(\mathcal B\models\operatorname{Th}(\mathcal B)\),
+\cref{thm:p03-imaginaries-quotient-truth} applies to \(M=\mathcal B\). For a
+sentence \(\sigma\) the assignment is empty, and the theorem gives
+\(I(\mathcal B)\models\sigma\) iff \(\mathcal B\models\sigma^I\). An
+isomorphism \(g:I(\mathcal B)\to\mathcal A\) preserves the truth of every
+formula at corresponding assignments; this is an induction on formulas in
+which the atomic case is the definition of isomorphism and the quantifier
+case uses that \(g\) is a bijection. Hence \(\mathcal A\models\sigma\) iff
+\(\mathcal B\models\sigma^I\).
+
+The function \(\sigma\mapsto\sigma^I\) is therefore a computable many-one
+reduction of \(\operatorname{Th}(\mathcal A)\) to \(\operatorname{Th}(\mathcal B)\).
+If \(\operatorname{Th}(\mathcal B)\) is decidable, deciding
+\(\sigma^I\in\operatorname{Th}(\mathcal B)\) decides
+\(\sigma\in\operatorname{Th}(\mathcal A)\); the undecidability statement is the
+contrapositive.
+\end{proof}
+\end{annexitem}

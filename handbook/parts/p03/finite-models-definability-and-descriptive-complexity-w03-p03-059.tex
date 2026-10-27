@@ -1,0 +1,811 @@
+%% toc: P3 39 39.6
+\chapter{Least and Partial Fixed-Point Logics}
+\label{sec:p03-w03-p03-059-fixed-point-logics}
+
+First-order logic cannot define the transitive closure of a relation on
+finite structures. Fixed-point logics repair this by letting a formula
+define a relation through iteration: a formula \(\varphi(R,\bar x)\) with a
+free relation variable \(R\) is read as an operator that sends a relation to
+a new relation, and the logic adds a constructor naming a fixed point of
+that operator. This chapter develops the two fixed-point logics that matter
+most for descriptive complexity. Least fixed-point logic (LFP) iterates only
+operators made monotone by a positivity condition. Partial fixed-point logic
+(PFP) iterates arbitrary first-order operators on finite structures and
+returns the empty relation when the iteration never stabilizes.
+
+The inputs are a finite relational vocabulary \(\tau\), first-order
+formulas over \(\tau\) together with one extra relation variable, and, for
+the complexity results, finite structures equipped with a linear order. The
+conclusions are: the operator theory that makes least and greatest fixed
+points exist (Knaster--Tarski and the stage construction); the syntax and
+semantics of both logics; Immerman's normal form, by which on finite
+structures negated least fixed points can be eliminated, proved through
+stage comparison; the inclusion of LFP in PFP; the fact that a PFP
+iteration can run through exponentially many stages; the evaluation of PFP
+formulas in polynomial space; the capture of \(\mathsf{PSPACE}\) by PFP on
+ordered finite structures; and the resulting equivalence between the
+question \(\mathsf P=\mathsf{PSPACE}\) and the question whether LFP and PFP
+define the same classes of ordered finite structures.
+
+The presentation follows Gr\"adel's chapter in the author-hosted PDF of
+2007, whose running page numbers are used for every locator below
+\cite[pp.~152--180]{Gradel2007FMTDescriptiveChapter}; whether that file coincides with the
+printed Springer text of the same year has not been checked. The handbook's
+own first-order least fixed-point constructor
+(\cref{def:p04-fol-lfp}) is the same object as the constructor of
+\cref{def:p03-w03-p03-059-lfp}; the present chapter adds the operator
+theory behind it, the greatest fixed points, and the partial fixed points.
+Complexity classes are those of \cref{def:p04-resource-classes}, and
+``captures'' has the meaning of \cref{def:p04-captures-complexity}.
+
+\section{Operators and fixed points on power-set lattices}
+\label{sec:p03-w03-p03-059-operators}
+
+Gr\"adel states the basic fixed-point theory for the power-set lattice
+\((\mathcal P(B),\subseteq)\) of an arbitrary set \(B\), finite or infinite
+\cite[p.~153]{Gradel2007FMTDescriptiveChapter}. In applications \(B\) is \(A^k\), the set
+of \(k\)-tuples over the universe \(A\) of a structure.
+
+\begin{hbdefinition}{def:p03-w03-p03-059-operator}{Fixed points and monotone operators}
+Let \(B\) be a set and \(F:\mathcal P(B)\to\mathcal P(B)\) a function,
+called an \emph{operator} on \(B\).
+\begin{enumerate}
+ \item A set \(X\subseteq B\) is a \emph{fixed point} of \(F\) when
+       \(F(X)=X\).
+ \item A \emph{least fixed point} of \(F\) is a fixed point \(X\) with
+       \(X\subseteq Y\) for every fixed point \(Y\) of \(F\); a
+       \emph{greatest fixed point} is a fixed point \(X\) with
+       \(Y\subseteq X\) for every fixed point \(Y\).
+ \item \(F\) is \emph{monotone} when \(X\subseteq Y\) implies
+       \(F(X)\subseteq F(Y)\) for all \(X,Y\subseteq B\).
+\end{enumerate}
+A least (greatest) fixed point is unique when it exists, since two of them
+are each contained in the other. This is Definition~3.3.1 of
+\cite[p.~153]{Gradel2007FMTDescriptiveChapter}.
+\index{fixed point!of an operator}\index{monotone operator}
+\end{hbdefinition}
+
+An operator need not have any fixed point: on a nonempty \(B\), the
+complement operator \(X\mapsto B\setminus X\) has none, because
+\(X=B\setminus X\) is impossible. Monotonicity is the hypothesis that
+removes this obstruction.
+
+\begin{hbtheorem}{thm:p03-w03-p03-059-knaster-tarski}{proved=annex:p03-w03-p03-059-knaster-tarski}{Knaster--Tarski for power-set lattices}
+Every monotone operator \(F:\mathcal P(B)\to\mathcal P(B)\) has a least
+fixed point \(\operatorname{lfp}(F)\) and a greatest fixed point
+\(\operatorname{gfp}(F)\), and
+\[
+\begin{aligned}
+ \operatorname{lfp}(F)&=\bigcap\{X:F(X)=X\}=\bigcap\{X:F(X)\subseteq X\},\\
+ \operatorname{gfp}(F)&=\bigcup\{X:F(X)=X\}=\bigcup\{X:X\subseteq F(X)\}.
+\end{aligned}
+\]
+This is Theorem~3.3.2 of \cite[p.~153]{Gradel2007FMTDescriptiveChapter}.
+\index{Knaster--Tarski theorem!power-set form}
+\end{hbtheorem}
+
+The intersection formula describes the least fixed point from above, as the
+smallest set closed under \(F\). The stages below describe it from below,
+by iterating \(F\) from the empty set.
+
+\begin{hbdefinition}{def:p03-w03-p03-059-stages}{Stages, inductive operators and closure ordinal}
+For an operator \(F\) on \(B\), the \emph{stages} \(X^\alpha\), for
+ordinals \(\alpha\), are defined by
+\[
+ X^0\defeq\varnothing,\qquad X^{\alpha+1}\defeq F(X^\alpha),\qquad
+ X^\lambda\defeq\bigcup_{\alpha<\lambda}X^\alpha\ \text{for limit }\lambda.
+\]
+\(F\) is \emph{inductive} when the stages increase:
+\(X^\alpha\subseteq X^\beta\) whenever \(\alpha<\beta\). For an inductive
+operator the stages reach a fixed point
+\(X^\infty\) (\cref{thm:p03-w03-p03-059-closure-ordinal}), called its
+\emph{inductive fixed point}, and the least ordinal \(\alpha\) with
+\(X^\alpha=X^{\alpha+1}\) is the \emph{closure ordinal}
+\(\operatorname{cl}(F)\). Dually, the \emph{downward stages} are
+\(Y^0\defeq B\), \(Y^{\alpha+1}\defeq F(Y^\alpha)\) and
+\(Y^\lambda\defeq\bigcap_{\alpha<\lambda}Y^\alpha\) at limits. For
+\(X\subseteq B\) write \(\overline X\defeq B\setminus X\); the \emph{dual
+operator} of \(F\) is \(F^d(X)\defeq\overline{F(\overline X)}\)
+\cite[p.~154]{Gradel2007FMTDescriptiveChapter}.
+\index{stages of an operator}\index{closure ordinal}\index{dual operator}
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p03-w03-p03-059-closure-ordinal}{proved=annex:p03-w03-p03-059-closure-ordinal}{The stages of an inductive operator stop}
+Let \(F\) be an inductive operator on \(B\). There is an ordinal
+\(\alpha\) with \(X^\alpha=X^{\alpha+1}\); from that ordinal on the stages
+are constant, and \(X^\infty=X^{\operatorname{cl}(F)}\) is a fixed point
+of \(F\). Moreover \(|\operatorname{cl}(F)|\leq|B|\). Every monotone
+operator is inductive. This is Lemma~3.3.3 of
+\cite[p.~154]{Gradel2007FMTDescriptiveChapter} together with the observations before it.
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p03-w03-p03-059-stages-lfp}{proved=annex:p03-w03-p03-059-stages-lfp}{Stage construction of the extremal fixed points}
+For a monotone operator \(F\) on \(B\):
+\begin{enumerate}
+ \item the inductive fixed point is the least fixed point,
+       \(X^\infty=\operatorname{lfp}(F)\);
+ \item the downward stages decrease and become constant at a fixed point
+       \(Y^\infty\), and \(Y^\infty=\operatorname{gfp}(F)\);
+ \item \(F^d\) is monotone, and
+       \(\operatorname{lfp}(F)=\overline{\operatorname{gfp}(F^d)}\) and
+       \(\operatorname{gfp}(F)=\overline{\operatorname{lfp}(F^d)}\).
+\end{enumerate}
+Item~1 is Proposition~3.3.4; items~2 and~3 are stated on
+\cite[p.~154]{Gradel2007FMTDescriptiveChapter}, item~3 being left there as
+Exercise~3.3.5.
+\end{hbtheorem}
+
+\begin{hblemma}{thm:p03-w03-p03-059-finite-stages}{proved=annex:p03-w03-p03-059-finite-stages}{Finite stages reach the fixed points in polynomially many steps}
+Let \(A\) be a finite set with \(n\) elements and
+\(F:\mathcal P(A^k)\to\mathcal P(A^k)\) monotone. Then
+\(\operatorname{lfp}(F)=X^m\) and \(\operatorname{gfp}(F)=Y^m\) for some
+\(m\leq n^k\), so only finite stages are needed. If \(F\) is computable in
+time polynomial in \(n\), then so are \(\operatorname{lfp}(F)\) and
+\(\operatorname{gfp}(F)\). The complexity claim is Lemma~3.3.6 of
+\cite[p.~155]{Gradel2007FMTDescriptiveChapter}.
+\end{hblemma}
+
+\section{Least fixed-point logic}
+\label{sec:p03-w03-p03-059-lfp}
+
+Relation variables, like first-order variables, have binding scopes. In the
+polarity conditions and relation substitutions below, occurrences of a
+relation symbol are those free with respect to relation binding; a nested
+fixed-point binder for that symbol starts a new scope. Before substitution,
+bound relation variables are renamed to distinct fresh symbols of the same
+arity, avoiding the free symbols of the formulas being inserted. Bound
+first-order variables are likewise renamed to prevent capture of parameters.
+Such renaming changes neither the update operator nor the defined relation;
+the annex records the semantic justification.
+
+Let \(\tau\) be a relational vocabulary, \(R\) a relation symbol not in
+\(\tau\) of arity \(k\), and \(\varphi(R,\bar x)\) a formula of vocabulary
+\(\tau\cup\{R\}\) whose free first-order variables include the \(k\)
+distinct variables \(\bar x\). In a \(\tau\)-structure \(\mathfrak A\) with
+universe \(A\), and for a fixed assignment to the other free variables of
+\(\varphi\), the formula defines the \emph{update operator}
+\[
+ F_\varphi:\mathcal P(A^k)\to\mathcal P(A^k),\qquad
+ F_\varphi(R)\defeq\{\bar a:(\mathfrak A,R)\entails\varphi(R,\bar a)\}
+\]
+\cite[p.~152]{Gradel2007FMTDescriptiveChapter}. An occurrence of \(R\) is \emph{positive}
+when it lies under an even number of negations, counted after implications
+and biconditionals are rewritten with negation, conjunction and
+disjunction. Positivity is the syntactic condition that makes
+\(F_\varphi\) monotone, and so brings
+\cref{thm:p03-w03-p03-059-knaster-tarski} into play.
+
+\begin{hblemma}{thm:p03-w03-p03-059-positive-monotone}{proved=annex:p03-w03-p03-059-positive-monotone}{Positivity gives monotone operators}
+If every occurrence of \(R\) in \(\varphi(R,\bar x)\) is positive, then for
+every structure \(\mathfrak A\) and every assignment to the other free
+variables, \(F_\varphi\) is monotone. If every occurrence is negative
+(under an odd number of negations), \(F_\varphi\) is antitone:
+\(S\subseteq S'\) implies \(F_\varphi(S')\subseteq F_\varphi(S)\).
+\end{hblemma}
+
+\begin{hbdefinition}{def:p03-w03-p03-059-lfp}{Least fixed-point logic}
+LFP extends first-order logic by the following formation rule. If
+\(\varphi(R,\bar x)\) is a formula of vocabulary \(\tau\cup\{R\}\) in which
+\(R\) occurs only positively, \(\bar x\) is a \(k\)-tuple of distinct
+variables, \(k\) is the arity of \(R\), and \(\bar t\) is a \(k\)-tuple of
+terms, then
+\[
+ [\mathbf{lfp}\,R\bar x\,.\,\varphi](\bar t)
+ \quad\text{and}\quad
+ [\mathbf{gfp}\,R\bar x\,.\,\varphi](\bar t)
+\]
+are formulas of vocabulary \(\tau\). Their free first-order variables are
+those of \(\varphi\) other than the variables of \(\bar x\), together with
+the variables of \(\bar t\); \(R\) is bound. The free variables of
+\(\varphi\) outside \(\bar x\) are the \emph{parameters} of the fixed-point
+formula.
+
+\emph{Semantics.} For a \(\tau\)-structure \(\mathfrak A\) and an
+assignment to the free variables,
+\(\mathfrak A\entails[\mathbf{lfp}\,R\bar x\,.\,\varphi](\bar t)\) exactly
+when the tuple \(\bar t^{\mathfrak A}\) of values of \(\bar t\) belongs to
+\(\operatorname{lfp}(F_\varphi)\), the operator being taken with the
+parameters at their assigned values; the \(\mathbf{gfp}\) formula uses
+\(\operatorname{gfp}(F_\varphi)\) instead. By
+\cref{thm:p03-w03-p03-059-positive-monotone,thm:p03-w03-p03-059-knaster-tarski}
+both fixed points exist on every structure, finite or infinite. This is
+Definition~3.3.7 of \cite[p.~155]{Gradel2007FMTDescriptiveChapter}. The constructor of
+\cref{def:p04-fol-lfp}, written there
+\([\operatorname{lfp}_{R,\bar x}\varphi](\bar t)\), is the
+\(\mathbf{lfp}\) case.
+\index{least fixed-point logic}\index{LFP}\index{greatest fixed point!formula}
+\end{hbdefinition}
+
+\begin{hbexample}{def:p03-w03-p03-059-tc}{Transitive closure as a least fixed point}
+For a binary relation symbol \(E\), Gr\"adel's Example~3.3.8 defines the
+transitive closure by
+\[
+ [\mathbf{lfp}\,Txy\,.\,(Exy\lor\exists z(Exz\land Tzy))](u,v)
+\]
+\cite[p.~155]{Gradel2007FMTDescriptiveChapter}. The variable \(T\) occurs positively. On a
+finite graph the stage \(T^m\) is the set of pairs joined by a nonempty
+\(E\)-path with at most \(m\) edges: \(T^1=E\), and a pair enters
+\(T^{m+1}\) exactly when it is an edge or its first edge is followed by a
+path in \(T^m\). The union of the stages is the transitive closure, which
+\cref{thm:p03-w03-p03-059-stages-lfp} identifies with the least fixed
+point. The same example with \(u\) as a parameter is
+\([\mathbf{lfp}\,Ty\,.\,(Euy\lor\exists x(Tx\land Exy))](v)\).
+\end{hbexample}
+
+\begin{hbtheorem}{thm:p03-w03-p03-059-gfp-dual}{proved=annex:p03-w03-p03-059-gfp-dual}{Greatest fixed points through negated least fixed points}
+Let \(\varphi(R,\bar x)\) have only positive occurrences of \(R\), and let
+\(\neg\varphi[R/\neg R]\) be the negation of the result of replacing every
+free occurrence of \(R\bar s\) in \(\varphi\) by \(\neg R\bar s\). Then \(R\) occurs only
+positively in \(\neg\varphi[R/\neg R]\), and on every structure
+\[
+ [\mathbf{gfp}\,R\bar x\,.\,\varphi](\bar t)
+ \;\Leftrightarrow\;
+ \neg[\mathbf{lfp}\,R\bar x\,.\,\neg\varphi[R/\neg R]](\bar t).
+\]
+This equivalence is displayed on \cite[p.~156]{Gradel2007FMTDescriptiveChapter}; it shows
+that greatest fixed points add no expressive power once negation of
+\(\mathbf{lfp}\) formulas is allowed.
+\end{hbtheorem}
+
+Because of \cref{thm:p03-w03-p03-059-gfp-dual}, unrestricted LFP formulas
+may place negations in front of fixed points, and so may nest least and
+greatest fixed points. The classical theory of inductive definitions works
+with a narrower language.
+
+\begin{hbdefinition}{def:p03-w03-p03-059-lfp1}{Positive least fixed-point logic}
+\(\mathrm{LFP}_1\), also called positive LFP, is obtained from first-order
+logic by forming least fixed points
+\([\mathbf{lfp}\,R\bar x\,.\,\varphi](\bar x)\) of first-order formulas
+\(\varphi\), positive in \(R\) and without parameters, and closing the
+resulting formulas under conjunction, disjunction, and existential and
+universal quantification, but not under negation
+\cite[p.~173]{Gradel2007FMTDescriptiveChapter}. Gr\"adel refers to the preceding chapter
+of the same book for a more formal definition; the description given here is
+the one on p.~173.
+\index{positive least fixed-point logic}\index{LFP1@\(\mathrm{LFP}_1\)}
+\end{hbdefinition}
+
+On finite structures these negations can be removed again. The proof below
+follows Immerman's argument for the collapse of the fixed-point hierarchy
+\cite[Thm.~2 and Lemmas~4.1--4.7, pp.~94--100]{Immerman1986}; it works with
+an auxiliary class of formulas in which fixed points may be nested, may
+carry parameters and may define several relations at once, and in which
+negation stands only in front of atoms.
+
+\begin{hbdefinition}{def:p03-w03-p03-059-simultaneous-lfp}{Simultaneous least fixed points and positive fixed-point formulas}
+Let \(\sigma\) be a relational vocabulary; its symbols may include free
+relation variables, which are then treated like any other relation symbol.
+A \emph{system} \(\mathcal S\) over \(\sigma\) consists of distinct relation
+symbols \(R_1,\ldots,R_m\notin\sigma\) of arities \(k_1,\ldots,k_m\)
+and, for each \(i\), a \(k_i\)-tuple \(\bar x_i\) of distinct variables and
+a formula \(\varphi_i\) of vocabulary \(\sigma\cup\{R_1,\ldots,R_m\}\),
+written \(R_i\bar x_i\defeq\varphi_i\). The free variables of the
+\(\varphi_i\) outside \(\bar x_i\) are the \emph{parameters} of
+\(\mathcal S\). In a \(\sigma\)-structure \(\mathfrak A\), with the
+parameters assigned, the system defines the operator
+\[
+ F_{\mathcal S}(X_1,\ldots,X_m)\defeq(Y_1,\ldots,Y_m),\qquad
+ Y_i\defeq\{\bar a\in A^{k_i}:(\mathfrak A,X_1,\ldots,X_m)\entails\varphi_i(\bar a)\},
+\]
+on \(\mathcal P(A^{k_1})\times\cdots\times\mathcal P(A^{k_m})\). This
+product is identified with the power set of the disjoint union
+\(B\defeq\{(i,\bar a):i\leq m,\ \bar a\in A^{k_i}\}\), so that inclusion,
+stages, \cref{thm:p03-w03-p03-059-knaster-tarski} and
+\cref{thm:p03-w03-p03-059-finite-stages} apply componentwise.
+
+The class \(\mathrm{Pos}[\sigma]\) of \emph{positive fixed-point formulas}
+of vocabulary \(\sigma\) is the least class of formulas such that
+\begin{enumerate}
+ \item every \emph{literal} \(P\bar t\), \(\neg P\bar t\), \(s=t\),
+       \(\neg s=t\) with \(P\in\sigma\) belongs to it;
+ \item it is closed under \(\land\), \(\lor\), \(\exists x\) and
+       \(\forall x\);
+ \item if \(\mathcal S\) is a system over \(\sigma\) whose bodies
+       \(\varphi_i\) belong to \(\mathrm{Pos}[\sigma\cup\{R_1,\ldots,R_m\}]\)
+       and contain no literal \(\neg R_l\bar t\) for any \(l\leq m\), then
+       \([\mathbf{lfp}\,R_j:\mathcal S](\bar t)\) belongs to it, for every
+       \(j\leq m\) and every \(k_j\)-tuple \(\bar t\) of variables. Its free
+       variables are those of \(\bar t\) and the parameters of
+       \(\mathcal S\), and it holds when \(\bar t\) denotes a tuple in the
+       \(j\)-th component of \(\operatorname{lfp}(F_{\mathcal S})\).
+\end{enumerate}
+The notation \([\mathbf{lfp}\,R_j:\mathcal S](\bar t)\) is that of
+Gr\"adel's simultaneous fixed points \cite[Thm.~3.3.43,
+p.~174]{Gradel2007FMTDescriptiveChapter}; the class \(\mathrm{Pos}[\sigma]\) is an
+auxiliary class of this chapter. Write \(\bot\defeq\exists v\,\neg v=v\)
+and \(\top\defeq\forall v\,v=v\); structures are nonempty, so these are
+false and true. For \(\theta\in\mathrm{Pos}[\sigma\cup\{R\}]\), with \(R\)
+of arity \(k\), and formulas \(\alpha(\bar u),\beta(\bar u)\) with a
+\(k\)-tuple \(\bar u\) of free variables, \(\theta[R:\alpha/\beta]\) is the
+result of replacing every free \(R\)-literal \(R\bar t\) by
+\(\alpha(\bar t)\) and every free \(R\)-literal \(\neg R\bar t\) by
+\(\beta(\bar t)\). First-order and relation variables bound in the formulas
+are renamed so that no free variable of \(\alpha\) or \(\beta\) is captured;
+occurrences under a binder for \(R\) are not substituted.
+Two instances recur: \(\theta[R:\varnothing]\defeq\theta[R:\bot/\top]\),
+and \(\theta^{\sim}\defeq\theta[R:\neg R\bar u/R\bar u]\), which exchanges
+the two kinds of \(R\)-literals.
+\index{simultaneous least fixed point}\index{positive fixed-point formula}
+\end{hbdefinition}
+
+The semantics in item~3 presupposes that \(F_{\mathcal S}\) is monotone, so
+that \(\operatorname{lfp}(F_{\mathcal S})\) exists. The first lemma supplies
+this, together with the substitution rule that the later constructions use
+throughout.
+
+\begin{hblemma}{thm:p03-w03-p03-059-pos-basic}{proved=annex:p03-w03-p03-059-pos-basic}{Monotonicity and substitution for positive fixed-point formulas}
+\begin{enumerate}
+ \item If a symbol \(P\in\sigma\) occurs in no literal \(\neg P\bar t\) of
+       \(\theta\in\mathrm{Pos}[\sigma]\), then \(\theta\) is monotone in
+       \(P\): if two \(\sigma\)-structures \(\mathfrak A,\mathfrak A'\)
+       differ only in that \(P^{\mathfrak A}\subseteq P^{\mathfrak A'}\),
+       then \(\mathfrak A\entails\theta[s]\) implies
+       \(\mathfrak A'\entails\theta[s]\) for every assignment \(s\). In
+       particular every system allowed in item~3 of
+       \cref{def:p03-w03-p03-059-simultaneous-lfp} has a monotone operator,
+       and the semantics there is well defined.
+ \item Let \(\theta\in\mathrm{Pos}[\sigma\cup\{R\}]\), with \(R\notin\sigma\)
+       of arity \(k\), and let \(\alpha,\beta\in\mathrm{Pos}[\sigma']\) with
+       \(\sigma\subseteq\sigma'\), where the relation variables bound in
+       \(\theta\) do not occur in \(\alpha,\beta\). Then
+       \(\theta[R:\alpha/\beta]\in\mathrm{Pos}[\sigma']\). Let
+       \(\mathfrak B\) be a \(\sigma'\)-structure with universe \(A\) and
+       \(s\) an assignment, let \(Q\) be the set of \(\bar a\in A^k\) with
+       \(\mathfrak B\entails\alpha(\bar a)\) under \(s\), and suppose that
+       \(\beta\) defines \(A^k\setminus Q\) under \(s\). Then
+       \(\mathfrak B\entails\theta[R:\alpha/\beta][s]\) if and only if
+       \(\mathfrak B[R\mapsto Q]\entails\theta[s]\), where
+       \(\mathfrak B[R\mapsto Q]\) interprets \(R\) as \(Q\) and agrees
+       with \(\mathfrak B\) elsewhere. If \(\theta\) has no literal
+       \(\neg R\bar t\), the hypothesis on \(\beta\) is not needed.
+\end{enumerate}
+\end{hblemma}
+
+The decisive tool compares the stages at which tuples enter a least fixed
+point.
+
+\begin{hbdefinition}{def:p03-w03-p03-059-rank}{Rank and stage comparison}
+Let \(F\) be a monotone operator on \(\mathcal P(A^k)\), \(A\) finite, with
+stages \(X^0=\varnothing\) and \(X^{m+1}=F(X^m)\). The \emph{rank} of
+\(\bar a\in A^k\) is \(|\bar a|_F\defeq\min\{m:\bar a\in X^m\}\) if
+\(\bar a\in\operatorname{lfp}(F)\), and \(|\bar a|_F\defeq\infty\)
+otherwise; every finite rank is at least \(1\). The \emph{stage comparison
+relations} are
+\[
+ \bar a\le_F\bar b\iff|\bar a|_F\leq|\bar b|_F\text{ and }|\bar a|_F<\infty,
+ \qquad
+ \bar a<_F\bar b\iff|\bar a|_F<|\bar b|_F .
+\]
+These are Immerman's rank and his relations \(\leq_\varphi\) and
+\(<_\varphi\) \cite[p.~97]{Immerman1986}, written here for the operator
+rather than for the formula.
+\index{rank of a tuple in a fixed point}\index{stage comparison}
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p03-w03-p03-059-stage-comparison}{proved=annex:p03-w03-p03-059-stage-comparison}{Positive stage comparison and positive negation of least fixed points}
+Let \(R\notin\sigma\) have arity \(k\), let \(\bar x\) be a \(k\)-tuple of
+distinct variables, and let
+\(\theta^+,\theta^-\in\mathrm{Pos}[\sigma\cup\{R\}]\) have free variables
+among \(\bar x\) and parameters \(\bar p\). Assume that on every finite
+\((\sigma\cup\{R\})\)-structure \(\theta^-\) is equivalent to
+\(\neg\theta^+\), and that on every finite \(\sigma\)-structure, for all
+values of \(\bar p\), the operator
+\(F(X)\defeq\{\bar a:(\mathfrak A,X)\entails\theta^+(\bar a)\}\) is
+monotone. The symbol \(R\) may occur in \(\theta^\pm\) in literals of both
+signs. Then there are formulas
+\(\mathrm{le}(\bar u,\bar w)\), \(\mathrm{lt}(\bar u,\bar w)\),
+\(\mathrm{in}(\bar u)\) and \(\mathrm{out}(\bar u)\) in
+\(\mathrm{Pos}[\sigma]\), with free variables among \(\bar u,\bar w,\bar p\)
+for fresh \(k\)-tuples \(\bar u,\bar w\), which on every finite
+\(\sigma\)-structure define \(\le_F\), \(<_F\),
+\(\operatorname{lfp}(F)\) and \(A^k\setminus\operatorname{lfp}(F)\).
+\end{hblemma}
+
+The relations \(\le_F\) and \(<_F\) are defined by one simultaneous
+induction whose clauses are a variant of Immerman's equations
+\cite[p.~98]{Immerman1986}, written so that the stage
+\(X^{|\bar c|_F}\) is named by \(\{\bar u:\bar u\le_F\bar c\}\) and its
+complement by \(\{\bar u:\bar c<_F\bar u\}\). Both names are positive in
+the relations being defined, which is why \(R\) may occur with both signs
+in \(\theta^\pm\). The complement of the fixed point is expressed through a
+tuple of maximal rank, Immerman's \(\mathrm{MAX}_\varphi\)
+\cite[Lemmas~4.5--4.6, pp.~98--99]{Immerman1986}: a tuple lies outside
+\(\operatorname{lfp}(F)\) exactly when the fixed point is empty or some
+tuple of maximal rank has smaller rank than it.
+
+\begin{hbtheorem}{thm:p03-w03-p03-059-immerman-normal-form}{proved=annex:p03-w03-p03-059-immerman-normal-form}{Immerman's normal form on finite structures}
+\begin{enumerate}
+ \item For every LFP formula \(\chi\) of a relational vocabulary
+       \(\sigma\) there are formulas \(\chi^+,\chi^-\in\mathrm{Pos}[\sigma]\),
+       with free variables among those of \(\chi\), such that on every
+       finite \(\sigma\)-structure \(\chi^+\) is equivalent to \(\chi\) and
+       \(\chi^-\) to \(\neg\chi\).
+ \item Every formula of \(\mathrm{Pos}[\sigma]\) is equivalent on finite
+       \(\sigma\)-structures to a formula of \(\mathrm{LFP}_1\) of
+       vocabulary \(\sigma\).
+ \item Consequently, on finite structures every LFP formula, and the
+       negation of every LFP formula, is equivalent to a formula of
+       \(\mathrm{LFP}_1\). In particular the complement of an
+       \(\mathrm{LFP}_1\)-definable query on finite structures is again
+       \(\mathrm{LFP}_1\)-definable, and by
+       \cref{thm:p03-w03-p03-059-gfp-dual} every greatest fixed point is
+       expressible without negated fixed points.
+\end{enumerate}
+Item~3 is Theorem~3.3.51 of \cite[p.~176]{Gradel2007FMTDescriptiveChapter}, stated there
+without proof, with a pointer to stage comparison and to Immerman. It is
+the content of Immerman's Theorem~2, that the fixed-point hierarchy
+collapses at its first level \cite[pp.~87, 94]{Immerman1986}.
+\end{hbtheorem}
+
+The annex proof follows Immerman's sequence of lemmas. Item~2 combines
+Immerman's simultaneous induction lemma (two simultaneous inductions are
+one, with a pair of equal or unequal elements as a tag) and his
+transitivity lemma (a fixed point inside the body of another fixed point
+can be computed in a joint induction)
+\cite[Lemmas~4.1--4.2 and Cor.~4.3, pp.~95--97]{Immerman1986}. Immerman
+refers to Moschovakis for the inductions behind both; the annex writes them
+out, the second in the form of Beki\'c's principle. Item~1 uses
+\cref{thm:p03-w03-p03-059-stage-comparison} for least fixed points and, for
+greatest fixed points, the dual operator. Immerman records a difficulty
+raised by a referee: once negations are removed, the variable of an outer
+fixed point may occur both positively and negatively inside an inner one
+\cite[Lemma~4.7, p.~99]{Immerman1986}. He resolves it by substituting
+names of the outer stage and of its complement, which are positive
+\cite[p.~100]{Immerman1986}. Item~1 builds that remedy into the induction:
+each formula is carried together with a positive form of its negation, and
+\cref{thm:p03-w03-p03-059-stage-comparison} accepts a fixed-point variable
+occurring with both signs. Two differences of setting remain. Immerman
+assumes a constant symbol in every vocabulary and proves the sharper form
+in which a single application of the fixed-point operator suffices
+\cite[pp.~89, 94]{Immerman1986}; the statement above is Gr\"adel's
+\(\mathrm{LFP}_1\) form, for relational vocabularies without constants. The
+pair tag needs two distinct elements, so the annex treats one-element
+structures separately, by unfolding the induction.
+
+\begin{hbexample}{def:p03-w03-p03-059-non-reachability}{Non-reachability without a negated fixed point}
+Let \(\theta^+(T,x,y)\defeq Exy\lor\exists z(Exz\land Tzy)\), the body of
+\cref{def:p03-w03-p03-059-tc}, and
+\(\theta^-(T,x,y)\defeq\neg Exy\land\forall z(\neg Exz\lor\neg Tzy)\). On a
+finite graph the rank of a pair \((a,b)\) is the number of edges of a
+shortest nonempty path from \(a\) to \(b\), and \(\infty\) if there is
+none. A pair \((c,d)\) has maximal rank when no shortest path between any
+pair is longer than the one from \(c\) to \(d\). The formula
+\(\mathrm{out}(u,v)\) of \cref{thm:p03-w03-p03-059-stage-comparison} says:
+either there are no edges at all, or some pair \((c,d)\) of maximal rank
+has smaller rank than \((u,v)\). In the second case there is no path from
+\(u\) to \(v\), because every pair joined by a path has rank at most that
+of \((c,d)\). Maximality of \((c,d)\) is written
+\[
+ \mathrm{le}(c,d,c,d)\land\forall x\forall y\bigl(\mathrm{le}(x,y,c,d)\lor
+ \theta^-(x,y)[T:\mathrm{le}(\cdot,\cdot,c,d)/\mathrm{lt}(c,d,\cdot,\cdot)]\bigr):
+\]
+every pair has rank at most that of \((c,d)\) or does not enter at the next
+stage. For the path \(a\to b\to e\) with edges \(Eab\) and \(Ebe\), the
+ranks are \(|(a,b)|=|(b,e)|=1\) and \(|(a,e)|=2\); the pair \((a,e)\) is the
+only pair of maximal rank, and \((e,a)\) satisfies \(\mathrm{out}\) because
+\(|(a,e)|=2<\infty=|(e,a)|\). No negation stands in front of a fixed point:
+the negated \(T\)-atoms of \(\theta^-\) have been replaced by positive
+occurrences of \(\mathrm{lt}\), and the only negated atoms left are
+\(E\)-atoms.
+\end{hbexample}
+
+\begin{hbwarning}{def:p03-w03-p03-059-normal-form-boundary}{The normal form is a finite-structure theorem}
+The hypothesis ``finite structures'' cannot be dropped. Gr\"adel reports
+that on infinite structures some LFP formulas are equivalent to no positive
+formula, and that the hierarchy obtained by alternating least and greatest
+fixed points is strict there \cite[p.~176]{Gradel2007FMTDescriptiveChapter}; he refers to
+work of Bradfield and of Moschovakis for those results. The normal form
+therefore does not say that LFP is closed under complement as a matter of
+logic: it is a consequence of finiteness. Immerman makes the same remark
+\cite[p.~100]{Immerman1986}. The proof shows where finiteness enters. The
+clauses of the stage comparison induction reach a tuple of rank \(r\) through
+a tuple of rank \(r-1\), and on an infinite structure a stage may have no
+immediate predecessor, which Immerman notes \cite[pp.~97--98]{Immerman1986};
+and the negation of a fixed point is expressed through a tuple of maximal
+rank, which exists because the closure ordinal is finite. The normal form
+also concerns formulas over the stated vocabulary only; no order is needed
+for it.
+\end{hbwarning}
+
+\section{Partial fixed-point logic}
+\label{sec:p03-w03-p03-059-pfp}
+
+Positivity guarantees that the stages of an operator increase. Without it,
+the stages may oscillate. On a finite structure there are only finitely
+many relations of a given arity, so an oscillating sequence must eventually
+repeat. Partial fixed-point logic uses this to give every formula a
+fixed-point reading on finite structures.
+
+\begin{hbdefinition}{def:p03-w03-p03-059-pfp}{Partial fixed points and PFP}
+Let \(\mathfrak A\) be a finite \(\tau\)-structure and \(\psi(R,\bar x)\) an
+arbitrary formula of vocabulary \(\tau\cup\{R\}\), with \(R\) of arity
+\(k\) and the remaining free variables fixed by an assignment. Its operator
+\(F_\psi(R)\defeq\{\bar a:(\mathfrak A,R)\entails\psi(R,\bar a)\}\) need not
+be monotone. Its \emph{finite stages} are
+\[
+ R^0\defeq\varnothing,\qquad R^{m+1}\defeq F_\psi(R^m)\quad(m\in\N).
+\]
+The sequence need not increase. If some stage satisfies
+\(R^{m+1}=R^m\), the sequence has \emph{reached a fixed point}, and the
+\emph{partial fixed point} of \(F_\psi\) is that stage \(R^m\) (it does not
+depend on the choice of such \(m\), since from \(m\) on every stage equals
+\(R^m\)). Otherwise the partial fixed point is the empty relation.
+
+PFP extends first-order logic by the \emph{partial-fixed-point formation
+rule}: from any formula \(\psi(R,\bar x)\), a \(k\)-tuple \(\bar x\) of
+distinct variables and a \(k\)-tuple \(\bar t\) of terms, form
+\[
+ [\mathbf{pfp}\,R\bar x\,.\,\psi(R,\bar x)](\bar t),
+\]
+with free variables and parameters as in \cref{def:p03-w03-p03-059-lfp}. On
+a finite structure it holds when \(\bar t^{\mathfrak A}\) belongs to the
+partial fixed point of \(F_\psi\). The formula \(\psi\) may contain
+negations of \(R\), quantifiers, and nested \(\mathbf{pfp}\) formulas. This
+is the presentation of \cite[p.~177]{Gradel2007FMTDescriptiveChapter}.
+\index{partial fixed point}\index{partial fixed-point logic}\index{PFP}
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p03-w03-p03-059-pfp-dichotomy}{proved=annex:p03-w03-p03-059-pfp-dichotomy}{The two possible behaviours of finite stages}
+Let \(\mathfrak A\) be finite with \(n\) elements, \(F_\psi\) as in
+\cref{def:p03-w03-p03-059-pfp}, and \(N\defeq2^{n^k}\). Exactly one of
+the following holds:
+\begin{enumerate}
+ \item the stages reach a fixed point, and then they do so at some
+       \(m<N\);
+ \item the stages are eventually periodic with least period greater than
+       one: there are \(i<j\leq N\) with \(R^i=R^j\), and no stage is a
+       fixed point.
+\end{enumerate}
+Consequently the partial fixed point equals \(R^N\) when
+\(F_\psi(R^N)=R^N\), and equals \(\varnothing\) otherwise
+\cite[p.~177]{Gradel2007FMTDescriptiveChapter}.
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p03-w03-p03-059-lfp-in-pfp}{proved=annex:p03-w03-p03-059-lfp-in-pfp}{LFP is contained in PFP on finite structures}
+If \(R\) occurs only positively in \(\psi(R,\bar x)\), then on every finite
+structure
+\[
+ [\mathbf{lfp}\,R\bar x\,.\,\psi(R,\bar x)](\bar t)
+ \;\Leftrightarrow\;
+ [\mathbf{pfp}\,R\bar x\,.\,\psi(R,\bar x)](\bar t).
+\]
+Hence every LFP formula is equivalent on finite structures to a PFP
+formula; in Gr\"adel's notation \(\mathrm{LFP}\leq\mathrm{PFP}\)
+\cite[p.~177]{Gradel2007FMTDescriptiveChapter}.
+\end{hbtheorem}
+
+The inclusion has a quantitative side. By
+\cref{thm:p03-w03-p03-059-finite-stages}, a least-fixed-point iteration on
+a structure with \(n\) elements stops after at most \(n^k\) steps. A
+partial-fixed-point iteration can take exponentially many.
+
+\begin{hbexample}{def:p03-w03-p03-059-counter}{A binary counter as a partial-fixed-point induction}
+On a finite linear order \((A,<)\) with \(n\geq1\) elements, Gr\"adel's
+Example~3.3.53 uses the formula
+\[
+ \psi(R,x)\defeq
+ \bigl(Rx\land\exists y(y<x\land\neg Ry)\bigr)\lor
+ \bigl(\neg Rx\land\forall y(y<x\to Ry)\bigr)\lor
+ \forall y\,Ry
+\]
+\cite[p.~178]{Gradel2007FMTDescriptiveChapter}. Read a set \(S\subseteq A\) as a binary
+numeral: the element of rank \(j\) in the order (rank \(0\) for the least
+element) carries the bit of weight \(2^j\), and the bit is \(1\) when the
+element lies in \(S\). The first disjunct keeps a \(1\) bit when some lower
+bit is \(0\); the second turns a \(0\) bit into \(1\) when all lower bits
+are \(1\); together they add one to the numeral. The third disjunct makes
+the full set \(A\), the numeral \(2^n-1\), a fixed point instead of letting
+it overflow to \(\varnothing\). So \(R^m\) is the numeral \(m\), and the
+iteration visits all \(2^n\) subsets before it stops.
+\cref{thm:p03-w03-p03-059-counter} states and proves this.
+
+For \(n=3\) with \(a<b<c\), the stages \(R^0,\ldots,R^7\) are
+\[
+ \varnothing,\ \{a\},\ \{b\},\ \{a,b\},\ \{c\},\ \{a,c\},\ \{b,c\},\ \{a,b,c\},
+\]
+and \(\{a,b,c\}\) is the first stage with \(F_\psi(R^m)=R^m\), at \(m=7\). The
+\(R\) occurring negatively in the first and second disjuncts makes
+\(F_\psi\) non-monotone, so this is not an LFP induction: for instance
+\(\{a\}\subseteq\{a,b\}\), but \(F_\psi(\{a\})=\{b\}\) is not contained
+in \(F_\psi(\{a,b\})=\{c\}\).
+\end{hbexample}
+
+\begin{hblemma}{thm:p03-w03-p03-059-counter}{proved=annex:p03-w03-p03-059-counter}{The counter reaches its fixed point at stage \(2^n-1\)}
+For \(\psi\) and \((A,<)\) as in \cref{def:p03-w03-p03-059-counter}, with
+\(n=|A|\geq1\), the stages are pairwise distinct for \(m\leq2^n-1\),
+\(R^{2^n-1}=A\), and \(F_\psi(A)=A\). Hence the partial fixed point is
+\(A\), first reached at stage \(2^n-1\)
+\cite[p.~178]{Gradel2007FMTDescriptiveChapter}.
+\end{hblemma}
+
+\subsection{Complexity of partial fixed points}
+\label{sec:p03-w03-p03-059-pfp-complexity}
+
+Exponentially many stages need not cost exponential space: only the current
+stage and a counter must be stored. To speak of complexity at all,
+Gr\"adel first fixes how an ordered structure is presented to a machine.
+
+\begin{hbdefinition}{def:p03-w03-p03-059-good-encoding}{Good encodings of ordered structures}
+For a finite relational vocabulary \(\tau\), let \(\mathrm{Ord}(\tau)\) be
+the class of structures \((\mathfrak A,<)\) with \(\mathfrak A\) a finite
+\(\tau\)-structure and \(<\) a linear order of its universe. For
+\((\mathfrak A,<)\) with \(n\) elements, \(A^k\) is identified with
+\(\{0,\ldots,n^k-1\}\) by the rank of each tuple in the lexicographic order
+induced by \(<\). An encoding \(\mathit{code}\) of \(\mathrm{Ord}(\tau)\) by
+words over a finite alphabet \(\Sigma_0\) is \emph{good} when:
+\begin{enumerate}
+ \item[(i)] \(\mathit{code}(\mathfrak A,<)=\mathit{code}(\mathfrak B,<)\)
+       if and only if the two ordered structures are isomorphic;
+ \item[(ii)] \(|\mathit{code}(\mathfrak A,<)|\leq p(|A|)\) for a fixed
+       polynomial \(p\);
+ \item[(iii)] for every \(k\) and every \(\sigma\in\Sigma_0\) there is a
+       first-order formula \(\beta_\sigma(x_1,\ldots,x_k)\) of vocabulary
+       \(\tau\cup\{<\}\) such that \((\mathfrak A,<)\entails
+       \beta_\sigma(\bar a)\) exactly when the symbol at position
+       \(\bar a\) of \(\mathit{code}(\mathfrak A,<)\) is \(\sigma\);
+ \item[(iv)] from \(\mathit{code}(\mathfrak A,<)\), a relation symbol and a
+       tuple, the truth of the atomic statement can be decided
+       efficiently.
+\end{enumerate}
+This is Definition~3.1.10 of \cite[p.~136]{Gradel2007FMTDescriptiveChapter}. In (iii),
+positions beyond the end of the word carry no symbol, so every
+\(\beta_\sigma\) is false there. A class of ordered structures is
+\emph{recognizable} in a complexity class when the set of its codes is.
+
+The complexity statements below also use three properties that the source
+takes for granted when it passes between structures and their codes, and
+which are stated here as hypotheses: (a) the set of all codes is decidable
+in polynomial time, and from a code one computes \(|A|\) in polynomial
+time, the atomic test of (iv) also running in polynomial time; (b) from
+\(|A|\) and the tables of the relations of an ordered structure, its code
+is computable in polynomial time; (c)
+\(|\mathit{code}(\mathfrak A,<)|\geq|A|\). Gr\"adel's convenient encoding
+\cite[p.~136]{Gradel2007FMTDescriptiveChapter} begins with \(|A|\) ones, followed by
+padding zeros and the characteristic strings of the relations in the
+lexicographic tuple order; its length is a fixed polynomial in \(|A|\)
+determined by the leading run of ones, which gives (a)--(c).
+\index{good encoding}
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p03-w03-p03-059-pfp-pspace}{proved=annex:p03-w03-p03-059-pfp-pspace}{PFP formulas are evaluated in polynomial space}
+For every PFP sentence \(\psi\), the class of finite models of \(\psi\) is
+in \(\mathsf{PSPACE}\): for an encoding as in
+\cref{def:p03-w03-p03-059-good-encoding}, satisfying (a)--(c) there, a
+deterministic algorithm decides, given a word, whether it is a code
+\(\mathit{code}(\mathfrak A,<)\) of some finite structure with
+\(\mathfrak A\entails\psi\), using work space polynomial in the length of
+the word. The same holds for a PFP formula \(\psi(\bar x)\) with free
+first-order variables, whose finite models are the pairs
+\((\mathfrak A,\bar a)\): given a code and the ranks of \(\bar a\) written in
+binary, the truth of \(\psi(\bar a)\) is decided in work space polynomial in
+the length of the input. In short, \(\mathrm{PFP}\subseteq\mathsf{PSPACE}\).
+This is Proposition~3.3.54 of \cite[p.~178]{Gradel2007FMTDescriptiveChapter}, which is
+stated there for every PFP formula.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p03-w03-p03-059-pfp-captures}{proved=annex:p03-w03-p03-059-pfp-captures}{Abiteboul, Vianu and Vardi: PFP captures PSPACE on ordered structures}
+Fix a finite relational vocabulary \(\tau\) and a good encoding of
+\(\mathrm{Ord}(\tau)\) with properties (a)--(c) of
+\cref{def:p03-w03-p03-059-good-encoding}. A class \(\mathcal K\subseteq\mathrm{Ord}(\tau)\),
+closed under isomorphism, is recognizable in \(\mathsf{PSPACE}\) if and only
+if it is the class of finite ordered models of a PFP sentence of vocabulary
+\(\tau\cup\{<\}\). This is Theorem~3.3.55 of
+\cite[p.~178]{Gradel2007FMTDescriptiveChapter}, where the order is part of every input
+structure.
+\end{hbtheorem}
+
+\begin{hbcorollary}{thm:p03-w03-p03-059-ptime-pspace}{proved=annex:p03-w03-p03-059-ptime-pspace}{\(\mathsf P=\mathsf{PSPACE}\) as a question about fixed points}
+The following are equivalent:
+\begin{enumerate}
+ \item \(\mathsf P=\mathsf{PSPACE}\);
+ \item on ordered finite structures LFP and PFP have the same expressive
+       power: for every finite relational \(\tau\), a class of ordered
+       finite \(\tau\)-structures is defined by an LFP sentence of
+       vocabulary \(\tau\cup\{<\}\) if and only if it is defined by a PFP
+       sentence of that vocabulary.
+\end{enumerate}
+This is the consequence stated at the head of \cite[p.~180]{Gradel2007FMTDescriptiveChapter}.
+The proof uses \cref{thm:p03-w03-p03-059-pfp-captures} together with the
+capture of \(\mathsf P\) by LFP on ordered finite structures
+\cite[Theorem~3.3.16, p.~157]{Gradel2007FMTDescriptiveChapter}, which the handbook states
+as \cref{thm:p04-immerman-vardi} and proves in Immerman's syntax as
+\cref{thm:p09-immerman1986-capture}.
+\end{hbcorollary}
+
+The corollary concerns ordered structures. For several pairs of logics a
+separation on arbitrary finite structures is easy even though the
+separation on ordered structures would settle an open complexity question;
+Gr\"adel's examples are deterministic against general transitive-closure
+logic and transitive-closure logic against LFP
+\cite[p.~180]{Gradel2007FMTDescriptiveChapter}. For LFP against PFP the unordered question
+is no easier than the ordered one.
+
+\begin{hbtheorem}{thm:p03-w03-p03-059-abiteboul-vianu}{proved=annex:p03.av.4}{Abiteboul--Vianu equivalence}
+LFP and PFP have the same expressive power on finite structures if
+and only if \(\mathsf P=\mathsf{PSPACE}\). More precisely, under
+that complexity-class equality, every PFP formula over a finite
+vocabulary has an equivalent LFP formula over the same vocabulary,
+with free first-order variables among those of the original formula.
+Equivalence holds on all finite structures, without a distinguished
+order on their universes.
+\end{hbtheorem}
+
+Gr\"adel states this as Theorem~3.3.56 without a proof
+\cite[p.~180]{Gradel2007FMTDescriptiveChapter}.
+The construction in \cref{sec:p03-abiteboul-vianu-completion}
+proves the unordered implication by ordering tuple types and then
+pulling the resulting LFP definition back to the original vocabulary.
+The reverse implication uses the ordered capture results of
+\cref{thm:p03-w03-p03-059-ptime-pspace}.
+
+\begin{hbwarning}{def:p03-w03-p03-059-pfp-limits}{What the partial-fixed-point results do not say}
+\begin{enumerate}
+ \item \emph{Finite structures only.} The partial fixed point is defined
+       through the finite stages \(R^m\), \(m\in\N\), on a finite
+       structure (\cref{def:p03-w03-p03-059-pfp}). On an infinite
+       structure the stage sequence need not repeat and the definition
+       assigns no value, so neither \cref{thm:p03-w03-p03-059-lfp-in-pfp}
+       nor \cref{thm:p03-w03-p03-059-abiteboul-vianu} says anything about
+       infinite structures. Both LFP and PFP are compared there only as
+       logics of finite structures.
+ \item \emph{Cycling and non-membership look alike.} The value
+       \(\varnothing\) is returned both when the stages cycle and when the
+       iteration stops at the empty relation; a formula
+       \(\neg[\mathbf{pfp}\,R\bar x\,.\,\psi](\bar t)\) cannot tell which
+       happened.
+ \item \emph{Order is a hypothesis of the capture theorems.}
+       \cref{thm:p03-w03-p03-059-pfp-captures,thm:p03-w03-p03-059-ptime-pspace}
+       are about ordered structures with the order in the vocabulary. The
+       unordered equivalence of \cref{thm:p03-w03-p03-059-abiteboul-vianu}
+       is a separate theorem, and the separation of LFP from PFP on all
+       finite structures is exactly as hard as separating
+       \(\mathsf P\) from \(\mathsf{PSPACE}\).
+ \item \emph{Simultaneous inductions.} Gr\"adel notes that simultaneous
+       partial-fixed-point inductions reduce to simple ones only at the cost
+       of raising the arity, and that it is unknown whether simultaneous
+       monadic PFP collapses to simple monadic PFP
+       \cite[p.~178]{Gradel2007FMTDescriptiveChapter}. The proof of
+       \cref{thm:p03-w03-p03-059-pfp-captures} given here uses one
+       relation of higher arity in place of a simultaneous induction.
+\end{enumerate}
+\end{hbwarning}
+
+\section{Relationships and sources}
+\label{sec:p03-w03-p03-059-relationships}
+
+The first-order least fixed-point constructor of \cref{def:p04-fol-lfp} and
+the ordered capture of \(\mathsf P\) (\cref{thm:p04-immerman-vardi}, proved
+in Immerman's syntax as \cref{thm:p09-immerman1986-capture}) are the LFP
+side of \cref{thm:p03-w03-p03-059-ptime-pspace}. The same lattice-theoretic
+argument as \cref{thm:p03-w03-p03-059-knaster-tarski} gives the least and
+greatest fixed points of the modal \(\mu\)-calculus
+(\cref{thm:p08-bvb501-mu-constructions}), where the lattice is the power set
+of the set of worlds. The zero--one law for fixed-point logics recorded in
+\cref{sec:p09-presentation-n-c-002} covers PFP because PFP is contained in
+the finite-variable infinitary logic used there; the order needed in
+\cref{thm:p03-w03-p03-059-pfp-captures} is exactly what destroys that law.
+
+\paragraph{Exact sources.} Operator theory: Definition~3.3.1,
+Theorem~3.3.2, Lemma~3.3.3, Proposition~3.3.4, Exercise~3.3.5 and
+Lemma~3.3.6 of \cite[pp.~153--155]{Gradel2007FMTDescriptiveChapter}. LFP syntax and the
+transitive-closure example: Definition~3.3.7 and Example~3.3.8 of
+\cite[p.~155]{Gradel2007FMTDescriptiveChapter}; greatest fixed points through negation:
+\cite[p.~156]{Gradel2007FMTDescriptiveChapter}; \(\mathrm{LFP}_1\):
+\cite[p.~173]{Gradel2007FMTDescriptiveChapter}; Immerman's normal form and its
+infinite-structure boundary: Theorem~3.3.51 of
+\cite[p.~176]{Gradel2007FMTDescriptiveChapter}; simultaneous fixed points:
+Theorem~3.3.43 of \cite[p.~174]{Gradel2007FMTDescriptiveChapter}. The proof of the normal
+form: Immerman's Theorem~2 \cite[pp.~87, 94]{Immerman1986}, his constant
+assumption \cite[p.~89]{Immerman1986}, Lemmas~4.1 and~4.2 with
+Corollary~4.3 \cite[pp.~95--97]{Immerman1986}, rank, stage comparison and
+Fact~4.4 \cite[p.~97]{Immerman1986}, the stage comparison equations and
+Lemma~4.5 \cite[p.~98]{Immerman1986}, Lemmas~4.6 and~4.7
+\cite[pp.~98--99]{Immerman1986}, and the closing argument and the remark
+that the result fails on infinite structures
+\cite[p.~100]{Immerman1986}. PFP, the inclusion of LFP, and the
+counter: \cite[pp.~177--178]{Gradel2007FMTDescriptiveChapter}, Example~3.3.53;
+Proposition~3.3.54 and Theorem~3.3.55 with its proof:
+\cite[pp.~178--179]{Gradel2007FMTDescriptiveChapter}; good encodings:
+Definition~3.1.10 of \cite[p.~136]{Gradel2007FMTDescriptiveChapter}; the
+\(\mathsf P\) versus \(\mathsf{PSPACE}\) consequence and
+Theorem~3.3.56: \cite[p.~180]{Gradel2007FMTDescriptiveChapter}.

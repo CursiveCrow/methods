@@ -1,46 +1,189 @@
 % Exact Vardi 1982 proof/sketch boundaries and explicit reconstruction.
 
-\begin{annexitem}{annex:p9.n-c-004.2.theorem5}{thm:p09-vardi82-theorem5}{The two published lower-bound sketches are not one argument}
-\sketchnote{The original PTIME-completeness theorem for Path System
-Accessibility is an external dependency. The extended abstract does not print the complete
-logspace expression-producing tableau reduction. They are not declared fully
-proved by this sketch. The positive iteration bound is proved separately below.}
+\begin{annexitem}{annex:p9.n-c-004.2.theorem5}{thm:p09-vardi82-theorem5}{Two uniform reductions}
+\begin{proof}
+The membership bounds are the positive-iteration lemma below. We supply
+both lower-bound reductions, including their logspace uniformity. Vardi's
+printed proof invokes Path System Accessibility for the first and sketches
+a Boolean-addressed tableau for the second
+\cite[Theorem~5, pp.~141--142]{Vardi1982}. The details here are a handbook
+reconstruction, not additional text attributed to the extended abstract.
 
-The source's data lower bound uses a database describing initial accessible
-points \(A\) and triples \(P(x,y,z)\), with the rule that accessibility of
-both \(x\) and \(y\) permits accessibility of \(z\).  One fixed positive
-operator is
+\paragraph{The fixed query and its derivations.}
+A path system consists of a finite set of points, a unary set \(A\) of
+initial points, a ternary relation \(P\), and a target \(g\). Its accessible
+points are the least set containing \(A\) and closed under
+\(x,y\mapsto z\) whenever \(P(x,y,z)\). One fixed expression is
 \[
- \Upsilon X.z.
-   \bigl(A(z)\lor\exists x\exists y
-               (X(x)\land X(y)\land P(x,y,z))\bigr).
+ \Upsilon X.z.\bigl(A(z)\lor
+      \exists x\exists y(X(x)\land X(y)\land P(x,y,z))\bigr).
 \]
-Induction on stages identifies its tuples with points admitting finite
-derivations by that rule: the base is \(A\), and every later point has two
-earlier-premise derivations.  Conversely each finite derivation is obtained
-by the stage after its deepest premise derivation.  This is the source's
-Path System Accessibility reduction mechanism.  The graph of this fixed query
-contains the specified accessible target exactly when the path-system instance
-is positive.  The source cites Jones and Laaser for that problem's PTIME
-completeness \cite[Theorem~5, p.~141]{Vardi1982}; this local derivation does
-not independently prove that external completeness result.
+Induction on stages identifies its members with points having finite
+derivation trees: initial points are the leaves, and an internal node has
+the two premises of one triple. Conversely, induction on a derivation
+tree's height places its root in a finite stage. Iteration adds at most
+one point per strict increase, so accessibility is computable in polynomial
+time. It remains to establish hardness without assuming it from the name
+of the problem.
 
-For expression hardness the database stays
-\(B_0=(\{0,1\},\{\langle1\rangle\})\).  Its unary predicate tests a
-Boolean slot, so first-order formulas can describe binary strings, their
-lexicographic successor and comparisons.  Two blocks of \(n\) slots in the
-defined relation index \(2^n\) times and \(2^n\) tape positions.  A fixed
-number of further Boolean slots codes the cell alphabet of the machine being
-simulated.  The source's proposed relation has rank \(2n+m\), not a fixed
-rank while the database grows.  Positive local dependencies build successive
-deterministic rows.  Increasing \(n\) with the expression makes an
-exponential computation available on this same database.  This is the
-published E-hardness sketch \cite[pp.~141--142]{Vardi1982}.  It does not
-constitute the different D-hardness proof, and no claim of a complete formal
-expression-generation reduction is made here.
+\paragraph{From a polynomial-time machine to one path system.}
+Fix any language in \(PTIME\) and a deterministic machine deciding it.
+A standard one-tape simulation suffices with polynomial overhead: represent
+each of a fixed number of tapes and its head mark on tracks of one tape,
+scan the visited interval to collect the scanned symbols, and scan it again
+to perform the finitely many writes and head moves. After \(t\) simulated
+steps the interval has length \(O(t+n+1)\), so the overhead is polynomial.
+Thus fix a one-tape machine with a polynomial bound \(T=T(n)\geq n+2\),
+and extend both halting states by stationary, unchanged transitions.
+Use \(T+2\) squares; enlarge \(T\) if necessary so that a genuine run
+does not encounter the right boundary. A left-boundary move follows the
+machine's specified convention.
+
+Let \(\Omega\) be the fixed finite set of complete cell tokens: either
+a tape symbol without a head, or a tape symbol with the head and its
+control state. A genuine next-row token at a square depends only on the
+three adjacent old tokens. There is consequently a fixed map
+\(f:\Omega^3\to\Omega\), with separate endpoint cases using a virtual
+outside token. To verify this, a head in the central cell writes there
+and either stays or moves; a head in a neighbour can enter the cell with
+its new state; in the absence of these events the symbol is unchanged.
+Assign arbitrary values to inconsistent triples with competing heads;
+the induction below never uses them in a genuine row.
+
+Create a point \(v_{t,p,a}\) for each time \(0\leq t\leq T\), square
+\(p\), and token \(a\). Put precisely the genuine initial-row points
+in \(A\). For an interior square and each token triple
+\((a_-,a,a_+)\), create an additional point \(u_{t,p,a_-,a}\) and put
+the following two triples into \(P\):
+\[
+\begin{split}
+ &(v_{t,p-1,a_-},v_{t,p,a},u_{t,p,a_-,a}),\\
+ &(u_{t,p,a_-,a},v_{t,p+1,a_+},
+                  v_{t+1,p,f(a_-,a,a_+)}).
+\end{split}
+\]
+Only times \(t<T\) occur here. At an endpoint the local update uses two
+available cell tokens; put their pair directly into a triple with the
+new token. If an update has only one premise, repeat it in both premise
+slots. Finally, for every accepting-head token at any time and square,
+put \((v_{t,p,a},v_{t,p,a},g)\) into \(P\), with \(g\) a fresh point.
+
+Induction on time shows that exactly the genuine token point at each
+square becomes accessible. The intermediate point requires its two actual
+old tokens, and the second triple requires the third one; determinism
+then forces the correct new token. Conversely those three old points
+derive that token. Endpoints satisfy the same argument with the virtual
+token fixed. No other triples produce token points or \(g\). Thus \(g\)
+is accessible exactly when the machine accepts the input word.
+
+This is a logspace many-one reduction. Give the points consecutive
+identifiers by their fixed-shape index tuples and enumerate all the
+displayed triples with counters for \(t,p\) and the finitely many tokens.
+The counters and each identifier have \(O(\log(n+2))\) bits because
+\(T\) is a fixed polynomial. Initialization is found by rescanning the
+input at the required position; the reduction never simulates the run.
+There are polynomially many points and triples. The output is the
+explicit database \((D,A,P)\) together with target \(g\), and the query
+expression above is independent of the input and of its length. This
+proves D-hardness and also supplies the Path System Accessibility
+completeness ingredient cited, but not proved, in the source.
+
+\paragraph{The fixed Boolean database and variable-width addresses.}
+For E-hardness fix a language in \(EXPTIME\) and a deterministic decider.
+The same tape conversion has at most exponential time after enlarging a
+fixed polynomial exponent. Modify acceptance to return the head to square
+zero, write a designated symbol there, and enter a stationary accepting
+state; rejection has a different stationary state. The return takes at
+most the number of previously visited squares. Hence there is a fixed
+integer polynomial \(q\) such that, on an input \(w\) of length \(n\),
+all this takes fewer than \(2^{q(n)}\) steps and visits fewer than that
+many squares. Set \(N=q(n)+2\), increasing the constant term so that
+\(N\geq1\) and \(2^N>n+2\).
+
+Keep \(B_0=(\{0,1\},O)\), \(O=\{1\}\), fixed. A Boolean tuple of
+length \(N\) codes an integer in \([0,2^N-1]\), most significant bit
+first. Define \(Z_N(\bar x)\) by \(\bigwedge_i\neg O(x_i)\), and
+\(U_N(\bar x)\) by \(\bigwedge_i O(x_i)\). The formula
+\[
+ S_N(\bar x,\bar y)=
+ \bigvee_{i=1}^{N}\left(
+    \bigwedge_{j<i}x_j=y_j\ \land\ \neg O(x_i)\land O(y_i)
+    \ \land\ \bigwedge_{j>i}(O(x_j)\land\neg O(y_j))\right)
+\]
+is ordinary nonwrapping binary successor. Its length is \(O(N^2)\),
+even with no abbreviations shared between subformulas. Tests for any
+specified address are conjunctions of \(N\) literals of \(O\).
+Choose a fixed width \(m\) coding the finite token alphabet \(\Omega\)
+injectively in \(\{0,1\}^m\). Write \(C_a(\bar z)\) for the
+corresponding fixed conjunction of bit tests.
+
+The only recursively defined relation is
+\(R(\bar t,\bar p,\bar z)\), of rank \(2N+m\). Its initial condition
+requires \(Z_N(\bar t)\). At each position \(i<n\), an address test
+selects the token for the literal input letter \(w_i\), with the initial
+head-state token at position zero. Positions outside that finite list
+receive blank tokens; if \(n=0\), position zero receives the initial
+head on a blank square. These conditions are a first-order formula of
+length \(O((n+1)N)\), with no occurrence of \(R\).
+
+For each fixed interior token triple, the successor disjunct has free
+arguments \((\bar u,\bar p,\bar z)\) and existentially quantified
+predecessor coordinates. It conjoins
+\[
+\begin{gathered}
+ S_N(\bar t,\bar u),\quad
+ S_N(\bar p_-,\bar p),\quad S_N(\bar p,\bar p_+),\quad
+ C_{f(a_-,a,a_+)}(\bar z),\\
+ R(\bar t,\bar p_-,\bar z_-),\quad C_{a_-}(\bar z_-),\quad
+ R(\bar t,\bar p,\bar z_0),\quad C_a(\bar z_0),\quad
+ R(\bar t,\bar p_+,\bar z_+),\quad C_{a_+}(\bar z_+).
+\end{gathered}
+\]
+At the left or right endpoint use \(Z_N(\bar p)\) or
+\(U_N(\bar p)\), omit the unavailable neighbour fact, and use the
+fixed virtual-boundary token in \(f\). Disjoin these finitely many cases
+and the initial condition to obtain \(\varphi_w(R,\bar u,\bar p,\bar z)\).
+Every occurrence of \(R\) is positive; all remaining tests are
+first-order over the fixed predicate \(O\). The expression
+\[
+ e_w=\Upsilon R.(\bar u,\bar p,\bar z).
+                         \varphi_w(R,\bar u,\bar p,\bar z)
+\]
+therefore belongs to the original outer-operator grammar \(YF\).
+
+An induction on the coded time proves soundness: every derived token is
+the actual token in the deterministic run, since its predecessor facts
+are genuine and the local update is deterministic. No predecessor of
+time zero exists. The reverse induction on time proves completeness:
+row zero occurs at stage one, and all tokens of the next row occur after
+the preceding row. Thus the least fixed point is exactly the full
+computation table through time \(2^N-1\). The extra clock and tape slack
+ensures that boundary rejection cannot affect a genuine computation.
+Because halting persists, the tuple
+\[
+ \bar c_w=(1^N,0^N,\operatorname{code}(a_{\rm acc}))
+\]
+belongs to \(Q_{e_w}(B_0)\) exactly when \(w\) is accepted. The
+designated token \(a_{\rm acc}\) is the fixed accepting head and symbol
+at square zero. No existential projection or \(YF^+\) extension is
+needed to test this one output tuple.
+
+Finally \(w\mapsto(\bar c_w,e_w)\) is logspace computable, not merely
+polynomial-size. A transducer computes the fixed polynomial \(N\) with
+\(O(\log(n+2))\)-bit counters. It emits each successor conjunction by
+nested counters over bit positions, each input-address test by a counter
+over \(i<n\) and a rescan for \(w_i\), and each local-update case from
+the fixed machine transition table. Binary digits of an index and the
+names of bound variables can be emitted within the same space; distinct
+variable blocks avoid capture. Fully expanded output length is polynomial
+in \(n\), since the number of token cases is fixed and the address
+formulas have polynomial length. This proves E-hardness on the single
+database \(B_0\). Together with the membership bounds, the two
+completeness assertions follow.
+\end{proof}
 \end{annexitem}
 
-\begin{annexitem}{annex:p9.n-c-004.2.iteration}{thm:p09-vardi82-iteration}{Monotonicity, stage count and the changing input exponent}
+\begin{annexitem}{annex:p9.n-c-004.2.iteration}{thm:p09-vardi82-iteration}{Iteration and input size}
 \begin{proof}
 Expand implications into Boolean connectives before checking polarity.
 For \(X\subseteq X'\), use mutual formula induction: a formula positive
@@ -89,14 +232,13 @@ into a fixed constant on the expression or combined axes.
 \end{proof}
 \end{annexitem}
 
-\begin{annexitem}{annex:p9.n-c-004.2.ordered}{thm:p09-vardi82-remark2}{Positive deterministic tableau and the published capture boundary}
-\sketchnote{The source's Remark 2 is a sketch, not a printed full construction.
-The following supplies its local-tableau mechanism for nonempty ordered
-databases, including arbitrary fixed output rank and singleton inputs.
-The empty-domain Boolean case uses the closed language Y and then the
-source-cited normal-form identity C(Y)=C(YF-plus). The external proof of that
-identity is not reproduced here; the initial YF-plus grammar is not silently
-replaced by an unrestricted modern grammar.}
+\begin{annexitem}{annex:p9.n-c-004.2.ordered}{thm:p09-vardi82-remark2}{Deterministic and existential tableaux at their exact query scope}
+\begin{proof}
+The source's Remark~2 states the two capture mechanisms briefly. We
+reconstruct the deterministic construction within its single-operator
+grammar, then derive the full existential-second-order query statement
+from the proved Fagin theorem. The empty-universe cases are treated
+directly, without an unqualified appeal to a normal-form theorem.
 
 \paragraph{What order and determinism replace.}
 The source first invokes the existential-second-order route: existential
@@ -118,10 +260,11 @@ Let the database's input order be a weak total order \(\leq\), and
 define \(x<y\) by \(x\leq y\land x\ne y\).
 Minimum, maximum and immediate successor have first-order definitions:
 \[
- \operatorname{Min}(x):=\forall y(x\leq y),\quad
- \operatorname{Max}(x):=\forall y(y\leq x),\quad
- \operatorname{Succ}(x,y):=
- x<y\land\neg\exists z(x<z\land z<y).
+\begin{aligned}
+ \operatorname{Min}(x)&:=\forall y(x\leq y),&
+ \operatorname{Max}(x)&:=\forall y(y\leq x),\\
+ \operatorname{Succ}(x,y)&:=x<y\land\neg\exists z(x<z\land z<y).
+\end{aligned}
 \]
 On \(D^k\), lexicographic order is the finite disjunction over a first
 unequal coordinate, with all preceding coordinates equal; immediate tuple
@@ -212,8 +355,9 @@ formula selecting the token code and the distinct endpoint flags, then
 testing \(T\).  It is positive in \(T\).
 
 The initialization clause, only for \(d\geq2\), places one computational
-token at every square at the first time.  The padded input above occupies
-an initial tuple interval; later squares are blank.  The head/state component
+token at every square at the first time.  Embed the \(c\)-tuple input addresses above in \(k\)-tuple squares by
+fixing the first \(k-c\) coordinates to the minimum. They occupy an
+initial tuple interval; later squares are blank.  The head/state component
 is present only at the first square.  These are fixed first-order cases.
 
 For a deterministic one-tape machine there is a finite local update map
@@ -226,12 +370,14 @@ triples incompatible with a genuine one-head row.  Such triples never
 occur in the derived computation.  For each actual token triple, the new
 token clause is
 \[
+\begin{gathered}
  \operatorname{Succ}_k(\bar t,\bar u)\land
  T_{a_-}(\bar d,\bar t,\bar p_-)\land
  T_{a}(\bar d,\bar t,\bar p)\land
- T_{a_+}(\bar d,\bar t,\bar p_+)
- \quad\longrightarrow\quad
+ T_{a_+}(\bar d,\bar t,\bar p_+)\\
+ \longrightarrow\quad
  T_{f(a_-,a,a_+)}(\bar d,\bar u,\bar p).
+\end{gathered}
 \]
 Here \(\bar p_-\), \(\bar p_+\) are tuple predecessor and successor;
 the boundary cases omit the unavailable predecessor fact and substitute
@@ -307,18 +453,151 @@ abbreviates membership in the full-bound-tuple source expression
 On empty input the
 existential tableau disjunct is false and the first disjunct is exactly
 the intended answer; on nonempty input the first disjunct is false and
-the projection is correct.  The source's concluding section explicitly
-reports \(C(Y)=C(YF^+)\), attributing the fixed-point normal-form collapse
-to its reference [Im2], the 1982 same-volume Immerman paper
-\cite[p.~145]{Vardi1982}.  Applying that source-cited expressiveness
-identity yields a \(YF^+\) expression for this query.  This is an
-external normal-form step, not a line-by-line transformation printed in
-the extended abstract or independently proved in this annex.
+the projection is correct.  This is a \(Y\) expression by its stated Boolean and first-order
+closure. If \(\epsilon\) is false, the original \(YF^+\) projection
+already gives the right answer on every input. If \(\epsilon\) is true,
+the additional empty disjunct is kept in \(Y\); it is not claimed to
+have the same literal \(YF^+\) normal form. The separate
+\cref{thm:p09-vardi82-empty-boundary} proves why that distinction is
+necessary. The source's p.~145 normal-form assertion is therefore not
+being extended to an unverified empty-domain convention.
 
-Finally the converse bound is immediate from the separately proved
-positive-iteration lemma: each fixed \(YF^+\) expression and each fixed
-projection has polynomial data complexity.  Both membership and the
-construction respect order-preserving relabeling.  The 1982 equality is
-reported at its actual source-sketch standing; the detailed nonempty
-construction above is not attributed as a literal printed proof.
+For the converse, apply the positive-iteration lemma.
+Each fixed \(YF^+\) expression has fixed relation rank and a fixed
+number of projected coordinates. Closing fixed \(YF\) expressions
+under finitely many Boolean connectives and first-order quantifiers still
+takes polynomial data time: compute each fixed-point relation table, then
+enumerate the finitely many fixed-length assignment tuples for the outer
+formula. Thus the claimed bound also holds for \(Y\). The constructions
+and evaluations commute with order-preserving relabeling, as required.
+
+\paragraph{The full existential-second-order query statement.}
+The remaining assertion is \(C(SF)=QNPTIME_{\rm tot}\) under the
+explicit encoding, including arbitrary fixed answer rank and empty
+universes. The forward direction guesses the fixed-arity auxiliary
+relation table and evaluates the fixed first-order matrix. The guess has
+polynomial size in the explicit universe size and formula evaluation has
+a fixed polynomial exponent. It therefore recognizes the query graph in
+nondeterministic polynomial time.
+
+For the reverse direction fix a total consistent query in that class,
+of answer rank \(b\). First work on nonempty universes. Expand the input
+schema by a unary predicate \(U\), required to be the whole universe,
+and unary predicates \(V_1,\ldots,V_b\), each required to be a singleton.
+The expanded class consists of precisely those valid marked databases
+whose marked tuple belongs to the query answer. It is closed under
+isomorphism. Its canonical table encoding is recognized in
+nondeterministic polynomial time: check the marker conditions, extract
+their unique tuple, and run the original query recognizer on that
+canonical database and tuple. The full unary \(U\) table makes this
+an instance of the nonempty-input-type clause of
+\cref{thm:p09-fagin74-theorem6}, even if the original schema is empty.
+The explicit encoding conversions have polynomial overhead; no
+binary-size-only encoding of a pure universe is substituted here.
+
+That theorem gives an existential-second-order sentence defining the
+expanded class. In its first-order matrix replace \(U(x)\) by
+\(x=x\), and replace \(V_j(x)\) by \(x=d_j\), after renaming bound
+variables to avoid the free output tuple \(\bar d\). This yields an
+existential-second-order definition of exactly the required tuple query
+on nonempty inputs. The function-elimination part of the cited theorem's
+proof already converts auxiliary functions to relation graphs with
+totality and uniqueness conditions, so only finitely many auxiliary
+relations \(R_1,\ldots,R_l\) need be quantified. If there are none,
+the resulting expression is already in \(F\subseteq SF\).
+
+The source grammar permits one outer existential relation quantifier;
+the following coding reduces this finite list to one. On a universe with
+at least two elements choose distinct individual variables \(a,b\).
+Use fixed, distinct tag words of a common length \(s\) over \(a,b\),
+one per auxiliary relation, and let \(r\) be their maximum arity.
+Replace
+\[
+ R_i(x_1,\ldots,x_{r_i})
+ \quad\hbox{by}\quad
+ R(\operatorname{tag}_i(a,b),x_1,\ldots,x_{r_i},a,\ldots,a),
+\]
+padding the final block to length \(r\). The displayed tag is just a
+fixed tuple of the variables \(a,b\), so it is not an extra term-forming
+operation. Distinct tags make the slices disjoint. Every family of
+auxiliary relations extends to a single such \(R\) by filling those
+slices, and every \(R\) determines a family by restriction. Thus
+\(\exists R\exists a\exists b(a\ne b\land\theta_R)\) has exactly
+the required meaning for these inputs, with the entire individual
+quantification inside the first-order matrix of one \(SF\) expression.
+
+There are only finitely many singleton diagrams for the fixed original
+schema. Their correct answers form a first-order disjunction \(\chi\)
+of complete diagrams; the unique candidate tuple needs no additional
+choice. For an empty universe, positive answer rank forces the empty
+answer, while rank zero has one fixed truth value \(\epsilon\). A
+single first-order matrix under \(\exists R\) handles all cases by
+disjoining: the accepted singleton diagrams, the at-least-two-elements
+coding just constructed, and the empty-domain condition conjoined with
+\(\epsilon\) when the answer rank is zero. The unused auxiliary
+relation can always be chosen, including as the empty relation. This
+is still one \(SF\) expression. It proves the total-query assertion
+without equating partial functions having different definedness domains.
+
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p9.n-c-004.2.empty}{thm:p09-vardi82-empty-boundary}{Empty input and projection}
+\begin{proof}
+Use the literal grammar in \cref{def:p09-vardi82-languages}.
+If a Boolean expression existentially projects even one
+individual variable, it is false on an empty universe. Consequently an
+expression true there has no such projected variable and no free output
+variable. Every fixed-point component is then nullary: a positive-arity
+component would require individual argument slots, and those slots would
+have to be projected to obtain a Boolean answer.
+
+A nullary positive operator acts on the two truth values. Its least
+fixed point is true precisely when its first iterate from false is true:
+if that first iterate is false it is already fixed; if true, monotonicity
+keeps it true. Replace its nullary relation variable by a first-order
+falsity sentence in the first-order matrix. The result is a first-order
+sentence with exactly that least-fixed-point truth value. This also covers
+the more permissive reading with a finite conjunction of nullary
+fixed-point expressions: replace each component and conjoin the results.
+The original first-order branch of the grammar is already first-order.
+Thus every Boolean \(YF^+\) expression true on the empty universe is
+first-order definable on all universes.
+
+For a concrete obstruction, consider even cardinality on finite linear
+orders, with zero counted as even. It is a total consistent polynomial-time
+query under explicit universe representation. It is not first-order
+definable, as the following finite game argument shows. With \(r\)
+moves left, maintain that corresponding gaps between already selected
+points have equal sizes or both have at least \(2^r-1\) elements.
+Initially this holds for any two orders of sizes at least \(2^r-1\).
+Equal finite gaps are answered at the same offset. In two large gaps,
+put \(h=2^{r-1}-1\). If the chosen point has fewer than \(h\) points
+on one side, match that short side exactly in the other gap; both remaining
+long sides then have at least \(h\) points. The two sides cannot both
+be short, because the original gap has at least \(2h+1\) points.
+If neither side is short, choose a point with at least \(h\) points
+on each side in the other gap. This maintains the invariant for \(r-1\)
+moves. Repeated choices are matched to their already selected partners.
+At zero moves the selected points have the same equality and order
+relations, so the correspondence is a partial isomorphism.
+
+For completeness, the link to formulas is the elementary induction on
+quantifier rank: atomic formulas agree under a partial isomorphism;
+Boolean connectives preserve agreement; for an existential formula choose
+its witness as the next move and use the winning response together with
+the induction hypothesis. Universal formulas follow by negation. Hence
+orders of size at least \(2^r-1\) satisfy the same sentences of
+quantifier rank at most \(r\). Choosing one even and one odd size above
+that threshold contradicts any proposed first-order parity sentence.
+Even cardinality, true on the empty order, is therefore outside this
+literal all-domain \(YF^+\) grammar.
+
+This does not contradict the nonempty-domain capture construction. On
+nonempty orders its projected tableau defines parity. The closed language
+\(Y\) may disjoin the empty-domain truth case with that projection.
+It does show why the source-cited collapse \(C(Y)=C(YF^+)\) cannot be
+imported into the present empty-domain convention without a corresponding
+syntax or semantic qualification.
+\end{proof}
 \end{annexitem}

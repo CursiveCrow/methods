@@ -301,7 +301,19 @@ class Resolver:
                     required={'glyph','local_role','first_use','broader_scope','broader_role','reason','source'}
                     if not isinstance(item,dict) or set(item)!=required or not all(isinstance(v,str) and v.strip() for v in item.values()):
                         raise RegistryError('override requires exact row selectors, source and reason in '+raw)
-                    if item['source'] not in self.source_keys:raise RegistryError('unidentified override source '+item['source'])
+                    if item['source'] not in self.source_keys:
+                        # Editorial mention/readings can be declared in the book itself.
+                        # Accept only one reachable typed declaration, never a heading,
+                        # arbitrary prose, absent label, or ambiguous label.
+                        source = item['source']
+                        if not LABEL_RE.fullmatch(source):
+                            raise RegistryError('unidentified override source '+source)
+                        try:
+                            evidence = self.index.unique(source)
+                        except RegistryError as exc:
+                            raise RegistryError('unidentified override source '+source+': '+str(exc)) from exc
+                        if evidence.kind not in {'hbconvention', 'hbdefinition'}:
+                            raise RegistryError('local override source is not a convention or definition: '+source)
                     declaration=self.index.unique(item['first_use'])
                     if not any(r.start<=declaration.start<r.end for r in result.regions):
                         raise RegistryError('override declaration lies outside its scope in '+raw)
@@ -313,7 +325,10 @@ class Resolver:
                     raise RegistryError('malformed declaration range '+raw)
                 result=Scope(raw,regions=[self.index.region({'from':ends[0],'through':ends[1]})])
             else:raise RegistryError(f'unknown scope {raw!r}; an explicit declaration/region binding is required')
-        if result.part is None:raise RegistryError('scope has no stable part binding: '+raw)
+        # Front and back matter have concrete routed regions but no numbered part.
+        # A resolved active region is a valid scope; an unbound name still fails above.
+        if result.interval is None and not result.regions:
+            raise RegistryError('scope has no reader region: '+raw)
         self.cache[raw]=result
         return result
 
@@ -340,7 +355,8 @@ class Resolver:
             return any(max(x.start,y.start)<min(x.end,y.end) for x in a.regions for y in b.regions)
         numeric,local=(a,b) if a.interval else (b,a)
         for region in local.regions:
-            if region.part is None:return True
+            if region.part is None:
+                continue  # Concrete unnumbered matter is outside every numeric part.
             # A region's occupied declarations can span multiple chapters or
             # annex owners. Match every one, rather than its first number only.
             declarations=[d for ds in self.index.labels.values() for d in ds if region.start<=d.start<region.end]
@@ -369,6 +385,9 @@ class Resolver:
             broader=broad['_scope']
             if broader.interval==GLOBAL:return True
             if broader.interval:
+                # Global has already been handled. No numeric-part override can
+                # cover an unnumbered region, even if it has labelled declarations.
+                if any(region.part is None for region in scope.regions):return False
                 for region in scope.regions:
                     for ds in self.index.labels.values():
                         for d in ds:
@@ -426,20 +445,28 @@ def collision_check(rows):
     return errors
 
 
+def reader_label_tex(row, label):
+    """Numbered declarations use their number; unnumbered headings use their title."""
+    index = getattr(row.get('_resolver'), 'index', None)
+    unnumbered = index is not None and index.unique(label).part is None
+    command = r'\nameref*' if unnumbered else r'\ref*'
+    return rf'\hyperref[{label}]{{{command}{{{label}}}}}'
+
+
 def first_use_tex(row):
     value=row['first_use']
     if LABEL_RE.fullmatch(value):
-        return rf'\hyperref[{value}]{{\ref*{{{value}}}}}'
+        return reader_label_tex(row, value)
     return value
 
 
 def scope_tex(row):
     value=row['scope']
-    if LABEL_RE.fullmatch(value):return rf'\hyperref[{value}]{{\ref*{{{value}}}}}'
+    if LABEL_RE.fullmatch(value):return reader_label_tex(row, value)
     if ' through ' in value:
         parts=value.split(' through ')
         if len(parts)==2 and all(LABEL_RE.fullmatch(p) for p in parts):
-            return '--'.join(rf'\hyperref[{p}]{{\ref*{{{p}}}}}' for p in parts)
+            return '--'.join(reader_label_tex(row, p) for p in parts)
     if parse_scope(value):return value
     # Alias names are data, not trusted TeX. Braces and backslashes cannot be
     # allowed to break the literal wrapper; the explicit binding owns the name.
@@ -537,6 +564,43 @@ def _in_scope(row, visit, mark):
     return any(r.start <= position < r.end for r in scope.regions)
 
 
+def _effective_symbol_rows(candidates, visit, mark):
+    """Use the same explicitly authorized local overrides as row validation."""
+    active = [row for row in candidates if _in_scope(row, visit, mark)]
+    return [broad for broad in active if not any(
+        local is not broad and local['role'] != broad['role']
+        and local['_resolver'].authorized_override(local, broad)
+        for local in active)]
+
+
+def _sole_bar_operand(operand):
+    """Whether this entire operand is itself a bar expression.
+
+    A set comprehension or algebraic expression may contain a cardinality
+    without being an application of bars to bars. Inner uses are scanned
+    independently, so this distinction does not hide an untyped structure.
+    """
+    text = operand.strip()
+    if text.startswith(r'\abs'):
+        match = re.match(r'\\abs\s*', text)
+        if match:
+            args, end = _grammar().scan_braced_args(text, match.end(), 1)
+            return len(args) == 1 and not text[end:].strip()
+    if RAW_BAR_ATOM.fullmatch(text):
+        return True
+    # Delimiter forms are balanced by _bar_operands. Verify that their sole
+    # complete match consumes the outside delimiters, not just an inner term.
+    if re.match(r'\\left\s*(?:\\lvert\b|\\vert\b|\|)', text):
+        opener = re.match(r'\\left\s*(?:\\lvert\b|\\vert\b|\|)', text)
+        closer = re.search(r'\\right\s*(?:\\rvert\b|\\vert\b|\|)\s*$', text)
+    else:
+        opener = re.match(r'\\lvert\b', text)
+        closer = re.search(r'\\rvert\b\s*$', text)
+    return bool(opener and closer and any(
+        start == 0 and inner == text[opener.end():closer.start()]
+        for start, inner, _ in _bar_operands(text)))
+
+
 def notation_lint(rows):
     """Check routed body and annex notation against the registry.
 
@@ -587,11 +651,11 @@ def notation_lint(rows):
                 if any(DOMAIN_ROLE.search(r['role']) for r in in_scope):
                     continue
                 roles = '; '.join(sorted({f'{r["role"]} (line {r["_line"]})' for r in in_scope})[:3]) or 'none'
-                nested = OPEN_BAR.search(operand) or RAW_BAR_ATOM.search(operand)
+                nested = _sole_bar_operand(operand)
                 core = re.sub(r'(?:\s*[_^]\s*(?:\{[^{}]*\}|\\?[A-Za-z0-9]))+$', '', operand.strip().strip('{}').strip())
                 atoms = list(notation_atoms(core))
                 structure = (len(atoms) == 1 and re.fullmatch(r'\\Meta|\\(?:mathcal|mathfrak|mathbb|mathscr)\s*(?:\{\s*[A-Za-z]\s*\}|[A-Za-z])', core)
-                             and any(STRUCTURE_ROLE.search(r['role']) and _in_scope(r, visit, mark) for r in by_atom.get(atoms[0][1], [])))
+                             and any(STRUCTURE_ROLE.search(r['role']) for r in _effective_symbol_rows(by_atom.get(atoms[0][1], []), visit, mark)))
                 if nested:
                     note('notation-role', visit, start + offset, 'nested:' + operand.strip(),
                          f'nested bars {form}{{{operand.strip()}}}; in-scope bar roles: {roles}')

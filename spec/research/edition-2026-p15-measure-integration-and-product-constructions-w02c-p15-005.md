@@ -170,3 +170,18 @@ If the owner later writes any of them, the lead should keep one treatment.
 - unit-compile ok (overfull 10); check.py --tree: no finding in these files; find_fused_spaces clean;
   patch anchors in w02ca-p15-005.json each occur once, unapplied.
 - Remaining: the lead applies requests 1-3 of work/waves/w02ca/patches/w02ca-p15-005.json.
+- Run r6 block 2 rerun 2 (2026-10-13): both chapters are now routed (handbook/parts/p15.tex lines 46,
+  49; handbook/annex/p15.tex lines 45, 48). Durrett printed pp. 18, 26, 30, 31 re-read by pdftotext
+  (PDF pp. 26, 34, 38, 39). Closed the three assessment disputes:
+  - C001: body lines 51-63, Durrett's sec. 1.4 justification (p. 18): infinite measures sometimes
+    needed, general sigma-finite development no harder; tied to this chapter's uses of Lebesgue
+    measure on R and to thm:p15-w02c-p15-005-ae-bounded with mu(Omega) infinite.
+  - C010: body lines 166-180, the second half of Durrett's p. 26 sentence (Theorem 1.5.3 is easier to
+    prove under convergence in measure), with the reason read off his proof (only mu(B_n) -> 0 used).
+  - C019: body lines 445-470, Durrett's p. 30 framing of Theorem 1.6.8 (another integration-to-the-
+    limit result needed later; g = |x|^p, p > 1, h = x perhaps the most important case), new
+    corollary thm:p15-w02c-p15-005-moment-power with annex proof annex:p15-w02c-p15-005-moment-power
+    (annex lines 506-535), and the p = 1 failure Y_n = n 1_(0,1/n).
+  - G1 guard: spec/research/edition-2026-authoring-batch-intake-13.json shows no diff against HEAD
+    (git status clean for it); not touched in this run.
+- unit-compile ok (overfull 10); find_fused_spaces clean.

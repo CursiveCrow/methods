@@ -52,3 +52,13 @@ MAP-04/05 definitions and the edition's 9 September 2026 status already exist in
 Proposed named symbol scope: P3 Morley countable model dependencies, regions sec:p03-n-a-004-02 and annex/p03/n-a-004-02.tex. New unique bibliographic intake provides Morley1970CountableModels with exact original identity and separate posting date.
 
 The saved body and complete annex received an author read-through. Checked the countable coordinate alphabets, nested term evaluation, all infinitary connective and quantifier cases, transitivity and limit stages, exact within-model stabilization, universal stability implications in the Scott sentence, repeated-coordinate injectivity, finite/onto enumeration, constant/function preservation, global-versus-individual Borel distinction and the complete perfect-family witness. The intake was read against its actual first-use anchors. Local checks passed: eight reciprocal proof pairs, one still-cited Morley threshold, balanced environment stacks and 25 wrapped symbol rows with existing anchors. These are author checks, not independent acceptance or original-source completion. No builds, manuscript renders, independent review wave or prose test suite were run.
+
+
+## Annex-link correction, 26 October 2026
+
+The proof of thm:p03-morley-scott-stabilization now uses the unique annex
+identifier annex:p03-morley-scott-stabilization. Its former identifier was
+also used by the distinct global Morley-derivative bound in n-a-006-01;
+both annex files are on the active reader route. The theorem identity and
+the full Scott-stabilization argument are unchanged. The global result
+retains annex:p3.morley.stabilization.

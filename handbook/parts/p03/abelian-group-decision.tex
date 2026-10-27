@@ -1,0 +1,283 @@
+\section{Deciding abelian-group theory}
+\label{sec:p03-abelian-decision}
+
+Szmielew's theorem decides the common first-order theory of abelian groups,
+not the complete theory of an arbitrary individual group. The result is
+reported in \cite[p.~611, Theorem~7]{Rabin1977Decidable}. Here the module
+normal form of \cref{thm:p03-w03-p03-073-pp-elimination} is combined with
+integer linear algebra and a finite realizability test to give the
+decision procedure and its proof. Choice is used for vector-space bases
+and bounded-group decompositions, as in the preceding module theorem.
+No group presentation or oracle for invariant cardinals is an algorithm input.
+
+\begin{hbdefinition}{def:p03-ab-setting}{Language and notation}
+Let \(\mathsf{Ab}\) be the finite theory in \(\{+,0\}\) consisting of the
+universal group-associativity, commutativity and zero identities, together
+with \(\forall x\,\exists y\,(x+y=0)\). Integer multiples and differences
+are definitional abbreviations. In a linear equation, negative summands
+can be moved to the other side, giving an equation in \(\{+,0\}\).
+Every model has its unique \(\mathbb Z\)-module expansion, as in
+\cref{def:p03-w03-p03-073-language}.
+
+For an abelian group \(G\), write \(mG=\{mx:x\in G\}\) and
+\(G[m]=\{x\in G:mx=0\}\). Here integers are external coefficients,
+not quantified group elements. The formula \(d\mid x\) means
+\(\exists y\,(dy=x)\), where \(y\) is a group element.
+The notation \(C_{p^s}\) denotes the additive cyclic group
+\(\mathbb Z/p^s\mathbb Z\), for a prime \(p\) and \(s\geq1\).
+A superscript \((\kappa)\) denotes a direct sum of \(\kappa\) copies.
+\end{hbdefinition}
+
+\subsection{From sentences to unary indices}
+
+\begin{hblemma}{thm:p03-ab-index-normal}{proved=annex:p3.ab.1}{Effective index reduction}
+There is an algorithm which, from a sentence of \(\{+,0\}\), produces
+a Boolean combination of index-threshold sentences
+\[
+ [H(G):K(G)]\geq k,
+ \qquad k\geq1,
+\]
+equivalent to it in every abelian group. Each \(H\) and \(K\) is a unary
+pp formula, and \(K(G)\subseteq H(G)\) in every group. These are finite
+first-order sentence abbreviations in the sense of
+\cref{def:p03-w03-p03-073-invariants}.
+\end{hblemma}
+
+\begin{hbdefinition}{def:p03-ab-linear-form}{Unary integer form}
+A unary integer form is
+\[
+ (mx=0)\ \land\ \bigwedge_{i=1}^{t}(d_i\mid c_i x),
+ \qquad
+ m\geq0,\quad d_i\geq1,\quad c_i\in\mathbb Z\setminus\{0\}.
+\]
+The first conjunct is vacuous when \(m=0\), and the list of divisibility
+conditions may be empty. Clauses \(d\mid0x\) are discarded as tautologies.
+All coefficients are supplied as finite integer data.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p03-ab-unary-normal}{proved=annex:p3.ab.2}{Integer reduction}
+A unary pp formula can be effectively converted to a unary integer form
+equivalent in every abelian group. The construction uses integer
+unimodular row and column operations; it does not assume that the group
+is a vector space or is torsion-free.
+\end{hblemma}
+
+Annihilation conditions are retained separately. Nonzero-divisor
+conditions \(d\mid cx\) alone all hold throughout the additive group
+\(\mathbb Q\), whereas \(px=0\) does not hold at a nonzero rational.
+Replacing that annihilation condition by \(x=0\) would also be wrong
+uniformly: in \(C_p\), \(px=0\) holds for every element.
+
+\subsection{The finite invariant data}
+
+\begin{hbdefinition}{def:p03-ab-invariants}{Height, torsion and divisibility data}
+For a prime \(p\) and \(n\geq0\), put
+\[
+ U_{p,n}(G)=(p^nG)[p]=p^nG\cap G[p].
+\]
+The following are dimensions of vector spaces over \(\mathbb F_p\):
+\[
+ \begin{aligned}
+ \alpha_{p,n}(G)&=\dim_{\mathbb F_p}
+                   \bigl(U_{p,n}(G)/U_{p,n+1}(G)\bigr),\\
+ \beta_{p,n}(G)&=\dim_{\mathbb F_p}U_{p,n}(G),\\
+ \gamma_{p,n}(G)&=\dim_{\mathbb F_p}
+                   \bigl(p^nG/p^{n+1}G\bigr).
+ \end{aligned}
+\]
+They may be infinite. Only comparisons with finite integers occur in the
+algorithm. For example, \(\alpha_{p,n}\geq r\) says that the displayed
+quotient has at least \(p^r\) distinct cosets; it is a finite first-order
+sentence. The analogous descriptions apply to \(\beta\) and \(\gamma\).
+For \(m\geq1\), let
+\[
+ \operatorname{Ann}_m:\quad \forall x\,(mx=0).
+\]
+The indices \(p,n,r,m\) are metatheoretic integers, not additional
+variables or sorts in the group language. For a cardinal \(\kappa\)
+and a positive integer \(b\), define
+\[
+ \operatorname{cap}_b(\kappa)=
+ \begin{cases}\kappa,&\kappa<b,\\b,&\kappa\geq b.\end{cases}
+\]
+Its values are the integers \(0,\ldots,b\).
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p03-ab-bounded}{proved=annex:p3.ab.3}{Bounded groups}
+If \(p^E G=0\), then
+\[
+ G\cong\bigoplus_{s=1}^{E}
+             C_{p^s}^{(\alpha_{p,s-1}(G))}.
+\]
+A group annihilated by a positive integer is the direct sum of its
+finitely many primary components, to which this statement applies.
+The multiplicities can be infinite; bounded exponent is not a
+finiteness assertion.
+\end{hblemma}
+
+\begin{hblemma}{thm:p03-ab-layers}{proved=annex:p3.ab.4}{Layer comparisons}
+For every abelian group,
+\[
+ \beta_{p,n}=\alpha_{p,n}+\beta_{p,n+1},
+ \qquad
+ \gamma_{p,n}=\alpha_{p,n}+\gamma_{p,n+1}.
+\]
+These are cardinal sums, not subtraction identities. For \(E\geq1\),
+the cyclic multiplicities in the two bounded groups below are:
+\[
+ \begin{array}{c|c|c}
+ &C_{p^s},\ 1\leq s<E&C_{p^E}\\ \hline
+ G[p^E]&\alpha_{p,s-1}(G)&\beta_{p,E-1}(G)\\
+ G/p^EG&\alpha_{p,s-1}(G)&\gamma_{p,E-1}(G).
+ \end{array}
+\]
+\end{hblemma}
+
+\begin{hbdefinition}{def:p03-ab-cyclic-data}{Cyclic solution data}
+For a unary integer form \(\varphi\), let
+\[
+ a_\varphi(p,s)=
+ \begin{cases}
+ 0,&m=0,\\
+ \max(s-v_p(m),0),&m>0,
+ \end{cases}
+\]
+where \(v_p\) is the exponent of \(p\) in a nonzero integer, using its
+absolute value. Define
+\[
+ h_\varphi(p,s)=
+ \max\bigl(\{0,a_\varphi(p,s)\}
+       \cup\{\min(s,v_p(d_i))-v_p(c_i):1\leq i\leq t\}\bigr).
+\]
+For \(K\subseteq H\), put
+\[
+ w_{H,K}(p,s)=h_K(p,s)-h_H(p,s).
+\]
+The solution subgroup in \(C_{p^s}\) is \(p^{h_\varphi(p,s)}C_{p^s}\);
+hence \(w_{H,K}(p,s)\geq0\) and the index on this cyclic group is
+\(p^{w_{H,K}(p,s)}\). These assertions are verified in the next proof.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p03-ab-index-calculation}{proved=annex:p3.ab.5}{Computing invariant conditions}
+Every unary pp-index threshold can be effectively expressed as a Boolean
+combination of sentences
+\[
+ \alpha_{p,n}\geq r,\qquad
+ \beta_{p,n}\geq r,\qquad
+ \gamma_{p,n}\geq r,\qquad
+ \operatorname{Ann}_m.
+\]
+The equivalence holds in every abelian group, including uncountable
+groups and groups of unbounded exponent.
+\end{hbtheorem}
+
+\begin{hbmethod}{def:p03-ab-index-algorithm}{The three index calculations}
+For an index threshold \(k=1\), output truth. Otherwise replace \(K\)
+by \(H\land K\), compute the two unary integer forms, and let \(D\)
+be a positive common multiple of all their divisors \(d_i\), taking
+\(D=1\) for an empty list.
+\begin{enumerate}
+ \item If \(m_H=m_K=0\), compute in \(G/DG\). For each \(p^E\) exactly
+       dividing \(D\), use the quotient row of
+       \cref{thm:p03-ab-layers}.
+ \item If \(m_H>0\), put \(L=m_HD\) and compute in \(G[L]\). For each
+       \(p^E\) exactly dividing \(L\), use the torsion-subgroup row.
+ \item If \(m_H=0<m_K\), put \(L=m_KD(k-1)!\).
+       Emit truth on the branch \(\neg\operatorname{Ann}_L\).
+       On the branch \(\operatorname{Ann}_L\), use the bounded-group
+       multiplicities \(\alpha_{p,s-1}(G)\), for \(p^s\mid L\).
+\end{enumerate}
+In each bounded calculation, replace every relevant multiplicity by
+a value \(0,\ldots,k\), with \(k\) meaning at least \(k\). Test the finite
+integer product
+\[
+ \prod_{p,s}p^{\,w_{H,K}(p,s)\operatorname{cap}_k(\kappa_{p,s})}
+       \ \geq\ k.
+\]
+Enumerate the finitely many capped assignments for which it holds,
+and express each assignment by finite dimension-threshold conditions.
+These are symbolic calculations producing a sentence. The procedure
+does not inspect an input group or compute its actual infinite cardinals.
+\end{hbmethod}
+
+\subsection{Finite realizability and the decision procedure}
+
+\begin{hbdefinition}{def:p03-ab-test-groups}{Explicit comparison groups}
+The Prüfer \(p\)-group and the \(p\)-local rational group are
+\[
+ C_{p^\infty}=\mathbb Z[1/p]/\mathbb Z,\qquad
+ \mathbb Z_{(p)}=\{a/q\in\mathbb Q:p\nmid q\},
+\]
+with their additive group operations and nonzero denominators.
+For fixed finite data and a positive truncation bound \(b\), the
+comparison groups are:
+\[
+ \bigoplus_{\substack{p\mid d\\1\leq s\leq v_p(d)}}
+                 C_{p^s}^{(a_{p,s})}
+ \quad (0\leq a_{p,s}\leq b),
+\]
+and
+\[
+ \mathbb Q\ \oplus
+ \bigoplus_{p\in P}
+ \left(
+   \bigoplus_{j=0}^{N_p}C_{p^{j+1}}^{(a_{p,j})}
+   \ \oplus C_{p^\infty}^{(b_p)}
+   \ \oplus \mathbb Z_{(p)}^{(c_p)}
+ \right),
+\]
+where every multiplicity lies in \(0,\ldots,b\).
+These are finite descriptions of actual groups; the second family is
+not a claim that arbitrary abelian groups have such a decomposition.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p03-ab-realization}{proved=annex:p3.ab.6}{Finite realizability}
+Satisfiability of any finite Boolean combination of the sentences in
+\cref{thm:p03-ab-index-calculation} is decidable. When it is satisfiable,
+the procedure returns one of the explicitly described countable groups
+in \cref{def:p03-ab-test-groups} satisfying it.
+\end{hbtheorem}
+
+\begin{hbmethod}{def:p03-ab-realization-algorithm}{Testing the finite conditions}
+Put the Boolean combination in disjunctive normal form and test each
+conjunction. Let \(b\geq1\) be the largest finite dimension threshold
+in it, or one if there are none.
+\begin{enumerate}
+ \item If the conjunction contains positive annihilator sentences,
+       let \(d\) be the greatest common divisor of their indices.
+       Enumerate the first family of comparison groups and test the
+       literals by their finite cyclic multiplicities.
+ \item Otherwise let \(P\) be the finite set of primes mentioned in
+       dimension conditions, and \(N_p\) the largest measured level
+       for \(p\). Enumerate the second family. The rational summand
+       satisfies every negative annihilator sentence. At the measured
+       levels its dimension data are
+       \[
+       \begin{aligned}
+       \alpha_{p,n}&=a_{p,n},\\
+       \beta_{p,n}&=\sum_{j=n}^{N_p}a_{p,j}+b_p,\\
+       \gamma_{p,n}&=\sum_{j=n}^{N_p}a_{p,j}+c_p.
+       \end{aligned}
+       \]
+       Components indexed by other primes contribute zero.
+\end{enumerate}
+A successful finite test returns its group description. If no candidate
+for any conjunction succeeds, report unsatisfiability. The proof shows
+why the computed bounds cover all possible models, rather than merely
+a selected finite collection of examples.
+\end{hbmethod}
+
+\begin{hbtheorem}{thm:p03-abelian-decidable}{proved=annex:p3.ab.7}{Szmielew's theorem}
+There are algorithms deciding satisfiability and validity of first-order
+sentences in \(\{+,0\}\) relative to the class of all abelian groups.
+Every input sentence has an effectively obtainable equivalent Boolean
+combination of the explicit finite invariant conditions above.
+For a sentence which is not valid, a finite description of a countable
+countermodel is effectively obtainable.
+\end{hbtheorem}
+
+\begin{hblemma}{thm:p03-ab-individual-boundary}{proved=annex:p3.ab.8}{An individual theory}
+There is a countable abelian group whose complete first-order theory
+is undecidable. Thus the common-theory decision procedure does not
+supply a uniform decision of the complete theory of each individual group.
+\end{hblemma}

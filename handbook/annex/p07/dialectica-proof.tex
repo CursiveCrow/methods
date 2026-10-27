@@ -1,0 +1,482 @@
+\begin{annexitem}{annex:p7.d.1}{thm:p07-t-simultaneous-recursion}{Arrow-only tuple recursion}
+\begin{proof}
+There is nothing to construct for an empty tuple. Otherwise set
+\(\tau_i=0\to_{\mathrm{ty}}\sigma_1\to_{\mathrm{ty}}\cdots
+\to_{\mathrm{ty}}\sigma_r\to_{\mathrm{ty}}\sigma_i\).
+For each \(i\), use its own single recursor at type \(\tau_i\) to
+form \(C_i(n)\) with equations
+\[
+\begin{split}
+ C_i(0)&=\lambda k,\vec x.\,x_i,\\
+ C_i(Sn)&=\lambda k,\vec x.\,
+ C_i(n)(Sk,F_1(k,\vec x),\ldots,F_r(k,\vec x)).
+\end{split}
+\]
+The second equation refers only to the previous \(C_i\), not to
+any \(C_j\) being defined simultaneously. Its step term is
+\(\lambda n,c,k,\vec x.\,c(Sk,\vec F(k,\vec x))\), so it is an
+ordinary System-T definition with exactly the specified recursor type.
+Put \(X_i(n)=C_i(n)(0,\vec a)\).
+
+First define \(J(0)=\lambda k.k\) and
+\(J(Sn)=\lambda k.J(n)(Sk)\) by a recursor at type
+\(0\to_{\mathrm{ty}}0\). Open induction proves the functional
+equality
+\[
+ \lambda k.J(n)(Sk)=\lambda k.S(J(n)(k)).
+\]
+Its zero case is beta conversion. At the successor, unfold \(J(Sn)\)
+and apply the previous functional equality at \(Sk\); folding back
+gives the displayed next instance. These are substitutions of whole
+functionals, followed by definitional conversion. Evaluating at zero
+shows \(J(Sn)(0)=S(J(n)(0))\), so open induction gives
+\(J(n)(0)=n\).
+
+The target proves, by open induction on \(n\), the following finite
+conjunction of equalities at the types \(\tau_i\):
+\[
+ C_i(Sn)=\lambda k,\vec x.\,
+ F_i(J(n)(k),C_1(n)(k,\vec x),\ldots,C_r(n)(k,\vec x)).
+ \tag{F}
+\]
+At zero both sides reduce to \(\lambda k,\vec x.F_i(k,\vec x)\).
+For the step, unfold \(C_i(S(Sn))\) and substitute (F) for the
+whole functional \(C_i(Sn)\). Beta conversion gives
+\[
+ \lambda k,\vec x.\,
+ F_i(J(n)(Sk),C_1(n)(Sk,\vec F(k,\vec x)),\ldots,
+              C_r(n)(Sk,\vec F(k,\vec x))).
+\]
+The defining equations replace the latter arguments by
+\(C_j(Sn)(k,\vec x)\); the defining equation
+\(J(n)(Sk)=J(Sn)(k)\) gives the next instance of (F). The induction hypothesis is an equality
+of functionals, so substitution inside this displayed term is legitimate.
+No universal quantifier over \(k,\vec x\) has been inserted into an
+open induction formula. Applying (F) to \(0,\vec a\) and using \(J(n)(0)=n\) gives the
+required successor equations, and the zero equations are immediate.
+All transformations are finite syntactic constructions.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p7.d.2}{thm:p07-t-matrix-decision}{Numerical tests and contraction}
+\begin{proof}
+Define the numerical zero test by \(z(0)=0,z(Sn)=1\). Open induction
+proves \(z(n)=0\leftrightarrow n=0\), and its values are zero and
+one. At every finite type put
+\[
+ \operatorname{If}_\sigma(e,u,v)
+   =R_\sigma\,u\,(\lambda k,r.v)\,e.
+\]
+The computation equations give its zero and successor values. With
+\(p(0)=0,p(Sn)=n\), open induction gives
+\(n=0\lor n=Sp(n)\); hence these cases cover every numerical input.
+There is no equality test at type \(\sigma\).
+
+Here is a numerical equality test with a direct open-induction proof,
+so that no backward-challenge lemma is presupposed. For fixed \(m\),
+use tuple recursion to define three numerical sequences
+\((k_j,r_j,h_j)\), starting at \((0,m,0)\). If \(r_j=0\), let
+\[
+ (k_{j+1},r_{j+1},h_{j+1})=(k_j,0,Sh_j);
+\]
+otherwise let
+\[
+ (k_{j+1},r_{j+1},h_{j+1})=(Sk_j,p(r_j),h_j).
+\]
+The test in these definitions is just \(z(r_j)\). Open induction on
+\(j\), with \(m\) unchanged, proves the quantifier-free invariant
+\[
+ j=k_j+h_j,\qquad m=k_j+r_j,\qquad r_j=0\lor h_j=0.
+ \tag{D}
+\]
+At zero it is immediate. In the first branch the residual stays zero
+and only \(h_j\) increases, giving the next first equation and
+preserving the others. In the second branch
+\(r_j=Sp(r_j)\) and the old disjunction forces \(h_j=0\).
+Incrementing \(k_j\) and decrementing \(r_j\) preserves their sum
+and increases \(k_j+h_j\) by one. These are the elementary addition
+identities from its defining recursion.
+
+Addition cancellation \(k+r=k+h\to r=h\) is proved by open
+induction on \(k\), using \(Sk+r=S(k+r)\), itself proved from
+addition's equations by induction on \(r\). Also
+\(r+h=0\leftrightarrow(r=0\land h=0)\) follows by induction on
+\(h\). Thus (D), at \(j=n\), gives
+\[
+ n=m\quad\longleftrightarrow\quad r_n=h_n
+ \quad\longleftrightarrow\quad r_n=h_n=0.
+\]
+The second equivalence uses the last clause of (D). Consequently
+\(E(n,m)=z(r_n+h_n)\) is the required equality test.
+This construction uses only the previously proved tuple recursion,
+zero tests, and ordinary open induction.
+
+For Boolean formulas take the test of \(\neg A\) to be
+\(\operatorname{If}(d_A,1,0)\), and the test of \(A\land B\)
+to be \(\operatorname{If}(d_A,d_B,1)\); obtain the other
+connectives from these. Structural induction proves zero exactly for
+truth. Every atomic formula in an arithmetic Dialectica matrix is an
+equality of numerical terms, even when those terms contain functional
+parameters. This proves the required claim without higher-type
+equality-testing constants.
+
+In particular choose, component by component,
+\[
+ \vec h=\operatorname{If}(d_{A(\vec x,\vec y_1)},
+                           \vec y_2,\vec y_1).
+\]
+If the first matrix is true, \(A(\vec x,\vec h)\) supplies the
+second; if the first is false, \(A(\vec x,\vec h)\) itself is false.
+Hence the target proves
+\[
+ A(\vec x,\vec h)\longrightarrow
+ A(\vec x,\vec y_1)\land A(\vec x,\vec y_2).
+\]
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p7.d.3}{thm:p07-t-backward-induction}{Changing the challenge}
+\begin{proof}
+Write \(p(0)=0\), \(p(Sn)=n\) for the predecessor recursor, and
+\(a\mathbin{\dot{-}}0=a\),
+\(a\mathbin{\dot{-}}Sb=p(a\mathbin{\dot{-}}b)\) for truncated
+subtraction. Use \(a\leq b\) as the quantifier-free abbreviation
+\(a\mathbin{\dot{-}}b=0\). The elementary numerical identities
+needed below are
+\[
+\begin{gathered}
+ a\mathbin{\dot{-}}a=0,\qquad
+ Sa\mathbin{\dot{-}}Sb=a\mathbin{\dot{-}}b,\\
+ Sw\leq u\ \Longrightarrow\
+ w\leq u\ \land\
+ u\mathbin{\dot{-}}w=S(u\mathbin{\dot{-}}Sw).
+ \tag{N}
+\end{gathered}
+\]
+They are open-arithmetic consequences of the displayed recursions and
+successor axioms. The second identity follows by induction on \(b\),
+and then the first by induction on \(a\). For the last assertion,
+cancel a common successor in the two subtraction terms until one
+argument is zero. Its zero cases are: \(Sw\leq0\) is false, and
+\(S0\leq Su\) gives \(Su=S(u\mathbin{\dot{-}}0)\).
+This cancellation argument is formalized by induction on a bound for
+the sum of the two arguments. Its bounded list of cases can be encoded
+as a finite Boolean conjunction, with conjunction computed by recursion;
+open induction on that computation yields the same bounded induction.
+The Boolean encoding is available from
+\cref{thm:p07-t-matrix-decision}, whose direct countdown proof does not
+use the present lemma. A finite conjunction is computed by
+\(c(0)=0\) and \(c(Sj)=\operatorname{If}(c(j),d_j,1)\), where
+\(d_j\) is the zero-for-truth test of its next case. The recursion
+equations, with open induction, give extraction of each earlier case
+from \(c(j)=0\) and the introduction of the next case. This supplies
+the bounded case induction just used.
+
+Fix the desired numerical parameter \(u\) and challenge \(\vec y\).
+By \cref{thm:p07-t-simultaneous-recursion} define
+\[
+ \vec e(0)=\vec y,\qquad
+ \vec e(Sz)=\vec b(u\mathbin{\dot{-}}Sz,\vec e(z)).
+\]
+We prove by open induction on \(w\) the single quantifier-free formula
+\[
+ w\leq u\ \longrightarrow\
+ P(w,\vec e(u\mathbin{\dot{-}}w)).
+ \tag{B}
+\]
+At zero substitute \(\vec e(u)\) for the free challenge in the
+proved base formula \(P(0,\vec y)\). For the successor step, assume
+\(Sw\leq u\); otherwise the implication is true. By (N) and the
+recursion equation,
+\[
+ \vec e(u\mathbin{\dot{-}}w)
+ =\vec b(w,\vec e(u\mathbin{\dot{-}}Sw)).
+\]
+Indeed write \(z=u\mathbin{\dot{-}}Sw\), so that
+\(u\mathbin{\dot{-}}w=Sz\); the coefficient
+\(u\mathbin{\dot{-}}Sz\) is \(w\) in this range, by the same
+successor cancellation. The induction hypothesis (B), at its original
+parameters, therefore supplies precisely the antecedent of the given
+step theorem, with challenge
+\(\vec e(u\mathbin{\dot{-}}Sw)\). That theorem yields the next
+instance of (B). Set \(w=u\). Then \(u\mathbin{\dot{-}}u=0\)
+and \(\vec e(0)=\vec y\), giving \(P(u,\vec y)\).
+The only substitution at a changed challenge was into an already proved
+step theorem, not into an unquantified induction assumption.
+\end{proof}
+\end{annexitem}
+
+
+\begin{annexitem}{annex:p7.d.4}{thm:p07-dialectica-induction}{The full induction axiom}
+\begin{proof}
+Write the matrix of \(A(i)\) as \(P(i,\vec x,\vec y)\).
+A positive witness for the antecedent of induction consists of
+\(\vec a\) for \(A(0)\), and functionals \(\vec F,\vec G\)
+for \(\forall i(A(i)\to A(Si))\). The latter matrix, at challenges
+\(i,\vec x,\vec v\), is
+\[
+ P(i,\vec x,\vec G(i,\vec x,\vec v))\longrightarrow
+ P(Si,\vec F(i,\vec x),\vec v).
+ \tag{I}
+\]
+Define, by \cref{thm:p07-t-simultaneous-recursion},
+\[
+ \vec X(0)=\vec a,\qquad
+ \vec X(Si)=\vec F(i,\vec X(i)).
+\]
+The positive witness for the conclusion is \(\lambda n.\vec X(n)\).
+It has the required type and does not depend on the conclusion's
+challenge \(\vec y\).
+
+Given that challenge \((n,\vec y)\), define the backward sequence
+\[
+ \vec Y_n=\vec y,\qquad
+ \vec Y_i=\vec G(i,\vec X(i),\vec Y_{i+1})\quad(i<n).
+ \tag{Y}
+\]
+This is a System-T definition, not reverse recursion as a new primitive:
+start at \(\vec y\), apply at step \(k\) the operation
+\(\vec v\mapsto\vec G(n\mathbin{\dot{-}}Sk,
+\vec X(n\mathbin{\dot{-}}Sk),\vec v)\), and take its value
+after \(n\mathbin{\dot{-}}i\) steps. Tuple recursion supplies
+all its components. The cutoff identities verified in the preceding
+proof give exactly (Y) for \(i\leq n\). For indices above \(n\)
+use the closed default tuple, so every displayed functional is total.
+
+Put \(B_i=P(i,\vec X(i),\vec Y_i)\). These formulas have numerical
+equality atoms, so \cref{thm:p07-t-matrix-decision} supplies their
+Boolean tests. A bounded scan finds the first index \(i<n\) at
+which \(B_i\land\neg B_{i+1}\), if one exists. Explicitly let
+\(s(0)=0\), and at stage \(k+1\) retain \(s(k)\) if it is below
+\(k\); otherwise take \(k\) when the new edge is bad, and \(k+1\)
+when it is not. Thus \(s(k)=k\) is the sentinel for no bad edge.
+This is numerical primitive recursion with the just constructed tests.
+Open induction on \(k\), with the fixed parameters \(n,\vec y\),
+proves
+\[
+\begin{split}
+ s(k)<k&\ \Longrightarrow\ B_{s(k)}\land\neg B_{s(k)+1},\\
+ s(k)=k&\ \Longrightarrow\ (B_0\to B_k).
+\end{split}
+\]
+For the second implication the successor case with no old or new bad
+edge uses \(B_k\to B_{k+1}\); the first implication either retains
+its old witnessed edge or records the new one. These are precisely
+the branches of the scan. Hence \(B_0\land\neg B_n\) implies
+\(s(n)<n\) and a bad edge. Choose \(i=s(n)\) in that case and
+zero otherwise.
+
+Challenge the antecedent by \(\vec Y_0\) in its first conjunct and
+by \((i,\vec X(i),\vec Y_{i+1})\) in its second. If the conclusion
+matrix \(B_n\) is true there is nothing to prove. If it is false
+but the first conjunct is true, then \(B_0\) is true and the scan
+has selected a bad edge. By (Y) and the equation for \(\vec X\),
+(I) at the selected challenge is exactly \(B_i\to B_{i+1}\),
+which is false. Thus the two challenged antecedent conjuncts cannot
+both hold unless \(B_n\) holds. When \(n=0\), the first conjunct
+already is \(B_n\), and the unused second challenge may be arbitrary.
+This is exactly the matrix of the induction axiom under the fixed
+Dialectica clauses. All choices are typed conditional or recursion
+terms, and every case verification is in the quantifier-free target.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p7.d.5}{thm:p07-dialectica-soundness}{Soundness, rule by rule}
+\begin{proof}
+We verify the twelve groups of intuitionistic logical axioms and rules
+in Section~2.1 of the held author preprint, using the handbook's
+arithmetic axioms and induction schema. This fixes a concrete proof
+presentation of HA for the extraction. Proofs are finite, substitutions
+are capture avoiding, and numerical free parameters are retained
+throughout. Write
+\[
+ A^{\mathrm D}=\exists\vec x\forall\vec y\,a(\vec x,\vec y),
+ \quad B^{\mathrm D}=\exists\vec u\forall\vec v\,b(\vec u,\vec v),
+ \quad C^{\mathrm D}=\exists\vec p\forall\vec q\,c(\vec p,\vec q).
+\]
+In particular a realizer \((F,G)\) for \(A\to B\) supplies the
+proved target implication
+\[
+ a(\vec x,G(\vec x,\vec v))\longrightarrow
+ b(F(\vec x),\vec v).
+ \tag{R}
+\]
+All applications to tuples and all functions returning tuples stand for
+componentwise typed applications and lists of functions. The following
+checks are finite proof transformations, not semantic choices of
+functionals.
+
+\emph{1. Modus ponens.} Suppose a term \(\vec r\) realizes \(A\),
+so the target proves \(a(\vec r,\vec y)\). Substitute
+\(G(\vec r,\vec v)\) for \(\vec y\) and \(\vec r\) for
+\(\vec x\) in (R). Modus ponens yields
+\(b(F(\vec r),\vec v)\). The new positive witness is \(F(\vec r)\).
+
+\emph{2. Composition.} Given \((F,G)\) for \(A\to B\) and
+\((H,K)\) for \(B\to C\), take
+\[
+ F'(\vec x)=H(F(\vec x)),\qquad
+ G'(\vec x,\vec q)=G(\vec x,K(F(\vec x),\vec q)).
+\]
+The first implication supplies the intermediate matrix
+\[
+ b(F(\vec x),K(F(\vec x),\vec q)).
+\]
+Applying the second implication yields the required \(c\)-matrix.
+
+\emph{3. Contractions.} For \(A\lor A\to A\), a positive input is
+\((d,\vec x_1,\vec x_2)\). Return
+\(\operatorname{If}(d,\vec x_1,\vec x_2)\), and challenge both
+input copies by the output challenge \(\vec y\). A true input
+matrix forces \(d=0\) or \(d=1\) and the corresponding selected
+matrix. For \(A\to A\land A\), return \((\vec x,\vec x)\)
+and use the challenge selector at the end of
+\cref{thm:p07-t-matrix-decision}. That lemma proves precisely the
+required implication to the two challenged copies. The ordering of its
+conditional branches is essential.
+
+\emph{4. Injection and projection.} For \(A\to A\lor B\), return
+\((0,\vec x,\vec d_B)\), where \(\vec d_B\) is the default
+positive tuple for \(B\), and pass back the \(A\)-challenge.
+For \(A\land B\to A\), return its \(A\)-witness and pair the
+output challenge with a default challenge for \(B\). Propositional
+introduction and elimination of conjunction verify the matrices.
+
+\emph{5. Commutations.} For conjunction, exchange the positive tuples
+and exchange the negative tuples. For disjunction, exchange those tuples
+and replace its positive tag \(d\) by
+\(\operatorname{If}(d,1,0)\). Whenever the input matrix is true,
+its tag is zero or one, and the new tag selects exactly the same true
+matrix in its exchanged position. Invalid tags make the input false.
+
+\emph{6. Disjunction monotonicity.} From (R), interpret
+\(C\lor A\to C\lor B\) by
+\[
+ (d,\vec p,\vec x)\longmapsto(d,\vec p,F(\vec x)).
+\]
+At output challenges \((\vec q,\vec v)\), challenge the input by
+\((\vec q,G(\vec x,\vec v))\). The \(C\) branch is unchanged;
+in the other branch use (R).
+
+\emph{7. Currying and uncurrying.} A realizer for
+\(A\to(B\to C)\) gives a matrix of the form
+\[
+ a(\vec x,H(\vec x,\vec u,\vec q))\to
+ \bigl(b(\vec u,K(\vec x,\vec u,\vec q))\to
+ c(F(\vec x,\vec u),\vec q)\bigr).
+\]
+The realizer for \(A\land B\to C\) is \(F\) with paired
+negative output \((H,K)\). The two matrices are propositionally
+equivalent. Conversely, separate that paired negative output, and
+lambda-abstract the \(\vec u\) and \(\vec q\) arguments to
+obtain the curried positive functions and the outer negative function.
+All required types are exactly the arrow types specified by the
+implication clause.
+
+\emph{8. Falsity.} The matrix of \(\bottom\) is the same closed
+false numerical equation and has no witness or challenge variables.
+For \(\bottom\to C\), any default positive tuple suffices;
+its matrix follows by propositional falsity elimination.
+
+\emph{9. Universal introduction.} Suppose a realizer for
+\(A\to B(z)\) gives \(F(z,\vec x)\) and
+\(G(z,\vec x,\vec v)\), and \(z\) is not free in \(A\).
+For \(A\to\forall zB(z)\), use positive tuple
+\(\lambda z.F(z,\vec x)\) and negative tuple
+\(G(z,\vec x,\vec v)\) at the new challenge \((z,\vec v)\).
+The matrix is the original proved matrix after beta conversion.
+The eigenvariable condition ensures that the input witness types and
+matrix do not acquire an illicit dependence on \(z\).
+
+\emph{10. Universal elimination.} For
+\(\forall zA(z)\to A(t)\), a positive input is a tuple of
+functions \(\vec f\). Return \(\vec f(t)\), and send the
+challenge \(\vec y\) back as \((t,\vec y)\). Capture-free
+substitution makes the two matrices identical.
+
+\emph{11. Existential introduction.} For
+\(A(t)\to\exists zA(z)\), return \((t,\vec x)\) and pass
+back the unchanged challenge \(\vec y\).
+
+\emph{12. Existential elimination.} From a realizer \((F,G)\) for
+\(A(z)\to B\), where \(z\) is not free in \(B\), interpret
+\(\exists zA(z)\to B\) by
+\(F(z,\vec x)\) on positive input \((z,\vec x)\), and return
+\(G(z,\vec x,\vec v)\) as its negative challenge. Again the
+matrix is the given theorem. The eigenvariable condition is precisely
+what makes the output a witness for the unchanged \(B\).
+
+\emph{Equality.} Reflexivity is its own matrix. Atomic replacement
+\(s=t\to(\chi[s/z]\to\chi[t/z])\), for numerical terms, is
+its own quantifier-free matrix and follows from target equality
+replacement. These are the equality axioms of the logical presentation;
+replacement in compound formulas is obtained by their ordinary logical
+derivations. Thus it does not introduce a new higher-type equality
+principle into the interpretation.
+
+\emph{Arithmetic.} Define
+\[
+ \operatorname{add}(a,b)=R_0\,a\,(\lambda k,r.Sr)\,b,
+ \qquad
+ \operatorname{mul}(a,b)=R_0\,0\,
+                  (\lambda k,r.\operatorname{add}(r,a))\,b.
+\]
+Their equations are exactly the four addition and multiplication axioms
+of the selected arithmetic language. Successor injectivity and its
+nonzero value are target axioms. The remaining Robinson axiom is not
+quantifier free: \(n\ne0\to\exists m\,n=Sm\). Its positive
+witness is \(p(n)\), with predecessor as previously defined. Open
+induction proves \(n=0\lor n=Sp(n)\), so the interpreted implication
+is a target theorem. Universal closures use the preceding quantifier
+constructions. Finally every induction axiom is realized by
+\cref{thm:p07-dialectica-induction}. This covers the handbook's full
+arithmetic axiom list, not only its quantifier-free part.
+
+Induction on the given finite HA derivation assembles the indicated
+terms and target proofs. Intermediate premises can have numerical
+parameters absent from their conclusion. Retain them while performing
+the specified eigenvariable abstractions and substitutions; then replace
+any remaining extraneous numerical parameter by zero in the terms and
+target proof. The conclusion formula is independent of those parameters,
+so theorem substitution preserves its interpreted matrix. Negative
+challenge variables occur only in the matrix, not freely in its positive
+tuple. For a closed conclusion the resulting positive tuple is closed. Every
+construction is a typed term substitution, a finite logical proof
+construction, or one of the specified recursion constructions. This
+proves the theorem and its effectivity assertion.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p7.d.6}{thm:p07-dialectica-consistency}{The syntactic consistency implication}
+\begin{proof}
+Use explicit finite proof codes for the source presentation and for the
+target just specified. Checking a displayed typed term, an axiom
+instance, a single beta or recursor equation, a substitution, or an
+inference is primitive recursive. An induction instance is checked by
+its finite formula and displayed substitutions, not by deciding its
+truth. The preceding proof gives a primitive-recursive transformation
+of a source derivation into a target derivation: each inference replaces
+already constructed terms and proof fragments in fixed finite templates.
+There is no appeal to normalization, proof search, or an unbounded
+semantic test. The recursion is on the finite source proof code.
+
+Primitive recursive arithmetic formalizes the verification of this
+transformation by quantifier-free induction on that code. In particular,
+for the proof predicates of these fixed presentations it proves
+\[
+ \operatorname{Prf}_{\mathsf{HA}}(p,\ulcorner\bottom\urcorner)
+ \ \longrightarrow\
+ \operatorname{Prf}_{\mathsf T_{\mathrm{qf}}}
+       (f(p),\ulcorner\bottom\urcorner).
+\]
+Here \(f\) is the specified syntactic transformer. The interpretation
+of \(\bottom\) has no positive or negative variables and is exactly
+\(\bottom\), so no additional truth-reflection principle is used.
+Taking the contrapositive of the existential assertion about proof
+codes yields
+\(\mathsf{Con}(\mathsf T_{\mathrm{qf}})\to
+\mathsf{Con}(\mathsf{HA})\).
+This is a relative syntactic consistency statement in the stated
+arithmetical base, not a proof of either consistency assertion in HA.
+\end{proof}
+\end{annexitem}

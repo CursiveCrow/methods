@@ -1,0 +1,651 @@
+%% toc: P3 39 39.2
+\chapter{Definitional Complexity and Finite-Variable Logics}
+\label{sec:p03-w03-p03-055-definitional-complexity}
+
+A property of finite structures can be classified by the logics able to
+define it and, inside one logic, by how much of the logic a definition
+needs. This chapter measures that need in two ways: by quantifier rank, the
+depth of quantifier nesting, and by the number of distinct variables a
+formula uses. Each measure has a game that decides when two structures cannot
+be told apart within the measure: the Ehrenfeucht--Fra\"iss\'e game for
+quantifier rank and the pebble game for the number of variables. The
+rank game is proved in \cref{sec:p03-w03-p03-038-comparison-games}; this
+chapter adds the converse that makes the rank game a complete method,
+proves the pebble-game characterization of the finite-variable logics
+and its refinement in which rounds and pebbles are both bounded,
+derives the corresponding definability criteria, shows that both
+hierarchies are strict, and works through cardinality, parity,
+connectivity and 2-colorability as test cases, ending with a procedure
+for classifying a concept and a table of the cases treated.
+
+\emph{Inputs.} A finite relational signature, a class of structures closed
+under isomorphism, a subclass to be defined, and a logic with a complexity
+bound. \emph{Conclusions.} Either a defining sentence within the bound, or a
+proof that no such sentence exists, obtained from a winning strategy of the
+second player in the appropriate game.
+
+The presentation of first-order games and of the finite-variable logics
+follows Kolaitis's manuscript \emph{On the Expressive Power of Logics on
+Finite Models}, dated 1 August 2003 \cite{Kolaitis2003ExpressivePowerNotes}.
+His chapter in the 2007 volume \emph{Finite Model Theory and Its
+Applications} carries the same title; every locator given here refers to
+the 2003 manuscript, and nothing is attributed to the printed chapter.
+Locators for Gr\"adel's chapter in that volume refer to the author-hosted
+copy of the chapter, whose running page numbers are those of the book
+\cite{Gradel2007FMTDescriptiveChapter}. The manuscript outlines several of the
+proofs or leaves them as hints; all proofs below are written out in full in
+the annex. The basic Ehrenfeucht--Fra\"iss\'e game and quantifier rank are
+those of \cref{sec:p03-ef-games}; the infinitary language and its ordinal
+back-and-forth relations are those of \cref{sec:p03-w03-p03-039-marker}.
+
+\section{Queries, definability and two measures of definitional complexity}
+\label{sec:p03-w03-p03-055-measures}
+
+\begin{hbconvention}{def:p03-w03-p03-055-setting}{Signatures, structures, assignments and partial isomorphisms}
+Throughout, \(\tau\) is a finite set of relation symbols, each of positive
+arity; there are no constant or function symbols. Structures are nonempty;
+the universe of \(\mathcal A\) is written \(A\). The individual variables
+are \(x_1,x_2,\ldots\), and \(X_k\defeq\{x_1,\ldots,x_k\}\). An
+\emph{assignment} into \(\mathcal A\) is a map \(s\colon D\to A\) defined
+on a finite set \(D\) of variables, and \(s[x\mapsto a]\) agrees with
+\(s\) except that it sends \(x\) to \(a\) (its domain is
+\(D\cup\{x\}\)). For assignments \(s\colon D\to A\) and
+\(t\colon D\to B\) with the same domain put
+\[
+ \langle s,t\rangle\defeq\{(s(x),t(x)):x\in D\}\subseteq A\times B,
+\]
+and for tuples \(\bar a=(a_1,\ldots,a_n)\in A^n\),
+\(\bar b\in B^n\) put \(\langle\bar a,\bar b\rangle\defeq
+\{(a_i,b_i):1\le i\le n\}\); we write \(\mathcal A\entails\varphi[\bar a]\)
+for satisfaction under \(x_i\mapsto a_i\).
+
+A finite relation \(p\subseteq A\times B\) is a \emph{partial
+isomorphism} if, for all \((a,b),(a',b')\in p\), \(a=a'\) exactly when
+\(b=b'\), and for every \(R\in\tau\) of arity \(r\) and all
+\((a_1,b_1),\ldots,(a_r,b_r)\in p\),
+\(R^{\mathcal A}(a_1,\ldots,a_r)\) holds exactly when
+\(R^{\mathcal B}(b_1,\ldots,b_r)\) holds. Equivalently, \(p\) is the graph
+of an injective map from a finite subset of \(A\) onto a finite subset of
+\(B\) that preserves and reflects every relation. Every subset of a partial
+isomorphism is a partial isomorphism. This is the winning condition of
+\cref{def:p03-ef-game}, and it agrees with Kolaitis's use of partial
+isomorphisms as isomorphisms between generated substructures
+\cite[p.~4 and Def.~3.1, p.~9]{Kolaitis2003ExpressivePowerNotes} in the
+absence of constants.
+\end{hbconvention}
+
+\begin{hbdefinition}{def:p03-w03-p03-055-query}{Classes, Boolean queries and \(L\)-definability}
+A \emph{class} of \(\tau\)-structures is a collection closed under
+isomorphism. A \emph{Boolean query} on a class \(\mathcal C\) is an
+isomorphism-invariant map \(Q\colon\mathcal C\to\{0,1\}\); it is identified
+with the subclass \(\{\mathcal A\in\mathcal C:Q(\mathcal A)=1\}\)
+\cite[Def.~2.1, p.~4]{Kolaitis2003ExpressivePowerNotes}. For a logic \(L\),
+a subclass \(\mathcal K\subseteq\mathcal C\) is \emph{\(L\)-definable on
+\(\mathcal C\)} if there is an \(L\)-sentence \(\sigma\) with
+\(\mathcal A\in\mathcal K\iff\mathcal A\entails\sigma\) for every
+\(\mathcal A\in\mathcal C\)
+\cite[Def.~2.3, p.~5]{Kolaitis2003ExpressivePowerNotes}. One sentence must
+work uniformly on all of \(\mathcal C\). Three choices of \(\mathcal C\) are
+the important ones: all \(\tau\)-structures, a single structure up to
+isomorphism, and the class \(\mathcal F\) of all finite \(\tau\)-structures.
+Classifying a concept by definitional complexity means locating the least
+logic, or the least bound inside a logic, for which it is definable on the
+class in question.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p03-w03-p03-055-logics}{Quantifier rank, finite-variable logics and the induced equivalences}
+First-order formulas are built from \(\bottom\), atomic formulas
+\(x=y\) and \(R(y_1,\ldots,y_r)\), the connectives \(\neg,\wedge,\vee\) and
+the quantifiers \(\exists,\forall\). Quantifier rank \(\operatorname{qr}\) is
+as in \cref{def:p03-quantifier-rank}
+\cite[Def.~3.5, pp.~10--11]{Kolaitis2003ExpressivePowerNotes}.
+\begin{enumerate}
+\item \(\mathrm{FO}^k\) is the set of first-order formulas all of whose
+      variables, free and bound, lie in \(X_k\).
+\item \(\mathcal L^k_{\infty\omega}\) is the set of formulas of
+      \(\mathcal L_{\infty,\omega}\) (\cref{def:p03-w03-p03-039-language})
+      all of whose variables lie in \(X_k\); its formulas may use
+      \(\bigwedge\Phi\) and \(\bigvee\Phi\) for arbitrary sets \(\Phi\) of
+      such formulas. \(\mathcal L^\omega_{\infty\omega}\defeq
+      \bigcup_{k\ge1}\mathcal L^k_{\infty\omega}\)
+      \cite[Def.~7.1, pp.~52--53]{Kolaitis2003ExpressivePowerNotes}.
+\item \(\mathcal A\equiv_m\mathcal B\) means that \(\mathcal A\) and
+      \(\mathcal B\) satisfy the same first-order sentences of quantifier
+      rank at most \(m\); \((\mathcal A,\bar a)\equiv_m(\mathcal B,\bar b)\)
+      means the same for formulas with free variables among
+      \(x_1,\ldots,x_n\), evaluated at \(\bar a\) and \(\bar b\)
+      \cite[Def.~3.6, p.~11]{Kolaitis2003ExpressivePowerNotes}.
+\item For assignments \(s,t\) with a common domain \(D\subseteq X_k\),
+      \((\mathcal A,s)\equiv^k_{\infty\omega}(\mathcal B,t)\) means that
+      \(\mathcal A\entails\varphi[s]\iff\mathcal B\entails\varphi[t]\) for
+      every \(\mathcal L^k_{\infty\omega}\)-formula \(\varphi\) whose free
+      variables lie in \(D\); \((\mathcal A,s)\equiv^k(\mathcal B,t)\) is the
+      same with \(\mathrm{FO}^k\) in place of \(\mathcal L^k_{\infty\omega}\).
+      For \(D=\emptyset\) these are written
+      \(\mathcal A\equiv^k_{\infty\omega}\mathcal B\) and
+      \(\mathcal A\equiv^k\mathcal B\)
+      \cite[Def.~7.8, p.~57]{Kolaitis2003ExpressivePowerNotes}.
+\end{enumerate}
+A variable may be requantified any number of times, so an
+\(\mathrm{FO}^k\)-formula can have arbitrarily large quantifier rank
+\cite[p.~53]{Kolaitis2003ExpressivePowerNotes}. The truth of a formula of
+either logic under an assignment depends only on the values of its free
+variables.
+\index{finite-variable logic}\index{quantifier rank!hierarchy}
+\end{hbdefinition}
+
+The two measures are related in one direction only.
+
+\begin{hblemma}{thm:p03-w03-p03-055-rank-variables}{proved=annex:p03-w03-p03-055-rank-variables}{Rank bounds the number of variables}
+Let \(\varphi\) be a first-order formula with free variables among
+\(x_1,\ldots,x_n\) and \(\operatorname{qr}(\varphi)\le m\). Then
+\(\varphi\) is logically equivalent to a formula of the same quantifier
+rank whose variables, free and bound, lie in \(X_{n+m}\). In particular
+every first-order sentence of quantifier rank at most \(m\ge1\) is
+equivalent to an \(\mathrm{FO}^m\)-sentence.
+\end{hblemma}
+
+Gr\"adel states the same economy in terms of the \emph{width} of a formula,
+the largest number of free variables of a subformula, and uses width and
+quantifier rank to bound the space and time of first-order model checking
+\cite[Lemma~3.1.4 and Thm.~3.1.5, p.~133]{Gradel2007FMTDescriptiveChapter}.
+Knowing that a concept has a low-rank or few-variable definition therefore
+also bounds the cost of evaluating it.
+
+\section{Quantifier rank: definability and the game method}
+\label{sec:p03-w03-p03-055-ef}
+
+The Ehrenfeucht--Fra\"iss\'e theorem for positions with parameters is
+proved in \cref{thm:p03-w03-p03-038-pointed-ef}: for a finite relational
+signature, Duplicator wins the \(m\)-round game on \((\mathcal A,\bar a)\)
+and \((\mathcal B,\bar b)\) exactly when the two pointed structures have the
+same rank-\(m\) record, exactly when
+\((\mathcal A,\bar a)\equiv_m(\mathcal B,\bar b)\). The records range over a
+finite set \(\mathrm{Rec}_{n,m}\)
+(\cref{thm:p03-w03-p03-038-finite-records}), and each record \(t\) is
+defined by a characteristic formula \(\chi_t\) of rank at most \(m\)
+(\cref{def:p03-w03-p03-038-characteristic,thm:p03-w03-p03-038-characteristic}).
+The statement and its attribution to Fra\"iss\'e and Ehrenfeucht are
+Kolaitis's Theorem~3.8 \cite[p.~11]{Kolaitis2003ExpressivePowerNotes}, and
+the characteristic formulas correspond to his \((m,r)\)-types, which are
+indexed by moves already made rather than by moves remaining
+\cite[Def.~3.11 and Lemma~3.12, pp.~12--13]{Kolaitis2003ExpressivePowerNotes}.
+The proved form of the game criterion is
+\cref{thm:p03-w03-p03-038-criterion}. What the classification of concepts
+by rank needs in addition is the converse: closure under \(\equiv_m\)
+\emph{suffices} for definability by a sentence of rank \(m\), so the game
+method is complete as well as sound.
+
+\begin{hbtheorem}{thm:p03-w03-p03-055-rank-definability}{proved=annex:p03-w03-p03-055-rank-definability}{Definability by rank and completeness of the game method}
+Let \(\mathcal C\) be a class of \(\tau\)-structures, finite or not, and
+\(\mathcal K\subseteq\mathcal C\) a subclass closed under isomorphism; let
+\(m\ge0\).
+\begin{enumerate}
+\item \(\mathcal K\) is definable on \(\mathcal C\) by a first-order
+      sentence of quantifier rank at most \(m\) if and only if, for all
+      \(\mathcal A,\mathcal B\in\mathcal C\) with
+      \(\mathcal A\equiv_m\mathcal B\), \(\mathcal A\in\mathcal K\) implies
+      \(\mathcal B\in\mathcal K\). The defining sentence can be taken to be a
+      disjunction of characteristic sentences \(\chi_t\),
+      \(t\in\mathrm{Rec}_{0,m}\).
+\item \(\mathcal K\) is not first-order definable on \(\mathcal C\) if and
+      only if for every \(m\) there are \(\mathcal A_m\in\mathcal K\) and
+      \(\mathcal B_m\in\mathcal C\setminus\mathcal K\) such that Duplicator
+      wins the \(m\)-round game on \(\mathcal A_m\) and \(\mathcal B_m\).
+\end{enumerate}
+\end{hbtheorem}
+
+These are Kolaitis's Theorem~3.15 and Method~3.16
+\cite[pp.~14--15]{Kolaitis2003ExpressivePowerNotes}. The ``if'' half of the
+second item, for the class of finite structures, is
+\cref{thm:p03-ef-inexpressibility} and
+\cref{thm:p03-w03-p03-038-criterion}; the ``only if'' half says that every
+first-order undefinability fact on \(\mathcal C\) has a game proof inside
+\(\mathcal C\).
+
+\begin{hbexample}{def:p03-w03-p03-055-ef-strategy-reading}{Reading a distinguishing sentence as a strategy}
+A distinguishing sentence is a recipe for Spoiler. If
+\(\sigma=\exists x_1\exists x_2\exists x_3\bigwedge_{i<j}
+(\neg x_i=x_j\wedge\neg E(x_i,x_j))\) holds in a graph \(\mathcal B\) and
+fails in \(\mathcal A\), Spoiler plays three pairwise distinct, pairwise
+nonadjacent vertices of \(\mathcal B\). Because \(\mathcal A\) has no such
+triple, two of Duplicator's three answers in \(\mathcal A\) are equal or
+adjacent, and the selected pairing is not a partial isomorphism: Spoiler
+wins the \(3\)-round game, as \cref{thm:p03-w03-p03-038-pointed-ef} predicts
+from \(\operatorname{qr}(\sigma)=3\). Kolaitis discusses a pair of graphs
+separated in this way at three rounds but not at two
+\cite[Example~3.3 and Example~3.9, pp.~9--11]{Kolaitis2003ExpressivePowerNotes}.
+\end{hbexample}
+
+\section{Finite-variable logics and pebble games}
+\label{sec:p03-w03-p03-055-pebble}
+
+\begin{hbdefinition}{def:p03-w03-p03-055-pebble}{The \(k\)-pebble game and winning families}
+Let \(k\ge1\). In the \emph{\(k\)-pebble game} on \(\mathcal A\) and
+\(\mathcal B\) each player has \(k\) pebbles labelled \(1,\ldots,k\). In
+each move Spoiler, in a structure of his choice, either places an unused
+pebble on an element or removes a pebble; Duplicator places or removes the
+pebble with the same label in the other structure. Spoiler wins as soon as
+the pairs of elements carrying equally labelled pebbles fail to form a
+partial isomorphism; Duplicator wins if this never happens, however long
+the play continues \cite[Def.~7.3, p.~55]{Kolaitis2003ExpressivePowerNotes}.
+Following Kolaitis's precise form
+\cite[Def.~7.4, p.~55]{Kolaitis2003ExpressivePowerNotes}, a \emph{winning
+family} for Duplicator is a nonempty set \(\mathcal I\) of partial
+isomorphisms from \(\mathcal A\) to \(\mathcal B\) such that
+\begin{enumerate}
+\item \(|f|\le k\) for every \(f\in\mathcal I\);
+\item if \(g\in\mathcal I\) and \(f\subseteq g\) then \(f\in\mathcal I\);
+\item (forth up to \(k\)) if \(f\in\mathcal I\), \(|f|<k\) and
+      \(a\in A\), there is \(g\in\mathcal I\) with \(f\subseteq g\) and
+      \(a\in\dom g\);
+\item (back up to \(k\)) if \(f\in\mathcal I\), \(|f|<k\) and
+      \(b\in B\), there is \(g\in\mathcal I\) with \(f\subseteq g\) and
+      \(b\) in the range of \(g\).
+\end{enumerate}
+Duplicator \emph{wins the \(k\)-pebble game} on \(\mathcal A\) and
+\(\mathcal B\) when a winning family exists (it then contains \(\emptyset\)
+by the second clause), and on \((\mathcal A,s)\) and \((\mathcal B,t)\),
+for assignments with a common domain \(D\subseteq X_k\), when some winning
+family contains \(\langle s,t\rangle\). Clause~2 answers the removal of a
+pebble, clauses~3 and~4 answer its placement.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p03-w03-p03-055-pebble}{proved=annex:p03-w03-p03-055-pebble}{Pebble games characterize \(k\)-variable equivalence}
+Let \(k\ge1\), let \(\mathcal A,\mathcal B\) be \(\tau\)-structures, and
+let \(s\colon D\to A\), \(t\colon D\to B\) with \(D\subseteq X_k\).
+The following are equivalent:
+\begin{enumerate}
+\item Duplicator wins the \(k\)-pebble game on \((\mathcal A,s)\) and
+      \((\mathcal B,t)\);
+\item \((\mathcal A,s)\equiv^k_{\infty\omega}(\mathcal B,t)\).
+\end{enumerate}
+If \(\mathcal A\) and \(\mathcal B\) are finite, both are also equivalent to
+\begin{enumerate}\setcounter{enumi}{2}
+\item \((\mathcal A,s)\equiv^k(\mathcal B,t)\).
+\end{enumerate}
+\end{hbtheorem}
+
+This is Kolaitis's Theorem~7.9, attributed to Barwise and to Immerman
+\cite[pp.~58--59]{Kolaitis2003ExpressivePowerNotes}; the manuscript gives an
+outline and refers to Kolaitis and Vardi for the details. The annex supplies
+the complete argument. The finiteness hypothesis is used at exactly one
+point: it makes the conjunctions in the back-and-forth step finite, so that
+they stay inside \(\mathrm{FO}^k\).
+
+\begin{hbtheorem}{thm:p03-w03-p03-055-k-definability}{proved=annex:p03-w03-p03-055-k-definability}{Definability in \(k\)-variable infinitary logic on finite structures}
+Let \(\mathcal C\) be a class of finite \(\tau\)-structures,
+\(\mathcal K\subseteq\mathcal C\) closed under isomorphism, and \(k\ge1\).
+Then \(\mathcal K\) is \(\mathcal L^k_{\infty\omega}\)-definable on
+\(\mathcal C\) if and only if, for all \(\mathcal A,\mathcal B\in\mathcal C\)
+with \(\mathcal A\equiv^k\mathcal B\) (equivalently, with Duplicator
+winning the \(k\)-pebble game on them), \(\mathcal A\in\mathcal K\) implies
+\(\mathcal B\in\mathcal K\). Hence \(\mathcal K\) is
+\(\mathcal L^\omega_{\infty\omega}\)-definable on \(\mathcal C\) if and only
+if this holds for some \(k\).
+\end{hbtheorem}
+
+This is Kolaitis's Corollary~7.10
+\cite[p.~59]{Kolaitis2003ExpressivePowerNotes}. The bound on variables is
+what gives the theorem content.
+
+\begin{hblemma}{thm:p03-w03-p03-055-unbounded}{proved=annex:p03-w03-p03-055-unbounded}{Without a variable bound every finite-structure class is definable}
+Every class \(\mathcal K\) of finite \(\tau\)-structures is definable on the
+class \(\mathcal F\) of all finite \(\tau\)-structures by a sentence of
+\(\mathcal L_{\infty,\omega}\) that is a countable disjunction of
+first-order sentences.
+\end{hblemma}
+
+Kolaitis records this observation at the opening of his Section~7
+\cite[p.~52]{Kolaitis2003ExpressivePowerNotes}. The defining disjunction
+uses unboundedly many variables, so the lemma places no concept in any
+\(\mathcal L^k_{\infty\omega}\).
+
+\begin{hblemma}{thm:p03-w03-p03-055-pebble-basic}{proved=annex:p03-w03-p03-055-pebble-basic}{Monotonicity in the number of pebbles}
+Let \(1\le k\le k'\). If Duplicator wins the \(k'\)-pebble game on
+\(\mathcal A\) and \(\mathcal B\), she wins the \(k\)-pebble game on them;
+equivalently, if Spoiler wins the \(k\)-pebble game, he wins the
+\(k'\)-pebble game. For each \(k\), the relation ``Duplicator wins the
+\(k\)-pebble game on \(\mathcal A\) and \(\mathcal B\)'' is an equivalence
+relation on the class of all \(\tau\)-structures.
+\end{hblemma}
+
+Kolaitis records both facts after his definition of the game
+\cite[p.~56]{Kolaitis2003ExpressivePowerNotes}.
+
+\section{Rounds and pebbles together}
+\label{sec:p03-w03-p03-055-bounded}
+
+The two measures combine. A formula of \(\mathrm{FO}^k\) of quantifier rank
+at most \(m\) is bounded in both resources at once, and the game that
+matches it limits both the pebbles and the number of rounds. The resulting
+two-parameter family contains the Ehrenfeucht--Fra\"iss\'e game as the case
+in which there are at least as many pebbles as rounds, and the unbounded
+pebble game of \cref{def:p03-w03-p03-055-pebble} as the limit in which the
+number of rounds is unrestricted.
+
+\begin{hbdefinition}{def:p03-w03-p03-055-bounded-pebble}{The \(m\)-round \(k\)-pebble game and \(\equiv^k_m\)}
+Let \(k\ge1\) and \(m\ge0\). A \emph{position} on \(\mathcal A\) and
+\(\mathcal B\) is a pair \((s,t)\) of assignments \(s\colon D\to A\),
+\(t\colon D\to B\) with a common domain \(D\subseteq X_k\); the variable
+\(x_i\in D\) records where pebble \(i\) lies in each structure. In one
+\emph{round} Spoiler chooses a label \(i\in\{1,\ldots,k\}\) and an element
+\(a\in A\) (or \(b\in B\)); Duplicator answers with an element \(b\in B\)
+(or \(a\in A\)), and the new position is
+\((s[x_i\mapsto a],t[x_i\mapsto b])\). A pebble already on the board is
+thus lifted and replaced in a single round. Duplicator \emph{wins
+\(G^k_m(\mathcal A,s;\mathcal B,t)\)}, the \(m\)-round \(k\)-pebble game
+from \((s,t)\), as defined by recursion on \(m\):
+\begin{enumerate}
+\item she wins \(G^k_0(\mathcal A,s;\mathcal B,t)\) if
+      \(\langle s,t\rangle\) is a partial isomorphism;
+\item she wins \(G^k_{m+1}(\mathcal A,s;\mathcal B,t)\) if
+      \(\langle s,t\rangle\) is a partial isomorphism, for every
+      \(i\in\{1,\ldots,k\}\) and \(a\in A\) there is \(b\in B\) such that
+      she wins \(G^k_m(\mathcal A,s[x_i\mapsto a];\mathcal B,t[x_i\mapsto b])\),
+      and for every \(i\) and \(b\in B\) there is \(a\in A\) with the same
+      property.
+\end{enumerate}
+This recursion says that Duplicator has a strategy that keeps the pebbled
+pairs a partial isomorphism at the start and after each of the \(m\)
+rounds. For assignments with common domain \(D\subseteq X_k\),
+\((\mathcal A,s)\equiv^k_m(\mathcal B,t)\) means that
+\(\mathcal A\entails\varphi[s]\iff\mathcal B\entails\varphi[t]\) for every
+\(\mathrm{FO}^k\)-formula \(\varphi\) of quantifier rank at most \(m\) whose
+free variables lie in \(D\); for \(D=\emptyset\) we write
+\(\mathcal A\equiv^k_m\mathcal B\). Two formulas are \emph{logically
+equivalent} when they hold under the same assignments of all structures.
+\index{pebble game!bounded}
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p03-w03-p03-055-finitely-many-k}{proved=annex:p03-w03-p03-055-finitely-many-k}{Finitely many \(k\)-variable formulas of each rank}
+Let \(\tau\) be finite, \(k\ge1\), \(m\ge0\) and \(D\subseteq X_k\). Up to
+logical equivalence there are only finitely many \(\mathrm{FO}^k\)-formulas
+of quantifier rank at most \(m\) with free variables in \(D\).
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p03-w03-p03-055-bounded-pebble}{proved=annex:p03-w03-p03-055-bounded-pebble}{The \(m\)-round \(k\)-pebble game characterizes \(\equiv^k_m\)}
+Let \(\tau\) be finite, \(k\ge1\), \(m\ge0\), let \(\mathcal A,\mathcal B\)
+be \(\tau\)-structures, finite or infinite, and let \(s\colon D\to A\),
+\(t\colon D\to B\) with \(D\subseteq X_k\). Then Duplicator wins
+\(G^k_m(\mathcal A,s;\mathcal B,t)\) if and only if
+\((\mathcal A,s)\equiv^k_m(\mathcal B,t)\).
+\end{hbtheorem}
+
+The implication from the game to agreement does not use the finiteness of
+\(\tau\); the converse uses it through
+\cref{thm:p03-w03-p03-055-finitely-many-k}, which keeps the conjunction that
+Spoiler's move expresses finite.
+
+\begin{hbcorollary}{thm:p03-w03-p03-055-bounded-consequences}{proved=annex:p03-w03-p03-055-bounded-consequences}{Consequences of the two-parameter game}
+Let \(\tau\) be finite and \(k\ge1\).
+\begin{enumerate}
+\item For all \(\tau\)-structures and assignments with common domain
+      \(D\subseteq X_k\), \((\mathcal A,s)\equiv^k(\mathcal B,t)\) if and
+      only if Duplicator wins \(G^k_m(\mathcal A,s;\mathcal B,t)\) for every
+      \(m\). If \(\mathcal A\) and \(\mathcal B\) are finite, this holds if
+      and only if Duplicator wins the \(k\)-pebble game on
+      \((\mathcal A,s)\) and \((\mathcal B,t)\).
+\item If \(k\ge m\), then \(\mathcal A\equiv^k_m\mathcal B\) if and only if
+      \(\mathcal A\equiv_m\mathcal B\), if and only if Duplicator wins the
+      \(m\)-round Ehrenfeucht--Fra\"iss\'e game on \(\mathcal A\) and
+      \(\mathcal B\).
+\item Let \(\mathcal C\) be a class of \(\tau\)-structures and
+      \(\mathcal K\subseteq\mathcal C\) closed under isomorphism. Then
+      \(\mathcal K\) is definable on \(\mathcal C\) by an
+      \(\mathrm{FO}^k\)-sentence of quantifier rank at most \(m\) if and only
+      if, for all \(\mathcal A,\mathcal B\in\mathcal C\) with
+      \(\mathcal A\equiv^k_m\mathcal B\), \(\mathcal A\in\mathcal K\)
+      implies \(\mathcal B\in\mathcal K\). Consequently \(\mathcal K\) is
+      \(\mathrm{FO}^k\)-definable on \(\mathcal C\) if and only if this
+      holds for some \(m\), and it is not \(\mathrm{FO}^k\)-definable on
+      \(\mathcal C\) if and only if for every \(m\) there are
+      \(\mathcal A_m\in\mathcal K\) and
+      \(\mathcal B_m\in\mathcal C\setminus\mathcal K\) such that Duplicator
+      wins \(G^k_m(\mathcal A_m,\emptyset;\mathcal B_m,\emptyset)\).
+\end{enumerate}
+\end{hbcorollary}
+
+The second item locates the rank hierarchy inside the two-parameter one: up
+to logical equivalence the sentences of rank at most \(m\) are already
+\(\mathrm{FO}^m\)-sentences (\cref{thm:p03-w03-p03-055-rank-variables}), so
+pebbles beyond the number of rounds add nothing. The first item locates the
+variable hierarchy: on finite structures the unbounded \(k\)-pebble game is
+the conjunction of all its round-bounded versions. For infinite structures
+the round-bounded games still capture \(\equiv^k\), while the unbounded game
+is tied to \(\equiv^k_{\infty\omega}\) (\cref{thm:p03-w03-p03-055-pebble});
+no comparison of the two relations on infinite structures is proved here.
+
+\section{The two hierarchies and worked cases}
+\label{sec:p03-w03-p03-055-hierarchies}
+
+Let \(K_n\) be the complete graph on \(n\) vertices (the \(n\)-clique),
+\(L_n=(\{1,\ldots,n\},<)\) the \(n\)-element linear order, and, for
+\(n\ge3\), \(C_n\) the cycle with vertex set \(\mathbb Z/n\mathbb Z\) and
+edges \(\{i,i+1\}\); graphs are structures for one binary symbol \(E\)
+interpreted symmetrically and irreflexively. Put
+\[
+ \sigma_{\ge n}\defeq\exists x_1\cdots\exists x_n
+ \bigwedge_{1\le i<j\le n}\neg x_i=x_j ,
+\]
+a sentence of \(\mathrm{FO}^n\) of quantifier rank \(n\) that says there are
+at least \(n\) elements.
+
+\begin{hbtheorem}{thm:p03-w03-p03-055-cliques}{proved=annex:p03-w03-p03-055-cliques}{Cliques and the strictness of both hierarchies}
+Let \(k\ge1\).
+\begin{enumerate}
+\item For \(n,n'\ge k\) the set of all injective partial maps
+      \(f\) from \(K_n\) to \(K_{n'}\) with \(|f|\le k\) is a winning family
+      in the \(k\)-pebble game; hence
+      \(K_n\equiv^k_{\infty\omega}K_{n'}\) and \(K_n\equiv_kK_{n'}\).
+\item Spoiler wins the \((k+1)\)-pebble game and the \((k+1)\)-round game
+      on \(K_k\) and \(K_{k+1}\).
+\item (Variable hierarchy.) The class of graphs with at least \(k+1\)
+      vertices is defined on finite graphs by the \(\mathrm{FO}^{k+1}\)-sentence
+      \(\sigma_{\ge k+1}\) but is not \(\mathcal L^k_{\infty\omega}\)-definable
+      on finite graphs, nor even on finite cliques.
+\item (Rank hierarchy.) The same class is not definable on finite cliques
+      by any first-order sentence of quantifier rank at most \(k\).
+\end{enumerate}
+\end{hbtheorem}
+
+The first two items are Kolaitis's Example~7.5 together with his remark on
+the corresponding round counts
+\cite[p.~56]{Kolaitis2003ExpressivePowerNotes}.
+
+\begin{hbtheorem}{thm:p03-w03-p03-055-orders}{proved=annex:p03-w03-p03-055-orders}{Two variables on finite linear orders}
+Define \(\mathrm{FO}^2\)-formulas over \(\{<\}\) by
+\(\alpha_1(x_1)\defeq x_1=x_1\), \(\beta_1(x_2)\defeq x_2=x_2\) and
+\[
+ \alpha_{j+1}(x_1)\defeq\exists x_2\bigl(x_2<x_1\wedge\beta_j(x_2)\bigr),
+ \qquad
+ \beta_{j+1}(x_2)\defeq\exists x_1\bigl(x_1<x_2\wedge\alpha_j(x_1)\bigr).
+\]
+\begin{enumerate}
+\item In every linear order, \(\alpha_j\) and \(\beta_j\) hold of an element
+      exactly when at least \(j-1\) elements lie below it; so
+      \(\exists x_1\,\alpha_n(x_1)\) is an \(\mathrm{FO}^2\)-sentence of
+      quantifier rank \(n\) equivalent on linear orders to
+      \(\sigma_{\ge n}\).
+\item For \(m<n\), Spoiler wins the \(2\)-pebble game on \(L_m\) and
+      \(L_n\).
+\item For every set \(S\) of positive integers, the class of finite linear
+      orders whose size lies in \(S\) is
+      \(\mathcal L^2_{\infty\omega}\)-definable on finite linear orders. In
+      particular even cardinality is, although it is not first-order
+      definable on finite linear orders (\cref{def:p03-ef-parity}).
+\end{enumerate}
+\end{hbtheorem}
+
+The \(\mathrm{FO}^2\)-sentence for four elements, the definability of every
+set of cardinalities and Spoiler's two-pebble strategy are Kolaitis's
+\cite[p.~53 and Example~7.6, p.~56]{Kolaitis2003ExpressivePowerNotes}. The
+contrast with the parity example is the point: for a fixed number of rounds
+Duplicator wins the Ehrenfeucht--Fra\"iss\'e game on all sufficiently long
+finite linear orders, while two pebbles, reused, separate every pair of
+distinct lengths. Quantifier rank and number of variables measure different
+resources, and neither hierarchy refines the other.
+
+Connectivity shows rank and variables parting company.
+\Cref{thm:p03-w03-p03-038-connectivity} proves, with the distance invariant
+and response lemma of \cref{def:p03-w03-p03-038-cycles} and
+\cref{thm:p03-w03-p03-038-cycle-response}, that Duplicator wins the
+\(k\)-round game on \(C_{2m}\) and \(C_m\sqcup C_m\) whenever
+\(m\ge m_k=(k+1)2^{k+2}\); this is the strategy recorded in
+\cref{def:p03-ef-connectivity}. Kolaitis reaches the same pairs of graphs
+through a Hanf-type counting condition whose proof he gives as a hint
+\cite[Thm.~3.26 and Props.~3.28--3.29, pp.~19--20]{Kolaitis2003ExpressivePowerNotes}.
+
+\begin{hbcorollary}{thm:p03-w03-p03-055-connectivity}{proved=annex:p03-w03-p03-055-connectivity}{Connectivity and 2-colorability}
+\leavevmode
+\begin{enumerate}
+\item 2-colorability is not first-order definable on the class of
+      finite graphs; the same holds for connectivity
+      (\cref{thm:p03-w03-p03-038-connectivity}).
+\item Connectivity is \(\mathcal L^3_{\infty\omega}\)-definable on all
+      graphs: with \(\pi_1(x_1,x_2)\defeq E(x_1,x_2)\) and
+      \[
+       \pi_{n+1}(x_1,x_2)\defeq\exists x_3\bigl(E(x_1,x_3)\wedge
+       \exists x_1(x_3=x_1\wedge\pi_n(x_1,x_2))\bigr),
+      \]
+      \(\pi_n\) expresses the existence of a walk of length exactly \(n\),
+      and a graph is connected exactly when it satisfies
+      \(\forall x_1\forall x_2\bigl(x_1=x_2\vee\bigvee_{n\ge1}
+      \pi_n(x_1,x_2)\bigr)\).
+\item For every \(m\ge3\), Spoiler wins the \(3\)-pebble game on
+      \(C_{2m}\) and \(C_m\sqcup C_m\).
+\end{enumerate}
+\end{hbcorollary}
+
+The three-variable path formulas are Kolaitis's
+\cite[pp.~53--54]{Kolaitis2003ExpressivePowerNotes}; his sentence omits the
+disjunct \(x_1=x_2\) and so is false on the one-vertex graph, which is
+connected. His Example~7.7 makes the same three-pebble point for directed
+cycles \cite[pp.~56--57]{Kolaitis2003ExpressivePowerNotes}.
+
+\begin{hblemma}{thm:p03-w03-p03-055-bipartite}{proved=annex:p03-w03-p03-055-bipartite}{2-colorability in three-variable infinitary logic}
+A graph is 2-colorable if and only if it has no closed walk of odd length.
+Consequently 2-colorability is defined on the class of all graphs by the
+\(\mathcal L^3_{\infty\omega}\)-sentence
+\[
+ \neg\exists x_1\exists x_2\Bigl(x_1=x_2\wedge
+ \bigvee_{n\ge1,\ n\text{ odd}}\pi_n(x_1,x_2)\Bigr),
+\]
+with \(\pi_n\) as in \cref{thm:p03-w03-p03-055-connectivity}, and for every
+odd \(m\ge3\) Spoiler wins the \(3\)-pebble game on \(C_{2m}\) and
+\(C_m\sqcup C_m\).
+\end{hblemma}
+
+The proof of the characterization uses the axiom of choice to pick one
+vertex in each component of an infinite graph; for finite graphs no choice
+is needed.
+
+\begin{hbmethod}{def:p03-w03-p03-055-classify}{Classifying a concept of finite structures}
+Given a finite relational signature \(\tau\), a class \(\mathcal C\) of
+\(\tau\)-structures closed under isomorphism, and a subclass
+\(\mathcal K\) closed under isomorphism:
+\begin{enumerate}
+\item Fix \(\mathcal C\) first. Every upper and lower bound below is
+      relative to it; a result for all finite structures does not transfer
+      to a smaller class, nor conversely.
+\item Upper bound. Write a defining sentence and read off its quantifier
+      rank and its set of variables. Rename bound variables with
+      \cref{thm:p03-w03-p03-055-rank-variables} when only the rank matters,
+      and reuse variables, as in \cref{thm:p03-w03-p03-055-orders} and
+      \cref{thm:p03-w03-p03-055-connectivity}, when only their number
+      matters.
+\item Lower bound for rank \(m\). Exhibit \(\mathcal A\in\mathcal K\) and
+      \(\mathcal B\in\mathcal C\setminus\mathcal K\) with a Duplicator
+      strategy for the \(m\)-round game
+      (\cref{thm:p03-w03-p03-055-rank-definability}). For non-definability
+      in first-order logic such a pair is needed for every \(m\).
+\item Lower bound for \(k\) variables. On finite structures exhibit a pair
+      as in the previous step with a winning family for the \(k\)-pebble
+      game (\cref{thm:p03-w03-p03-055-k-definability}); this excludes
+      \(\mathcal L^k_{\infty\omega}\) and hence \(\mathrm{FO}^k\). To
+      exclude only \(\mathrm{FO}^k\), a family of pairs on which Duplicator
+      wins \(G^k_m\) for every \(m\) suffices
+      (\cref{thm:p03-w03-p03-055-bounded-consequences}).
+\item Side conditions. The signature must be finite for the completeness
+      halves (the converse directions) of
+      \cref{thm:p03-w03-p03-055-rank-definability,thm:p03-w03-p03-055-bounded-consequences};
+      the soundness halves need only that the strategies are genuine. The
+      identification of the \(k\)-pebble game with \(\equiv^k\) requires
+      finite structures.
+\end{enumerate}
+\end{hbmethod}
+
+\begin{hbexample}{def:p03-w03-p03-055-classification}{A classification of six concepts}
+The results of this chapter place the following concepts. The class
+\(\mathcal C\) is stated in each case.
+\begin{center}
+\begin{tabular}{p{0.3\linewidth}p{0.6\linewidth}}
+\hline
+Concept and class & Definability \\
+\hline
+At least \(n\) elements, finite graphs, \(n\ge2\) &
+\(\mathrm{FO}^n\), rank \(n\); not \(\mathcal L^{n-1}_{\infty\omega}\); not
+rank \(n-1\) (\cref{thm:p03-w03-p03-055-cliques}) \\
+At least \(n\) elements, finite linear orders &
+\(\mathrm{FO}^2\), rank \(n\) (\cref{thm:p03-w03-p03-055-orders}) \\
+Size in a set \(S\), finite linear orders &
+\(\mathcal L^2_{\infty\omega}\) for every \(S\)
+(\cref{thm:p03-w03-p03-055-orders}) \\
+Even size, finite linear orders &
+\(\mathcal L^2_{\infty\omega}\); not first-order
+(\cref{thm:p03-w03-p03-055-orders}, \cref{def:p03-ef-parity}) \\
+Connectivity, finite graphs &
+\(\mathcal L^3_{\infty\omega}\); not first-order
+(\cref{thm:p03-w03-p03-055-connectivity}) \\
+2-colorability, finite graphs &
+\(\mathcal L^3_{\infty\omega}\); not first-order
+(\cref{thm:p03-w03-p03-055-connectivity,thm:p03-w03-p03-055-bipartite}) \\
+\hline
+\end{tabular}
+\end{center}
+For the first row with \(n=k+1\) the upper bound is the sentence
+\(\sigma_{\ge k+1}\), and both lower bounds come from the single pair
+\(K_k,K_{k+1}\). The rows for connectivity and 2-colorability use the same
+pairs \(C_{2m},C_m\sqcup C_m\) in opposite roles: Duplicator wins the
+\(k\)-round game when \(m\) is large (and odd, for 2-colorability), while
+Spoiler wins the \(3\)-pebble game for every \(m\ge3\) (every odd
+\(m\ge3\), for 2-colorability).
+\end{hbexample}
+
+\begin{hbwarning}{def:p03-w03-p03-055-limits}{What the game methods do and do not give}
+\begin{enumerate}
+\item A nondefinability proof by games concerns a stated class: the pairs
+      \(\mathcal A_m,\mathcal B_m\) must lie in \(\mathcal C\). Even
+      cardinality is not first-order definable on finite linear orders, yet
+      it is \(\mathcal L^2_{\infty\omega}\)-definable there
+      (\cref{thm:p03-w03-p03-055-orders}); the two statements concern
+      different logics on the same class and do not conflict.
+\item The equivalence of \(\equiv^k\) with the \(k\)-pebble game is proved
+      here only for finite structures. For infinite structures the proof
+      gives only the equivalence of the game with
+      \(\equiv^k_{\infty\omega}\); no claim is made that \(\equiv^k\) and
+      \(\equiv^k_{\infty\omega}\) agree there.
+\item The finite-variable characterization does not bound quantifier rank,
+      and the rank characterization does not bound variables:
+      \cref{thm:p03-w03-p03-055-orders} has \(\mathrm{FO}^2\)-sentences of
+      every rank, while \(\sigma_{\ge k+1}\) has rank \(k+1\) and needs
+      \(k+1\) variables on cliques.
+\item \Cref{thm:p03-w03-p03-055-unbounded} shows that on finite
+      structures \(\mathcal L_{\infty,\omega}\) without a variable bound
+      separates nothing: classification by infinitary logic is informative
+      only through \(k\).
+\end{enumerate}
+\end{hbwarning}
+
+\paragraph{Relationships.}
+\Cref{thm:p03-w03-p03-055-rank-definability} completes the game method of
+\cref{sec:p03-ef-games} and of \cref{sec:p03-w03-p03-038-comparison-games}
+by its converse, and the transfinite back-and-forth relations used for
+Karp's and Scott's theorems are in \cref{sec:p03-w03-p03-039-marker}. The pebble game is the
+\(k\)-variable analogue of the partial-isomorphism systems of
+\cref{def:p03-w03-p03-039-partial-iso}. Asymptotic laws for finite
+structures, which also rest on extension and back-and-forth arguments, are
+in \cref{sec:p03-finite-model-theory}. Gr\"adel's chapter places these
+definability questions within descriptive complexity, where logics are
+compared with complexity classes on finite structures
+\cite[Section~3.1, pp.~125--138]{Gradel2007FMTDescriptiveChapter}.

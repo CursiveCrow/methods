@@ -20,6 +20,7 @@
 %%   \calculussheet{sheet:<slug>}{<Name>}{<identity>}
 %%   \hbrule{rule:<id>}{<Name>}{<premises>}{<conclusion>}{<side cond | \none>}
 %%   \showcalculus{<slug>}
+%%   \hblegacylabel{<old>}{<canonical>} (exact policy; adjacent alias)
 %%
 %% Status specs are single tokens of EXACTLY one of the three forms
 %%     proved=annex:<id>   sketched=annex:<id>   cited=<bibkey>
@@ -1635,6 +1636,8 @@
 
 \newenvironment{annexitem}[3]{%
   \par\addvspace{\bigskipamount}%
+  % Keep the stable heading and back-reference with the opening proof lines.
+  \Needspace{7\baselineskip}%
   \hb@inannextrue
   \refstepcounter{annexitem}%
   \hb@extractannexid{#1}%
@@ -1831,6 +1834,27 @@
 % --------------------------------------------------------------------------
 \RequirePackage[hidelinks,pdfusetitle]{hyperref}
 \RequirePackage[nameinlink,noabbrev]{cleveref}
+
+% Necessity: eight reviewed editorial labels predate the house taxonomy, and
+% existing references to those spellings must retain their exact destinations.
+% Definition: an immediately adjacent hblegacylabel{old}{canonical} writes a
+% second ordinary label at the canonical label's current counter and anchor.
+% Standing: this is reference compatibility, not a new result, proof status,
+% source-label exemption, audit result, or acceptance claim.
+% Nonredundancy: changing the canonical environment/label alone leaves the old
+% references dangling; broad prefix exceptions would admit new invalid labels.
+% Use: spec/handbook-legacy-labels.json lists the exact file/kind/pair. The static
+% checker requires the canonical definition to be globally unique and directly
+% before this command, and rejects any ordinary definition of the old spelling.
+% The canonical argument is the checker's explicit assertion; the ordinary
+% label call preserves number, page, title, hyperlink, and cleveref type by
+% running in the same context. No counter or PDF destination is created here.
+\newcommand\hblegacylabel[2]{%
+  \ifstrequal{#1}{#2}%
+    {\PackageError{handbook}{legacy label equals its canonical target}%
+      {Use only the distinct pairs in spec/handbook-legacy-labels.json.}}%
+    {\label{#1}}}
+
 \crefname{hbitem}{entry}{entries}
 \Crefname{hbitem}{Entry}{Entries}
 \crefname{definition}{definition}{definitions}

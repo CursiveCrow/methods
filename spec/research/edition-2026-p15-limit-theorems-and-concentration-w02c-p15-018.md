@@ -364,3 +364,80 @@ and have the owner add C004 (iv) from Feller p. 53 as recorded above
 VII.2 by a probabilistic argument).
 Own units: no change. The three patch anchors in
 work/waves/w02ca/patches/w02ca-p15-018.json still match their host once.
+
+Run r6 block 2 of 13 October 2026. Assessment items routed here: C004
+(Feller II.9 justificatory claims) and C014 (Feller's normative claim on
+percentage error) of the read-only unit
+ED26-P15-CH-de-moivre-laplace-and-stirling (owner w02c-p15-011, packet
+w02ca-p15-011, closed as drafted in r5 and not running again in this
+wave). Nothing written for them: the unit is in this packet's
+readonly_units, its hosts and the owner's files are read-only here, and
+no POL- record governs it.
+Re-verified in the held Feller I third edition (text layer, PDF pp. 67-68
+= printed pp. 52-53): p. 52, Feller's judgement that the absolute
+difference in (9.1) is unbounded but the percentage error is what really
+matters; pp. 52-53, (9.5) suggests comparing log n! with a quantity near
+the arithmetic mean of its extreme members, the simplest being
+(n+1/2) log n - n, hence d_n of (9.6); p. 53, e^C = sqrt(2 pi) is proved
+in VII,2, the proof is elementary and independent of chapters IV-VI, and
+is postponed to VII only for its natural tie to the normal approximation
+theorem (footnote 16: Wallis; Feller, Amer. Math. Monthly 1967).
+Still absent from every handbook file (grep this run): the d_n
+motivation, the e^C independence claim and its reconciliation with the
+handbook's use of the chapter VI tail estimate
+(thm:p15-stirling-tail-premises), and Feller's percentage-error judgement
+(owner body lines 88-92 and warning lines 149-159 give only the
+distinction and the opposite caution).
+Since the owner packet is closed, these need the lead: write them in the
+owner's file during integration, or move the unit out of this packet's
+readonly_units so it can write them in a later run.
+Guard G1 (spec/research/edition-2026-authoring-batch-intake-13.json): the
+only change to that file is lead commit 6de06cc3 (13 October 07:09); the
+working tree is clean against HEAD for it and this packet never wrote it.
+Own units: no change. unit-compile ok; find_fused_spaces clean on the
+five edited .tex files.
+
+Run r6 block 3 of 13 October 2026. Assessment items routed here: C004
+(three items), C014 and C015 of the read-only unit
+ED26-P15-CH-de-moivre-laplace-and-stirling (owner w02c-p15-011; packet
+w02ca-p15-011 closed). Change of approach: since the owner will not run
+again and its hosts parts/annex p15/de-moivre-laplace-and-stirling.tex are
+in this packet's readonly_hosts, the missing text is now supplied through
+the A8 channel as ready-to-apply patch items 4-9 in
+work/waves/w02ca/patches/w02ca-p15-018.json (items 1-3, for
+strong-law-rates-and-normalization.tex, unchanged). No host file was
+edited; the lead decides whether to apply them.
+- Item 4 (annex, insert after "The improper integral at zero ..."): Feller
+  pp. 52-53 justification of (n+1/2) log n - n from (9.5), with a proof
+  that it stays within distance one of the midpoint of an interval whose
+  width log(n+1)+n log(1+1/n) is unbounded.
+- Item 5 (annex, replace "We now discharge the constant referral ..."):
+  Feller p. 53 (proof of e^C = sqrt(2 pi) elementary, independent of
+  chapters IV-VI, deferred to VII for its connection with the normal
+  approximation theorem); VII.2 p. 180 n. 3 (pi in (2.6) replaced by an
+  unknown constant; tail estimate VI,(3.5) against VII,(1.8)); the
+  independence claim is reconciled with that footnote's use of VI,(3.5),
+  which thm:p15-stirling-tail-premises proves directly.
+- Item 6 (annex, replace from "Fix \(0<M<\infty\)" to "to zero."): full
+  range (2.4): |E_{n,k}| <= (2k^3+k)/(3n^2) <= k^3/n^2 for 0 <= k <= n/2;
+  K_n <= n/2 eventually; (2.5) and (2.7) uniformly on |k| < K_n with the
+  constant unknown; the bounded-x statement as the case K_n = M sqrt(n)+1.
+- Item 7 (body, thm:p15-stirling-with-remainder route paragraph): states
+  the three Feller points and the full-range ratios.
+- Item 8 (body, after thm:p15-stirling-worked-boundaries): Feller p. 52
+  normative claim (marked 8-word quotation), why every approximation in
+  the chapter is relative (only n!/A_n = e^{r_n} enters).
+- Item 9 (body, def:p15-stirling-continuation): the II.9 / VII.2 promise
+  made specific.
+Verified this run in the held Feller I third edition (PDF page = printed
+page + 15): pp. 52-54 (PDF 67-69; text layer) and pp. 180-181 (PDF
+195-196; rendered images): (2.3)-(2.7), footnote 3, the sentence after
+(2.7) on the K_nu range and the order-sqrt(nu) use, (1.8) in VII.1 p. 179.
+Checks: all six anchors match their host exactly once; the patched copies
+of both hosts (tmp/agent-scratch/w02ca-r6-w02ca-p15-018-b3-author/) build
+with the handbook preamble without TeX errors or undefined citations (one
+undefined reference, thm:p15-weak-elementary-asymptotics, is a label in
+another routed file and was already used by the host); no new overfull
+box; find_fused_spaces clean on both patched copies; unit-compile ok;
+check.py shows only the pre-existing notation-scope notes. Symbol intake:
+row for K_n added (conditional on items 4-9 being applied).

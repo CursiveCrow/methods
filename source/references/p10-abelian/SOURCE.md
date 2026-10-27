@@ -40,3 +40,25 @@ new148.2 writing. It does not discharge Borceux1994 volume2 Chapter1,
 `ED26-SRC-040-0001`, or a whole Freyd book/printing allocation. No book build,
 manuscript rendering, independent mathematical review, or source admission
 was performed.
+
+## 2026-10-26 continuation
+
+The current author review visually rechecked held original scan pixels for
+printed 42--45 and 50--62. The reader and proof packet now explicitly supplies
+2.61--2.64 (pp.54--57) and all constructions in Exercises 2-A--2-C (pp.60--62),
+in addition to the earlier material. The exactness test 2.42, difference-kernel
+test 2.51, monicity equivalence 2.52, commutative-square test 2.53 and full
+Noether diagrams 2.66--2.67 were made explicit.
+
+Exercise 2-A.2's uniqueness is stated with zero neutral: AC1--AC2 alone admit
+the degenerate operation taking every parallel pair to the zero arrow. The
+active proof gives this counterexample and the normalized uniqueness argument.
+This qualification is recorded rather than attributed to the source as an
+expressly printed hypothesis. Universal extension constructions state their
+chosen finite-biproduct or splitting families and the small-source alternative.
+
+A TeX Live/Biber unit build and author proof/diagram review now exist; the
+previous no-build statement describes the October 3 block only. The held PDF
+and its 192-page/hash identity are unchanged. No original-printing admission,
+Borceux allocation closure, full-book Freyd reading or independent mathematical
+acceptance is claimed.

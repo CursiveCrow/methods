@@ -1,0 +1,799 @@
+%% toc: P3 40 40.8
+\chapter{Nonconvergence and the Limits of Parity Definability}
+\label{sec:p03-w03-p03-071-nonconvergence}
+
+This chapter treats two negative results about first-order sentences on the
+random ordered graph \(G_<(n,p)\), in which the vertices carry a built-in
+total order.  The first is that the zero--one law and even mere convergence
+fail: there is a first-order sentence \(A\) for which
+\(\lim_{n\to\infty}\Pr[G_<(n,\frac12)\entails A]\) does not exist.  The proof
+encodes arithmetic on an initial segment \(\{1,\ldots,u\}\) of the order
+through the neighbourhoods of further vertices, measures how long an initial
+segment can be encoded, and lets the sentence ask a question about the
+logarithm of that length.  The second result runs the other way: for every
+first-order \(A\) the difference
+\(\Pr[G_<(n+1,\frac12)\entails A]-\Pr[G_<(n,\frac12)\entails A]\) tends to
+\(0\).  Probabilities may fail to converge, but they cannot alternate from
+one value of \(n\) to the next, and so no first-order sentence almost surely
+expresses that the number of vertices is even.
+
+The inputs are a first-order sentence in the language with the order symbol
+\(<\), the adjacency symbol \(\sim\) and equality, and the edge probability
+\(p=\frac12\).  The conclusions are the existence of a sentence whose
+probabilities have \(\liminf 0\) and \(\limsup 1\), an explicit such
+sentence, the almost sure representation of every \(k\)-ary relation on a
+short initial segment of the order, first-order definitions of primality
+and of Fermat primality for the length of an encoded segment, a
+total-influence estimate for bounded-depth circuits with a complete proof
+(including the switching lemma it rests on), the slow-oscillation bound for
+every sentence with a rate, and the impossibility of an almost sure
+first-order representation of evenness.
+
+The presentation follows Spencer's author version of ``Logic and Random
+Structures'' \cite{Spencer2007LogicRandomStructuresAuthor}, sections 12 and
+13 (pp.~22--26).  That text is formatted separately from the chapter printed
+in the 2007 Springer volume \emph{Finite Model Theory and Its Applications};
+its sections are numbered without a chapter prefix, and all locators below
+are to it.  Spencer gives both results in outline.  Three points of the
+outline do not hold as written, and the chapter corrects them explicitly:
+the literal neighbourhood encoding cannot represent addition
+(\cref{thm:p03-w03-p03-071-literal-fails}); the upper limit on the encodable
+length needs a restriction on the witness interval
+(\cref{def:p03-w03-p03-071-clean}); and the circuit lower bound the source
+names, that bounded-depth circuits cannot compute majority, does not by
+itself give the needed estimate, so the proof uses a total-influence bound
+instead, proved in full here (\cref{thm:p03-w03-p03-071-ac0-influence}).
+
+\section{The random ordered graph}
+\label{sec:p03-w03-p03-071-ordered}
+
+\begin{hbconvention}{def:p03-w03-p03-071-assumptions}{Standing assumptions}
+The language has the binary symbols \(<\) and \(\sim\) and equality.
+Formulas are built from atomic formulas with \(\neg,\wedge,\vee,\exists,
+\forall\); \(\to\) and \(\leftrightarrow\) abbreviate their usual
+definitions.  For a first-order sentence \(A\) and a random structure on
+\(n\) points, \(A\) holds \emph{almost surely} if \(\Pr[A]\to1\) and
+\emph{almost never} if \(\Pr[A]\to0\) as \(n\to\infty\)
+\cite[p.~2]{Spencer2007LogicRandomStructuresAuthor}.  The logarithm
+\(\log\) is to base \(2\), as in the source
+\cite[p.~23]{Spencer2007LogicRandomStructuresAuthor}, and
+\(L=L(n)=(\log n)^{1/3}\).  For a real \(t\), \(\lfloor t\rfloor\) is the
+largest integer not above \(t\).
+\end{hbconvention}
+
+\begin{hbdefinition}{def:p03-w03-p03-071-gord}{The random ordered graph \(G_<(n,p)\) and \(f_A(n)\)}
+Let \(n\geq1\) and \(0\leq p\leq1\).  The random ordered graph \(G_<(n,p)\)
+has vertex set \(\Omega=\{1,\ldots,n\}\), totally ordered by the built-in
+relation \(<\), which is the usual order of the integers and belongs to the
+language.  Adjacency \(\sim\) is irreflexive and symmetric, and each of the
+\(\binom n2\) pairs is adjacent with probability \(p\), independently of the
+others \cite[p.~22]{Spencer2007LogicRandomStructuresAuthor}.  For a sentence
+\(A\),
+\[
+  f_A(n)=\Pr[G_<(n,p)\entails A]
+\]
+\cite[p.~25]{Spencer2007LogicRandomStructuresAuthor}.  The element \(1\) is
+first-order definable as the element with nothing below it, and
+\(y=x+1\) abbreviates \(x<y\wedge\neg\exists z\,(x<z\wedge z<y)\); when
+\(y\neq1\), \(x=y-1\) means \(y=x+1\).  Addition and subtraction are not in
+the language \cite[p.~22]{Spencer2007LogicRandomStructuresAuthor}.  For
+\(u\in\Omega\) and a vertex \(e\), the \emph{trace} of \(e\) on
+\(\{1,\ldots,u\}\) is \(N_u(e)=\{w\leq u: w\sim e\}\).
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p03-w03-p03-071-no-zero-one}{proved=annex:p03-w03-p03-071-no-zero-one}{No zero--one law with a built-in order}
+Let \(B\) be the sentence
+\[
+  \exists_x\exists_y\,(x\neq y)\wedge(x<y)\wedge[\forall_z\,z<y\to z=x]
+  \wedge x\sim y
+\]
+\cite[p.~22]{Spencer2007LogicRandomStructuresAuthor}, which says that the
+first two elements are adjacent.  For every \(n\geq2\),
+\(\Pr[G_<(n,p)\entails B]=p\).  In particular for \(p=\frac12\) the
+sentence \(B\) holds neither almost surely nor almost never.
+\end{hbtheorem}
+
+\section{Arithmetization and its almost sure encoding}
+\label{sec:p03-w03-p03-071-arithmetization}
+
+\begin{hbdefinition}{def:p03-w03-p03-071-arithmetizable}{Second-order arithmetization of \(\{1,\ldots,u\}\)}
+Let \(S=\{1,\ldots,u\}\) with the induced order.  Ternary relations
+\(+,\ast\subseteq S^3\), read as \(x+y=z\) and \(x\cdot y=z\), \emph{arithmetize}
+\(S\) if for all \(x,y,z\in S\):
+\begin{enumerate}
+\item \(+(x,1,z)\) if and only if \(z=x+1\);
+\item when \(y\neq1\), \(+(x,y,z)\) if and only if \(z\neq1\) and
+  \(+(x,y-1,z-1)\);
+\item \(\ast(x,1,z)\) if and only if \(z=x\);
+\item when \(y\neq1\), \(\ast(x,y,z)\) if and only if there exists \(v\in S\)
+  with \(\ast(x,y-1,v)\) and \(+(x,v,z)\).
+\end{enumerate}
+\(S\) is \emph{arithmetizable} if such relations exist
+\cite[p.~22]{Spencer2007LogicRandomStructuresAuthor}.  The clause
+``\(z\neq1\)'' in item~2 makes explicit that \(z-1\) must exist; the source
+leaves it implicit.  Write \(\mathrm{Add}_u=\{(x,y,z)\in S^3:x+y=z\}\) and
+\(\mathrm{Mul}_u=\{(x,y,z)\in S^3:xy=z\}\), with the arithmetic of the
+integers.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p03-w03-p03-071-unique}{proved=annex:p03-w03-p03-071-unique}{The arithmetization is unique}
+Relations \(+,\ast\subseteq S^3\) arithmetize \(S=\{1,\ldots,u\}\) if and only
+if \(+=\mathrm{Add}_u\) and \(\ast=\mathrm{Mul}_u\).  In particular every
+\(\{1,\ldots,u\}\) is arithmetizable, by exactly one pair of relations.
+\end{hblemma}
+
+\begin{hbdefinition}{def:p03-w03-p03-071-literal}{Spencer's encoding \(R_{c,d}\)}
+For \(c\leq d\) in \(\Omega\) and \(S=\{1,\ldots,u\}\), Spencer writes
+\(R_{c,d}(x,y,z)\) if \(x,y\leq z\) and there is \(e\) with \(c\leq e<d\)
+adjacent to \(x\), \(y\) and \(z\) and to no other element of \(S\); and he
+calls \(S\) \emph{first order arithmetizable} if there are \(c,d\) and
+\(c',d'\) such that \(R_{c,d}\) and \(R_{c',d'}\) have the four properties
+of \(+\) and \(\ast\) in \cref{def:p03-w03-p03-071-arithmetizable}
+\cite[pp.~22--23]{Spencer2007LogicRandomStructuresAuthor}.  The relation
+\(R_{c,d}\) is first-order definable from the parameters \(c,d,u\), because
+``\(w\in S\)'' is \(w\leq u\).
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p03-w03-p03-071-literal-fails}{proved=annex:p03-w03-p03-071-literal-fails}{The literal encoding never represents addition}
+For every ordered graph on \(\Omega\), every \(u\geq2\) in \(\Omega\) and
+all \(c\leq d\) in \(\Omega\), \(R_{c,d}\neq\mathrm{Add}_u\) and
+\(R_{c,d}\neq\mathrm{Mul}_u\).  Consequently no \(\{1,\ldots,u\}\) with
+\(u\geq2\) is first order arithmetizable in the sense of
+\cref{def:p03-w03-p03-071-literal}, and Spencer's representation lemma
+\cite[p.~23]{Spencer2007LogicRandomStructuresAuthor} fails as literally
+stated for every \(u\geq2\).
+\end{hbtheorem}
+
+The defect is that a vertex whose trace is a two-element set
+\(\{a,b\}\) with \(a<b\) witnesses three triples, \((a,a,b)\), \((a,b,b)\) and
+\((b,a,b)\), and no arithmetic relation contains all three.  The repair below
+keeps Spencer's idea, a vertex per triple whose trace on \(S\) is exactly
+the triple, and changes three details: the inequalities become strict, the
+unit cases of multiplication are written out, and every vertex of a witness
+interval must have a trace of size \(2\) or \(3\).  The last clause is what
+makes the upper bound of \cref{thm:p03-w03-p03-071-upper} provable.
+
+\begin{hbdefinition}{def:p03-w03-p03-071-clean}{The corrected encoding and the formula \(\operatorname{Ar}(u)\)}
+All quantifiers over elements of \(S=\{1,\ldots,u\}\) below are relativized
+to \(w\leq u\).  For parameters \(u,c,d\) put
+\begin{align*}
+  \operatorname{Tr}_u(e;x,y,z)&:\quad x<z\wedge y<z\wedge e\sim x\wedge e\sim y
+     \wedge e\sim z\\
+  &\qquad\wedge\forall_{w\leq u}\,(e\sim w\to w=x\vee w=y\vee w=z),\\
+  R^<_{c,d}(x,y,z)&:\quad \exists_e\,(c\leq e<d\wedge
+     \operatorname{Tr}_u(e;x,y,z)),\\
+  \operatorname{Clean}_u(c,d)&:\quad c\leq d\wedge u<c\\
+  &\qquad\wedge\forall_e\,\bigl(c\leq e<d\to\exists_{x,y,z\leq u}
+     \operatorname{Tr}_u(e;x,y,z)\bigr).
+\end{align*}
+Thus \(\operatorname{Tr}_u(e;x,y,z)\) says \(N_u(e)=\{x,y,z\}\) with
+\(x,y<z\), and \(\operatorname{Clean}_u(c,d)\) says the interval
+\([c,d)=\{e:c\leq e<d\}\) lies above \(S\) and each of its vertices has a
+trace on \(S\) of exactly two or three elements.  With
+\begin{align*}
+  P(x,y,z)&:\quad R^<_{c,d}(x,y,z),\\
+  T(x,y,z)&:\quad (y=1\wedge z=x)\vee(x=1\wedge z=y)\vee R^<_{c',d'}(x,y,z),
+\end{align*}
+let \(\operatorname{Good}(u,c,d,c',d')\) be the conjunction of
+\(\operatorname{Clean}_u(c,d)\), \(\operatorname{Clean}_u(c',d')\) and the
+four properties of \cref{def:p03-w03-p03-071-arithmetizable} for \(P\) in
+place of \(+\) and \(T\) in place of \(\ast\).  Finally
+\[
+  \operatorname{Ar}(u):\quad\exists_c\exists_d\exists_{c'}\exists_{d'}\,
+  \operatorname{Good}(u,c,d,c',d').
+\]
+The witness families are
+\(\mathcal F_+(u)=\bigl\{\{a,b,a+b\}:1\leq a\leq b,\ a+b\leq u\bigr\}\) and
+\(\mathcal F_\times(u)=\bigl\{\{a,b,ab\}:2\leq a\leq b,\ ab\leq u\bigr\}\), of
+sizes \(m_+(u)\) and \(m_\times(u)\).
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p03-w03-p03-071-witness}{proved=annex:p03-w03-p03-071-witness}{What a witness interval is}
+Fix an ordered graph on \(\Omega\) and \(u\in\Omega\).
+\begin{enumerate}
+\item If \(u<c\), \(d=c+m_+(u)\leq n+1\) and the traces
+  \(N_u(c),\ldots,N_u(d-1)\) are the sets of \(\mathcal F_+(u)\), each once,
+  then \(\operatorname{Clean}_u(c,d)\) holds and \(R^<_{c,d}=\mathrm{Add}_u\)
+  on \(S\).  If the same holds with \(\mathcal F_\times(u)\) and
+  \(d'=c'+m_\times(u)\), then \(\operatorname{Clean}_u(c',d')\) holds and
+  \(T=\mathrm{Mul}_u\).
+\item \(\operatorname{Good}(u,c,d,c',d')\) holds if and only if
+  \(\operatorname{Clean}_u(c,d)\), \(\operatorname{Clean}_u(c',d')\),
+  \(P=\mathrm{Add}_u\) and \(T=\mathrm{Mul}_u\).
+\item If \(\operatorname{Clean}_u(c,d)\) and \(P=\mathrm{Add}_u\), then each
+  set of \(\mathcal F_+(u)\) is the trace of a vertex of \([c,d)\), so
+  \(d-c\geq m_+(u)\), and the vertices \(c,\ldots,c+m_+(u)-1\) lie in
+  \((u,n]\) and have traces of size \(2\) or \(3\).
+\end{enumerate}
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p03-w03-p03-071-representation}{proved=annex:p03-w03-p03-071-representation}{Representation lemma}
+In \(G_<(n,\frac12)\), with probability tending to \(1\),
+\(\operatorname{Ar}(u)\) holds for every \(u\) with \(1\leq u\leq0.9L\).
+\end{hbtheorem}
+
+This is Spencer's representation lemma with his bound
+\(u\leq0.9\log^{1/3}n\) \cite[p.~23]{Spencer2007LogicRandomStructuresAuthor},
+for the corrected encoding and uniformly in \(u\).  The proof is his: a block
+of \(s\) consecutive vertices above \(S\) carries the required pattern with
+probability \(2^{-us}\), and disjoint blocks are independent.
+
+Spencer adds that with further technical work, perhaps with a different
+bound on \(u\), every ternary and even every \(k\)-ary relation could almost
+surely be represented \cite[p.~23]{Spencer2007LogicRandomStructuresAuthor}.
+He specifies neither the encoding nor the bound.  The encoding
+\(R^<_{c,d}\) of \cref{def:p03-w03-p03-071-clean} cannot do this: a trace is
+a set, so \(R^<_{c,d}(x,y,z)\) holds exactly when \(R^<_{c,d}(y,x,z)\) does,
+and only relations with \(x,y<z\) occur.  The block encoding below reads a tuple from \(k+1\)
+consecutive vertices, uses the first as a marker, and so represents
+arbitrary relations; the price is a smaller range of \(u\).
+
+\begin{hbdefinition}{def:p03-w03-p03-071-block-encoding}{Block encoding of a \(k\)-ary relation}
+Let \(k\geq1\).  For parameters \(u,c,d\) and variables
+\(x_1,\ldots,x_k\), let \(\operatorname{Rep}^{(k)}_{u,c,d}(x_1,\ldots,x_k)\)
+abbreviate the formula
+\begin{align*}
+  &\exists_{e_0}\cdots\exists_{e_k}\Bigl[c\leq e_0\wedge e_k<d\\
+  &\qquad\wedge\bigwedge_{m<k}e_{m+1}=e_m+1
+  \wedge\forall_{w\leq u}\,\neg(e_0\sim w)\\
+  &\qquad\wedge\bigwedge_{m=1}^{k}\bigl(e_m\sim x_m\wedge
+  \forall_{w\leq u}(e_m\sim w\to w=x_m)\bigr)\Bigr].
+\end{align*}
+On \(S=\{1,\ldots,u\}\) this formula defines the set of tuples
+\((x_1,\ldots,x_k)\in S^k\) for which some \(k+1\) consecutive vertices
+\(e_0<\cdots<e_k\) of the interval \([c,d)\) have traces
+\(N_u(e_0)=\varnothing\) and \(N_u(e_m)=\{x_m\}\) for \(1\leq m\leq k\).  A
+relation \(R\subseteq S^k\) is \emph{represented by} \((c,d)\) if
+\(u<c\leq d\) and this set equals \(R\).  Put
+\[
+  U_k(n)=\Bigl\lfloor\Bigl(\frac{\log n}{2(k+1)}\Bigr)^{1/(k+1)}\Bigr\rfloor .
+\]
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p03-w03-p03-071-kary}{proved=annex:p03-w03-p03-071-kary}{Every \(k\)-ary relation on a short initial segment is represented}
+Fix \(k\geq1\).  In \(G_<(n,\frac12)\), with probability tending to \(1\),
+for every \(u\) with \(1\leq u\leq U_k(n)\) and every relation
+\(R\subseteq\{1,\ldots,u\}^k\) there are \(c,d\in\Omega\) with \(u<c\leq d\)
+such that \(R\) is represented by \((c,d)\).
+\end{hbtheorem}
+
+On the event of \cref{thm:p03-w03-p03-071-kary}, as \((c,d)\) ranges over
+the pairs with \(u<c\leq d\), the formula
+\(\operatorname{Rep}^{(k)}_{u,c,d}\) ranges over exactly the \(k\)-ary
+relations on \(\{1,\ldots,u\}\): every pair defines some relation, and every
+relation is defined by some pair.  A first-order quantifier over \(c,d\) thus
+acts, almost surely, as a second-order quantifier over all \(k\)-ary
+relations on \(\{1,\ldots,u\}\) for \(u\leq U_k(n)\).  This is the exact form
+in which Spencer's remark is established here.  For \(k=3\) the range is
+\(u\leq((\log n)/8)^{1/4}\), of smaller order than the \(0.9(\log n)^{1/3}\) of
+\cref{thm:p03-w03-p03-071-representation}, which concerns only addition and
+multiplication.  Whether every ternary relation is almost surely
+representable, by this or another first-order encoding, for all \(u\) up to
+a constant multiple of \((\log n)^{1/3}\) is not established in this chapter.
+
+\begin{hbtheorem}{thm:p03-w03-p03-071-upper}{proved=annex:p03-w03-p03-071-upper}{Upper limit of the encoding}
+In \(G_<(n,\frac12)\), for every \(u\geq30\),
+\(\Pr[\operatorname{Ar}(u)]\leq n\,2^{-u^3/10}\).  Consequently, with
+probability tending to \(1\), \(\operatorname{Ar}(u)\) fails for every
+\(u\in\Omega\) with \(u\geq3L\).
+\end{hbtheorem}
+
+Spencer states that the representation fails almost surely above
+\(C\log^{1/3}n\) for a computable constant \(C\), takes \(C=900\), and
+excludes the argument \cite[p.~23]{Spencer2007LogicRandomStructuresAuthor}.
+The bound proved here has \(C=3\).  Its proof needs the cleanliness clause:
+without it, a witness interval may be arbitrarily long, and the count of
+\cref{thm:p03-w03-p03-071-upper} no longer applies; this chapter does not
+decide whether the strict-inequality encoding without that clause has an
+upper limit of order \(\log^{1/3}n\).
+
+\begin{hblemma}{thm:p03-w03-p03-071-log-mod}{proved=annex:p03-w03-p03-071-log-mod}{The residue of \(\lfloor\log u\rfloor\) is definable}
+In the structure with universe \(S=\{1,\ldots,u\}\), its order and the
+relations \(\mathrm{Add}_u\) and \(\mathrm{Mul}_u\), let
+\begin{align*}
+  \operatorname{One}(x)&:\ \neg\exists_y\,y<x,\\
+  \operatorname{Ev}(a)&:\ \exists_b\,\mathrm{Add}(b,b,a),\\
+  \operatorname{Pw}(w)&:\ \forall_a\forall_b\,(\mathrm{Mul}(a,b,w)\to
+     \operatorname{One}(a)\vee\operatorname{Ev}(a)),\displaybreak[1]\\
+  \operatorname{Top}(w)&:\ \operatorname{Pw}(w)\wedge\forall_{w'}
+     (\operatorname{Pw}(w')\to w'\leq w),\\
+  \delta_0(x)&:\ \operatorname{One}(x),\\
+  \delta_{i+1}(x)&:\ \exists_y\,(\delta_i(y)\wedge\mathrm{Add}(y,y,x)),\displaybreak[1]\\
+  \kappa(x)&:\ \exists_y\,(\delta_{40}(y)\wedge y=x+1),\\
+  \operatorname{Cong}_r(w)&:\ \delta_r(w)\vee\exists_t\exists_v\exists_q
+     \exists_h\,\bigl(\kappa(q)\wedge\delta_r(h)\\
+  &\qquad\wedge\mathrm{Mul}(t,q,v)\wedge\mathrm{Add}(v,h,w)\bigr),\\
+  \Phi&:\ \exists_w\,\Bigl(\operatorname{Top}(w)\wedge
+     \bigvee_{r=1}^{20}\operatorname{Cong}_r(w)\Bigr).
+\end{align*}
+If \(u\geq2^{40}\), then \(\Phi\) holds in this structure if and only if
+\(\lfloor\log u\rfloor\bmod 40\in\{1,\ldots,20\}\).
+\end{hblemma}
+
+Spencer says only that once \(\{1,\ldots,u\}\) is arithmetized ``we can talk
+about \(\log u\)'' \cite[p.~23]{Spencer2007LogicRandomStructuresAuthor};
+\cref{thm:p03-w03-p03-071-log-mod} supplies the formula.  The hypothesis
+\(u\geq2^{40}\) is needed only so that the constant \(2^{40}-1\) lies in
+\(S\).
+
+Spencer also says that once \(\{1,\ldots,u\}\) is arithmetized one can say
+that \(u\) is prime and that \(u\) is a Fermat prime
+\cite[p.~23]{Spencer2007LogicRandomStructuresAuthor}.  The next lemma gives
+the formulas, and the corollary after it transfers them to the random
+ordered graph.
+
+\begin{hblemma}{thm:p03-w03-p03-071-prime}{proved=annex:p03-w03-p03-071-prime}{Primes and Fermat primes are definable}
+In the structure \((S,<,\mathrm{Add}_u,\mathrm{Mul}_u)\) with
+\(S=\{1,\ldots,u\}\), with \(\operatorname{One}\) and \(\operatorname{Pw}\) as
+in \cref{thm:p03-w03-p03-071-log-mod}, let
+\begin{align*}
+  \operatorname{Div}(a,b)&:\ \exists_c\,\mathrm{Mul}(a,c,b),\\
+  \operatorname{Two}(w)&:\ \exists_y\,(\operatorname{One}(y)\wedge
+     \mathrm{Add}(y,y,w)),\\
+  \operatorname{Sq}(w)&:\ \exists_y\,\mathrm{Mul}(y,y,w),\displaybreak[1]\\
+  \operatorname{Prime}(x)&:\ \neg\operatorname{One}(x)\wedge\forall_a\forall_b\,
+     \bigl(\mathrm{Mul}(a,b,x)\\
+  &\qquad\to\operatorname{One}(a)\vee\operatorname{One}(b)\bigr),\\
+  \operatorname{Fer}(x)&:\ \operatorname{Prime}(x)\wedge\exists_v\exists_{v'}
+     \bigl[x=v+1\wedge v=v'+1\wedge\operatorname{Pw}(v)\\
+  &\qquad\wedge\forall_w\forall_{w'}\bigl((\operatorname{Pw}(w)\wedge w=w'+1
+     \wedge\operatorname{Div}(w',v'))\\
+  &\qquad\qquad\to\operatorname{Two}(w)\vee\operatorname{Sq}(w)\bigr)\bigr].
+\end{align*}
+For every \(x\in S\), \(\operatorname{Prime}(x)\) holds if and only if \(x\)
+is prime, and \(\operatorname{Fer}(x)\) holds if and only if \(x\) is a
+Fermat prime, that is, a prime of the form \(2^{2^m}+1\) with \(m\geq0\).
+\end{hblemma}
+
+The idea of \(\operatorname{Fer}\): with \(x=2^j+1\), the exponent \(j\) is a
+power of \(2\) exactly when every divisor \(i\geq2\) of \(j\) is even, and
+\(i\) divides \(j\) exactly when \(2^i-1\) divides \(2^j-1\), so divisibility
+of exponents is read off from divisibility of numbers in \(S\) without
+defining exponentiation.
+
+\begin{hbcorollary}{thm:p03-w03-p03-071-prime-graph}{proved=annex:p03-w03-p03-071-prime-graph}{Primality of an encoded length is almost surely first-order}
+Let \(\operatorname{Prime}^{\ast}(u)\) be the formula
+\(\exists_c\exists_d\exists_{c'}\exists_{d'}\,[\operatorname{Good}(u,c,d,c',d')
+\wedge\operatorname{Prime}^{P,T}_u(u)]\), where
+\(\operatorname{Prime}^{P,T}_u\) is \(\operatorname{Prime}\) with quantifiers
+relativized to \(w\leq u\), \(\mathrm{Add}\) replaced by \(P\) and
+\(\mathrm{Mul}\) by \(T\), built from the same \(c,d,c',d'\) as in
+\cref{def:p03-w03-p03-071-sentence}; define \(\operatorname{Fer}^{\ast}(u)\)
+in the same way from \(\operatorname{Fer}\).  For every ordered graph and
+every \(u\), \(\operatorname{Prime}^{\ast}(u)\) implies that \(u\) is prime
+and \(\operatorname{Fer}^{\ast}(u)\) implies that \(u\) is a Fermat prime.
+In \(G_<(n,\frac12)\), with probability tending to \(1\), for every \(u\)
+with \(1\leq u\leq0.9L\), \(\operatorname{Prime}^{\ast}(u)\) holds if and only
+if \(u\) is prime and \(\operatorname{Fer}^{\ast}(u)\) holds if and only if
+\(u\) is a Fermat prime.
+\end{hbcorollary}
+
+\begin{hbdefinition}{def:p03-w03-p03-071-sentence}{The nonconvergent sentence \(A\)}
+Spencer's sentence says: there exists \(u\) such that
+\(\{1,\ldots,u\}\) is first order arithmetizable, \(\{1,\ldots,u+1\}\) is
+not, and \(\log u\) modulo \(40\) is one of \(1,2,\ldots,20\)
+\cite[p.~23]{Spencer2007LogicRandomStructuresAuthor}.  With the corrected
+encoding it is the first-order sentence
+\[
+  A:\quad\exists_u\exists_{u'}\exists_c\exists_d\exists_{c'}\exists_{d'}\,
+  \bigl[u'=u+1\wedge\operatorname{Good}(u,c,d,c',d')\wedge
+  \neg\operatorname{Ar}(u')\wedge\Phi^{P,T}_u\bigr],
+\]
+where \(\Phi^{P,T}_u\) is \(\Phi\) of \cref{thm:p03-w03-p03-071-log-mod} with
+quantifiers relativized to \(w\leq u\), \(\mathrm{Add}\) replaced by \(P\)
+and \(\mathrm{Mul}\) by \(T\) (built from the same \(c,d,c',d'\)), and
+\(\log u\) read as \(\lfloor\log u\rfloor\).
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p03-w03-p03-071-chs}{proved=annex:p03-w03-p03-071-chs}{Nonconvergence (Compton, Henson and Shelah)}
+For the sentence \(A\) of \cref{def:p03-w03-p03-071-sentence},
+\[
+  \liminf_{n\to\infty}\Pr[G_<(n,\tfrac12)\entails A]=0,\qquad
+  \limsup_{n\to\infty}\Pr[G_<(n,\tfrac12)\entails A]=1 .
+\]
+In particular \(\lim_{n\to\infty}\Pr[G_<(n,\frac12)\entails A]\) does not
+exist.
+\end{hbtheorem}
+
+Spencer attributes the theorem to Compton, Henson and Shelah; his text
+spells the second name ``Hansen'' on pp.~22 and~25, while his reference list
+has Henson \cite[pp.~22, 28]{Spencer2007LogicRandomStructuresAuthor}.  His
+account of why the sentence works is that \(n\) fixes the largest
+arithmetizable \(u\) up to a constant factor, so \(\log u\) up to an
+additive constant, and the residue class then depends only on \(n\)
+\cite[pp.~23--24]{Spencer2007LogicRandomStructuresAuthor}.  The proof in the
+annex follows that account with the constants \(0.9\) and \(3\) of
+\cref{thm:p03-w03-p03-071-representation,thm:p03-w03-p03-071-upper}.
+
+\begin{hbexample}{def:p03-w03-p03-071-u-three}{Encoding \(\{1,2,3\}\)}
+Take \(u=3\).  Then
+\[
+ \mathcal F_+(3)=\{\{1,2\},\{1,2,3\}\},
+\]
+from \(1+1=2\) and \(1+2=3\), and \(\mathcal F_\times(3)=\varnothing\), since
+\(2\cdot2>3\).  Suppose \(c>3\), the trace of \(c\) on \(\{1,2,3\}\) is
+\(\{1,2\}\) and that of \(c+1\) is \(\{1,2,3\}\); for fixed \(c\) this has
+probability \(2^{-6}\) in \(G_<(n,\frac12)\).  The vertex \(c\) witnesses
+exactly the triple \((1,1,2)\) of \(R^<_{c,c+2}\), because the strict
+inequalities force \(z=2\) and \(x=y=1\); the vertex \(c+1\) witnesses
+\((1,2,3)\) and \((2,1,3)\).  So \(R^<_{c,c+2}=\mathrm{Add}_3\).  With
+\(c'=d'=4\), the relation \(T\) consists of the unit triples
+\((1,1,1)\), \((2,1,2)\), \((3,1,3)\), \((1,2,2)\) and \((1,3,3)\),
+which is \(\mathrm{Mul}_3\).
+By \cref{thm:p03-w03-p03-071-witness} the formula
+\(\operatorname{Good}(3,c,c+2,4,4)\) holds.  Under Spencer's literal
+\(R_{c,c+2}\) the same vertex \(c\) would also witness \((1,2,2)\) and
+\((2,1,2)\), which are not sums.
+\end{hbexample}
+
+\begin{hbwarning}{def:p03-w03-p03-071-speed}{How slowly the oscillation happens}
+Along \(n\), the residue in \cref{def:p03-w03-p03-071-sentence} changes only
+when \(\lfloor\log(0.8L)\rfloor\) changes, that is, when \((\log n)^{1/3}\)
+doubles.  A run of values of \(n\) on which \(\Pr[A]\) is near \(1\) is
+therefore astronomically long, and the theorem gives no information for
+any particular \(n\): the proof needs \(0.9L-1\geq2^{40}\).  This is
+consistent with \cref{thm:p03-w03-p03-071-shelah} below, which forbids rapid
+oscillation.
+\end{hbwarning}
+
+\begin{hbdefinition}{def:p03-w03-p03-071-common-nbhd}{Common neighbourhoods in the sparse random graph}
+In the random graph \(G(n,p)\) of \cref{def:p03-w03-p03-065-gnp}, on the
+vertex set \(\{1,\ldots,n\}\) and with no built-in order, take
+\(p=n^{-1/4}\).  For distinct vertices \(x_1,x_2,x_3,x_4\),
+\(N(x_1,x_2,x_3,x_4)\) is the set of vertices other than \(x_1,\ldots,x_4\)
+that are adjacent to all four \cite[p.~24]{Spencer2007LogicRandomStructuresAuthor}.
+Since \(p^4=\frac1n\), a fixed vertex outside a fixed quadruple lies in its
+common neighbourhood with probability \(\frac1n\).  Here \(\ln\) is the
+natural logarithm, and \(\sigma(n)=\lfloor\ln n/(20\ln\ln n)\rfloor\) for
+\(n\geq16\).
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p03-w03-p03-071-all-sizes}{proved=annex:p03-w03-p03-071-all-sizes}{Common neighbourhoods of every small size}
+In \(G(n,n^{-1/4})\), with probability tending to \(1\), for every integer
+\(s\) with \(0\leq s\leq\sigma(n)\) there are distinct vertices
+\(x_1,x_2,x_3,x_4\) with \(|N(x_1,x_2,x_3,x_4)|=s\).
+\end{hblemma}
+
+Spencer states that such sets exist of all sizes up to roughly
+\(\ln n/\ln\ln n\) \cite[p.~24]{Spencer2007LogicRandomStructuresAuthor}.
+\Cref{thm:p03-w03-p03-071-all-sizes} proves this with the factor
+\(\frac1{20}\); the proof does not reach the constant \(1\), and no upper
+limit on the sizes is proved here.  The factor is irrelevant to the use the
+outline makes of the lemma, which needs sizes only up to a constant multiple
+of \(\ln^{1/3}n\), and \(C\ln^{1/3}n\leq\sigma(n)\) for every constant \(C\)
+once \(n\) is large.
+
+\begin{proofboundary}{def:p03-w03-p03-071-sparse-outline}{Nonconvergence for \(G(n,n^{-1/4})\) without order: what the source outlines and what is not proved here}
+Spencer also outlines the same method for the unordered random graph
+\(G(n,n^{-1/4})\) \cite[p.~24]{Spencer2007LogicRandomStructuresAuthor}.
+There a set \(S\) is arithmetized in second-order language by a binary
+\(<\) and ternary \(+,\ast\).  For \(u\notin S\) the ternary relation
+\(R_u(x,y,z)\) on \(S\) says that \(u,x,y,z\) have a common neighbour, and
+for \(u,x\notin S\) the binary relation is \(R_{u,x}(y,z)=R_u(x,y,z)\); the
+source notes that these relations are symmetric while \(<\) is not, and that
+further work is needed for this.  \(S\) is first order arithmetizable if
+there are \(u_1,u_2,u_3,u_4\) with \(R_{u_1,u_2},R_{u_3},R_{u_4}\) playing the
+roles of \(<,+,\ast\).  Because one cannot quantify over all \(S\), the
+encoding uses the common neighbourhoods \(S=N(x_1,x_2,x_3,x_4)\) of four
+vertices (\cref{def:p03-w03-p03-071-common-nbhd}), compares sizes by \(\operatorname{BIGGER}(S,T)\), an injection
+from \(T\) to \(S\) given by some \(R_{u_1,u_2}\), as in the almost sure
+encoding of \cref{sec:p03-w03-p03-069-encoding}, and states that some
+\(N(x_1,x_2,x_3,x_4)\) is arithmetizable while no bigger one is, and that
+its size \(u\) has \(\log u\) between \(1\) and \(20\) modulo \(40\).  Two
+steps are proved here: four given vertices have no common neighbour among
+the other \(n-4\) with probability \((1-p^4)^{n-4}=(1-\frac1n)^{n-4}\), which
+tends to \(e^{-1}\); and common neighbourhoods of every size up to
+\(\sigma(n)\) occur almost surely (\cref{thm:p03-w03-p03-071-all-sizes}).
+The source asserts without proof that each \(R_u\) behaves like an
+independent random ternary relation of density \(1-e^{-1}\), that
+\(+,\ast,<\) are almost surely represented for \(|S|\leq\ln^{1/3}n\), and
+that a maximal arithmetizable \(N(x_1,x_2,x_3,x_4)\) has size
+\(\Theta(\ln^{1/3}n)\); it also leaves open how the symmetric relations
+\(R_{u,x}\) are to represent the asymmetric \(<\).  The same difficulty
+affects \(+\) and \(\ast\): \(R_u\) is symmetric in all three arguments, so
+taken literally it can never be addition on a set of at least two elements
+(on \(\{1,\ldots,u\}\), \((1,1,2)\) is a sum and \((2,1,1)\) is not).  None of these claims is
+proved in this chapter, and the resulting nonconvergence for
+\(G(n,n^{-1/4})\) is not asserted here as a theorem.
+\end{proofboundary}
+
+\section{Slow oscillation and the evenness of \(n\)}
+\label{sec:p03-w03-p03-071-evenness}
+
+\begin{hbdefinition}{def:p03-w03-p03-071-coupling}{Restriction to a random subset, and almost sure representation}
+Let \(N=2n+1\) and let \(G\) be an ordered graph on \(\{1,\ldots,N\}\).  For
+\(S\subseteq\{1,\ldots,N\}\), \(G|S\) is the induced ordered graph on \(S\).
+\(G^{(n)}\) is \(G|S\) for \(S\) a uniformly random subset of size exactly
+\(n\), and \(G^{(n+1)}\) is \(G|S\) for \(S\) uniform of size \(n+1\); the
+probabilities \(\Pr[G^{(k)}\entails A]\) are over \(S\) with \(G\) fixed.
+\(\mu(G)\) is the probability that \(G_<(2n+1,p)\) is \(G\)
+\cite[p.~25]{Spencer2007LogicRandomStructuresAuthor}.  A sentence \(A\)
+\emph{almost surely represents evenness} if \(f_A(2n)\to1\) and
+\(f_A(2n+1)\to0\) \cite[p.~25]{Spencer2007LogicRandomStructuresAuthor}.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p03-w03-p03-071-coupling}{proved=annex:p03-w03-p03-071-coupling}{The coupling identity}
+For every \(k\leq N\) and every \(p\), if \(G\sim G_<(N,p)\) and \(S\) is an
+independent uniform \(k\)-subset, then \(G|S\), transported to
+\(\{1,\ldots,k\}\) by the order isomorphism, is distributed as
+\(G_<(k,p)\).  Hence for every sentence \(A\)
+\[
+  f_A(n+1)-f_A(n)=\sum_G\mu(G)\Bigl[\Pr[G^{(n+1)}\entails A]
+  -\Pr[G^{(n)}\entails A]\Bigr].
+\]
+\end{hblemma}
+
+\begin{hbdefinition}{def:p03-w03-p03-071-circuit}{Circuits and total influence}
+Following O'Donnell, for \(d\geq2\) a \emph{depth-\(d\) circuit} over
+Boolean variables \(s_1,\ldots,s_N\) is a directed acyclic graph whose nodes
+lie in \(d+1\) layers, with every arc from some layer \(j-1\) to layer
+\(j\); layer \(0\) consists of exactly \(2N\) nodes labelled by the literals
+\(s_b,\neg s_b\); layer \(d\) has exactly one node, the output; the nodes of
+layers \(1,3,5,\ldots\) all carry one of the labels AND, OR and those of
+layers \(2,4,\ldots\) the other; gates compute the AND or OR of their
+in-neighbours \cite[def.~4.26, p.~103]{ODonnell2021AnalysisBooleanArxiv}.
+Its \emph{size} is the number of nodes in layers \(1\) to \(d-1\), and no
+layer-\(1\) node is joined to a variable or its negation more than once
+\cite[def.~4.27, p.~104]{ODonnell2021AnalysisBooleanArxiv}.  For
+\(f:\{0,1\}^N\to\{0,1\}\), coordinate \(b\) is pivotal at \(s\) if flipping
+\(s_b\) changes \(f\); \(\operatorname{Inf}_b[f]\) is the probability that
+\(b\) is pivotal at a uniformly random \(s\), and the total influence is
+\(\mathbf I[f]=\sum_b\operatorname{Inf}_b[f]\)
+\cite[defs.~2.12--2.13, p.~46; def.~2.27,
+p.~49]{ODonnell2021AnalysisBooleanArxiv}.  O'Donnell writes truth values as
+\(\pm1\); pivotality, and so \(\mathbf I\), does not depend on how the two
+values are named.
+\end{hbdefinition}
+
+\begin{hbdefinition}{def:p03-w03-p03-071-restriction}{Restrictions, decision trees and normal forms}
+Let \(V\) be a finite set of coordinates.  A \emph{restriction} of \(V\) is a
+pair \((J\mid z)\) with \(J\subseteq V\) and \(z\in\{0,1\}^{V\setminus J}\);
+the coordinates in \(J\) are \emph{free} and the others \emph{fixed}.  For
+\(f:\{0,1\}^V\to\{0,1\}\), the restricted function
+\(f_{J\mid z}:\{0,1\}^J\to\{0,1\}\) is \(f\) with the fixed coordinates set
+to \(z\) \cite[def.~3.18, p.~75]{ODonnell2021AnalysisBooleanArxiv}.  For
+\(0\leq\delta\leq1\), a \emph{\(\delta\)-random restriction} puts each
+coordinate into \(J\) independently with probability \(\delta\) and then
+chooses \(z\) uniformly; equivalently, each coordinate is independently free
+with probability \(\delta\) and fixed to \(0\), or to \(1\), with probability
+\(\frac{1-\delta}2\) each
+\cite[def.~4.15, p.~98]{ODonnell2021AnalysisBooleanArxiv}.  If \((J'\mid
+z')\) is a restriction of \(J\), the \emph{composed} restriction of \(V\) is
+\((J'\mid(z,z'))\), and \((f_{J\mid z})_{J'\mid z'}=f_{J'\mid(z,z')}\).
+Influences and total influence of a function on \(\{0,1\}^J\) are defined as
+in \cref{def:p03-w03-p03-071-circuit} with \(J\) for the set of coordinates;
+for \(J=\varnothing\) the total influence is \(0\).
+
+A \emph{decision tree} over \(J\) is a rooted binary tree whose internal
+nodes are labelled by coordinates in \(J\), whose two outgoing edges at each
+internal node are labelled \(0\) and \(1\), whose leaves are labelled \(0\)
+or \(1\), and in which no coordinate appears twice on a root-to-leaf path;
+on input \(y\) it follows the edges labelled by the queried values of \(y\)
+and outputs the label of the leaf reached.  Its depth is the largest number
+of internal nodes on a root-to-leaf path, and \(\operatorname{DT}(g)\) is the
+least depth of a decision tree computing \(g\)
+\cite[defs.~3.13--3.14, pp.~73--74]{ODonnell2021AnalysisBooleanArxiv}; a
+constant function has \(\operatorname{DT}=0\).  A \emph{term} is an AND, and
+a \emph{clause} an OR, of literals on distinct coordinates; a \emph{DNF} is
+an OR of terms, a \emph{CNF} an AND of clauses, and the \emph{width} is the
+largest number of literals in a term or clause
+\cite[def.~4.1, p.~93; def.~4.3, p.~94]{ODonnell2021AnalysisBooleanArxiv}.
+An AND of no inputs is \(1\) and an OR of no inputs is \(0\), for terms and
+clauses and for the gates of a circuit alike.
+\end{hbdefinition}
+
+\begin{hblemma}{thm:p03-w03-p03-071-restriction-facts}{proved=annex:p03-w03-p03-071-restriction-facts}{Three facts about restrictions}
+Let \(V\) be a finite set, \(f:\{0,1\}^V\to\{0,1\}\) and
+\(0\leq\delta,\delta_1,\delta_2\leq1\).
+\begin{enumerate}
+\item If \((J\mid z)\) is a \(\delta\)-random restriction of \(V\), then
+  \(\mathbb E\bigl[\mathbf I[f_{J\mid z}]\bigr]=\delta\,\mathbf I[f]\).
+\item If \((J\mid z)\) is a \(\delta_1\)-random restriction of \(V\) and,
+  given it, \((J'\mid z')\) is a \(\delta_2\)-random restriction of \(J\),
+  then the composed restriction \((J'\mid(z,z'))\) is a
+  \(\delta_1\delta_2\)-random restriction of \(V\).
+\item If \(g:\{0,1\}^J\to\{0,1\}\) has \(\operatorname{DT}(g)\leq k\), then
+  \(\mathbf I[g]\leq k\), and \(g\) is computed by a DNF of width at most
+  \(k\) and by a CNF of width at most \(k\).  Every \(g:\{0,1\}^J\to\{0,1\}\)
+  has \(\mathbf I[g]\leq|J|\).
+\end{enumerate}
+\end{hblemma}
+
+O'Donnell proves item~1 through Fourier coefficients
+\cite[cor.~4.18, p.~99]{ODonnell2021AnalysisBooleanArxiv}, observes item~2
+\cite[p.~104]{ODonnell2021AnalysisBooleanArxiv}, and proves the normal-form
+part of item~3 \cite[prop.~4.5, p.~94]{ODonnell2021AnalysisBooleanArxiv};
+the annex proves all three directly.
+
+\begin{hblemma}{thm:p03-w03-p03-071-switching}{proved=annex:p03-w03-p03-071-switching}{Switching lemma (H\aa stad)}
+Let \(F\) be a DNF or a CNF of width at most \(w\) over a finite set \(V\),
+let \(0<\delta\leq\frac12\), and let \((J\mid z)\) be a \(\delta\)-random
+restriction of \(V\).  Then for every integer \(k\geq1\),
+\[
+  \Pr\bigl[\operatorname{DT}(F_{J\mid z})\geq k\bigr]\leq(16\delta w)^k .
+\]
+\end{hblemma}
+
+O'Donnell states the lemma with the constant \(5\) in place of \(16\) and
+refers for its proof to H\aa stad and to Razborov
+\cite[pp.~100--101]{ODonnell2021AnalysisBooleanArxiv}.  The annex gives a
+complete proof by an encoding argument; the constant \(16\) is all that the
+next theorem needs.
+
+\begin{hbtheorem}{thm:p03-w03-p03-071-ac0-influence}{proved=annex:p03-w03-p03-071-ac0-influence}{Total influence of bounded-depth circuits}
+Let \(N\geq1\), \(d\geq2\), and let \(f:\{0,1\}^N\to\{0,1\}\) be computed by
+a depth-\(d\) circuit of size \(s\geq1\).  Put
+\(t=\lceil3\log(2Ns)\rceil\).  Then
+\[
+  \mathbf I[f]\leq4\,(32t)^{d-1}\leq4\,\bigl(128\log(2Ns)\bigr)^{d-1}.
+\]
+\end{hbtheorem}
+
+Boppana's theorem, as O'Donnell states it, is the sharper bound
+\(\mathbf I[f]\leq O(\log s)^{d-1}\), with no dependence on \(N\)
+\cite[thm.~4.30, p.~106]{ODonnell2021AnalysisBooleanArxiv}; O'Donnell
+attributes it to Boppana \cite[p.~111]{ODonnell2021AnalysisBooleanArxiv} and
+leaves its proof as Exercise~4.20
+\cite[p.~106]{ODonnell2021AnalysisBooleanArxiv}.
+\Cref{thm:p03-w03-p03-071-ac0-influence} has \(\log(2Ns)\) in place of
+\(\log s\).  For circuits of size at most \(N^c\) the two agree up to a
+factor depending on \(c\) and \(d\), because \(\log(2Ns)\leq(c+1)\log(2N)\);
+that is the only case used below.  Whether the dependence on \(N\) can be
+removed is not proved in this chapter.  The proof follows the plan of
+O'Donnell's lemma~4.28 \cite[pp.~104--106]{ODonnell2021AnalysisBooleanArxiv}:
+a \(\frac12\)-random restriction shortens the bottom gates, as in his
+lemma~4.19 \cite[p.~99]{ODonnell2021AnalysisBooleanArxiv}; each further
+restriction switches one layer of DNFs or CNFs into shallow decision trees,
+so that two layers merge into one; and a final restriction turns the output
+into a shallow decision tree, whose total influence is at most its depth.
+
+The circuit fact Spencer names is different: a bounded-depth circuit of
+polynomial size cannot compute majority, a theorem he credits originally to
+Razborov, after which ``some further technical work'' shows that such a
+circuit cannot tell a random set of \(n\) true inputs from one of \(n+1\)
+\cite[p.~26]{Spencer2007LogicRandomStructuresAuthor}.  Failure to compute
+majority exactly does not bound the distinguishing advantage, so the proof
+below replaces that step by \cref{thm:p03-w03-p03-071-ac0-influence} and the
+elementary \cref{thm:p03-w03-p03-071-slice}; their combination is
+\cref{thm:p03-w03-p03-071-advantage}, the precise form of the
+indistinguishability Spencer describes.  O'Donnell derives the majority
+lower bound itself from Boppana's theorem
+\cite[p.~107]{ODonnell2021AnalysisBooleanArxiv}.
+
+\begin{hblemma}{thm:p03-w03-p03-071-translation}{proved=annex:p03-w03-p03-071-translation}{A first-order sentence becomes a bounded-depth circuit}
+Let \(A\) be a sentence with \(\ell\) occurrences of connectives,
+quantifiers and atomic formulas and quantifier rank \(q\), and let
+\(d_A=\max(2,2\ell)\).  For every ordered graph \(G\) on
+\(\{1,\ldots,N\}\), the function \(f_{G}:\{0,1\}^N\to\{0,1\}\) with
+\(f_G(s)=1\) exactly when \(G|\{b:s_b=1\}\entails A\) is constant, or a
+single literal, or computed by a depth-\(d\) circuit with \(2\leq d\leq d_A\)
+and size at most \(s_N=(d_A+1)\,\ell\,(3N)^{q}+2\).
+\end{hblemma}
+
+\begin{hblemma}{thm:p03-w03-p03-071-slice}{proved=annex:p03-w03-p03-071-slice}{Adjacent slices}
+For \(f:\{0,1\}^N\to\{0,1\}\) and \(0\leq k<N\), let \(\mu_k(f)\) be the
+average of \(f\) over the inputs with exactly \(k\) ones.  Then
+\[
+  |\mu_{k+1}(f)-\mu_k(f)|\leq\frac{2^{N-1}\,\mathbf I[f]}{\binom Nk(N-k)} .
+\]
+For \(N=2n+1\) and \(k=n\) the right side is at most
+\(\mathbf I[f]/\sqrt n\).
+\end{hblemma}
+
+\begin{hbcorollary}{thm:p03-w03-p03-071-advantage}{proved=annex:p03-w03-p03-071-advantage}{Bounded-depth circuits cannot tell \(n\) true inputs from \(n+1\)}
+Let \(d\geq2\), \(c\geq1\) and \(n\geq1\).  If
+\(f:\{0,1\}^{2n+1}\to\{0,1\}\) is computed by a depth-\(d\) circuit of size
+\(s\) with \(1\leq s\leq(2n+1)^c\), then
+\[
+  |\mu_{n+1}(f)-\mu_n(f)|\leq
+  \frac{4\,\bigl(128(c+1)\log(4n+2)\bigr)^{d-1}}{\sqrt n},
+\]
+which tends to \(0\) as \(n\to\infty\) for fixed \(d\) and \(c\).
+\end{hbcorollary}
+
+\begin{hbtheorem}{thm:p03-w03-p03-071-shelah}{proved=annex:p03-w03-p03-071-shelah}{Slow oscillation (Shelah)}
+For every first-order sentence \(A\) there is a constant \(K\) such that, for
+all \(n\geq2\) and every ordered graph \(G\) on \(2n+1\) vertices,
+\[
+  \bigl|\Pr[G^{(n+1)}\entails A]-\Pr[G^{(n)}\entails A]\bigr|
+  \leq K\frac{(\log n)^{d_A-1}}{\sqrt n},
+\]
+with \(d_A\) as in \cref{thm:p03-w03-p03-071-translation}.  Consequently
+\(\lim_{n\to\infty}\bigl(f_A(n+1)-f_A(n)\bigr)=0\) for \(G_<(n,\frac12)\).
+\end{hbtheorem}
+
+The theorem is Shelah's \cite[pp.~25, 28]{Spencer2007LogicRandomStructuresAuthor};
+the uniform statement over all \(G\) is the form Spencer reports Shelah as
+proving \cite[p.~25]{Spencer2007LogicRandomStructuresAuthor}.  The proof
+uses the value of \(p\) only through \cref{thm:p03-w03-p03-071-coupling},
+which holds for every \(p\), so the conclusion holds for every fixed \(p\).
+
+\begin{hbcorollary}{thm:p03-w03-p03-071-evenness}{proved=annex:p03-w03-p03-071-evenness}{No almost sure representation of evenness}
+No first-order sentence almost surely represents evenness in
+\(G_<(n,\frac12)\): there is no first-order \(A\) with \(f_A(2n)\to1\) and
+\(f_A(2n+1)\to0\).
+\end{hbcorollary}
+
+\begin{hbexample}{def:p03-w03-p03-071-translation-example}{Translating a sentence into a circuit}
+Spencer illustrates the translation with a sentence and its relativization
+to \(S\) \cite[p.~25]{Spencer2007LogicRandomStructuresAuthor}; the displayed
+sentence and its displayed translation do not match, and the translation is
+that of
+\[
+  B:\quad\exists_x\forall_y\exists_z\,(z\sim x\wedge z\sim y),
+\]
+``some vertex shares a neighbour with every vertex.''  (The displayed
+sentence, with \(y\sim x\) inside \(\forall_y\), is false in every graph,
+since \(y=x\) is allowed.)  Fix \(G\) on \(\{1,\ldots,N\}\) and write
+\(N_G(b)\) for the neighbourhood of \(b\).  By the construction of
+\cref{thm:p03-w03-p03-071-translation}, \(G|S\entails B\) exactly when
+\[
+  \bigvee_{b=1}^{N}\Bigl[s_b\wedge\bigwedge_{c=1}^{N}\Bigl(\neg s_c\vee
+  \bigvee_{e\in N_G(b)\cap N_G(c)}s_e\Bigr)\Bigr]=1,
+\]
+the atomic facts \(e\sim b\), \(e\sim c\) having been evaluated in \(G\).
+Layered, the inner disjunctions are \(N^2\) OR-gates at layer \(1\), the
+literal \(s_b\) passes through one single-input OR-gate at layer \(1\), the
+\(N\) conjunctions are AND-gates at layer \(2\), and the output OR is at
+layer \(3\): a depth-\(3\) circuit of size \(N^2+2N\).  If some
+\(N_G(b)\cap N_G(c)\) is empty the corresponding gate is
+\(\neg s_c\) alone.  \Cref{thm:p03-w03-p03-071-ac0-influence,thm:p03-w03-p03-071-slice}
+then give \(|\Pr[G^{(n+1)}\entails B]-\Pr[G^{(n)}\entails B]|\leq
+4(128\log(2N^3+4N^2))^2/\sqrt n\) for every \(G\).
+\end{hbexample}
+
+\begin{hbtheorem}{thm:p03-w03-p03-071-mso}{proved=annex:p03-w03-p03-071-mso}{The first-order restriction is necessary}
+Let \(\operatorname{EV}\) be the monadic second-order sentence
+\[
+  \exists X\,\bigl[\forall_x(\operatorname{One}(x)\to Xx)\wedge
+  \forall_x\forall_y(y=x+1\to(Xx\leftrightarrow\neg Xy))\wedge
+  \forall_x(\operatorname{Last}(x)\to\neg Xx)\bigr],
+\]
+where \(\operatorname{Last}(x)\) is \(\neg\exists_y\,x<y\).  An ordered graph
+on \(n\geq1\) vertices satisfies \(\operatorname{EV}\) if and only if \(n\)
+is even.  Hence \(f_{\operatorname{EV}}(2n)=1\) and
+\(f_{\operatorname{EV}}(2n+1)=0\) for every \(p\), and
+\cref{thm:p03-w03-p03-071-shelah,thm:p03-w03-p03-071-evenness} fail for
+monadic second-order sentences.
+\end{hbtheorem}
+
+\begin{hbwarning}{def:p03-w03-p03-071-not-convergence}{Slow oscillation is not convergence}
+\Cref{thm:p03-w03-p03-071-shelah} does not say that \(f_A(n)\) converges:
+the sentence of \cref{thm:p03-w03-p03-071-chs} has \(f_A(n+1)-f_A(n)\to0\)
+and still no limit.  Nor does it bound how far \(f_A(n)\) and \(f_A(n+t)\)
+are apart when \(t\) grows with \(n\).  The order is essential to the
+nonconvergence: without it, \(G(n,\frac12)\) satisfies the zero--one law
+(\cref{thm:p03-w03-p03-067-zero-one}).
+\end{hbwarning}
+
+\section{Relationships}
+\label{sec:p03-w03-p03-071-relationships}
+
+\Cref{thm:p03-w03-p03-071-evenness} implies that parity of a finite linear
+order is not first-order definable in the order alone.  If a sentence
+\(A\) in \(<\) alone held in exactly the orders of even size, then read in
+an ordered graph, where it ignores \(\sim\), it would have
+\(f_A(2n)=1\) and \(f_A(2n+1)=0\), contrary to the corollary.  The direct
+proof by Ehrenfeucht games is \cref{def:p03-ef-parity}; the probabilistic
+statement is stronger, since \(A\) may use \(\sim\) and need only be right
+with probability tending to \(1\).  The unordered constant-probability
+theory is in \cref{sec:p03-w03-p03-067-constant-p}, and the almost sure
+encoding of a second-order property by common neighbourhoods, which the
+outline of \cref{def:p03-w03-p03-071-sparse-outline} reuses, is in
+\cref{sec:p03-w03-p03-069-encoding}.  Libkin's remark that even cardinality
+has no zero--one truth limit is cited in \cref{sec:p09-presentation-n-c-002}.
+Spencer's reference list sends the reader to Compton, Henson and Shelah for
+results on the random ordered graph and to Shelah for the evenness theorem
+\cite[p.~28]{Spencer2007LogicRandomStructuresAuthor}; those papers were not
+consulted for this chapter.
+
+\section{Sources}
+\label{sec:p03-w03-p03-071-sources}
+
+Spencer, ``Logic and Random Structures'', author's version, sections 12 and
+13, pp.~22--26, with ``About the references'', pp.~27--28
+\cite{Spencer2007LogicRandomStructuresAuthor}.  O'Donnell, \emph{Analysis
+of Boolean Functions}, arXiv edition of May 2021, definitions 2.12--2.13,
+2.27, 3.13--3.14, 3.18, 4.1, 4.3, 4.15, 4.26--4.27, proposition 4.5,
+corollary 4.18, lemmas 4.19 and 4.28, the switching lemma (pp.~100--101) and
+theorem 4.30 with exercise 4.20 (p.~106) \cite{ODonnell2021AnalysisBooleanArxiv}.

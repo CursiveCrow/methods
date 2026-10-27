@@ -1,0 +1,447 @@
+%% toc: P3 39 39.10
+\chapter{Computable Presentations of Countable Structures}
+\label{sec:p03-w03-p03-063-computable-presentations}
+
+An abstract countable structure is not yet an object that an algorithm can
+read.  To ask whether a structure is computable, one first fixes a concrete
+copy whose elements are natural numbers.  One then asks whether its atomic
+facts can be decided.  Two copies of the same structure can behave quite
+differently, and some countable structures have no decidable copy at all.
+This chapter fixes the conventions on which the short entry in
+\cref{sec:p03-computable-model-theory} and the index-level result in
+\cref{thm:p04-rational-order-uniform-index} depend.  These are the
+signature hypothesis, the numerical coding of atomic and negated atomic
+sentences, the domain convention including finite structures, indices and
+computable isomorphisms.  It proves the facts these conventions require.
+
+\paragraph{Inputs and conclusions.}
+The input is a signature \(\Lang\) and a countable \(\Lang\)-structure, or a
+concrete presentation of one.  The conclusions are of three kinds: whether a
+given presentation is computable; whether the structure has some computable
+presentation; and whether two computable presentations are computably
+isomorphic.  The model-theoretic prerequisites are atomic diagrams and
+parameter expansions (\cref{def:parameter-expansion,def:diagrams}),
+isomorphisms (\cref{sec:maps-elementarity-01}) and, for the rational order,
+classical back-and-forth (\cref{method:back-and-forth,thm:back-and-forth-test,thm:p03-rn-dlo-uniqueness}).
+The computability prerequisites are the numerical and tuple coding
+(\cref{sec:turing-machines-01}), partial
+computable and computable functions (\cref{def:partial-computable}),
+decidable and computably enumerable sets and relations
+(\cref{sec:turing-machines-03}), the fixed
+program numbering and its indices (\cref{def:p04-program-serialization}), and the
+self-application set \(K\)
+(\cref{sec:universal-reductions-03}, with \cref{thm:halting-undecidable}).
+
+\paragraph{Selected treatment.}
+The definitions follow the opening of Montalb\'an's \emph{Computable Structure
+Theory: Within the Arithmetic}, in the author's draft of Part~1 compiled on
+25 June 2019 \cite{Montalban2019CSTDraft}.  The book's version of record
+\cite{Montalban2021CST} has not been consulted, and every locator below refers
+to the 2019 draft.  Specifically: the computable-signature hypothesis follows
+\cite[p.~xviii]{Montalban2019CSTDraft}; \(\omega\)-presentations, copies and
+computability of a presentation follow Definition~I.1
+\cite[pp.~1--2]{Montalban2019CSTDraft}; the atomic diagram as a coded object
+follows Definition~I.2 \cite[p.~2]{Montalban2019CSTDraft}; presentations with
+domain a subset of \(\N\), and the finite case, follow Sections~I.1.3 and
+I.1.5 with Observation~I.3 \cite[pp.~3--5]{Montalban2019CSTDraft}; and
+computable categoricity follows Definition~VIII.1
+\cite[p.~123]{Montalban2019CSTDraft}.  The draft fixes only \emph{some}
+effective enumeration of atomic formulas.  The explicit coding in
+\cref{def:p03-w03-p03-063-sentence-coding} is the handbook's own instance of
+it, and so is the identification of coded formulas with sentences of the
+parameter expansion.  The draft asserts the equivalence of its two
+computability conditions without proof \cite[p.~2]{Montalban2019CSTDraft};
+\cref{thm:p03-w03-p03-063-equivalence} proves the corresponding statement.
+The broader monograph of Ash and Knight \cite{AshKnight2000} is a separate
+treatment, and nothing here is attributed to it.
+
+\section{Signatures and the coding of literals}
+\label{sec:p03-w03-p03-063-coding}
+
+Throughout, signatures are single-sorted and first-order with equality, and
+structures have nonempty domains, as in \cref{ch:maps-elementarity}.
+
+\begin{hbconvention}{def:p03-w03-p03-063-computable-signature}{Computable signature}
+Following \cite[p.~xviii]{Montalban2019CSTDraft}, a signature \(\Lang\) is
+presented as three indexed families of symbols
+\[
+ \{\mathsf R_i:i\in I_R\},\qquad
+ \{\mathsf f_i:i\in I_F\},\qquad
+ \{\mathsf c_i:i\in I_C\},
+\]
+for relation, function and constant symbols, together with arity maps
+\(a_R:I_R\to\N\) and \(a_F:I_F\to\N\).  Each of \(I_R,I_F,I_C\) is an
+initial segment of \(\N\), finite or all of \(\N\).  The signature is
+\emph{computable} when \(a_R\) and \(a_F\) are computable functions in the
+sense of \cref{def:partial-computable}.  Every finite signature is
+computable, since a map with finite domain is given by a finite table.  The
+sans-serif \(\mathsf c_i\) are symbols of \(\Lang\).  They are distinct from
+the parameter constants \(c_a\) of \cref{def:parameter-expansion}, which
+name elements of a domain.
+\index{computable signature}
+\end{hbconvention}
+
+The computability notions below are defined only for computable signatures.
+For a noncomputable arity map, even the set of well-formed atomic formulas
+can fail to be decidable.
+
+\begin{hbconvention}{def:p03-w03-p03-063-sentence-coding}{Codes of terms and literals}
+Fix a computable signature \(\Lang\) and variables \(x_0,x_1,\ldots\).
+Write \(\langle a,b\rangle_{\N}\) for \(\operatorname{pair}_{\N}(a,b)\) and
+\(\operatorname{code}_k\) for the tuple code of
+\cref{sec:turing-machines-01}.  Codes of terms are given by
+\begin{align*}
+ \ulcorner x_j\urcorner&=\langle 0,j\rangle_{\N},\qquad
+ \ulcorner \mathsf c_i\urcorner=\langle 1,i\rangle_{\N},\\
+ \ulcorner \mathsf f_i(t_1,\ldots,t_k)\urcorner
+ &=\bigl\langle 2,\langle i,\operatorname{code}_k(\ulcorner t_1\urcorner,\ldots,\ulcorner t_k\urcorner)\rangle_{\N}\bigr\rangle_{\N}
+ \quad(k=a_F(i)).
+\end{align*}
+Codes of atomic formulas and their negations are given by
+\begin{align*}
+ \ulcorner t=s\urcorner&=\bigl\langle 3,\langle\ulcorner t\urcorner,\ulcorner s\urcorner\rangle_{\N}\bigr\rangle_{\N},\\
+ \ulcorner \mathsf R_i(t_1,\ldots,t_k)\urcorner
+ &=\bigl\langle 4,\langle i,\operatorname{code}_k(\ulcorner t_1\urcorner,\ldots,\ulcorner t_k\urcorner)\rangle_{\N}\bigr\rangle_{\N}
+ \quad(k=a_R(i)),\\
+ \ulcorner\neg\varphi\urcorner&=\langle 5,\ulcorner\varphi\urcorner\rangle_{\N}
+ \quad(\varphi\text{ atomic}).
+\end{align*}
+An atomic formula or the negation of one is a \emph{literal}.
+
+\emph{Sentences of a parameter expansion.}  Let \(D\subseteq\N\).  The
+substitution \(x_j\mapsto c_j\) is a bijection from the literals of \(\Lang\)
+all of whose variable indices lie in \(D\) onto the literal
+\(\Lang(D)\)-sentences of \cref{def:parameter-expansion}.  Its inverse
+replaces each parameter constant \(c_j\) by \(x_j\).  The code of a literal
+\(\Lang(D)\)-sentence \(\sigma\) is the code of the literal it comes from:
+\[
+ \ulcorner\varphi(c_{j_1},\ldots,c_{j_m})\urcorner
+ =\ulcorner\varphi(x_{j_1},\ldots,x_{j_m})\urcorner .
+\]
+This is the fixed serialization of atomic and negated atomic sentences used
+for indices in \cref{sec:p04-busy-beaver-structures}.
+\index{coding!of literals}
+\end{hbconvention}
+
+\begin{hblemma}{thm:p03-w03-p03-063-parsing}{proved=annex:p03-w03-p03-063-parsing}{Decidable syntax}
+For a computable signature \(\Lang\), the sets \(\mathrm{Tm}\),
+\(\mathrm{At}\) and \(\mathrm{Lit}\) of codes of terms, atomic formulas and
+literals are decidable subsets of \(\N\).  Each code determines its
+expression uniquely.  The relation ``\(x_j\) occurs in the expression with
+code \(n\)'' is decidable on \(\mathrm{Tm}\cup\mathrm{Lit}\).  Every code of
+an immediate subexpression is strictly smaller than the code of the
+expression containing it.
+\end{hblemma}
+
+\section{Presentations and their atomic diagrams}
+\label{sec:p03-w03-p03-063-presentations}
+
+\begin{hbdefinition}{def:p03-w03-p03-063-presentations}{Presentations, coded diagrams and computability}
+Let \(\Lang\) be a computable signature.
+\begin{enumerate}
+\item A \emph{\((\subseteq\omega)\)-presentation} is an \(\Lang\)-structure
+  \(\mathcal M\) whose domain \(M\) is a nonempty subset of \(\N\).  It is
+  an \emph{\(\omega\)-presentation} when \(M=\N\)
+  \cite[Definition~I.1, p.~1]{Montalban2019CSTDraft}.  It is a
+  \emph{\((\sqsubseteq\omega)\)-presentation} when \(M\) is an initial
+  segment of \(\N\), that is, \(M=\{0,\ldots,k-1\}\) with \(k\geq1\) or
+  \(M=\N\) \cite[pp.~3--4]{Montalban2019CSTDraft}.
+\item A \emph{presentation of}, or \emph{copy of}, an \(\Lang\)-structure
+  \(\mathcal A\) is a \((\subseteq\omega)\)-presentation isomorphic to
+  \(\mathcal A\).
+\item The \emph{coded atomic diagram} of \(\mathcal M\) is
+  \[
+   \ulcorner\operatorname{Diag}(\mathcal M)\urcorner
+   =\{\ulcorner\sigma\urcorner:\sigma\in\operatorname{Diag}(\mathcal M)\}
+   \subseteq\N,
+  \]
+  where \(\operatorname{Diag}(\mathcal M)\) is the set of literal
+  \(\Lang(M)\)-sentences true in \(\mathcal M_M\)
+  (\cref{def:diagrams}) and codes are those of
+  \cref{def:p03-w03-p03-063-sentence-coding}.
+\item \(\mathcal M\) is \emph{computable} when
+  \(\ulcorner\operatorname{Diag}(\mathcal M)\urcorner\) is decidable
+  (\cref{sec:turing-machines-03}).  A structure \emph{has a computable
+  copy} when some copy of it is computable.
+\item The interpretations of \(\mathcal M\) are \emph{uniformly computable}
+  when there are computable total functions
+  \(\rho,\zeta:\N^2\to\N\) and \(\gamma:\N\to\N\) such that, for
+  \(\vec n\in M^k\),
+  \begin{gather*}
+   \rho(i,\operatorname{code}_k(\vec n))=1\iff \vec n\in\mathsf R_i^{\mathcal M}
+   \quad(i\in I_R,\ k=a_R(i)),\\
+   \zeta(i,\operatorname{code}_k(\vec n))=\mathsf f_i^{\mathcal M}(\vec n)
+   \quad(i\in I_F,\ k=a_F(i)),
+  \end{gather*}
+  and \(\gamma(i)=\mathsf c_i^{\mathcal M}\) for \(i\in I_C\).
+  This is the handbook form of the condition that the set
+  \(\tau^{\mathcal M}\) of \cite[Definition~I.1, p.~2]{Montalban2019CSTDraft}
+  be computable.
+\end{enumerate}
+A code of a literal that mentions a variable \(x_j\) with \(j\notin M\) is
+never in \(\ulcorner\operatorname{Diag}(\mathcal M)\urcorner\).  This
+matches the draft's convention for domains that are proper subsets of \(\N\)
+\cite[Section~I.1.3, p.~3]{Montalban2019CSTDraft}.
+\index{presentation!omega-presentation}
+\index{atomic diagram!coded}
+\end{hbdefinition}
+
+For an \(\omega\)-presentation, this is the notion of
+\cref{def:p03-computable-presentation}, with the atomic diagram read through
+the coding above.  A finite structure has no \(\omega\)-presentation, since
+\(\N\) is infinite, but it has \((\sqsubseteq\omega)\)-presentations.
+\Cref{thm:p03-w03-p03-063-domain} describes exactly what the choice of
+domain changes.
+
+\begin{hbtheorem}{thm:p03-w03-p03-063-equivalence}{proved=annex:p03-w03-p03-063-equivalence}{Three forms of a computable presentation}
+Let \(\mathcal M\) be a \((\subseteq\omega)\)-presentation in a computable
+signature.  The following are equivalent.
+\begin{enumerate}
+\item \(\ulcorner\operatorname{Diag}(\mathcal M)\urcorner\) is decidable.
+\item The set of codes of true atomic \(\Lang(M)\)-sentences is decidable,
+  and so is \(M\).
+\item \(M\) is decidable and the interpretations of \(\mathcal M\) are
+  uniformly computable.
+\end{enumerate}
+Moreover, in each case \(M\) is decidable.  Let \(a_0<a_1<\cdots\) list
+\(\mathrm{At}\).  The binary sequence \(D(\mathcal M)\) with
+\(D(\mathcal M)(i)=1\) iff \(a_i\) codes a sentence in
+\(\operatorname{Diag}(\mathcal M)\) is computable iff the three conditions
+hold.  This is the atomic diagram \(D(\mathcal M)\in2^{\N}\) of
+\cite[Definition~I.2, p.~2]{Montalban2019CSTDraft}, for the enumeration
+\((a_i)\).
+\end{hbtheorem}
+
+\begin{hbmethod}{def:p03-w03-p03-063-decide-literal}{Deciding a literal}
+\emph{Input:} the decision procedure for \(M\), the functions
+\(\rho,\zeta,\gamma\) of a computable presentation, and a number \(n\).
+\emph{Output:} whether \(n\in\ulcorner\operatorname{Diag}(\mathcal M)\urcorner\).
+\begin{enumerate}
+\item Decide whether \(n\in\mathrm{Lit}\); if not, answer no.
+\item List the indices \(j\) with \(x_j\) occurring in \(n\); if one lies
+  outside \(M\), answer no.
+\item Evaluate every term by recursion on codes:
+  \(x_j\mapsto j\), \(\mathsf c_i\mapsto\gamma(i)\) and
+  \(\mathsf f_i(\vec t)\mapsto\zeta(i,\operatorname{code}_k(\text{values of }\vec t))\).
+\item Answer according to equality of values, or according to \(\rho\),
+  and reverse the answer for a negated atomic code.
+\end{enumerate}
+\emph{Side conditions:} the signature must be computable, so that steps~1
+and~3 can read arities; and \(M\) must be decidable, so that step~2
+terminates.  The procedure decides a fixed presentation.  It says nothing
+about other copies of the same structure.
+\end{hbmethod}
+
+\section{Indices and computable isomorphisms}
+\label{sec:p03-w03-p03-063-indices}
+
+\begin{hbdefinition}{def:p03-w03-p03-063-index}{Indices and computable isomorphisms}
+Let \(\mathcal M\) be a computable \((\subseteq\omega)\)-presentation.  An
+\emph{index} of \(\mathcal M\) is a number \(e\) such that \(\varphi_e\), in
+the numbering of \cref{def:p04-program-serialization}, is total, takes only the
+values \(0\) and \(1\), and is the characteristic function of
+\(\ulcorner\operatorname{Diag}(\mathcal M)\urcorner\).  An isomorphism
+\(g:\mathcal A\to\mathcal B\) between \((\subseteq\omega)\)-presentations is
+\emph{computable} when some partial computable function is defined on all of
+\(A\) and agrees with \(g\) there.  Two presentations are \emph{computably
+isomorphic} when a computable isomorphism exists between them.
+\index{computable presentation!index}
+\index{computable isomorphism}
+\end{hbdefinition}
+
+An index depends on the program numbering and on the coding of
+\cref{def:p03-w03-p03-063-sentence-coding}.  It is a name of one
+presentation, not of an isomorphism type.  By
+\cref{thm:p03-w03-p03-063-equivalence}, the presentation can be recovered
+from its index: the domain, the relations, the functions and the constants
+are all read off the decided diagram.  The draft defines the \emph{index set}
+of a class of structures as the set of indices of computable functions that
+are diagrams of \(\omega\)-presentations of members of the class
+\cite[p.~124, note]{Montalban2019CSTDraft}.
+
+\begin{hblemma}{thm:p03-w03-p03-063-pullback}{proved=annex:p03-w03-p03-063-pullback}{Transport along computable bijections}
+Let \(\mathcal M\) be a computable \(\omega\)-presentation and
+\(g:\N\to\N\) a computable bijection.  Then \(g^{-1}\) is computable.  The
+\emph{pullback} \(g^{-1}(\mathcal M)\), with domain \(\N\) and
+\begin{gather*}
+ \mathsf R_i^{g^{-1}(\mathcal M)}=\{\vec n:g\vec n\in\mathsf R_i^{\mathcal M}\},\\
+ \mathsf c_i^{g^{-1}(\mathcal M)}=g^{-1}(\mathsf c_i^{\mathcal M}),\\
+ \mathsf f_i^{g^{-1}(\mathcal M)}(\vec n)=g^{-1}\bigl(\mathsf f_i^{\mathcal M}(g\vec n)\bigr),
+\end{gather*}
+is a computable \(\omega\)-presentation, and \(g\) is an isomorphism
+\(g^{-1}(\mathcal M)\to\mathcal M\).  Consequently an
+\(\omega\)-presentation computably isomorphic to a computable one is itself
+computable.  Composites and inverses of computable isomorphisms between
+\(\omega\)-presentations are computable.
+\end{hblemma}
+
+By the last clause, \cref{def:p03-computably-categorical} agrees with
+\cite[Definition~VIII.1, p.~123]{Montalban2019CSTDraft}.  The handbook
+definition asks for a computable isomorphism from a fixed computable
+\(\mathcal A\) to each computable copy.  The draft asks for one between any
+two computable copies.  Composing through \(\mathcal A\) and inverting turns
+either requirement into the other.
+
+\section{Domains and computable copies}
+\label{sec:p03-w03-p03-063-domains}
+
+\begin{hbtheorem}{thm:p03-w03-p03-063-domain}{proved=annex:p03-w03-p03-063-domain}{What the domain convention changes}
+Let \(\Lang\) be a computable signature.
+\begin{enumerate}
+\item If \(\mathcal M\) is a computable \((\subseteq\omega)\)-presentation
+  with infinite domain \(M\), list \(M=\{m_0<m_1<\cdots\}\) and put
+  \(h(i)=m_i\).  Then the \(\omega\)-presentation \(\mathcal A\) obtained by
+  transporting \(\mathcal M\) along \(h\) is computable, and
+  \(h:\mathcal A\to\mathcal M\) is a computable isomorphism whose inverse
+  \(M\to\N\) is also computable \cite[Observation~I.3, pp.~3--4]{Montalban2019CSTDraft}.
+\item If \(\Lang\) is finite, every finite \(\Lang\)-structure with \(k\)
+  elements has a computable presentation with domain \(\{0,\ldots,k-1\}\);
+  this is a \((\sqsubseteq\omega)\)-presentation.
+\item There is a computable infinite signature, consisting of unary relation
+  symbols \(\mathsf R_i\) for \(i\in\N\), and a one-element structure with no
+  computable \((\subseteq\omega)\)-presentation.
+\end{enumerate}
+\end{hbtheorem}
+
+Clause~(a) is why the entry in \cref{sec:p03-computable-model-theory} can use
+domain \(\N\) for infinite structures without loss.  Clause~(b) is the
+correct statement for finite structures, which have no
+\(\omega\)-presentation.  Clause~(c) shows that finiteness of the domain alone
+does not make a structure computable: in an infinite signature, a single
+element can carry a noncomputable set of atomic facts.
+
+\begin{hbtheorem}{thm:p03-w03-p03-063-no-copy}{proved=annex:p03-w03-p03-063-no-copy}{An abstract countable structure need not have a computable copy}
+Let \(\Lang=\{E\}\) with \(E\) binary.  For an infinite \(X\subseteq\N\), let
+\(\mathcal C_X\) be the graph that is a disjoint union of cycles, with
+exactly one cycle of length \(n+3\) for each \(n\in X\) and no other
+vertices.  If \(\mathcal C_X\) has a computable copy, then \(X\) is
+computably enumerable.  In particular, \(\mathcal C_{\N\setminus K}\) is a
+countably infinite \(\Lang\)-structure with no computable copy.
+\end{hbtheorem}
+
+The structure \(\mathcal C_{\N\setminus K}\) exists, is countable, and has
+\(\omega\)-presentations, but none of them is decidable.  The existence of an
+abstract countable model is therefore never by itself a computable
+presentation.  A claim that a structure is computable must exhibit, or prove
+the existence of, a presentation together with a decision procedure for its
+coded diagram.
+
+\section{Copies of one structure that differ computationally}
+\label{sec:p03-w03-p03-063-copies}
+
+\begin{hbtheorem}{thm:p03-w03-p03-063-omega-copies}{proved=annex:p03-w03-p03-063-omega-copies}{Computable copies of \((\N,<)\) that are not computably isomorphic}
+Let \(\Lang=\{<\}\).
+\begin{enumerate}
+\item There is a computable \(\omega\)-presentation \(\mathcal M=(\N,<_M)\)
+  isomorphic to \((\N,<)\) such that the \(<_M\)-immediate successor of
+  \(2n\) is \(2n+2\) exactly when \(n\notin K\).  Hence \(\mathcal M\) and
+  \((\N,<)\) are not computably isomorphic, and \((\N,<)\) is not computably
+  categorical.
+\item There is an \(\omega\)-presentation of \((\N,<)\) that is not
+  computable.
+\end{enumerate}
+\end{hbtheorem}
+
+Clause~(a) follows the example of \cite[Section~I.1.2, pp.~2--3]{Montalban2019CSTDraft}.
+The draft orders by \(\leq\) and codes its halting set \(0'\).  Here the
+strict order and the self-application set \(K\) of
+\cref{sec:universal-reductions-03} are used, so that the proof runs
+entirely on Part~IV results.  Clause~(b) is a separate, elementary
+observation.  It shows that computability is a property of a presentation,
+not of an isomorphism type.  The contrast with
+\cref{thm:p03-q-computably-categorical} is the point.  For the dense order,
+the classical back-and-forth argument can be run effectively, and uniformly
+in indices
+(\cref{thm:p04-rational-order-uniform-index}).  For \((\N,<)\), the
+immediate-successor function is computable in the standard copy but not in
+the copy \(\mathcal M\), and a computable isomorphism would transfer it, so no
+such effective construction is possible.
+
+\begin{hbexample}{def:p03-w03-p03-063-worked}{Coding and deciding one literal}
+Take \(\Lang=\{\mathsf R_0\}\) with \(a_R(0)=2\), \(I_F=I_C=\varnothing\),
+and write \(\mathsf R_0\) as \(<\).  In the standard presentation
+\((\N,<)\), consider the \(\Lang(\N)\)-sentence \(c_3<c_5\).  It comes from
+the formula \(x_3<x_5\), and
+\begin{gather*}
+ \ulcorner x_3\urcorner=\langle0,3\rangle_{\N}=9,\qquad
+ \ulcorner x_5\urcorner=\langle0,5\rangle_{\N}=20,\\
+ \operatorname{code}_2(9,20)=\langle9,20\rangle_{\N}=455,
+\end{gather*}
+so
+\[
+ \ulcorner c_3<c_5\urcorner
+ =\bigl\langle4,\langle0,455\rangle_{\N}\bigr\rangle_{\N}
+ =\langle4,104195\rangle_{\N}=5428872095 .
+\]
+Since \(3<5\), this number lies in
+\(\ulcorner\operatorname{Diag}(\N,<)\urcorner\), while
+\(\ulcorner\neg(c_3<c_5)\urcorner=\langle5,5428872095\rangle_{\N}\) does not.
+In the procedure of \cref{def:p03-w03-p03-063-decide-literal}, step~1
+recognizes the tag \(4\), the relation index \(0\) and the arity \(2\).
+Step~2 finds the variable indices \(3\) and \(5\) in \(M=\N\).  Step~3
+evaluates the two terms to \(3\) and \(5\).  Step~4 applies
+\(\rho(0,\operatorname{code}_2(3,5))=1\).  Every step is a bounded
+computation.  Running the same procedure on the presentation \(\mathcal M\)
+of \cref{thm:p03-w03-p03-063-omega-copies} gives a different diagram, because
+there \(\rho\) compares the keys of the construction rather than the numbers
+themselves.
+\end{hbexample}
+
+\begin{hbwarning}{def:p03-w03-p03-063-limits}{Limits of the notions}
+\begin{enumerate}
+\item The notions require a computable signature.  Without one, the coding
+  of \cref{def:p03-w03-p03-063-sentence-coding} need not have a decidable
+  set of well-formed codes.
+\item Computability belongs to a presentation.  A computable structure has
+  noncomputable copies (\cref{thm:p03-w03-p03-063-omega-copies}).
+\item Having a computable copy is a property of the isomorphism type, and it
+  can fail for countable structures (\cref{thm:p03-w03-p03-063-no-copy}).
+\item A finite structure has no \(\omega\)-presentation.  In an infinite
+  computable signature, it need not have any computable presentation
+  (\cref{thm:p03-w03-p03-063-domain}).
+\item An index names a presentation relative to fixed codings.  Changing the
+  program numbering or the literal coding changes the indices, and it does not
+  change which presentations are computable.
+\item The draft reports that the index set of computably categorical
+  structures is \(\Pi^1_1\)-complete, a result it attributes to Downey,
+  Kach, Lempp, Lewis-Pye, Montalb\'an and Turetsky
+  \cite[p.~124]{Montalban2019CSTDraft}.  The handbook neither proves nor uses
+  this.  It is recorded only as the reason why computable categoricity
+  admits no simple structural test in general.
+\end{enumerate}
+\end{hbwarning}
+
+\section{Relationships and notation}
+\label{sec:p03-w03-p03-063-relations}
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{p{0.38\linewidth}p{0.52\linewidth}}
+\toprule
+Draft \cite{Montalban2019CSTDraft} & Handbook \\
+\midrule
+vocabulary \(\tau\), arities \(a_R,a_F\) (p.~xviii) & signature \(\Lang\), \cref{def:p03-w03-p03-063-computable-signature} \\
+\(\omega\)-presentation, copy (Def.~I.1) & presentation with domain \(\N\), \cref{def:p03-w03-p03-063-presentations} \\
+\(\tau^{\mathcal M}\) computable (Def.~I.1) & uniformly computable interpretations \(\rho,\zeta,\gamma\) \\
+\(\varphi^{\mathrm{at}}_i\), \(D(\mathcal M)\in2^{\N}\) (Def.~I.2) & \(\mathrm{At}\), \(\ulcorner\operatorname{Diag}(\mathcal M)\urcorner\subseteq\N\), \cref{thm:p03-w03-p03-063-equivalence} \\
+\((\subseteq\omega)\)-, \((\sqsubseteq\omega)\)-presentations (pp.~3--4) & the same names, \cref{def:p03-w03-p03-063-presentations} \\
+computably categorical (Def.~VIII.1) & \cref{def:p03-computably-categorical}, via \cref{thm:p03-w03-p03-063-pullback} \\
+halting set \(0'\) (p.~3) & self-application set \(K\), \cref{sec:universal-reductions-03} \\
+\bottomrule
+\end{tabular}
+\caption{Notation of the selected treatment and of the handbook}
+\label{tab:p03-w03-p03-063-bridge}
+\end{table}
+
+The classical theorem that countable dense linear orders without endpoints
+are isomorphic (\cref{thm:p03-rn-dlo-uniqueness}) is a statement about
+isomorphism types.  Its effective form (\cref{thm:p03-q-computably-categorical})
+is a statement about computable presentations, and it uses the decidability of
+both coded diagrams at every stage of the back-and-forth construction.  The
+draft isolates the abstract mechanism: a set of pairs of tuples with the
+back-and-forth property yields an isomorphism computable from an enumeration
+of that set \cite[Lemma~III.15, p.~40]{Montalban2019CSTDraft}.  Finite model
+theory, the subject of the surrounding chapters, concerns finite structures
+as inputs to algorithms, and \cref{thm:p03-w03-p03-063-domain} records how
+that setting fits under the present conventions.

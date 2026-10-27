@@ -81,10 +81,12 @@ cells in \(B\),
  \qquad
  C_S\models\exists x A(x)\ \Longleftrightarrow\ S\cap B\ne\varnothing.
 \]
-If a sample \(e\) has observed support \(T\), with \(|T|=c\),
-then precisely the \(2^{K-c}\) constituents with \(T\subseteq S\)
-are compatible with \(e\). There are \(\binom{K-c}{w-c}\)
-compatible constituents of width \(w\).
+If a nonempty sample \(e\) has observed support \(T\), with
+\(|T|=c\geq1\), then precisely the \(2^{K-c}\) constituents with
+\(T\subseteq S\) are compatible with \(e\). Empty evidence instead
+leaves all \(2^K-1\) nonempty-domain constituents compatible. In either
+case there are \(\binom{K-c}{w-c}\) compatible constituents of width
+\(w\), for \(\max(1,c)\leq w\leq K\).
 \end{hbtheorem}
 
 Thus an existential report about a previously unseen cell eliminates
@@ -450,8 +452,13 @@ instantiated, its eventual support is instead the true support and
 the concentration theorem gives truth convergence.
 If observations are independent and each of the finitely many true
 cells has a fixed positive sampling probability, this witnessing
-condition holds almost surely. It does not hold on every possible
-sample path and cannot be certified from a finite prefix alone.
+condition holds almost surely. If at least two cells are true, some
+possible sample paths still omit a true cell. A finite nonempty
+error-free prefix whose observed support is a proper subset of all
+\(K\) cells cannot, from those reports alone, certify that no true cell
+remains unseen. A prefix witnessing all \(K\) cells does certify this;
+if the true support is known to be a singleton, its first true report
+already witnesses the entire support.
 \end{hbtheorem}
 
 Niiniluoto calls the required truth-and-variety condition evidential
@@ -670,6 +677,97 @@ same certainty if misclassification is allowed. A declared error matrix
 and a sample-error dependence model are needed for that extension
 \cite[sec.~9, pp.~340--343]{Niiniluoto2011HintikkaProgramReading}.
 
+\section{Reports with a declared error channel}
+\label{sec:p15-hintikka-error-channel}
+
+The distinction between true cells and reported appearances can be made
+into a complete probability construction. The following extension retains
+the constituent prior and conditional sample law already declared. It adds
+a fixed, explicit observation mechanism; it is a reconstruction of the
+error problem, not a claim to reproduce every historical error calculus
+\cite[sec.~9, pp.~340--343]{Niiniluoto2011HintikkaProgramReading}.
+
+\begin{hbdefinition}{def:p15-hintikka-error-channel}{True cells and noisy reports}
+Let the report alphabet be \(\{1,\ldots,J\}\), where \(J\geq1\).
+Specify numbers \(E_{ri}\geq0\) with
+\(\sum_{r=1}^J E_{ri}=1\) for every true cell \(i\).
+After the latent sequence of true cells has been sampled, reports are
+conditionally independent, and a true cell \(i\) produces report \(r\)
+with probability \(E_{ri}\). The same matrix is used at every position.
+This is an assumption about observation, separate from the conditional
+dependence among true cells in the constituent sample law.
+
+For a support \(S\), write \(w=|S|\),
+\(a_S=\lambda_w/w\), and let \(\boldsymbol c=(c_i)_{i\in S}\)
+be latent cell counts. For the first \(n\) actual reports
+\(\boldsymbol y=(y_1,\ldots,y_n)\), define weights
+\(W_{S,n}(\boldsymbol c;\boldsymbol y)\) by
+\(W_{S,0}(\boldsymbol0;\varnothing)=1\). All other initial weights
+are zero. Given the weights at stage \(n\), start the next array at
+zero and, for every \(i\in S\), add
+\[
+ W_{S,n}(\boldsymbol c;\boldsymbol y)
+ \frac{c_i+a_S}{n+\lambda_w}E_{y_{n+1},i}
+\]
+to \(W_{S,n+1}(\boldsymbol c+\boldsymbol e_i;
+\boldsymbol y,y_{n+1})\). Here \(\boldsymbol e_i\) is the
+unit count vector; it is not evidence. Only vectors with total count
+\(n\) occur at stage \(n\), so each array is finite.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p15-hintikka-error-channel}{proved=annex:p15.hintikka-error-channel}{Coherent noisy reports and exact finite updating}
+The true-cell construction and the declared report channel have a joint
+countable-domain realization with unchanged constituent masses \(\pi_S\).
+The report likelihood conditional on \(C_S\) is
+\[
+ H_S(\boldsymbol y)=\sum_{\boldsymbol c}W_{S,n}
+       (\boldsymbol c;\boldsymbol y)
+ =\sum_{(i_1,\ldots,i_n)\in S^n}
+       L_S(i_1,\ldots,i_n)\prod_{t=1}^n E_{y_t,i_t}.
+\]
+These likelihoods are normalized, deletion consistent and exchangeable.
+For \(Z(\boldsymbol y)=\sum_S\pi_SH_S(\boldsymbol y)>0\),
+the joint posterior of support and latent count vector is
+\[
+ v_{S,\boldsymbol c}
+   =\frac{\pi_SW_{S,n}(\boldsymbol c;\boldsymbol y)}
+                {Z(\boldsymbol y)}.
+\]
+The next true-cell prediction is
+\(\sum_{S\ni i,\boldsymbol c}v_{S,\boldsymbol c}
+(c_i+a_S)/(n+\lambda_{|S|})\); the next report prediction is
+\[
+ P(Y_{n+1}=r\mid\boldsymbol y)
+  =\sum_{S,\boldsymbol c}v_{S,\boldsymbol c}
+       \sum_{i\in S}\frac{c_i+a_S}{n+\lambda_{|S|}}E_{ri}.
+\]
+Every constituent has positive posterior after every finite report string
+if every \(E_{ri}>0\). If all columns of the channel are the same
+probability vector \((q_r)\), reports leave the constituent priors
+unchanged whenever their likelihood is positive. Thus coherence of error
+correction does not imply that the reports identify the true support.
+\end{hbtheorem}
+
+\begin{hbexample}{def:p15-hintikka-noisy-counterreport}{One apparent counterexample and complete loss of information}
+Take the three nonempty supports on \(A,\neg A\), equal prior masses,
+and the combined family. Let a report flip its true cell with probability
+\(0<\varepsilon<1/2\). After one report of \(\neg A\), the
+conditional likelihoods on the \(A\)-only, \(\neg A\)-only and
+full supports are respectively \(\varepsilon,1-\varepsilon,1/2\).
+Consequently
+\[
+ P(\forall xAx\mid Y_1=\neg A)=\frac{2\varepsilon}{3}.
+\]
+At \(\varepsilon=1/10\) this is \(1/15\), rather than zero.
+The report weakens the law without deductively refuting it. At
+\(\varepsilon=1/2\), both channel columns are \((1/2,1/2)\);
+every length-\(n\) report string has likelihood \(2^{-n}\) under
+every support. No number of such reports changes any support probability.
+These conclusions concern the specified channel; an unknown or dependent
+error process requires a different model and a new likelihood.
+\end{hbexample}
+
+
 \section{Truthlikeness and the final philosophical assessment}
 \label{sec:p15-hintikka-truthlikeness}
 
@@ -743,10 +841,11 @@ and observed variety; eliminate supports contradicted by error-free
 evidence. Compute likelihoods, normalize posterior constituent masses,
 then sum for laws or average for predictions. Keep acceptance thresholds,
 epistemic utilities, distances and physical sampling assumptions as
-additional commitments. If reports may be erroneous, the language has
-relations or identity, or the conceptual scheme changes, supply the
-appropriate new construction instead of transferring these formulas
-unchanged.
+additional commitments. For erroneous reports with a known fixed channel, use the joint latent-count
+recursion in \cref{thm:p15-hintikka-error-channel}. For a different error
+process, relations or identity in the language, or a changed conceptual
+scheme, supply the corresponding construction instead of transferring
+the error-free formulas unchanged.
 \end{hbmethod}
 
 \begin{proofboundary}{def:p15-hintikka-source-boundary}{Declared constructions and wider characterization problems}
@@ -758,8 +857,10 @@ declared domains, not proofs of the full historical program.
 Normal-form existence alone gives neither probability weights nor a
 satisfiability filter for unrestricted relational descriptions. The
 K-dimensional necessity/representation theorem and identity, relational,
-modal, analogy/error and theoretical-systematization extensions require
+modal, analogy and theoretical-systematization extensions require
 their own hypotheses and arguments. They do not follow by substituting
-new parameter names into the monadic likelihood. The historical author
-copy and final 2011 publisher version retain their distinct identities.
+new parameter names into the monadic likelihood. The fixed observation-channel extension now has its own joint realization,
+likelihood, updating proof and nonidentification counterexample; it does not
+cover an unspecified or dependent error process. The historical author copy
+and final 2011 publisher version retain their distinct identities.
 \end{proofboundary}

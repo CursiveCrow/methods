@@ -194,3 +194,19 @@ regular-conditional-laws C002, C004, C005, C007, C008). Checked against the curr
 - All patch anchors of w02ca-p15-002, -004, -008, -014 re-checked: each found exactly once.
 - Checks: unit-compile ok (19 overfull); check.py --tree handbook shows no findings on this packet's files;
   find_fused_spaces clean. No text changes in this pass.
+
+## Run 6 block 2 (third pass)
+Gap list: only the hard guard G1 on spec/research/edition-2026-authoring-batch-intake-13.json.
+- This packet never edited that file. Its working copy equals HEAD; lead commit 6de06cc3 changed it after the wave base
+  53573796, so tools/waves.py now classifies it as a lead-commit finding, not a hard failure. No action in owned files.
+- The P15 drivers now input the w02c files of 002, 004, 008 and 014 (handbook/parts/p15.tex lines 31, 47, 50, 115;
+  annex 30, 46, 49, 114). The return moves every item whose only blocker was the driver input to written. Items still
+  blocked on unapplied content patches: measurable-probability C009 (entry 4), C025 (entry 1), rcl C004/C007/C008
+  (entries 5-8), rcl C002 (w02ca-p15-008 entry 1).
+- Owner-file line ranges for countable-product C009/C013/C015 re-read in the 004 file (243-346, 347-432, 433-521).
+- On the route, check.py reports 14 notation-scope findings (not hard) on this packet's files; symbol-intake rows added
+  for \mathcal B, \mathcal G, \mathcal S, \mathcal A, \mathbb P, \mathcal T. No reader text changed.
+- Checks: unit-compile ok (19 overfull); check.py no hard finding on these files; find_fused_spaces clean.
+
+## Continuation (current)
+- Remaining work is lead-owned: content patches 002 entries 1, 4-9 and 008 entry 1. Nothing open in owned files.

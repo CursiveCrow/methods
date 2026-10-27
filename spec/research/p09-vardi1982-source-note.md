@@ -1,3 +1,10 @@
+> Author correction, 26 October 2026: the proof-status and empty-domain
+> normal-form account below is the earlier handoff snapshot. It is superseded
+> by `p09-vardi1982-author-correction.md` and the current manuscript. Theorem 5
+> and the correctly qualified capture theorem now have full author proofs;
+> the literal projection grammar's empty-domain limitation is separately
+> proved. The old source-reading evidence and hashes are retained as history.
+
 # Vardi 1982 exact extended abstract: qualification and authoring record
 
 Unit: `ED26-REQ-N-c-004-02`; allocated components `N-c-004-MAP-02` and

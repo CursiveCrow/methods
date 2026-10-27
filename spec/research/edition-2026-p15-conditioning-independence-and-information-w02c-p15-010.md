@@ -291,3 +291,34 @@ def:p15-w02c-p15-010-prior-posterior.
   routes the owner file (w02ca-p15-014.json entries 3-4) and applies the
   host pointers (w02ca-p15-019.json entries 24-30, w02ca-p15-014.json
   entries 9-10) and this packet's entries 0-2.
+
+### Continuation, block 2 of run r6 (2026-10-13), author lane 64
+
+- Hard guard G1 (spec/research/edition-2026-authoring-batch-intake-13.json
+  changed outside the owned set): this packet never wrote that file. It is
+  clean in the working tree; its last change is the lead commit 6de06cc3
+  ("authored state (r1-r6) and route of batch 13"). Nothing to revert from
+  this packet; the guard should be rerun against a base after 6de06cc3.
+- Routing changed: handbook/parts/p15.tex line 115 and handbook/annex/p15.tex
+  line 114 now input the owner file limit-theorems-and-concentration-w02c-p15-014
+  (and lines 33 / 32 input this packet's comment-only owned files). The r6-b1
+  assessment, which read the same driver hash 46006426..., still calls the
+  owner file unrouted; its C001, C003 and C016 gap items are on the route in
+  the owner text (ui-arbitrary 563, ui-moment-source 599, prior-posterior 777,
+  posterior-mean 816).
+- Assessment defect observations closed by new patch entries 3-5 of
+  work/waves/w02ca/patches/w02ca-p15-010.json (all against read-only hosts):
+  entry 3 (body, after the conclusion of thm:p15-extinction-or-escape) states
+  Durrett's real-level form of the hypothesis (ex. 4.6.4, printed p. 249) and
+  its equivalence with the integer thresholds; entry 4 (annex, after "This is
+  exactly \(X_n\to\infty\).") proves that reduction; entry 5 (body) replaces
+  "known mean \(\mu\)" in thm:p15-posterior-mean-consistency by
+  \(\mu=E\xi_1\) with a note that only existence of the mean is used (Durrett
+  ex. 4.6.1, printed p. 248, assumes E|Z_i| finite and theta with finite mean).
+  No overlap with w02ca-p15-019.json entry 29.
+- Source reread this block: PTE5 PDF pp. 256-257 (pdftotext): ex. 4.6.1 on
+  printed p. 248, exs. 4.6.4-4.6.5 on printed p. 249.
+- Checks: all six patch anchors occur exactly once; find_fused_spaces clean on
+  the patched scratch copies (the only hits in the patch JSON are the verbatim
+  host anchor "\to0"); unit-compile ok; check.py --tree handbook shows no
+  finding in the owned files. The patched hosts were not compiled this block.

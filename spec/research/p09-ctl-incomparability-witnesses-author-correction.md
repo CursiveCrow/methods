@@ -1,0 +1,9 @@
+# CTL witness induction: author completion, 26 October 2026
+
+The new body theorem `thm:p09-bk-ctl-witness-depth` and reciprocal annex `annex:p09-bk-ctl-witness-depth` complete the bounded-formula claim for the first Baier--Katoen Theorem 6.21(a) witness family. The held 2008 book at `tmp/pdfs/baier-katoen-2008.pdf`, printed pp. 337--340 (physical pages 356--359), was read directly. The figures, separate n=0 case, labels, and transitions agree with the existing source reconstruction. This is an original handbook proof of a source assertion, not a claim that the source prints the induction.
+
+The proof simultaneously establishes stabilization on primed levels and primed/unprimed top-state agreement, by CTL temporal depth. It treats EX, EG, and existential strong until, explicitly proves the Boolean recurrence stabilizes, and checks why the additional return edge is invisible at the required depth. Universal CTL operators are eliminated by depth-preserving identities. The final argument recovers both the source's formula-length bound and nondefinability of universal-path eventually-always a.
+
+Validation: an independent finite counterexample search evaluates direct CTL least/greatest fixed-point semantics on explicit witness graphs for levels 0 through 6. Its deterministic results are saved in the task's `p03-games/ctl-finite-check.json`; this check supports, and does not replace, the written unbounded induction. Scoped LaTeX and layout checks are recorded in the task verification report. The new symbol intake is proposed for canonical adoption; it is not self-admitted.
+
+Remaining obligations are kept separate: the other LTL witness in Theorem 6.21(a), the omitted Theorem 6.18 criterion used for other CTL witnesses, and other uncompleted source allocations are not discharged by this addition. No independent review or complete-source acceptance is claimed.

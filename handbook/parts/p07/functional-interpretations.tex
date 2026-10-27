@@ -1,18 +1,17 @@
 %% parts/p07/functional-interpretations.tex --- Phase-4 P7 chapter 7.6
 %% New content: N-a-053, N-a-054, N-a-055.
-%% Rules remain in registry/calculi.  The only local proved result is the
-%% cut-free LJ last-rule lemma; the interpretation and HA metatheorems are
-%% cited, with the exact source-relative HA boundary stated in the body.
+%% Term-calculus rules remain in registry/calculi. Dialectica soundness and
+%% relative consistency are proved in the linked proof unit. The separate
+%% realizability and HA constructive-property results retain their stated status.
 
 \chapter{Functional Interpretations and Constructive Properties}
 \label{sec:p07-functional-interpretations}
 \chaptermark{Functional Interpretations}
 
-Functional interpretations attach computational witnesses to derivations,
-but the witness language, target theory, and soundness theorem must be named
-separately.  This chapter fixes one Dialectica translation and Kleene's number
-realizability, then states the disjunction and numerical-existence properties
-at their honest evidence levels.  The principal sources are
+Functional interpretations attach computational witnesses to derivations.
+This chapter develops a fixed Dialectica translation, its quantifier-free
+target, and its HA soundness proof. It then treats Kleene number realizability
+and the distinct disjunction and numerical-existence properties.  The principal sources are
 \cite{Godel1958,Troelstra1973,AvigadFeferman1998,Kleene1945,
 Troelstra1998,TroelstraVanDalen1988}.
 
@@ -54,22 +53,37 @@ matrix property in \(\mathsf T_{\mathrm{qf}}\).
 \end{hbdefinition}
 
 \begin{hbdefinition}{def:p07-dialectica-target}{The quantifier-free target theory \(\mathsf T_{\mathrm{qf}}\)}
-The target \(\mathsf T_{\mathrm{qf}}\) is the exact quantifier-free,
-many-sorted finite-type
-theory imported from \cite[Section~2.2]{AvigadFeferman1998}, with its System-T
-term surface linked to \hyperref[sheet:system-t]{\texttt{sheet:system-t}}.  Its
-terms are those of System~T (equivalently, the cited combinatory presentation);
-its atomic formulas are equalities of same-typed terms; and it has the cited
-defining equations, equality principles, classical propositional base,
-same-type term substitution, and open-formula induction principle.
-Higher-type equality is read exactly as in the selected source presentation.
-The symbol therefore names that imported formal target theory, not a locally
-underspecified abbreviation and not merely the strongly normalizing term
-calculus of Definition~\ref{def:p07-system-t}.  This entry does not reproduce
-the target's complete axiom and rule surface; consequently every theorem that
-uses it below remains citation-only.  The distinction is used in
-Theorems~\ref{thm:p07-dialectica-soundness} and
-\ref{thm:p07-dialectica-consistency}.
+The terms and finite types are those of \cref{def:p07-system-t}.
+An atomic formula is an equality of two terms of the same finite type;
+formulas are built with the classical propositional connectives.
+The theory has classical propositional reasoning and modus ponens,
+reflexivity, and the replacement schema
+\[
+ s=t\land A[s/x]\ \longrightarrow\ A[t/x],
+\]
+with matching types and capture-free substitution. Its term equations
+are the compatible beta equations of
+\hyperref[sheet:stlc]{\texttt{sheet:stlc}} and the recursor equations of
+\hyperref[sheet:system-t]{\texttt{sheet:system-t}}. Definitional conversion is closed under typed term contexts; no rule
+inferring functional equality from arbitrary pointwise equality is added.
+Its additional numerical axioms are
+\(Sn\ne0\) and \(Sn=Sm\to n=m\).
+Same-type term substitution preserves theorems. Open induction permits
+one to infer \(A(t)\) from proofs of \(A(0)\) and
+\(A(n)\to A(Sn)\), where \(n\) and \(t\) have ground type and
+\(A\) is quantifier free; its other typed parameters remain free.
+Set \(\bottom\) to \(0=S0\). Addition and multiplication below are
+the System-T terms defined by primitive recursion, not new primitives.
+
+This fixes the intensional, all-types-equality version called \(T\)
+in Section~2.5 of the held July 20, 1999 author preprint associated with
+\cite{AvigadFeferman1998}, in the lambda presentation allowed in its
+Section~2.2. It does not add the higher-type equality-testing constants
+of \(I\text{-}T\), or replace equality by the different rule of
+\(\mathrm{WE}\text{-}T\). Numerical equality tests used below are
+constructed from the recursors. The theory is separate from both HA
+and the term-reduction calculus: its open induction and propositional
+inferences are assertions about equations, not term-reduction steps.
 \index{System T@System \(T\)!quantifier-free target theory}
 \end{hbdefinition}
 
@@ -92,16 +106,16 @@ are chosen fresh and every displayed substitution is capture avoiding.  If
  \chi^{\mathrm D}
    &\defeq \chi &&(\chi\text{ atomic}),\\
  (\varphi\land\psi)^{\mathrm D}
-   &\defeq \exists\vec x,\vec u\,\forall\vec y,\vec v\,
-       (\varphi_{\mathrm D}(\vec x,\vec y)\land
+   &\defeq \exists\vec x,\vec u\,\forall\vec y,\vec v\,\\
+   &\qquad (\varphi_{\mathrm D}(\vec x,\vec y)\land
         \psi_{\mathrm D}(\vec u,\vec v)),\\
  (\varphi\lor\psi)^{\mathrm D}
-   &\defeq \exists z,\vec x,\vec u\,\forall\vec y,\vec v\,
-       ((z=0\land\varphi_{\mathrm D}(\vec x,\vec y))\lor
+   &\defeq \exists z,\vec x,\vec u\,\forall\vec y,\vec v\,\\
+   &\qquad ((z=0\land\varphi_{\mathrm D}(\vec x,\vec y))\lor
         (z=1\land\psi_{\mathrm D}(\vec u,\vec v))),\\
  (\varphi\to\psi)^{\mathrm D}
-   &\defeq \exists\vec f,\vec g\,\forall\vec x,\vec v\,
-       (\varphi_{\mathrm D}(\vec x,\vec g(\vec x,\vec v))\to
+   &\defeq \exists\vec f,\vec g\,\forall\vec x,\vec v\,\\
+   &\qquad (\varphi_{\mathrm D}(\vec x,\vec g(\vec x,\vec v))\to
         \psi_{\mathrm D}(\vec f(\vec x),\vec v)),\\
  (\forall z\,\varphi(z))^{\mathrm D}
    &\defeq \exists\vec f\,\forall z,\vec y\,
@@ -116,13 +130,15 @@ added.  The tag \(z\) is necessary to distinguish the selected disjunct;
 the functionals \(\vec f\) transform witnesses and \(\vec g\) transform a
 purported counterexample to the conclusion into a challenge to the premise.
 This is an inductively defined translation of formulas, not formula
-equivalence in the source logic.  Its clauses are used verbatim by the cited
-soundness theorem.
+equivalence in the source logic.  Its clauses are verified in the
+soundness proof below.
 \index{Dialectica interpretation}
 \index{functional interpretation!Dialectica}
 \end{hbdefinition}
 
-\begin{hbtheorem}{thm:p07-dialectica-soundness}{cited=AvigadFeferman1998}{Dialectica soundness for HA}
+\input{parts/p07/dialectica-proof}
+
+\begin{hbtheorem}{thm:p07-dialectica-soundness}{proved=annex:p7.d.5}{Dialectica soundness for HA}
 Let \(\varphi\) be a closed arithmetic sentence.  If
 \(\derives_{\mathsf{HA}}\varphi\), then
 one can effectively extract a tuple of closed System-T terms \(\vec t\) such that
@@ -134,38 +150,42 @@ The challenge variables \(\vec y\) remain free, equivalently universally
 closed at the metalevel.
 \end{hbtheorem}
 
-This is Theorem~2.4.1 of \cite{AvigadFeferman1998}.  It is an effective
-metatheorem about HA derivations and the fixed target, not an internal HA
-reflection principle and not a blanket interpretation of analysis.
+The target statement is Theorem~2.4.1 in the held July 20, 1999 author
+preprint associated with \cite{AvigadFeferman1998}. The annex proves it
+for the explicitly specified target and the handbook's HA axioms.
+It is an effective metatheorem about derivations, not internal HA
+reflection or an interpretation of arbitrary analysis.
 
-\begin{hbcorollary}{thm:p07-dialectica-consistency}{cited=AvigadFeferman1998}{Relative consistency consequence}
-In the weak arithmetical base used to formalize the cited syntactic
-translation,
+\begin{hbcorollary}{thm:p07-dialectica-consistency}{proved=annex:p7.d.6}{Relative consistency consequence}
+In primitive recursive arithmetic, for the proof predicates of the
+fixed source and target presentations,
 \[
   \mathsf{Con}(\mathsf T_{\mathrm{qf}})\to\mathsf{Con}(\mathsf{HA}).
 \]
 \end{hbcorollary}
 
-The cited corollary uses the translation's fixed treatment of falsity.  This
-sentence records the scope and provenance of the imported implication; it is
-not a local derivation.  The result is not an internal
-\(\mathsf{HA}\)-proof of \(\mathsf{Con}(\mathsf{HA})\), nor does it assert the
-absolute consistency of either theory.
+The proof uses the interpretation's fixed treatment of falsity and the
+primitive-recursive transformation of proof codes. It does not prove
+\(\mathsf{Con}(\mathsf{HA})\) internally in HA or assert absolute
+consistency of either theory.
 
-\begin{proofboundary}{def:p07-dialectica-proof-boundary}{What the Dialectica citation carries}
-A local proof would require induction on every rule and arithmetic axiom of
-the selected HA calculus, typed construction of each extracted functional,
-the quantifier-free decidability functional used for contraction, and the
-recursor construction that handles induction.  None is replaced by the six
-translation clauses.  The two metatheorems therefore remain cited and have no
-annex items.
-\index{proof boundary!Dialectica interpretation}
-\end{proofboundary}
+\begin{hbconvention}{def:p07-dialectica-proof-boundary}{Scope of the soundness proof}
+The proof constructs the tuple recursors, numerical matrix tests,
+contraction challenges, and full induction-axiom realizer in the stated
+arrow-only term calculus. It checks all twelve groups of logical rules
+in the source presentation, equality, and every arithmetic axiom of the
+handbook's HA, including predecessor existence. Its higher-type equality
+is the specified intensional equality; no higher-type decision constants
+or unrestricted extensionality principle are added. The relative
+consistency consequence is a transformation of finite proof codes.
+These results concern HA and its chosen quantifier-free target; extensions
+to analysis require their own interpreted axioms.
+\end{hbconvention}
 
 \section{Kleene number realizability}
 \label{sec:p07-number-realizability}
 
-\begin{hbdefinition}{def:p07-number-realizability}{Kleene number realizability}
+\begin{hbdefinition}{def:p07-number-realizability}{Number realizability}
 Fix an acceptable numbering of the unary partial recursive functions, a
 primitive-recursive pairing function, and projections \(\pi_0,\pi_1\).  For
 a closed arithmetic formula \(\varphi\), the phrase
@@ -220,55 +240,17 @@ number realizes \(\varphi\), in which case the implication clause is vacuous \\
 \end{longtable}
 \endgroup
 
-\begin{hbtheorem}{thm:p07-number-realizability-soundness}{cited=Kleene1945}{Soundness of number realizability for HA}
+\begin{hbtheorem}{thm:p07-number-realizability-soundness}{proved=annex:p7.real.1}{Soundness of number realizability for HA}
 There is an effective transformation which, from an
 \(\mathsf{HA}\)-derivation of a closed arithmetic sentence \(\varphi\), produces a
 natural number realizing \(\varphi\).
 \end{hbtheorem}
 
-The cited proof is an induction over the complete HA derivation system.  The
-clause table alone is not that induction.
+The annex constructs the programs uniformly in numerical parameters and
+checks all logical rules, equality, and the complete arithmetic axiom
+list. Effective parameterization supplies the required program indices.
 
-\begin{hbdefinition}{def:p07-almost-negative-ect}{Almost-negative formulas and \(\mathsf{ECT}_0\)}
-An arithmetic formula is \emph{almost negative} when it contains no
-disjunction and every existential quantifier occurs immediately in front of
-an atomic formula.  This syntactic class is needed because unrestricted
-extended Church's thesis is inconsistent.  Fix an arithmetic formula
-\(\chi(e,x,y)\) representing the graph of the selected acceptable numbering:
-it holds exactly when the indexed computation with program number \(e\) on
-input \(x\) terminates with output \(y\).  For almost-negative
-\(\varphi(x)\), an instance of \emph{extended Church's thesis}
-\(\mathsf{ECT}_0\) is the universal closure of
-\[
- \forall x\bigl(\varphi(x)\to\exists y\,\psi(x,y)\bigr)
- \to
- \exists e\,\forall x\bigl(\varphi(x)\to
-   \exists y\,(\chi(e,x,y)\land\psi(x,y))\bigr).
-\]
-The graph formula is an eliminable local abbreviation for the usual
-arithmetization by Kleene's computation predicate and output function; its
-standing is an arithmetic formula, not a new function symbol.  Thus
-\(\mathsf{ECT}_0\) is an object-language scheme after expansion, not the
-informal Church--Turing thesis.  The almost-negative restriction is used in
-the characterization theorem below.
-\index{extended Church thesis@extended Church's thesis}
-\index{almost-negative formula}
-\end{hbdefinition}
-
-\begin{hbtheorem}{thm:p07-ect-characterization}{cited=Troelstra1998}{Formal number-realizability characterization}
-In the formalized partial-term presentation of \cite{Troelstra1998}, every
-instance of \(\mathsf{ECT}_0\) is number-realizable.  Moreover, for every
-closed arithmetic sentence \(\varphi\), derivability of \(\varphi\) in that
-source's exactly displayed partial-term calculus after adjoining
-\(\mathsf{ECT}_0\) is equivalent to the existence of a standard numeral whose
-realizability of \(\varphi\) is derivable in the underlying partial-term
-calculus.
-\end{hbtheorem}
-
-The partial-term calculus and the almost-negative restriction are
-load-bearing.  Replacing that cited calculus by an undefined local theory name,
-or erasing the restriction, would turn a formal characterization into an
-unsupported unrestricted scheme.
+\input{parts/p07/ect-characterization}
 
 \begin{hbdefinition}{def:p07-markov-principle}{Markov's principle for decidable arithmetic predicates}
 For an arithmetic predicate \(\varphi(x)\), the relevant instance of
@@ -284,18 +266,31 @@ metatheoretic step used to analyze realizers.
 \index{Markov principle@Markov's principle}
 \end{hbdefinition}
 
-\begin{hbtheorem}{thm:p07-markov-realizability-boundary}{cited=TroelstraVanDalen1988}{Markov principle: realizability and independence boundary}
-Ordinary Kleene number realizability validates the instances of
-Markov's principle in Definition~\ref{def:p07-markov-principle}, under the
-classical metatheory used for that semantics, while \(\mathsf{HA}\) does not
-derive the full scheme.
+\input{parts/p07/modified-realizability}
+
+\begin{hblemma}{thm:p07-markov-number-realizability}{proved=annex:p7.real.2}{Markov realizability}
+In the classical metatheory, ordinary Kleene number realizability
+validates every instance of \cref{def:p07-markov-principle}, including
+its displayed decidability premise. A uniform realizer searches the
+successive outputs of the supplied decision realizer. The double-negation
+realizer guarantees that this search terminates; it is not replaced by
+an unrestricted termination assertion.
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p07-markov-realizability-boundary}{proved=annex:p7.mr.4}{Nonderivability of Markov's principle}
+\(\mathsf{HA}\) does not derive the full scheme in
+\cref{def:p07-markov-principle}. Already one instance with a bounded
+predicate and a universally closed numerical parameter is not provable.
+This is a nonderivability result, separate from validation by ordinary
+number realizability.
 \end{hbtheorem}
 
-Consequently ordinary number realizability is not a countermodel proving
-Markov's principle independent of HA.  The nonderivability half requires the
-separate Kripke/model argument cited in
-\cite{TroelstraVanDalen1988}; modified realizability or another named model
-must be specified before it is used as an independence method.  Realizability
+The two assertions use different interpretations. Ordinary number
+realizability validates the scheme by a search terminating on realizing
+inputs. Modified realizability extracts total System-T functions; the
+halting argument shows why such a function cannot realize the chosen
+Markov instance. Validation in the first semantics is therefore not
+mistaken for a countermodel in the second.  Realizability
 topoi are outside this row; see \cite{VanOosten2008} only for further reading.
 
 \begingroup\small
@@ -333,7 +328,9 @@ consistency \\
 \section{Disjunction and numerical existence}
 \label{sec:p07-constructive-properties}
 
-\begin{hblemma}{thm:p07-lj-disjunction-last-rule}{proved=annex:p7.functional.1}{Cut-free LJ disjunction extraction}
+\input{parts/p07/proof-carrying-realizability}
+
+\begin{hblemma}{thm:p07-lj-disjunction-last-rule}{proved=annex:p7.functional.1}{Last-rule lemma}
 If there is a derivation on
 \hyperref[sheet:lj]{\texttt{sheet:lj}} of the empty-antecedent sequent
 \(\Rightarrow\varphi\lor\psi\) containing neither Cut nor Mix, then that sheet
@@ -341,11 +338,11 @@ has a derivation of \(\Rightarrow\varphi\) or a derivation of
 \(\Rightarrow\psi\).
 \end{hblemma}
 
-The lemma is only the canonical last-rule step.  Turning an arbitrary
-intuitionistic derivation into such a derivation additionally requires the
-complete cut-elimination theorem for the exact calculus.
+\Cref{thm:p07-lj-exact-cut-elimination} supplies the complete Cut and
+Mix elimination needed before applying this last-rule lemma. Its scope
+is the stated logical sheet, without arithmetic or equality axioms.
 
-\begin{hbtheorem}{thm:p07-ipc-disjunction-property}{cited=TroelstraVanDalen1988}{Disjunction property for intuitionistic propositional logic}
+\begin{hbtheorem}{thm:p07-ipc-disjunction-property}{proved=annex:p7.real.3}{Propositional disjunction property}
 For propositional formulas \(\varphi\) and \(\psi\), if
 \(\derives_{\mathsf{LJ}}\varphi\lor\psi\), then
 \(\derives_{\mathsf{LJ}}\varphi\) or
@@ -353,14 +350,14 @@ For propositional formulas \(\varphi\) and \(\psi\), if
 fragment of \hyperref[sheet:lj]{\texttt{sheet:lj}} with empty antecedent.
 \end{hbtheorem}
 
-\begin{hbtheorem}{thm:p07-ha-disjunction-property}{cited=TroelstraVanDalen1988}{Disjunction property for HA}
+\begin{hbtheorem}{thm:p07-ha-disjunction-property}{proved=annex:p7.real.5}{Disjunction property for HA}
 For closed arithmetic sentences \(\varphi\) and \(\psi\), if
 \(\derives_{\mathsf{HA}}\varphi\lor\psi\), then
 \(\derives_{\mathsf{HA}}\varphi\) or
 \(\derives_{\mathsf{HA}}\psi\).
 \end{hbtheorem}
 
-\begin{hbtheorem}{thm:p07-ha-numerical-existence}{cited=TroelstraVanDalen1988}{Numerical existence property for HA}
+\begin{hbtheorem}{thm:p07-ha-numerical-existence}{proved=annex:p7.real.6}{Numerical existence property for HA}
 Let \(\varphi(x)\) be an arithmetic formula whose only possible free variable is
 the displayed number variable.  If
 \(\derives_{\mathsf{HA}}\exists x\,\varphi(x)\), then for some \(n\in\N\),
@@ -368,36 +365,33 @@ the result of substituting the standard numeral denoting \(n\) for \(x\) in
 \(\varphi\) is derivable in \(\mathsf{HA}\).
 \end{hbtheorem}
 
-These are metatheorems about the existence of derivations, not
-object-language elimination rules.  In particular, extracting a number that
-realizes a disjunct does not by itself produce an HA derivation of that
-disjunct.  The frozen v1.1 normalization sketch covered neither arithmetic
-induction nor equality and therefore cannot serve as a proof of the last two
-theorems.
+Propositional disjunction uses exact cut elimination. For arithmetic,
+\cref{thm:p07-proof-carrying-soundness} constructs proof components as
+well as computational data. Ordinary realizability alone does not
+supply the asserted HA proof.
 
-\begin{proofboundary}{def:p07-ha-extraction-source}{Source-relative status of the constructive-property proofs}
-The three preceding metatheorems are imported from the fixed HA development in
-\textcite[Vol.~I, Chapter~3, \S5.6, beginning at p.~139]{TroelstraVanDalen1988}.
-That source proves the disjunction and numerical-existence properties for its
-fully specified arithmetic formalism, including equality and induction.  This
-handbook does not reproduce that formalism's proof-term grammar, equality
-conversions, induction reductions, normalization proof, or erasure theorem;
-consequently it does not invent a local proof-term calculus or label the three
-results locally proved.
+\begin{hbconvention}{def:p07-ha-extraction-source}{Constructive extraction and its scope}
+The HA disjunction and numerical-existence proofs use the explicitly
+defined proof-carrying relation. Its soundness proof constructs every
+component proof by finite HA inferences, including the proof of a
+universal conclusion in the induction case. It does not infer HA
+provability from ordinary realizability, nor require a normalization
+theorem for an unstated arithmetic proof-term calculus.
 
-The cited extraction has the expected canonical-form shape: a normalized
-closed proof of a disjunction determines one disjunct, and a normalized closed
-proof of a numerical existential determines a numeral and a proof of its
-instance.  This sentence explains the cited argument; it is not a proof from
-the smaller inherited normalization theorem, which explicitly omits arithmetic
-equality and induction.  For the purely propositional last-rule fact available
-locally, use Lemma~\ref{thm:p07-lj-disjunction-last-rule} and its annex proof.
-\index{disjunction property!source-relative proof}
-\index{numerical existence property!source-relative proof}
-\end{proofboundary}
+Compare \cite[Vol.~I, Chapter~3, \S5.6]{TroelstraVanDalen1988}.
+Here the extraction manipulates HA proof codes and programs. It is a
+different proof, not a reconstruction of that source's normalization
+calculus.
 
-The resulting treatments keep four neighboring topics distinct: the exact
-System-T/Dialectica clauses and HA soundness theorem, the complete
-number-realizability clause table and its Markov boundary, the matched
-source-relative constructive-property results, and the separately sourced proof-mining
-survey in the structural-extensions chapter.
+The propositional case follows from
+\cref{thm:p07-lj-exact-cut-elimination}. Its last-rule step is
+\cref{thm:p07-lj-disjunction-last-rule}. No complexity bound on
+arithmetic witness extraction is asserted.
+\end{hbconvention}
+
+The chapter distinguishes Dialectica extraction, ordinary number
+realizability, proof-carrying HA extraction, and modified realizability.
+The formal extended-Church-thesis characterization is proved in the
+explicit partial-term calculus, including the necessity of its
+antecedent restriction. Proof mining is treated in the
+structural-extensions chapter.

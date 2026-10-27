@@ -1,0 +1,399 @@
+%% toc: P3 39 39.10
+\section{Proofs: computable presentations of countable structures}
+\label{sec:annex-p03-w03-p03-063-computable-presentations}
+
+Throughout, \(\Lang\) is a computable signature in the sense of
+\cref{def:p03-w03-p03-063-computable-signature}, and codes are those of
+\cref{def:p03-w03-p03-063-sentence-coding}.  Two facts about the numerical
+pairing map of \cref{sec:turing-machines-01} are used repeatedly.
+
+\emph{(P1) Bijectivity.}  For each \(s\geq0\), the pairs \((a,b)\) with
+\(a+b=s\) receive the codes \(s(s+1)/2+b\) for \(b=0,\ldots,s\).  These are
+the consecutive integers from \(s(s+1)/2\) to \((s+1)(s+2)/2-1\).  The blocks
+for \(s=0,1,2,\ldots\) partition \(\N\), so
+\(\langle\cdot,\cdot\rangle_{\N}:\N^2\to\N\) is a bijection.  Its inverse is
+computed by the decoding procedure in \cref{sec:turing-machines-01}.  By induction on \(k\),
+\(\operatorname{code}_k:\N^k\to\N\) is a bijection for every \(k\geq1\), and
+it is computably invertible; \(\operatorname{code}_0\) sends the empty tuple
+to \(0\).
+
+\emph{(P2) Size.}  Write \(T=(a+b)(a+b+1)/2\).  Then
+\(\langle a,b\rangle_{\N}=T+b\geq b\).  If \(a+b\geq1\), then
+\(T\geq a+b\geq a\); if \(a+b=0\), then \(a=0\).  Hence
+\(\langle a,b\rangle_{\N}\geq a\).  If \(a\geq1\), then \(T\geq1\) and so
+\(\langle a,b\rangle_{\N}>b\).  By induction on \(k\), every entry of a tuple
+is at most its code \(\operatorname{code}_k\).
+
+A function defined by course-of-values recursion, in which the value at \(n\)
+is computed by a computable step from \(n\) and the values at arguments
+smaller than \(n\), is computable.  The procedure computes the finite table of
+values at \(0,1,\ldots,n\) in order, and each entry is obtained by a
+terminating computation from the earlier ones.
+
+\begin{annexitem}{annex:p03-w03-p03-063-parsing}{thm:p03-w03-p03-063-parsing}{Decidable syntax}
+\begin{proof}
+\emph{Smaller subcodes.}  In a code
+\(\langle t,\langle i,\operatorname{code}_k(\vec z)\rangle_{\N}\rangle_{\N}\)
+with tag \(t\in\{2,4\}\), (P2) gives
+\(z_l\leq\operatorname{code}_k(\vec z)\leq\langle i,\operatorname{code}_k(\vec z)\rangle_{\N}\).
+Since \(t\geq1\), the last number is strictly less than the whole code.  The
+same argument applies to tag \(3\), with \(\langle\ulcorner t\urcorner,\ulcorner s\urcorner\rangle_{\N}\),
+and to tag \(5\).  Hence every immediate subexpression has a strictly smaller
+code.
+
+\emph{Terms.}  The index sets \(I_R,I_F,I_C\) are initial segments of \(\N\),
+so each is either \(\N\) or a finite set \(\{0,\ldots,p-1\}\), and each is
+decidable.  Define \(\chi_{\mathrm{Tm}}(n)\) as follows.  Decode
+\(n=\langle a,b\rangle_{\N}\) by (P1).  Put \(\chi_{\mathrm{Tm}}(n)=1\) iff
+one of the following holds:
+\begin{itemize}
+\item \(a=0\);
+\item \(a=1\) and \(b\in I_C\); or
+\item \(a=2\), \(b=\langle i,z\rangle_{\N}\) with \(i\in I_F\), and, for
+  \(k=a_F(i)\), either \(k=0\) and \(z=0\), or \(k\geq1\),
+  \(z=\operatorname{code}_k(z_1,\ldots,z_k)\) and
+  \(\chi_{\mathrm{Tm}}(z_l)=1\) for every \(l\).
+\end{itemize}
+The step is computable, because \(a_F\) is computable and decoding is
+computable, and it consults only the smaller arguments \(z_l\).  So
+\(\chi_{\mathrm{Tm}}\) is computable by course-of-values recursion.  An
+induction on terms shows that \(\chi_{\mathrm{Tm}}(n)=1\) exactly when \(n\)
+is the code of a term.
+
+\emph{Atomic formulas and literals.}  Put \(n\in\mathrm{At}\) iff
+\(n=\langle3,\langle u,v\rangle_{\N}\rangle_{\N}\) with \(u,v\in\mathrm{Tm}\),
+or \(n=\langle4,\langle i,z\rangle_{\N}\rangle_{\N}\) with \(i\in I_R\) and
+\(z\) the code of an \(a_R(i)\)-tuple of term codes.  Put
+\(\mathrm{Lit}=\mathrm{At}\cup\{\langle5,m\rangle_{\N}:m\in\mathrm{At}\}\).
+Both conditions are decidable from \(\chi_{\mathrm{Tm}}\), \(a_R\) and
+decoding.
+
+\emph{Unique readability.}  The tag determines the form of the expression.
+The pairing map is injective by (P1), so the tag and its argument are
+determined.  The index \(i\) then determines the arity \(k\), and
+\(\operatorname{code}_k\) is injective.  Induction on codes now shows that
+each code in \(\mathrm{Tm}\cup\mathrm{Lit}\) comes from exactly one
+expression.
+
+\emph{Occurrence.}  Define \(\mathrm{Occ}(j,n)\) by recursion on \(n\).  For
+tag \(0\), it holds iff \(b=j\).  For tag \(1\), it is false.  For the tags
+\(2\), \(3\), \(4\) and \(5\), it holds iff it holds for some immediate
+subcode.  This is a course-of-values recursion in \(n\) with \(j\) as a
+parameter, so the relation is decidable.  Since
+\(\ulcorner x_j\urcorner=\langle0,j\rangle_{\N}\geq j\), and every subcode is
+at most \(n\), every \(j\) with \(\mathrm{Occ}(j,n)\) satisfies \(j\leq n\).
+Therefore the finite set of variable indices of \(n\) is computable from
+\(n\) by checking \(j=0,\ldots,n\).
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-063-equivalence}{thm:p03-w03-p03-063-equivalence}{Three forms of a computable presentation}
+\begin{proof}
+Let \(P\) be the set of codes of true atomic \(\Lang(M)\)-sentences.  For a
+literal code \(n\) whose variable indices lie in \(M\), let \(\sigma_n\) be
+the \(\Lang(M)\)-sentence it codes.
+
+\emph{(a) implies (b).}  If \(j\in M\), then \(c_j=c_j\) is a true atomic
+\(\Lang(M)\)-sentence, so
+\(\ulcorner x_j=x_j\urcorner\in\ulcorner\operatorname{Diag}(\mathcal M)\urcorner\).
+If \(j\notin M\), then no code mentioning \(x_j\) belongs to that set.  Hence
+\(j\in M\) iff
+\(\ulcorner x_j=x_j\urcorner\in\ulcorner\operatorname{Diag}(\mathcal M)\urcorner\),
+and the map \(j\mapsto\ulcorner x_j=x_j\urcorner\) is computable.  So \(M\)
+is decidable.  Negated codes carry tag \(5\) and lie outside \(\mathrm{At}\),
+so \(P=\ulcorner\operatorname{Diag}(\mathcal M)\urcorner\cap\mathrm{At}\).
+This is decidable by \cref{thm:p03-w03-p03-063-parsing}.
+
+\emph{(b) implies (c).}  Define
+\(\rho(i,z)\) as follows.  If \(i\notin I_R\), return \(0\).  Otherwise put
+\(k=a_R(i)\) and decode \(z=\operatorname{code}_k(n_1,\ldots,n_k)\) when
+\(k\geq1\).  If some \(n_l\notin M\), return \(0\).  Otherwise return
+\(\chi_P(\ulcorner\mathsf R_i(x_{n_1},\ldots,x_{n_k})\urcorner)\).  The
+sentence coded there is \(\mathsf R_i(c_{n_1},\ldots,c_{n_k})\), so
+\(\rho(i,\operatorname{code}_k(\vec n))=1\) iff
+\(\vec n\in\mathsf R_i^{\mathcal M}\).
+
+Define \(\zeta(i,z)\) as follows.  If \(i\notin I_F\), or if a decoded entry
+lies outside \(M\), return \(0\).  Otherwise search for the least \(m\in M\)
+with
+\(\ulcorner\mathsf f_i(x_{n_1},\ldots,x_{n_k})=x_m\urcorner\in P\).  The
+value \(m=\mathsf f_i^{\mathcal M}(\vec n)\) lies in \(M\) and satisfies the
+condition, so the search terminates.  No other \(m\) satisfies it, because
+the sentence asserts equality with \(c_m\).  Define \(\gamma(i)=0\) for
+\(i\notin I_C\).  Otherwise let \(\gamma(i)\) be the least \(m\in M\) with
+\(\ulcorner\mathsf c_i=x_m\urcorner\in P\), which exists and is
+\(\mathsf c_i^{\mathcal M}\).  All three functions are total and computable,
+since \(I_R,I_F,I_C\), \(M\) and \(P\) are decidable and \(a_R,a_F\) are
+computable.
+
+\emph{(c) implies (a).}  For \(n\in\mathrm{Tm}\) with variable indices in
+\(M\), define \(\operatorname{val}(n)\) by course-of-values recursion:
+\(\operatorname{val}(\ulcorner x_j\urcorner)=j\),
+\(\operatorname{val}(\ulcorner\mathsf c_i\urcorner)=\gamma(i)\), and
+\[
+ \operatorname{val}(\ulcorner\mathsf f_i(t_1,\ldots,t_k)\urcorner)
+ =\zeta\bigl(i,\operatorname{code}_k(\operatorname{val}\ulcorner t_1\urcorner,\ldots,\operatorname{val}\ulcorner t_k\urcorner)\bigr).
+\]
+By induction on terms, \(\operatorname{val}(\ulcorner t\urcorner)\) is the
+value in \(\mathcal M_M\) of the closed \(\Lang(M)\)-term obtained from \(t\)
+by replacing each \(x_j\) with \(c_j\), and this value lies in \(M\).  The
+base cases hold because \(c_j\) denotes \(j\) and
+\(\gamma(i)=\mathsf c_i^{\mathcal M}\in M\).  In the step, the arguments lie
+in \(M^k\) by the induction hypothesis, and \(\zeta\) agrees with
+\(\mathsf f_i^{\mathcal M}\) on \(M^k\), which maps into \(M\).
+
+Now let \(n\) be given.  If \(n\notin\mathrm{Lit}\), or if some variable
+index of \(n\) lies outside \(M\), then
+\(n\notin\ulcorner\operatorname{Diag}(\mathcal M)\urcorner\).  Both tests are
+decidable by \cref{thm:p03-w03-p03-063-parsing} and the decidability of
+\(M\).  Otherwise \(\sigma_n\) is defined.  If \(n\) codes \(t=s\),
+then \(\sigma_n\) is true iff
+\(\operatorname{val}\ulcorner t\urcorner=\operatorname{val}\ulcorner s\urcorner\).
+If \(n\) codes \(\mathsf R_i(\vec t)\), then \(\sigma_n\) is true iff
+\(\rho(i,\operatorname{code}_k(\operatorname{val}\ulcorner\vec t\urcorner))=1\),
+because the values lie in \(M^k\).  A code with tag \(5\) is in the set iff
+the atomic code inside it is a false sentence.  This decides
+\(\ulcorner\operatorname{Diag}(\mathcal M)\urcorner\).  It is exactly the
+procedure of \cref{def:p03-w03-p03-063-decide-literal}.
+
+Condition (a) gives decidability of \(M\) by the first paragraph, and (b) and
+(c) include it.
+
+\emph{The binary sequence \(D(\mathcal M)\).}  The set \(\mathrm{At}\) is
+decidable.  It is infinite, since the codes \(\ulcorner x_j=x_j\urcorner\) are
+pairwise distinct.  So \(i\mapsto a_i\) is computable: search for successive
+elements.  Its inverse on \(\mathrm{At}\) is computable: count the elements
+of \(\mathrm{At}\) below \(n\).  By definition,
+\(D(\mathcal M)(i)=\chi_P(a_i)\).  If (b) holds, \(D(\mathcal M)\) is
+therefore computable.  Conversely, if \(D(\mathcal M)\) is computable, then
+\(\chi_P(n)\) is \(0\) for \(n\notin\mathrm{At}\) and is \(D(\mathcal M)(i)\)
+for \(n=a_i\).  Moreover,
+\(j\in M\) iff \(D(\mathcal M)(i)=1\) for the \(i\) with
+\(a_i=\ulcorner x_j=x_j\urcorner\).  So (b) holds.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-063-pullback}{thm:p03-w03-p03-063-pullback}{Transport along computable bijections}
+\begin{proof}
+For \(m\in\N\), \(g^{-1}(m)\) is the least \(n\) with \(g(n)=m\).  The search
+terminates because \(g\) is onto, and it returns the right value because
+\(g\) is injective.  So \(g^{-1}\) is computable.
+
+By \cref{thm:p03-w03-p03-063-equivalence}, \(\mathcal M\) has uniformly
+computable interpretations \(\rho,\zeta,\gamma\).  For
+\(z=\operatorname{code}_k(\vec n)\) with \(k\) the relevant arity, put
+\begin{gather*}
+ \rho'(i,z)=\rho\bigl(i,\operatorname{code}_k(g\vec n)\bigr),\\
+ \gamma'(i)=g^{-1}(\gamma(i)),\\
+ \zeta'(i,z)=g^{-1}\bigl(\zeta(i,\operatorname{code}_k(g\vec n))\bigr).
+\end{gather*}
+Put the value \(0\) at indices outside \(I_R\), \(I_F\) or \(I_C\).  These
+functions are total and computable.  By the displayed definition of the
+pullback, they are uniformly computable interpretations of
+\(g^{-1}(\mathcal M)\), whose domain \(\N\) is decidable.  By
+\cref{thm:p03-w03-p03-063-equivalence}, \(g^{-1}(\mathcal M)\) is computable.
+
+The map \(g\) is a bijection.  It satisfies
+\(\vec n\in\mathsf R_i^{g^{-1}(\mathcal M)}\iff g\vec n\in\mathsf R_i^{\mathcal M}\),
+\(g(\mathsf f_i^{g^{-1}(\mathcal M)}(\vec n))=\mathsf f_i^{\mathcal M}(g\vec n)\)
+and \(g(\mathsf c_i^{g^{-1}(\mathcal M)})=\mathsf c_i^{\mathcal M}\).
+So it is a surjective embedding, that is, an isomorphism
+(\cref{sec:maps-elementarity-01}).
+
+Let \(h:\mathcal A\to\mathcal M\) be a computable isomorphism from an
+\(\omega\)-presentation \(\mathcal A\).  Since \(h\) is an isomorphism,
+\(\mathsf R_i^{\mathcal A}(\vec n)\) iff \(\mathsf R_i^{\mathcal M}(h\vec n)\),
+\(\mathsf f_i^{\mathcal A}(\vec n)=h^{-1}(\mathsf f_i^{\mathcal M}(h\vec n))\)
+and \(\mathsf c_i^{\mathcal A}=h^{-1}(\mathsf c_i^{\mathcal M})\).  Thus
+\(\mathcal A=h^{-1}(\mathcal M)\), which is computable by the first part.
+Finally, a composite of computable total functions is computable, and the
+inverse of a computable bijection is computable by the search above.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-063-domain}{thm:p03-w03-p03-063-domain}{What the domain convention changes}
+\begin{proof}
+\emph{(a)}  By \cref{thm:p03-w03-p03-063-equivalence}, \(M\) is decidable
+and \(\mathcal M\) has uniformly computable interpretations
+\(\rho,\zeta,\gamma\).  Let \(h(0)\) be the least element of \(M\), and let
+\(h(i+1)\) be the least element of \(M\) above \(h(i)\).  The searches
+terminate because \(M\) is infinite, so \(h\) is computable and is a bijection
+\(\N\to M\).  On \(M\), the inverse is \(h^{-1}(m)=|\{d<m:d\in M\}|\), a
+bounded count, and this formula defines a computable total function on \(\N\).
+Transport \(\mathcal M\) along \(h\): put
+\(\mathsf R_i^{\mathcal A}(\vec n)\iff\mathsf R_i^{\mathcal M}(h\vec n)\),
+\(\mathsf f_i^{\mathcal A}(\vec n)=h^{-1}(\mathsf f_i^{\mathcal M}(h\vec n))\)
+and \(\mathsf c_i^{\mathcal A}=h^{-1}(\mathsf c_i^{\mathcal M})\).  As in
+\cref{annex:p03-w03-p03-063-pullback}, \(h\) is an isomorphism
+\(\mathcal A\to\mathcal M\).  The functions
+\(\rho(i,\operatorname{code}_k(h\vec n))\),
+\(h^{-1}(\zeta(i,\operatorname{code}_k(h\vec n)))\) and \(h^{-1}(\gamma(i))\)
+are uniformly computable interpretations of \(\mathcal A\).  They are correct
+because \(\zeta\) and \(\gamma\) take values in \(M\) at arguments from \(M\),
+where \(h^{-1}\) is the true inverse.  By
+\cref{thm:p03-w03-p03-063-equivalence}, \(\mathcal A\) is computable.
+
+\emph{(b)}  Let \(\mathcal B\) be a finite \(\Lang\)-structure with \(k\)
+elements, \(k\geq1\) since domains are nonempty.  List them as
+\(b_0,\ldots,b_{k-1}\), and transport \(\mathcal B\) along \(l\mapsto b_l\) to
+a structure \(\mathcal M\) with domain \(\{0,\ldots,k-1\}\).  This is a
+\((\sqsubseteq\omega)\)-presentation isomorphic to \(\mathcal B\).  Its
+domain is finite and so decidable.  Since \(\Lang\) is finite, there are
+finitely many symbols, and each interpretation is a finite table on
+\(\{0,\ldots,k-1\}\).  Let \(\rho(i,z)\) decode \(z\) to an \(a_R(i)\)-tuple
+and look it up in the table of \(\mathsf R_i\) when \(i\in I_R\) and every
+entry is below \(k\); otherwise let it return \(0\).  Define \(\zeta\) and
+\(\gamma\) in the same way.  These are finite case distinctions over
+computable decoding, hence computable.  By
+\cref{thm:p03-w03-p03-063-equivalence}, \(\mathcal M\) is computable.
+
+\emph{(c)}  Let \(I_R=\N\), \(a_R(i)=1\) for all \(i\), and
+\(I_F=I_C=\varnothing\).  This signature is computable.  Let
+\(\mathcal B\) have one element \(b\), with \(\mathsf R_i^{\mathcal B}=\{b\}\)
+if \(i\in K\) and \(\mathsf R_i^{\mathcal B}=\varnothing\) otherwise.
+Suppose that \(\mathcal M\) is a computable \((\subseteq\omega)\)-presentation
+of \(\mathcal B\).  Its domain is \(\{m\}\) for one number \(m\), and
+\[
+ i\in K\iff \mathsf R_i^{\mathcal M}(m)\iff
+ \bigl\langle4,\langle i,\langle0,m\rangle_{\N}\rangle_{\N}\bigr\rangle_{\N}
+ \in\ulcorner\operatorname{Diag}(\mathcal M)\urcorner,
+\]
+using \(\operatorname{code}_1(n)=n\).  For the fixed \(m\), the map
+\(i\mapsto\langle4,\langle i,\langle0,m\rangle_{\N}\rangle_{\N}\rangle_{\N}\)
+is computable, so \(K\) would be decidable.  This contradicts
+\cref{thm:halting-undecidable}.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-063-no-copy}{thm:p03-w03-p03-063-no-copy}{An abstract countable structure need not have a computable copy}
+\begin{proof}
+\emph{The structure.}  Take as vertices the pairs \((n,r)\) with \(n\in X\)
+and \(r<n+3\).  Let \(E((n,r),(n',r'))\) hold iff \(n=n'\) and
+\(r'\equiv r\pm1\pmod{n+3}\).  Since \(n+3\geq3\), each vertex has exactly
+two distinct neighbours, \(E\) is symmetric and irreflexive, and the cycle
+\(Z_n=\{(n,r):r<n+3\}\) has length \(n+3\).  Since \(X\) is infinite,
+\(\mathcal C_X\) is countably infinite.
+
+\emph{A combinatorial claim.}  Suppose that \(w_0,\ldots,w_{n+2}\) are
+pairwise distinct vertices of \(\mathcal C_X\) with \(E(w_l,w_{l+1})\) for
+\(l<n+2\) and \(E(w_{n+2},w_0)\).  We show that \(n\in X\).  Edges join only
+vertices of the same cycle, so every \(w_l\) lies in one cycle \(Z_m\) with
+\(m\in X\).  Write its vertices as \(z_q=(m,q)\), indices modulo \(m+3\).
+Let \(w_0=z_p\).  Then \(w_1=z_{p+d}\) for some \(d\in\{1,-1\}\).  By
+induction, \(w_l=z_{p+ld}\) for \(l\leq n+2\): the vertex \(w_{l+1}\) is a
+neighbour of \(z_{p+ld}\), so it is \(z_{p+(l+1)d}\) or
+\(z_{p+(l-1)d}=w_{l-1}\), and distinctness excludes \(w_{l-1}\).  The
+\(n+3\) distinct vertices lie in a set of \(m+3\) elements, so \(n\leq m\).
+The closing edge says that \(z_{p+(n+2)d}\) is adjacent to \(z_p\).  So
+\(n+2\equiv\pm1\pmod{m+3}\).  Since \(2\leq n+2\leq m+2\), the case
+\(n+2\equiv1\) is impossible.  The case \(n+2\equiv-1\equiv m+2\) gives
+\(n=m\in X\).  Conversely, if \(n\in X\), then the vertices of \(Z_n\) in
+cyclic order form such a sequence.
+
+\emph{Enumerating \(X\).}  Let \(\mathcal A\) be a computable copy.  By
+\cref{thm:p03-w03-p03-063-equivalence}, its domain \(A\) and the relation
+\(E^{\mathcal A}\) are decidable.  Let \(Q(n,z)\) say the following: \(z\)
+decodes as \(\operatorname{code}_{n+3}(v_0,\ldots,v_{n+2})\); the \(v_l\) lie
+in \(A\) and are pairwise distinct; \(E^{\mathcal A}(v_l,v_{l+1})\) holds for
+\(l<n+2\); and \(E^{\mathcal A}(v_{n+2},v_0)\) holds.  The relation \(Q\) is
+decidable, since it is a finite list of decidable checks after computable
+decoding.  An isomorphism preserves and reflects \(E\) and distinctness.  So
+by the claim, \(n\in X\) iff \(\exists z\,Q(n,z)\).  The partial function
+\(n\mapsto\mu z\,Q(n,z)\) is partial recursive, by closure under unbounded
+minimization (\cref{def:p04-partial-recursive}) applied to the computable
+characteristic function of \(Q\).  By \cref{thm:p04-tm-partial-recursive}, it
+is partial computable.  Its domain is \(X\), so \(X\) is computably
+enumerable (\cref{sec:turing-machines-03}).
+
+\emph{The example.}  The set \(\N\setminus K\) is infinite: otherwise \(K\)
+would be cofinite, and a cofinite set is decidable by a finite table of
+exceptions, contradicting \cref{thm:halting-undecidable}.  By
+the corollary in \cref{sec:universal-reductions-03}, \(\N\setminus K\) is not computably enumerable.
+So \(\mathcal C_{\N\setminus K}\) has no computable copy.  It is countably
+infinite, so it has \(\omega\)-presentations, obtained by transporting it
+along any bijection with \(\N\).
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-063-omega-copies}{thm:p03-w03-p03-063-omega-copies}{Computable copies of \((\N,<)\) that are not computably isomorphic}
+\begin{proof}
+\emph{Step 1: a one-to-one computable listing of \(K\).}  By
+\cref{thm:universal-computation}, \(n\mapsto\varphi_n(n)\) is partial
+computable, and \(K\) is its domain.  By \cref{thm:p04-tm-partial-recursive},
+it is partial recursive.  By \cref{thm:p04-kleene-normal-form}, there are an
+index \(e_0\) and a primitive recursive relation \(\mathsf T_1\) such that
+\(n\in K\) iff \(\exists y\,\mathsf T_1(e_0,n,y)\).  The relation
+\(\mathsf T_1\) is decidable by \cref{sec:turing-machines-02}.  Let
+\[
+ W=\{\langle n,y\rangle_{\N}:\mathsf T_1(e_0,n,y)\text{ and }
+ \neg\mathsf T_1(e_0,n,y')\text{ for all }y'<y\}.
+\]
+This set is decidable, and it contains exactly one element with first
+component \(n\) for each \(n\in K\) and none for \(n\notin K\).  The set \(K\)
+is infinite, since a finite set is decidable and \(K\) is not
+(\cref{thm:halting-undecidable}).  So \(W\) is infinite.  List \(W\) in
+increasing order as \(w_0<w_1<\cdots\), which is computable as in
+\cref{annex:p03-w03-p03-063-domain}.  Let \(k_s\) be the first component of
+\(w_s\).  Then \(s\mapsto k_s\) is computable and one-to-one, with range
+\(K\).
+
+\emph{Step 2: the presentation.}  Put
+\(\operatorname{key}(2n)=(n,0)\) and \(\operatorname{key}(2s+1)=(k_s,1)\).
+Keys are pairwise distinct, because \(s\mapsto k_s\) is one-to-one.  Let
+\(x<_My\) iff \(\operatorname{key}(x)\) precedes \(\operatorname{key}(y)\) in
+the lexicographic order of \(\N\times\{0,1\}\).  The lexicographic order is a
+strict linear order and \(\operatorname{key}\) is injective, so \(<_M\) is a
+strict linear order on \(\N\).  It is decidable, since keys are computable and
+compared by finitely many comparisons.  Thus
+\(\rho(0,\operatorname{code}_2(x,y))=1\) iff \(x<_My\) defines uniformly
+computable interpretations, and \(\mathcal M=(\N,<_M)\) is computable by
+\cref{thm:p03-w03-p03-063-equivalence}.
+
+\emph{Step 3: \(\mathcal M\cong(\N,<)\).}  If
+\(\operatorname{key}(x)=(n,b)\), every \(<_M\)-predecessor of \(x\) has a key
+with first coordinate at most \(n\).  Such elements are the \(n+1\) even
+numbers \(2m\) with \(m\leq n\), and the odd numbers \(2s+1\) with
+\(k_s\leq n\).  There are at most \(n+1\) of the latter, by injectivity.  So
+the set \(\operatorname{pred}(x)\) of predecessors is finite.  Let
+\(r(x)=|\operatorname{pred}(x)|\).  If \(x<_My\), then
+\(\operatorname{pred}(x)\cup\{x\}\subseteq\operatorname{pred}(y)\) by
+transitivity, and \(x\notin\operatorname{pred}(x)\), so \(r(x)<r(y)\).  By
+linearity, \(r(x)<r(y)\) iff \(x<_My\), and \(r\) is injective.  The image of
+\(r\) is downward closed.  If \(r(x)=p>0\), let \(y\) be the
+\(<_M\)-greatest element of the finite nonempty set
+\(\operatorname{pred}(x)\).  Then
+\(\operatorname{pred}(y)=\operatorname{pred}(x)\setminus\{y\}\), so
+\(r(y)=p-1\).  The image is infinite because \(r\) is injective on \(\N\).
+An infinite downward-closed subset of \(\N\) is \(\N\).  Hence
+\(r:(\N,<_M)\to(\N,<)\) is a bijection that preserves and reflects the order,
+which is an isomorphism.
+
+\emph{Step 4: successors.}  The elements strictly between \(2n\) and
+\(2n+2\) in \(<_M\) are those with key \((n,1)\).  These are the odd numbers
+\(2s+1\) with \(k_s=n\), and there is one exactly when \(n\in K\).  Since
+\(2n<_M2n+2\), the immediate \(<_M\)-successor of \(2n\) is \(2n+2\) iff
+\(n\notin K\).
+
+\emph{Step 5: no computable isomorphism.}  Suppose that
+\(g:(\N,<)\to\mathcal M\) is a computable isomorphism.  By
+\cref{thm:p03-w03-p03-063-pullback}, \(g^{-1}\) is computable.  An order
+isomorphism carries immediate successors to immediate successors, and the
+immediate successor of \(p\) in \((\N,<)\) is \(p+1\).  So the immediate
+\(<_M\)-successor of \(x\) is \(g(g^{-1}(x)+1)\).  By Step~4,
+\(n\in K\) iff \(g(g^{-1}(2n)+1)\neq2n+2\), which would make \(K\) decidable,
+contrary to \cref{thm:halting-undecidable}.  The standard presentation
+\((\N,<)\) is computable, since \(x<y\) is decidable.  It is isomorphic to
+the computable copy \(\mathcal M\), but not computably.  So \((\N,<)\) is not
+computably categorical in the sense of \cref{def:p03-computably-categorical}.
+
+\emph{(b)}  Let \(\pi\) exchange \(2n\) and \(2n+1\) when \(n\in K\), and fix
+both when \(n\notin K\).  This \(\pi\) is a bijection of \(\N\).  Put
+\(x<'y\) iff \(\pi(x)<\pi(y)\).  Then
+\(\pi:(\N,<')\to(\N,<)\) is an isomorphism.  Also \(2n+1<'2n\) iff
+\(n\in K\): if \(n\in K\), then \(\pi(2n+1)=2n<2n+1=\pi(2n)\), and otherwise
+\(2n+1<2n\) is false.  If \((\N,<')\) were computable, then the computable
+map \(n\mapsto\ulcorner c_{2n+1}<c_{2n}\urcorner\), followed by its decision
+procedure, would decide \(K\).  So \((\N,<')\) is an \(\omega\)-presentation
+of \((\N,<)\) that is not computable.
+\end{proof}
+\end{annexitem}

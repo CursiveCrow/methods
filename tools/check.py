@@ -26,6 +26,8 @@ mirroring the source-tree behaviour; the rest print as findings):
                          exact, current provenance record and artifact
   annex-bidir            annex<->body bidirectionality (112=112 discipline)
   label-prefix           label-prefix taxonomy violations
+  legacy-label           invalid/missing legacy-label policy or declaration
+                         (always hard; no source-label exemption)
   duplicate-label        duplicate labels (incl. environment-argument labels)
   dangling-ref           dangling \\ref/\\cref/\\pageref/\\hyperref/
                          \\entrycalculus/\\showcalculus targets
@@ -57,6 +59,8 @@ Exit codes: 0 all hard checks passed; 1 hard failures; 2 usage/tree errors.
 """
 
 import argparse
+from bisect import bisect_left
+from functools import lru_cache
 import csv
 import hashlib
 import re
@@ -275,7 +279,7 @@ HB_STUB_MARKER_RE = re.compile(
 HB_CATEGORY_ORDER = (
     "status-spec", "body-proof", "rule-outside-registry", "annex-bidir",
     "restoration-scope",
-    "label-prefix", "duplicate-label", "dangling-ref", "pending-inherited-ref",
+    "label-prefix", "legacy-label", "duplicate-label", "dangling-ref", "pending-inherited-ref",
     "glyph-collision",
     "entry-fields", "zero-cite-chapter", "bib-key", "fused-number",
     "stub-marker", "env-grammar", "symbols-csv", "missing-infra",
@@ -283,6 +287,7 @@ HB_CATEGORY_ORDER = (
     "notation-scope", "first-use-late",
 )
 HB_ALWAYS_HARD = {
+    "legacy-label",
     "duplicate-label", "dangling-ref", "pending-inherited-ref", "bib-key",
     "symbols-generated-stale", "notation-role",
 }
@@ -332,6 +337,58 @@ def scan_braced_args(text: str, pos: int, count: int) -> tuple[list[str], int]:
         args.append(text[start:i - 1])
         pos = i
     return args, pos
+
+
+
+def _hb_fraction_has_rule_shape(body: str, match: re.Match[str]) -> bool:
+    """Inspect only a fraction's two TeX arguments for rule markers.
+
+    A convergence arrow after a numeric quotient is not a rule premise or
+    conclusion.  Balanced groups keep nested fractions/formulas intact;
+    unbraced one-token arguments and cfrac's optional alignment are valid
+    TeX too.  Missing or unbalanced arguments fail closed because their
+    extent cannot be established safely.
+    """
+    pos = match.end()
+    size = len(body)
+
+    def skip_space(index: int) -> int:
+        while index < size and body[index].isspace():
+            index += 1
+        return index
+
+    pos = skip_space(pos)
+    if match.group() == r"\cfrac" and pos < size and body[pos] == "[":
+        end = body.find("]", pos + 1)
+        if end < 0:
+            return True
+        pos = end + 1
+
+    args: list[str] = []
+    for _ in range(2):
+        pos = skip_space(pos)
+        if pos >= size:
+            return True
+        if body[pos] == "{":
+            groups, end = scan_braced_args(body, pos, 1)
+            if len(groups) != 1:
+                return True
+            args.append(groups[0])
+            pos = end
+        elif body[pos] == "\\":
+            token = re.match(r"\\(?:[A-Za-z@]+|[^A-Za-z@])", body[pos:])
+            if token is None or token.group() in {
+                r"\[", r"\]", r"\(", r"\)", r"\begin", r"\end",
+            }:
+                return True
+            args.append(token.group())
+            pos += len(token.group())
+        elif body[pos] in "}$^_&":
+            return True
+        else:
+            args.append(body[pos])
+            pos += 1
+    return any(HB_SEQ_MARK_RE.search(arg) for arg in args)
 
 
 def _normalized_tex_input(raw: str) -> str | None:
@@ -593,7 +650,7 @@ def _has_restricted_restoration_construct(body: str) -> bool:
     if re.search(r"\\hbrule\b", body) or HB_RULECMD_RE.search(body):
         return True
     for match in HB_FRAC_RE.finditer(body):
-        if HB_SEQ_MARK_RE.search(body[match.end():match.end() + 240]):
+        if _hb_fraction_has_rule_shape(body, match):
             return True
     return False
 
@@ -938,20 +995,34 @@ def hb_parse_status(spec: str):
     return None
 
 
+@lru_cache(maxsize=2)
+def _line_breaks(text: str) -> tuple[int, ...]:
+    """Index a scanned file once; keep at most two file texts alive."""
+    return tuple(match.start() for match in re.finditer("\n", text))
+
+
 def _line(text: str, pos: int) -> int:
-    return text.count("\n", 0, pos) + 1
+    # Preserve str.count's stop convention, including negative/out-of-range stops.
+    stop = max(0, len(text) + pos) if pos < 0 else min(pos, len(text))
+    return bisect_left(_line_breaks(text), stop) + 1
 
 
 class _HBData:
     """Everything harvested from the tree in one pass."""
 
     def __init__(self) -> None:
+        self.legacy_label_aliases: dict[str, str] = {}
         self.labels: dict[str, list[str]] = {}   # label -> [locations]
         self.refs: list[tuple[str, str, str]] = []  # (target, location, source file)
         self.cites: list[tuple[str, str, str]] = []  # (key, location, context)
         self.statuses: list[dict] = []           # owner/owner_kind/form/target/raw/loc
         self.annexitems: list[dict] = []         # label/backref/loc
         self.entries: list[dict] = []            # label/loc/fields
+        self.scanned_files: set[str] = set()
+        self.file_inputs: dict[str, set[str]] = {}
+        self.file_has_cite: dict[str, bool] = {}
+        self.calculus_sheets: dict[str, set[str]] = {}
+        self.calculus_inputs: list[tuple[str, str]] = []  # (file, location)
         self.stub_parts: Counter = Counter()
         self.chapters: list[tuple[str, bool, bool]] = []  # (rel, is_stub, has_cite)
         self.findings: dict[str, list[str]] = {}
@@ -1116,6 +1187,14 @@ def _hb_scan_systementry(data: _HBData, rel: str, body: str,
             else:
                 valid_required.add(name)
             _hb_scan_status_arg(data, entry_label, name, fargs[0], floc)
+            # An entry field may navigate to a theorem-owned proof. Preserve
+            # only references in this field, not unrelated links on the card.
+            field_refs = set()
+            if len(fargs) >= 2:
+                for reference in HB_REF_RE.finditer(fargs[1]):
+                    labels = reference.group(1) or reference.group(2)
+                    field_refs.update(label.strip() for label in labels.split(","))
+            data.statuses[-1]["field_refs"] = field_refs
         elif name == "entrycalculus":
             fargs, _ = scan_braced_args(body, fm.end(), 1)
             if not fargs or not fargs[0].strip():
@@ -1185,6 +1264,18 @@ def _hb_scan_file(
     restoration_authorized: bool = False,
     source_result_authorized: bool = False,
 ) -> None:
+    data.scanned_files.add(rel)
+    data.file_inputs[rel] = {
+        target
+        for match in HB_INPUT_RE.finditer(body)
+        if (target := _normalized_tex_input(match.group(1) or match.group(2)))
+    }
+    # The local macro inputs an actual table fragment at this point in the
+    # reader route. Its citations count for the containing chapter too.
+    data.file_inputs[rel].update(
+        target for match in re.finditer(r"\\hbinputtablerows\s*\{([^{}]+)\}", body)
+        if (target := _normalized_tex_input(match.group(1)))
+    )
     if rel.startswith("parts/"):
         zone = "parts"
     elif rel.startswith("annex/"):
@@ -1301,8 +1392,10 @@ def _hb_scan_file(
         if len(args) < 3:
             data.flag("env-grammar",
                       f"\\calculussheet with {len(args)}/3 arguments ({loc})")
-        _register_env_label(
+        label = _register_env_label(
             data, "calculussheet", args[0] if args else "", "sheet:", loc)
+        if label:
+            data.calculus_sheets.setdefault(rel, set()).add(label)
     for m in re.finditer(r"\\hbrule\b", body):
         loc = f"{rel}:{_line(body, m.start())}"
         if zone != "registry/calculi" and not restoration_authorized:
@@ -1336,8 +1429,10 @@ def _hb_scan_file(
                 data.refs.append((t, loc, rel))
     for m in re.finditer(r"\\showcalculus\s*\{([^{}]+)\}", body):
         slug = m.group(1).strip()
-        target = slug if slug.startswith("sheet:") else f"sheet:{slug}"
-        data.refs.append((target, f"{rel}:{_line(body, m.start())}", rel))
+        # The macro inputs a file; its basename need not name a sheet.
+        # A registry file may declare several separately labelled calculi.
+        target = f"registry/calculi/{slug}.tex"
+        data.calculus_inputs.append((target, f"{rel}:{_line(body, m.start())}"))
     for m in HB_CITE_RE.finditer(body):
         loc = f"{rel}:{_line(body, m.start())}"
         for k in m.group(1).split(","):
@@ -1381,11 +1476,12 @@ def _hb_scan_file(
                       f"\\{m.group(1)} rule display "
                       f"({rel}:{_line(body, m.start())})")
         for m in HB_FRAC_RE.finditer(body):
-            window = body[m.end():m.end() + 240]
-            if HB_SEQ_MARK_RE.search(window):
+            if _hb_fraction_has_rule_shape(body, m):
                 data.flag("rule-outside-registry",
                           f"\\frac-based rule shape "
                           f"({rel}:{_line(body, m.start())})")
+
+    data.file_has_cite[rel] = has_cite
 
     # --- stubs and chapters ----------------------------------------------
     n_stub = len(re.findall(r"\\hbstub\b", body))
@@ -1448,12 +1544,50 @@ def _hb_source_inventory_labels(root: Path, data: _HBData) -> dict[str, int]:
     return labels
 
 
+
+def _hb_check_legacy_labels(root: Path, bodies: dict[str, str], data: _HBData) -> None:
+    """Register only exact, adjacent aliases authorized by the explicit policy."""
+    try:
+        from .handbook_legacy_labels import load_legacy_label_policy, validate_legacy_labels
+    except ImportError:
+        from handbook_legacy_labels import load_legacy_label_policy, validate_legacy_labels
+    path = root / "spec" / "handbook-legacy-labels.json"
+    try:
+        policy = load_legacy_label_policy(path)
+    except ValueError as exc:
+        data.flag("legacy-label", str(exc))
+        return
+    errors, aliases = validate_legacy_labels(policy, bodies, data.labels, scan_braced_args)
+    for message in errors:
+        data.flag("legacy-label", message)
+    for old, canonical, location in aliases:
+        data.add_label(old, location)
+        data.legacy_label_aliases[old] = canonical
+
+
 def _hb_cross_checks(data: _HBData, source_labels: dict[str, int]) -> None:
     # Duplicate labels (plain \label and environment-argument labels alike).
     for label, sites in sorted(data.labels.items()):
         if len(sites) > 1:
             data.flag("duplicate-label",
                       f"{label} defined {len(sites)}x ({', '.join(sites)})")
+
+    # showcalculus names an input file, not a synthetic sheet label. Retain
+    # real label checks below and require an actual sheet in its input closure.
+    def declared_sheets(relative: str, seen: set[str]) -> set[str]:
+        if relative in seen:
+            return set()
+        seen.add(relative)
+        labels = set(data.calculus_sheets.get(relative, set()))
+        for target in data.file_inputs.get(relative, set()):
+            labels.update(declared_sheets(target, seen))
+        return labels
+
+    for target, loc in data.calculus_inputs:
+        if target not in data.scanned_files:
+            data.flag("dangling-ref", f"showcalculus input {target} is missing ({loc})")
+        elif not declared_sheets(target, set()):
+            data.flag("dangling-ref", f"showcalculus input {target} declares no calculus sheet ({loc})")
 
     # Dangling references.
     known = set(data.labels)
@@ -1498,6 +1632,40 @@ def _hb_cross_checks(data: _HBData, source_labels: dict[str, int]) -> None:
             status_by_target.setdefault(st["target"], []).append(st)
     resolvable = ({st["owner"] for st in data.statuses if st["owner"]}
                   | {e["label"] for e in data.entries})
+
+    # A card can cite an existing theorem's proof without becoming a second
+    # proof owner. Require the same status and a field-local link to that exact
+    # theorem. Entry-owned annexes retain their reciprocal ownership checks.
+    entry_kinds = {"entryadequacy", "entrydecidability"}
+    for target, statuses in list(status_by_target.items()):
+        items = annex_by_label.get(target, [])
+        if len(items) != 1:
+            continue
+        backref = items[0]["backref"]
+        theorem_owners = [
+            status for status in statuses
+            if status["owner"] == backref
+            and status["owner_kind"] not in entry_kinds
+        ]
+        if len(theorem_owners) != 1:
+            continue
+        owner = theorem_owners[0]
+        owner_statuses = []
+        for status in statuses:
+            if status["owner_kind"] not in entry_kinds:
+                owner_statuses.append(status)
+                continue
+            if status["form"] != owner["form"]:
+                data.flag("annex-bidir",
+                          f"{status['owner']} navigates to {backref} with "
+                          f"{status['form']} but its owner status is {owner['form']} "
+                          f"({status['loc']})")
+            if backref not in status.get("field_refs", set()):
+                data.flag("annex-bidir",
+                          f"{status['owner']} {status['owner_kind']} links to "
+                          f"{target} but must reference its owning result {backref} "
+                          f"in that field ({status['loc']})")
+        status_by_target[target] = owner_statuses
 
     for target, sts in sorted(status_by_target.items()):
         if len(sts) > 1:
@@ -1548,9 +1716,21 @@ def _hb_cross_checks(data: _HBData, source_labels: dict[str, int]) -> None:
                       f"proved=/sketched= status pointing at {label} "
                       f"({it['loc']})")
 
-    # Zero-citation non-stub chapters.
+    # A chapter may place its actual bibliography links in an input table.
+    # Follow only explicit input edges to scanned files, with cycle protection;
+    # an unrelated cited file must not lend a citation to an uncited chapter.
+    def closure_has_cite(relative: str, seen: set[str]) -> bool:
+        if relative in seen:
+            return False
+        seen.add(relative)
+        if data.file_has_cite.get(relative, False):
+            return True
+        return any(closure_has_cite(child, seen)
+                   for child in data.file_inputs.get(relative, set())
+                   if child in data.scanned_files)
+
     for rel, is_stub, has_cite in data.chapters:
-        if not is_stub and not has_cite:
+        if not is_stub and not (has_cite or closure_has_cite(rel, set())):
             data.flag("zero-cite-chapter", rel)
 
 
@@ -1725,6 +1905,7 @@ def check_handbook(
                 )
             ),
         )
+    _hb_check_legacy_labels(root, bodies, data)
     source_labels = _hb_source_inventory_labels(root, data)
     _hb_cross_checks(data, source_labels)
     if require_no_pending_inherited_refs:

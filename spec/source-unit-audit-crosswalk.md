@@ -9,10 +9,10 @@ a unit has been transcribed, reconstructed, or assigned a valid destination.
 - Active source units: 1,055.
 - Units crossing more than one audit interval: 0.
 - Units lacking exact single line coverage by audit intervals: 0.
-- Reviewer-supplied records accepted: 1,055.
-- Unit-bearing restoration records represented: 254.
+- Reviewer-supplied records accepted: 1,049.
+- Unit-bearing restoration records represented: 250.
 - Units with disposition `full transcription`: 0.
-- Admitted units still open: 1,055.
+- Admitted units still open: 1,049.
 - Units retaining disposition `open/missing`: 1,055.
 - An open record may expose checked identity, provenance, destination,
   audit, completeness, and verification results without closing the unit.

@@ -120,16 +120,27 @@ def longtable(colspec: str, header: list[str], body_rows: list[list[str]],
 
 
 def group_key(row):
-    """Scope group: 'global' or the part number of the scope's lower end."""
-    return row["_scope"].part
+    """Global, concrete unnumbered matter, or the opening numbered part."""
+    part = row["_scope"].part
+    return "unnumbered" if part is None else part
 
 
 def group_title(key) -> str:
-    return "Global scope" if key == "global" else f"Stable part P{key} scopes"
+    if key == "global": return "Global scope"
+    if key == "unnumbered": return "Unnumbered reader regions"
+    return f"Stable part P{key} scopes"
 
 
 def table_label(key) -> str:
-    return "tab:p01-classical-symbols" if key == "global" else f"tab:p01-w02-p01-026-symbols-p{key}"
+    if key == "global": return "tab:p01-classical-symbols"
+    if key == "unnumbered": return "tab:p01-w02-p01-026-symbols-unnumbered"
+    return f"tab:p01-w02-p01-026-symbols-p{key}"
+
+
+def group_sort_key(key):
+    if key == "global": return (0, 0)
+    if key == "unnumbered": return (1, 0)
+    return (2, key)
 
 
 def rank_key(prec: str):
@@ -211,30 +222,36 @@ def macro_code(s: str) -> str:
 
 
 def render(rows) -> str:
-    order = {"global": 0}
+    """Full registry: wide typed-reading cells retain every canonical field.
+
+    The alphabetical index points here rather than repeating these notes.
+    Stable row anchors are unchanged; no registry data is elided or merged.
+    """
     groups: dict = {}
     for row in rows:
         groups.setdefault(group_key(row), []).append(row)
-    keys = sorted(groups, key=lambda k: 0 if k == "global" else k)
+    keys = sorted(groups, key=group_sort_key)
     chunks = [GENERATED, r"\begin{landscape}" + "\n"]
     for key in keys:
-        body = [[rf"\phantomsection\label{{entry:symbol-registry-{r['_line']:05d}}}{glyph_cell(r['glyph'])}",
-                 macro_code(r["macro"]),
-                 text_cell(r["role"]), registry.scope_tex(r), r["precedence"], registry.first_use_tex(r),
-                 r"\thepage", text_cell(r["notes"])]
-                for r in groups[key]]
-        # Keep a scope heading with the first rows of its generated table.
+        body = []
+        for row in groups[key]:
+            label = f"entry:symbol-registry-{row['_line']:05d}"
+            spelling = (rf"\phantomsection\label{{{label}}}" + glyph_cell(row['glyph'])
+                        + r"\par " + macro_code(row['macro']))
+            reading = (r"\textbf{" + text_cell(row['role']) + "}"
+                       + r"\par\textit{Scope:} " + registry.scope_tex(row)
+                       + r". \textit{Precedence/form:} " + row['precedence']
+                       + r". \textit{First use:} " + registry.first_use_tex(row)
+                       + rf". \textit{{Registration:}} p.~\pageref{{{label}}}."
+                       + (r"\par " + text_cell(row['notes']) if row['notes'] else ""))
+            body.append([spelling, reading])
         chunks.append(r"\Needspace{.4\textheight}" + "\n")
         chunks.append(rf"\subsection*{{{group_title(key)}}}" + "\n")
         title = group_title(key)
         chunks.append(longtable(
-            # Landscape line width is 541.4pt; these columns use 6.8in
-            # (491.4pt) plus seven 6pt gaps, 533.4pt in all, so no header or
-            # scope cell runs into its neighbour.
-            r"@{}p{0.9in}p{1.2in}p{1.0in}p{0.75in}p{0.5in}p{0.45in}p{0.35in}p{1.65in}@{}",
-            ["Glyph", "Macro", "Role", "Scope", "Prec. / form", "First", "Reg. page", "Principal uses / notes"],
-            body, caption=f"Symbol register: {title[0].lower()}{title[1:]}",
-            label=table_label(key)))
+            r"@{}p{0.24\linewidth}p{0.72\linewidth}@{}",
+            ["Symbol and spelling", "Typed reading and use"], body, size=r"\footnotesize",
+            caption=f"Symbol register: {title[0].lower()}{title[1:]}", label=table_label(key)))
     chunks.append(r"\end{landscape}" + "\n")
     return "".join(chunks)
 
@@ -270,7 +287,7 @@ def render_index(rows) -> str:
         lines.append(
             f"{glyph_cell(row['glyph'])} & {text_cell(row['role'])} & {registry.scope_tex(row)} & "
             rf"\hyperref[{label}]{{p.~\pageref{{{label}}}}} & "
-            f"{registry.first_use_tex(row)} & {text_cell(row['notes'])} " + r" \\" + "\n"
+            f"{registry.first_use_tex(row)} " + r" \\" + "\n"
         )
     return "".join(lines)
 
@@ -334,7 +351,7 @@ def main() -> None:
         with path.open("w", encoding="utf-8", newline="\n") as fh:
             fh.write(text)
     groups = sorted({group_key(r) for r in rows},
-                    key=lambda k: 0 if k == "global" else k)
+                    key=group_sort_key)
     print(f"[symbols2tex] {len(rows)} rows -> "
           + ", ".join(str(p) for p in outputs) + f" ({len(groups)} scope groups: "
           + ", ".join(group_title(k) for k in groups) + ")")

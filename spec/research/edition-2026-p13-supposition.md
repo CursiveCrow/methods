@@ -39,3 +39,89 @@ At printed224 the example moves from classifying “animal” to calling “some
 ## Saved reconstruction
 
 Authoring in progress. Final body/annex/intake hashes, exact item map and residual reconstruction extent will be recorded below after saves. No source facet, coverage status or shared reader route is changed by this note.
+
+## Author continuation and correction, 2026-10-26
+
+This pass preserves the earlier body and expands the presentation through
+the substantive end of the held chapter at printed p.276. The earlier
+"authoring in progress" entry records the state of the prior bounded task;
+it is superseded for writing extent by this continuation, not by a claim
+of acceptance. The held PDF hash was rechecked against the value above.
+Printed pp.157–280 (physical165–288), including notes and bibliography,
+were read on this pass using bounded page extractions. The small extraction
+gap around pp.174–184 was reread in full. The nine-option table at printed274
+was inspected as rendered source pixels.
+
+### Reader and source map
+
+| Held manuscript section/pages | Reader location and actual treatment |
+| --- | --- |
+| Introduction and §§1.1–1.10, 157–173 | Core and syntax; non-vacuous affirmatives; square; 24 moods; indirect reduction; expanded grammar; scope/equipollence; hypothetical kinds and modal/formal consequence. |
+| §§2.1–2.9, 174–186 | Substantivated adjectives/participles; transitive dependent terms; infinitizing negation; conversion/obversion; relative clauses and tense; genitive dependency; exponibles. |
+| §§3.1–3.5, 186–192 | Signification and occurrence-specific supposition; realist/nominalist alternatives; truth clauses' limits; mental language; connotative/absolute terms and disputed reduction. |
+| §§4.1–4.3, 192–202 | Univocation; material uses and quotation; all three Sherwood simple-supposition cases; Ockham and Buridan alternatives and limits. |
+| §§5.1–5.5, 202–215 | Default restriction and ampliation; tense ambiguity/disjunction; independent time witnesses; relative clauses, genitives and sequence of tense; modal syntax; mental and semantic vocabulary; ontological neutrality/commitment. |
+| §§6.1–6.3, 215–221 | Accusative-infinitive objects; Ockham/Wodeham/Buridan contrasts; ratio account; approaching father; promised horse alternatives. |
+| §§7.1–7.6, 222–241 | Early quantitative reconstruction; local modes vs mobility; causes and discrepancies; Sherwood inference rules and all three classes of failure. |
+| §§8.1–8.9, 241–266 | Later global ascent/descent definitions; exhaustiveness, occurrence and empty/repeated-term qualifications; mobility variants; causes/double distribution; infinitizing negation; restricted descent; inferior/superior inferences; exponibles; variant definitions, term expansion, Dorp and residual mere confusion. |
+| §§9.1–9.5, 266–274 | Modern four-mode refinement; symmetry; complete revised transition table; designated order-preserving prefix; dependency limit; full nine-option chart and examples. |
+| §9.6, 274–276 | Non-main terms; two relative-clause patterns; verified correction of one closing classification; general composition algorithm left open as in the source. |
+| Acknowledgements/bibliography, 276–280 | Read and used for provenance; not represented as independent reading of the listed medieval editions or other secondary works. |
+
+### Proof inventory
+
+The previously missing four targets now have full proofs:
+`annex:p13.supposition.square`, `.moods`, `.scope`, and `.complements`.
+The moods item proves all nineteen named rows individually and obtains
+the five unnamed rows by the proved subalternations, without assuming
+existential import for O.
+
+Five additional reciprocal proof pairs check explicitly declared modern
+comparisons: `.time`, `.dependent-range`, `.four-modes`, `.prefix-rules`,
+and `.relative-check`. These establish finite countermodels for temporal
+coordination and dependent ranges, all eight categorical occurrence
+classifications plus negation duality, the full four-state transition
+table by structural induction, and the relative-clause witness patterns.
+They do not present a modern proof as an original medieval proof.
+
+### Corrections and limits
+
+The p.168 conversion-direction slip, p.224 mismatched denoting phrase,
+and p.234 mobility-rule reference remain recorded above. The active
+presentation follows the valid directions and actual term occurrence.
+The p.276 second closing example, "Some horse is an animal that sees
+every donkey," is printed as merely confused. In the declared relational
+reading it descends to a conjunction of donkey instances, while return
+fails in a two-horse/two-donkey diagonal model; it is narrow distributive.
+The corresponding full proof is `.relative-check`. The source also
+introduces this example as if its outer complex had narrow distribution,
+although that predicate is existential. Its final list is therefore not
+adopted as a verified composition table. The general non-main-term
+algorithm remains unconstructed, as the source itself says.
+
+Author correction and source-section coverage do not constitute independent
+review or C001/C002 admission. The final 2008 chapter is still uncollated;
+the cited medieval originals retain separate reading and verification
+obligations. The source's limitations concerning reduplicatives,
+coordination of times, intensional reports, restricted anaphoric descent,
+and mode composition are substantive boundaries, not disguised proofs.
+The appendix proves its stated modern checks in full but does not claim
+those boundaries have been solved.
+
+### Integration and verification standing at save
+
+The root owns driver routing, canonical bibliography/symbol adoption and
+coverage ledgers. The body and four-proof annex route were confirmed by
+the root. This pass supplies `intake-p13-supposition.bib` and
+`symbols-intake-p13-supposition.csv`; no shared file is edited here.
+Exact staged before/after hashes and subsequent compilation/model-check
+outputs are retained in the task's `p03-foundations` directory. Mechanical
+checks and fixture rendering are reported separately from source acceptance.
+
+## Final author verification on 26 October 2026
+
+The completed body and annex compile in the focused `supposition-stage-check` fixture to 35 pages with all citations and references resolved, no overfull boxes and no remaining label-rerun warning. All pages were rendered in contact sheets, with detailed inspection of the newly completed proof pages; the final headings stay with their proof openings. The fixture is a local construction check rather than the integrated book PDF.
+
+The executable finite checks evaluated all 24 displayed syllogistic rows on all term-set triples over domains of sizes 1–4 (112,320 evaluations), including empty term extensions. They also checked 21,844 prefix strings of lengths 1–7 against the transition rules and verified the displayed dependent-range and relative-clause countermodels. Nine theorem/annex pairs are reciprocal, environments are balanced, and all ten dedicated notation rows parse. These finite checks support the examples and tables; the mathematical arguments are the proofs in the annex. The relative-clause notation row is confined to `annex:p13.supposition.relative-check`, so its men-range letter does not rebind the earlier syllogistic middle term.
+
+Standing remains authored and checked. Independent source admission, collation with the distinct final 2008 chapter, and any separately owed historical originals remain open. The held manifestation and its corrected source example are identified above; no unproved general algorithm for non-main-term supposition is claimed.

@@ -1,0 +1,709 @@
+%% toc: P3 28 28.1,28.2,28.3,28.4
+\chapter{Quantifier Elimination, Existential Closure, and Model Companions}
+\label{sec:p03-w03-p03-020-qe}
+
+Quantifier elimination replaces every formula, modulo a theory, by a formula
+without quantifiers. It is the strongest of four related properties that this
+chapter keeps apart: quantifier elimination for a theory, model completeness
+of a theory, existential closure of a model in a class of models, and the
+relations of model companion and model completion between two theories. The
+inputs throughout are a first-order signature \(\Lang\) and an
+\(\Lang\)-theory \(T\); the conclusions are equivalences of formulas modulo
+\(T\), elementarity of embeddings between models of \(T\), and completeness of
+\(T\) together with the atomic diagram of a structure.
+
+The chapter supplies the proofs that the earlier entries state or outline.
+The definition of quantifier elimination and the one-quantifier method are in
+\cref{sec:qe-categoricity-01}; the definitions of existentially closed models,
+model companions and model completions are
+\cref{def:p03-existentially-closed,def:p03-model-companion}, and the cited
+statements of Robinson's test and of the field examples are
+\cref{thm:p03-robinson-model-completeness,thm:p03-field-model-completions}.
+Below, the semantic and syntactic criteria for elimination are proved, Robinson's
+test is proved together with its diagram and existential-normal-form forms, the
+basic existence, uniqueness and embedding facts for companions are proved,
+dense linear orders and their endpoint variants are treated by back-and-forth,
+and algebraically closed fields of fixed characteristic are shown to be the
+model completion of fields of that characteristic, including the algebra of
+algebraic closures. In the ordered-ring language, real closures of ordered
+fields are constructed and real closed fields are shown to be the model
+completion of ordered fields, with completeness over the diagram of each
+ordered field. The effective elimination procedures and their use for
+decision problems are in \cref{sec:p03-w03-p03-022-decidability}. The general
+criteria follow the treatment in Kruckman's lecture notes
+\cite[sec.~2.2--2.3, pp.~16--22]{Kruckman2020}; the algebraic lemmas, the
+companion facts and the back-and-forth arguments are proved here in full.
+
+\section{Semantic and syntactic criteria for quantifier elimination}
+\label{sec:p03-w03-p03-020-criteria}
+
+\begin{hbconvention}{def:p03-w03-p03-020-standing}{Standing conventions}
+Structures are nonempty. Quantifier-free formulas include \(\top\) and
+\(\bot\). A \emph{literal} is an atomic formula or the negation of one, and a
+\emph{primitive formula} is one of the form \(\exists y\,\theta\) with
+\(\theta\) a finite conjunction of literals. For a formula
+\(\varphi(\bar x)\), the tuple \(\bar x=(x_1,\ldots,x_n)\) lists distinct
+variables including all free variables of \(\varphi\); \(n=0\) is allowed.
+Two formulas \(\varphi(\bar x)\) and \(\psi(\bar x)\) are
+\emph{\(T\)-equivalent} when
+\(T\entails\forall\bar x\,(\varphi\leftrightarrow\psi)\).
+For an \(\Lang\)-structure \(\mathcal M\) and \(\bar a\in M^n\), the
+\emph{quantifier-free type}
+\(\operatorname{qftp}^{\mathcal M}(\bar a)\) is the set of quantifier-free
+formulas \(\psi(\bar x)\) with \(\mathcal M\entails\psi(\bar a)\). For
+\(n=0\) it is the set of quantifier-free sentences true in \(\mathcal M\).
+An \emph{existential} formula is \(\exists\bar y\,\theta\) and a
+\emph{universal} formula is \(\forall\bar y\,\theta\), with \(\theta\)
+quantifier-free and \(\bar y\) possibly empty. \(T_\forall\) is the set of
+universal sentences entailed by \(T\), and \(T_{\forall\exists}\) the set of
+entailed sentences of the form \(\forall\bar x\,\exists\bar y\,\theta\) with
+\(\theta\) quantifier-free. Diagrams and the parameter signature
+\(\Lang(A)\) are as in \cref{def:parameter-expansion,def:diagrams}.
+\end{hbconvention}
+
+Quantifier-free types replace the common-substructure formulation of the
+criteria. The two agree when the tuple is nonempty or the signature has
+constant symbols, because \(\bar a\) and \(\bar b\) have the same
+quantifier-free type exactly when \(t(\bar a)\mapsto t(\bar b)\) is a
+well-defined isomorphism between the substructures they generate. The type
+formulation also covers sentences in a signature without constants, where the
+generated substructure would be empty.
+
+\begin{hbtheorem}{thm:p03-w03-p03-020-primitive}{proved=annex:p03-w03-p03-020-primitive}{Syntactic criterion: primitive formulas suffice}
+A theory \(T\) eliminates quantifiers if and only if every primitive formula
+\(\exists y\,\theta(\bar x,y)\) is \(T\)-equivalent to a quantifier-free
+formula \(\psi(\bar x)\).
+\end{hbtheorem}
+
+This is the justification of the one-quantifier method of
+\cref{sec:qe-categoricity-01}. The algorithmic version, which also keeps
+track of computability, is \cref{thm:p03-w03-p03-022-one-step}.
+
+\begin{hbtheorem}{thm:p03-w03-p03-020-semantic}{proved=annex:p03-w03-p03-020-semantic}{Semantic criterion for one formula}
+Let \(T\) be a theory and \(\varphi(\bar x)\) a formula. The following are
+equivalent.
+\begin{enumerate}
+\item \(\varphi(\bar x)\) is \(T\)-equivalent to a quantifier-free formula
+  \(\psi(\bar x)\).
+\item For all models \(\mathcal M,\mathcal N\) of \(T\) and all
+  \(\bar a\in M^n\), \(\bar b\in N^n\) with
+  \(\operatorname{qftp}^{\mathcal M}(\bar a)=\operatorname{qftp}^{\mathcal N}(\bar b)\),
+  if \(\mathcal M\entails\varphi(\bar a)\) then
+  \(\mathcal N\entails\varphi(\bar b)\).
+\end{enumerate}
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p03-w03-p03-020-one-point}{proved=annex:p03-w03-p03-020-one-point}{One-point extension test}
+A theory \(T\) eliminates quantifiers if and only if the following holds:
+whenever \(\mathcal M,\mathcal N\entails T\),
+\(\bar a\in M^n\) and \(\bar b\in N^n\) have the same quantifier-free type,
+and \(c\in M\), there are an elementary extension
+\(\mathcal N\preccurlyeq\mathcal N'\) and \(d\in N'\) such that
+\(\operatorname{qftp}^{\mathcal M}(\bar a,c)=\operatorname{qftp}^{\mathcal N'}(\bar b,d)\).
+\end{hbtheorem}
+
+The test is the form used for fields below. It asks only that a single new
+element be matched, and the elementary extension may be chosen to contain the
+match; the price is that the method gives no explicit equivalent formula.
+
+\begin{hbcorollary}{thm:p03-w03-p03-020-qe-consequences}{proved=annex:p03-w03-p03-020-qe-consequences}{What elimination gives}
+Let \(T\) eliminate quantifiers in \(\Lang\).
+\begin{enumerate}
+\item If \(T\subseteq T'\) for an \(\Lang\)-theory \(T'\), then \(T'\)
+  eliminates quantifiers.
+\item If \(\Lang'\) is \(\Lang\) with new constant symbols, then \(T\),
+  read as an \(\Lang'\)-theory, eliminates quantifiers in \(\Lang'\).
+\item \(T\) is model complete.
+\item For every \(\Lang\)-structure \(\mathcal A\), the
+  \(\Lang(A)\)-theory \(T\cup\operatorname{Diag}(\mathcal A)\) is complete:
+  for each \(\Lang(A)\)-sentence \(\sigma\), it entails \(\sigma\) or
+  \(\neg\sigma\). It is consistent exactly when \(\mathcal A\) embeds in a
+  model of \(T\).
+\item If \(T\) is consistent and any two models of \(T\) satisfy the same
+  atomic sentences, then \(T\) is complete.
+\end{enumerate}
+\end{hbcorollary}
+
+Item~4 is the diagram form of elimination. It is the property that turns a
+companion with elimination into a model completion in
+\cref{thm:p03-w03-p03-020-qe-completion}.
+
+\subsection{Model completeness and Robinson's test}
+\label{sec:p03-w03-p03-020-robinson}
+
+Model completeness is defined in \cref{def:theory-completeness}. For
+\(\mathcal M\subseteq\mathcal N\), say that \(\mathcal M\) is
+\emph{existentially closed in} \(\mathcal N\) when every existential
+\(\Lang(M)\)-sentence true in \(\mathcal N_M\) is true in \(\mathcal M_M\).
+\Cref{def:p03-existentially-closed} quantifies this over all extensions that
+are models of a given theory.
+
+\begin{hblemma}{thm:p03-w03-p03-020-existential-preservation}{proved=annex:p03-w03-p03-020-existential-preservation}{Existential normal form from preservation}
+Let \(T\) be a theory and \(\varphi(\bar x)\) a formula. Then
+\(\varphi\) is \(T\)-equivalent to an existential formula if and only if,
+for all models \(\mathcal M\subseteq\mathcal N\) of \(T\) and all
+\(\bar a\in M^n\), \(\mathcal M\entails\varphi(\bar a)\) implies
+\(\mathcal N\entails\varphi(\bar a)\). Dually, \(\varphi\) is
+\(T\)-equivalent to a universal formula if and only if truth of
+\(\varphi\) passes from \(\mathcal N\) down to every submodel
+\(\mathcal M\) of \(T\).
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p03-w03-p03-020-robinson}{proved=annex:p03-w03-p03-020-robinson}{Robinson's test, with its diagram and normal-form bridges}
+For a theory \(T\) the following are equivalent.
+\begin{enumerate}
+\item \(T\) is model complete.
+\item Whenever \(\mathcal M\subseteq\mathcal N\) are models of \(T\),
+  \(\mathcal M\) is existentially closed in \(\mathcal N\).
+\item Every formula is \(T\)-equivalent to an existential formula.
+\item Every formula is \(T\)-equivalent to a universal formula.
+\item For every model \(\mathcal M\) of \(T\), the \(\Lang(M)\)-theory
+  \(T\cup\operatorname{Diag}(\mathcal M)\) is complete; equivalently, it
+  entails \(\operatorname{ElDiag}(\mathcal M)\).
+\end{enumerate}
+\end{hbtheorem}
+
+The step from 2 to 3 is the existential-normal-form bridge: it passes from a
+property of pairs of models to a syntactic normal form through
+\cref{thm:p03-w03-p03-020-existential-preservation}. The step from 3 to 1
+is the reverse bridge. Items 1 and 5 are the diagram bridge in both
+directions. This proves the statement recorded with a citation at
+\cref{thm:p03-robinson-model-completeness}, and adds items 4 and 5.
+
+\begin{hblemma}{thm:p03-w03-p03-020-ec-elementary}{proved=annex:p03-w03-p03-020-ec-elementary}{Existential closure and elementary extensions}
+If \(\mathcal A\subseteq\mathcal B\) and \(\mathcal A\) is existentially
+closed in \(\mathcal B\), then there is an elementary extension
+\(\mathcal A\preccurlyeq\mathcal A'\) and an embedding of \(\mathcal B\)
+into \(\mathcal A'\) that is the identity on \(A\).
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p03-w03-p03-020-ae}{proved=annex:p03-w03-p03-020-ae}{Model complete theories are \(\forall\exists\)-axiomatized}
+If \(T\) is model complete, then \(T_{\forall\exists}\) and \(T\) have the
+same models.
+\end{hbtheorem}
+
+\subsection{Companions and completions}
+\label{sec:p03-w03-p03-020-companions}
+
+\begin{hblemma}{thm:p03-w03-p03-020-companion-embedding}{proved=annex:p03-w03-p03-020-companion-embedding}{Companions by mutual embedding}
+Let \(T\) and \(T^*\) be theories in the same signature. Then
+\(T_\forall=T^*_\forall\) if and only if every model of \(T\) embeds in a
+model of \(T^*\) and every model of \(T^*\) embeds in a model of \(T\).
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p03-w03-p03-020-companion-unique}{proved=annex:p03-w03-p03-020-companion-unique}{Uniqueness of model companions}
+If \(T_1^*\) and \(T_2^*\) are model companions of \(T\), then they have
+the same models. In particular a model completion of \(T\), when it exists,
+is unique up to having the same models.
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p03-w03-p03-020-companion-ec}{proved=annex:p03-w03-p03-020-companion-ec}{Models of a model companion are the existentially closed models}
+Let \(T^*\) be a model companion of \(T\).
+\begin{enumerate}
+\item Every model of \(T^*\) is existentially closed in each of its
+  extensions that is a model of \(T_\forall\), in particular in each
+  extension that is a model of \(T\).
+\item If \(T\) has the same models as \(T_{\forall\exists}\), then the
+  models of \(T^*\) are exactly the models of \(T\) that are existentially
+  closed among models of \(T\) in the sense of
+  \cref{def:p03-existentially-closed}.
+\end{enumerate}
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p03-w03-p03-020-qe-completion}{proved=annex:p03-w03-p03-020-qe-completion}{A companion with elimination is a model completion}
+Let \(T^*\) satisfy \(T^*_\forall=T_\forall\) and eliminate quantifiers.
+Then \(T^*\) is the model completion of \(T\). Explicitly, for every model
+\(\mathcal M\) of \(T\), the \(\Lang(M)\)-theory
+\(T^*\cup\operatorname{Diag}(\mathcal M)\) is consistent and complete.
+\end{hbtheorem}
+
+\begin{hbwarning}{def:p03-w03-p03-020-distinctions}{Four notions that are not quantifier elimination}
+\begin{enumerate}
+\item \emph{Existential closure} is a property of one model relative to a
+  class of extensions. It says nothing about formulas with universal
+  quantifiers, and it does not make any theory eliminate quantifiers. A model
+  of \(\mathsf{DLO}\) is existentially closed among linear orders by
+  \cref{thm:p03-w03-p03-020-companion-ec,thm:p03-w03-p03-020-dense-variants},
+  yet the theory of linear orders has no elimination: the formula
+  \(\exists y\,(x<y)\) is not equivalent to a quantifier-free formula in
+  \(x\) in the two-element order, as noted after
+  \cref{thm:p03-w03-p03-022-dlo-step}.
+\item \emph{Model completeness} is weaker than elimination. By
+  \cref{thm:p03-w03-p03-020-qe-consequences} elimination implies it, and
+  \cref{thm:p03-w03-p03-020-robinson} shows that it amounts to elimination
+  down to existential, not quantifier-free, formulas.
+  \Cref{thm:p03-w03-p03-020-marked-point} gives a model complete theory
+  without elimination.
+\item A \emph{model companion} is a theory related to another theory. Its
+  existence and uniqueness (\cref{thm:p03-w03-p03-020-companion-unique}) are
+  statements about two theories, and a model companion need not eliminate
+  quantifiers; it need only be model complete.
+\item A \emph{model completion} adds completeness over each atomic diagram
+  of a model of the base theory. Elimination in the companion is a sufficient
+  condition (\cref{thm:p03-w03-p03-020-qe-completion}), not the definition.
+\end{enumerate}
+\end{hbwarning}
+
+\section{Back-and-forth proofs of quantifier elimination}
+\label{sec:p03-w03-p03-020-back-forth}
+
+\begin{hbdefinition}{def:p03-w03-p03-020-partial-iso}{Finite partial isomorphisms and back-and-forth systems}
+Let \(\mathcal M\) and \(\mathcal N\) be \(\Lang\)-structures. A
+\emph{finite partial isomorphism} from \(\mathcal M\) to \(\mathcal N\) is
+a map \(p\) from a finite subset of \(M\) to \(N\) such that, for every
+atomic formula \(\alpha(x_1,\ldots,x_k)\) and every tuple \(\bar a\) of
+elements of the domain of \(p\),
+\(\mathcal M\entails\alpha(\bar a)\) iff
+\(\mathcal N\entails\alpha(p\bar a)\). The empty map is included; it is a
+finite partial isomorphism exactly when \(\mathcal M\) and \(\mathcal N\)
+satisfy the same atomic sentences. A \emph{back-and-forth system} is a
+nonempty set \(I\) of finite partial isomorphisms such that for each
+\(p\in I\): for each \(c\in M\) some \(q\in I\) extends \(p\) and has \(c\)
+in its domain (\emph{forth}), and for each \(d\in N\) some \(q\in I\)
+extends \(p\) and has \(d\) in its range (\emph{back}).
+\end{hbdefinition}
+
+Here atomic formulas may contain arbitrary terms, so a partial isomorphism
+need not have a domain closed under the function symbols. In a relational
+signature this is Fra\"iss\'e's notion of
+\cref{def:p03-w03-p03-038-bf-system}, without its bound on the number of
+rounds.
+
+\begin{hbtheorem}{thm:p03-w03-p03-020-bf-preserve}{proved=annex:p03-w03-p03-020-bf-preserve}{Back-and-forth systems preserve all formulas}
+Let \(I\) be a back-and-forth system between \(\mathcal M\) and
+\(\mathcal N\). For every \(p\in I\), every formula \(\varphi(\bar x)\) and
+every tuple \(\bar a\) of elements of the domain of \(p\),
+\(\mathcal M\entails\varphi(\bar a)\) iff
+\(\mathcal N\entails\varphi(p\bar a)\).
+\end{hbtheorem}
+
+\begin{hbcorollary}{thm:p03-w03-p03-020-bf-criterion}{proved=annex:p03-w03-p03-020-bf-criterion}{Back-and-forth criterion for elimination}
+Suppose that for all models \(\mathcal M,\mathcal N\) of \(T\), every
+finite partial isomorphism from \(\mathcal M\) to \(\mathcal N\) can be
+extended to include any given element of \(M\) in its domain and, likewise,
+any given element of \(N\) in its range. Then \(T\) eliminates
+quantifiers, and any two models of \(T\) satisfying the same atomic
+sentences are elementarily equivalent.
+\end{hbcorollary}
+
+\begin{hbtheorem}{thm:p03-w03-p03-020-dlo-bf}{proved=annex:p03-w03-p03-020-dlo-bf}{Elimination for dense linear orders by back-and-forth}
+Let \(\mathcal M,\mathcal N\) be models of \(\mathsf{DLO}\) in \(\{<\}\).
+Every finite partial isomorphism from \(\mathcal M\) to \(\mathcal N\)
+extends to include any given element of \(M\) in its domain, and any given
+element of \(N\) in its range. Consequently \(\mathsf{DLO}\) eliminates
+quantifiers, is complete, and is model complete.
+\end{hbtheorem}
+
+This proves the cited \cref{thm:dlo-qe} and the corollary that follows it in
+\cref{sec:qe-categoricity-01}. The back-and-forth proof yields no formula;
+the explicit elimination step of \cref{def:p03-w03-p03-022-dlo-step},
+proved correct in \cref{thm:p03-w03-p03-022-dlo-step}, produces the
+quantifier-free equivalent and covers every combination of literals. The
+inconsistent combinations reduce to \(\bot\) there, either directly
+(\(y<y\)) or after the bound comparison produces an irreflexive atom, as in
+the next example.
+
+\begin{hbexample}{def:p03-w03-p03-020-dlo-literals}{Consistent and inconsistent literal combinations}
+Modulo \(\mathsf{DLO}\):
+\begin{enumerate}
+\item \(\exists y\,(x<y\land y<z)\) is equivalent to \(x<z\).
+\item \(\exists y\,(x<y\land y<x)\) is equivalent to \(x<x\), hence to
+  \(\bot\): the bound comparison yields an irreflexive atom.
+\item \(\exists y\,(y=x\land y<z\land z<y)\) is equivalent, by substituting
+  \(x\) for \(y\), to \(x<z\land z<x\), which is false in every linear order.
+\item \(\exists y\,\neg(y<x)\) is equivalent to
+  \(\exists y\,(x<y)\lor\exists y\,(y=x)\), hence to \(\top\).
+\item \(\exists y\,(y\ne x\land y\ne z)\) becomes the disjunction of
+  \(\exists y\,(y<x\land y<z)\), \(\exists y\,(x<y\land z<y)\),
+  \(\exists y\,(z<y\land y<x)\) and \(\exists y\,(x<y\land y<z)\). The
+  first two have witnesses because there are no endpoints, so the formula
+  is equivalent to \(\top\), although the last two disjuncts alone reduce
+  to \(z<x\) and \(x<z\).
+\end{enumerate}
+In the back-and-forth proof these cases do not need to be listed: a formula
+that is false at every point of one model is false at every point of every
+model, because the partial isomorphisms carry truth both ways.
+\end{hbexample}
+
+\section{Dense linear orders and dense systems}
+\label{sec:p03-w03-p03-020-dense}
+
+Dense linear orders come in four kinds according to the endpoints present.
+Only the kind without endpoints eliminates quantifiers in \(\{<\}\). The
+other three eliminate once their endpoints are named.
+
+\begin{hbdefinition}{def:p03-w03-p03-020-dense-variants}{Dense linear orders with prescribed endpoints}
+Let \(E\subseteq\{\mathsf{b},\mathsf{t}\}\) and let \(\Lang_E\) be
+\(\{<\}\) together with a constant symbol for each member of \(E\). The
+\(\Lang_E\)-theory \(\mathsf{DLO}^{E}\) says that \(<\) is a strict linear
+order with at least two elements, that between any two elements there is a
+third, that \(\mathsf{b}\) is the least element if
+\(\mathsf{b}\in E\) and that there is no least element otherwise, and that
+\(\mathsf{t}\) is the greatest element if \(\mathsf{t}\in E\) and that
+there is no greatest element otherwise. Thus \(\mathsf{DLO}^{\emptyset}\)
+is \(\mathsf{DLO}\) together with the axiom \(\exists x\,\exists y\,x\ne y\),
+which \(\mathsf{DLO}\) already entails.
+\end{hbdefinition}
+
+\begin{hbtheorem}{thm:p03-w03-p03-020-dense-variants}{proved=annex:p03-w03-p03-020-dense-variants}{Elimination for each endpoint pattern}
+For each \(E\subseteq\{\mathsf{b},\mathsf{t}\}\), the theory
+\(\mathsf{DLO}^{E}\) eliminates quantifiers in \(\Lang_E\), is complete and
+is model complete. Every linear order embeds in a model of
+\(\mathsf{DLO}^{\emptyset}\), so \(\mathsf{DLO}\) is the model completion of
+the theory of linear orders in \(\{<\}\).
+\end{hbtheorem}
+
+\begin{hbwarning}{def:p03-w03-p03-020-endpoint-failure}{Unnamed endpoints block elimination}
+Let \(\mathsf{b}\in E\), and let \(T\) be the \(\{<\}\)-theory whose models
+are the \(\{<\}\)-reducts of models of \(\mathsf{DLO}^{E}\). Then \(T\) is
+complete but neither eliminates quantifiers nor is model complete. A
+quantifier-free \(\{<\}\)-formula in one variable \(x\) is a Boolean
+combination of \(x<x\) and \(x=x\), so it is true of all elements of a
+model or of none; but \(\exists y\,(y<x)\) fails at the least element and
+holds at every other element. And
+\(\mathcal M=(\mathbb Q\cap[0,1];<)\subseteq\mathcal N=(\mathbb Q\cap[-1,1];<)\)
+are models when \(E=\{\mathsf{b},\mathsf{t}\}\), but \(\exists y\,(y<0)\) is
+true in \(\mathcal N\) and false in \(\mathcal M\). The same failure holds
+with \(\mathsf{t}\) in place of \(\mathsf{b}\). The proof that \(T\) is
+complete is part of the annex proof of
+\cref{thm:p03-w03-p03-020-dense-variants}.
+\end{hbwarning}
+
+\begin{hbtheorem}{thm:p03-w03-p03-020-marked-point}{proved=annex:p03-w03-p03-020-marked-point}{A model complete theory without elimination}
+Let \(Z\) be a unary relation symbol and let \(T_Z\) be the
+\(\{<,Z\}\)-theory consisting of \(\mathsf{DLO}\) and the sentence saying
+that exactly one element satisfies \(Z\). Then \(T_Z\) is model complete and
+does not eliminate quantifiers.
+\end{hbtheorem}
+
+\section{Algebraically closed fields and real closed fields}
+\label{sec:p03-w03-p03-020-fields}
+
+The ring language is \(\Lang_{\mathrm r}=\{0,1,+,-,\cdot\}\), with \(-\)
+unary. Every \(\Lang_{\mathrm r}\)-term in variables \(\bar x\) denotes, in
+every commutative ring, the value of a polynomial with integer coefficients,
+so every atomic formula is equivalent modulo the field axioms to one of the
+form \(f(\bar x)=0\) with \(f\in\mathbb Z[\bar x]\)
+\cite[Remark~2.26, p.~19]{Kruckman2020}. For \(p\) prime, \(\chi_p\) is the
+atomic sentence \(1+\cdots+1=0\) with \(p\) summands. The theory
+\(\mathsf{Fld}_p\) consists of the field axioms with \(\chi_p\) if \(p\) is
+prime, and with \(\neg\chi_q\) for every prime \(q\) if \(p=0\). The theory
+\(\mathsf{ACF}_p\) adds, for each \(d\ge1\), the sentence
+\(\forall a_0\cdots\forall a_{d-1}\,\exists y\,
+(y^d+a_{d-1}y^{d-1}+\cdots+a_0=0)\). The characteristic is fixed by the
+theory; without it the class of algebraically closed fields is not complete,
+as \cref{tab:p03-qe-catalog} records.
+
+\begin{hblemma}{thm:p03-w03-p03-020-field-algebra}{proved=annex:p03-w03-p03-020-field-algebra}{Field extensions used in the elimination}
+Let \(E\subseteq K\) be fields and \(\sigma:E\to L\) a field embedding.
+\begin{enumerate}
+\item If \(g\in E[X]\) is irreducible, then \(E[X]/(g)\) is a field
+  extension of (a copy of) \(E\) in which the class of \(X\) is a root of
+  \(g\). Hence finitely many nonconstant polynomials over \(E\) all have
+  roots in one extension field of \(E\).
+\item If \(\alpha\in K\) is algebraic over \(E\) with minimal polynomial
+  \(g\), and \(\beta\in L\) is a root of \(\sigma g\), then \(\sigma\)
+  extends to an embedding \(E(\alpha)\to L\) with \(\alpha\mapsto\beta\).
+  If \(L\) is algebraically closed such a \(\beta\) exists.
+\item If \(\alpha\in K\) is transcendental over \(E\) and \(\beta\in L\)
+  is transcendental over \(\sigma(E)\), then \(\sigma\) extends to an
+  embedding \(E(\alpha)\to L\) with \(\alpha\mapsto\beta\).
+\item An injective ring homomorphism from an integral domain \(A\) into a
+  field \(L\) extends uniquely to an embedding of the fraction field of
+  \(A\) into \(L\).
+\item Every algebraically closed field is infinite.
+\end{enumerate}
+\end{hblemma}
+
+\begin{hbtheorem}{thm:p03-w03-p03-020-closure-exists}{proved=annex:p03-w03-p03-020-closure-exists}{Algebraically closed extensions exist}
+Assume the Axiom of Choice. Every field \(K\) is a subfield of an
+algebraically closed field of the same characteristic, and the elements of
+that field algebraic over \(K\) form an algebraically closed field
+algebraic over \(K\).
+\end{hbtheorem}
+
+\begin{hbtheorem}{thm:p03-w03-p03-020-acf-qe}{proved=annex:p03-w03-p03-020-acf-qe}{Elimination for algebraically closed fields of fixed characteristic}
+For \(p=0\) and for every prime \(p\), \(\mathsf{ACF}_p\) eliminates
+quantifiers in \(\Lang_{\mathrm r}\). It is complete and model complete.
+\end{hbtheorem}
+
+This proves the cited theorem on algebraically closed fields in
+\cref{sec:qe-categoricity-01}. Kruckman's proof uses the same test and takes
+the existence of algebraic closures and the extension of embeddings as known
+\cite[Theorem~2.27, p.~20]{Kruckman2020}; here they are
+\cref{thm:p03-w03-p03-020-field-algebra,thm:p03-w03-p03-020-closure-exists}.
+
+\begin{hbtheorem}{thm:p03-w03-p03-020-acf-completion}{proved=annex:p03-w03-p03-020-acf-completion}{\(\mathsf{ACF}_p\) is the model completion of \(\mathsf{Fld}_p\)}
+Assume the Axiom of Choice. For \(p=0\) and every prime \(p\):
+\begin{enumerate}
+\item every model of \(\mathsf{Fld}_p\) embeds in a model of
+  \(\mathsf{ACF}_p\), so \(\mathsf{ACF}_p\) and \(\mathsf{Fld}_p\) have
+  the same universal consequences;
+\item \(\mathsf{ACF}_p\) is model complete;
+\item for every field \(K\) of characteristic \(p\), the
+  \(\Lang_{\mathrm r}(K)\)-theory
+  \(\mathsf{ACF}_p\cup\operatorname{Diag}(K)\) is consistent and complete;
+\item the fields of characteristic \(p\) that are existentially closed
+  among fields of characteristic \(p\) are exactly the algebraically closed
+  ones.
+\end{enumerate}
+\end{hbtheorem}
+
+This proves the \(\mathsf{ACF}_p\) half of the cited
+\cref{thm:p03-field-model-completions}.
+
+\begin{hbexample}{def:p03-w03-p03-020-quadratic}{Eliminating a root quantifier}
+Modulo \(\mathsf{ACF}_p\), the formula \(\exists y\,(ay^2+by+c=0)\) is
+equivalent to \(a\ne0\lor b\ne0\lor c=0\). If \(a\ne0\), the monic
+polynomial \(y^2+(b/a)y+c/a\) has a root by the axiom for \(d=2\); if
+\(a=0\) and \(b\ne0\), then \(y=-c/b\) is a root; if \(a=b=0\), the
+equation reads \(c=0\). The equivalence fails in the theory of fields:
+\(\mathbb R\subseteq\mathbb C\), and \(y^2+1=0\) has a root in
+\(\mathbb C\) but not in \(\mathbb R\), so
+\(\exists y\,(y^2+1=0)\) is not preserved down this embedding and is not
+equivalent to a quantifier-free formula modulo the field axioms
+\cite[Example~2.21, p.~16]{Kruckman2020}.
+\end{hbexample}
+
+\begin{hbwarning}{def:p03-w03-p03-020-language-choice}{Characteristic, order and definable choice}
+Three hypotheses stay attached to these results. The characteristic must
+be fixed for completeness; the class of all algebraically closed fields
+passes the one-point test by the same proof, since equal quantifier-free
+types already agree on each \(\chi_p\), but it leaves each \(\chi_p\)
+undecided. For the real field, elimination is possible only in a language
+that contains the order: in \(\Lang_{\mathrm r}\) the formula
+\(\exists y\,(y^2=x)\) defines the nonnegative elements of \(\mathbb R\),
+which is neither finite nor cofinite, whereas every quantifier-free
+\(\Lang_{\mathrm r}\)-formula in one variable defines, in any field, a
+finite or cofinite set, because an atom \(f(x)=0\) with
+\(f\in\mathbb Z[x]\) defines the whole field when \(f\) is zero in the
+field and at most \(\deg f\) points otherwise, and finite and cofinite
+sets are closed under Boolean operations. Finally, elimination does not
+by itself provide definable choice of witnesses
+(\cref{def:p03-definable-skolem-functions}): the conjugate roots in
+\(\mathsf{ACF}_p\) cannot be selected uniformly, while the catalog
+\cref{tab:p03-qe-catalog} records definable choice for real closed fields
+as a separate property.
+\end{hbwarning}
+
+
+\subsection{Ordered fields, real closures and real closed fields}
+\label{sec:p03-w03-p03-020-rcf}
+
+The ordered analogue of the passage from fields to algebraically closed
+fields runs in the ordered-ring language
+\(\Lang_{\mathrm{or}}=\{0,1,+,-,\mathbin{\cdot},<\}\) of
+\cref{def:p03-w03-p03-037-rcf}, in which \(-\) is binary subtraction rather
+than the unary minus of \(\Lang_{\mathrm r}\). Terms again denote integer
+polynomials (\cref{def:p03-w03-p03-037-parametric}), but the atomic formulas
+now include strict inequalities between polynomials as well as equations.
+The inputs are an ordered field and the axioms of \(\mathsf{RCF}\); the
+conclusions are that every ordered field has a real closure, that
+\(\mathsf{RCF}\) is the model completion of the theory of ordered fields,
+with completeness over the \(\Lang_{\mathrm{or}}\)-diagram of each ordered
+field, and that the existentially closed ordered fields are exactly the real
+closed fields. Elimination of quantifiers for \(\mathsf{RCF}\) in
+\(\Lang_{\mathrm{or}}\) is \cref{thm:p03-w03-p03-037-qe}, proved from the
+axioms in \cref{sec:p03-w03-p03-037-qe}; it is used here and not reproved.
+
+\begin{hbdefinition}{def:p03-w03-p03-020-ordered-fields}{Ordered fields and real closures}
+\(\mathsf{OF}\) is the \(\Lang_{\mathrm{or}}\)-theory of ordered fields of
+\cref{def:p03-w03-p03-037-rcf}: the axioms of commutative fields (with
+\(\forall x\,\exists y\,(x=0\lor x\mathbin{\cdot}y=1)\) for inverses), the
+axioms of a strict linear order for \(<\), and the two compatibility axioms
+\(x<y\rightarrow x+z<y+z\) and \((0<x\land0<y)\rightarrow0<x\mathbin{\cdot}y\).
+\(\mathsf{RCF}\) is \(\mathsf{OF}\) together with the intermediate-value
+axioms of \cref{def:p03-w03-p03-037-rcf}. For ordered fields \((F,<)\) and
+\((L,<_L)\) with \(F\subseteq L\), the order \(<_L\) \emph{extends} \(<\)
+when \((F,<)\) is an \(\Lang_{\mathrm{or}}\)-substructure of \((L,<_L)\),
+that is, \(F\) is a subfield of \(L\) and \(<\) is the restriction of
+\(<_L\) to \(F\). A \emph{real closure} of an ordered field \((F,<)\) is an
+ordered field \((R,<_R)\models\mathsf{RCF}\) such that \(R\) is a field
+extension of \(F\), algebraic over \(F\), and \(<_R\) extends \(<\).
+\index{real closure}
+\index{ordered field}
+\end{hbdefinition}
+
+The order is part of the data. Kruckman defines a real closure of a field
+without an order, as an algebraic extension that is formally real and has no
+proper formally real algebraic extension \cite[Definitions~3.16 and~3.18,
+p.~30]{Kruckman2020}, and then shows that for an ordered field it can be
+chosen so that its unique order extends the given one
+\cite[Theorem~3.28, p.~36]{Kruckman2020}. The definition above builds that
+requirement in. For the agreement of his definition of real closed fields
+with the intermediate-value form used here see
+\cite[Theorem~3.31, p.~37]{Kruckman2020};
+\cref{thm:p03-w03-p03-020-rcf-char} proves the part used below.
+
+\begin{hblemma}{thm:p03-w03-p03-020-order-extension}{proved=annex:p03-w03-p03-020-order-extension}{Extending an order}
+Assume the Axiom of Choice. Let \((K,<)\) be an ordered field and
+\(L\supseteq K\) a field. The order \(<\) extends to an order \(<_L\) making
+\((L,<_L)\) an ordered field if and only if there are no \(m\ge1\), no
+\(p_1,\ldots,p_m\in K\) with \(0<p_i\), and no \(y_1,\ldots,y_m\in L\) such
+that
+\[
+ -1=p_1y_1^2+\cdots+p_my_m^2 .
+\]
+\end{hblemma}
+
+This is the positive-cone argument of \cite[Lemmas~3.12 and~3.13,
+pp.~27--28]{Kruckman2020}, run over the positive elements of \(K\) instead
+of over sums of squares alone, so that the order obtained on \(L\) contains
+the given order on \(K\).
+
+\begin{hblemma}{thm:p03-w03-p03-020-root-ext}{proved=annex:p03-w03-p03-020-root-ext}{Adjoined roots keep an order}
+Assume the Axiom of Choice. Let \((K,<)\) be an ordered field, \(L\supseteq
+K\) a field and \(\alpha\in L\).
+\begin{enumerate}
+\item If \(\alpha^2=a\) for some \(a\in K\) with \(0<a\), then \(<\)
+  extends to an order of the field \(K(\alpha)\).
+\item If \(\alpha\) is a root of an irreducible polynomial \(g\in K[X]\) of
+  odd degree, then \(<\) extends to an order of \(K(\alpha)\).
+\end{enumerate}
+\end{hblemma}
+
+Kruckman proves the unordered forms, for formally real fields
+\cite[Lemmas~3.20 and~3.21, p.~31]{Kruckman2020}; the descent on the degree
+in item~2 is the same argument.
+
+\begin{hbtheorem}{thm:p03-w03-p03-020-rcf-char}{proved=annex:p03-w03-p03-020-rcf-char}{Real closed fields by roots}
+For an ordered field \((R,<)\) the following are equivalent.
+\begin{enumerate}
+\item \((R,<)\models\mathsf{RCF}\).
+\item Every \(a\in R\) with \(0<a\) is a square in \(R\), and every
+  polynomial of odd degree in \(R[X]\) has a root in \(R\).
+\end{enumerate}
+When they hold, \(-1\) is not a square in \(R\), and the field
+\(R(\mathrm i)=R[X]/(X^2+1)\), with \(\mathrm i\) the class of \(X\), is
+algebraically closed.
+\end{hbtheorem}
+
+The implication from 2 to 1 is where algebra enters. The annex proof first
+shows that \(R(\mathrm i)\) is algebraically closed, by induction on the
+power of \(2\) dividing the degree and with symmetric polynomials. It then
+factors a polynomial over \(R\) into linear factors and quadratic factors
+without roots, and a sign change between two points must come from a linear
+factor. Kruckman proves that \(R(\mathrm i)\) is algebraically closed with
+Galois theory and Sylow subgroups \cite[Theorem~3.22,
+pp.~32--33]{Kruckman2020} and then derives the intermediate value property
+\cite[Theorem~3.31, pp.~37--38]{Kruckman2020}.
+
+\begin{hbtheorem}{thm:p03-w03-p03-020-real-closure}{proved=annex:p03-w03-p03-020-real-closure}{Real closures exist}
+Assume the Axiom of Choice. Let \((F,<)\) be an ordered field and let
+\(\Omega\supseteq F\) be an algebraically closed field algebraic over \(F\),
+as provided by \cref{thm:p03-w03-p03-020-closure-exists}. Then some subfield
+\(R\) of \(\Omega\) containing \(F\) carries an order \(<_R\) such that
+\((R,<_R)\) is a real closure of \((F,<)\). In particular every ordered field
+has a real closure.
+\end{hbtheorem}
+
+Kruckman first adjoins square roots of all positive elements and then takes
+a maximal formally real algebraic extension
+\cite[Lemma~3.27 and Theorem~3.28, p.~36]{Kruckman2020}; the annex proof
+instead takes a maximal ordered subfield of \(\Omega\) whose order extends
+\(<\), so that the extension of the order is kept at every stage. Real
+closures are also unique up to isomorphism over \(F\), by Sturm's theorem
+\cite[Theorem~3.38, p.~42]{Kruckman2020}; that uniqueness is not proved here
+and nothing below uses it. Item~3 of the next theorem gives the weaker
+statement that any two real closures of \((F,<)\) satisfy the same
+\(\Lang_{\mathrm{or}}(F)\)-sentences.
+
+\begin{hbtheorem}{thm:p03-w03-p03-020-rcf-mc}{proved=annex:p03-w03-p03-020-rcf-mc}{Model completion of ordered fields}
+Assume the Axiom of Choice. In the ordered-ring language
+\(\Lang_{\mathrm{or}}\):
+\begin{enumerate}
+\item every ordered field embeds in a model of \(\mathsf{RCF}\), so
+  \(\mathsf{OF}\) and \(\mathsf{RCF}\) have the same universal consequences;
+\item \(\mathsf{RCF}\) eliminates quantifiers, and it is complete and model
+  complete;
+\item for every ordered field \((F,<)\), the
+  \(\Lang_{\mathrm{or}}(F)\)-theory
+  \(\mathsf{RCF}\cup\operatorname{Diag}(F,<)\) is consistent and complete,
+  so \(\mathsf{RCF}\) is the model completion of \(\mathsf{OF}\); in
+  particular any two real closures of \((F,<)\), with each constant
+  \(c_a\) naming \(a\in F\), satisfy the same
+  \(\Lang_{\mathrm{or}}(F)\)-sentences;
+\item the ordered fields that are existentially closed among ordered
+  fields, in the sense of \cref{def:p03-existentially-closed}, are exactly
+  the real closed fields.
+\end{enumerate}
+\end{hbtheorem}
+
+This proves the real-closed-field half of the cited
+\cref{thm:p03-field-model-completions}, in the ordered-ring language; the
+algebraically closed half is \cref{thm:p03-w03-p03-020-acf-completion}.
+Kruckman proves elimination, completeness and model completeness
+\cite[Theorem~3.39, p.~43; Corollary~3.40, p.~44; Theorem~3.46,
+p.~46]{Kruckman2020}, and his elimination proof uses the uniqueness of real
+closures; the route here goes through \cref{thm:p03-w03-p03-037-qe}, which
+does not need it.
+
+\begin{hbexample}{def:p03-w03-p03-020-rcf-example}{Deciding sentences over an ordered field}
+\emph{The ordered field.} In \(\mathbb Q(t)\), with \(t\) transcendental
+over \(\mathbb Q\), call a nonzero element \(f/g\) (\(f,g\in\mathbb Q[t]\)
+nonzero) positive when the leading coefficients satisfy
+\(\operatorname{lc}(f)\operatorname{lc}(g)>0\). This does not depend on the
+representation: \(f/g=f'/g'\) gives
+\(\operatorname{lc}(f)\operatorname{lc}(g')=\operatorname{lc}(f')\operatorname{lc}(g)\),
+and multiplying by \(\operatorname{lc}(g)\operatorname{lc}(g')\) shows that
+\(\operatorname{lc}(f)\operatorname{lc}(g)\) and
+\(\operatorname{lc}(f')\operatorname{lc}(g')\) have the same sign. Write
+positive elements with denominators of positive leading coefficient. Then
+products of positive elements are positive, and so are sums, because the
+leading coefficient of \(fg'+f'g\) is that of the summand of larger degree,
+or the sum of two positive rationals when the degrees agree. Exactly one of
+\(x\) and \(-x\) is positive for \(x\ne0\). So \(x<_+y\) iff \(y-x\) is
+positive defines an ordered field \((\mathbb Q(t),<_+)\) extending the order
+of \(\mathbb Q\), in which \(n<_+t\) for every integer \(n\), because
+\(t-n\) has leading coefficient \(1\).
+
+\emph{One quantifier, eliminated.} Modulo \(\mathsf{RCF}\),
+\(\exists y\,(y\mathbin{\cdot}y=x)\) is equivalent to \(0<x\lor x=0\):
+squares are nonnegative in any ordered field, and nonnegative elements of a
+real closed field are squares by
+\cref{thm:p03-w03-p03-020-rcf-char}. So for every
+\(a\in\mathbb Q(t)\), the theory
+\(\mathsf{RCF}\cup\operatorname{Diag}(\mathbb Q(t),<_+)\) entails
+\(\exists y\,(y\mathbin{\cdot}y=c_a)\) when \(a\) is positive or zero,
+because the atomic sentence \(c_0<c_a\) or \(c_a=c_0\) is then in the
+diagram, and entails its negation otherwise. For instance it entails
+\(\exists y\,(y\mathbin{\cdot}y=c_{t-n})\) for every integer \(n\), so every
+real closure of \((\mathbb Q(t),<_+)\) contains square roots of all the
+elements \(t-n\). None of them lies in \(\mathbb Q(t)\): an equation
+\(f^2=(t-n)g^2\) with nonzero \(f,g\in\mathbb Q[t]\) is impossible, since
+the left side has even degree and the right side odd degree.
+
+\emph{Existential closure fails below.} The ordered field
+\((\mathbb Q,<)\) is not existentially closed among ordered fields: the
+existential sentence \(\exists y\,(y\mathbin{\cdot}y=1+1)\) is false in
+\(\mathbb Q\) and true in every real closure of \(\mathbb Q\), which exists by
+\cref{thm:p03-w03-p03-020-real-closure}. This is the kind of witness used in
+the proof of item~4 of \cref{thm:p03-w03-p03-020-rcf-mc}.
+\end{hbexample}
+
+\begin{hbwarning}{def:p03-w03-p03-020-rcf-ring-diagram}{The order belongs in the diagram}
+Completeness over diagrams in \cref{thm:p03-w03-p03-020-rcf-mc}
+needs the order of \(F\) in the diagram. Let
+\(\sigma:\mathbb Q(t)\to\mathbb Q(t)\) be the field automorphism with
+\(\sigma(t)=-t\) (the substitution \(t\mapsto-t\) on \(\mathbb Q[t]\), an
+injective ring homomorphism into \(\mathbb Q(t)\), extended to fractions by
+item~4 of \cref{thm:p03-w03-p03-020-field-algebra}; it is its own inverse),
+and put \(x<_-y\) iff \(\sigma(x)<_+\sigma(y)\), with \(<_+\) as in
+\cref{def:p03-w03-p03-020-rcf-example}. Since \(\sigma\) preserves sums and
+products, \((\mathbb Q(t),<_-)\) is an ordered field, and \(t<_-0\) because
+\(\sigma(t)=-t<_+0\). Let \(R_+\) and \(R_-\) be real closures of
+\((\mathbb Q(t),<_+)\) and \((\mathbb Q(t),<_-)\)
+(\cref{thm:p03-w03-p03-020-real-closure}). As
+\(\Lang_{\mathrm r}(\mathbb Q(t))\)-structures, both satisfy the
+\(\Lang_{\mathrm r}\)-sentences true in all real closed fields and the
+\(\Lang_{\mathrm r}\)-diagram of the field \(\mathbb Q(t)\). But
+\(R_+\models\exists y\,(y\mathbin{\cdot}y=c_t)\), since \(0<t\) there, and
+\(R_-\models\neg\exists y\,(y\mathbin{\cdot}y=c_t)\), since \(t<0\) there and
+squares are nonnegative. So the ring diagram of a field with more than one
+order does not decide the theory of its real closures, and real closures
+depend on the chosen order, as Kruckman observes for
+\(\mathbb Q(\sqrt2)\) \cite[Example~3.4, p.~25]{Kruckman2020}. Elimination
+also needs the order symbol: in \(\Lang_{\mathrm r}\) it fails for the real
+closed fields (\cref{thm:p03-w03-p03-037-ring-language} and
+\cref{def:p03-w03-p03-020-language-choice}).
+\end{hbwarning}

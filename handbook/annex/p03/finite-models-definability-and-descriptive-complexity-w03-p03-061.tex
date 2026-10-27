@@ -1,0 +1,1617 @@
+%% toc: P3 39 39.8
+\section{Proofs: existential pebble games and fixed-subgraph queries}
+\label{sec:annex-p03-w03-p03-061-existential}
+
+Conventions are those of \cref{def:p03-w03-p03-061-setting}; \(C\) abbreviates
+\(C_{\mathbf A,\mathbf B}\) when the structures are clear. The truth of a
+formula under an assignment depends only on the values of its free variables;
+this is an induction on formulas whose infinitary clauses are immediate, and
+it is used without mention.
+
+\begin{annexitem}{annex:p03-w03-p03-061-substitution}{thm:p03-w03-p03-061-substitution}{Substitution of terms for variables}
+\begin{proof}
+For a term \(t\) over \(V_k\) and \(\bar a\in A^k\) write
+\(\rho(\bar a)\defeq(\rho(1)^{\mathbf A}[\bar a],\ldots,
+\rho(k)^{\mathbf A}[\bar a])\). Define \(\varphi_\rho\) by recursion on
+\(\varphi\), simultaneously for all \(\rho\), and verify the equivalence and
+the free-variable condition along the way.
+
+\emph{Basic formulas.} \(\varphi_\rho\) replaces each variable \(v_j\) in
+\(\varphi\) by the term \(\rho(j)\). Its free variables are those of the terms
+\(\rho(j)\) with \(v_j\) in \(\varphi\). The value of the replaced term at
+\(\bar a\) is the value of \(v_j\) at \(\rho(\bar a)\), and constants are
+unchanged, so the equivalence holds. Atomic formulas go to atomic formulas,
+and \(t\neq t'\) to a negated equality, so \(\varphi_\rho\) stays in
+\(\mathcal L\).
+
+\emph{Conjunction and disjunction.} Put
+\((\bigwedge\Psi)_\rho\defeq\bigwedge\{\psi_\rho:\psi\in\Psi\}\) and likewise
+for \(\bigvee\). The equivalence and the free-variable condition pass through
+each conjunct or disjunct. A finite \(\Psi\) gives a finite set, so finitary
+formulas stay finitary.
+
+\emph{Existential quantifier.} Let \(\varphi=\exists v_j\,\psi\). The set
+\(W\) of variables occurring in the terms \(\rho(i)\), \(i\neq j\), has at
+most \(k-1\) members, so some \(v_l\in V_k-W\) exists; fix the least such
+\(l\). Let \(\rho'\) agree with \(\rho\) except that \(\rho'(j)=v_l\), and
+put \(\varphi_\rho\defeq\exists v_l\,\psi_{\rho'}\). For \(\bar a\in A^k\)
+and \(a\in A\) let \(\bar a[l/a]\) replace the \(l\)-th entry by \(a\). For
+\(i\neq j\) the term \(\rho(i)\) does not contain \(v_l\), so
+\(\rho'(\bar a[l/a])\) agrees with \(\rho(\bar a)\) at every \(i\neq j\) and
+has \(a\) at \(j\). Hence
+\[
+\begin{aligned}
+ \mathbf A\models\exists v_l\,\psi_{\rho'}[\bar a]
+ &\iff\exists a\in A\;\mathbf A\models\psi\bigl[\rho'(\bar a[l/a])\bigr]\\
+ &\iff\exists a\in A\;\mathbf A\models\psi\bigl[\rho(\bar a)[j/a]\bigr]\\
+ &\iff\mathbf A\models\exists v_j\,\psi\bigl[\rho(\bar a)\bigr],
+\end{aligned}
+\]
+using the induction hypothesis for \(\psi\) and \(\rho'\) in the first step.
+The free variables of \(\psi_{\rho'}\) lie among the variables of the terms
+\(\rho'(i)\) with \(v_i\) free in \(\psi\). Those with \(i=j\) contribute only
+\(v_l\), which is now bound; those with \(i\neq j\) are terms \(\rho(i)\)
+with \(v_i\) free in \(\exists v_j\psi\). The variables of
+\(\varphi_\rho\) lie in \(V_k\), and no negation or universal quantifier has
+been introduced.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-061-datalog}{thm:p03-w03-p03-061-datalog}{Bounded-variable Datalog is existential finite-variable}
+\begin{proof}
+\emph{The stages and the least fixed point.} The bodies contain the
+intensional symbols only positively, so \(\Phi\) is monotone:
+\(\bar P\subseteq\bar P'\) componentwise implies
+\(\Phi(\bar P)\subseteq\Phi(\bar P')\). Since \(\Phi^0\) is empty,
+\(\Phi^0\subseteq\Phi^1\), and monotonicity gives
+\(\Phi^m\subseteq\Phi^{m+1}\) by induction. Let \(U\defeq\bigcup_m\Phi^m\).
+Monotonicity gives \(\Phi^{m+1}=\Phi(\Phi^m)\subseteq\Phi(U)\) for all
+\(m\), so \(U\subseteq\Phi(U)\). Conversely, a tuple of \(\Phi(U)\) comes from
+a rule and an assignment under which its finitely many intensional body atoms
+hold in \(U\); each holds in some stage, and as the stages increase all hold
+in \(\Phi^m\) for one \(m\), so the tuple lies in \(\Phi^{m+1}\subseteq U\).
+Thus \(U\) is a fixed point. If \(\Phi(\bar P)\subseteq\bar P\), induction
+gives \(\Phi^m\subseteq\bar P\) for every \(m\), since
+\(\Phi^{m+1}=\Phi(\Phi^m)\subseteq\Phi(\bar P)\subseteq\bar P\). Hence
+\(U=\Phi^\infty\).
+
+\emph{Item 1.} Induction on \(m\). Put \(\theta^0_{i,\mu}\defeq\bot\); this is
+correct as \(\Phi^0_i=\emptyset\). Assume the formulas for stage \(m\) exist.
+Fix \(i\), \(\mu\) and a rule \(r\) with head \(S_i(u_1,\ldots,u_n)\). Rename
+the distinct body variables of \(r\) as \(v_1,\ldots,v_p\) (\(p\le k\)); the
+head variables not in the body keep separate names. If some intensional body
+atom has \(\theta^m=\bot\) (as computed below), \(r\) contributes nothing to
+\(\Phi^{m+1}\) and is dropped. Otherwise define:
+\begin{itemize}
+\item \(\chi\): the conjunction of the body literals, where an extensional
+      atom, equality or inequality is kept, and an intensional atom
+      \(S_j(w_1,\ldots,w_q)\) is replaced by \(\theta^m_{j,\nu}\) with
+      \(\nu(t)\defeq w_t\). By the induction hypothesis,
+      \(\mathbf A\models\chi[\bar d]\) exactly when every body literal holds
+      in \((\mathbf A,\Phi^m)\) under \(v_j\mapsto d_j\).
+\item \(J\): the set of \(j\le p\) such that \(v_j\) occurs in the head; for
+      \(j\in J\) fix a head position \(i_j\) with \(u_{i_j}=v_j\).
+\item \(\chi'\defeq\exists v_{j_1}\cdots\exists v_{j_e}\,\chi\), where
+      \(j_1,\ldots,j_e\) list \(\{1,\ldots,p\}-J\). Its free variables lie
+      in \(\{v_j:j\in J\}\).
+\item \(\rho\): \(\rho(j)\defeq\mu(i_j)\) for \(j\in J\), \(\rho(j)\defeq
+      v_j\) otherwise; \(\chi'_\rho\) is given by
+      \cref{thm:p03-w03-p03-061-substitution}.
+\item \(\varepsilon\): the conjunction of the equalities
+      \(\mu(i)=\mu(i')\) for head positions with \(u_i=u_{i'}\) a variable,
+      and \(\mu(i)=c\) for head positions with \(u_i\) a constant \(c\).
+\end{itemize}
+Put \(\psi_{r}\defeq\varepsilon\wedge\chi'_\rho\) and let
+\(\theta^{m+1}_{i,\mu}\) be the disjunction of the \(\psi_r\) over the
+remaining rules with head symbol \(S_i\) (\(\bot\) if none remains). The
+variables are in \(V_k\); only atomic formulas, inequalities where the
+program has them, finite conjunctions and disjunctions and existential
+quantifiers are used, so \(\theta^{m+1}_{i,\mu}\in\exists\mathrm{FO}^k\)
+(respectively \(\exists\mathrm{FO}^k(\neq)\)) or is \(\bot\). By
+\cref{thm:p03-w03-p03-061-substitution} the free variables of
+\(\chi'_\rho\) lie among the terms \(\mu(i_j)\), and those of
+\(\varepsilon\) among the \(\mu(i)\).
+
+Write \(\bar e\defeq(\mu(1)^{\mathbf A}[\bar a],\ldots,\mu(n)^{\mathbf
+A}[\bar a])\) and \(\bar c\defeq\rho(\bar a)\). It remains to show that
+\(\mathbf A\models\psi_r[\bar a]\) exactly when some assignment \(\beta\) of
+the variables of \(r\) makes the body true in \((\mathbf A,\Phi^m)\) and
+\(u_i^{\mathbf A}[\beta]=e_i\) for every \(i\).
+
+Suppose \(\mathbf A\models\psi_r[\bar a]\). By
+\cref{thm:p03-w03-p03-061-substitution}, \(\mathbf A\models\chi'[\bar c]\),
+so some \(\bar d\in A^k\) agrees with \(\bar c\) on \(J\) and satisfies
+\(\chi\). Let \(\beta(v_j)\defeq d_j\) for \(j\le p\). For a head variable
+\(x\) not in the body choose a position \(i\) with \(u_i=x\) and let
+\(\beta(x)\defeq e_i\); by \(\varepsilon\) the choice of \(i\) does not
+matter. The body holds under \(\beta\). For a head position \(i\): if
+\(u_i=v_j\) with \(j\in J\), then
+\(\beta(v_j)=d_j=c_j=\mu(i_j)^{\mathbf A}[\bar a]=e_{i_j}=e_i\), the last
+step by \(\varepsilon\); if \(u_i\) is a head-only variable,
+\(\beta(u_i)=e_i\) by \(\varepsilon\); if \(u_i=c\), then \(e_i=c^{\mathbf
+A}\) by \(\varepsilon\).
+
+Conversely, given such \(\beta\), the equalities of \(\varepsilon\) hold at
+\(\bar a\), because positions carrying the same term receive the same value
+\(u_i^{\mathbf A}[\beta]\). Let \(d_j\defeq\beta(v_j)\) for \(j\le p\) and
+\(d_j\defeq a_j\) for \(j>p\). Then \(\mathbf A\models\chi[\bar d]\), and for
+\(j\in J\), \(d_j=u_{i_j}^{\mathbf A}[\beta]=e_{i_j}=c_j\). So \(\bar d\)
+witnesses \(\mathbf A\models\chi'[\bar c]\), that is,
+\(\mathbf A\models\chi'_\rho[\bar a]\).
+
+Taking the disjunction over the rules, \(\mathbf A\models
+\theta^{m+1}_{i,\mu}[\bar a]\) exactly when \(\bar e\in\Phi(\Phi^m)_i=
+\Phi^{m+1}_i\). Dropped rules contribute nothing, because their bodies
+contain an atom false at stage \(m\).
+
+\emph{Item 2.} \(\Phi^\infty_i=\bigcup_m\Phi^m_i\) by the first paragraph, so
+the disjunction of the \(\theta^m_{i,\mu}\) is correct. It is a disjunction of
+a countable set of formulas with variables in \(V_k\), hence in
+\(\exists\mathrm L^k_{\infty\omega}\) (respectively
+\(\exists\mathrm L^k_{\infty\omega}(\neq)\)).
+
+\emph{Item 3.} If the goal symbol \(S_i\) has arity \(n\le k\), take
+\(\mu(t)\defeq v_t\). Then \(\theta^\infty_{i,\mu}\) has free variables among
+\(v_1,\ldots,v_n\) and holds of \((a_1,\ldots,a_n)\) exactly when this tuple
+is in \(\Phi^\infty_i\), on every \(\sigma\)-structure. For \(n=0\) it is a
+sentence.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-061-strategy}{thm:p03-w03-p03-061-strategy}{Strategies and families}
+\begin{proof}
+The argument is the same for both games; ``partial homomorphism'' means
+``one-to-one partial homomorphism'' for the \((\exists,\neq,k)\)-game.
+
+\emph{A family gives a strategy.} Let \(\mathcal I\) be a winning family.
+Every member contains \(C\), and \(\mathcal I\) is nonempty and closed under
+subfunctions, so \(C\in\mathcal I\). Duplicator keeps the invariant
+\(f_p\in\mathcal I\), which holds at the empty position. If Spoiler removes a
+pebble, Duplicator removes hers; the new relation is contained in \(f_p\) and
+contains \(C\), so it is in \(\mathcal I\). If Spoiler places a pebble \(j\)
+that is not in use on \(a\), at most \(k-1\) pebbles are in use, so
+\(|f_p-C|\le k-1\). The forth property gives \(g\in\mathcal I\) with
+\(f_p\subseteq g\) and \(a\in\operatorname{dom}(g)\); Duplicator puts pebble
+\(j\) on \(g(a)\). The new relation \(f_p\cup\{(a,g(a))\}\) lies between
+\(C\) and \(g\), so it is in \(\mathcal I\). Every member of \(\mathcal I\) is
+a partial homomorphism, so Spoiler never wins.
+
+\emph{A strategy gives a family.} Fix a winning strategy of Duplicator and let
+\(\mathcal I\) be the set of relations \(f_p\) at positions \(p\) reached in
+finite plays that follow the strategy. The empty position gives
+\(C\in\mathcal I\). Each \(f_p\) is a partial homomorphism, as otherwise
+Spoiler would have won at \(p\). At most \(k\) pebbles are down, so
+\(|f_p-C|\le k\). For closure under subfunctions let \(C\subseteq g\subseteq
+f_p\). Let Spoiler continue the play from \(p\) by removing each pebble whose
+pair is not in \(g\); Duplicator's answers are forced. The resulting
+relation contains \(C\) and the pairs of the remaining pebbles, which are the
+pairs of \(g-C\), so it equals \(g\). For the forth property let \(|f_p-C|<k\)
+and \(a\in A\). If all \(k\) pebbles are in use, two of them carry the same
+pair or one carries a pair of \(C\), since otherwise \(|f_p-C|=k\); Spoiler
+removes such a pebble, which leaves the relation unchanged. He then places a
+free pebble on \(a\), and the strategy's answer \(b\) yields a position with
+relation \(f_p\cup\{(a,b)\}\in\mathcal I\).
+
+\emph{Fewer pebbles.} If \(\mathcal I\) is a winning family for \(k\) pebbles
+and \(j\le k\), let \(\mathcal I_j\defeq\{f\in\mathcal I:|f-C|\le j\}\). It
+contains \(C\) and is closed under subfunctions. If \(f\in\mathcal I_j\) has
+\(|f-C|<j\le k\) and \(a\in A\), the forth property of \(\mathcal I\) gives
+\(g\supseteq f\) with \(a\in\operatorname{dom}(g)\); then
+\(f\cup\{(a,g(a))\}\) lies between \(C\) and \(g\), so it is in \(\mathcal I\),
+and it has at most \(j\) pairs outside \(C\).
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-061-game-logic}{thm:p03-w03-p03-061-game-logic}{Existential pebble games characterize existential \(k\)-variable preservation}
+\begin{proof}
+By \cref{thm:p03-w03-p03-061-strategy} it suffices to work with winning
+families. The proof is written for \(\exists\mathrm L^k_{\infty\omega}\);
+the version with inequalities differs only at the two places marked.
+
+\emph{(2)\(\Rightarrow\)(1).} Let \(\mathcal I\) be a winning family. Claim:
+for every \(\varphi\in\exists\mathrm L^k_{\infty\omega}\), every
+\(f\in\mathcal I\) and all \(\bar a\in A^k\), \(\bar b\in B^k\) such that
+\(a_i\in\operatorname{dom}(f)\) and \(b_i=f(a_i)\) whenever \(v_i\) is free in
+\(\varphi\),
+\(\mathbf A\models\varphi[\bar a]\) implies \(\mathbf B\models\varphi[\bar
+b]\). Induction on \(\varphi\), for all \(f,\bar a,\bar b\) at once.
+
+For a term \(t\) of \(\varphi\), the value \(t^{\mathbf A}[\bar a]\) lies in
+\(\operatorname{dom}(f)\) and \(f(t^{\mathbf A}[\bar a])=t^{\mathbf B}[\bar
+b]\): for a free variable by hypothesis, for a constant because \(C\subseteq
+f\). An atom \(R(t_1,\ldots,t_r)\) true in \(\mathbf A\) is therefore true in
+\(\mathbf B\) because \(f\) is a partial homomorphism. An equality true in
+\(\mathbf A\) is true in \(\mathbf B\) because \(f\) is a function. (With
+inequalities: \(t\neq t'\) true in \(\mathbf A\) is true in \(\mathbf B\)
+because \(f\) is injective.) The infinitary connectives are immediate, since
+the free variables of a conjunct or disjunct are free in the compound.
+
+Let \(\varphi=\exists v_j\,\psi\) and \(\mathbf A\models\psi[\bar a[j/a]]\).
+Let \(F\) be the set of \(i\) with \(v_i\) free in \(\varphi\); then
+\(j\notin F\) and \(|F|\le k-1\). The function
+\(g\defeq C\cup\{(a_i,f(a_i)):i\in F\}\) lies between \(C\) and \(f\), so
+\(g\in\mathcal I\), and \(|g-C|\le k-1<k\). The forth property gives
+\(h\in\mathcal I\) with \(g\subseteq h\) and \(a\in\operatorname{dom}(h)\).
+For \(i\in F\), \(h(a_i)=g(a_i)=b_i\). The induction hypothesis for
+\(\psi\), \(h\), \(\bar a[j/a]\) and \(\bar b[j/h(a)]\) gives
+\(\mathbf B\models\psi[\bar b[j/h(a)]]\), so \(\mathbf B\models\varphi[\bar
+b]\).
+
+For a sentence \(\varphi\) apply the claim with \(f=C\in\mathcal I\): every
+\(\exists\mathrm L^k_{\infty\omega}\)-sentence true in \(\mathbf A\) is true
+in \(\mathbf B\).
+
+\emph{(1)\(\Rightarrow\)(2), and the finite case.} Let \(\mathcal L\) be
+\(\exists\mathrm L^k_{\infty\omega}\), or \(\exists\mathrm{FO}^k\) when
+\(\mathbf B\) is finite, and assume every \(\mathcal L\)-sentence true in
+\(\mathbf A\) is true in \(\mathbf B\). For \(r\le k\) and tuples
+\(\bar a\in A^r\), \(\bar b\in B^r\) write
+\((\bar a)\le_{\mathcal L}(\bar b)\) when every \(\mathcal L\)-formula with
+free variables among \(v_1,\ldots,v_r\) true of \(\bar a\) in \(\mathbf A\) is
+true of \(\bar b\) in \(\mathbf B\). Let \(\mathcal I\) be the set of
+relations \(C\cup\{(a_1,b_1),\ldots,(a_r,b_r)\}\) for all such \(r\),
+\(\bar a,\bar b\) with \((\bar a)\le_{\mathcal L}(\bar b)\).
+
+(a) Each member \(f\) is a partial homomorphism. Every element of
+\(\operatorname{dom}(f)\) is the value \(t^{\mathbf A}[\bar a]\) of a term
+over \(v_1,\ldots,v_r\), and \(f\) is the set of pairs
+\((t^{\mathbf A}[\bar a],t^{\mathbf B}[\bar b])\). If
+\(t^{\mathbf A}[\bar a]=t'^{\mathbf A}[\bar a]\), the atomic formula
+\(t=t'\) holds of \(\bar a\), hence of \(\bar b\); so \(f\) is a function.
+Relations are preserved in the same way, through atomic formulas. (With
+inequalities: \(t\neq t'\) transfers in the same way, so \(f\) is
+injective.) Also \(|f-C|\le r\le k\).
+
+(b) \(C\in\mathcal I\): this is the case \(r=0\), which is the hypothesis.
+
+(c) Re-indexing. If \((\bar a)\le_{\mathcal L}(\bar b)\) and
+\(1\le i_1,\ldots,i_q\le r\), then \((a_{i_1},\ldots,a_{i_q})
+\le_{\mathcal L}(b_{i_1},\ldots,b_{i_q})\). Indeed, let \(\varphi\) have free
+variables among \(v_1,\ldots,v_q\) and let \(\rho(t)\defeq v_{i_t}\) for
+\(t\le q\), \(\rho(t)\defeq v_t\) otherwise. By
+\cref{thm:p03-w03-p03-061-substitution}, \(\varphi_\rho\in\mathcal L\) has
+free variables among \(v_1,\ldots,v_r\) and holds of \(\bar a\) exactly
+when \(\varphi\) holds of \((a_{i_1},\ldots,a_{i_q})\), and likewise in
+\(\mathbf B\). Consequently \(\mathcal I\) is closed under subfunctions: if
+\(C\subseteq g\subseteq f\) with \(f\) given by \(\bar a,\bar b\), list the
+pairs of \(g-C\) as \((a_{i_t},b_{i_t})\). It also follows that every
+\(f\in\mathcal I\) has a representation by tuples of length
+\(|f-C|\).
+
+(d) Forth. Let \(f\in\mathcal I\), \(|f-C|<k\) and \(a\in A\). By (c),
+\(f\) is given by \(\bar a,\bar b\) of length \(r=|f-C|<k\). Suppose that
+for every \(b\in B\) the relation \((\bar a,a)\le_{\mathcal L}(\bar b,b)\)
+fails, and choose \(\varphi_b\in\mathcal L\) with free variables among
+\(v_1,\ldots,v_{r+1}\), true of \((\bar a,a)\) and false of \((\bar b,b)\).
+Put \(\psi\defeq\exists v_{r+1}\bigwedge_{b\in B}\varphi_b\). Its variables
+lie in \(V_k\), and it is in \(\mathcal L\): when \(\mathcal L\) is
+first-order, \(B\) is finite and the conjunction is finitary. \(\psi\) holds
+of \(\bar a\) in \(\mathbf A\), with witness \(a\), so it holds of \(\bar b\)
+in \(\mathbf B\) with some witness \(b\), and then \(\varphi_b\) holds of
+\((\bar b,b)\), a contradiction. Hence some \(b\) has
+\((\bar a,a)\le_{\mathcal L}(\bar b,b)\), and
+\(f\cup\{(a,b)\}\in\mathcal I\) extends \(f\) with \(a\) in its domain.
+
+So \(\mathcal I\) is a winning family. With \(\mathcal L=\exists\mathrm
+L^k_{\infty\omega}\) this proves (1)\(\Rightarrow\)(2). If \(\mathbf B\) is
+finite, \(\mathbf A\preceq^{\exists,k}_{\omega\omega}\mathbf B\) gives (2) by
+the case \(\mathcal L=\exists\mathrm{FO}^k\), and (1) implies
+\(\mathbf A\preceq^{\exists,k}_{\omega\omega}\mathbf B\) because
+\(\exists\mathrm{FO}^k\subseteq\exists\mathrm L^k_{\infty\omega}\).
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-061-homomorphism}{thm:p03-w03-p03-061-homomorphism}{Preservation under homomorphisms}
+\begin{proof}
+A homomorphism of \(\sigma\)-structures sends \(c^{\mathbf A}\) to
+\(c^{\mathbf B}\), so \(C\subseteq h\). Let \(\mathcal I\defeq\{f:C\subseteq
+f\subseteq h,\ |f-C|\le k\}\). Its members are restrictions of \(h\), hence
+partial homomorphisms (one-to-one if \(h\) is); it contains \(C\) and is
+closed under subfunctions; and if \(|f-C|<k\), then
+\(f\cup\{(a,h(a))\}\in\mathcal I\). By \cref{thm:p03-w03-p03-061-strategy}
+Duplicator wins, and by \cref{thm:p03-w03-p03-061-game-logic} every
+\(\exists\mathrm L^k_{\infty\omega}\)-sentence (respectively
+\(\exists\mathrm L^k_{\infty\omega}(\neq)\)-sentence) true in \(\mathbf A\) is
+true in \(\mathbf B\), for every \(k\).
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-061-cliques}{thm:p03-w03-p03-061-cliques}{The existential game is asymmetric}
+\begin{proof}
+The vocabulary is \(\{E\}\), so \(C=\emptyset\). Spoiler places his
+\(k+1\) pebbles on the \(k+1\) distinct vertices \(a_1,\ldots,a_{k+1}\) of
+\(\mathbf K_{k+1}\). Duplicator's answers lie in a set of \(k\) vertices, so
+\(b_i=b_j\) for some \(i\neq j\). Either the relation \(f_p\) is not a
+function, or it is and \(E(a_i,a_j)\) holds while \(E(b_i,b_i)\) fails, since
+\(\mathbf K_k\) has no loops. Either way Spoiler wins.
+
+For the other direction, any injection \(h\) of the vertices of \(\mathbf
+K_k\) into those of \(\mathbf K_{k+1}\) is a one-to-one homomorphism, since
+distinct vertices go to distinct, hence adjacent, vertices.
+\Cref{thm:p03-w03-p03-061-homomorphism} gives a winning family for the
+\((\exists,\neq,j)\)-game for every \(j\). A one-to-one partial homomorphism
+is a partial homomorphism, so the same family wins the \((\exists,j)\)-game.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-061-criterion}{thm:p03-w03-p03-061-criterion}{Game criterion for existential finite-variable definability}
+\begin{proof}
+It suffices to show that, for each fixed \(k\), item~2 for \(k\) holds
+exactly when \(Q\) is \(\exists\mathrm L^k_{\infty\omega}\)-definable on
+\(\mathcal C\); the equivalence of items 1 and 2 follows because
+\(\exists\mathrm L^\omega_{\infty\omega}\) is the union of the
+\(\exists\mathrm L^k_{\infty\omega}\).
+
+Suppose \(\varphi\in\exists\mathrm L^k_{\infty\omega}\) defines \(Q\) on
+\(\mathcal C\). If \(Q(\mathbf A)=1\) and Duplicator wins the
+\((\exists,k)\)-game on \(\mathbf A,\mathbf B\in\mathcal C\), then
+\(\mathbf A\models\varphi\), so \(\mathbf B\models\varphi\) by
+\cref{thm:p03-w03-p03-061-game-logic}, and \(Q(\mathbf B)=1\).
+
+Conversely assume item~2 for \(k\). Every finite structure is isomorphic to
+one whose universe is \(\{1,\ldots,n\}\) for some \(n\), and these form a set;
+let \(\mathcal R\) be the set of such structures that are isomorphic to a
+member of \(\mathcal C\) with \(Q=1\). For \(\mathbf A\in\mathcal R\) let
+\(\tau_{\mathbf A}\) be the conjunction of the set of
+\(\exists\mathrm{FO}^k\)-sentences true in \(\mathbf A\), and let
+\(\varphi\defeq\bigvee_{\mathbf A\in\mathcal R}\tau_{\mathbf A}\), a sentence
+of \(\exists\mathrm L^k_{\infty\omega}\). If \(\mathbf B\in\mathcal C\) and
+\(Q(\mathbf B)=1\), then \(\mathbf B\) is isomorphic to some \(\mathbf
+A\in\mathcal R\), and \(\mathbf B\models\tau_{\mathbf A}\) because
+isomorphisms preserve truth. If \(\mathbf B\in\mathcal C\) and
+\(\mathbf B\models\tau_{\mathbf A}\) for some \(\mathbf A\in\mathcal R\), then
+\(\mathbf A\preceq^{\exists,k}_{\omega\omega}\mathbf B\). Since \(\mathbf B\)
+is finite, \cref{thm:p03-w03-p03-061-game-logic} shows that Duplicator wins the
+\((\exists,k)\)-game on \(\mathbf A'\) and \(\mathbf B\), where
+\(\mathbf A'\in\mathcal C\) is isomorphic to \(\mathbf A\) with
+\(Q(\mathbf A')=1\): isomorphic structures satisfy the same sentences, so
+\(\mathbf A'\preceq^{\exists,k}_{\omega\omega}\mathbf B\) as well. Item~2
+gives \(Q(\mathbf B)=1\). Thus \(\varphi\) defines \(Q\) on \(\mathcal C\).
+
+The version with inequalities is word for word the same, using
+\(\exists\mathrm{FO}^k(\neq)\), \(\exists\mathrm L^k_{\infty\omega}(\neq)\)
+and the \((\exists,\neq,k)\)-games.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-061-horn}{thm:p03-w03-p03-061-horn}{Satisfiability as an existential pebble game}
+\begin{proof}
+An empty clause makes the conjunction unsatisfiable, just as
+\(x\wedge\neg x\) does. Adding an unused variable changes no clause, and
+any satisfying assignment extends to it. Thus the normalization in
+\cref{def:p03-w03-p03-061-horn} preserves satisfiability and ensures a
+nonempty encoding. In this proof write \(\varphi\) for the normalized
+conjunction and allow assignments on its enlarged variable set.
+
+\emph{(1)\(\Rightarrow\)(2).} A satisfying assignment \(s\) of \(\varphi\) is
+a homomorphism \(\mathbf A_\varphi\to\mathbf B\). For each tuple of a relation
+of \(\mathbf A_\varphi\), the corresponding clause is true under \(s\), and
+the relation of \(\mathbf B\) with the same name consists exactly of the
+value tuples satisfying that clause form. \Cref{thm:p03-w03-p03-061-homomorphism}
+gives (2). \emph{(2)\(\Rightarrow\)(3)} is the case \(k=3\).
+
+\emph{(3)\(\Rightarrow\)(1).} Let \(\pi\) be the program displayed after the
+theorem, and on a \(\sigma\)-structure let \(T^\infty\) and the truth value
+of the goal \(P\) be those of its least fixed point.
+
+First, in \(\mathbf A_\varphi\), \(T^\infty\) is the least set \(M\) of
+variables closed under the rules ``\(x\in M\) if \(x\) is a clause; \(z\in M\) if \(\neg
+x\vee z\) is a clause and \(x\in M\); \(z\in M\) if \(\neg x\vee\neg y\vee z\)
+is a clause and \(x,y\in M\)'', and these are the three rules for \(T\).
+\(P\) holds in \(\mathbf A_\varphi\) exactly when some clause with no positive
+literal has all its variables in \(M\).
+
+Second, \(P\) holds in \(\mathbf A_\varphi\) exactly when \(\varphi\) is
+unsatisfiable. If a negative clause has all its variables in \(M\): every
+satisfying assignment \(s\) of \(\varphi\) makes all of \(M\) true (induction
+along the closure rules, since each rule's clause forces its head true when
+its premises are true), hence falsifies that clause, a contradiction. If no
+negative clause lies within \(M\): the assignment true exactly on \(M\)
+satisfies every clause. A positive unit clause \(x\) has \(x\in M\). A clause
+\(\neg x\vee z\) or \(\neg x\vee\neg y\vee z\) is true unless its premises are
+in \(M\), and then \(z\in M\). A negative clause has a variable outside \(M\).
+
+Third, \(P\) fails in \(\mathbf B\). The rules for \(T\) give \(1\in T\) from
+\(P_1^{\mathbf B}\). If \(x=1\) and \((x,z)\in P_2^{\mathbf B}\) then
+\(z=1\), and if \(x=y=1\) and \((x,y,z)\in P_3^{\mathbf B}\) then \(z=1\), so
+\(T^\infty=\{1\}\). The goal rules would need \(1\in N_1^{\mathbf B}\),
+\((1,1)\in N_2^{\mathbf B}\) or \((1,1,1)\in N_3^{\mathbf B}\), and none of
+these holds.
+
+The program \(\pi\) is in \(3\)-Datalog: every body has at most three
+variables and every head at most one. By
+\cref{thm:p03-w03-p03-061-datalog} its goal is defined by an
+\(\exists\mathrm L^3_{\infty\omega}\)-sentence. If Duplicator wins the
+\((\exists,3)\)-game on \(\mathbf A_\varphi\) and \(\mathbf B\),
+\cref{thm:p03-w03-p03-061-game-logic} gives
+\(\mathbf A_\varphi\preceq^{\exists,3}_{\infty\omega}\mathbf B\). Since \(P\)
+fails in \(\mathbf B\), it fails in \(\mathbf A_\varphi\), and \(\varphi\) is
+satisfiable by the second step.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-061-menger}{thm:p03-w03-p03-061-menger}{Menger's theorem for directed graphs, fan form}
+\begin{proof}
+Loops lie on no path and are deleted first. Call a path from \(X\) to \(Y\)
+an \emph{\(X\)--\(Y\) path} when its first node is its only node in \(X\) and
+its last node is its only node in \(Y\); a one-node path at a node of
+\(X\cap Y\) is one. Every path from \(X\) to \(Y\) contains an
+\(X\)--\(Y\) path (from its last node in \(X\) before its first node in
+\(Y\) to that node), so a set meets every path from \(X\) to \(Y\) exactly
+when it meets every \(X\)--\(Y\) path; call such a set
+\emph{separating}. Disjoint paths from \(X\) to \(Y\) yield disjoint
+\(X\)--\(Y\) paths.
+
+\emph{Item 1.} Disjoint \(X\)--\(Y\) paths need distinct nodes of any
+separating set, so their number is at most the least size \(\kappa\) of a
+separating set. For the converse, induction on the number of edges. With no
+edges, the \(X\)--\(Y\) paths are the one-node paths at \(X\cap Y\);
+\(X\cap Y\) is separating and every separating set contains it, so
+\(\kappa=|X\cap Y|\) and the one-node paths realize it.
+
+Let \(e=(x,y)\) be an edge, \(x\neq y\). If \(\mathbf D-e\) has no separating
+set of size less than \(\kappa\), induction gives \(\kappa\) disjoint paths in
+\(\mathbf D-e\), which are paths in \(\mathbf D\). Otherwise let \(W\) be
+separating in \(\mathbf D-e\) with \(|W|<\kappa\). Every path from \(X\) to
+\(Y\) in \(\mathbf D\) that avoids \(W\) uses \(e\), so \(W_x\defeq
+W\cup\{x\}\) and \(W_y\defeq W\cup\{y\}\) are separating in \(\mathbf D\).
+Hence \(|W|=\kappa-1\) and \(x,y\notin W\).
+
+Every set \(Z\) separating \(X\) from \(W_x\) in \(\mathbf D-e\) separates
+\(X\) from \(Y\) in \(\mathbf D\). Let \(P\) be a path from \(X\) to \(Y\) in
+\(\mathbf D\). It meets \(W_x\); its initial segment up to its first node in
+\(W_x\) does not use \(e\), because if \(P\) uses \(e\) it reaches \(x\)
+before \(y\). That segment is a path from \(X\) to \(W_x\) in \(\mathbf D-e\),
+so it meets \(Z\). Thus \(|Z|\ge\kappa\), and by induction \(\mathbf D-e\) has
+\(\kappa=|W_x|\) disjoint \(X\)--\(W_x\) paths, one ending at each node of
+\(W_x\). Symmetrically, using final segments from the last node in \(W_y\),
+which follow \(y\) when \(P\) uses \(e\), \(\mathbf D-e\) has \(\kappa\)
+disjoint \(W_y\)--\(Y\) paths, one starting at each node of \(W_y\).
+
+Let \(P\) be one of the first paths and \(R\) one of the second, and suppose
+they share a node \(z\notin W\). If \(z\) is neither the last node of \(P\)
+nor the first node of \(R\), then \(P\) up to \(z\) followed by \(R\) from
+\(z\) is a walk in \(\mathbf D-e\) from \(X\) to \(Y\) avoiding \(W\) (the
+first part meets \(W_x\) only in its last node, the second meets \(W_y\) only
+in its first node), and it contains a path from \(X\) to \(Y\) in \(\mathbf
+D-e\) avoiding \(W\), which is impossible. If \(z\) is the last node of
+\(P\), then \(z=x\) and \(z\) is not the first node of \(R\) (that is in
+\(W_y\) and \(x\notin W_y\)); the same walk again avoids \(W\). If \(z\) is
+the first node of \(R\), then \(z=y\), and symmetrically. Hence the two
+systems meet only in \(W\). Each node \(w\in W\) is the last node of exactly
+one \(P_w\) and the first node of exactly one \(R_w\); \(P_w\) meets \(W\)
+only in \(w\) and \(R_w\) meets \(W\) only in \(w\), so \(P_wR_w\) is a path.
+Together with \(P_x\,e\,R_y\) (where \(P_x\) ends at \(x\) and \(R_y\) starts
+at \(y\); they are disjoint, as \(P_x\) avoids \(W\)) these are \(\kappa\)
+paths from \(X\) to \(Y\) in \(\mathbf D\). Two of them can meet only in
+\(W\), and at a node \(w\) of \(W\) only \(P_wR_w\) passes, so they are
+disjoint.
+
+\emph{Item 2.} Apply item 1 to \(\mathbf D-s\) with \(X\) the set of
+out-neighbours of \(s\) other than \(s\) and \(Y\defeq T\). If there are \(m\)
+disjoint \(X\)--\(T\) paths \(R_1,\ldots,R_m\) in \(\mathbf D-s\), the paths
+\(sR_i\) start at \(s\), meet \(T\) only in their last nodes and share only
+\(s\). Otherwise item 1 gives a separating set \(Z\subseteq V-\{s\}\) with
+\(|Z|\le m-1\). A walk from \(s\) to a node of \(T\) contains a path from
+\(s\) to that node; as \(s\notin T\), the path has a second node, which is in
+\(X\), and its part from there is a path from \(X\) to \(T\) in \(\mathbf
+D-s\). It meets \(Z\).
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-061-star}{thm:p03-w03-p03-061-star}{Star patterns are existentially definable with inequalities}
+\begin{proof}
+\emph{Out-stars.} Let the centre be \(r\) and the leaves \(w_1,\ldots,w_m\).
+Write \(s,t_i\) for \(d_r^{\mathbf G},d_{w_i}^{\mathbf G}\) and
+\(s',t_i'\) for the corresponding nodes of \(\mathbf G'\), and
+\(T'\defeq\{t'_1,\ldots,t'_m\}\). Since the \(t_i\) are distinct and differ
+from \(s\), two paths \(p_i\) (from \(s\) to \(t_i\)) and \(p_j\) are
+node-disjoint exactly when they share only \(s\), and then neither passes
+through another leaf. So \(\mathrm{FiSH}(\mathbf H)(\mathbf G)=1\) gives
+simple paths \(p_1,\ldots,p_m\) of \(\mathbf G\), \(p_i\) from \(s\) to
+\(t_i\), pairwise sharing only \(s\). If \(\mathbf G'\) had \(m\) paths from
+\(s'\) to \(T'\), each meeting \(T'\) only in its last node and any two
+sharing only \(s'\), their last nodes would be distinct and so would be the
+\(m\) nodes \(t'_i\); they would witness
+\(\mathrm{FiSH}(\mathbf H)(\mathbf G')=1\). Hence by
+\cref{thm:p03-w03-p03-061-menger} there is \(Z\subseteq V(\mathbf
+G')-\{s'\}\) with \(|Z|\le m-1\) meeting every walk from \(s'\) to a node of
+\(T'\).
+
+Suppose a winning family \(\mathcal I\) for the \((\exists,\neq,m+1)\)-game on
+\(\mathbf G\) and \(\mathbf G'\) existed. We build \(f_0,\ldots,f_m\in
+\mathcal I\) and nodes \(x_1,\ldots,x_m\) of \(\mathbf G\) such that
+\(f_i-C\) consists of pairs \((x_j,\cdot)\) with \(j\le i\), each \(x_j\) is a
+node of \(p_j\) other than \(s\), \(x_j\in\operatorname{dom}(f_i)\), and
+\(f_i(x_j)\in Z\) for \(j\le i\). Start with \(f_0\defeq C\in\mathcal I\).
+
+Given \(f_{i-1}\) with \(i\le m\), let \(p_i=(u_0,u_1,\ldots,u_L)\) with
+\(u_0=s\), \(u_L=t_i\), \(L\ge1\). Put \(h_0\defeq f_{i-1}\). For
+\(l=1,\ldots,L\), given \(h_{l-1}\in\mathcal I\) with
+\(h_{l-1}\subseteq f_{i-1}\cup\{(u_{l-1},h_{l-1}(u_{l-1}))\}\) and
+\(u_{l-1}\in\operatorname{dom}(h_{l-1})\): \(|h_{l-1}-C|\le i\le m<m+1\), so
+the forth property gives \(h'\in\mathcal I\) with \(h_{l-1}\subseteq h'\)
+and \(u_l\in\operatorname{dom}(h')\). Let \(h_l\defeq f_{i-1}\cup
+\{(u_l,h'(u_l))\}\), which lies between \(C\) and \(h'\) and so is in
+\(\mathcal I\). Put \(y_l\defeq h'(u_l)\) and \(y_0\defeq s'\). Since
+\(E^{\mathbf G}(u_{l-1},u_l)\) and \(h'\) is a partial homomorphism containing
+\(h_{l-1}\), \(E^{\mathbf G'}(y_{l-1},y_l)\). As \(t_i\) is a constant,
+\(y_L=t'_i\). So \(y_0,\ldots,y_L\) is a walk in \(\mathbf G'\) from \(s'\)
+to \(t'_i\), and it meets \(Z\); let \(l^*\) be least with \(y_{l^*}\in Z\).
+Then \(l^*\ge1\) because \(s'\notin Z\). Put \(x_i\defeq u_{l^*}\) and
+\(f_i\defeq h_{l^*}\). The pair \((x_i,y_{l^*})\) is the only new pair, and
+\(f_i(x_j)=f_{i-1}(x_j)\in Z\) for \(j<i\).
+
+The nodes \(x_1,\ldots,x_m\) are distinct, since \(x_j\) lies on \(p_j\) and
+differs from \(s\), and the paths share only \(s\). Their images under the
+one-to-one function \(f_m\) are \(m\) distinct elements of \(Z\), which has
+at most \(m-1\) elements. This contradiction shows that no winning family
+exists, so by \cref{thm:p03-w03-p03-061-strategy} Spoiler wins the
+\((\exists,\neq,m+1)\)-game, and by its last clause the
+\((\exists,\neq,k)\)-game for every \(k\ge m+1\).
+
+\emph{In-stars.} Reversing all edges turns an in-star \(\mathbf H\) into an
+out-star \(\mathbf H^{\mathrm{rev}}\), and
+\(\mathrm{FiSH}(\mathbf H)(\mathbf G)=\mathrm{FiSH}(\mathbf H^{\mathrm
+{rev}})(\mathbf G^{\mathrm{rev}})\), since reversed simple paths are simple
+paths with the same nodes. A function is a (one-to-one) partial homomorphism
+from \(\mathbf G\) to \(\mathbf G'\) exactly when it is one from
+\(\mathbf G^{\mathrm{rev}}\) to \(\mathbf G'^{\mathrm{rev}}\), so winning
+families for the two pairs coincide, and the out-star case applies.
+
+\emph{Definability.} By the first part, if
+\(\mathrm{FiSH}(\mathbf H)(\mathbf G)=1\) and Duplicator wins the
+\((\exists,\neq,m+1)\)-game on \(\mathbf G\) and \(\mathbf G'\) in
+\(\mathcal F_{\mathbf H}\), then \(\mathrm{FiSH}(\mathbf H)(\mathbf G')=1\).
+The query is invariant under isomorphism, so the fixed-\(k\) form of
+\cref{thm:p03-w03-p03-061-criterion} with inequalities, for \(k=m+1\), shows
+that it is \(\exists\mathrm L^{m+1}_{\infty\omega}(\neq)\)-definable on
+\(\mathcal F_{\mathbf H}\).
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-061-fish-preserved}{thm:p03-w03-p03-061-fish-preserved}{Homeomorphism queries are preserved by one-to-one homomorphisms}
+\begin{proof}
+Let paths \(p_e\) witness \(\mathrm{FiSH}(\mathbf H)(\mathbf G)=1\). A
+homomorphism sends edges to edges, so the image \(g(p_e)\) of each path is a
+walk from \(g(d_u^{\mathbf G})=d_u^{\mathbf G'}\) to
+\(d_w^{\mathbf G'}\) for \(e=(u,w)\). Since \(g\) is injective it repeats no
+node, so it is a simple path. If \(g(p_e)\) and \(g(p_{e'})\) share a node
+\(g(z)\), injectivity puts \(z\) on both \(p_e\) and \(p_{e'}\), so \(z\) is
+an endpoint of both, and \(g(z)\) is an endpoint of both images. The images
+witness \(\mathrm{FiSH}(\mathbf H)(\mathbf G')=1\).
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-061-star-datalog}{thm:p03-w03-p03-061-star-datalog}{Star patterns are Datalog\((\neq)\)-definable}
+\begin{proof}
+Write \(\Phi\) for the operator of \(\pi_m\) on \(\mathbf G\) and
+\(R_j^n\), \(R_j^\infty\) for the components of its stages and of its least
+fixed point. The first paragraph of the proof of
+\cref{thm:p03-w03-p03-061-datalog} applies to every Datalog\((\neq)\)
+program: the stages increase, their union is \(\Phi^\infty\), and
+\(\Phi(\Phi^\infty)=\Phi^\infty\), so \(\Phi^\infty\) is closed under every
+rule.
+
+\emph{Walk description.} Fix \(j\), \(l=m-j\). For a tuple
+\(\bar c=(s,y_1,\ldots,y_{j-1},x,t_1,\ldots,t_l)\) of nodes, say that a walk
+\(s=w_0,w_1,\ldots,w_n=x\) with \(n\ge1\) is \emph{admissible} for
+\(\bar c\) when \(s\) and every \(w_i\) with \(i\ge1\) differ from
+\(t_1,\ldots,t_l\) and, if \(j\ge2\),
+\[
+ (s,y_1,\ldots,y_{j-1},w_i,t_1,\ldots,t_l)\in R_{j-1}^\infty
+ \qquad(i\ge1).
+\] Claim: \(\bar c\in R_j^\infty\) exactly when some walk is
+admissible for \(\bar c\).
+
+If an admissible walk of length \(n\) exists, induction on \(n\) shows
+\(\bar c\in R_j^\infty\). For \(n=1\) the first rule for \(R_j\) applies,
+since \(E(s,x)\) holds, the inequalities hold and the atom \(\Lambda_j\) is
+in \(\Phi^\infty\); closure of \(\Phi^\infty\) under the rule gives the
+tuple. For \(n>1\), the walk \(w_0,\ldots,w_{n-1}\) is admissible for the
+tuple with \(w_{n-1}\) in place of \(x\), which is in \(R_j^\infty\) by
+induction; the second rule with \(w\defeq w_{n-1}\) gives \(\bar c\).
+
+Conversely, induction on the stage \(n\) shows that every tuple of \(R_j^n\)
+has an admissible walk. \(R_j^0\) is empty. A tuple enters \(R_j^{n+1}\)
+through a rule whose body holds in \(\Phi^n\). By the first rule, \(E(s,x)\)
+holds, \(s\) and \(x\) differ from the \(t\)'s, and for \(j\ge2\) the atom
+\(R_{j-1}(s,\bar y,x,\bar t)\) holds in \(\Phi^n\subseteq\Phi^\infty\); the
+walk \(s,x\) is admissible. By the second rule, the tuple with \(w\) in place
+of \(x\) is in \(R_j^n\) and has an admissible walk ending at \(w\) by
+induction; appending the edge \((w,x)\), with \(x\) different from the
+\(t\)'s and \(R_{j-1}(s,\bar y,x,\bar t)\) in \(\Phi^\infty\), gives an
+admissible walk ending at \(x\).
+
+\emph{The equivalence.} Induction on \(j\). Fix pairwise distinct
+\(s,s_1,\ldots,s_j\) and nodes \(t_1,\ldots,t_l\), and let \(\bar c\) be the
+tuple with \(y_i\defeq s_i\) (\(i<j\)) and \(x\defeq s_j\). For \(j\ge2\),
+the tuples \((s,s_1,\ldots,s_{j-1},w,t_1,\ldots,t_l)\) have pairwise distinct
+\(s,s_1,\ldots,s_{j-1}\), so by the induction hypothesis, for
+\(l+1=m-(j-1)\), they lie in \(R_{j-1}^\infty\) exactly when
+\(Q_{j-1,l+1}(s,s_1,\ldots,s_{j-1},w,t_1,\ldots,t_l)\) holds.
+
+Suppose \(Q_{j,l}(s,s_1,\ldots,s_j,\bar t)\), witnessed by
+\(p_1,\ldots,p_j\). Take the walk \(p_j=(w_0,\ldots,w_n)\); \(n\ge1\) since
+\(s\neq s_j\). Its nodes, \(s\) included, differ from the \(t\)'s. For
+\(j\ge2\) and \(i\ge1\), \(w_i\neq s\) because \(p_j\) is simple, so \(w_i\)
+lies on none of \(p_1,\ldots,p_{j-1}\), which share with \(p_j\) only \(s\).
+Hence \(p_1,\ldots,p_{j-1}\) witness
+\(Q_{j-1,l+1}(s,s_1,\ldots,s_{j-1},w_i,\bar t)\). The walk is admissible,
+and \(\bar c\in R_j^\infty\).
+
+Suppose \(\bar c\in R_j^\infty\), with admissible walk
+\(W=(w_0,\ldots,w_n)\), and suppose \(Q_{j,l}(s,s_1,\ldots,s_j,\bar t)\)
+fails. For \(j=1\), \(W\) is a walk from \(s\) to \(s_1\) avoiding the
+\(t\)'s; it contains a simple path from \(s\) to \(s_1\) with the same
+property, which witnesses \(Q_{1,l}\). So \(j\ge2\). The nodes
+\(s_1,\ldots,s_{j-1}\) differ from the \(t\)'s, since they are endpoints of
+the paths witnessing \(Q_{j-1,l+1}\) at \(w_n\); \(s\) and \(s_j=w_n\) differ
+from them by admissibility. Let \(\mathbf D\) be the subgraph of
+\(\mathbf G\) induced on the nodes other than \(t_1,\ldots,t_l\), and
+\(T\defeq\{s_1,\ldots,s_j\}\), a set of \(j\) nodes of \(\mathbf D\) not
+containing \(s\). If \(\mathbf D\) had \(j\) paths from \(s\) to \(T\), each
+meeting \(T\) only in its last node and any two sharing only \(s\), their
+last nodes would be distinct, hence all of \(T\), and they would witness
+\(Q_{j,l}\). By \cref{thm:p03-w03-p03-061-menger}, item~2, there is
+\(Z\subseteq V(\mathbf D)-\{s\}\) with \(|Z|\le j-1\) meeting every walk of
+\(\mathbf D\) from \(s\) to a node of \(T\). The walk \(W\) lies in
+\(\mathbf D\) and ends at \(s_j\in T\), so \(w_i\in Z\) for some \(i\ge1\).
+By admissibility and the induction hypothesis there are paths
+\(p_1,\ldots,p_{j-1}\), \(p_r\) from \(s\) to \(s_r\), any two sharing only
+\(s\), avoiding \(w_i\) and the \(t\)'s. Each lies in \(\mathbf D\), so each
+meets \(Z\), in a node other than \(s\) and other than \(w_i\). Distinct
+paths meet \(Z\) in distinct nodes, since they share only \(s\). So
+\(Z-\{w_i\}\), of size at most \(j-2\), has \(j-1\) elements, a
+contradiction.
+
+\emph{The goal and the variable count.} Let \(\mathbf H\) be an out-star
+with centre \(r\) and leaves \(w_1,\ldots,w_m\), \(\mathbf G\in\mathcal
+F_{\mathbf H}\), \(s\defeq d_r^{\mathbf G}\), \(s_i\defeq d_{w_i}^{\mathbf
+G}\). These nodes are pairwise distinct, and simple paths \(p_i\) from \(s\)
+to \(s_i\) are node-disjoint exactly when any two share only \(s\), because
+\(s\) is the only endpoint that \(p_i\) and \(p_{i'}\) have in common. So
+\(\mathrm{FiSH}(\mathbf H)(\mathbf G)=1\) exactly when
+\(Q_{m,0}(s,s_1,\ldots,s_m)\), exactly when \((s,s_1,\ldots,s_m)\in
+R_m^\infty\), exactly when the goal holds. For an in-star, the program with
+reversed atoms computes on \(\mathbf G\) what \(\pi_m\) computes on the
+reversed graph, and the reversal argument of the proof of
+\cref{thm:p03-w03-p03-061-star} applies. Every body of \(\pi_m\) has at most
+the variables \(s,y_1,\ldots,y_{j-1},w,x,t_1,\ldots,t_{m-j}\), that is
+\(m+2\) of them, and every head at most \(m+1\); the goal rule has none.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-061-basic}{thm:p03-w03-p03-061-basic}{Every non-star pattern contains a basic pattern}
+\begin{proof}
+Let \(\mathbf H\) be a pattern graph that is not a star graph. Patterns have
+no loops, so the two nodes of an edge are distinct.
+
+If two edges have no common node, their four nodes are distinct and form a
+copy of \(\mathbf H_1\). If some node \(v\) is the head of an edge
+\((u,v)\) and the tail of an edge \((v,w)\), then \(u\neq v\neq w\); for
+\(u=w\) the two edges form a copy of \(\mathbf H_3\), and otherwise a copy
+of \(\mathbf H_2\).
+
+Suppose neither case occurs: any two edges share a node, and no node is both
+a head and a tail. \(\mathbf H\) has an edge \((a,b)\). If every edge had
+tail \(a\), every node other than \(a\) would, not being isolated, be the
+head of an edge from \(a\), and \(\mathbf H\) would be an out-star with
+centre \(a\). So some edge \((c,d)\) has \(c\neq a\); similarly, as
+\(\mathbf H\) is not an in-star with centre \(b\), some edge \((c',d')\) has
+\(d'\neq b\). The edge \((c,d)\) shares a node with \((a,b)\). Now \(c=b\)
+would make \(b\) a head and a tail, and \(d=a\) would do so for \(a\);
+hence \(d=b\) and \(c\notin\{a,b\}\). In the same way \((c',d')\) shares a
+node with \((a,b)\), \(d'=a\) and \(c'=b\) are excluded, and so \(c'=a\) and
+\(d'\notin\{a,b\}\). The edges \((c,b)\) and \((a,d')\) share a node; since
+\(c\neq a\), \(b\neq a\) and \(b\neq d'\), this forces \(c=d'\). Then \(c\)
+is the head of \((a,c)\) and the tail of \((c,b)\), a contradiction.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-061-transfer}{thm:p03-w03-p03-061-transfer}{Non-definability passes to larger patterns}
+\begin{proof}
+\emph{Reduction to a subgraph.} Let \(\iota\) be an isomorphism from
+\(\mathbf F_1\) onto a subgraph \(\mathbf F_1'\) of \(\mathbf F_2\).
+Renaming each constant symbol \(d_v\) as \(d_{\iota(v)}\) is a bijection
+between \(\sigma_{\mathbf F_1}\)-structures and
+\(\sigma_{\mathbf F_1'}\)-structures with the same graph. A homeomorphism of
+\(\mathbf F_1\) extending \(v\mapsto d_v\) is, through \(\iota\), a
+homeomorphism of \(\mathbf F_1'\) extending \(\iota(v)\mapsto
+d_{\iota(v)}\) with the same paths. The renaming carries formulas of
+\(\exists\mathrm L^k_{\infty\omega}(\neq)\) to formulas of the same logic
+with the same truth values. So \(\mathrm{FiSH}(\mathbf F_1')\) is not
+\(\exists\mathrm L^k_{\infty\omega}(\neq)\)-definable either, and we may
+assume that \(\mathbf F_1=(V_1,E_1)\) is a subgraph of
+\(\mathbf F_2=(V_2,E_2)\).
+
+\emph{Distinguished nodes on paths.} Let \(\mathbf F\) be a pattern graph,
+\(\mathbf G\in\mathcal F_{\mathbf F}\), and let paths \(p_e\)
+(\(e\in E_{\mathbf F}\)) form a homeomorphism extending
+\(v\mapsto d_v^{\mathbf G}\). Then for \(e=(u,w)\) the path \(p_e\) contains
+no node \(d_x^{\mathbf G}\) with \(x\notin\{u,w\}\). Indeed, \(x\) is not
+isolated, so it lies on an edge \(e'\), and \(e'\neq e\). The path
+\(p_{e'}\) has \(d_x^{\mathbf G}\) as an endpoint, and \(p_e,p_{e'}\) are
+node-disjoint, so \(d_x^{\mathbf G}\) would be an endpoint of \(p_e\), that
+is \(d_u^{\mathbf G}\) or \(d_w^{\mathbf G}\); the constants denote distinct
+nodes, so \(x\in\{u,w\}\), a contradiction.
+
+\emph{The construction.} By the fixed-\(k\) form of
+\cref{thm:p03-w03-p03-061-criterion} with inequalities (the query is
+invariant under isomorphism), there are \(\mathbf A,\mathbf B\in\mathcal
+F_{\mathbf F_1}\) with \(\mathrm{FiSH}(\mathbf F_1)(\mathbf A)=1\),
+\(\mathrm{FiSH}(\mathbf F_1)(\mathbf B)=0\), such that Duplicator wins the
+\((\exists,\neq,k)\)-pebble game on \(\mathbf A\) and \(\mathbf B\); let
+\(\mathcal I\) be a winning family (\cref{thm:p03-w03-p03-061-strategy}).
+Let \(\mathbf A'\) have universe \(A\) together with new elements \(a'_v\)
+for \(v\in V_2-V_1\); let \(d_v^{\mathbf A'}\defeq d_v^{\mathbf A}\) for
+\(v\in V_1\) and \(d_v^{\mathbf A'}\defeq a'_v\) otherwise; and let
+\(E^{\mathbf A'}\defeq E^{\mathbf A}\cup\{(d_u^{\mathbf A'},d_w^{\mathbf
+A'}):(u,w)\in E_2-E_1\}\). Build \(\mathbf B'\) from \(\mathbf B\) in the same
+way with new elements \(b'_v\). The constants of \(\mathbf A'\) and of
+\(\mathbf B'\) are pairwise distinct, so both lie in
+\(\mathcal F_{\mathbf F_2}\).
+
+\emph{\(\mathrm{FiSH}(\mathbf F_2)(\mathbf A')=1\).} Let \(p_e\)
+(\(e\in E_1\)) witness \(\mathrm{FiSH}(\mathbf F_1)(\mathbf A)=1\); they are
+paths of \(\mathbf A'\). For \(e=(u,w)\in E_2-E_1\) let \(q_e\) be the
+one-edge path from \(d_u^{\mathbf A'}\) to \(d_w^{\mathbf A'}\), simple
+because \(u\neq w\). A node shared by \(q_e\) and another path of the family
+is an endpoint of \(q_e\), say \(d_x^{\mathbf A'}\). If the other path is
+some \(q_{e'}\), the node is an endpoint of it too. If it is some
+\(p_{e'}\), then \(x\in V_1\) (the new elements are not in \(A\)) and, by
+the previous paragraph applied to \(\mathbf F_1\) and \(\mathbf A\), \(x\) is
+an endpoint of \(e'\), so the node is an endpoint of \(p_{e'}\). Two paths
+\(p_e,p_{e'}\) are node-disjoint by hypothesis. Hence the paths \(p_e\) and
+\(q_e\) are pairwise node-disjoint and witness
+\(\mathrm{FiSH}(\mathbf F_2)(\mathbf A')=1\).
+
+\emph{\(\mathrm{FiSH}(\mathbf F_2)(\mathbf B')=0\).} Suppose paths \(p_e\)
+(\(e\in E_2\)) witness the contrary. Let \(e=(u,w)\in E_1\). By the
+paragraph on distinguished nodes, applied to \(\mathbf F_2\) and
+\(\mathbf B'\), the only distinguished nodes on \(p_e\) are its endpoints
+\(d_u^{\mathbf B'}\) and \(d_w^{\mathbf B'}\). The new elements are
+distinguished, so \(p_e\) runs in \(B\). An edge of
+\(E^{\mathbf B'}-E^{\mathbf B}\) joins two distinguished nodes, so on
+\(p_e\) it would be \((d_u^{\mathbf B'},d_w^{\mathbf B'})\), since no edge of
+a simple path leaves its last node or enters its first; but such an edge is
+\((d_x^{\mathbf B'},d_y^{\mathbf B'})\) for some \((x,y)\in E_2-E_1\), and the
+constants are distinct, so \((x,y)=(u,w)\in E_1\), which is impossible. So
+\(p_e\) is a path of \(\mathbf B\). The constants of \(\mathbf F_1\) have the
+same values in \(\mathbf B\) and \(\mathbf B'\), so the paths \(p_e\)
+(\(e\in E_1\)) witness \(\mathrm{FiSH}(\mathbf F_1)(\mathbf B)=1\), a
+contradiction.
+
+\emph{Duplicator wins on \(\mathbf A'\) and \(\mathbf B'\).} Let
+\(N\defeq\{(a'_v,b'_v):v\in V_2-V_1\}\), so that
+\(C_{\mathbf A',\mathbf B'}=C_{\mathbf A,\mathbf B}\cup N\), and
+\(\mathcal I'\defeq\{f\cup N:f\in\mathcal I\}\). Each \(f\cup N\) is a
+one-to-one function, as \(f\) and \(N\) are and their domains and ranges are
+disjoint. It sends \(d_v^{\mathbf A'}\) to \(d_v^{\mathbf B'}\) for every
+\(v\in V_2\). An edge of \(\mathbf A\) between elements of its domain goes to
+an edge of \(\mathbf B\); an added edge \((d_u^{\mathbf A'},d_w^{\mathbf
+A'})\) goes to the added edge \((d_u^{\mathbf B'},d_w^{\mathbf B'})\). So
+\(f\cup N\) is a one-to-one partial homomorphism, and
+\(|(f\cup N)-C_{\mathbf A',\mathbf B'}|=|f-C_{\mathbf A,\mathbf B}|\le k\).
+If \(C_{\mathbf A',\mathbf B'}\subseteq g\subseteq f\cup N\), then
+\(g=g_0\cup N\) with \(C_{\mathbf A,\mathbf B}\subseteq g_0\subseteq f\), so
+\(g_0\in\mathcal I\) and \(g\in\mathcal I'\). For the forth property, a new
+element is already in every domain, and for \(a\in A\) the forth property of
+\(\mathcal I\) gives \(g\supseteq f\) with \(a\in\operatorname{dom}(g)\), and
+then \(g\cup N\supseteq f\cup N\). So \(\mathcal I'\) is a winning family.
+
+By \cref{thm:p03-w03-p03-061-strategy} and the fixed-\(k\) form of
+\cref{thm:p03-w03-p03-061-criterion}, the pair \(\mathbf A',\mathbf B'\)
+shows that \(\mathrm{FiSH}(\mathbf F_2)\) is not
+\(\exists\mathrm L^k_{\infty\omega}(\neq)\)-definable on
+\(\mathcal F_{\mathbf F_2}\).
+
+\emph{The consequence.} Let \(\mathbf H\) be a non-star pattern and suppose
+\(\mathrm{FiSH}(\mathbf H)\) is defined by a sentence of
+\(\exists\mathrm L^k_{\infty\omega}(\neq)\). By
+\cref{thm:p03-w03-p03-061-basic}, some \(\mathbf H_i\) is isomorphic to a
+subgraph of \(\mathbf H\), and by the first part
+\(\mathrm{FiSH}(\mathbf H_i)\) is
+\(\exists\mathrm L^k_{\infty\omega}(\neq)\)-definable, contrary to the
+hypothesis.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-061-walks}{thm:p03-w03-p03-061-walks}{Walks of every fixed length with three variables}
+\begin{proof}
+Induction on \(m\). The formula \(\psi_1=E(v_1,v_2)\) is atomic, its free
+variables are \(v_1,v_2\), and it holds at \((a_1,a_2,a_3)\) exactly when
+\(E^{\mathbf A}(a_1,a_2)\), that is, when \(e_0=a_1,e_1=a_2\) is a walk of
+length \(1\).
+
+Assume the claim for \(\psi_m\). The variables of \(\psi_{m+1}\) are those
+of \(\psi_m\) together with \(v_1,v_3\), so they lie in \(\{v_1,v_2,v_3\}\);
+only atomic formulas, conjunction and existential quantifiers are used, so
+\(\psi_{m+1}\in\exists\mathrm{FO}^3\). In
+\((\exists v_1)(v_1=v_3\wedge\psi_m)\) the variable \(v_1\) is bound, so its
+free variables lie among \(v_2,v_3\); in \(E(v_1,v_3)\wedge(\exists
+v_1)(v_1=v_3\wedge\psi_m)\) they lie among \(v_1,v_2,v_3\), and
+\((\exists v_3)\) binds \(v_3\). So the free variables of \(\psi_{m+1}\) lie
+among \(v_1,v_2\).
+
+For \(a_1,a_2,a_3\in A\), \(\mathbf A\models\psi_{m+1}[a_1,a_2,a_3]\) holds
+exactly when there is \(c\in A\) with \(E^{\mathbf A}(a_1,c)\) and some
+\(d\in A\) with \(d=c\) and \(\mathbf A\models\psi_m[d,a_2,c]\), that is,
+with \(\mathbf A\models\psi_m[c,a_2,c]\). By the induction hypothesis the last
+condition says that a walk \(c=e_1,\ldots,e_{m+1}=a_2\) of length \(m\)
+exists. Prefixing \(e_0\defeq a_1\) gives a walk of length \(m+1\) from
+\(a_1\) to \(a_2\); conversely, the second node \(c\defeq e_1\) of such a
+walk satisfies \(E^{\mathbf A}(a_1,c)\) and starts a walk of length \(m\) to
+\(a_2\).
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-061-system}{thm:p03-w03-p03-061-system}{Stages and least fixed points of positive existential systems}
+\begin{proof}
+The proof is written for \(\exists\mathrm{FO}^k\); with inequalities nothing
+changes, since a negated equality is replaced by itself below and does not
+mention the \(S_j\).
+
+\emph{Removing \(\bot\).} Call a formula \emph{extended} if it is built from
+\(\bot\) and \(\exists\mathrm{FO}^k\)-formulas by finite conjunction, finite
+disjunction and existential quantification over variables of \(V_k\).
+Every extended formula \(\chi\) is equivalent to \(\bot\) or to an
+\(\exists\mathrm{FO}^k\)-formula \(\chi^\circ\) whose free variables are among
+those of \(\chi\). Induction on \(\chi\): a conjunction with a conjunct
+equivalent to \(\bot\) is equivalent to \(\bot\), and otherwise the
+conjunction of the \(\chi_i^\circ\) is used; a disjunction drops its
+disjuncts equivalent to \(\bot\) and is \(\bot\) if none remains;
+\(\exists v_j\,\chi\) is equivalent to \(\bot\) if \(\chi\) is, and to
+\(\exists v_j\,\chi^\circ\) otherwise.
+
+\emph{Item 1.} Induction on \(m\); \(\theta^0_i\defeq\bot\) defines
+\(\Phi^0_i=\emptyset\). Given \(\theta^m_1,\ldots,\theta^m_l\), let
+\(\varphi_i^*\) arise from \(\varphi_i\) by replacing each atom
+\(S_j(t_1,\ldots,t_{n_j})\) by \(\bot\) if \(\theta^m_j=\bot\), and otherwise
+by \((\theta^m_j)_\rho\) of \cref{thm:p03-w03-p03-061-substitution}, with
+\(\rho(r)\defeq t_r\) for \(r\le n_j\) and \(\rho(r)\defeq v_r\) for
+\(n_j<r\le k\). The free variables of \((\theta^m_j)_\rho\) lie among the
+terms \(\rho(r)\) with \(v_r\) free in \(\theta^m_j\), hence among the
+\(t_r\) with \(r\le n_j\), which are terms of the replaced atom. So
+\(\varphi_i^*\) is an extended formula with variables in \(V_k\) and free
+variables among those of \(\varphi_i\); let \(\theta^{m+1}_i\) be \(\bot\) or
+\((\varphi_i^*)^\circ\) accordingly.
+
+Claim: for every subformula \(\psi\) of \(\varphi_i\), its replacement
+\(\psi^*\) and all \(\bar a\in A^k\),
+\(\mathbf A\models\psi^*[\bar a]\iff(\mathbf A,\Phi^m)\models\psi[\bar a]\).
+For atoms of \(\sigma\), equalities and negated equalities nothing is
+replaced. For an atom \(S_j(t_1,\ldots,t_{n_j})\) with \(\theta^m_j\neq\bot\),
+\cref{thm:p03-w03-p03-061-substitution} gives
+\(\mathbf A\models(\theta^m_j)_\rho[\bar a]\iff\mathbf
+A\models\theta^m_j[\rho(\bar a)]\), and as the free variables of
+\(\theta^m_j\) are among \(v_1,\ldots,v_{n_j}\), the induction hypothesis
+turns this into \((t_1^{\mathbf A}[\bar a],\ldots,t_{n_j}^{\mathbf A}[\bar
+a])\in\Phi^m_j\), which is the truth of the atom in \((\mathbf A,\Phi^m)\);
+if \(\theta^m_j=\bot\), both sides are false since \(\Phi^m_j=\emptyset\).
+Replacement commutes with conjunction, disjunction and \(\exists v_j\), so
+the claim passes to compound formulas. For \(\psi=\varphi_i\) it says that
+\(\theta^{m+1}_i\) defines \(\Phi(\Phi^m)_i=\Phi^{m+1}_i\).
+
+\emph{Item 2.} \emph{Monotonicity.} If \(\bar P\subseteq\bar P'\)
+componentwise, then \((\mathbf A,\bar P)\models\psi[\bar a]\) implies
+\((\mathbf A,\bar P')\models\psi[\bar a]\) for every negation-free formula
+\(\psi\), by induction on \(\psi\): atoms \(S_j\) pass from \(P_j\) to
+\(P'_j\), the other basic formulas do not mention the \(S_j\), and
+conjunction, disjunction and \(\exists\) preserve the implication. Hence
+\(\Phi(\bar P)\subseteq\Phi(\bar P')\).
+
+\emph{Least fixed point.} By monotonicity and \(\Phi^0\subseteq\Phi^1\), the
+stages increase. Let \(U\defeq\bigcup_m\Phi^m\). Monotonicity gives
+\(\Phi^{m+1}\subseteq\Phi(U)\), so \(U\subseteq\Phi(U)\). For the converse,
+by induction on a finitary negation-free formula \(\psi\): if \((\mathbf
+A,U)\models\psi[\bar a]\), then \((\mathbf A,\Phi^m)\models\psi[\bar a]\) for
+some \(m\). An atom \(S_j\) true in \(U\) is true in some stage; the other
+basic formulas do not mention the \(S_j\); for a finite conjunction take the
+largest of the finitely many stages and use that the stages increase; for a
+disjunction or an existential formula use the true disjunct or the witness.
+Applied to \(\varphi_i\), this puts every tuple of \(\Phi(U)_i\) into some
+\(\Phi^{m+1}_i\subseteq U_i\), so \(\Phi(U)\subseteq U\). If
+\(\Phi(\bar P)\subseteq\bar P\), induction gives \(\Phi^m\subseteq\bar P\)
+for all \(m\), so \(U\subseteq\bar P\). Hence \(U\) is the least fixed point.
+
+\emph{Definability.} A tuple lies in \(\Phi^\infty_i\) exactly when it lies
+in some \(\Phi^m_i\), exactly when some \(\theta^m_i\) holds of it. The
+disjunction of the countable set \(\{\theta^m_i:m\ge0\}\) has its variables
+in \(V_k\) and uses no negation, so it belongs to
+\(\exists\mathrm L^k_{\infty\omega}\).
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-061-proper}{thm:p03-w03-p03-061-proper}{The inclusion of bounded-variable Datalog is proper}
+\begin{proof}
+\emph{Item 1.} Let \(\pi\) be a Datalog\((\neq)\) program and \(\mathbf A\) a
+finite \(\sigma\)-structure. Each rule has finitely many variables, so the
+assignments of its variables into \(A\) can be listed, and from the list of
+the tuples of a stage \(\Phi^m\) the stage \(\Phi^{m+1}\) is computed by
+checking every rule under every assignment. The stages increase (first
+paragraph of the proof of \cref{thm:p03-w03-p03-061-datalog}) within the
+finite set of tuples of the intensional relations, so
+\(\Phi^{m+1}=\Phi^m\) for some \(m\) at most the number of those tuples.
+Then \(\Phi^{m'}=\Phi^m\) for all \(m'\ge m\), and
+\(\Phi^\infty=\bigcup_{m'}\Phi^{m'}=\Phi^m\). The algorithm computes stages
+until two consecutive ones agree and reads off the goal.
+
+\emph{Item 2.} With \(\psi_n\) of \cref{thm:p03-w03-p03-061-walks}, put
+\[
+ \chi_S\defeq\bigvee_{p\in S}(\exists v_1)(\exists v_2)\bigl(v_1=v_2\wedge
+ \psi_p\bigr),
+\]
+a sentence of \(\exists\mathrm L^3_{\infty\omega}\). By
+\cref{thm:p03-w03-p03-061-walks} the disjunct for \(p\) holds in \(\mathbf A\)
+exactly when some walk of length \(p\) leads from a node to itself, so
+\(\chi_S\) defines \(Q_S\).
+
+For a prime \(p\) let \(\mathbf C_p\) be the \(\sigma\)-structure with universe
+\(\{0,\ldots,p-1\}\), \(E^{\mathbf C_p}=\{(r,r+1\bmod p):r<p\}\), all other
+relations empty and all constants equal to \(0\). A walk in
+\(\mathbf C_p\) advances by \(1\) modulo \(p\) at each step, so a closed walk
+has a length divisible by \(p\), and the walk once around the cycle has
+length \(p\). The only prime divisible by \(p\) is \(p\), so
+\(Q_S(\mathbf C_p)=1\) exactly when \(p\in S\).
+
+There are uncountably many sets of primes, as there are infinitely many
+primes, and only countably many algorithms. Choose \(S\) such that no
+algorithm decides membership in \(S\) on the primes. If an algorithm
+decided \(Q_S\), then on input a prime \(p\) one could write down
+\(\mathbf C_p\) and run it, deciding \(p\in S\); so \(Q_S\) is not
+computable.
+
+\emph{Consequences.} Fix \(k\ge1\). By \cref{thm:p03-w03-p03-061-datalog},
+every Boolean \(k\)-Datalog query is
+\(\exists\mathrm L^k_{\infty\omega}\)-definable, hence
+\(\exists\mathrm L^\omega_{\infty\omega}\)-definable, and the same holds with
+inequalities. The query \(Q_S\) is
+\(\exists\mathrm L^3_{\infty\omega}\)-definable, hence definable in
+\(\exists\mathrm L^\omega_{\infty\omega}\) and in
+\(\exists\mathrm L^\omega_{\infty\omega}(\neq)\), and for \(k\ge3\) in
+\(\exists\mathrm L^k_{\infty\omega}\) and
+\(\exists\mathrm L^k_{\infty\omega}(\neq)\), since \(V_3\subseteq V_k\). By
+item~1 no Datalog\((\neq)\) program defines it. So each inclusion is proper.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-061-spoiler-lfp}{thm:p03-w03-p03-061-spoiler-lfp}{Determining the winner of the existential game}
+\begin{proof}
+The proof is written for the \((\exists,k)\)-pebble game; for the
+\((\exists,\neq,k)\)-pebble game read ``one-to-one partial homomorphism''
+throughout, and the additions are marked. Write \(C\) for
+\(C_{\mathbf A,\mathbf B}\), \(f_{\bar a\bar b}\) for \(f_{\bar a,\bar b}\)
+and \(\mathcal W\) for \(\mathcal W_{\mathbf A,\mathbf B}\). In the
+definition of \(\Gamma\), \(T\) occurs only in the condition
+``\((\bar a[j/a],\bar b[j/b])\in T\) for every \(b\)'', which is preserved
+when \(T\) grows; so \(\Gamma\) is monotone, and by
+\cref{thm:p03-w03-p03-059-knaster-tarski} its least fixed point exists and is
+the intersection of all \(T\) with \(\Gamma(T)\subseteq T\).
+
+\emph{Item 1, first direction.} Let \(\mathcal I\) be a winning family and
+\(J\defeq\{(\bar a,\bar b):f_{\bar a\bar b}\in\mathcal I\}\), \(X\) its
+complement in \(A^k\times B^k\). We show \(\Gamma(X)\subseteq X\), that is,
+no \((\bar a,\bar b)\in J\) lies in \(\Gamma(X)\). Its relation
+\(f_{\bar a\bar b}\) is in \(\mathcal I\), hence a partial homomorphism. Let
+\(j\le k\) and \(a\in A\). The relation \(g\defeq C\cup\{(a_i,b_i):i\neq j\}\)
+lies between \(C\) and \(f_{\bar a\bar b}\), so \(g\in\mathcal I\), and
+\(|g-C|\le k-1\). The forth property gives \(h\in\mathcal I\) with
+\(g\subseteq h\) and \(a\in\operatorname{dom}(h)\); put \(b\defeq h(a)\).
+Then \(f_{\bar a[j/a]\bar b[j/b]}=g\cup\{(a,b)\}\) lies between \(C\) and
+\(h\), so it is in \(\mathcal I\) and \((\bar a[j/a],\bar b[j/b])\notin X\).
+So neither condition of \(\Gamma(X)\) holds at \((\bar a,\bar b)\). By the
+intersection formula \(\mathcal W\subseteq X\), that is, \(\mathcal W\cap
+J=\emptyset\).
+
+Now let \(\bar a\in A^k\). Put \(g_0\defeq C\in\mathcal I\). Given
+\(g_{i-1}=C\cup\{(a_r,b_r):r<i\}\in\mathcal I\) with \(i\le k\), we have
+\(|g_{i-1}-C|\le i-1<k\); the forth property gives \(h\in\mathcal I\)
+containing \(g_{i-1}\) with \(a_i\) in its domain, and with
+\(b_i\defeq h(a_i)\) the relation \(g_i\defeq g_{i-1}\cup\{(a_i,b_i)\}\) lies
+between \(C\) and \(h\), so \(g_i\in\mathcal I\). Then
+\(f_{\bar a\bar b}=g_k\in\mathcal I\), so \((\bar a,\bar b)\in J\) and
+\((\bar a,\bar b)\notin\mathcal W\).
+
+\emph{Item 1, second direction.} Assume that every \(\bar a\) has some
+\(\bar b\) with \((\bar a,\bar b)\notin\mathcal W\). Let \(\mathcal I\) be the
+set of relations \(g\) with \(C\subseteq g\subseteq f_{\bar a\bar b}\) for
+some \((\bar a,\bar b)\notin\mathcal W\). As \(\mathcal W=\Gamma(\mathcal W)\),
+such \((\bar a,\bar b)\) is not in \(\Gamma(\mathcal W)\), so
+\(f_{\bar a\bar b}\) is a partial homomorphism, and so is every
+\(g\subseteq f_{\bar a\bar b}\) containing \(C\). Also
+\(|g-C|\le|f_{\bar a\bar b}-C|\le k\). \(A\) is nonempty, so \(\mathcal I\)
+is nonempty, and it is closed under subfunctions by definition. Forth: let
+\(g\in\mathcal I\) with \(C\subseteq g\subseteq f_{\bar a\bar b}\),
+\((\bar a,\bar b)\notin\mathcal W\), \(|g-C|<k\), and \(a\in A\). Each pair
+of \(g-C\) is \((a_i,b_i)\) for some \(i\); choose one such \(i\) for each
+pair, giving a set \(I_0\) of fewer than \(k\) indices, and fix \(j\notin
+I_0\). Since \((\bar a,\bar b)\notin\Gamma(\mathcal W)\), some \(b\in B\) has
+\((\bar a[j/a],\bar b[j/b])\notin\mathcal W\). Then
+\(g\cup\{(a,b)\}\subseteq C\cup\{(a_i,b_i):i\in I_0\}\cup\{(a,b)\}
+\subseteq f_{\bar a[j/a]\bar b[j/b]}\), so \(g\cup\{(a,b)\}\in\mathcal I\).
+Hence \(\mathcal I\) is a winning family, and Duplicator wins by
+\cref{thm:p03-w03-p03-061-strategy}.
+
+\emph{Item 2.} Let \(\bar x=x_1,\ldots,x_k\) and \(\bar y=y_1,\ldots,y_k\) be
+distinct variables. For a term \(t\) over \(\bar x\) and the constant symbols
+let \(t^1\) replace \(x_i\) by itself and \(c\) by \(c^1\), and \(t^2\)
+replace \(x_i\) by \(y_i\) and \(c\) by \(c^2\). Let \(\vartheta(\bar x,\bar
+y)\) be the disjunction of the formulas \(t^1=t'^1\wedge\neg\,t^2=t'^2\) for
+all terms \(t,t'\), and
+\(R^1(t_1^1,\ldots,t_r^1)\wedge\neg R^2(t_1^2,\ldots,t_r^2)\) for all
+relation symbols \(R\) and terms \(t_1,\ldots,t_r\) (with inequalities add
+\(\neg\,t^1=t'^1\wedge t^2=t'^2\)). The elements of
+\(f_{\bar a\bar b}\) are the pairs \((t^{\mathbf A}[\bar a],t^{\mathbf
+B}[\bar b])\), so \(\mathbf A\oplus\mathbf B\models\vartheta[\bar a,\bar b]\)
+exactly when \(f_{\bar a\bar b}\) is not a function, or (with inequalities)
+not injective, or is a function that fails to preserve some relation, that
+is, when it is not a (one-to-one) partial homomorphism. Let
+\[
+\begin{aligned}
+ \psi(T,\bar x,\bar y)\defeq{}&\bigwedge_{i\le k}\bigl(D_1(x_i)\wedge
+ D_2(y_i)\bigr)\wedge\Bigl(\vartheta\\
+ &\vee\bigvee_{j\le k}(\exists x_j)\bigl(
+ D_1(x_j)\wedge(\forall y_j)(\neg D_2(y_j)\vee T(\bar x,\bar y))\bigr)\Bigr),
+\end{aligned}
+\]
+in which the \(2k\)-ary \(T\) occurs only positively. Its operator
+\(F_\psi\) on \(2k\)-tuples of the universe \(U\) of \(\mathbf A\oplus\mathbf
+B\) has values in \(A^k\times B^k\), and \(T\) is consulted only at tuples in
+\(A^k\times B^k\), so \(F_\psi(T)=\Gamma(T\cap(A^k\times B^k))\). Hence
+\(\mathcal W=\Gamma(\mathcal W)=F_\psi(\mathcal W)\) is a fixed point of
+\(F_\psi\), and every fixed point \(T'\) of \(F_\psi\) lies in
+\(A^k\times B^k\) and satisfies \(\Gamma(T')=T'\), so \(\mathcal W\subseteq
+T'\). Thus \(\operatorname{lfp}(F_\psi)=\mathcal W\), and by item~1 the
+sentence
+\[
+\begin{aligned}
+ (\exists\bar x)\Bigl(&\bigwedge_iD_1(x_i)\wedge{}\\
+ &(\forall\bar y)\bigl(\bigvee_i\neg D_2(y_i)\vee[\mathbf{lfp}\,T\bar x\bar
+ y\,.\,\psi](\bar x,\bar y)\bigr)\Bigr)
+\end{aligned}
+\]
+holds in \(\mathbf A\oplus\mathbf B\) exactly when Duplicator does not win.
+
+For finite structures let \(n\defeq|A|+|B|\). For fixed \(\sigma\) and \(k\)
+the formula \(\vartheta\) is fixed, and \(F_\psi(T)\) is computed from \(T\)
+by testing, for each of the at most \(n^{2k}\) tuples, \(\vartheta\) and the
+at most \(kn^2\) membership questions of the second disjunct; this takes time
+polynomial in \(n\). By \cref{thm:p03-w03-p03-059-finite-stages},
+\(\operatorname{lfp}(F_\psi)\) is then computed in time polynomial in \(n\),
+and the final test over \(A^k\times B^k\) adds at most \(n^{2k}\) lookups.
+
+\emph{Item 3.} Let \(\mathbf A\) be a \(\sigma\)-structure. A family
+\(\bar P=(P_{\bar b})_{\bar b\in B^k}\) of subsets of \(A^k\) corresponds to
+\(\tau(\bar P)\defeq\{(\bar a,\bar b):\bar a\in P_{\bar b}\}\subseteq
+A^k\times B^k\), and this correspondence is a bijection that preserves
+inclusion in both directions. Let \(\Phi\) be the operator of
+\(\pi_{\mathbf B}\) on \(\mathbf A\). We show that the \(T\)-components of
+\(\Phi(\bar P)\) correspond to \(\Gamma(\tau(\bar P))\). A rule of the first
+kind for \(\bar b\) puts \(\bar a\) into \(\Phi(\bar P)_{\bar b}\) exactly
+when \(t^{\mathbf A}[\bar a]=t'^{\mathbf A}[\bar a]\) for terms with
+\(t^{\mathbf B}[\bar b]\neq t'^{\mathbf B}[\bar b]\), that is, when
+\(f_{\bar a\bar b}\) is not a function; a rule of the second kind does so
+exactly when \(\mathbf A\models R(t_1,\ldots,t_r)\) at \(\bar a\) and
+\(\mathbf B\not\models R(t_1,\ldots,t_r)\) at \(\bar b\). Together, as in item~2,
+they put \(\bar a\) in exactly when \(f_{\bar a\bar b}\) is not a partial
+homomorphism (with the rules for inequalities: not a one-to-one partial
+homomorphism). A rule of the third kind for \(j\) fires under an assignment
+\(\beta\) when \(\beta(y)\) satisfies
+\((\beta(x_1),\ldots,\beta(y),\ldots,\beta(x_k))\in P_{\bar b[j/c]}\) for
+every \(c\in B\), and \(\beta(x_j)\) is free; so it puts \(\bar a\) into
+\(\Phi(\bar P)_{\bar b}\) exactly when some \(a\in A\) has
+\((\bar a[j/a],\bar b[j/c])\in\tau(\bar P)\) for all \(c\in B\). This is
+\(\Gamma\). The \(T\)-components of \(\Phi(\bar P)\) do not depend on the
+goal component.
+
+By induction on \(m\), the \(T\)-components of the stage \(\Phi^m\)
+correspond to \(\Gamma^m(\emptyset)\), the \(m\)-th iterate of \(\Gamma\) from
+the empty set. By the first paragraph of the proof of
+\cref{thm:p03-w03-p03-061-datalog}, \(\Phi^\infty=\bigcup_m\Phi^m\) and
+\(\Phi(\Phi^\infty)=\Phi^\infty\). So \(U\defeq\bigcup_m\Gamma^m(\emptyset)\)
+corresponds to the \(T\)-components of \(\Phi^\infty\) and satisfies
+\(\Gamma(U)=U\). Every fixed point \(T'\) of \(\Gamma\) contains each
+\(\Gamma^m(\emptyset)\), by induction and monotonicity, hence contains \(U\);
+so \(U=\mathcal W\). Finally, the goal rule fires in \(\Phi(\Phi^\infty)=
+\Phi^\infty\) exactly when some \(\bar a\) lies in \(\Phi^\infty_{\bar b}\)
+for all \(\bar b\in B^k\), that is, when some \(\bar a\) has \((\bar a,\bar
+b)\in\mathcal W\) for all \(\bar b\). By item~1 this says that Duplicator does
+not win.
+
+Every rule body has at most \(k\) distinct variables: the terms of the first
+two kinds use only \(x_1,\ldots,x_k\); the third kind uses \(y\) and the
+\(x_i\) with \(i\neq j\); the goal body uses \(\bar x\). Heads have at most
+\(k\) variables. So \(\pi_{\mathbf B}\) is a \(k\)-Datalog program, and a
+\(k\)-Datalog\((\neq)\) program with the rules for inequalities.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-061-horn-complete}{thm:p03-w03-p03-061-horn-complete}{A \(\mathsf P\)-complete existential game}
+\begin{proof}
+\emph{Membership.} The vocabulary, \(k=3\) and \(\mathbf B\) are fixed, so by
+\cref{thm:p03-w03-p03-061-spoiler-lfp}, item~2, whether Duplicator wins the
+\((\exists,3)\)-pebble game on \(\mathbf A\) and \(\mathbf B\) is decided in
+time polynomial in \(|A|+2\).
+
+\emph{Correctness of the reduction.} A Horn formula with at most three
+literals per clause, after the normalization in
+\cref{def:p03-w03-p03-061-horn}, is a finite list of clauses of its six
+nonempty forms. By \cref{thm:p03-w03-p03-061-horn},
+\(\varphi\) is satisfiable exactly when Duplicator wins the
+\((\exists,3)\)-pebble game on \(\mathbf A_\varphi\) and \(\mathbf B\). A
+formula without clauses is satisfiable and is sent to a fixed one-element
+structure with empty relations, which maps homomorphically to \(\mathbf B\),
+so Duplicator wins there by \cref{thm:p03-w03-p03-061-homomorphism}.
+
+\emph{The reduction is computable in logarithmic space.} Let \(\varphi\) be
+written as a list of clauses, each a list of at most three literals, a
+literal being a sign followed by a variable name in binary. The machine keeps
+a bounded number of pointers into the input, each of \(O(\log n)\) bits for
+input length \(n\). A first scan detects an empty clause; if one occurs,
+the machine outputs the fixed two-element structure whose \(P_1\) and
+\(N_1\) both contain one element and whose other element is unused. This
+is the encoding of the normalized contradiction. Otherwise it reserves a
+separate output label for the fresh unused element and tags all input
+variable names differently, avoiding a name collision without storing a
+fresh long integer. To output the remaining universe it runs through the literal
+positions \(p\) in order and writes the name at \(p\) when no earlier
+position carries the same name, comparing names symbol by symbol with two
+further pointers. To output the relations it runs through the clauses; for
+each it counts the literals (at most three) and the positive ones (at most
+one, as the clause is Horn), which fixes the symbol \(N_r\) or \(P_r\), and
+writes the names of the negative literals in their order followed by the
+name of the positive literal, if any; this is the tuple prescribed in
+\cref{def:p03-w03-p03-061-horn}. Only the pointers and counters of bounded
+number are stored.
+
+\emph{Hardness.} Horn 3-satisfiability is \(\mathsf P\)-complete under
+logarithmic-space reductions, as Kolaitis records with a reference
+\cite[p.~76]{Kolaitis2003ExpressivePowerNotes}; this fact is used, not proved,
+here. Let \(X\in\mathsf P\) and let \(r_1\) be a logarithmic-space reduction
+of \(X\) to Horn 3-satisfiability and \(r_2\) the reduction above. The
+composite \(r_2\circ r_1\) is computed in logarithmic space by running the
+machine for \(r_2\) and, whenever it reads its \(i\)-th input symbol,
+running the machine for \(r_1\) on \(x\) from the start while counting its
+output symbols, discarding all but the \(i\)-th. The length of \(r_1(x)\) is
+polynomial in \(|x|\), because a logarithmic-space machine has polynomially
+many configurations, so the counter and the work space of \(r_2\) use
+\(O(\log|x|)\) bits. Hence every problem in \(\mathsf P\) reduces in
+logarithmic space to the game problem, which is in \(\mathsf P\): it is
+\(\mathsf P\)-complete.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-061-refines}{thm:p03-w03-p03-061-refines}{A win in the \(k\)-pebble game is a win in the existential games}
+\begin{proof}
+As \(\sigma\) has no constant symbols, \(C_{\mathbf A,\mathbf B}=\emptyset\).
+Let \(\mathcal I\) be a winning family for the \(k\)-pebble game. A partial
+isomorphism is an injective function on a finite set that preserves every
+relation, hence a one-to-one partial homomorphism. For \(f\in\mathcal I\),
+\(|f-\emptyset|=|f|\le k\); every subset of a member is a member; and the forth
+property up to \(k\) is the same clause in both definitions. So \(\mathcal I\)
+is a winning family for the \((\exists,\neq,k)\)-pebble game, and, as
+one-to-one partial homomorphisms are partial homomorphisms, for the
+\((\exists,k)\)-pebble game.
+
+For the failure of the converse, the existential half is
+\cref{thm:p03-w03-p03-061-cliques}. Suppose a winning family \(\mathcal I\)
+for the \((k+1)\)-pebble game on \(\mathbf K_k\) and \(\mathbf K_{k+1}\)
+existed, and let \(d_1,\ldots,d_{k+1}\) be the vertices of
+\(\mathbf K_{k+1}\). Starting from \(\emptyset\in\mathcal I\), suppose
+\(f_i\in\mathcal I\) has range \(\{d_1,\ldots,d_i\}\) and \(|f_i|=i\le k\).
+The back property gives \(g\in\mathcal I\) with \(f_i\subseteq g\) and
+\(d_{i+1}\) in its range; then \(f_{i+1}\defeq f_i\cup\{(g^{-1}(d_{i+1}),
+d_{i+1})\}\subseteq g\) is in \(\mathcal I\) and has \(i+1\) pairs, since
+\(d_{i+1}\) is not in the range of \(f_i\). The relation \(f_{k+1}\) is
+injective with \(k+1\) pairs and domain in the \(k\)-element vertex set of
+\(\mathbf K_k\), which is impossible. So Spoiler wins the
+\((k+1)\)-pebble game.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-061-switch}{thm:p03-w03-p03-061-switch}{Paths through a switch}
+\begin{proof}
+\emph{The ring.} The edges of \(\mathbf S\) between the twelve vertices other
+than \(a,\ldots,h\) form the directed cycle
+\[
+ \alpha_1\to\alpha_2\to\alpha_3\to\alpha_4\to\beta'_1\to\beta'_2\to
+ \alpha'_1\to\alpha'_2\to\alpha'_3\to\alpha'_4\to\beta_1\to\beta_2\to\alpha_1,
+\]
+the \emph{ring}; number its vertices \(0,\ldots,11\) in this order. Every
+other edge joins an entry vertex to the ring or the ring to an exit vertex:
+\(c\to0\), \(c\to6\), \(b\to2\), \(b\to8\), \(e\to4\), \(g\to10\), and
+\(1\to h\), \(3\to a\), \(5\to d\), \(7\to f\), \(9\to a\), \(11\to d\). Each
+of the twenty-four edges of \(\mathbf S\) is one of these. A ring vertex
+therefore has as successors its ring successor and at most one exit vertex,
+and the even-numbered ring vertices have no exit successor. A path passing
+through \(\mathbf S\) consists of an entry vertex, a nonempty arc of
+consecutive ring vertices \(i,i+1,\ldots\) (indices modulo \(12\)), and an
+exit vertex.
+
+\emph{Case \(Q\) starts at \(b\) and continues at \(2\).} Vertex \(2\) has
+only the successor \(3\), so \(3\in Q\). The successors of \(3\) are \(a\)
+and \(4\); \(a\) lies on \(P\), so \(4\in Q\), and \(4\) has only the successor
+\(5\), so \(5\in Q\). The vertex before \(a\) on \(P\) is \(3\) or \(9\); as
+\(3\in Q\), it is \(9\). The entry vertex of \(P\) is not \(b\in Q\). If \(P\)
+entered at \(g\) (ring vertex \(10\)) or at \(c\) through \(0\), its arc,
+running forward to \(9\), would contain \(2\in Q\); if it entered at \(e\), it
+would start at \(4\in Q\). So \(P\) enters at \(c\) through \(6\) and is
+\(c,6,7,8,9,a=q(c,a)\). The successors of \(5\) are \(d\) and \(6\in P\), so
+\(Q=b,2,3,4,5,d=q(b,d)\).
+
+Let \(R\) be a path passing through \(\mathbf S\) with no vertex in common with
+\(P\) or \(Q\). Its entry is not \(c\) or \(b\), nor \(e\), whose only
+successor \(4\) lies on \(Q\); so it is \(g\), followed by \(10\) and \(11\).
+The successors of \(11\) are \(d\in Q\) and \(0\); then \(0\) has only the
+successor \(1\); the successors of \(1\) are \(h\) and \(2\in Q\). So
+\(R=g,10,11,0,1,h=q(g,h)\), which indeed avoids \(P\) and \(Q\).
+
+\emph{Case \(Q\) continues at \(8\).} The mirror \(\mu\) is an automorphism of
+\(\mathbf S\) fixing \(a,b,c,d\) and moving each ring vertex \(i\) to
+\(i+6\); it carries \(8\) to \(2\). Applying the first case to \(\mu(P)\)
+and \(\mu(Q)\) gives \(\mu(P)=q(c,a)\), \(\mu(Q)=q(b,d)\) and the unique third
+path \(q(g,h)\); applying \(\mu\) again gives \(P=p(c,a)\), \(Q=p(b,d)\) and the
+unique third path \(p(e,f)\).
+
+These are the only cases, since the successors of \(b\) are \(2\) and \(8\).
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-061-templates}{thm:p03-w03-p03-061-templates}{Templates are walks that are injective on good positions}
+\begin{proof}
+\emph{Item 1.} Inside each block \(\mathrm{CA}_\nu(o)\), \(\mathrm{BD}_\nu(o)\),
+\(q(g,h)\langle o\rangle\) and \(p(e,f)\langle o\rangle\), consecutive entries
+are joined by edges of the switch of \(o\), copied by item~1 of
+\cref{def:p03-w03-p03-061-fhw-graph}. The junctions are edges by the other
+items: \(z_1\to c\langle o_N\rangle\), \(a\langle o_{r+1}\rangle\to
+c\langle o_r\rangle\) and \(a\langle o_1\rangle\to z_2\) in \(T_1\);
+\(z_3\to b\langle o_1\rangle\), \(d\langle o_r\rangle\to b\langle
+o_{r+1}\rangle\), \(d\langle o_N\rangle\to u_1\); within \(\Gamma_i\), the
+edges \(u_i\to g\langle o^y_1\rangle\), \(h\langle o^y_s\rangle\to
+g\langle o^y_{s+1}\rangle\), \(h\langle o^y_{m(y)}\rangle\to v_i\), or
+\(u_i\to v_i\) when \(m(y)=0\); \(v_i\to u_{i+1}\), \(v_k\to n_0\);
+\(n_{j-1}\to e\langle\kappa(j)\rangle\) and \(f\langle\kappa(j)\rangle\to
+n_j\), as \(\kappa(j)\) is an occurrence in clause \(j\); and \(n_l\to z_4\).
+
+\emph{Item 2.} Vertices in different switches are different, and each of
+\(z_1,\ldots,z_4\), \(u_i\), \(v_i\), \(n_j\) occurs at exactly one position
+of \(T_1(\nu)T_2(\nu,\kappa)\). Within one block the entries are distinct.
+Fix an occurrence \(o\) with literal \(y\); the entries in its switch at the
+considered positions come from: \(\mathrm{CA}_\nu(o)\) and
+\(\mathrm{BD}_\nu(o)\); \(q(g,h)\langle o\rangle\) when \(y\) is the literal
+\(\lambda^\nu_i\) of its variable, that is, when \(\nu\) makes \(y\) false;
+and \(p(e,f)\langle o\rangle\) when \(o=\kappa(j)\) for the clause \(j\) of
+\(o\) and the segment of \(j\) meets \(D\), in which case \(\nu\) makes \(y\)
+true because \(D\) is good. If \(\nu\) makes \(y\) true, the mode is \(p\) and
+the blocks present are among \(p(c,a),p(b,d),p(e,f)\); if it makes \(y\)
+false, the mode is \(q\) and they are among \(q(c,a),q(b,d),q(g,h)\). In both
+cases they are pairwise vertex-disjoint by
+\cref{def:p03-w03-p03-061-switch}, and each occurs once, since \(o\) lies in
+one column and in one clause.
+
+\emph{Item 3.} \(\mathrm{CA}_\nu(o_r)\) and \(\mathrm{BD}_\nu(o_r)\) have six
+entries in either mode, so the positions of these blocks in \(T_1\) and at
+the start of \(T_2\) do not depend on \(\nu\). Their first and last entries are
+\(c,a\) and \(b,d\) of the switch of \(o_r\) in either mode, and their inner
+entries depend on the mode, which depends only on \(\nu\) at the variable of
+\(o_r\). In a balanced formula \(\Gamma_i\) has \(6m(x_i)+2\) entries whichever
+literal \(\lambda^\nu_i\) is, so the positions of \(u_i\), \(v_i\) and of all
+later entries do not depend on \(\nu\); the entries strictly between \(u_i\)
+and \(v_i\) are determined by \(\lambda^\nu_i\), that is, by \(\nu(x_i)\). The
+segment of clause \(j\) holds \(p(e,f)\langle\kappa(j)\rangle\), determined
+by \(\kappa(j)\). The remaining entries are \(z_1,\ldots,z_4\), the vertices
+\(c,a,b,d\) of the switches, \(u_i,v_i\) and \(n_j\), at fixed positions.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-061-fhw}{thm:p03-w03-p03-061-fhw}{The reduction of Fortune, Hopcroft and Wyllie}
+\begin{proof}
+\emph{Entering and leaving switches.} By the list of edges in
+\cref{def:p03-w03-p03-061-fhw-graph}, every edge of \(\mathbf G_\varphi\) that
+enters the switch of an occurrence \(o\) from outside ends at
+\(b\langle o\rangle\), \(c\langle o\rangle\), \(e\langle o\rangle\) or
+\(g\langle o\rangle\), and every edge that leaves it starts at
+\(a\langle o\rangle\), \(d\langle o\rangle\), \(f\langle o\rangle\) or
+\(h\langle o\rangle\). Let \(P\) be a simple path whose first and last
+vertices lie outside the switch of \(o\). A maximal run of consecutive
+vertices of \(P\) inside that switch is entered by an edge from outside and
+left by an edge to outside, so it is a path of the switch from an entry to an
+exit vertex: it passes through the switch. The vertices \(z_1,z_3\) have no
+incoming and \(z_2,z_4\) no outgoing edge.
+
+\emph{Paths give a satisfying assignment.} Let \(P_1\) from \(z_1\) to
+\(z_2\) and \(P_2\) from \(z_3\) to \(z_4\) be simple paths with no common
+vertex. We show by induction on \(r=1,\ldots,N\): the last
+\(6r+1\) vertices of \(P_1\) are \(\mathrm{CA}(o_r),\ldots,\mathrm{CA}(o_1),z_2\)
+and the first \(6r+1\) vertices of \(P_2\) are
+\(z_3,\mathrm{BD}(o_1),\ldots,\mathrm{BD}(o_r)\), where for each \(o_s\) the
+two blocks are either \(p(c,a)\langle o_s\rangle,p(b,d)\langle o_s\rangle\)
+or \(q(c,a)\langle o_s\rangle,q(b,d)\langle o_s\rangle\); call \(o_s\) of
+\emph{mode} \(p\) or \(q\) accordingly. The vertex of \(P_1\) before
+\(z_2\), respectively before \(c\langle o_{r-1}\rangle\) when \(r\ge2\), is the
+only in-neighbour \(a\langle o_r\rangle\) of that vertex; the vertex of \(P_2\)
+after \(z_3\), respectively after \(d\langle o_{r-1}\rangle\), is the only
+out-neighbour \(b\langle o_r\rangle\). The run of \(P_1\) in the switch of
+\(o_r\) that ends at \(a\langle o_r\rangle\) and the run of \(P_2\) that starts
+at \(b\langle o_r\rangle\) pass through the switch and have no common vertex,
+so \cref{thm:p03-w03-p03-061-switch} identifies them as stated. This
+completes the induction. The only in-neighbour of \(c\langle o_N\rangle\) is
+\(z_1\), the first vertex of \(P_1\), so \(P_1\) is \(z_1,\mathrm{CA}(o_N),
+\ldots,\mathrm{CA}(o_1),z_2\); the only out-neighbour of \(d\langle o_N\rangle\)
+is \(u_1\), and \(P_2\) continues from \(u_1\) by a path \(R\) to \(z_4\).
+
+\(R\) has no vertex in common with \(P_1\) or with the first part of
+\(P_2\). If \(R\) meets the switch of \(o\), each of its runs there passes
+through the switch avoiding the two blocks of \(P_1\) and \(P_2\), so by
+\cref{thm:p03-w03-p03-061-switch} it is \(p(e,f)\langle o\rangle\) when \(o\)
+has mode \(p\), and \(q(g,h)\langle o\rangle\) when \(o\) has mode \(q\).
+Follow \(R\) from \(u_1\). From \(u_i\) it moves to \(v_i\) or to
+\(g\langle o^y_1\rangle\) for a literal \(y\) of \(x_i\); entering at
+\(g\) it runs through \(q(g,h)\), so the switch has mode \(q\), and leaves at
+\(h\), whose only out-neighbour is \(g\) of the next occurrence of \(y\) or
+\(v_i\). So \(R\) runs through the whole column of one literal \(y_i\) of
+\(x_i\), all of whose occurrences have mode \(q\), and reaches \(v_i\), whose
+only out-neighbour is \(u_{i+1}\), respectively \(n_0\). From \(n_{j-1}\) it
+moves to \(e\langle o\rangle\) for an occurrence \(o\) in clause \(j\), runs
+through \(p(e,f)\langle o\rangle\), so \(o\) has mode \(p\), and reaches
+\(n_j\). Let \(\nu\) make each \(y_i\) false. For clause \(j\) with the
+occurrence \(o=(y,j)\) used by \(R\): if \(\nu\) made \(y\) false, then
+\(y=y_i\) for its variable \(x_i\), and every occurrence of \(y\) would have
+mode \(q\), against the mode \(p\) of \(o\). So \(\nu\) makes \(y\) true, and
+\(\nu\) satisfies every clause.
+
+\emph{A satisfying assignment gives paths.} Let \(\nu\) satisfy \(\varphi\)
+and let \(\kappa(j)\) be an occurrence in clause \(j\) of a literal made true
+by \(\nu\). The set \(D\) of all positions of \(T_2\) is good for
+\((\nu,\kappa)\). By \cref{thm:p03-w03-p03-061-templates}, items~1 and~2,
+\(T_1(\nu)\) and \(T_2(\nu,\kappa)\) are walks without repeated vertices, so
+simple paths, from \(z_1\) to \(z_2\) and from \(z_3\) to \(z_4\), with no
+common vertex.
+
+\emph{The complete formulas.} \(\varphi_k\) is unsatisfiable: under any
+assignment, the clause consisting of the literals it makes false is false.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-061-family}{thm:p03-w03-p03-061-family}{Duplicator's winning family}
+\begin{proof}
+\emph{The two queries.} The two paths of \(\mathbf A_k\) have no common
+vertex and join \(d_{s_1}\) to \(d_{s_2}\) and \(d_{s_3}\) to \(d_{s_4}\); as
+\(L_1,L_2\ge2\), the four constants are distinct, so \(\mathbf A_k\in
+\mathcal F_{\mathbf H_1}\) and \(\mathrm{FiSH}(\mathbf H_1)(\mathbf A_k)=1\).
+\(\mathbf B_k\in\mathcal F_{\mathbf H_1}\), and
+\(\mathrm{FiSH}(\mathbf H_1)(\mathbf B_k)=0\) by
+\cref{thm:p03-w03-p03-061-fhw}.
+
+\emph{The formula \(\varphi_k\) is balanced.} Each literal lies in exactly
+the \(2^{k-1}\) clauses that choose it for its variable, so
+\(m(x_i)=m(\bar x_i)\). Hence \(L_1,L_2\) and the positions in
+\cref{thm:p03-w03-p03-061-templates}, item~3, are fixed, and
+\(h_{\nu,\kappa}\) is defined on all of \(A_k\).
+
+\emph{Members are one-to-one partial homomorphisms.} Let
+\(f=h_{\nu,\kappa}\restriction(D\cup W)\) with \(D\) good. The constants go
+to the constants: \(\eta_0\mapsto z_1\), \(\eta_{L_1-1}\mapsto z_2\),
+\(\eta'_0\mapsto z_3\), \(\eta'_{L_2-1}\mapsto z_4\), the first and last
+entries of the templates; so \(C\subseteq f\), where \(C\) is the set of these
+four pairs. An edge of \(\mathbf A_k\) is \((\eta_t,\eta_{t+1})\) or
+\((\eta'_t,\eta'_{t+1})\), and goes to an edge by item~1 of
+\cref{thm:p03-w03-p03-061-templates}. The positions of \(\eta'_0\) and
+\(\eta'_{L_2-1}\) lie outside every clause segment, so item~2 shows that
+\(f\) is injective. Moreover \(|f-C|=|D|\le k\).
+
+\emph{Nonempty and closed under subfunctions.} Clauses are nonempty, so
+clause choices exist, and \(D=\emptyset\) is good: \(h_{\nu,\kappa}
+\restriction W=C\in\mathcal I_k\). If \(C\subseteq g\subseteq f\), then
+\(g=h_{\nu,\kappa}\restriction(D'\cup W)\) for some \(D'\subseteq D\), and a
+subset of a good set is good.
+
+\emph{Forth.} Let \(f=h_{\nu,\kappa}\restriction(D\cup W)\in\mathcal I_k\)
+with \(|D|<k\), and \(a\in A_k\). If \(a\in D\cup W\) there is nothing to
+do. Let \(F\) be the set of variables \(x_i\) such that some vertex of \(D\)
+sits at a position inside a block \(\mathrm{CA}(o_r)\) or \(\mathrm{BD}(o_r)\)
+other than its first and last, with \(x_i\) the variable of \(o_r\); or
+strictly between the positions of \(u_i\) and \(v_i\); or in the segment of a
+clause \(j\) with \(x_i\) the variable of the literal of \(\kappa(j)\). Let
+\(K\) be the set of clauses whose segment meets \(D\). Each vertex of \(D\)
+contributes at most one variable, so \(|F|\le|D|\le k-1\). By item~3 of
+\cref{thm:p03-w03-p03-061-templates}, if \(\nu'\) agrees with \(\nu\) on
+\(F\) and \(\kappa'\) with \(\kappa\) on \(K\), then \(h_{\nu',\kappa'}\) and
+\(h_{\nu,\kappa}\) agree on \(D\cup W\), and \(D\) is good for
+\((\nu',\kappa')\), because for \(j\in K\) the literal of
+\(\kappa'(j)=\kappa(j)\) has its variable in \(F\).
+
+If \(a\) does not lie in the segment of a clause outside \(K\), the set
+\(D\cup\{a\}\) is good for \((\nu,\kappa)\), and
+\(h_{\nu,\kappa}\restriction(D\cup\{a\}\cup W)\in\mathcal I_k\) extends
+\(f\). Otherwise \(a\) lies in the segment of a clause \(j\notin K\). That
+clause contains a literal of each of the \(k\) variables, and \(|F|<k\), so it
+contains a literal \(y\) of a variable \(x_i\notin F\). Let \(\nu'\) agree
+with \(\nu\) except that it makes \(y\) true, and \(\kappa'\) with \(\kappa\)
+except that \(\kappa'(j)\defeq(y,j)\). Then \(\nu'\) agrees with \(\nu\) on
+\(F\) and \(\kappa'\) with \(\kappa\) on \(K\), so
+\(g\defeq h_{\nu',\kappa'}\restriction(D\cup\{a\}\cup W)\) extends \(f\);
+\(D\cup\{a\}\) is good for \((\nu',\kappa')\), since the clauses of \(K\)
+keep their true literals and clause \(j\) receives one; and
+\(|D\cup\{a\}|\le k\). So \(g\in\mathcal I_k\) and \(a\in\operatorname{dom}(g)\).
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-061-h1}{thm:p03-w03-p03-061-h1}{The 2-disjoint paths query is not existentially definable}
+\begin{proof}
+Suppose a sentence \(\chi\) of \(\exists\mathrm L^k_{\infty\omega}(\neq)\)
+defined \(\mathrm{FiSH}(\mathbf H_1)\) on \(\mathcal F_{\mathbf H_1}\). By
+\cref{thm:p03-w03-p03-061-family} and \cref{thm:p03-w03-p03-061-strategy},
+Duplicator wins the \((\exists,\neq,k)\)-pebble game on \(\mathbf A_k\) and
+\(\mathbf B_k\), so by \cref{thm:p03-w03-p03-061-game-logic} every
+\(\exists\mathrm L^k_{\infty\omega}(\neq)\)-sentence true in \(\mathbf A_k\)
+is true in \(\mathbf B_k\). As \(\mathbf A_k\models\chi\), also
+\(\mathbf B_k\models\chi\), contradicting
+\(\mathrm{FiSH}(\mathbf H_1)(\mathbf B_k)=0\). A sentence of
+\(\exists\mathrm L^\omega_{\infty\omega}(\neq)\) lies in some
+\(\exists\mathrm L^k_{\infty\omega}(\neq)\). A Datalog\((\neq)\) program is a
+\(k\)-Datalog\((\neq)\) program for \(k\) the largest number of variables of
+a rule, and its Boolean goal is then
+\(\exists\mathrm L^k_{\infty\omega}(\neq)\)-definable by
+\cref{thm:p03-w03-p03-061-datalog}.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-061-quotient}{thm:p03-w03-p03-061-quotient}{Identifying distinguished vertices}
+\begin{proof}
+Write \(C\) for \(\{(a_i,b_i):i\le n\}\) and \(C'\) for
+\(\{([a_i],[b_i]):i\le n\}\), the relations of the constants. A class \([x]\)
+with more than one element consists of distinguished vertices. Let
+\(f\in\mathcal I\); then \(C\subseteq f\).
+
+\(f/{\equiv}\) is a function: if \([x]=[x']\) with \(x\neq x'\), then
+\(x=a_i\), \(x'=a_j\) with \(i\equiv j\), so \(f(x)=b_i\), \(f(x')=b_j\) and
+\([b_i]=[b_j]\). It is injective: if \([f(x)]=[f(x')]\) with \(f(x)\neq
+f(x')\), then \(f(x)=b_i\), \(f(x')=b_j\) with \(i\equiv j\); as
+\(f(a_i)=b_i\) and \(f\) is injective, \(x=a_i\), \(x'=a_j\), so
+\([x]=[x']\). It preserves edges: an edge \(([x],[x'])\) of \(\mathbf
+A/{\equiv}\) between classes in its domain comes from an edge \(x_0\to x_0'\)
+of \(\mathbf A\) with \(x_0\in[x]\), \(x'_0\in[x']\); every member of a class
+in the domain of \(f/{\equiv}\) lies in the domain of \(f\) (a non-singleton
+class consists of constants), so \(f(x_0)\to f(x'_0)\) in \(\mathbf B\) and
+\(([f(x_0)],[f(x'_0)])\) is an edge of \(\mathbf B/{\equiv}\). And
+\(C'\subseteq f/{\equiv}\).
+
+The map \((x,y)\mapsto([x],[y])\) sends \(f-C\) onto \(f/{\equiv}-C'\): a
+pair of \(C\) goes into \(C'\), and a pair \((x,y)\) of \(f-C\) has \(x\) not
+distinguished (as \(f(a_i)=b_i\)), so \([x]=\{x\}\) is not the class of a
+constant and \(([x],[y])\notin C'\). It is injective on \(f-C\), since
+\(x\mapsto[x]\) is injective on non-distinguished vertices. Hence
+\(|f/{\equiv}-C'|=|f-C|\le k\).
+
+Closure under subfunctions: let \(C'\subseteq g'\subseteq f/{\equiv}\) and
+\(g\defeq C\cup\{(x,y)\in f:([x],[y])\in g'\}\). Then \(C\subseteq g\subseteq
+f\), so \(g\in\mathcal I\), and \(g/{\equiv}=g'\): the inclusion
+\(\subseteq\) holds as \(C'\subseteq g'\), and each pair of \(g'\) is
+\(([x],[y])\) for some \((x,y)\in f\), which then lies in \(g\).
+
+Forth: let \(|f/{\equiv}-C'|<k\) and let \([x]\) be a vertex of
+\(\mathbf A/{\equiv}\). Then \(|f-C|<k\), and the forth property of
+\(\mathcal I\) gives \(g\in\mathcal I\) with \(f\subseteq g\) and \(x\in
+\operatorname{dom}(g)\); so \(f/{\equiv}\subseteq g/{\equiv}\) and \([x]\) is
+in the domain of \(g/{\equiv}\). The family is nonempty since \(\mathcal I\)
+is.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-061-h2h3}{thm:p03-w03-p03-061-h2h3}{The basic patterns \(\mathbf H_2\) and \(\mathbf H_3\)}
+\begin{proof}
+Fix \(k\). In \(\mathbf A_k\) and \(\mathbf B_k\) the distinguished vertices
+are, in order,
+\[
+ (\eta_0,\eta_{L_1-1},\eta'_0,\eta'_{L_2-1})
+ \quad\hbox{and}\quad(z_1,z_2,z_3,z_4).
+\] In both graphs the first and third have no incoming and
+the second and fourth no outgoing edges. If a structure has several constant
+symbols denoting the same element and all but one of them are dropped, a
+winning family for the original structures is one for the reducts, because
+the set of pairs of constants is unchanged.
+
+\emph{\(\mathbf H_2\).} Identify the second and third distinguished
+vertices: \(\mathbf A^2_k\defeq\mathbf A_k/{\equiv}\) and \(\mathbf
+B^2_k\defeq\mathbf B_k/{\equiv}\) with \(2\equiv3\), read as
+\(\sigma_{\mathbf H_2}\)-structures with \(d_{s_1},d_{s_2},d_{s_3}\) denoting
+the classes of the first, second (\(=\)third) and fourth vertex. These are
+distinct, so both structures lie in \(\mathcal F_{\mathbf H_2}\), and by
+\cref{thm:p03-w03-p03-061-family,thm:p03-w03-p03-061-quotient} Duplicator
+wins the \((\exists,\neq,k)\)-pebble game on them. In \(\mathbf A^2_k\) the
+paths \(\eta_0,\ldots,\eta_{L_1-1}\) and \(\eta'_0,\ldots,\eta'_{L_2-1}\)
+become simple paths from \(d_{s_1}\) to \(d_{s_2}\) and from \(d_{s_2}\) to
+\(d_{s_3}\) sharing only \(d_{s_2}\), so \(\mathrm{FiSH}(\mathbf
+H_2)(\mathbf A^2_k)=1\). Suppose simple paths \(P\) from \([z_1]\) to
+\([z_2]=[z_3]\) and \(Q\) from \([z_2]\) to \([z_4]\) in \(\mathbf B^2_k\)
+share only \([z_2]\). The last edge of \(P\) enters \([z_2]\), so it comes
+from an edge of \(\mathbf B_k\) into \(z_2\) (\(z_3\) has none); the first edge
+of \(Q\) comes from an edge out of \(z_3\) (\(z_2\) has none). All other
+vertices of \(P\) and \(Q\) are singletons, and edges between them are edges
+of \(\mathbf B_k\). Replacing \([z_2]\) by \(z_2\) in \(P\) and by \(z_3\) in
+\(Q\) gives simple paths of \(\mathbf B_k\) from \(z_1\) to \(z_2\) and from
+\(z_3\) to \(z_4\) with no common vertex, contradicting
+\(\mathrm{FiSH}(\mathbf H_1)(\mathbf B_k)=0\). So
+\(\mathrm{FiSH}(\mathbf H_2)(\mathbf B^2_k)=0\).
+
+\emph{\(\mathbf H_3\).} Identify the first with the fourth and the second with
+the third distinguished vertex, and let \(d_{s_1},d_{s_2}\) denote the classes
+\([z_1]=[z_4]\) and \([z_2]=[z_3]\) (in \(\mathbf A_k\) the corresponding
+classes). They are distinct, the structures lie in \(\mathcal F_{\mathbf
+H_3}\), and Duplicator wins the \((\exists,\neq,k)\)-pebble game on them by
+the same two results. In the quotient of \(\mathbf A_k\) the two paths become
+simple paths from \(d_{s_1}\) to \(d_{s_2}\) and from \(d_{s_2}\) to
+\(d_{s_1}\) that share only their endpoints, so the query holds. Suppose
+simple paths \(P\) from \([z_1]\) to \([z_2]\) and \(Q\) from \([z_2]\) to
+\([z_1]\) in the quotient of \(\mathbf B_k\) share only their endpoints. The
+first edge of \(P\) leaves \([z_1]\), hence comes from an edge out of \(z_1\)
+(\(z_4\) has none); its last edge comes from an edge into \(z_2\). The first
+edge of \(Q\) comes from an edge out of \(z_3\), its last from an edge into
+\(z_4\) (\(z_1\) has none). Simple paths visit their endpoints only at the
+ends, so replacing the endpoints accordingly gives simple paths of
+\(\mathbf B_k\) from \(z_1\) to \(z_2\) and from \(z_3\) to \(z_4\) with no
+common vertex, a contradiction as before.
+
+In both cases, if an \(\exists\mathrm L^k_{\infty\omega}(\neq)\)-sentence
+defined the query, it would hold in the positive structure and, by
+\cref{thm:p03-w03-p03-061-game-logic}, in the negative one.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-061-single-loop}{thm:p03-w03-p03-061-single-loop}{The single-loop boundary example}
+\begin{proof}
+At stage \(n\ge1\), the unary relation computed by the program consists
+exactly of the vertices reachable from \(c\) by a directed walk of length
+between one and \(n\). This follows by induction: the first rule supplies
+the walks of length one and the second appends one edge. Hence the least
+fixed point contains \(c\) precisely when there is a positive-length
+closed walk from \(c\) to itself.
+
+A simple directed cycle through \(c\) is such a walk. Conversely choose
+a closed walk from \(c\) to itself of least positive length. No internal
+vertex is \(c\), since its first return would be a shorter positive closed
+walk. No two internal vertices coincide, since deleting the segment
+between equal vertices would give a shorter positive closed walk with the
+same endpoints. Thus the chosen walk is a simple directed cycle, including
+the length-one case.
+
+For the finite-variable claim, unwind the stages. Write \(\rho_1(x)=E(c,x)\)
+and recursively
+\[
+ \rho_{n+1}(x)=E(c,x)\vee\exists y\,(\rho_n(y)\wedge E(y,x)).
+\]
+Only \(x,y\) are needed: in the copy of \(\rho_n(y)\), bound occurrences
+of \(x\) are confined to that subformula and do not bind the \(x\) in
+\(E(y,x)\). The resulting sentence
+\(\bigvee_{n\ge1}\rho_n(c)\) belongs to
+\(\exists\mathrm L^2_{\infty\omega}\) and defines the same query.
+Finally, a loop has coincident endpoints, whereas each edge in the star
+definition joins its centre to a distinct leaf. It is therefore a
+non-star pattern with a definable query under the stated extension.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-061-dichotomy}{thm:p03-w03-p03-061-dichotomy}{Descriptive dichotomy for fixed subgraph homeomorphism queries}
+\begin{proof}
+\emph{Item 1} is \cref{thm:p03-w03-p03-061-star} together with
+\cref{thm:p03-w03-p03-061-star-datalog}.
+
+\emph{Item 2.} By \cref{thm:p03-w03-p03-061-h1,thm:p03-w03-p03-061-h2h3},
+for every \(k\) none of \(\mathrm{FiSH}(\mathbf H_1)\),
+\(\mathrm{FiSH}(\mathbf H_2)\), \(\mathrm{FiSH}(\mathbf H_3)\) is
+\(\exists\mathrm L^k_{\infty\omega}(\neq)\)-definable. Let \(\mathbf H\) be
+a pattern graph that is not a star graph. By
+\cref{thm:p03-w03-p03-061-basic} some \(\mathbf H_i\) is isomorphic to a
+subgraph of \(\mathbf H\), and \(\mathbf H_i\) is itself a pattern graph. By
+\cref{thm:p03-w03-p03-061-transfer}, for every \(k\),
+\(\mathrm{FiSH}(\mathbf H)\) is not
+\(\exists\mathrm L^k_{\infty\omega}(\neq)\)-definable on
+\(\mathcal F_{\mathbf H}\). A sentence of
+\(\exists\mathrm L^\omega_{\infty\omega}(\neq)\) lies in one of these logics,
+and a Datalog\((\neq)\) program defines an
+\(\exists\mathrm L^k_{\infty\omega}(\neq)\)-definable query for some \(k\),
+as in the proof of \cref{thm:p03-w03-p03-061-h1}.
+\end{proof}
+\end{annexitem}

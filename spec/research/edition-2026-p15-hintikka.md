@@ -119,3 +119,26 @@ version-comparison dependency.
   probability formulas are explicitly reconstructed from the separately
   held historical author account. Neither source role is promoted to the
   unheld original probability paper or final2011 published chapter.
+
+
+## 26 October continuation: explicit observation-error construction
+
+The lead reread the complete saved body and all twelve reciprocal annex
+arguments, and directly read the held historical author's pp.340–343.
+The source explicitly requires report probabilities on report histories,
+but the saved packet only named that need. The new declared fixed-channel
+construction supplies those likelihoods by summing latent words, an exact
+latent-count recursion, a countable joint realization preserving constituent
+masses, posterior and predictive formulas, and positivity/nonidentification
+results. The one-counterreport calculation gives 1/15 for the specified
+ten-percent symmetric error channel; identical channel columns leave all
+support priors unchanged. This is an explicitly attributed editorial
+reconstruction with additional independence assumptions, not a recovered
+proof from the unheld 1997 original or the full historical error program.
+
+One reciprocal proof pair and seven typed symbol rows were added. Original
+probability-source acquisition, the K-dimensional necessity theorem and
+the remaining separately allocated source presentations stay open. The
+prior report's twelve-pair count describes the earlier saved state; the
+current packet has thirteen. Author calculations/build results are recorded
+separately and confer no independent-review or source-admission status.

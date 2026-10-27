@@ -150,7 +150,7 @@ def detail(status: str, source: bool) -> str:
         noun = "annex proof" if match.group(1) == "proved" else "annex sketch"
         return rf"\hyperref[{label}]{{{noun}}}, p.~\pageref{{{label}}}"
     if status.startswith("cited="):
-        return rf"citation \texttt{{{status.removeprefix('cited=')}}}"
+        return rf"source \cite{{{status.removeprefix('cited=')}}}"
     raise ValueError(f"unsupported result status: {status}")
 
 

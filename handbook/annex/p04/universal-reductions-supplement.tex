@@ -15,3 +15,289 @@ Theorem~\ref{thm:enumeration}(b) supplies a local index \(e\) with
 \(\varphi_e\simeq f\).
 \end{proof}
 \end{annexitem}
+
+\needspace{8\baselineskip}
+\begin{annexitem}{annex:p04.local.counter-compilation}{thm:p04-counter-compilation}{Counter compilation}
+\begin{proof}
+We describe a uniform finite transition-table construction, including the
+input/output interface.  Let the procedure use \(r\geq1\) counters.  On a
+work interval of the tape store
+\[
+  \lhd\,\#1^{c_1}\#1^{c_2}\#\cdots\#1^{c_r}\#\,\rhd.
+\]
+The endpoint markers and separators are work symbols distinct from the
+blank and numerical digits.  There are only finitely many additional
+marked versions of these symbols.  The machine's control records the
+current instruction, a scan mode, and, when needed, a number between
+\(1\) and \(r\).  At an instruction boundary it scans the left marker.
+The interval between the markers is finite, and every counter has exactly
+its displayed tally block.  We now give the templates for each instruction.
+
+To find counter \(i\), scan right from \(\lhd\), counting separators in
+the finite control.  The next symbol is a separator exactly when the
+counter is zero.  Otherwise scan to its closing separator; the preceding
+symbol is its last tally.  For increment, mark that closing separator,
+scan to \(\rhd\), and shift the suffix from the marked separator through
+\(\rhd\) one cell to the right.  Carry out the shift from right to left:
+remember the current symbol in the finite control, write it in its right
+neighbor, and move to the next source cell on the left.  On reaching the
+marked separator, write an ordinary separator to its right and a tally
+in its old cell.  At each shift step the already processed suffix is in
+its new position and the unprocessed prefix is unchanged.  Thus exactly
+one tally has been inserted and all later counters are unchanged.
+
+For a positive decrement, mark the last tally, and shift the suffix
+beginning at the closing separator one cell to the left.  Process this
+suffix from left to right, copying the next symbol into the hole and
+moving the hole right until \(\rhd\) has been copied; blank its old cell.
+The corresponding invariant is that the processed prefix has moved left
+one cell and the remaining suffix is unchanged.  Exactly one tally is
+deleted.  A zero test changes no cell.  Each completed instruction scans
+back to \(\lhd\) and enters the control state for its selected target.
+All these scans terminate because the marked interval is finite.
+
+These are transition-table templates, not operations requiring an
+unbounded control state.  In a scan mode there is one row for each member
+of the fixed finite work alphabet; remembering a symbol introduces one
+state for each possible symbol.  Separator counts range only up to the
+fixed \(r\).  A stationary action is replaced by a move right to a fresh
+state followed by a move left, with one preserving row for every symbol
+in that fresh state.  Hence all moves have the required direction
+\(L\) or \(R\).  Fresh states keep different instruction templates
+disjoint.  Induction on executed instructions proves the boundary
+invariant and exact agreement of counter values and control targets.
+
+For completeness, initialize and return in the required binary convention.
+Before using the work interval, put an origin marker on a spare track
+at physical cell \(0\).  A track here means a finite product alphabet:
+each tape cell stores an ordinary symbol together with one of finitely
+many flags; a transition reads and writes that product symbol.  This
+introduces finitely many symbols and still uses one head and one tape.
+Copy the input digit string into a delimited work block and scan it from
+left to right.  Starting at zero, for each digit \(b\) replace the input
+counter \(c\) by \(2c+b\).  Doubling is obtained by moving its tallies
+one at a time into a scratch counter, adding two tallies there for each
+one removed, then moving the scratch counter back.  A one-bit flag in
+the control decides the final increment.  These are finite sequences
+of the instruction templates just described.  Copying the finite input
+block can itself be performed by marking its next unprocessed digit,
+carrying that digit in the control to the destination, appending it by
+the suffix shift, and returning to the marked digit.  Preserve the origin
+flag throughout shifts.  Initially the input is canonical, as required
+by the numerical-machine interface.  The resulting counters are the
+input value and zeros, and the procedure begins.
+
+At a return, convert the selected tally block to binary.  Repeatedly
+remove pairs of tallies, counting them in a scratch block; the possible
+remaining tally is the remainder on division by two.  Record that bit
+and repeat with the quotient until it is zero.  For an original zero
+record the single digit zero.  Reverse the recorded bits by moving
+their last digit successively into an output block.  This yields exactly
+\(\operatorname{bin}(c_i)\).  Copy this block to the cells starting at
+the preserved origin, write a blank immediately after it, remove work
+flags from that prefix, and enter the accepting state.  To avoid an
+overlap during this copy, first move the output block and workspace
+past a blank interval longer than the output; finite scans determine
+its length and perform the relocation.  No other tape cells or final
+head location affect the output convention.  Every conversion terminates.
+If the counter procedure never returns, its simulated instructions
+continue forever, so the resulting Turing computation is infinite.
+
+The procedure for printing this transition table is total.  Enumerate
+the finite instruction list, instantiate the finitely many template
+states and rows, and concatenate them with fresh state names.  The
+templates for initialization and return are fixed; their counter indices
+are finite syntactic data.  Literal initialization by \(a\) prints a
+zeroing loop and \(a\) increment states, so printing terminates for every
+natural number \(a\), irrespective of its cost.  Complete every unused
+nonhalting state/symbol row by entering a fresh infinite-loop component.
+Use distinct start, accepting, and rejecting states, even though rejection
+is never used, and include the blank and both binary digits in the tape
+alphabet and both digits in the input alphabet.
+
+Finally assign numbers \(0,1,2\) to the designated states and symbols,
+assign the remaining numbers by the order of their construction, sort
+the full row list, and serialize its state count, alphabet size, input
+bitmap and rows exactly as in
+Definition~\ref{def:p04-program-serialization}.  Finite enumeration,
+sorting and the specified tuple coding terminate and produce a valid
+index.  Renaming invariance preserves all runs.  This proves both the
+behavioral assertion and the total computability of the compiler.
+\end{proof}
+\end{annexitem}
+
+\needspace{8\baselineskip}
+\begin{annexitem}{annex:p04.local.universal}{thm:p04-local-universal}{Local interpreter}
+\begin{proof}
+Apply Theorem~\ref{thm:p04-counter-compilation} to the following counter
+procedure.  Its numerical input is the
+binary numeral for \(\operatorname{code}_2(e,x)\).  The following finite
+arithmetic routines are available on counters.  A copy preserving a
+counter moves its tallies to a target and a scratch counter in parallel,
+then restores the source from the scratch counter.  Addition uses such
+copies and repeated increment; multiplication uses repeated addition.
+Comparison and truncated subtraction use copied counters, decrementing
+them together until one is zero.  A loop with a copied bound executes
+exactly that many iterations.  These routines terminate.  They implement
+the bounded search for the inverse of the Cantor pairing already given
+in Section~\ref{sec:turing-machines-01}; division by two is implemented
+by removing pairs of tallies.  Consequently they also implement finite
+binary digit extraction and right-nested tuple encoding and decoding.
+Every routine has a fixed finite instruction list, using scratch counters
+which it clears before reuse.
+
+There is no bound on the length of a simulated program or tape.  Variable
+finite lists are stored as two numbers: their length and their nested
+pair code.  The empty list has length zero and code zero; a nonempty list
+with first entry \(a\) and remaining list code \(v\) uses
+\(\operatorname{pair}_{\N}(a,v)\), with a terminal zero after its last
+entry.  This auxiliary list code is separate from the source's
+\(\operatorname{code}_k\), whose last entry is unpaired.  Length-bounded
+pairing inversions implement scan, lookup, and reconstruction of these
+lists.  Thus unbounded storage size uses counter values, not additional
+counters or control states.
+
+Decode \((e,x)\), invert the outer pairing of \(e\), and apply the exact
+finite validity checks in
+Definition~\ref{def:p04-program-serialization}: the stated length,
+\(n,b\geq3\), input bitmap, all row-field bounds, directions and ordered
+nonhalting keys.  Reject an incorrect length before interpreting its
+fields.  Each check uses finite arithmetic and a length-bounded scan.
+If it fails, enter the one-instruction infinite increment loop.  Otherwise
+retain the full decoded transition table as a list of five-field rows.
+
+Represent a simulated configuration by its state \(q\), its head
+coordinate \(h\), and a finite dictionary of its nonblank cells.  Encode
+integers by \(2j\) for \(j\geq0\) and \(2(-j)-1\) for \(j<0\);
+left and right movement are terminating arithmetic operations on these
+codes.  A dictionary is a list of coordinate/symbol pairs with distinct
+coordinates; an absent coordinate means blank.  Lookup scans its finite
+length.  Replacement changes its matching entry, deletes it when the
+new symbol is blank, or appends a previously absent nonblank entry.
+These operations preserve distinctness.  Initialize \(q=0,h=0\) and
+the cells \(0,\ldots,|\operatorname{bin}(x)|-1\) with the corresponding
+designated digit numbers \(1,2\).
+
+At a nonhalting state, look up the symbol at \(h\), find its unique row
+in the full transition table, replace that cell, move the head one cell
+in the row's direction, and update the state.  Each such operation
+terminates, because the table and current dictionary are finite.  By
+induction on the number of simulated steps, the state, head and dictionary
+represent exactly the configuration of the decoded machine after that
+many steps.  The base case is the specified binary input; the induction
+step is precisely the defining one-step rule.  Thus an infinite machine
+run gives infinitely many completed simulation steps, and every finite
+halt is reached after finitely many interpreter steps.
+
+At state \(2\), enter the infinite loop.  At state \(1\), scan coordinates
+\(0,1,\ldots\) until the first blank; this scan terminates since the
+dictionary is finite.  Check that the prefix is nonempty, uses only the
+designated binary digits, and has no leading zero unless it consists of
+the single zero digit.  An invalid prefix leads to the infinite loop.
+For a valid prefix evaluate its binary value by the recurrence
+\(v\mapsto2v+b\), and return it.  The compiler then writes its canonical
+binary output.  This is exactly the definition of \(\varphi_e(x)\),
+including every undefined case.  The compiled procedure therefore
+computes the asserted partial function \(U\).
+\end{proof}
+\end{annexitem}
+
+\needspace{8\baselineskip}
+\begin{annexitem}{annex:p04.local.parameter}{thm:p04-local-parameter}{Literal specialization}
+\begin{proof}
+Fix \(m,n\geq1\).  Given numbers \(e,a_1,\ldots,a_m\), print a counter
+procedure with those literal initializations and the following fixed
+instruction blocks.  On numerical input \(z\), decode
+\(z=\operatorname{code}_n(x_1,\ldots,x_n)\), compute
+\[
+  w=\operatorname{code}_{m+n}(a_1,\ldots,a_m,x_1,\ldots,x_n),
+\]
+and execute the counter interpreter in
+Annex~\ref{annex:p04.local.universal} on the pair \((e,w)\).
+For \(n=1\) decoding is the identity; for larger \(n\) it uses exactly
+\(n-1\) pairing inversions.  The two blocks for coding and decoding are
+finite terminating counter procedures by that annex.  Supply the
+interpreter's input counters and enter its start instruction.  Rename all
+scratch counters and instruction labels beforehand so that literal
+storage and runtime data are not overwritten by a different block.
+Clear each scratch counter at its first use.  This is a mechanical
+operation on finite instruction lists.
+
+At the three interfaces, respectively, the designated counters contain
+\((e,\bar a,z)\), then \((e,\bar a,\bar x)\), and then \((e,w)\).
+Termination of the first two blocks proves these assertions for every
+input; the interpreter invariant proves that the last block returns
+exactly when \(\varphi_e(w)\) is defined, with that value.  The
+\((m+n)\)-ary application convention identifies this value with
+\(\varphi_e(\bar a,\bar x)\).  In particular, if \(e\) is invalid the
+generated program reaches the interpreter's infinite loop rather than
+failing to compile.
+
+Apply the total compiler from
+Theorem~\ref{thm:p04-counter-compilation} to this printed procedure and
+call its valid index \(\mathsf{par}_n^m(e,\bar a)\).  Production of
+literal chains, finite instruction concatenation, fresh names,
+normalization and serialization all terminate.  Thus the index map is
+total computable, independently of whether its output program returns.
+On input \(\operatorname{bin}(\operatorname{code}_n(\bar x))\) the
+compiled machine has exactly the behavior just proved, establishing
+the required strong equality.  If \(m,n\) are also supplied, a loop
+prints their finitely many tuple and initialization blocks; the same
+construction is total on positive arities.  No search for an index of
+a semantically specified function occurs in this compiler.
+\end{proof}
+\end{annexitem}
+
+\needspace{8\baselineskip}
+\begin{annexitem}{annex:p04.local.recursion}{thm:p04-local-recursion}{Diagonal specialization}
+\begin{proof}
+Fix \(k\geq1\) and the partial computable function \(g\).  Choose a
+valid index \(b\) of arity \(k+1\) for \(g\) by
+Theorem~\ref{thm:enumeration}.  Put
+\[
+  d(z)=\mathsf{par}_k^1(z,z),
+  \qquad
+  H(z,\bar x)\simeq g(d(z),\bar x).
+\]
+The map \(d\) is total computable by
+Theorem~\ref{thm:p04-local-parameter}.  More explicitly, compute
+\(d(z)\), form the tuple code of \((d(z),\bar x)\), and run
+\(U(b,\operatorname{code}_{k+1}(d(z),\bar x))\).
+The literal compiler and the interpreter give a machine for this
+composition, so \(H\) is partial computable even when \(g\) is not
+total.  Choose a valid index \(a\) for \(H\) of arity \(k+1\), and
+let \(e=d(a)\).  This is a valid index because the parameter compiler
+always produces one.  For every \(\bar x\),
+\[
+ \varphi_e(\bar x)
+ \simeq\varphi_a(a,\bar x)
+ \simeq H(a,\bar x)
+ \simeq g(d(a),\bar x)
+ =g(e,\bar x).
+\]
+The first equality is parameter specialization, the second is the chosen
+index property, and the third is the definition of \(H\).  Each
+\(\simeq\) equates both definedness and value.  This is Kleene's
+diagonal argument with the local specialization map in place of his
+equation-code operation.
+
+For a total computable \(f\), take \(k=1\) and
+\(g(z,x)\simeq U(f(z),x)\).  Its machine first computes \(f(z)\),
+which always returns, and then runs the interpreter.  The proved result
+gives \(\varphi_e(x)\simeq U(f(e),x)\simeq\varphi_{f(e)}(x)\).
+An invalid value \(f(e)\) simply denotes the everywhere undefined
+function, as required by the fixed numbering.
+
+The particular intermediate transformation used in the inherited sketch
+can now also be constructed.  The procedure
+\(B(x,y)\simeq U(U(x,x),y)\) first runs the inner interpreter and
+starts the outer one only if the inner call returns.  Let \(c\) be a
+valid binary index for this procedure, and set
+\(p(x)=\mathsf{par}_1^1(c,x)\).  This map is total computable and
+satisfies
+\(\varphi_{p(x)}(y)\simeq\varphi_{\varphi_x(x)}(y)\), with both
+sides undefined when the inner computation fails to return.  Thus the
+inherited fixed-point calculation has its previously omitted program
+transformation, without invoking an additional recursion theorem.
+\end{proof}
+\end{annexitem}

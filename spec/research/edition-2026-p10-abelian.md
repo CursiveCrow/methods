@@ -103,3 +103,81 @@ observations, not independent correctness or source-admission certificates.
 Final file extents and hashes are returned after saving; this note does not
 contain a self-referential hash. No tests, independent reviews, builds,
 manuscript rendering, children, or shared-file edits occurred.
+
+## Author completion and verification, 2026-10-26
+
+This dated continuation supersedes the earlier block's remaining-work and
+no-build statements for this finite packet. It does not alter the source
+allocation or claim independent admission.
+
+Read and checked all sixteen existing body/annex proof pairs. In particular,
+the order of normality, graph equalizers, image factorization, biproducts,
+addition and the shear inverse avoids using addition before it is constructed.
+The snake proof constructs its connecting arrow, proves the two interior
+kernel/cokernel exactness positions with epic pullback covers, and proves
+naturality. No module embedding or untyped element chase is substituted.
+
+Visually rechecked the original held scan pixels for printed 42--45 and
+50--62. The revised packet adds four reciprocal proof pairs (twenty total):
+
+- `thm:p10-ab-classical-route` / `annex:p10.ab.17` gives all four lemmas
+  2.61--2.64, including the exact partial endpoints of the three-by-three
+  diagram. The proof joins kernel cancellation to the two orientations of
+  a pullback. The nine-lemma annex now also spells out the source's 2.64
+  plus dual route, alongside the separately retained snake derivation.
+- `thm:p10-ab-matrix-completion` / `annex:p10.ab.18` completes Exercise 2-A:
+  the self-biproduct monoid construction, finite rectangular matrices,
+  concatenation biproducts and the universal additive extension. Exercise
+  2-A.1 is also supplied by the existing additive-bridge proof.
+- `thm:p10-ab-idempotents` / `annex:p10.ab.19` completes Exercise 2-B:
+  epi--mono splitting, the category of idempotents with identity `e`, its
+  actual splitting construction, universal extension, and inherited products
+  and coproducts. A set-indexed or explicitly chosen family of splittings
+  replaces any implicit proper-class choice.
+- `thm:p10-ab-group-representables` / `annex:p10.ab.20` completes Exercise 2-C:
+  internal groups, the one-sided-to-two-sided law argument, group-valued
+  pointed representables, and recovery of multiplication from the projections.
+
+The exactness-recognition test 2.42, equalizer-as-kernel-of-difference 2.51,
+kernel reflection and monicity equivalence 2.52, and zero-composite criterion
+2.53 are now explicit in the existing bridge/base-change declarations and
+proofs. The Noether proof includes the full exact diagrams of 2.66--2.67,
+not just the quotient isomorphism formulas. Existing stable labels are retained.
+
+Source qualification: on held printed p.60, Exercise 2-A.2 says uniqueness
+under AC1--AC2 without explicitly requiring zero to be neutral. Taken
+literally those two conditions also allow the degenerate operation `f star
+g = 0` on every parallel pair, even when a nonzero arrow exists. The active
+statement therefore asserts uniqueness with zero neutral and proves both that
+claim and the counterexample to the unnormalized claim. The held source bytes
+are unchanged; this is an explicitly justified mathematical qualification,
+not an assertion that the source printed the strengthened hypothesis.
+
+The 24 original Freyd registry rows and two projection rows had blank macro
+cells or semantic type words in the precedence column. Their normalization
+populates missing macros with the exact displayed TeX and uses `n/a` for
+binding precedence. Glyphs, roles, first-use records and notes are preserved.
+A further 24-row intake records the new constructions. Eighteen explicit
+scope bindings locate the older names in this packet; the two `q_f` meanings
+are narrowed to their actual declaration/proof regions, including the
+cokernel use in `annex:p10.ab.9`. Proposed-route validation of all 50 rows
+against canonical SHA-256
+`924fb1a6c603bf33cf42f96bdc36e03c815f3570439ab318227d1ee938122aae`
+reported zero resolution errors and zero collisions. That private test added
+the two still-unrouted files to its in-memory reader index; it did not mutate
+the canonical registry or pretend the route was already installed.
+
+Verification: twenty reciprocal `proved` declarations/annexitems, no duplicate
+owned labels, balanced environments, preservation of the sixteen prior proof
+pairs, and successful TeX Live/Biber compilation with the categorical-toolkit
+prerequisites into a 43-page review PDF. The source diagrams and selected
+rendered statement/proof pages were visually inspected; no clipped formulas
+or diagrams were observed. This is author review and local compilation, not
+formal independent acceptance. The global build and shared registry merge
+remain the parent's integration responsibility.
+
+Remaining source boundaries: Borceux1994 volume2 Chapter1 and its fifteen
+allocated groups remain undischarged by this different Freyd presentation.
+Neither original 1964 printing is separately held. Later Freyd embedding,
+torsion/localization, projective/injective and derived-functor constructions
+remain separate obligations; these additions do not silently retire them.

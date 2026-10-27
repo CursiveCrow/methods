@@ -1,0 +1,690 @@
+%% toc: P3 39 39.2
+\section{Proofs: definitional complexity, rank definability and pebble games}
+\label{sec:annex-p03-w03-p03-055-definitional-complexity}
+
+Conventions are those of \cref{def:p03-w03-p03-055-setting}. The truth of a
+formula of \(\mathrm{FO}\) or of \(\mathcal L_{\infty,\omega}\) under an
+assignment depends only on the values of its free variables: this is an
+induction on formulas in which the infinitary clauses are immediate, as
+recorded at the start of \cref{sec:annex-p03-w03-p03-039-marker}. It is used
+below without further mention.
+
+\begin{annexitem}{annex:p03-w03-p03-055-rank-variables}{thm:p03-w03-p03-055-rank-variables}{Rank bounds the number of variables}
+\begin{proof}
+For a first-order formula \(\varphi\), a number \(d\ge0\) and an injective
+map \(\rho\) from a finite set of variables containing the free variables
+of \(\varphi\) into \(X_d\), define a formula
+\(\operatorname{tr}(\varphi,\rho,d)\) by recursion on \(\varphi\):
+\(\operatorname{tr}(\bottom,\rho,d)=\bottom\);
+\(\operatorname{tr}(y=z,\rho,d)\) is \(\rho(y)=\rho(z)\);
+\(\operatorname{tr}(R(y_1,\ldots,y_r),\rho,d)\) is
+\(R(\rho(y_1),\ldots,\rho(y_r))\); \(\operatorname{tr}\) commutes with
+\(\neg,\wedge,\vee\) (with the same \(\rho\) and \(d\), which is legitimate
+because the free variables of a component are free in the compound); and
+\[
+ \operatorname{tr}(\exists y\,\psi,\rho,d)=\exists x_{d+1}\,
+ \operatorname{tr}(\psi,\rho',d+1),\qquad
+ \operatorname{tr}(\forall y\,\psi,\rho,d)=\forall x_{d+1}\,
+ \operatorname{tr}(\psi,\rho',d+1),
+\]
+where \(\rho'\) agrees with \(\rho\) except that \(\rho'(y)=x_{d+1}\) (its
+domain is \(\dom\rho\cup\{y\}\)). Since \(\rho\) maps into \(X_d\) and
+\(x_{d+1}\notin X_d\), \(\rho'\) is injective into \(X_{d+1}\), and its
+domain contains every free variable of \(\psi\).
+
+By induction on \(\varphi\) we prove: \(\operatorname{tr}(\varphi,\rho,d)\)
+has the quantifier rank of \(\varphi\), all its variables lie in
+\(X_{d+\operatorname{qr}(\varphi)}\), and for every structure
+\(\mathcal A\) and all assignments \(s,s'\) with \(s'(\rho(y))=s(y)\) for
+\(y\in\dom\rho\),
+\(\mathcal A\entails\varphi[s]\iff
+\mathcal A\entails\operatorname{tr}(\varphi,\rho,d)[s']\).
+For \(\bottom\) and atomic formulas the rank is \(0\), the variables are
+values of \(\rho\), hence in \(X_d\), and the two sides say the same thing
+about the same elements because \(s'(\rho(y))=s(y)\). The Boolean cases
+follow directly from the induction hypothesis, since the rank of a compound
+is the maximum of the ranks of its components. For \(\exists y\,\psi\):
+\(\mathcal A\entails\exists y\,\psi[s]\) iff for some \(a\in A\),
+\(\mathcal A\entails\psi[s[y\mapsto a]]\). The assignments
+\(s[y\mapsto a]\) and \(s'[x_{d+1}\mapsto a]\) satisfy the hypothesis
+for \(\rho'\): at \(y\) both give \(a\), and for \(z\in\dom\rho\setminus\{y\}\),
+\(\rho'(z)=\rho(z)\in X_d\) differs from \(x_{d+1}\), so
+\(s'[x_{d+1}\mapsto a](\rho'(z))=s'(\rho(z))=s(z)\). By the induction
+hypothesis the condition is equivalent to
+\(\mathcal A\entails\operatorname{tr}(\psi,\rho',d+1)[s'[x_{d+1}\mapsto a]]\)
+for some \(a\), that is, to
+\(\mathcal A\entails\operatorname{tr}(\exists y\,\psi,\rho,d)[s']\). The
+rank rises by one on both sides, and the variables lie in
+\(\{x_{d+1}\}\cup X_{d+1+\operatorname{qr}(\psi)}=
+X_{d+\operatorname{qr}(\exists y\psi)}\). The case \(\forall y\,\psi\) is
+the same computation with ``for every \(a\in A\)'' in place of ``for some
+\(a\in A\)''.
+
+For \(\varphi\) with free variables among \(x_1,\ldots,x_n\) take \(d=n\)
+and \(\rho\) the identity on \(X_n\); then \(s'=s\) is allowed, so
+\(\operatorname{tr}(\varphi,\rho,n)\) is equivalent to \(\varphi\), has the
+same rank, and uses only variables in
+\(X_{n+\operatorname{qr}(\varphi)}\subseteq X_{n+m}\). For a sentence take
+\(n=0\) and \(\rho=\emptyset\): the variables lie in \(X_m\), so the
+translation is an \(\mathrm{FO}^m\)-sentence.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-055-rank-definability}{thm:p03-w03-p03-055-rank-definability}{Definability by rank and completeness of the game method}
+\begin{proof}
+(1) If \(\sigma\) has rank at most \(m\) and defines \(\mathcal K\) on
+\(\mathcal C\), and \(\mathcal A,\mathcal B\in\mathcal C\) with
+\(\mathcal A\equiv_m\mathcal B\) and \(\mathcal A\in\mathcal K\), then
+\(\mathcal A\entails\sigma\), hence \(\mathcal B\entails\sigma\), hence
+\(\mathcal B\in\mathcal K\).
+
+Conversely assume the closure condition. Let
+\(T=\{\operatorname{rec}_m(\mathcal A):\mathcal A\in\mathcal K\}\), the
+records of length \(0\) and rank \(m\) of
+\cref{def:p03-w03-p03-038-records}. It is a subset of the finite set
+\(\mathrm{Rec}_{0,m}\) (\cref{thm:p03-w03-p03-038-finite-records}), so
+\(\sigma\defeq\bigvee_{t\in T}\chi_t\) is a finite disjunction of the
+characteristic sentences of \cref{def:p03-w03-p03-038-characteristic}; it
+is \(\bottom\) if \(T=\emptyset\). Each \(\chi_t\) is a sentence of rank at
+most \(m\) (\cref{thm:p03-w03-p03-038-characteristic}), so \(\sigma\) is a
+first-order sentence of rank at most \(m\). Let
+\(\mathcal B\in\mathcal C\). If \(\mathcal B\in\mathcal K\), then
+\(t=\operatorname{rec}_m(\mathcal B)\in T\) and
+\(\mathcal B\entails\chi_t\) by \cref{thm:p03-w03-p03-038-characteristic},
+so \(\mathcal B\entails\sigma\). If \(\mathcal B\entails\sigma\), then
+\(\mathcal B\entails\chi_t\) for some \(t=\operatorname{rec}_m(\mathcal A)\)
+with \(\mathcal A\in\mathcal K\); by
+\cref{thm:p03-w03-p03-038-characteristic},
+\(\operatorname{rec}_m(\mathcal B)=t=\operatorname{rec}_m(\mathcal A)\), and
+by \cref{thm:p03-w03-p03-038-pointed-ef} (with \(n=0\), implication from
+equal records to agreement) \(\mathcal A\equiv_m\mathcal B\). The closure
+condition gives \(\mathcal B\in\mathcal K\).
+
+(2) Every first-order sentence has some finite rank, so by (1)
+\(\mathcal K\) is first-order definable on \(\mathcal C\) iff the closure
+condition of (1) holds for some \(m\). The condition fails for \(m\)
+exactly when there are \(\mathcal A\in\mathcal K\) and
+\(\mathcal B\in\mathcal C\setminus\mathcal K\) with
+\(\mathcal A\equiv_m\mathcal B\), and by
+\cref{thm:p03-w03-p03-038-pointed-ef} (with \(n=0\)) this is the same as
+Duplicator having a winning strategy in the \(m\)-round game on them. Hence
+\(\mathcal K\) is not first-order definable on \(\mathcal C\) iff such a
+pair exists for every \(m\).
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-055-pebble}{thm:p03-w03-p03-055-pebble}{Pebble games characterize \(k\)-variable equivalence}
+\begin{proof}
+\emph{(1)\(\Rightarrow\)(2).} Let \(\mathcal I\) be a winning family with
+\(\langle s,t\rangle\in\mathcal I\). We prove by induction on
+\(\mathcal L^k_{\infty\omega}\)-formulas \(\varphi\): for all
+\(s',t'\) with a common domain \(D'\subseteq X_k\) containing the free
+variables of \(\varphi\) and with \(\langle s',t'\rangle\in\mathcal I\),
+\(\mathcal A\entails\varphi[s']\iff\mathcal B\entails\varphi[t']\).
+Both sides of \(\bottom\) fail. For \(y=z\) with \(y,z\in D'\), the
+pairs \((s'(y),t'(y))\) and \((s'(z),t'(z))\) belong to the partial
+isomorphism \(\langle s',t'\rangle\), so \(s'(y)=s'(z)\iff t'(y)=t'(z)\);
+for \(R(y_1,\ldots,y_r)\) the pairs \((s'(y_i),t'(y_i))\) belong to it, so
+\(R\) holds of the \(s'\)-values iff it holds of the \(t'\)-values. For \(\neg\varphi\), \(\bigwedge\Phi\) and \(\bigvee\Phi\) the
+free variables of each component lie in \(D'\), and the induction
+hypothesis applied to every component gives the claim.
+
+Let \(\varphi=\exists x_i\,\psi\), put \(D''=D'\setminus\{x_i\}\) and
+\(f=\langle s'|_{D''},t'|_{D''}\rangle\). Then
+\(f\subseteq\langle s',t'\rangle\), so \(f\in\mathcal I\), and
+\(|f|\le|D''|\le k-1<k\) because \(D''\subseteq X_k\setminus\{x_i\}\).
+Suppose \(\mathcal A\entails\varphi[s']\) with witness \(a\), so
+\(\mathcal A\entails\psi[s'|_{D''}[x_i\mapsto a]]\) (this assignment is
+\(s'[x_i\mapsto a]\)). By the forth property there is \(g\in\mathcal I\)
+with \(f\subseteq g\) and \(a\in\dom g\); let \(b=g(a)\). Then
+\(\langle s'|_{D''}[x_i\mapsto a],t'|_{D''}[x_i\mapsto b]\rangle=
+f\cup\{(a,b)\}\subseteq g\) lies in \(\mathcal I\), and the free variables
+of \(\psi\) lie in \(D''\cup\{x_i\}\). The induction hypothesis gives
+\(\mathcal B\entails\psi[t'|_{D''}[x_i\mapsto b]]\), so
+\(\mathcal B\entails\varphi[t']\). The implication from \(\mathcal B\) to
+\(\mathcal A\) uses the back property to find \(a\) for a witness \(b\).
+For \(\varphi=\forall x_i\,\psi\) with \(\mathcal A\entails\varphi[s']\):
+for any \(b\in B\) the back property gives \(g\supseteq f\) in
+\(\mathcal I\) with \(b\) in its range; with \(a=g^{-1}(b)\), the relation
+\(f\cup\{(a,b)\}\subseteq g\) is in \(\mathcal I\), and
+\(\mathcal A\entails\psi[s'[x_i\mapsto a]]\) gives
+\(\mathcal B\entails\psi[t'[x_i\mapsto b]]\); so
+\(\mathcal B\entails\varphi[t']\). The converse uses the forth property.
+Applied to \(s,t\), the claim gives
+\((\mathcal A,s)\equiv^k_{\infty\omega}(\mathcal B,t)\).
+
+\emph{(2)\(\Rightarrow\)(1).} Let \(\mathcal I\) be the set of all relations
+\(\langle s',t'\rangle\) with \(s'\colon D'\to A\), \(t'\colon D'\to B\),
+\(D'\subseteq X_k\) and \((\mathcal A,s')\equiv^k_{\infty\omega}(\mathcal B,t')\).
+It contains \(\langle s,t\rangle\). Each member is a partial
+isomorphism: the formulas \(y=z\) and \(R(y_1,\ldots,y_r)\) with variables
+in \(D'\) belong to \(\mathcal L^k_{\infty\omega}\), and agreement on them
+is exactly the defining condition. Each member has at most
+\(|D'|\le k\) pairs.
+
+Closure under subsets: let \(f\subseteq\langle s',t'\rangle\) and
+\(D''=\{x\in D':(s'(x),t'(x))\in f\}\). Every pair of \(f\) has the form
+\((s'(x),t'(x))\) with \(x\in D''\), so
+\(f=\langle s'|_{D''},t'|_{D''}\rangle\); formulas with free variables in
+\(D''\) have them in \(D'\), so
+\((\mathcal A,s'|_{D''})\equiv^k_{\infty\omega}(\mathcal B,t'|_{D''})\) and
+\(f\in\mathcal I\).
+
+Forth: let \(f=\langle s',t'\rangle\in\mathcal I\) with \(|f|<k\), and
+\(a\in A\). Choose \(D''\subseteq D'\) containing, for each pair in \(f\),
+exactly one variable \(x\) with \((s'(x),t'(x))\) equal to that pair. Then
+\(f=\langle s'',t''\rangle\) for \(s''=s'|_{D''}\), \(t''=t'|_{D''}\), the
+two restrictions are still \(\equiv^k_{\infty\omega}\)-equivalent, and
+\(|D''|=|f|<k\); choose \(x_i\in X_k\setminus D''\). We claim that some
+\(b\in B\) satisfies
+\((\mathcal A,s''[x_i\mapsto a])\equiv^k_{\infty\omega}(\mathcal B,t''[x_i\mapsto b])\).
+Otherwise choose for each \(b\in B\) an
+\(\mathcal L^k_{\infty\omega}\)-formula \(\theta_b\) with free variables in
+\(D''\cup\{x_i\}\) such that \(\mathcal A\entails\theta_b[s''[x_i\mapsto a]]\)
+and \(\mathcal B\not\entails\theta_b[t''[x_i\mapsto b]]\) (replacing a
+formula by its negation if the disagreement goes the other way). The formula
+\(\Theta=\exists x_i\bigwedge_{b\in B}\theta_b\) uses only variables of
+\(X_k\), so it lies in \(\mathcal L^k_{\infty\omega}\), and its free
+variables lie in \(D''\). It holds in \(\mathcal A\) under \(s''\), with
+witness \(a\), and fails in \(\mathcal B\) under \(t''\), since every
+\(b\) falsifies \(\theta_b\). This contradicts the equivalence of
+\((\mathcal A,s'')\) and \((\mathcal B,t'')\). With such a \(b\),
+\(g=\langle s''[x_i\mapsto a],t''[x_i\mapsto b]\rangle=f\cup\{(a,b)\}\) is
+in \(\mathcal I\), extends \(f\) and has \(a\) in its domain.
+
+Back: with \(f\), \(D''\), \(x_i\) as before and \(b\in B\), suppose no
+\(a\in A\) gives
+\((\mathcal A,s''[x_i\mapsto a])\equiv^k_{\infty\omega}(\mathcal B,t''[x_i\mapsto b])\).
+Choose for each \(a\in A\) a formula \(\theta_a\) of
+\(\mathcal L^k_{\infty\omega}\) with free variables in \(D''\cup\{x_i\}\),
+true in \(\mathcal B\) under \(t''[x_i\mapsto b]\) and false in
+\(\mathcal A\) under \(s''[x_i\mapsto a]\). Then
+\(\exists x_i\bigwedge_{a\in A}\theta_a\) holds in \(\mathcal B\) under
+\(t''\) and fails in \(\mathcal A\) under \(s''\), a contradiction; the
+\(a\) so obtained gives \(g=f\cup\{(a,b)\}\in\mathcal I\) with \(b\) in its
+range. So \(\mathcal I\) is a winning family containing
+\(\langle s,t\rangle\).
+
+\emph{Finite structures.} (2)\(\Rightarrow\)(3) holds because
+\(\mathrm{FO}^k\subseteq\mathcal L^k_{\infty\omega}\). For
+(3)\(\Rightarrow\)(1), let \(\mathcal I_{\mathrm{FO}}\) be defined as
+\(\mathcal I\) above with \(\equiv^k\) in place of
+\(\equiv^k_{\infty\omega}\). The verification that its members are partial
+isomorphisms with at most \(k\) pairs, and that it is closed under subsets,
+used only atomic formulas and the dependence of truth on free variables, and
+applies verbatim to \(\mathrm{FO}^k\). In the forth step the formulas
+\(\theta_b\) are now chosen in \(\mathrm{FO}^k\); since \(B\) is finite,
+\(\bigwedge_{b\in B}\theta_b\) is a finite conjunction, so
+\(\Theta\in\mathrm{FO}^k\), and the contradiction is with \(\equiv^k\). In
+the back step the conjunction over the finite set \(A\) is finite for the
+same reason. Hence \(\mathcal I_{\mathrm{FO}}\) is a winning family
+containing \(\langle s,t\rangle\). Together with (1)\(\Rightarrow\)(2) this
+closes the cycle of implications.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-055-k-definability}{thm:p03-w03-p03-055-k-definability}{Definability in \(k\)-variable infinitary logic on finite structures}
+\begin{proof}
+For finite structures, \(\mathcal A\equiv^k\mathcal B\) is equivalent to
+Duplicator winning the \(k\)-pebble game and to
+\(\mathcal A\equiv^k_{\infty\omega}\mathcal B\), by
+\cref{thm:p03-w03-p03-055-pebble} with \(D=\emptyset\).
+
+Suppose an \(\mathcal L^k_{\infty\omega}\)-sentence \(\Phi\) defines
+\(\mathcal K\) on \(\mathcal C\). If \(\mathcal A,\mathcal B\in\mathcal C\),
+\(\mathcal A\equiv^k\mathcal B\) and \(\mathcal A\in\mathcal K\), then
+\(\mathcal A\equiv^k_{\infty\omega}\mathcal B\), so \(\mathcal B\entails\Phi\)
+and \(\mathcal B\in\mathcal K\).
+
+Conversely assume the closure condition. For a finite structure
+\(\mathcal A\) let \(\sigma_{\mathcal A}\) be the conjunction of the set of
+all \(\mathrm{FO}^k\)-sentences true in \(\mathcal A\); it is an
+\(\mathcal L^k_{\infty\omega}\)-sentence. A structure satisfies
+\(\sigma_{\mathcal A}\) iff it is \(\equiv^k\)-equivalent to \(\mathcal A\):
+if \(\mathcal B\entails\sigma_{\mathcal A}\) and \(\theta\) is an
+\(\mathrm{FO}^k\)-sentence, then \(\theta\) or \(\neg\theta\) is a conjunct,
+according to its truth in \(\mathcal A\), and \(\mathcal B\) agrees; the
+converse is immediate. Let \(R\) be the set of members of \(\mathcal K\)
+whose universe is \(\{0,\ldots,n-1\}\) for some \(n\ge1\); it is a set, and
+every member of \(\mathcal K\) is isomorphic to one of its members. Put
+\(\Phi=\bigvee_{\mathcal A\in R}\sigma_{\mathcal A}\). For
+\(\mathcal B\in\mathcal C\): if \(\mathcal B\in\mathcal K\), choose
+\(\mathcal A\in R\) isomorphic to \(\mathcal B\); isomorphic structures
+satisfy the same sentences (\cref{thm:p03-w03-p03-039-iso-invariance}), so
+\(\mathcal B\entails\sigma_{\mathcal A}\) and \(\mathcal B\entails\Phi\). If
+\(\mathcal B\entails\Phi\), then \(\mathcal B\equiv^k\mathcal A\) for some
+\(\mathcal A\in R\subseteq\mathcal K\), and the closure condition gives
+\(\mathcal B\in\mathcal K\).
+
+Finally \(\mathcal L^\omega_{\infty\omega}\) is the union of the
+\(\mathcal L^k_{\infty\omega}\), so a defining sentence of it lies in some
+\(\mathcal L^k_{\infty\omega}\), and the first part applies with that \(k\).
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-055-unbounded}{thm:p03-w03-p03-055-unbounded}{Without a variable bound every finite-structure class is definable}
+\begin{proof}
+Let \(\mathcal A\) be finite with universe \(\{a_1,\ldots,a_n\}\), the
+\(a_i\) distinct, \(\bar a=(a_1,\ldots,a_n)\), and
+\(S=\operatorname{rec}_0(\mathcal A,\bar a)\subseteq\mathrm{At}_n\), with
+\(\chi_S\) as in \cref{def:p03-w03-p03-038-characteristic}. Put
+\[
+ \delta_{\mathcal A}\defeq\exists x_1\cdots\exists x_n\Bigl(
+ \chi_S\wedge
+ \forall x_{n+1}\bigvee_{i=1}^n x_{n+1}=x_i\Bigr).
+\]
+If \(h\colon\mathcal A\to\mathcal B\) is an isomorphism, the elements
+\(h(a_i)\) witness \(\delta_{\mathcal A}\) in \(\mathcal B\): an isomorphism
+preserves the truth of atomic formulas, so the \(h(a_i)\) satisfy exactly
+the members of \(S\) among the formulas of \(\mathrm{At}_n\), and they
+exhaust \(B\). Conversely, if \(b_1,\ldots,b_n\) witness \(\delta_{\mathcal A}\) in
+\(\mathcal B\), then \(\langle\bar a,\bar b\rangle\) is a partial
+isomorphism: by \cref{thm:p03-w03-p03-038-characteristic}
+with \(j=0\), \(\operatorname{rec}_0(\mathcal B,\bar b)=S\), so the two
+tuples satisfy the same formulas of \(\mathrm{At}_n\), which is the
+definition of a partial isomorphism in
+\cref{def:p03-w03-p03-038-positions}; whose domain is all of \(A\) and whose range is all of \(B\) by the
+last conjunct; so it is an isomorphism. Thus \(\mathcal B\entails
+\delta_{\mathcal A}\) iff \(\mathcal B\cong\mathcal A\).
+
+Since \(\tau\) is finite, for each \(n\) there are finitely many
+\(\tau\)-structures with universe \(\{0,\ldots,n-1\}\), so the set \(R\) of
+members of \(\mathcal K\) with such a universe is countable, and every
+member of \(\mathcal K\) is isomorphic to a member of \(R\). The countable
+disjunction \(\bigvee_{\mathcal A\in R}\delta_{\mathcal A}\) of first-order
+sentences holds in a finite \(\mathcal B\) iff \(\mathcal B\) is isomorphic
+to a member of \(R\), iff \(\mathcal B\in\mathcal K\), because
+\(\mathcal K\) is closed under isomorphism.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-055-pebble-basic}{thm:p03-w03-p03-055-pebble-basic}{Monotonicity in the number of pebbles}
+\begin{proof}
+Spoiler wins the \(k\)-pebble game exactly when Duplicator has no winning
+family in the sense of \cref{def:p03-w03-p03-055-pebble}, so the two
+formulations of the first claim are contrapositives of each other. By
+\cref{thm:p03-w03-p03-055-pebble} with \(D=\emptyset\), Duplicator wins the
+\(k\)-pebble game on \(\mathcal A\) and \(\mathcal B\) if and only if
+\(\mathcal A\equiv^k_{\infty\omega}\mathcal B\), and likewise for \(k'\).
+Since \(X_k\subseteq X_{k'}\), every \(\mathcal L^k_{\infty\omega}\)-sentence
+is an \(\mathcal L^{k'}_{\infty\omega}\)-sentence. Hence
+\(\mathcal A\equiv^{k'}_{\infty\omega}\mathcal B\) implies
+\(\mathcal A\equiv^k_{\infty\omega}\mathcal B\), which is the first claim.
+The relation \(\equiv^k_{\infty\omega}\) between structures says that every
+\(\mathcal L^k_{\infty\omega}\)-sentence has the same truth value in both. Equality of truth values is
+reflexive, symmetric and transitive, sentence by sentence, so
+\(\equiv^k_{\infty\omega}\) is an equivalence relation, and by
+\cref{thm:p03-w03-p03-055-pebble} so is the relation of the game.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-055-finitely-many-k}{thm:p03-w03-p03-055-finitely-many-k}{Finitely many \(k\)-variable formulas of each rank}
+\begin{proof}
+For \(E\subseteq X_k\) let \(F_m(E)\) be the set of
+\(\mathrm{FO}^k\)-formulas of quantifier rank at most \(m\) whose free
+variables lie in \(E\). For formulas with free variables in \(X_k\) write
+\(\varphi\sim\psi\) when \(\mathcal A\entails\varphi[s]\iff
+\mathcal A\entails\psi[s]\) for every structure \(\mathcal A\) and every
+\(s\colon X_k\to A\). This is logical equivalence: an assignment whose
+domain contains the free variables of both formulas can be restricted to
+those variables and then extended to all of \(X_k\), as \(A\neq\emptyset\),
+without changing either truth value.
+
+Call \emph{basic of level \(0\)} the atomic formulas with variables in
+\(X_k\), and \emph{basic of level \(m+1\)} these together with the formulas
+\(\exists x_i\,\psi\) and \(\forall x_i\,\psi\) for \(i\le k\) and
+\(\psi\in F_m(X_k)\). By induction on formulas, every member of
+\(F_0(X_k)\) is built from basic formulas of level \(0\) and \(\bottom\) by
+\(\neg,\wedge,\vee\) (a formula of rank \(0\) has no quantifier), and every
+member of \(F_{m+1}(X_k)\) is built in the same way from basic formulas of
+level \(m+1\) and \(\bottom\): a quantified subformula
+\(\exists x_i\,\psi\) or \(\forall x_i\,\psi\) met while descending through
+the connectives has rank at most \(m+1\) and variables in \(X_k\), so
+\(\psi\in F_m(X_k)\).
+
+We show by induction on \(m\) that \(F_m(X_k)\) meets only finitely many
+\(\sim\)-classes. There are \(k^2\) equalities and, for each
+\(R\in\tau\) of arity \(r\), \(k^r\) atomic formulas \(R(y_1,\ldots,y_r)\)
+with \(y_j\in X_k\); as \(\tau\) is finite there are finitely many atomic
+formulas with variables in \(X_k\). For level \(m+1\), let
+\(\psi_1,\ldots,\psi_N\) represent the classes met by \(F_m(X_k)\) (the
+induction hypothesis). If \(\psi\sim\psi_j\), then
+\(\exists x_i\,\psi\sim\exists x_i\,\psi_j\): for \(s\colon X_k\to A\),
+\(\mathcal A\entails\exists x_i\,\psi[s]\) iff
+\(\mathcal A\entails\psi[s[x_i\mapsto a]]\) for some \(a\in A\), and
+\(s[x_i\mapsto a]\) is again an assignment on \(X_k\), so this holds iff
+\(\mathcal A\entails\psi_j[s[x_i\mapsto a]]\) for some \(a\), iff
+\(\mathcal A\entails\exists x_i\,\psi_j[s]\); the universal case is the same
+with ``for every \(a\)''. So the basic formulas of each level fall into
+finitely many classes; let \(\beta_1,\ldots,\beta_M\) represent them.
+
+For \(\mathcal A\) and \(s\colon X_k\to A\) let
+\(v(\mathcal A,s)\in\{0,1\}^M\) list the truth values of
+\(\beta_1,\ldots,\beta_M\). To a formula \(\varphi\) built from basic
+formulas and \(\bottom\) by connectives assign a function
+\(f_\varphi\colon\{0,1\}^M\to\{0,1\}\): for a basic formula, the projection
+onto the coordinate of its representative; \(f_\bottom=0\); and \(f\)
+commutes with the connectives, read as operations on \(\{0,1\}\). By
+induction on this construction, the truth value of \(\varphi\) at
+\((\mathcal A,s)\) is \(f_\varphi(v(\mathcal A,s))\). Hence formulas with the
+same function are \(\sim\)-equivalent, and the classes met by the level are
+at most the \(2^{2^M}\) functions. This completes the induction.
+
+Finally, \(F_m(D)\subseteq F_m(X_k)\), so \(F_m(D)\) meets only finitely
+many classes; choosing one member of \(F_m(D)\) in each class it meets gives
+a finite set of representatives.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-055-bounded-pebble}{thm:p03-w03-p03-055-bounded-pebble}{The \(m\)-round \(k\)-pebble game characterizes \(\equiv^k_m\)}
+\begin{proof}
+\emph{Game implies agreement.} We prove by induction on the
+\(\mathrm{FO}^k\)-formula \(\varphi\): for every \(m\ge\operatorname{qr}(\varphi)\)
+and every position \((s',t')\) whose common domain \(D'\) contains the free
+variables of \(\varphi\) and from which Duplicator wins
+\(G^k_m(\mathcal A,s';\mathcal B,t')\),
+\(\mathcal A\entails\varphi[s']\iff\mathcal B\entails\varphi[t']\). In
+either clause of \cref{def:p03-w03-p03-055-bounded-pebble} a win requires
+\(\langle s',t'\rangle\) to be a partial isomorphism. Both sides of
+\(\bottom\) fail. For \(y=z\) with \(y,z\in D'\) the pairs
+\((s'(y),t'(y))\) and \((s'(z),t'(z))\) lie in \(\langle s',t'\rangle\), so
+\(s'(y)=s'(z)\iff t'(y)=t'(z)\); for \(R(y_1,\ldots,y_r)\) the pairs
+\((s'(y_j),t'(y_j))\) lie in it, so \(R\) holds of the \(s'\)-values iff it
+holds of the \(t'\)-values. For \(\neg,\wedge,\vee\) the components have rank
+at most \(m\) and free variables in \(D'\), and the induction hypothesis
+applies with the same \(m\) and position.
+
+Let \(\varphi=\exists x_i\,\psi\), so \(m\ge1\); write \(m=m'+1\), with
+\(m'\ge\operatorname{qr}(\psi)\). Suppose \(\mathcal A\entails\varphi[s']\),
+witnessed by \(a\): \(\mathcal A\entails\psi[s'[x_i\mapsto a]]\). Clause 2
+of the definition, applied to the label \(i\) and the element \(a\), gives
+\(b\in B\) such that Duplicator wins
+\(G^k_{m'}(\mathcal A,s'[x_i\mapsto a];\mathcal B,t'[x_i\mapsto b])\). The new
+common domain \(D'\cup\{x_i\}\) contains the free variables of \(\psi\), so
+the induction hypothesis gives \(\mathcal B\entails\psi[t'[x_i\mapsto b]]\)
+and \(\mathcal B\entails\varphi[t']\). The converse implication uses the
+clause for moves in \(\mathcal B\). For \(\varphi=\forall x_i\,\psi\) and
+\(\mathcal A\entails\varphi[s']\), let \(b\in B\); the clause for moves in
+\(\mathcal B\) supplies \(a\) with a winning position
+\((s'[x_i\mapsto a],t'[x_i\mapsto b])\) for \(m'\) rounds; since
+\(\psi\) holds at \(s'[x_i\mapsto a]\), the induction hypothesis makes it hold
+at \(t'[x_i\mapsto b]\). So \(\mathcal B\entails\varphi[t']\), and the
+converse uses the clause for moves in \(\mathcal A\). Applied to \((s,t)\)
+and the formulas of rank at most \(m\) with free variables in \(D\), this
+gives \((\mathcal A,s)\equiv^k_m(\mathcal B,t)\).
+
+\emph{Agreement implies game.} By induction on \(m\), for all positions.
+Agreement on the atomic formulas with variables in \(D\) makes
+\(\langle s,t\rangle\) a partial isomorphism: for \(x,y\in D\) the formula
+\(x=y\) gives \(s(x)=s(y)\iff t(x)=t(y)\), and the formulas
+\(R(y_1,\ldots,y_r)\) with \(y_j\in D\) give preservation and reflection of
+\(R\). Atomic formulas have rank \(0\le m\). This settles \(m=0\) and the
+first requirement of clause 2.
+
+Let \((\mathcal A,s)\equiv^k_{m+1}(\mathcal B,t)\), let \(i\le k\) and
+\(a\in A\), and put \(D'=D\cup\{x_i\}\). Suppose that for no \(b\in B\) is
+\((\mathcal A,s[x_i\mapsto a])\equiv^k_m(\mathcal B,t[x_i\mapsto b])\). By
+\cref{thm:p03-w03-p03-055-finitely-many-k} fix a finite set \(\Psi\) of
+\(\mathrm{FO}^k\)-formulas of rank at most \(m\) with free variables in
+\(D'\) representing every such formula up to logical equivalence; \(\Psi\)
+is closed under negation up to equivalence, since a negation has the same
+rank, variables and free variables. For each \(b\in B\) there is a formula
+of rank at most \(m\), with free variables in \(D'\), true at
+\(s[x_i\mapsto a]\) and false at \(t[x_i\mapsto b]\) (if the disagreement goes
+the other way, take the negation); let \(\theta_b\in\Psi\) be equivalent to
+it. Then \(\Theta\defeq\exists x_i\bigwedge\{\theta_b:b\in B\}\) is a finite
+conjunction under one quantifier, an \(\mathrm{FO}^k\)-formula of rank at most
+\(m+1\) whose free variables lie in \(D'\setminus\{x_i\}\subseteq D\). It
+holds in \(\mathcal A\) at \(s\), with witness \(a\), and fails in
+\(\mathcal B\) at \(t\), since every \(b\) falsifies \(\theta_b\) at
+\(t[x_i\mapsto b]\). This contradicts
+\((\mathcal A,s)\equiv^k_{m+1}(\mathcal B,t)\). So some \(b\) gives
+\((\mathcal A,s[x_i\mapsto a])\equiv^k_m(\mathcal B,t[x_i\mapsto b])\), and by
+the induction hypothesis Duplicator wins \(G^k_m\) from that position. For
+\(i\le k\) and \(b\in B\) the same argument with the roles of the
+structures exchanged, using \(\exists x_i\bigwedge\{\theta_a:a\in A\}\),
+gives \(a\). All requirements of clause 2 hold, and Duplicator wins
+\(G^k_{m+1}(\mathcal A,s;\mathcal B,t)\).
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-055-bounded-consequences}{thm:p03-w03-p03-055-bounded-consequences}{Consequences of the two-parameter game}
+\begin{proof}
+(1) Every \(\mathrm{FO}^k\)-formula has some finite quantifier rank, so
+\((\mathcal A,s)\equiv^k(\mathcal B,t)\) holds if and only if
+\((\mathcal A,s)\equiv^k_m(\mathcal B,t)\) for every \(m\), and by
+\cref{thm:p03-w03-p03-055-bounded-pebble} if and only if Duplicator wins
+every \(G^k_m(\mathcal A,s;\mathcal B,t)\). For finite structures,
+\cref{thm:p03-w03-p03-055-pebble} identifies \(\equiv^k\) with Duplicator
+winning the \(k\)-pebble game.
+
+(2) Every \(\mathrm{FO}^k\)-sentence of rank at most \(m\) is a first-order
+sentence of rank at most \(m\), so \(\mathcal A\equiv_m\mathcal B\) implies
+\(\mathcal A\equiv^k_m\mathcal B\). Conversely let \(\sigma\) be a
+first-order sentence of rank at most \(m\). If \(m\ge1\),
+\cref{thm:p03-w03-p03-055-rank-variables} gives an equivalent sentence of the
+same rank with variables in \(X_m\subseteq X_k\), on which
+\(\mathcal A\) and \(\mathcal B\) agree when
+\(\mathcal A\equiv^k_m\mathcal B\); so they agree on \(\sigma\). If
+\(m=0\), \(\sigma\) has no quantifier and no free variable, so it has no
+variable at all; every atomic formula contains a variable, as all symbols
+of \(\tau\) have positive arity, so \(\sigma\) is built from \(\bottom\) by
+connectives and is itself an \(\mathrm{FO}^k\)-sentence of rank \(0\). Hence
+\(\mathcal A\equiv^k_m\mathcal B\) implies \(\mathcal A\equiv_m\mathcal B\).
+The equivalence with the \(m\)-round Ehrenfeucht--Fra\"iss\'e game is
+\cref{thm:p03-w03-p03-038-pointed-ef} for tuples of length \(0\).
+
+(3) If an \(\mathrm{FO}^k\)-sentence \(\sigma\) of rank at most \(m\) defines
+\(\mathcal K\) on \(\mathcal C\), \(\mathcal A\in\mathcal K\) and
+\(\mathcal A\equiv^k_m\mathcal B\) with \(\mathcal B\in\mathcal C\), then
+\(\mathcal B\entails\sigma\) and \(\mathcal B\in\mathcal K\). Conversely
+assume the closure condition. By
+\cref{thm:p03-w03-p03-055-finitely-many-k} with \(D=\emptyset\) there are
+\(\mathrm{FO}^k\)-sentences \(\theta_1,\ldots,\theta_N\) of rank at most
+\(m\) such that every \(\mathrm{FO}^k\)-sentence of rank at most \(m\) is
+logically equivalent to one of them. For a structure \(\mathcal A\) let
+\[
+ \zeta_{\mathcal A}\defeq\bigwedge_{\mathcal A\entails\theta_j}\theta_j\wedge
+ \bigwedge_{\mathcal A\not\entails\theta_j}\neg\theta_j ,
+\]
+an \(\mathrm{FO}^k\)-sentence of rank at most \(m\). A structure
+\(\mathcal B\) satisfies \(\zeta_{\mathcal A}\) iff
+\(\mathcal B\equiv^k_m\mathcal A\): if \(\mathcal B\entails\zeta_{\mathcal A}\),
+then \(\mathcal B\) agrees with \(\mathcal A\) on every \(\theta_j\), hence on
+every \(\mathrm{FO}^k\)-sentence of rank at most \(m\), each being equivalent
+to some \(\theta_j\); the converse is immediate. The sentence
+\(\zeta_{\mathcal A}\) is determined by the set of \(j\) with
+\(\mathcal A\entails\theta_j\), so as \(\mathcal A\) ranges over
+\(\mathcal K\) at most \(2^N\) distinct sentences occur; let \(\sigma\) be
+their disjunction (\(\bottom\) if \(\mathcal K\) is empty), an
+\(\mathrm{FO}^k\)-sentence of rank at most \(m\). If
+\(\mathcal B\in\mathcal K\) then \(\mathcal B\entails\zeta_{\mathcal B}\), a
+disjunct. If \(\mathcal B\in\mathcal C\) satisfies \(\sigma\), then
+\(\mathcal B\entails\zeta_{\mathcal A}\) for some \(\mathcal A\in\mathcal K\), so
+\(\mathcal A\equiv^k_m\mathcal B\) and the closure condition gives
+\(\mathcal B\in\mathcal K\).
+
+Every \(\mathrm{FO}^k\)-sentence has a finite rank, so \(\mathcal K\) is
+\(\mathrm{FO}^k\)-definable on \(\mathcal C\) iff the closure condition holds
+for some \(m\). It fails for \(m\) exactly when some
+\(\mathcal A_m\in\mathcal K\) and \(\mathcal B_m\in\mathcal C\setminus
+\mathcal K\) satisfy \(\mathcal A_m\equiv^k_m\mathcal B_m\), that is, by
+\cref{thm:p03-w03-p03-055-bounded-pebble} with \(D=\emptyset\), when
+Duplicator wins \(G^k_m(\mathcal A_m,\emptyset;\mathcal B_m,\emptyset)\).
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-055-cliques}{thm:p03-w03-p03-055-cliques}{Cliques and the strictness of both hierarchies}
+\begin{proof}
+(1) In a clique two vertices are adjacent iff they are distinct. Hence an
+injective partial map between cliques preserves and reflects adjacency and
+equality, and is a partial isomorphism. Let \(\mathcal I\) be the set of
+injective partial maps \(f\) from \(K_n\) to \(K_{n'}\) with \(|f|\le k\).
+It contains \(\emptyset\) and is closed under subsets. Forth: let
+\(f\in\mathcal I\), \(|f|<k\), and let \(a\) be a vertex of \(K_n\). If
+\(a\in\dom f\), take \(g=f\). Otherwise the range of \(f\) has fewer than
+\(k\le n'\) elements, so some vertex \(b\) of \(K_{n'}\) is outside it, and
+\(g=f\cup\{(a,b)\}\) is injective with \(|g|\le k\). Back: for a vertex
+\(b\) of \(K_{n'}\) not in the range of \(f\), the domain of \(f\) has fewer
+than \(k\le n\) elements, and any vertex \(a\) of \(K_n\) outside it gives
+\(f\cup\{(a,b)\}\in\mathcal I\); if \(b\) is in the range, take \(g=f\).
+So \(\mathcal I\) is a winning family and
+\cref{thm:p03-w03-p03-055-pebble} (with \(D=\emptyset\)) gives
+\(K_n\equiv^k_{\infty\omega}K_{n'}\). A first-order sentence of rank at most
+\(k\) is equivalent to an \(\mathrm{FO}^k\)-sentence
+(\cref{thm:p03-w03-p03-055-rank-variables}, as \(k\ge1\)), which is an
+\(\mathcal L^k_{\infty\omega}\)-sentence; so \(K_n\equiv_kK_{n'}\).
+
+(2) The sentence \(\sigma_{\ge k+1}\) belongs to \(\mathrm{FO}^{k+1}\) and
+has rank \(k+1\); it holds in \(K_{k+1}\) and fails in \(K_k\). If
+Duplicator won the \((k+1)\)-pebble game on \(K_k\) and \(K_{k+1}\),
+\cref{thm:p03-w03-p03-055-pebble} would give
+\(K_k\equiv^{k+1}_{\infty\omega}K_{k+1}\); if Duplicator won the
+\((k+1)\)-round game, \cref{thm:p03-w03-p03-038-pointed-ef} would give
+\(K_k\equiv_{k+1}K_{k+1}\). Either contradicts the behaviour of
+\(\sigma_{\ge k+1}\).
+
+(3) A graph satisfies \(\sigma_{\ge k+1}\) iff it has at least \(k+1\)
+vertices. An \(\mathcal L^k_{\infty\omega}\)-sentence defining this class on
+finite cliques would be false in \(K_k\) and true in \(K_{k+1}\),
+contradicting \(K_k\equiv^k_{\infty\omega}K_{k+1}\) from (1). A sentence
+defining the class on finite graphs defines it on finite cliques.
+
+(4) A sentence of rank at most \(k\) defining the class on finite cliques
+would separate \(K_k\) from \(K_{k+1}\), contradicting
+\(K_k\equiv_kK_{k+1}\) from (1).
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-055-orders}{thm:p03-w03-p03-055-orders}{Two variables on finite linear orders}
+\begin{proof}
+(1) For \(j\ge1\) let \(\gamma_j\) stand for either \(\alpha_j\), with
+\(z=x_1\) and \(z'=x_2\), or \(\beta_j\), with \(z=x_2\) and \(z'=x_1\);
+let \(\gamma'_j\) be the other one of the pair. The definitions read
+\(\gamma_1(z)\defeq z=z\) and
+\(\gamma_{j+1}(z)\defeq\exists z'(z'<z\wedge\gamma'_j(z'))\), and the free
+variable of \(\gamma'_j\) is \(z'\). We show by induction on \(j\), for both
+choices at once, that in any linear order \(\gamma_j\) holds of \(c\) iff at
+least \(j-1\) elements are below \(c\). For \(j=1\) both sides always hold.
+For \(j+1\): \(\gamma_{j+1}\) holds of \(c\) iff some \(d<c\) satisfies
+\(\gamma'_j\), iff (induction hypothesis) some \(d<c\) has at least \(j-1\)
+elements below it. If so, those elements and \(d\) are \(j\) elements below
+\(c\). If at least \(j\) elements lie below \(c\), choose \(j\) of them and
+let \(d\) be the largest of these; the other \(j-1\) lie below \(d\), and
+\(d<c\). The formulas use only \(x_1,x_2\), and
+\(\operatorname{qr}(\gamma_j)=j-1\) by induction, so
+\(\exists x_1\,\alpha_n(x_1)\) has rank \(n\). It holds iff some element has
+at least \(n-1\) elements below it, iff there are at least \(n\) elements:
+given \(n\) elements, the largest has the other \(n-1\) below it.
+
+(2) For \(m<n\) the \(\mathrm{FO}^2\)-sentence \(\exists x_1\,\alpha_n(x_1)\)
+holds in \(L_n\) and fails in \(L_m\). By
+\cref{thm:p03-w03-p03-055-pebble} a winning family in the \(2\)-pebble
+game would give \(L_m\equiv^2_{\infty\omega}L_n\); so Spoiler wins.
+
+(3) Let \(\eta_n\defeq\exists x_1\,\alpha_n(x_1)\wedge
+\neg\exists x_1\,\alpha_{n+1}(x_1)\), an \(\mathrm{FO}^2\)-sentence that by
+(1) holds in a linear order iff it has exactly \(n\) elements, and put
+\(\theta_S\defeq\bigvee_{n\in S}\eta_n\), a sentence of
+\(\mathcal L^2_{\infty\omega}\) (the empty disjunction being \(\bottom\)). A
+finite linear order satisfies \(\theta_S\) iff its size lies in \(S\). With
+\(S\) the set of even positive integers, \(\theta_S\) defines even
+cardinality on finite linear orders. That even cardinality is not
+first-order definable on finite linear orders is the content of
+\cref{def:p03-ef-parity}.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-055-connectivity}{thm:p03-w03-p03-055-connectivity}{Connectivity and 2-colorability}
+\begin{proof}
+(1) The undefinability of connectivity is
+\cref{thm:p03-w03-p03-038-connectivity}, which shows that Duplicator wins
+the \(k\)-round game on \(C_{2m}\) and \(C_m\sqcup C_m\) for every
+\(k\in\N\) and every \(m\ge(k+1)2^{k+2}\).
+
+For 2-colorability and \(k\in\N\) choose \(m\) odd with
+\(m\ge(k+1)2^{k+2}\).
+\(C_{2m}\) is 2-colorable: color \(i\in\{0,\ldots,2m-1\}\) by its parity;
+the edges \(\{i,i+1\}\) for \(i<2m-1\) and \(\{2m-1,0\}\) join vertices of
+different parity. \(C_m\) is not 2-colorable: in a proper coloring with
+colors \(0,1\), adjacent vertices differ, so along the path
+\(0,1,\ldots,m-1\) the color of \(i\) is the color of \(0\) plus \(i\)
+modulo \(2\); since \(m-1\) is even, \(m-1\) and \(0\) receive the same
+color, but they are adjacent. So \(C_m\sqcup C_m\) is not 2-colorable.
+For every \(k\) we thus have a 2-colorable finite graph and a finite graph
+that is not 2-colorable on which Duplicator wins the \(k\)-round game; by
+\cref{thm:p03-w03-p03-055-rank-definability}(2), with \(\mathcal C\) the
+class of finite graphs, 2-colorability is not first-order definable on
+finite graphs.
+
+(2) By induction on \(n\): under \(x_1\mapsto u\), \(x_2\mapsto v\),
+\(\pi_n\) holds iff there is a walk of length exactly \(n\) from \(u\) to
+\(v\). For \(n=1\) this is adjacency. For \(n+1\): \(\pi_{n+1}\) holds iff
+there is \(w\) adjacent to \(u\) such that, under
+\(x_1\mapsto u,x_2\mapsto v,x_3\mapsto w\), some \(u'\) with \(u'=w\)
+satisfies \(\pi_n\) under \(x_1\mapsto u'\), \(x_2\mapsto v\); that is, iff
+some neighbor \(w\) of \(u\) has a walk of length \(n\) to \(v\), iff
+there is a walk of length \(n+1\) from \(u\) to \(v\). Every \(\pi_n\) uses
+only \(x_1,x_2,x_3\) and has free variables \(x_1,x_2\). A graph is
+connected iff any two vertices are equal or joined by a walk of some length
+\(n\ge1\), which is what the displayed sentence of
+\(\mathcal L^3_{\infty\omega}\) says.
+
+(3) \(C_{2m}\) is connected, since from any vertex \(i\) the walk
+\(i,i+1,i+2,\ldots\) reaches every vertex, and \(C_m\sqcup C_m\) is not,
+since no edge joins the two copies. So the sentence of (2) holds in
+\(C_{2m}\) and fails in \(C_m\sqcup C_m\).
+If Duplicator won the \(3\)-pebble game on them,
+\cref{thm:p03-w03-p03-055-pebble} would make them
+\(\equiv^3_{\infty\omega}\)-equivalent; so Spoiler wins.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p03-w03-p03-055-bipartite}{thm:p03-w03-p03-055-bipartite}{2-colorability in three-variable infinitary logic}
+\begin{proof}
+A \emph{walk} of length \(n\ge0\) from \(u\) to \(v\) is a sequence
+\(u=w_0,w_1,\ldots,w_n=v\) of vertices with \(E(w_{j-1},w_j)\) for
+\(1\le j\le n\); it is \emph{closed} if \(n\ge1\) and \(u=v\). Reversing a
+walk gives a walk, because \(E\) is symmetric, and two walks, the first
+ending where the second starts, concatenate to a walk whose length is the
+sum.
+
+Let \(c\) be a proper 2-coloring, with colors \(0,1\). Along a walk, adjacent
+vertices receive different colors, so by induction on \(j\),
+\(c(w_j)\equiv c(w_0)+j\pmod2\). For a closed walk of length \(n\) this gives
+\(c(w_0)\equiv c(w_0)+n\), so \(n\) is even.
+
+Conversely suppose there is no closed walk of odd length. Write
+\(u\approx v\) when a walk from \(u\) to \(v\) exists; by the remarks on
+reversal and concatenation, and the walks of length \(0\), this is an
+equivalence relation. Using the axiom of choice, pick a vertex \(r_Q\) in
+each \(\approx\)-class \(Q\) (for a finite graph, the first vertex of \(Q\)
+in a fixed enumeration). For \(v\in Q\) let \(c(v)\) be the parity of the
+length of a walk from \(r_Q\) to \(v\). This does not depend on the walk: if
+walks of lengths \(p\) and \(q\) lead from \(r_Q\) to \(v\), the first
+followed by the reverse of the second is a walk from \(r_Q\) to \(r_Q\) of
+length \(p+q\); if \(p+q\ge1\) it is closed, hence of even length, and if
+\(p+q=0\) then \(p=q=0\); in both cases \(p\equiv q\pmod2\). If \(E(u,v)\),
+then \(u\approx v\), and a walk of length \(p\) from \(r_Q\) to \(u\)
+followed by \(v\) is a walk of length \(p+1\) to \(v\); so
+\(c(v)\neq c(u)\), and \(c\) is a proper 2-coloring.
+
+By part~(2) of \cref{thm:p03-w03-p03-055-connectivity}, under
+\(x_1\mapsto u\), \(x_2\mapsto v\) the formula \(\pi_n\) (for \(n\ge1\))
+holds iff there is a walk of length \(n\) from \(u\) to \(v\). So
+\(\exists x_1\exists x_2(x_1=x_2\wedge\bigvee_{n\text{ odd}}\pi_n(x_1,x_2))\)
+holds in a graph iff some vertex has a closed walk of odd length through
+it, and its negation holds iff the graph is 2-colorable. Every \(\pi_n\)
+uses only \(x_1,x_2,x_3\), so the sentence lies in
+\(\mathcal L^3_{\infty\omega}\).
+
+Let \(m\ge3\) be odd. In \(C_{2m}\), coloring \(i\in\{0,\ldots,2m-1\}\) by its
+parity is proper, since every edge \(\{i,i+1\}\) with \(i<2m-1\), and the edge
+\(\{2m-1,0\}\), joins vertices of different parity. In each copy of \(C_m\)
+the sequence \(0,1,\ldots,m-1,0\) is a closed walk of odd length \(m\). So
+the sentence above, which lies in \(\mathcal L^3_{\infty\omega}\), is true in
+\(C_{2m}\) and false in \(C_m\sqcup C_m\). If Duplicator had a winning family
+for the \(3\)-pebble game on them, \cref{thm:p03-w03-p03-055-pebble} would make
+them \(\equiv^3_{\infty\omega}\)-equivalent; so Spoiler wins.
+\end{proof}
+\end{annexitem}

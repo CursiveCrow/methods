@@ -224,6 +224,15 @@ C007, C011, C012) belong to w02ca-p15-006, -014, -003 and -008; not written (A14
 
 ## Continuation
 
+State after r10 (block 2): no body or annex change. All task gaps are on readonly units (finite-probability C008,
+C009, C015, C019 -> w02ca-p15-006; measure-extension C001, C005, C006, C007 -> w02ca-p15-003); not written (A14).
+Neither owner is in the r6 carry-over and neither has these components in its note; the tree search found none of
+the items; routing loop relayed to the lead (crosslink_requests, r10). The chapter is routed (lead commit f910c8ec:
+p15.tex line 46, annex/p15.tex line 45), so the components previously blocked only on routing are now reported as
+written; radon-nikodym C011 waits on patch request 8. Patch requests 1-10 still unapplied. Unit compile ok
+(5 overfull); find_fused_spaces clean; check.py --tree: no hard failure in these files (soft notation-scope findings
+for shared P15 glyphs since routing).
+
 State after r9 (block 1): no body or annex change; patch request 10 added (pointer after thm:p15-jensen-integral for
 C014); unit compile ok (5 overfull annex headers, unchanged); find_fused_spaces clean. Remaining: lead routing of this
 chapter and w02c-p15-005 (w02ca-p15-005.json requests 1-2), patch requests 1-10, symbol-intake merge. Readonly-unit

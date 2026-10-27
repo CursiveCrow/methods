@@ -212,3 +212,21 @@ handbook/parts/p15/normal-domains-of-attraction.tex and its annex.
 - Unit compile ok (overfull 3); check.py: only preexisting soft
   notation-scope / rule-outside-registry notes in the NDA hosts;
   fused-space check clean.
+- Run r6 block 2, 2026-10-13: the assessment listed NDA C014 (owned unit):
+  the GK definition allows B_n real nonzero but the proofs used only
+  positive scales. GK PDF 185-186 (pp. 171-172) reread: no sign
+  condition on A_n, B_n; Theorem 1 for a "(proper) normal law" with the
+  open-truncation ratio (1). Written: body lines 131-193,
+  thm:p15-w02c-p15-016-normal-signs (sign reflection to a positive
+  normalization to chi; free signs; converse; degenerate laws attracted
+  to no proper normal law) and thm:p15-w02c-p15-016-gk-normal (Theorem 1
+  both directions under the stated definition; point mass at c != 0
+  shows nondegeneracy cannot be dropped); annex 42-172 full proofs;
+  boundary updated (281-298). Symbols added (epsilon_n, sigma_n, N(m,v),
+  Phi, R_F).
+- Readonly-unit disputes (IRV C001, WLTA C006, OS C013) not written here
+  (A14; owners w02c-p15-006, -015, -020). Guard G1 on
+  spec/research/edition-2026-authoring-batch-intake-13.json: the file
+  comes from the lead commit 6de06cc3 and has no working-tree change;
+  this packet did not touch it.
+- Unit compile ok (overfull 3); fused-space check clean.

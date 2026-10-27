@@ -241,3 +241,16 @@ in the preceding Chapter 5 sections, with their displayed algebra-map
 coherence, or the general Chapter 7 truncation/loop interfaces needed
 for higher homotopy calculations. Do not rerepeat the already supplied
 circle inverse, cover contraction or identity-system coherence.
+
+## Historical-omission wording clarification, 2026-10-26
+
+The phrase at the end of the winding pair-path coherence proof referred to
+dependencies omitted by the selected source, not by this manuscript. The
+pinned June 2013 homotopy.tex source was checked at the official raw URL above:
+its direct identity-system argument invokes Sigma composition and leaves a
+winding-witness comparison unstated. The current annex constructs that
+comparison using transport, the signed-power path and integer setness. The
+closing sentence now says those dependencies are not proved in the source's
+Section 8.1 argument. No formula, proof step, assumption, source status or ledger
+has changed; this removes a misleading match by the generic stub-word scanner.
+

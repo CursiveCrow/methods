@@ -1,47 +1,199 @@
-%% annex/p07/proof-complexity.tex --- proof-complexity sketches for Part VII
+%% Complete editorial counting proof; original-source acquisition is separate.
+\section{The pigeonhole counting argument}
 
-\section{The pigeonhole bottleneck argument}
+\begin{annexitem}{annex:p7.complexity.1}{thm:p07-haken-resolution-lower-bound}{An explicit exponential count for pigeonhole resolution}
+\begin{proof}
+We prove the more explicit bound
+\[
+ L\ \geq\ (16/15)^{\lfloor n/4\rfloor}\qquad(n\geq4),
+\]
+where \(L\) is the number of clause occurrences in the given DAG.
+Rows below are pigeons and columns are holes, as in
+Definition~\ref{def:p07-pigeonhole-cnf}. Clauses retain the literal-set
+convention of Sheet~\ref{sheet:resolution-cpl}. In particular, no
+functionality clauses or weakening rule are added.
 
-\begin{annexitem}{annex:p7.complexity.1}{thm:p07-haken-resolution-lower-bound}{Haken's resolution lower bound}
-\sketchnote{Haken's full bottleneck lemma with its numerical constants; the
-count of critical partial injections falsifying each possible bottleneck
-clause; and the bookkeeping that assigns every critical injection to a first
-bottleneck node in a shared derivation DAG.  These are the combinatorial core
-of the exponential estimate, not consequences of resolution soundness alone.}
-For the exact formula \(\mathsf{PHP}^{n}_{n+1}\), call an assignment
-\emph{critical} when it injects exactly \(n\) of the \(n+1\) pigeons into all
-\(n\) holes and sets every variable belonging to the remaining pigeon to
-false.  There are \((n+1)n!\) such assignments.  Each satisfies every
-collision clause and falsifies exactly the totality clause belonging to its
-unassigned pigeon.  The qualifier is necessary to distinguish this counted
-family from arbitrary truth assignments.  It names a metalinguistic class of
-assignments, not a new proof object; its unique-falsified-input property is the
-nonredundant feature used by the routing and counting steps below.
+\paragraph{Critical assignments and a one-step bound.}
+A critical assignment matches \(n\) of the \(n+1\) pigeons bijectively
+to the \(n\) holes, and leaves the remaining pigeon unmatched. It makes
+precisely those matching variables true. Every collision input is true;
+the unique false input is the unmatched pigeon's row clause.
+At a false resolvent, follow the parent whose pivot literal is false.
+Every other literal of that parent is also a literal of the resolvent,
+so the selected parent is false. This is the routing proved in
+Theorem~\ref{thm:p07-haken-critical-count-routing}.
 
-Orient a resolution refutation from the empty clause toward its input clauses.
-Whenever a critical assignment falsifies a resolvent, its value on the pivot
-selects a parent clause that it also falsifies.  Following these choices sends
-every critical assignment from the empty clause to the unique input totality
-clause that it falsifies.  DAG sharing does not change this routing; it is the
-reason assignments, rather than proof paths, are counted.
+Order all occurrences topologically, with both parents earlier than their
+resolvent. Routing to parents strictly decreases the index and ends at
+the unique false input. Write
+\[
+ p_i(C)=\#\{j:x_{ij}\in C\}
+\]
+for the number of positive literals in pigeon row \(i\) of clause \(C\).
+On a step from a resolvent to its selected parent this number increases
+by at most one: only the removed pivot literal can be in the parent
+without also being in the resolvent. It may decrease by more than one;
+no monotonicity in the other direction is assumed. If the unmatched
+pigeon of a falsifying critical assignment is \(i\), the false clause
+has no negative literal in row \(i\), because every variable there is
+false.
 
-The load-bearing combinatorial input is Haken's bottleneck lemma in the
-formulation surveyed by Beame and Pitassi.  Its clause-complexity predicate is
-the source's predicate on clauses and compatible partial injections; it is
-strictly stronger than merely counting how many pigeon indices a clause
-mentions.  The lemma supplies absolute constants \(\alpha,\beta>0\) and proves
-both facts needed here: every routed critical assignment has a first
-bottleneck occurrence, and any fixed bottleneck occurrence receives at most a
-\(2^{-\beta n}\) fraction of all critical assignments.  The proof of those two
-facts is exactly the omitted bottleneck/counting argument named in the opening
-sketch note; no independent-literal heuristic is substituted for it.
+\paragraph{Assigning partial matchings to occurrences.}
+Put \(k=\lfloor n/4\rfloor\), so \(1\leq k\) and \(2k<n\).
+Let \(\mathcal M_{n,k}\) be the family of all injections \(f\) from
+a \(k\)-element subset of the \(n+1\) pigeons into the \(n\) holes.
+A critical assignment extends \(f\) when it makes all \(x_{i,f(i)}\),
+for \(i\) in the domain of \(f\), true. Every \(f\) has such an extension:
+choose an unmatched pigeon outside its domain and biject the remaining
+unmatched pigeons with the unused holes.
 
-Charge each critical assignment to that first bottleneck occurrence.  Since
-all \((n+1)n!\) assignments must be charged and one occurrence receives at
-most a \(2^{-\beta n}\) fraction of them, the refutation contains at least
-\(2^{\beta n}\) bottleneck clause occurrences.  Taking \(c=2^{\beta}>1\)
-yields the theorem's bound.  The cited sources prove the imported lemma for
-general DAG-like resolution and for precisely the nonfunctional CNF fixed in
-Definition~\ref{def:p07-pigeonhole-cnf}
-\cite{Haken1985,BeamePitassi1998}.
+For any such extension with unmatched pigeon \(u\), its route from the
+empty clause to the row input has positive-row counts starting at zero
+and ending at \(n\). The one-step bound forces a count of exactly \(2k\)
+at some occurrence. Call an occurrence \emph{eligible for \(f\)} when
+some critical assignment extending \(f\) falsifies it and has unmatched
+pigeon \(u\) with \(p_u(C)=2k\). Choose \(C_f\) to be the earliest
+eligible occurrence in the fixed topological order. This choice is
+well-defined on the original DAG, without unfolding shared nodes.
+
+The minimality of \(C_f\) has the following useful consequence.
+If a critical assignment extending \(f\) falsifies \(C_f\) and leaves
+\(q\) unmatched, then
+\[
+ p_q(C_f)\geq2k.                                                \tag{*}
+\]
+Indeed, if its count at \(C_f\) were smaller than \(2k\), route this
+assignment from \(C_f\) to its false row input. The count ends at \(n\)
+and increases by at most one per step. An earlier occurrence would
+therefore have count exactly \(2k\) and would be eligible for \(f\),
+contrary to the choice of \(C_f\).
+
+\paragraph{At least \(k+1\) constrained rows.}
+Fix \(f\) and a witness \(v\) to the eligibility of \(C_f\), with unmatched
+pigeon \(u\). There are \(2k\) holes whose positive literals occur in
+row \(u\) of \(C_f\), and \(k\) holes in the image of \(f\).
+At least \(n-3k\geq k\) holes belong to neither set.
+For each such hole \(j\), let \(q\) be the pigeon matched to \(j\) by
+\(v\). The pigeons obtained from distinct holes are distinct,
+are different from \(u\), and do not belong to the domain of \(f\).
+
+Move the matching edge at hole \(j\) from \(q\) to \(u\). The resulting
+assignment \(v'\) is critical, still extends \(f\), and leaves \(q\)
+unmatched. Only \(x_{u,j}\) and \(x_{q,j}\) change:
+the first from false to true and the second from true to false.
+The positive literal \(x_{u,j}\) is absent from \(C_f\) by the choice
+of \(j\). If \(\neg x_{q,j}\) occurs, row \(q\) contains a negative
+literal. If it does not occur, neither changed variable makes a
+literal of \(C_f\) true, so \(v'\) still falsifies \(C_f\).
+Consequence \((*)\) then gives \(p_q(C_f)\geq2k\).
+Together with row \(u\), this proves that \(C_f\) has at least \(k+1\)
+distinct rows each of which contains a negative literal or at least
+\(2k\) positive literals.
+
+For any occurrence \(C\) in the image of \(f\mapsto C_f\), fix a set
+\(A\) of exactly \(k+1\) such rows. The set is chosen from \(C\) once,
+independently of which \(f\)'s are subsequently counted at that occurrence.
+Suppose a critical assignment falsifies \(C\). If row \(i\in A\)
+contains \(\neg x_{i,j}\), that assignment must match \(i\) to \(j\).
+Thus a partial matching contained in the assignment has at most one
+possible image for \(i\) when it includes that pigeon. If the row instead
+has at least \(2k\) positive literals, all their holes are forbidden
+as its image. In either case there are at most \(n-2k\) possible images.
+The assertion remains valid when several negative literals make
+falsification impossible; such a clause simply has no matching to count.
+Here \(1\leq n-2k\), as required for the first case.
+
+\paragraph{An explicit bound on each fiber.}
+The total number of partial matchings is
+\[
+ H=\#\mathcal M_{n,k}=\binom{n+1}{k}\frac{n!}{(n-k)!}.
+\]
+For a fixed image occurrence \(C\), let \(i\) of a partial matching's
+\(k\) pigeons lie in its fixed set \(A\). The number of choices of
+domain with this property is
+\[
+ d_i=\binom{k+1}{i}\binom{n-k}{k-i},\qquad 0\leq i\leq k.
+\]
+For a fixed such domain, the \(i\) constrained pigeons have at most
+\((n-2k)^i\) image choices if the requirement that their images be
+distinct is ignored. For each valid injective choice among them, the
+other \(k-i\) labeled pigeons have at most
+\((n-i)!/(n-k)!\) injective image choices. Multiplying these upper
+bounds counts every valid matching, possibly with surplus choices;
+it does not treat different images as independent random events.
+Consequently every fiber has size at most
+\[
+ G=\sum_{i=0}^{k}d_i(n-2k)^i\frac{(n-i)!}{(n-k)!}.
+\]
+The fibers partition \(\mathcal M_{n,k}\), and there are at most \(L\)
+image occurrences, hence \(H\leq LG\).
+By counting the \(k\)-element domains according to their intersection
+with \(A\), \(\sum_{i=0}^{k}d_i=\binom{n+1}{k}\). It follows that
+\[
+ \frac GH
+ =\frac{\displaystyle\sum_{i=0}^{k}d_i
+          \frac{(n-2k)^i(n-i)!}{n!}}
+        {\displaystyle\binom{n+1}{k}}.
+\]
+Each factorial ratio is at most
+\[
+ \left(\frac{n-2k}{n-k+1}\right)^i\leq(3/4)^i.
+\]
+For the last inequality write \(n=4k+r\), \(0\leq r\leq3\):
+\(4(2k+r)\leq3(3k+r+1)\) follows from \(r\leq k+3\).
+The empty product when \(i=0\) is one.
+
+\paragraph{The exponential estimate, including its averaging lemma.}
+We use the following elementary inequality. Let \(w_1,\ldots,w_N\) be
+nonnegative. Write \(e_\ell(w)\) for the sum of the products over
+all \(\ell\)-element subsets of the indices, with \(e_0=1\).
+Then, for \(1\leq\ell\leq N\),
+\[
+ \frac{e_\ell(w)}{\binom N\ell}
+ \leq\left(\frac{w_1+\cdots+w_N}{N}\right)^\ell.             \tag{**}
+\]
+For \(\ell=1\) this is equality. For \(\ell\geq2\), keep all but
+two coordinates \(a,b\) fixed. Separating subsets by how many of these
+coordinates they contain gives
+\[
+ e_\ell(w)=ab\,e_{\ell-2}(z)+(a+b)e_{\ell-1}(z)+e_\ell(z),
+\]
+where \(z\) lists the other coordinates and an elementary sum beyond
+its range is zero. Replacing \(a,b\) by their common average preserves
+their sum and increases their product, so it cannot decrease
+\(e_\ell\). Repeatedly average a largest and a smallest coordinate.
+Their sum remains fixed. If their common overall mean is \(\mu\),
+the quantity \(\sum_j(w_j-\mu)^2\) decreases by
+\((a-b)^2/2\) at each step. If it had a positive limiting value,
+the largest-minus-smallest difference would stay bounded below,
+since \(\sum_j(w_j-\mu)^2\leq N(\max w_j-\min w_j)^2\).
+That would force a fixed positive decrease indefinitely, a contradiction.
+Thus the coordinates converge to \(\mu\). Continuity of \(e_\ell\)
+now bounds its initial value by \(\binom N\ell\mu^\ell\), proving
+\((**)\).
+
+Apply \((**)\) with \(N=n+1\), \(\ell=k\), weight \(3/4\) on the
+\(k+1\) indices in \(A\), and weight one on all other indices.
+Grouping the products by their intersection with \(A\) gives
+\[
+ \begin{aligned}
+ \frac GH
+ &\leq\frac{\sum_{i=0}^{k}d_i(3/4)^i}{\binom{n+1}{k}}\\
+ &\leq\left(1-\frac{k+1}{4(n+1)}\right)^k
+ \leq(15/16)^k.
+ \end{aligned}
+\]
+The last inequality uses \(4(k+1)\geq n+1\).
+Since \(H\leq LG\), we obtain \(L\geq(16/15)^k\).
+For \(n\geq8\), \(k\geq n/8\), so
+\(c=(16/15)^{1/8}>1\) is one constant satisfying the theorem.
+
+Every object counted is a partial matching or an occurrence in the
+original annotated DAG. Shared clauses are never unfolded into a tree;
+equal literal sets at different occurrences remain distinct occurrences.
+Tautological clauses have no falsifying critical assignment and cannot
+be selected. Thus the proof covers exactly the registered resolution
+rule, including its permission for tautological intermediate clauses,
+and the nonfunctional input family of the stated theorem.
+\end{proof}
 \end{annexitem}

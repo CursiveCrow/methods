@@ -1,0 +1,289 @@
+\section{Recursive functions and the fixed machine model}
+\label{sec:annex-p04-recursive-machine-equivalence}
+
+\begin{annexitem}{annex:p04.recursive-counter-realization}{thm:p04-recursive-counter-realization}{Counter constructions}
+\begin{proof}
+We use only increment, zero-test/decrement, and finite control, as in
+\cref{def:p04-counter-program}. The zeroing of a counter is a loop which
+decrements it until its zero branch is taken. An unconditional transfer
+is the zero branch of a fresh counter kept at zero. Each description
+below therefore expands into a finite list of the permitted instructions.
+
+First specify a copying block. For distinct source and destination
+counters, zero the destination and a fresh temporary counter. Until the
+source is zero, decrement it and increment both the destination and the
+temporary. If its original value was \(a\), after \(j\) iterations their
+values are \(a-j,j,j\). Then decrement the temporary while incrementing
+the source. This restores the source to \(a\), leaves the destination at
+\(a\), and clears the temporary. Both loops terminate. Fresh scratch
+counters keep all other named counters unchanged.
+
+Addition to a counter is repeated increment controlled by a copied
+argument; multiplication is repeated addition controlled by another
+copy. Comparison copies both arguments and decrements the copies in
+lockstep until one is zero. Testing the first copy before decrementing
+distinguishes \(a\leq b\) from \(a>b\), including equality at zero.
+Subtraction of a smaller counter value is a bounded sequence of
+decrements. These descriptions terminate and preserve any inputs whose
+copies they use; they appeal to no machine--recursion equivalence.
+
+The fixed pairing and its inverse can also be handled by these blocks.
+To encode \((a,b)\), form \(u=a+b\), accumulate
+\(1+2+\cdots+u\), and add \(b\). To decode \(z\), start with
+\(u=t=0\), and while \(t+u+1\leq z\), replace
+\((u,t)\) by \((u+1,t+u+1)\). At the loop boundary
+\(t=u(u+1)/2\leq z\). It terminates, since the next triangular
+number eventually exceeds \(z\), and gives
+\[
+ b=z-t,\qquad a=u-b.
+\]
+The stopping condition implies \(0\leq b\leq u\), so these are natural
+numbers and their pairing is \(z\). Iterating the inverse a fixed
+number of times decodes the fixed-arity tuple code. This supplies the
+input counters from the procedure's single numerical input counter.
+
+For the closure induction it is useful to give every block designated
+input counters, a distinct result counter, and one exit. On return it
+preserves its input counters and places its value in the result counter.
+Scratch counters are disjoint from those used by surrounding blocks.
+There are only finitely many of them for any fixed construction.
+A block's entry initializes the scratch values it needs; hence repeated
+entries do not rely on their values from an earlier call.
+
+The zero block clears its result counter. The successor block copies its
+input and increments the copy. A projection copies the selected input.
+These have the specified behavior and always return.
+
+For composition, run the blocks for all inner functions, one after
+another, on the unchanged input counters, putting their results in
+distinct counters. Only after every inner block has returned, run the
+outer block on those results. If any required inner block fails to
+return, execution remains in it; if the outer block fails to return,
+execution remains there. Otherwise the returned value is the prescribed
+composition. Thus the construction is strict even when the outer
+function would ignore an argument whose inner computation diverges.
+
+For primitive recursion in the manuscript's last-argument convention,
+\[
+ f(\vec x,0)=g(\vec x),\qquad
+ f(\vec x,n+1)=h(\vec x,n,f(\vec x,n)),
+\]
+keep the input counters unchanged and copy \(n\) into a countdown
+counter. Initialize an index counter to zero, and run the block for
+\(g\) to obtain the current value. If the countdown is zero, exit.
+Otherwise decrement it, copy the current value into a separate argument
+counter, and run the block for \(h\) on the parameters, the index, and
+that value. Replace the current value by the returned result, increment
+the index, and repeat. At the boundary after \(i\) completed steps, the
+index is \(i\), the countdown is \(n-i\), and the current value is
+\(f(\vec x,i)\). Induction establishes this invariant whenever that
+boundary is reached. A divergence in the base or a required step blocks
+every subsequent boundary, exactly as the definition requires. If all
+required values exist, there are exactly \(n\) step calls and the block
+returns the required value. Inputs remain unchanged.
+
+For minimization, keep \(\vec x\) unchanged and set a candidate counter
+to zero. Run the block for \(g(\vec x,y)\). If it returns zero, copy
+\(y\) to the result and exit. If it returns a nonzero value, increment
+\(y\) and repeat. Reaching candidate \(y\) means that every earlier
+value was defined and nonzero. Thus a return has exactly the least-zero
+meaning in \cref{def:p04-partial-recursive}. If an earlier required
+computation diverges, execution stays in that call and never skips it.
+If all tested values are defined and nonzero, there are infinitely many
+iterations and no return. These exhaust the undefined cases.
+
+The least class closed under these finitary operations is the union of
+its finite construction stages: that union contains the initial
+functions and is itself closed under each operation. Every function
+under discussion therefore has a finite construction tree. Instantiate
+the displayed finite blocks along that tree, rename scratch counters and
+instruction locations to avoid clashes, prepend fixed-arity tuple
+decoding, and replace the final exit by return of the result counter.
+The result is a finite counter procedure. The argument proves its
+behavior by induction on the construction tree, independently of any
+decision about eventual termination of its execution.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p04.fixed-machine-pr}{thm:p04-fixed-machine-pr}{Finite simulation with a fixed origin}
+\begin{proof}
+We first give the elementary primitive-recursive closure facts used in
+the coding, rather than infer them from Turing computability.
+Predecessor, addition, multiplication, and truncated subtraction
+\(u\mathbin{\dot{-}}v=\max(u-v,0)\) are obtained by primitive recursion.
+Zero-test is obtained by a recursion with initial value one and all
+successor values zero. These give sign, equality, order, and conditional
+selection. For a zero--one test \(e\), selection between \(u\) and \(v\)
+is \(eu+(1\mathbin{\dot{-}}e)v\).
+Bounded sums and products are primitive recursions. A bounded search
+for the least \(j\leq n\) satisfying a primitive-recursive test iterates
+through \(0,\ldots,n\), retaining its first successful index and using
+\(n+1\) as the failure value. The retained index is the state of a
+primitive recursion; once it is at most \(n\), subsequent updates leave
+it unchanged. Thus the search is primitive recursive.
+If a scalar recursion needs a nullary initial constant, first carry an
+unused positive-arity parameter and then identify or discard the dummy
+input by composition. All functions used below can consequently be
+formed in the manuscript's positive-arity partial-recursive convention
+as well as in its primitive-recursive class.
+
+For \(d>0\), the quotient is explicitly
+\[
+ \left\lfloor n/d\right\rfloor
+   =\sum_{j=1}^{n}\mathbf1_{jd\leq n};
+\]
+give it value zero at \(d=0\). Remainder is obtained by multiplication
+and truncated subtraction. Powers are primitive recursive by recursion
+on the exponent. Triangular numbers are the recurrence
+\(t(0)=0,\ t(u+1)=t(u)+u+1\), so the fixed pairing
+\(t(a+b)+b\) is primitive recursive without an initial division
+operation. Its inverse finds the largest \(u\leq z\) with
+\(t(u)\leq z\), and returns \(z-t(u)\) and
+\(u-(z-t(u))\) in the appropriate order. The largest such \(u\) is
+\(\sum_{j=1}^{z}\mathbf1_{t(j)\leq z}\). Since
+\(t(u)\leq z<t(u+1)\), the two recovered components are nonnegative
+and pair back to \(z\). Fixed tuple coding and decoding are therefore
+primitive recursive by finite composition. No unbounded search has
+entered these closure arguments.
+
+Fix the state and symbol numbers of
+\cref{def:p04-origin-preserving-code}. Every nonnegative integer \(W\)
+has a unique base-\(b\) digit sequence with finite nonzero support, so
+it describes a finite-support tape under the address bijection. Write
+\[
+ D(W,j)=\left\lfloor W/b^j\right\rfloor\bmod b.
+\]
+This is primitive recursive. The address-code operations for a move
+right or left are respectively
+\[
+ r(j)=\begin{cases}j+2,&j\text{ even},\\
+                   j\mathbin{\dot{-}}2,&j\text{ odd},\end{cases}
+ \qquad
+ \ell(j)=\begin{cases}1,&j=0,\\
+             j\mathbin{\dot{-}}2,&j>0\text{ even},\\
+             j+2,&j\text{ odd}.\end{cases}
+\]
+Checking the cases \(i\geq0\) and \(i<0\), including the crossings
+at zero and minus one, proves
+\(r(\operatorname{addr}(i))=\operatorname{addr}(i+1)\) and
+\(\ell(\operatorname{addr}(i))=\operatorname{addr}(i-1)\).
+Parity is a remainder test, so both maps are primitive recursive.
+
+Decode \(c\) into \((q,j,W)\). If \(q\) is a valid nonhalting state,
+read \(a=D(W,j)\), and use the fixed finite transition table to obtain
+\((q',a',d)\). Finite case distinction on the state and symbol numbers
+is primitive recursive. Replace the tape code by
+\[
+ W'=\bigl(W\mathbin{\dot{-}}a b^j\bigr)+a'b^j,
+\]
+and replace \(j\) by \(r(j)\) or \(\ell(j)\) according to \(d\).
+Here \(W\geq ab^j\); digit expansion shows that this removes exactly
+the scanned digit and inserts exactly the new one. All other digits
+are unchanged. Pair the new components to obtain \(N(c)\).
+If the state is halting or is an invalid state number, define \(N(c)=c\).
+This is a total primitive recursive function, and the preceding
+calculation proves its exact transition meaning on configuration codes.
+
+For initialization let \(x=\operatorname{code}_k(\vec x)\).
+The length of \(\operatorname{bin}(x)\) is one if \(x=0\), and
+otherwise the least positive \(v\leq x+1\) with \(x<2^v\).
+This bounded search always succeeds. If the length is \(v\), its
+\(i\)-th bit, most significant first, is
+\[
+ e_i=\left\lfloor x/2^{v-1-i}\right\rfloor\bmod2
+       \quad(0\leq i<v).
+\]
+These formulas also give the single zero bit when \(x=0\).
+The initial tape code is
+\[
+ W_0=\sum_{i<v}(1+e_i)b^{2i}.
+\]
+The digit at address \(\operatorname{addr}(i)=2i\) is therefore exactly
+the symbol number of the input bit, and all other cells are blank.
+Pair \((q_0,0,W_0)\) to obtain \(I(\vec x)\).
+The length, bits, bounded sum, and final pairing are primitive recursive.
+
+For output, find the first \(m\leq W+1\) with \(D(W,2m)=0\).
+There is such an \(m\): for \(e>W\), the elementary inequality
+\(b^e\geq e+1>W\) gives \(D(W,e)=0\); in particular the cell with
+address code \(2(W+1)\) is blank. Thus bounded search finds exactly
+the first blank at a nonnegative physical address. The prefix is valid
+precisely when \(m>0\), every \(D(W,2i)\) with \(i<m\) is one or two,
+and its first digit is two unless \(m=1\). These tests express both
+binary-symbol validity and the prohibition of leading zero in a
+multi-symbol output. They are primitive recursive by bounded products
+and the elementary tests above. Let \(G(c)\) be their conjunction
+with the test that the state is the accepting state. In the valid case
+the output value is
+\[
+ O(c)=\sum_{i<m}
+       \bigl(D(W(c),2i)\mathbin{\dot{-}}1\bigr)2^{m-1-i}.
+\]
+Use that same bounded expression as a total default when the prefix is
+invalid. It is primitive recursive and has the claimed value whenever
+\(G(c)=1\). The test does not inspect the current head position, and
+digits outside the prefix do not affect the output. This is exactly the
+fixed numerical interface, not the different head-relative delimiter
+convention used elsewhere for a separately specified coding.
+
+Finally, primitive recursion on the supplied step count gives
+\(C(\vec x,n)\). Induction on \(n\) shows that it codes the actual
+computation up to a halt and thereafter repeats the halting code.
+Every operation in this construction was obtained by the displayed
+primitive-recursive closures; none uses the theorem being proved.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p04.tm-partial-recursive}{thm:p04-tm-partial-recursive}{The two directions}
+\begin{proof}
+If \(f\) is partial recursive, \cref{thm:p04-recursive-counter-realization}
+gives a finite counter procedure receiving its fixed tuple code and
+returning exactly its defined values. Apply
+\cref{thm:p04-counter-compilation}. Its explicit one-tape construction
+decodes the most-significant-bit-first input, simulates the counters,
+and writes the canonical binary output at the preserved physical origin.
+Every finite counter instruction takes finitely many machine steps;
+a nonreturning counter run becomes an infinite machine run. Hence the
+compiled machine meets both clauses of \cref{def:partial-computable}.
+The counter-compilation proof uses finite transition templates and
+their invariants, not the present equivalence theorem.
+
+Conversely suppose a machine computes \(f\) in that definition's exact
+sense. Take the primitive recursive \(C,G,O\) from
+\cref{thm:p04-fixed-machine-pr}, and form
+\[
+ t(\vec x)=\mu n\,[1\mathbin{\dot{-}}G(C(\vec x,n))=0].
+\]
+Every tested value is defined, being primitive recursive. Therefore
+\(t\) is defined exactly when a valid accepting configuration is
+reached, and then it is its first time. By the witness machine's
+specification this occurs exactly when \(f(\vec x)\) is defined;
+on other inputs its computation is infinite. Consequently
+\[
+ f(\vec x)\simeq O(C(\vec x,t(\vec x))),
+\]
+where equality includes simultaneous undefinedness. The right side is
+partial recursive by minimization and strict composition. This proves
+the other direction under the same tuple and output encodings.
+No identification with an index from a separately chosen normal-form
+coding is needed.
+\end{proof}
+\end{annexitem}
+
+\begin{annexitem}{annex:p04.primitive-recursive-total}{thm:p04-primitive-recursive-total}{The total subclass}
+\begin{proof}
+Zero, successor, and projections are total. Composition of total
+functions is total, and primitive recursion on a natural-number argument
+makes finitely many calls to its total base and step functions. Induction
+on a primitive-recursive construction proves totality. The counter
+construction above uses only these terminating base, composition, and
+recursion blocks when no minimization occurs, so its compiled machine
+halts with the required value on every input. A nullary subconstruction
+is a fixed natural constant and can be returned by literal initialization;
+equivalently it can be carried with an unused positive-arity parameter.
+For the nullary function itself, the required input is
+\(\operatorname{bin}(\operatorname{code}_0())=\operatorname{bin}(0)\);
+a machine writing the fixed constant in canonical binary at cell zero
+computes it. Thus the zero-arity convention introduces no exception.
+\end{proof}
+\end{annexitem}
